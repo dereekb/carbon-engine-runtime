@@ -712,3 +712,135 @@ test("Unmute keeps Carbon's order: the forced wake runs while still muted", () =
     teardown();
   }
 });
+
+
+/** A live world for RemoveEventOnWake: an enabled manager, a loaded bank and a counting backend. */
+function makeWakeWorld()
+{
+  const repository = new AudStaticDataRepository();
+  repository.Initialize({
+    Events: {
+      engine_loop: { eventID: 1, maxRadiusAttenuation: 100, isLoop: 1, is2D: 0, isVital: 0, eventsStoppedBy: [], soundbanks: ["ships.bnk"] },
+      ship_engine_loop: { eventID: 3, maxRadiusAttenuation: 100, isLoop: 1, is2D: 0, isVital: 0, eventsStoppedBy: [], soundbanks: ["ships.bnk"] }
+    },
+    SoundBanks: { "ships.bnk": { EssentialSoundBank: 0 } },
+    WemFileIDs: {}
+  });
+  const manager = new AudManager();
+  const posts = [];
+  let nextPlayingID = 40;
+  AudGameObjResource.manager = manager;
+  AudGameObjResource.staticDataRepository = repository;
+  AudGameObjResource.backend = WwiseSoundEngineStubWith({
+    Init: () => true,
+    LoadBank: (_name, callback) => callback(true),
+    RegisterGameObj: () => {},
+    UnregisterGameObj: () => {},
+    SetPosition: () => {},
+    PostEvent: (_eventID, _gameObjID, _flags, _emitter, eventName) =>
+    {
+      posts.push(eventName);
+      return ++nextPlayingID;
+    },
+    ExecuteActionOnPlayingID: () => true,
+    RenderAudio: () => {},
+  });
+  manager.Enable(["ships.bnk"]);
+  const emitter = new AudEmitter();
+  emitter.SetPosition([0, 0, 1], [0, 1, 0], [10, 0, 0]);
+  // A new emitter starts culled; wake it as CullAudio would.
+  emitter.Wake();
+  return { emitter, posts };
+}
+
+test("RemoveEventOnWake drops a loop Cull queued after its id finished, so Wake replays nothing", () =>
+{
+  try
+  {
+    const { emitter, posts } = makeWakeWorld();
+    const playingID = emitter.PostEvent("engine_loop");
+    assert.ok(playingID > 0);
+    emitter.Cull();
+    assert.deepEqual(emitter.GetEventsOnWake(), ["engine_loop"]);
+
+    // Cull's fade-out ends: the id leaves _playingEvents, out of MarkPlayingIDStoppedByRequest's reach.
+    emitter.EventFinishedCallback(playingID);
+    emitter.MarkPlayingIDStoppedByRequest(playingID);
+    assert.deepEqual(emitter.GetEventsOnWake(), ["engine_loop"], "the stop-by-request misses a finished id");
+
+    assert.equal(emitter.RemoveEventOnWake("engine_loop"), true);
+    assert.deepEqual(emitter.GetEventsOnWake(), []);
+    posts.length = 0;
+    emitter.Wake();
+    assert.equal(emitter.IsCulled(), false);
+    assert.deepEqual(posts, [], "nothing replays");
+  }
+  finally
+  {
+    teardown();
+  }
+});
+
+test("RemoveEventOnWake drops a loop posted while culled (no id), and false for one not queued", () =>
+{
+  try
+  {
+    const { emitter, posts } = makeWakeWorld();
+    emitter.Cull();
+    assert.equal(emitter.PostEvent("engine_loop"), 0);
+    assert.deepEqual(emitter.GetEventsOnWake(), ["engine_loop"]);
+    assert.equal(emitter.RemoveEventOnWake("hit_once"), false);
+    assert.equal(emitter.RemoveEventOnWake("engine_loop"), true);
+    assert.equal(emitter.RemoveEventOnWake("engine_loop"), false, "already gone");
+    posts.length = 0;
+    emitter.Wake();
+    assert.deepEqual(posts, []);
+  }
+  finally
+  {
+    teardown();
+  }
+});
+
+test("RemoveEventOnWake resolves the prefix as PostEvent does, unless bypassed", () =>
+{
+  try
+  {
+    const { emitter, posts } = makeWakeWorld();
+    emitter.eventPrefix = "ship_";
+    emitter.Cull();
+    assert.equal(emitter.PostEvent("engine_loop"), 0);
+    assert.equal(emitter.PostEvent("engine_loop", true), 0);
+    assert.deepEqual(emitter.GetEventsOnWake().sort(), ["engine_loop", "ship_engine_loop"]);
+
+    assert.equal(emitter.RemoveEventOnWake(" engine_loop "), true, "trimmed, then prefixed");
+    assert.deepEqual(emitter.GetEventsOnWake(), ["engine_loop"]);
+    assert.equal(emitter.RemoveEventOnWake("engine_loop", true), true, "the full name");
+    assert.deepEqual(emitter.GetEventsOnWake(), []);
+    posts.length = 0;
+    emitter.Wake();
+    assert.deepEqual(posts, []);
+  }
+  finally
+  {
+    teardown();
+  }
+});
+
+test("RemoveEventOnWake resets the attenuation radius once nothing plays or waits", () =>
+{
+  try
+  {
+    const { emitter } = makeWakeWorld();
+    emitter.Cull();
+    emitter.PostEvent("engine_loop");
+    emitter.UpdateEventSoundPrioritizationAttributes();
+    assert.ok(emitter._maxAttenuationRadiusSq > 0, "the queued loop keeps the radius");
+    emitter.RemoveEventOnWake("engine_loop");
+    assert.equal(emitter._maxAttenuationRadiusSq, 0);
+  }
+  finally
+  {
+    teardown();
+  }
+});

@@ -1226,6 +1226,29 @@ export class AudGameObjResource
   }
 
   /**
+   * Drops one queued event so Wake does not replay it.
+   *
+   * Adapted: CarbonEngineJS-only; Carbon purges the wake queue only through stop relationships
+   * (ApplyEventStopRelationships) and MarkPlayingIDStoppedByRequest while the playing id is still
+   * tracked. This reaches a loop whose id already finished (after Cull's fade-out) or that never had
+   * one (posted while culled). The prioritization attributes are recomputed, as the queue keeps the
+   * radius and the 2D and vital flags alive.
+   *
+   * @param {string} eventName - The event, as PostEvent takes it.
+   * @param {boolean} [bypassPrefix=false] - True: `eventName` is the full name, without the prefix.
+   * @returns {boolean} True when the event was queued.
+   */
+  RemoveEventOnWake(eventName, bypassPrefix = false)
+  {
+    const removed = this._eventsOnWake.delete(PrepareEvent(this.eventPrefix, eventName, bypassPrefix));
+    if (removed)
+    {
+      this.UpdateEventSoundPrioritizationAttributes();
+    }
+    return removed;
+  }
+
+  /**
    * The pending culled one-shot event name, "" when none.
    *
    * Adapted: CarbonEngineJS-only accessor over private one-shot state; Carbon exposes no
