@@ -73,6 +73,8 @@ const FADE_CURVE_SAMPLES = 65;
 // Reaches 95% of a new pose in about 15 ms without repeatedly cancelling an
 // in-flight automation ramp during high-rate pointer or scene updates.
 const SPATIAL_POSE_TIME_CONSTANT_SECONDS = 0.005;
+// The bucket of an emitter generation with no playing records; never mutated.
+const NO_PLAYING_RECORDS = new Map();
 
 /**
  * WebAudio backend for the audio graph: emitter nodes, playing sources, listener pose.
@@ -116,6 +118,9 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     _emitterNodes = new Map();
 
     _playing = new Map();
+
+    /** Playing records by emitter-node generation (identity), each in playingID order. */
+    _playingByEmitterNodes = new Map();
 
     _voiceLimitLedger = new CjsAudioBackendSfxVoiceLimitLedger({
         isOwnerActive: owner =>
@@ -649,6 +654,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             sfxControls: null,
         };
         this._playing.set(playingID, record);
+        this._IndexPlayingRecord(playingID, record);
 
         if (music)
         {
@@ -2197,6 +2203,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             onFinished
         };
         this._playing.set(playingID, record);
+        this._IndexPlayingRecord(playingID, record);
         this._StartMusicComponent(playingID, record);
         return playingID;
     }
@@ -3128,13 +3135,14 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     /** Advances affected SFX voice transport before an RTPC mutation. */
     _AdvanceRtpcVoices(scope, gameObjID, at)
     {
-        for (const record of this._playing.values())
+        const records = scope === "game-object"
+            ? this._PlayingRecordsOf(this._emitterNodes.get(gameObjID))
+                .values()
+            : this._playing.values();
+
+        for (const record of records)
         {
-            if (!record.sfx
-                || (scope === "game-object"
-                    && (record.gameObjID !== gameObjID
-                        || record.emitterNodes
-                            !== this._emitterNodes.get(gameObjID))))
+            if (!record.sfx)
             {
                 continue;
             }
@@ -3283,9 +3291,9 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     /** Advances matching voices before replacing their active pitch curve. */
     _AdvanceMatchingSfxVoices(nodes, targetId, at)
     {
-        for (const record of this._playing.values())
+        for (const record of this._PlayingRecordsOf(nodes).values())
         {
-            if (!record.sfx || record.emitterNodes !== nodes)
+            if (!record.sfx)
             {
                 continue;
             }
@@ -6705,14 +6713,14 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             return;
         }
         const now = Number(this._context?.currentTime) || 0;
+        const records = gameObjID === null
+            ? this._playing.values()
+            : this._PlayingRecordsOf(this._emitterNodes.get(gameObjID))
+                .values();
 
-        for (const record of this._playing.values())
+        for (const record of records)
         {
-            if (!record.sfx
-                || (gameObjID !== null && record.gameObjID !== gameObjID)
-                || (gameObjID !== null
-                    && record.emitterNodes
-                        !== this._emitterNodes.get(record.gameObjID)))
+            if (!record.sfx)
             {
                 continue;
             }
@@ -6934,11 +6942,13 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     /** Re-evaluates per-voice distance gains after listener/emitter changes. */
     _RefreshDistanceGains(emitterNodes = null, smooth = true)
     {
-        for (const record of this._playing.values())
+        const records = emitterNodes === null
+            ? this._playing.values()
+            : this._PlayingRecordsOf(emitterNodes).values();
+
+        for (const record of records)
         {
-            if (!record.sfx
-                || (emitterNodes !== null
-                    && record.emitterNodes !== emitterNodes))
+            if (!record.sfx)
             {
                 continue;
             }
@@ -7409,6 +7419,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
         {
             this._voiceLimitLedger.ReleaseAll(record);
             this._playing.delete(playingID);
+            this._UnindexPlayingRecord(playingID, record);
             this._scheduledSfxActions = this._scheduledSfxActions
                 .filter(value => value.ownerPlayingID !== playingID);
             record.stopped = true;
@@ -7475,12 +7486,56 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     {
         if (!nodes
             || this._emitterNodes.get(gameObjID) === nodes
-            || [ ...this._playing.values() ]
-                .some(record => record.emitterNodes === nodes))
+            || this._playingByEmitterNodes.has(nodes))
         {
             return;
         }
         this._DisconnectEmitterNodes(nodes);
+    }
+
+    /** Adds one playing record to its emitter generation's bucket (none for a record without one). */
+    _IndexPlayingRecord(playingID, record)
+    {
+        const nodes = record.emitterNodes;
+
+        if (!nodes)
+        {
+            return;
+        }
+        let bucket = this._playingByEmitterNodes.get(nodes);
+
+        if (!bucket)
+        {
+            bucket = new Map();
+            this._playingByEmitterNodes.set(nodes, bucket);
+        }
+        bucket.set(playingID, record);
+    }
+
+    /** Removes one playing record from its generation's bucket, dropping a bucket it empties. */
+    _UnindexPlayingRecord(playingID, record)
+    {
+        const nodes = record.emitterNodes;
+        const bucket = nodes
+            ? this._playingByEmitterNodes.get(nodes)
+            : undefined;
+
+        if (!bucket)
+        {
+            return;
+        }
+        bucket.delete(playingID);
+        if (bucket.size === 0)
+        {
+            this._playingByEmitterNodes.delete(nodes);
+        }
+    }
+
+    /** One emitter generation's playing records in playingID order; empty for none. */
+    _PlayingRecordsOf(nodes)
+    {
+        return (nodes && this._playingByEmitterNodes.get(nodes))
+            || NO_PLAYING_RECORDS;
     }
 
     /** Disconnects a no-longer-used emitter node generation. */
