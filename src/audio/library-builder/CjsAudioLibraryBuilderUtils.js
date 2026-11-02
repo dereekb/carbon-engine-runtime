@@ -83,6 +83,17 @@ export const SFX_INITIAL_DELAY_PROPERTY = 34;
 
 export const WWISE_PRIORITY_PROPERTY = 0x06;
 
+// AkPropID_150 PriorityDistanceOffset.
+export const WWISE_PRIORITY_DISTANCE_OFFSET_PROPERTY = 0x38;
+
+// Wwise's default Priority when no node on the path authors one.
+export const WWISE_DEFAULT_PRIORITY = 50;
+
+// Assumed Wwise default PriorityDistanceOffset for a node with "Offset
+// priority by ... at max distance" set and no authored value (unconfirmed:
+// Audiokinetic's pages were not reachable; see README).
+export const WWISE_DEFAULT_PRIORITY_DISTANCE_OFFSET = -10;
+
 export const WWISE_OUTPUT_BUS_VOLUME_PROPERTY = 0x0d;
 
 export const WWISE_USER_AUX_VOLUME_PROPERTY = 0x08;

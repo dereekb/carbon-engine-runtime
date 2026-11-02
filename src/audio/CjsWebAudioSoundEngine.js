@@ -2341,7 +2341,25 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
 
                 for (const selection of originalSelections)
                 {
-                    const limit = selection.voiceLimit;
+                    const limits = selection.voiceLimits;
+
+                    if (limits === undefined)
+                    {
+                        selections.push(selection);
+                        continue;
+                    }
+                    if (!Array.isArray(limits))
+                    {
+                        throw new TypeError(
+                            "Resolved SFX voice limit is unsupported",
+                        );
+                    }
+                    // Enforced so far: the per-object cap-one reject-newest
+                    // counter; the other authored counters are admitted.
+                    const limit = limits.find(value =>
+                        value?.scope === "game-object"
+                        && Number(value.maxInstances) === 1
+                        && value.behavior === "reject-newest");
 
                     if (limit === undefined)
                     {
@@ -2350,13 +2368,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
                     }
                     const counterNumber = Number(limit?.counterId);
 
-                    if (!limit
-                        || typeof limit !== "object"
-                        || Array.isArray(limit)
-                        || limit.scope !== "game-object"
-                        || Number(limit.maxInstances) !== 1
-                        || limit.behavior !== "reject-newest"
-                        || !Number.isSafeInteger(counterNumber)
+                    if (!Number.isSafeInteger(counterNumber)
                         || counterNumber <= 0
                         || counterNumber > 0xffffffff
                         || String(counterNumber) !== String(limit.counterId)
@@ -5629,7 +5641,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
 
         if (pendingTransitionDelayMs > 0
             && pendingSelections.some(selection =>
-                selection.voiceLimit !== undefined))
+                selection.voiceLimits !== undefined))
         {
             this._ExhaustSfxProgramSlot(slot);
             return;
@@ -6241,7 +6253,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             this._FailOverlappingSlot(slot);
             return;
         }
-        if (batchSelections[0].voiceLimit !== undefined)
+        if (batchSelections[0].voiceLimits !== undefined)
         {
             transaction?.rollback?.();
             this._FailOverlappingSlot(slot);

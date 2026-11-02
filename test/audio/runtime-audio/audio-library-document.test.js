@@ -1237,12 +1237,13 @@ test("timed silence remains distinct from an empty authored branch", () =>
         authoredBusVolumeDb: -3,
         authoredBusMakeUpGainDb: 2,
         authoredOutputBusVolumeDb: -1,
-        voiceLimit: {
+        voiceLimits: [ {
             counterId: "3",
             scope: "game-object",
             maxInstances: 1,
             behavior: "reject-newest",
-        },
+            onLimit: "kill",
+        } ],
     });
 
     for (const durationMs of [ undefined, 0, -1, Infinity ])
@@ -1434,12 +1435,16 @@ test("Sound cap-one reject-newest policy is normalized and constrained", () =>
     };
     const normalized = normalizeSfxGraph(graph, media);
 
-    assert.deepEqual(normalized.nodes["1"].voiceLimit, {
+    assert.equal(normalized.schemaVersion, 3);
+    assert.equal(normalized.nodes["1"].voiceLimit, undefined);
+    assert.deepEqual(normalized.nodes["1"].voiceLimits, [ {
         counterId: "77",
         scope: "game-object",
         maxInstances: 1,
         behavior: "reject-newest",
-    });
+        onLimit: "kill",
+    } ]);
+    assert.deepEqual(normalizeSfxGraph(normalized, media), normalized);
 
     for (const mutate of [
         value => { value.nodes["1"].voiceLimit.scope = "global"; },
@@ -1447,6 +1452,107 @@ test("Sound cap-one reject-newest policy is normalized and constrained", () =>
         value => { value.nodes["1"].voiceLimit.behavior = "kill-oldest"; },
         value => { value.nodes["1"].voiceLimit.counterId = 0; },
         value => { value.nodes["1"].type = "parallel"; },
+    ])
+    {
+        const invalid = structuredClone(graph);
+
+        mutate(invalid);
+        assert.throws(() => normalizeSfxGraph(invalid, media));
+    }
+});
+
+test("SFX v3 authored playback limits are normalized and constrained", () =>
+{
+    const media = { "100": { resPath: "res:/audio/100.wem" } };
+    const graph = {
+        schemaVersion: 3,
+        events: { capped: [ { nodeId: "1" } ], silent: [ { nodeId: "2" } ] },
+        nodes: {
+            "1": {
+                type: "sound",
+                mediaId: "100",
+                voiceLimits: [ {
+                    counterId: 77,
+                    scope: "game-object",
+                    maxInstances: 2,
+                    behavior: "kill-oldest",
+                    onLimit: "virtual",
+                }, {
+                    counterId: "bus:0012",
+                    scope: "global",
+                    maxInstances: 30,
+                    behavior: "reject-newest",
+                    onLimit: "kill",
+                } ],
+                priority: { value: 60, distanceOffset: -50, dynamic: true },
+                virtualVoice: { belowThreshold: "virtual", onReturn: "resume" },
+            },
+            "2": {
+                type: "timed-silence",
+                durationMs: 100,
+                voiceLimits: [ {
+                    counterId: "2",
+                    scope: "global",
+                    maxInstances: 30,
+                    behavior: "kill-oldest",
+                    onLimit: "kill",
+                } ],
+                priority: { value: 50, distanceOffset: null },
+                virtualVoice: { belowThreshold: "continue", onReturn: "from-beginning" },
+            },
+        },
+    };
+    const normalized = normalizeSfxGraph(graph, media);
+
+    assert.equal(normalized.schemaVersion, 3);
+    assert.deepEqual(normalized.nodes["1"].voiceLimits, [ {
+        counterId: "77",
+        scope: "game-object",
+        maxInstances: 2,
+        behavior: "kill-oldest",
+        onLimit: "virtual",
+    }, {
+        counterId: "bus:12",
+        scope: "global",
+        maxInstances: 30,
+        behavior: "reject-newest",
+        onLimit: "kill",
+    } ]);
+    assert.deepEqual(normalized.nodes["1"].priority, {
+        value: 60,
+        distanceOffset: -50,
+        dynamic: true,
+    });
+    assert.deepEqual(normalized.nodes["1"].virtualVoice, {
+        belowThreshold: "virtual",
+        onReturn: "resume",
+    });
+    assert.deepEqual(normalized.nodes["2"].priority, {
+        value: 50,
+        distanceOffset: null,
+    });
+    assert.deepEqual(normalizeSfxGraph(normalized, media), normalized);
+
+    const limit = value => value.nodes["1"].voiceLimits[0];
+
+    for (const mutate of [
+        value => { limit(value).scope = "everywhere"; },
+        value => { value.nodes["1"].voiceLimits[1].scope = "game-object"; },
+        value => { limit(value).behavior = "kill-quietest"; },
+        value => { limit(value).onLimit = "duck"; },
+        value => { limit(value).maxInstances = 0; },
+        value => { limit(value).maxInstances = 1.5; },
+        value => { limit(value).counterId = 0; },
+        value => { limit(value).counterId = "bus:x"; },
+        value => { value.nodes["1"].voiceLimits[1].counterId = "77"; },
+        value => { value.nodes["1"].voiceLimits = []; },
+        value => { value.nodes["1"].voiceLimit = limit(value); },
+        value => { value.nodes["1"].priority.value = "high"; },
+        value => { value.nodes["1"].priority.dynamic = false; },
+        value => { value.nodes["1"].virtualVoice.onReturn = "rewind"; },
+        value => { delete value.nodes["1"].voiceLimits; },
+        value => { value.schemaVersion = 2; },
+        value => { value.schemaVersion = 4; },
     ])
     {
         const invalid = structuredClone(graph);

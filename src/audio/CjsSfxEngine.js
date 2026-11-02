@@ -1040,9 +1040,22 @@ export class CjsSfxEngine
                 ...(node.sourceEffects === undefined
                     ? {}
                     : { sourceEffects: node.sourceEffects }),
-                ...(node.voiceLimit === undefined
+                // A raw v2 graph's single limit reads as SFX v3's list.
+                ...(node.voiceLimits !== undefined
+                    ? { voiceLimits: node.voiceLimits }
+                    : node.voiceLimit === undefined
+                        ? {}
+                        : {
+                            voiceLimits: [
+                                { ...node.voiceLimit, onLimit: "kill" },
+                            ],
+                        }),
+                ...(node.priority === undefined
                     ? {}
-                    : { voiceLimit: node.voiceLimit }),
+                    : { priority: node.priority }),
+                ...(node.virtualVoice === undefined
+                    ? {}
+                    : { virtualVoice: node.virtualVoice }),
                 gainDb: terms.gainDb,
                 gainCurves: [ ...terms.gainCurves ],
                 ...(rtpcCurves.length ? { rtpcCurves } : {}),

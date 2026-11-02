@@ -40,7 +40,7 @@ graph.
 | Whole build throws | Bus parsing failure; invalid Bus RTPC curve; invalid or unsupported active Bus State definition; missing STMG transition data for a used Bus State group; non-additive STMG filter behavior with Bus State filters; invalid ducking rule; invalid routed Bus effect slot or failed effect parsing; missing or cyclic Bus ancestry on any routed Sound or Music Track; a NodeBase aux-inheritance cycle; unmatched requested language; music bank or music-event failures | `buildFromBanks()` rejects. No partial library is returned. |
 | One event omitted | Any throw while lowering the event: unsupported node, action, form or name; missing target; cycle | Listed in `diagnostics.omittedEvents` with the reason. The event is absent from `events`, `programs` and `eventMedia`. |
 | One event partly kept | The single bounded Crossfade-to-Layer shape (see *Bounded fallback*) | Listed in `diagnostics.approximatedEvents`. |
-| Field omitted | Unqualified `sourceEffects`, `voiceLimit`, leaf `spatial`/`dryVolumeCurve`, NodeBase State group with an unsupported property or accumulation, non-Game-Parameter or non-renderable NodeBase RTPC | Only that field is absent. The node still plays. |
+| Field omitted | Unqualified `sourceEffects`, an RTPC-driven limit counter, delayed `voiceLimits`, leaf `spatial`/`dryVolumeCurve`, NodeBase State group with an unsupported property or accumulation, non-Game-Parameter or non-renderable NodeBase RTPC | Only that field is absent. The node still plays. |
 | Action omitted | Voice Volume, Pitch, or LPF/HPF element target absent from every loaded NodeBase | Dropped as a no-op. The event's other actions remain. |
 
 An event whose only actions are of unknown types produces no program and is
@@ -255,26 +255,60 @@ the record. Any other plug-in, a parse failure, a bypass-all flag on the
 walked path, or invalid slot flags omits the whole chain; the voice plays
 dry.
 
-## Voice limit
+## Playback limits
 
-`CreateSfxSoundVoiceLimitProjection` emits
-`{ scope: "game-object", maxInstances: 1, behavior: "reject-newest" }` only
-when:
+`CreateSfxSoundPlaybackProjection` projects Wwise's authored playback limits
+onto every Sound and timed silence whose NodeBase ancestry reaches a root (no
+missing parent or cycle). Each hierarchy has one owner, by Wwise's
+override-parent pattern:
 
-- the Sound's own packed Advanced Settings flags are `0x09` and its maximum
-  is 1;
-- the NodeBase ancestry reaches a root (no missing parent or cycle);
-- the effective below-threshold behavior is Continue (0). It comes from the
-  first NodeBase that overrides virtual-voice behavior, else the root;
-- no NodeBase on the priority path (up to and including the first priority
-  override) has a Priority randomizer, RTPC or State value;
-- every Bus on the dry path exists, has no static maximum-instance policy,
-  and has no `MaxNumInstances` (53) RTPC.
+- **Node counter.** The owner is the nearest NodeBase at or above the Sound
+  with "ignore parent" (Advanced Settings `0x08`) set, else the root. When its
+  maximum is above 0 and no RTPC drives `MaxNumInstances` (`0x35`) on it:
+  `{ counterId: <owner id>, scope, maxInstances, behavior, onLimit }`.
+  `scope` is `global` when the owner's bit `0x04` is set, else
+  `game-object`; `behavior` is `reject-newest` with "kill newest" (`0x01`),
+  else `kill-oldest`; `onLimit` is `virtual` with "use virtual voice"
+  (`0x02`), else `kill`.
+- **Bus counter.** On the dry output path (output bus first), the owner is
+  the first bus whose policy has "ignore parent" set, else the last (the
+  master). When its maximum is above 0 and it has no `MaxNumInstances` (53)
+  RTPC: `{ counterId: "bus:<id>", scope: "global", ... }` from its policy
+  flags.
+- **`priority`.** The owner is the nearest NodeBase with "override parent",
+  else the root: `{ value: Priority (0x06) ?? 50, distanceOffset }`, where
+  `distanceOffset` is PriorityDistanceOffset (`0x38`) when the owner applies
+  the distance factor (`0x02`), defaulting to -10, else `null`. A
+  randomizer, RTPC or State on `0x06` or `0x38` along the priority path adds
+  `dynamic: true`; the static value is used.
+- **`virtualVoice`.** From the nearest NodeBase overriding virtual-voice
+  behavior (`0x10`), else the root: `{ belowThreshold: "continue" | "kill" |
+  "virtual" | "kill-if-finite-else-virtual", onReturn: "from-beginning" |
+  "from-elapsed" | "resume" }`.
 
-`OmitFutureScheduledVoiceLimits` then removes it from Sounds reachable
-through a positive Play delay (including its randomizer maximum), a positive
-own Initial Delay or Initial Delay RTPC, a Continuous Delay with a positive
-duration, or any Continuous Crossfade.
+The node emits `voiceLimits` (node counter, then bus counter) with
+`priority` and `virtualVoice`, or none of the three when neither hierarchy
+limits it. The below-threshold behavior no longer gates a limit: the browser
+emulates no volume-threshold virtualization for any voice, so a limit whose
+virtual owner says "set as virtual" is still counted (Wwise would also
+virtualize it when quiet).
+
+**Assumptions** (Audiokinetic's Wwise Help pages were not reachable; the
+rules rest on wwiser and EVE's banks): NodeBase bit `0x04` is the "Globally"
+scope (wwiser leaves it unnamed above v89; EVE sets it only on broad,
+high-level limits); bus limits are global; the default Priority is 50 and
+the default PriorityDistanceOffset -10. If a source contradicts these, change
+the projection constants here; the backend reads `scope`, not bits.
+
+`OmitFutureScheduledVoiceLimits` then removes all three fields from Sounds
+and timed silences reachable through a positive Play delay (including its
+randomizer maximum), a positive own Initial Delay or Initial Delay RTPC, a
+Continuous Delay with a positive duration, or any Continuous Crossfade:
+admission happens at selection time, and a limited delayed selection would
+refuse its whole event.
+
+The SFX graph is emitted at `schemaVersion: 3`; the library's top-level
+`schemaVersion` stays 2.
 
 ## Bus catalogs
 

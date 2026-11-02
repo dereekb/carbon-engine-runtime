@@ -12135,6 +12135,7 @@ test("Sound cap reservations cover pending loads and release per game object", a
     scope: "game-object",
     maxInstances: 1,
     behavior: "reject-newest",
+    onLimit: "kill",
   };
   const program = () => [ {
     kind: "play",
@@ -12143,7 +12144,7 @@ test("Sound cap reservations cover pending loads and release per game object", a
       mediaID: "100",
       actionIndex: 0,
       leafIndex: 0,
-      voiceLimit,
+      voiceLimits: [ voiceLimit ],
     } ],
   } ];
   const resultFor = value => ({
@@ -12205,13 +12206,14 @@ test("an immediate authored Stop releases a cap before the next Play action", as
     scope: "game-object",
     maxInstances: 1,
     behavior: "reject-newest",
+    onLimit: "kill",
   };
   const selection = actionIndex => ({
     mediaID: "100",
     actionIndex,
     leafIndex: 0,
     matchIds: [ "77" ],
-    voiceLimit,
+    voiceLimits: [ voiceLimit ],
   });
   const program = [
     { kind: "play", actionIndex: 0, selections: [ selection(0) ] },
@@ -12276,12 +12278,13 @@ test("failed and stopped capped loads release their pending reservations", async
       mediaID: "100",
       actionIndex: 0,
       leafIndex: 0,
-      voiceLimit: {
+      voiceLimits: [ {
         counterId: "88",
         scope: "game-object",
         maxInstances: 1,
         behavior: "reject-newest",
-      },
+        onLimit: "kill",
+      } ],
     } ],
   } ];
   const { emitter, backend } = Harness({
@@ -12327,12 +12330,13 @@ test("custom future-scheduled Sound limits fail closed before acquisition", asyn
         actionIndex: 0,
         leafIndex: 0,
         delayMs: 10,
-        voiceLimit: {
+        voiceLimits: [ {
           counterId: "99",
           scope: "game-object",
           maxInstances: 1,
           behavior: "reject-newest",
-        },
+          onLimit: "kill",
+        } ],
       } ],
     } ],
     loadBuffer: async () =>

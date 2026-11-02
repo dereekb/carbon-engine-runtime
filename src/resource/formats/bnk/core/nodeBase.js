@@ -574,6 +574,31 @@ export function readAux(cursor)
 }
 
 /**
+ * Wwise's below-threshold (virtual voice) behaviors, by their v150 enum value.
+ *
+ * Adapted: named for the portable SFX graph's `virtualVoice.belowThreshold`
+ * (Wwise: ContinueToPlay, KillVoice, SetAsVirtualVoice, KillIfOneShotElseVirtual).
+ */
+export const BELOW_THRESHOLD_BEHAVIORS = Object.freeze([
+    "continue",
+    "kill",
+    "virtual",
+    "kill-if-finite-else-virtual",
+]);
+
+/**
+ * Wwise's virtual-voice return behaviors, by their v150 enum value.
+ *
+ * Adapted: named for the portable SFX graph's `virtualVoice.onReturn`
+ * (Wwise: PlayFromBeginning, PlayFromElapsedTime, Resume).
+ */
+export const VIRTUAL_QUEUE_BEHAVIORS = Object.freeze([
+    "from-beginning",
+    "from-elapsed",
+    "resume",
+]);
+
+/**
  * Reads the NodeBase advanced settings.
  *
  * @param {WwiseCursor} cursor Bounded object cursor at the block.
@@ -597,11 +622,16 @@ function ReadAdvanced(cursor)
         flags,
         killNewest: Boolean(flags & 0x01),
         useVirtualBehavior: Boolean(flags & 0x02),
+        // Unnamed in wwiser above v89. EVE's banks set it only on broad,
+        // high-level limits, which reads as Wwise's "Globally" scope.
+        globalLimit: Boolean(flags & 0x04),
         ignoreParentMaxInstances: Boolean(flags & 0x08),
         overrideVirtualVoiceBehavior: Boolean(flags & 0x10),
         virtualQueueBehavior,
+        virtualQueue: VIRTUAL_QUEUE_BEHAVIORS[virtualQueueBehavior],
         maxInstances,
         belowThresholdBehavior,
+        belowThreshold: BELOW_THRESHOLD_BEHAVIORS[belowThresholdBehavior],
         hdrFlags,
         overrideHdrEnvelope: Boolean(hdrFlags & 0x01),
         overrideAnalysis: Boolean(hdrFlags & 0x02),
