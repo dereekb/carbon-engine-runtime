@@ -1320,7 +1320,7 @@ function LowerSfxGraph({
     const pruned = PruneSfxNodes(events, nodes);
 
     return {
-        schemaVersion: 2,
+        schemaVersion: 3,
         generator: "@carbonenginejs/runtime/audio/library-builder",
         events,
         programs,
@@ -1347,7 +1347,8 @@ function LowerSfxGraph({
 // Playback limiting is evaluated when Wwise starts the pending Sound, not when
 // an earlier delayed action or Crossfade prefetch first selects its media. The
 // browser arbiter currently admits at selection time, so keep those future
-// scheduling shapes out of the otherwise exact cap-one projection.
+// scheduling shapes out of the authored-limit projection (Sounds and timed
+// silences alike: a limited delayed selection would refuse its whole event).
 function OmitFutureScheduledVoiceLimits(events, programs, nodes)
 {
     const visited = new Set();
@@ -1384,7 +1385,7 @@ function OmitFutureScheduledVoiceLimits(events, programs, nodes)
         {
             return;
         }
-        if (node.type === "sound")
+        if (node.type === "sound" || node.type === "timed-silence")
         {
             const maximumRandomDelay = (node.initialDelayRangesMs ?? [])
                 .reduce((sum, range) =>
@@ -1396,7 +1397,9 @@ function OmitFutureScheduledVoiceLimits(events, programs, nodes)
 
             if (risk || ownDelay)
             {
-                delete node.voiceLimit;
+                delete node.voiceLimits;
+                delete node.priority;
+                delete node.virtualVoice;
             }
             return;
         }

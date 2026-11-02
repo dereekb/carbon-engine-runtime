@@ -2,7 +2,7 @@ import { CjsSchema } from "#schema";
 
 // CarbonEngineJS original (no Carbon counterpart).
 import { PARAMETRIC_EQ_PLUGIN_ID, WWISE_DELAY_PLUGIN_ID, WWISE_COMPRESSOR_PLUGIN_ID, WWISE_PEAK_LIMITER_PLUGIN_ID, WWISE_FLANGER_PLUGIN_ID, WWISE_TREMOLO_PLUGIN_ID, WWISE_GUITAR_DISTORTION_PLUGIN_ID, WWISE_MATRIX_REVERB_PLUGIN_ID, WWISE_ROOMVERB_PLUGIN_ID, WWISE_METER_PLUGIN_ID, parseStaticParametricEqBytes, parseStaticWwiseDelayBytes, parseGraphSharedBusEffect, parseStaticWwiseFlangerBytes, parseStaticWwiseTremoloBytes, parseStaticWwiseGuitarDistortionBytes, parseStaticWwiseMatrixReverbBytes, parseStaticWwiseRoomVerbBytes, parseStaticWwiseMeterBytes } from "../internal/busEffects.js";
-import { CjsAudioLibraryBuilderUtils, WWISE_SILENCE_SOURCE_PLUGIN_ID, SFX_INITIAL_DELAY_PROPERTY, SFX_VOLUME_PROPERTY, SFX_PITCH_PROPERTY, SFX_LOW_PASS_PROPERTY, SFX_HIGH_PASS_PROPERTY, SFX_IMMEDIATE_STATE_SYNC, SFX_FILTER_ACCUMULATION, SFX_ADDITIVE_ACCUMULATION, WWISE_PRIORITY_PROPERTY, BUS_MAX_NUM_INSTANCES_RTPC_PROPERTY, WWISE_EXCLUSIVE_ACCUMULATION, WWISE_FILTERING_OVER_TIME_RAMP } from "./CjsAudioLibraryBuilderUtils.js";
+import { CjsAudioLibraryBuilderUtils, WWISE_SILENCE_SOURCE_PLUGIN_ID, SFX_INITIAL_DELAY_PROPERTY, SFX_VOLUME_PROPERTY, SFX_PITCH_PROPERTY, SFX_LOW_PASS_PROPERTY, SFX_HIGH_PASS_PROPERTY, SFX_IMMEDIATE_STATE_SYNC, SFX_FILTER_ACCUMULATION, SFX_ADDITIVE_ACCUMULATION, WWISE_PRIORITY_PROPERTY, WWISE_PRIORITY_DISTANCE_OFFSET_PROPERTY, WWISE_DEFAULT_PRIORITY, WWISE_DEFAULT_PRIORITY_DISTANCE_OFFSET, BUS_MAX_NUM_INSTANCES_RTPC_PROPERTY, WWISE_EXCLUSIVE_ACCUMULATION, WWISE_FILTERING_OVER_TIME_RAMP } from "./CjsAudioLibraryBuilderUtils.js";
 
 /** Owns recursive SFX node lowering, memoized summaries, and synthetic IDs. */
 export class CjsAudioLibraryBuilderSfxNodeLoweringSession
@@ -147,7 +147,7 @@ export class CjsAudioLibraryBuilderSfxNodeLoweringSession
                     this._names,
                 ),
                 source.type === "sound"
-                    ? CreateSfxSoundVoiceLimitProjection(
+                    ? CreateSfxSoundPlaybackProjection(
                         this._ancestry,
                         id,
                         this._buses,
@@ -1771,85 +1771,161 @@ function CreateSfxSoundEffectProjection(ancestry, effects, names, rawId)
     return chain.length ? { sourceEffects: chain } : {};
 }
 
-// Wwise's complete voice arbiter combines hierarchy, bus, project, priority,
-// and virtual-voice policy. Project only the one EVE Sound shape whose local
-// reject-newest result remains determinate after resolving those authored
-// ancestors. Everything broader stays absent from the portable graph.
-function CreateSfxSoundVoiceLimitProjection(ancestry, rawID, buses)
+// Wwise's playback limits, projected for one Sound (or timed silence).
+// Each hierarchy has one owner of the limit, by Wwise's override-parent rule:
+// the nearest NodeBase at or above the Sound with "ignore parent" set, else the
+// root; and the nearest bus on the dry output path with it set, else the
+// master. NodeBase bit 0x04 reads as the "Globally" scope; bus limits are
+// global. Priority belongs to the nearest NodeBase with "override parent",
+// else the root, and the virtual-voice settings to the nearest with
+// "override virtual voice", else the root. A max driven by an RTPC (0x35, or
+// a bus RTPC 53) omits its counter. The below-threshold behavior no longer
+// gates a limit: the browser emulates no volume-threshold virtualization.
+function CreateSfxSoundPlaybackProjection(ancestry, rawID, buses)
 {
     const id = Number(rawID) >>> 0;
     const trace = ancestry.Trace(id);
-    const nodeBase = trace.entries[0]?.nodeBase;
-    const advanced = nodeBase?.advanced;
 
-    if (!nodeBase
-        || advanced?.flags !== 0x09
-        || advanced.maxInstances !== 1
-        || !(buses instanceof Map)
-        || trace.terminal !== "root")
+    if (!trace.entries.length || trace.terminal !== "root")
     {
         return {};
     }
 
     const chain = trace.entries.map(entry => entry.nodeBase);
+    const OwnerIndex = predicate =>
+    {
+        const index = chain.findIndex(predicate);
 
-    const virtualOwner = chain.find(value =>
-        value.advanced?.overrideVirtualVoiceBehavior)
-        ?? chain.at(-1);
+        return index >= 0 ? index : chain.length - 1;
+    };
+    const voiceLimits = [];
+    const nodeIndex = OwnerIndex(value =>
+        value.advanced?.ignoreParentMaxInstances);
+    const nodeOwner = chain[nodeIndex];
+    const advanced = nodeOwner.advanced;
 
-    if (virtualOwner?.advanced?.belowThresholdBehavior !== 0)
+    if (Number(advanced?.maxInstances) > 0
+        && !(nodeOwner.rtpcs ?? []).some(rtpc =>
+            Number(rtpc.parameterId) === BUS_MAX_NUM_INSTANCES_RTPC_PROPERTY))
+    {
+        voiceLimits.push({
+            counterId: String(trace.entries[nodeIndex].id >>> 0),
+            scope: advanced.globalLimit ? "global" : "game-object",
+            maxInstances: Number(advanced.maxInstances),
+            behavior: advanced.killNewest ? "reject-newest" : "kill-oldest",
+            onLimit: advanced.useVirtualBehavior ? "virtual" : "kill",
+        });
+    }
+
+    const busLimit = CreateSfxBusVoiceLimit(ancestry, id, buses);
+
+    if (busLimit)
+    {
+        voiceLimits.push(busLimit);
+    }
+    if (!voiceLimits.length)
     {
         return {};
     }
 
-    const priorityPath = [];
-
-    for (const current of chain)
-    {
-        priorityPath.push(current);
-        if (current.priority?.overrideParent)
-        {
-            break;
-        }
-    }
-    if (priorityPath.some(current =>
-        (current.ranges ?? []).some(range =>
-            Number(range.id) === WWISE_PRIORITY_PROPERTY)
-        || (current.rtpcs ?? []).some(rtpc =>
-            Number(rtpc.parameterId) === WWISE_PRIORITY_PROPERTY)
-        || (current.state?.groups ?? []).some(group =>
-            (group.states ?? []).some(state =>
-                (state.values ?? []).some(value =>
-                    Number(value.propertyId) === WWISE_PRIORITY_PROPERTY)))))
-    {
-        return {};
-    }
-
-    const routing = CjsAudioLibraryBuilderUtils.createSfxBusRouting(ancestry, id, buses);
-
-    if (!routing?.busPathIds?.length
-        || routing.busPathIds.some(rawBusID =>
-        {
-            const bus = buses.get(Number(rawBusID) >>> 0);
-
-            return !bus
-                || Number(bus.policy?.maxInstances) > 0
-                || (bus.rtpcs ?? []).some(rtpc =>
-                    Number(rtpc.parameterId)
-                        === BUS_MAX_NUM_INSTANCES_RTPC_PROPERTY);
-        }))
-    {
-        return {};
-    }
+    const priorityIndex = OwnerIndex(value => value.priority?.overrideParent);
+    const priorityOwner = chain[priorityIndex];
+    const dynamic = chain.slice(0, priorityIndex + 1).some(value =>
+        NodeBaseVariesProperty(value, WWISE_PRIORITY_PROPERTY)
+        || NodeBaseVariesProperty(value, WWISE_PRIORITY_DISTANCE_OFFSET_PROPERTY));
+    const priority = {
+        value: NodeBasePropertyFloat(priorityOwner, WWISE_PRIORITY_PROPERTY)
+            ?? WWISE_DEFAULT_PRIORITY,
+        distanceOffset: priorityOwner.priority?.applyDistanceFactor
+            ? NodeBasePropertyFloat(
+                priorityOwner,
+                WWISE_PRIORITY_DISTANCE_OFFSET_PROPERTY,
+            ) ?? WWISE_DEFAULT_PRIORITY_DISTANCE_OFFSET
+            : null,
+        ...(dynamic ? { dynamic: true } : {}),
+    };
+    const virtualOwner = chain[OwnerIndex(value =>
+        value.advanced?.overrideVirtualVoiceBehavior)].advanced;
 
     return {
-        voiceLimit: {
-            counterId: String(id),
-            scope: "game-object",
-            maxInstances: 1,
-            behavior: "reject-newest",
+        voiceLimits,
+        priority,
+        virtualVoice: {
+            belowThreshold: virtualOwner?.belowThreshold ?? "continue",
+            onReturn: virtualOwner?.virtualQueue ?? "from-beginning",
         },
     };
+}
+
+// The bus counter: the owner is the first bus on the dry path (output bus
+// first) with "ignore parent" set, else the last (the master).
+function CreateSfxBusVoiceLimit(ancestry, id, buses)
+{
+    if (!(buses instanceof Map))
+    {
+        return null;
+    }
+
+    let routing;
+
+    try
+    {
+        routing = CjsAudioLibraryBuilderUtils.createSfxBusRouting(ancestry, id, buses);
+    }
+    catch
+    {
+        return null;
+    }
+
+    const pathIds = routing?.busPathIds ?? [];
+    const path = pathIds.map(rawBusID => buses.get(Number(rawBusID) >>> 0));
+
+    if (!path.length || path.some(bus => !bus))
+    {
+        return null;
+    }
+
+    const found = path.findIndex(bus => bus.policy?.ignoreParentMaxInstances);
+    const index = found >= 0 ? found : path.length - 1;
+    const bus = path[index];
+    const policy = bus.policy;
+
+    if (!(Number(policy?.maxInstances) > 0)
+        || (bus.rtpcs ?? []).some(rtpc =>
+            Number(rtpc.parameterId) === BUS_MAX_NUM_INSTANCES_RTPC_PROPERTY))
+    {
+        return null;
+    }
+    return {
+        counterId: `bus:${Number(pathIds[index]) >>> 0}`,
+        scope: "global",
+        maxInstances: Number(policy.maxInstances),
+        behavior: policy.killNewest ? "reject-newest" : "kill-oldest",
+        onLimit: policy.useVirtualBehavior ? "virtual" : "kill",
+    };
+}
+
+// One NodeBase's authored static float property, or null.
+function NodeBasePropertyFloat(nodeBase, propertyID)
+{
+    const property = (nodeBase.properties ?? []).find(value =>
+        Number(value.id) === propertyID);
+    const value = Number(property?.floatValue);
+
+    return Number.isFinite(value) ? value : null;
+}
+
+// Whether a randomizer, RTPC or state on one NodeBase moves a property.
+function NodeBaseVariesProperty(nodeBase, propertyID)
+{
+    return (nodeBase.ranges ?? []).some(range =>
+        Number(range.id) === propertyID)
+        || (nodeBase.rtpcs ?? []).some(rtpc =>
+            Number(rtpc.parameterId) === propertyID)
+        || (nodeBase.state?.groups ?? []).some(group =>
+            (group.states ?? []).some(state =>
+                (state.values ?? []).some(value =>
+                    Number(value.propertyId) === propertyID)));
 }
 
 function CreateSfxNodeBasePlaybackProjection(

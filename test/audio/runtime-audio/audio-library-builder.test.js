@@ -860,7 +860,7 @@ test("complete library construction reads banks only through the injected loader
         },
     });
 
-    assert.equal(library.sfx.schemaVersion, 2);
+    assert.equal(library.sfx.schemaVersion, 3);
     assert.equal(calls.length, 1);
     assert.equal(calls[0].context.sourceID, "200:0");
     assert.deepEqual(library.eventMedia, {
@@ -2099,7 +2099,7 @@ test("NodeBase playback ancestry stops at the next playable parent", () =>
     assert.equal(result.nodes["201"].gainDb, -3);
 });
 
-test("SFX lowering projects only route-qualified cap-one Sound limits", () =>
+test("SFX lowering projects the owners of authored Sound and bus limits", () =>
 {
     const openBus = {
         overrideBusId: 0,
@@ -2207,29 +2207,60 @@ test("SFX lowering projects only route-qualified cap-one Sound limits", () =>
         ]),
     });
 
-    assert.deepEqual(result.nodes["200"].voiceLimit, {
-        counterId: "200",
+    const counter = (counterId, extra = {}) => ({
+        counterId,
         scope: "game-object",
         maxInstances: 1,
         behavior: "reject-newest",
+        onLimit: "kill",
+        ...extra,
     });
-    assert.equal(result.nodes["201"].voiceLimit, undefined,
-        "inherited virtual behavior is not approximated");
-    assert.equal(result.nodes["202"].voiceLimit, undefined,
-        "an independent bus cap keeps the Sound policy unresolved");
-    assert.equal(result.nodes["203"].voiceLimit, undefined,
-        "randomized Priority keeps the kill-newest choice unresolved");
-    assert.equal(result.nodes["204"].voiceLimit, undefined,
+    const rootDefaults = {
+        priority: { value: 50, distanceOffset: null },
+        virtualVoice: { belowThreshold: "continue", onReturn: "from-beginning" },
+    };
+    const limits = id => ({
+        voiceLimits: result.nodes[id].voiceLimits,
+        priority: result.nodes[id].priority,
+        virtualVoice: result.nodes[id].virtualVoice,
+    });
+
+    assert.deepEqual(limits("200"), {
+        voiceLimits: [ counter("200") ],
+        ...rootDefaults,
+    });
+    assert.deepEqual(limits("201"), {
+        voiceLimits: [ counter("201") ],
+        priority: rootDefaults.priority,
+        virtualVoice: { belowThreshold: "virtual", onReturn: "from-beginning" },
+    }, "an inherited virtual behavior no longer gates the Sound's own limit");
+    assert.deepEqual(limits("202"), {
+        voiceLimits: [ counter("202"), {
+            counterId: "bus:501",
+            scope: "global",
+            maxInstances: 2,
+            behavior: "kill-oldest",
+            onLimit: "kill",
+        } ],
+        ...rootDefaults,
+    }, "the master bus's cap is a second, global counter");
+    assert.deepEqual(limits("203").priority, {
+        value: 50,
+        distanceOffset: null,
+        dynamic: true,
+    }, "a randomized Priority keeps its static value, marked dynamic");
+    assert.equal(result.nodes["204"].voiceLimits, undefined,
         "positive Initial Delay is admitted later than selection time");
-    assert.equal(result.nodes["205"].voiceLimit, undefined,
+    assert.equal(result.nodes["204"].priority, undefined);
+    assert.equal(result.nodes["205"].voiceLimits, undefined,
         "positive Play-action delay is admitted later than selection time");
-    assert.equal(result.nodes["206"].voiceLimit, undefined,
+    assert.equal(result.nodes["206"].voiceLimits, undefined,
         "cyclic NodeBase ancestry cannot qualify an effective policy");
-    assert.equal(result.nodes["207"].voiceLimit, undefined,
+    assert.equal(result.nodes["207"].voiceLimits, undefined,
         "inherited Initial Delay randomizers combine before qualification");
 });
 
-test("Sound limit qualification follows priority, bus, and future scheduling", () =>
+test("Sound limit owners follow virtual overrides, priority, bus, and future scheduling", () =>
 {
     const openBus = {
         overrideBusId: 0,
@@ -2378,29 +2409,181 @@ test("Sound limit qualification follows priority, bus, and future scheduling", (
             [ 511, { ...openBus, overrideBusId: 510 } ],
             [ 520, {
                 ...openBus,
+                policy: { maxInstances: 4 },
                 rtpcs: [ { parameterId: 53 } ],
             } ],
         ]),
     });
 
-    assert.deepEqual(result.nodes["200"].voiceLimit, {
-        counterId: "200",
+    const own = id => ({
+        counterId: id,
         scope: "game-object",
         maxInstances: 1,
         behavior: "reject-newest",
+        onLimit: "kill",
+    });
+    const dynamic = { value: 50, distanceOffset: null, dynamic: true };
+
+    assert.deepEqual(result.nodes["200"].voiceLimits, [ own("200") ]);
+    assert.deepEqual(result.nodes["200"].virtualVoice, {
+        belowThreshold: "continue",
+        onReturn: "from-beginning",
     }, "the nearest virtual override wins over a more distant ancestor");
-    assert.equal(result.nodes["201"].voiceLimit, undefined,
-        "Priority RTPCs keep reject-newest arbitration unresolved");
-    assert.equal(result.nodes["202"].voiceLimit, undefined,
-        "Priority State mutations keep reject-newest arbitration unresolved");
-    assert.equal(result.nodes["203"].voiceLimit, undefined,
-        "an ancestor Audio Bus cap keeps Sound admission unresolved");
-    assert.equal(result.nodes["204"].voiceLimit, undefined,
-        "a MaxNumInstances RTPC keeps Sound admission unresolved");
-    assert.equal(result.nodes["205"].voiceLimit, undefined,
+    assert.deepEqual(result.nodes["201"].voiceLimits, [ own("201") ]);
+    assert.deepEqual(result.nodes["201"].priority, dynamic,
+        "a Priority RTPC marks the static priority dynamic");
+    assert.deepEqual(result.nodes["202"].priority, dynamic,
+        "a Priority State mutation marks the static priority dynamic");
+    assert.deepEqual(result.nodes["203"].voiceLimits, [ own("203"), {
+        counterId: "bus:510",
+        scope: "global",
+        maxInstances: 2,
+        behavior: "kill-oldest",
+        onLimit: "kill",
+    } ], "without ignore-parent the last bus on the path owns the cap");
+    assert.deepEqual(result.nodes["204"].voiceLimits, [ own("204") ],
+        "a MaxNumInstances RTPC omits the bus counter");
+    assert.equal(result.nodes["205"].voiceLimits, undefined,
         "Continuous Delay admits the Sound at a future boundary");
-    assert.equal(result.nodes["206"].voiceLimit, undefined,
+    assert.equal(result.nodes["206"].voiceLimits, undefined,
         "Continuous Crossfade prefetches before Sound admission");
+    assert.equal(result.nodes["206"].priority, undefined);
+    assert.equal(result.nodes["206"].virtualVoice, undefined);
+});
+
+test("authored limits take ancestor, global, priority-offset and bus owners", () =>
+{
+    const openBus = {
+        overrideBusId: 0,
+        policy: { maxInstances: 0 },
+        rtpcs: [],
+        busVolume: null,
+        makeUpGain: null,
+    };
+    const sound = (id, directParentId, overrideBusId, options = {}) => ({
+        type: 2,
+        id,
+        pluginId: 0x00040001,
+        pluginType: 1,
+        streamType: 0,
+        sourceId: 9001,
+        inMemoryMediaSize: 64,
+        payload: soundPayload({ directParentId, overrideBusId, ...options }),
+    });
+    const result = CjsAudioLibraryBuilder.createSfxGraph({
+        inspections: [ {
+            source: "common.bnk",
+            bankVersion: 150,
+            hirc: [
+                {
+                    type: 7,
+                    id: 160,
+                    payload: actorMixerPayload({
+                        advancedFlags: 0x0c,
+                        maxInstances: 30,
+                        virtualQueueBehavior: 2,
+                        belowThresholdBehavior: 3,
+                        priorityFlags: 0x03,
+                        properties: [
+                            { id: 0x06, value: 70 },
+                            { id: 0x38, value: -50 },
+                        ],
+                        children: [ 210, 212, 161 ],
+                    }),
+                },
+                {
+                    type: 7,
+                    id: 161,
+                    payload: actorMixerPayload({
+                        directParentId: 160,
+                        priorityFlags: 0x03,
+                        properties: [ { id: 0x06, value: 80 } ],
+                        children: [ 211 ],
+                    }),
+                },
+                sound(210, 160, 600),
+                sound(211, 161, 600, { advancedFlags: 0x0a, maxInstances: 2 }),
+                sound(212, 160, 610, { advancedFlags: 0x08 }),
+                sound(213, 0, 600),
+                ...[ 210, 211, 212, 213 ].map((targetId, index) => ({
+                    type: 3,
+                    id: 320 + index,
+                    actionType: 0x0403,
+                    targetId,
+                    payload: new Uint8Array(),
+                })),
+                {
+                    type: 4,
+                    id: 101,
+                    actionIds: [ 320, 321, 322, 323 ],
+                    payload: new Uint8Array(),
+                },
+            ],
+        } ],
+        metadata: {
+            Events: { owned_limits: { eventID: 101 } },
+        },
+        media: {
+            "9001": { resPath: "res:/audio/9001.wem" },
+        },
+        buses: new Map([
+            [ 600, openBus ],
+            [ 610, {
+                ...openBus,
+                overrideBusId: 611,
+                policy: {
+                    ignoreParentMaxInstances: true,
+                    killNewest: true,
+                    useVirtualBehavior: true,
+                    maxInstances: 3,
+                },
+            } ],
+            [ 611, { ...openBus, policy: { maxInstances: 5 } } ],
+        ]),
+    });
+    const ancestorVirtual = {
+        belowThreshold: "kill-if-finite-else-virtual",
+        onReturn: "resume",
+    };
+
+    assert.deepEqual(result.nodes["210"].voiceLimits, [ {
+        counterId: "160",
+        scope: "global",
+        maxInstances: 30,
+        behavior: "kill-oldest",
+        onLimit: "kill",
+    } ], "the nearest ignore-parent ancestor owns a global limit");
+    assert.deepEqual(result.nodes["210"].priority, {
+        value: 70,
+        distanceOffset: -50,
+    });
+    assert.deepEqual(result.nodes["210"].virtualVoice, ancestorVirtual,
+        "with no override the root's virtual-voice settings apply");
+    assert.deepEqual(result.nodes["211"].voiceLimits, [ {
+        counterId: "211",
+        scope: "game-object",
+        maxInstances: 2,
+        behavior: "kill-oldest",
+        onLimit: "virtual",
+    } ]);
+    assert.deepEqual(result.nodes["211"].priority, {
+        value: 80,
+        distanceOffset: -10,
+    }, "the nearest priority override owns it; the offset defaults to -10");
+    assert.deepEqual(result.nodes["212"].voiceLimits, [ {
+        counterId: "bus:610",
+        scope: "global",
+        maxInstances: 3,
+        behavior: "reject-newest",
+        onLimit: "virtual",
+    } ], "a max-0 owner gives no node counter; an ignore-parent bus owns");
+    assert.deepEqual(result.nodes["212"].priority, {
+        value: 70,
+        distanceOffset: -50,
+    });
+    assert.equal(result.nodes["213"].voiceLimits, undefined);
+    assert.equal(result.nodes["213"].priority, undefined);
+    assert.equal(result.nodes["213"].virtualVoice, undefined);
 });
 
 test("SFX lowering projects only wholly supported Immediate state properties", () =>

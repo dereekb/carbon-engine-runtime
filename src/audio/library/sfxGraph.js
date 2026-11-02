@@ -1,7 +1,23 @@
 import { coerceFiniteNumber, coerceNonNegativeInteger, coercePositiveInteger } from "#utils/validation";
 import { normalizeStaticSourceEffectChain } from "../internal/busEffects.js";
 
-const SFX_SCHEMA_VERSION = 2;
+const SFX_SCHEMA_VERSION = 3;
+// Read and normalized to v3: a v2 `voiceLimit` becomes `voiceLimits` (kill).
+const SFX_LEGACY_SCHEMA_VERSION = 2;
+const SFX_VOICE_LIMIT_SCOPES = new Set([ "game-object", "global" ]);
+const SFX_VOICE_LIMIT_BEHAVIORS = new Set([ "reject-newest", "kill-oldest" ]);
+const SFX_VOICE_LIMIT_OUTCOMES = new Set([ "kill", "virtual" ]);
+const SFX_BELOW_THRESHOLD_BEHAVIORS = new Set([
+    "continue",
+    "kill",
+    "virtual",
+    "kill-if-finite-else-virtual",
+]);
+const SFX_VIRTUAL_RETURN_BEHAVIORS = new Set([
+    "from-beginning",
+    "from-elapsed",
+    "resume",
+]);
 
 /**
  * Portable authored SFX program (`sfx` in the audio-library document),
@@ -22,7 +38,13 @@ const SFX_SCHEMA_VERSION = 2;
  *   `embeddedMedia`. Optional `loop` (boolean, not with `playCount`),
  *   `playCount` (finite repeat count), `playbackRate`, `spatial` (panner
  *   vs flat SFX route), `dryVolumeCurve` (Wwise distance gain),
- *   `sourceEffects` (one complete static effect chain), `voiceLimit`.
+ *   `sourceEffects` (one complete static effect chain), and the authored
+ *   playback limits: `voiceLimits` (counters `{ counterId, scope:
+ *   "game-object"|"global", maxInstances, behavior: "reject-newest"|
+ *   "kill-oldest", onLimit: "kill"|"virtual" }`; a bus counter's id is
+ *   `bus:<id>`, always global), with `priority` (`{ value, distanceOffset,
+ *   dynamic? }`) and `virtualVoice` (`{ belowThreshold, onReturn }`). Also on
+ *   `timed-silence`. A v2 graph's single `voiceLimit` reads as `voiceLimits`.
  * - `timed-silence`: one finite silent voice of `durationMs` that takes part
  *   in routing, Stop matching and completion without acquiring media.
  * - `silence`: no voice; keeps an authored empty case from falling through.
@@ -65,7 +87,7 @@ const SFX_SCHEMA_VERSION = 2;
  * `weight` is allowed only under `random`.
  *
  * @typedef {object} CjsSfxGraph
- * @property {2} schemaVersion
+ * @property {3} schemaVersion Version 2 is still read.
  * @property {Object<string, Array<object|string>>} events Non-empty root
  *   edges per event.
  * @property {Object<string, Array<object>>} [programs] Non-empty ordered
@@ -148,7 +170,8 @@ export function validateSfxGraph(
 {
     RequireRecord(graph, "Audio library SFX graph");
 
-    if (graph.schemaVersion !== SFX_SCHEMA_VERSION)
+    if (graph.schemaVersion !== SFX_SCHEMA_VERSION
+        && graph.schemaVersion !== SFX_LEGACY_SCHEMA_VERSION)
     {
         throw new TypeError(
             `Unsupported audio SFX schema version: ${graph.schemaVersion}`,
@@ -196,8 +219,8 @@ export function validateSfxGraph(
             node,
             `Audio library SFX node ${id}`,
         );
-        ValidateVoiceLimit(node.voiceLimit, node,
-            `Audio library SFX node ${id} voiceLimit`);
+        ValidatePlaybackLimits(node, graph.schemaVersion,
+            `Audio library SFX node ${id}`);
         ValidateRtpcCurves(
             node.rtpcCurves,
             `Audio library SFX node ${id} rtpcCurves`,
@@ -680,7 +703,7 @@ function NormalizeNode(node)
         type: node.type,
         ...NormalizeGain(node),
         ...NormalizeNodePlaybackProperties(node),
-        ...NormalizeVoiceLimit(node.voiceLimit),
+        ...NormalizePlaybackLimits(node),
         ...NormalizeRtpcCurves(node),
         ...NormalizeStateProperties(node),
     };
@@ -1153,19 +1176,63 @@ function NormalizeNodePlaybackProperties(value)
     return result;
 }
 
-function NormalizeVoiceLimit(value)
+function NormalizePlaybackLimits(node)
 {
-    if (value === undefined)
+    if (node.voiceLimit !== undefined)
+    {
+        return {
+            voiceLimits: [ {
+                ...NormalizeVoiceLimitCounter(node.voiceLimit),
+                onLimit: "kill",
+            } ],
+        };
+    }
+    if (node.voiceLimits === undefined)
     {
         return {};
     }
+
+    const priority = node.priority;
+    const virtualVoice = node.virtualVoice;
+
     return {
-        voiceLimit: {
-            counterId: String(Number(value.counterId) >>> 0),
-            scope: value.scope,
-            maxInstances: Number(value.maxInstances),
-            behavior: value.behavior,
-        },
+        voiceLimits: node.voiceLimits.map(limit => ({
+            ...NormalizeVoiceLimitCounter(limit),
+            onLimit: limit.onLimit,
+        })),
+        ...(priority === undefined
+            ? {}
+            : {
+                priority: {
+                    value: Number(priority.value),
+                    distanceOffset: priority.distanceOffset === null
+                        ? null
+                        : Number(priority.distanceOffset),
+                    ...(priority.dynamic === true ? { dynamic: true } : {}),
+                },
+            }),
+        ...(virtualVoice === undefined
+            ? {}
+            : {
+                virtualVoice: {
+                    belowThreshold: virtualVoice.belowThreshold,
+                    onReturn: virtualVoice.onReturn,
+                },
+            }),
+    };
+}
+
+function NormalizeVoiceLimitCounter(value)
+{
+    const counterId = String(value.counterId);
+
+    return {
+        counterId: counterId.startsWith("bus:")
+            ? `bus:${Number(counterId.slice(4)) >>> 0}`
+            : String(Number(counterId) >>> 0),
+        scope: value.scope,
+        maxInstances: Number(value.maxInstances),
+        behavior: value.behavior,
     };
 }
 
@@ -2917,20 +2984,146 @@ function ValidatePhysicalLeafIdentity(node, id, label)
     }
 }
 
-function ValidateVoiceLimit(value, node, label)
+function ValidatePlaybackLimits(node, schemaVersion, label)
 {
-    if (value === undefined)
+    const limited = node.voiceLimit !== undefined
+        || node.voiceLimits !== undefined;
+
+    if (!limited)
     {
+        if (node.priority !== undefined || node.virtualVoice !== undefined)
+        {
+            throw new TypeError(
+                `${label} priority and virtualVoice require voiceLimits`,
+            );
+        }
         return;
     }
-    const limit = RequireRecord(value, label);
-
     if (node.type !== "sound" && node.type !== "timed-silence")
     {
         throw new TypeError(
-            `${label} is supported only on sound or timed-silence nodes`,
+            `${label} playback limits are supported only on sound or timed-silence nodes`,
         );
     }
+    if (schemaVersion === SFX_LEGACY_SCHEMA_VERSION)
+    {
+        ValidateLegacyVoiceLimit(node, `${label} voiceLimit`);
+        return;
+    }
+    if (node.voiceLimit !== undefined)
+    {
+        throw new TypeError(
+            `${label} voiceLimit is v2; schema version 3 uses voiceLimits`,
+        );
+    }
+    if (!Array.isArray(node.voiceLimits) || !node.voiceLimits.length)
+    {
+        throw new TypeError(`${label} voiceLimits must be a non-empty array`);
+    }
+
+    const counters = new Set();
+
+    node.voiceLimits.forEach((value, index) =>
+    {
+        const limitLabel = `${label} voiceLimits[${index}]`;
+        const limit = RequireRecord(value, limitLabel);
+        const counterId = ValidateVoiceLimitCounterId(
+            limit.counterId,
+            `${limitLabel} counterId`,
+        );
+
+        if (counters.has(counterId))
+        {
+            throw new TypeError(`${limitLabel} repeats counter ${counterId}`);
+        }
+        counters.add(counterId);
+        if (!SFX_VOICE_LIMIT_SCOPES.has(limit.scope)
+            || (counterId.startsWith("bus:") && limit.scope !== "global"))
+        {
+            throw new TypeError(
+                `${limitLabel} scope must be game-object or global (bus counters are global)`,
+            );
+        }
+
+        const maximum = Number(limit.maxInstances);
+
+        if (typeof limit.maxInstances !== "number"
+            || !Number.isInteger(maximum)
+            || maximum < 1
+            || maximum > 0xffff)
+        {
+            throw new TypeError(
+                `${limitLabel} maxInstances must be an integer 1..65535`,
+            );
+        }
+        if (!SFX_VOICE_LIMIT_BEHAVIORS.has(limit.behavior))
+        {
+            throw new TypeError(
+                `${limitLabel} behavior must be reject-newest or kill-oldest`,
+            );
+        }
+        if (!SFX_VOICE_LIMIT_OUTCOMES.has(limit.onLimit))
+        {
+            throw new TypeError(`${limitLabel} onLimit must be kill or virtual`);
+        }
+    });
+    if (node.priority !== undefined)
+    {
+        const priority = RequireRecord(node.priority, `${label} priority`);
+
+        if (typeof priority.value !== "number"
+            || !Number.isFinite(priority.value)
+            || (priority.distanceOffset !== null
+                && (typeof priority.distanceOffset !== "number"
+                    || !Number.isFinite(priority.distanceOffset)))
+            || (priority.dynamic !== undefined && priority.dynamic !== true))
+        {
+            throw new TypeError(
+                `${label} priority must be { value, distanceOffset: number|null, dynamic?: true }`,
+            );
+        }
+    }
+    if (node.virtualVoice !== undefined)
+    {
+        const virtualVoice = RequireRecord(
+            node.virtualVoice,
+            `${label} virtualVoice`,
+        );
+
+        if (!SFX_BELOW_THRESHOLD_BEHAVIORS.has(virtualVoice.belowThreshold)
+            || !SFX_VIRTUAL_RETURN_BEHAVIORS.has(virtualVoice.onReturn))
+        {
+            throw new TypeError(
+                `${label} virtualVoice has an unknown belowThreshold or onReturn`,
+            );
+        }
+    }
+}
+
+function ValidateVoiceLimitCounterId(value, label)
+{
+    if (typeof value === "string" && value.startsWith("bus:"))
+    {
+        NormalizePositiveID(value.slice(4), label);
+        return `bus:${Number(value.slice(4)) >>> 0}`;
+    }
+    NormalizePositiveID(value, label);
+    return String(Number(value) >>> 0);
+}
+
+function ValidateLegacyVoiceLimit(node, label)
+{
+    if (node.voiceLimits !== undefined
+        || node.priority !== undefined
+        || node.virtualVoice !== undefined)
+    {
+        throw new TypeError(
+            `${label}: voiceLimits, priority and virtualVoice need schema version 3`,
+        );
+    }
+
+    const limit = RequireRecord(node.voiceLimit, label);
+
     NormalizePositiveID(limit.counterId, `${label} counterId`);
     if (limit.scope !== "game-object"
         || Number(limit.maxInstances) !== 1

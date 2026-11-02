@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
 import { readWwiseVar } from "../../../../../src/resource/formats/bnk/core/helpers.js";
+import { BELOW_THRESHOLD_BEHAVIORS, VIRTUAL_QUEUE_BEHAVIORS } from "../../../../../src/resource/formats/bnk/core/nodeBase.js";
 
 const SOUND_A = 1001;
 const SOUND_B = 1002;
@@ -304,9 +305,13 @@ test("consumes v150 NodeBase positioning automation exactly", () =>
     );
 });
 
-test("keeps alignment through nonempty v150 NodeBase branches", () =>
+function BranchActorBytes({
+    advancedFlags = 0x1b,
+    virtualQueue = 2,
+    belowThreshold = 3,
+} = {})
 {
-    const actor = new Writer()
+    return new Writer()
         .u8(1).u8(1).u8(1)
         .u8(2).u32(100).u8(0x07)
         .u8(1).u8(1)
@@ -320,7 +325,7 @@ test("keeps alignment through nonempty v150 NodeBase branches", () =>
         .u8(0x1c)
         .u32(1).u32(2).u32(3).u32(4)
         .u32(5)
-        .u8(0x1b).u8(2).u16(4).u8(3).u8(0x0f)
+        .u8(advancedFlags).u8(virtualQueue).u16(4).u8(belowThreshold).u8(0x0f)
         .variable(1)
         .variable(130).u8(2).u8(1)
         .variable(1)
@@ -332,6 +337,11 @@ test("keeps alignment through nonempty v150 NodeBase branches", () =>
         .point(0, 1, 4)
         .u32(0)
         .bytes();
+}
+
+test("keeps alignment through nonempty v150 NodeBase branches", () =>
+{
+    const actor = BranchActorBytes();
     const parsed = CjsBnkFormat.wwise.parseSfxActorMixer(actor, {
         bankVersion: 150,
     });
@@ -360,6 +370,10 @@ test("keeps alignment through nonempty v150 NodeBase branches", () =>
     assert.equal(base.aux.reflectionsAuxBusId, 5);
     assert.equal(base.advanced.maxInstances, 4);
     assert.equal(base.advanced.normalizeLoudness, true);
+    assert.equal(base.advanced.globalLimit, false);
+    assert.equal(base.advanced.ignoreParentMaxInstances, true);
+    assert.equal(base.advanced.virtualQueue, "resume");
+    assert.equal(base.advanced.belowThreshold, "kill-if-finite-else-virtual");
     assert.equal(base.state.properties[0].propertyId, 130);
     assert.deepEqual(base.state.groups[0].states[0].values, [
         {
@@ -373,6 +387,36 @@ test("keeps alignment through nonempty v150 NodeBase branches", () =>
         to: 1,
         interpolation: 4,
     });
+});
+
+test("decodes the v150 advanced scope bit and names the voice enums", () =>
+{
+    const parsed = CjsBnkFormat.wwise.parseSfxActorMixer(BranchActorBytes({
+        advancedFlags: 0x0d,
+        virtualQueue: 1,
+        belowThreshold: 2,
+    }), { bankVersion: 150 });
+    const advanced = parsed.nodeBase.advanced;
+
+    assert.equal(advanced.flags, 0x0d);
+    assert.equal(advanced.killNewest, true);
+    assert.equal(advanced.useVirtualBehavior, false);
+    assert.equal(advanced.globalLimit, true);
+    assert.equal(advanced.ignoreParentMaxInstances, true);
+    assert.equal(advanced.overrideVirtualVoiceBehavior, false);
+    assert.equal(advanced.virtualQueue, "from-elapsed");
+    assert.equal(advanced.belowThreshold, "virtual");
+    assert.deepEqual(BELOW_THRESHOLD_BEHAVIORS, [
+        "continue",
+        "kill",
+        "virtual",
+        "kill-if-finite-else-virtual",
+    ]);
+    assert.deepEqual(VIRTUAL_QUEUE_BEHAVIORS, [
+        "from-beginning",
+        "from-elapsed",
+        "resume",
+    ]);
 });
 
 test("skips v150 source-plugin parameters before a Sound NodeBase", () =>

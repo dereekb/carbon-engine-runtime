@@ -126,9 +126,13 @@ and new voices join it. State names and numeric IDs resolve to one canonical
 value when the transition catalog names them. An unset group or a State with
 no authored case contributes 0.
 
-**Voice limits.** A `voiceLimit` reserves its counter per game object when the
-Play resolves, before media loads; a second selection of the same counter on
-that object is rejected without loading media. Cancellation, failed loading,
+**Voice limits.** A selection's `voiceLimits` (SFX v3; a v2 `voiceLimit`
+reads as a one-counter list) are checked when the Play resolves, before media
+loads. Enforced today: a per-object max-1 reject-newest counter reserves per
+game object, and a second selection of the same counter on that object is
+rejected without loading media. Other authored counters (higher maxima,
+kill-oldest, global and bus counters) are admitted unenforced until the
+backend arbiter applies them. Cancellation, failed loading,
 Stop and natural completion release the reservation. A limited selection with
 a positive delay throws, so a limit is never reserved early.
 

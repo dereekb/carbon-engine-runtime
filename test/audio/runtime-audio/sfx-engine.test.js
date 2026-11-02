@@ -7,10 +7,10 @@ import {
 } from "../../../npm/dist/audio/internal/wwiseCurve.js";
 import { SfxControlsWith } from "../../support/audioStub.js";
 
-function Graph(events, nodes)
+function Graph(events, nodes, schemaVersion = 2)
 {
     return {
-        schemaVersion: 2,
+        schemaVersion,
         events,
         nodes,
     };
@@ -102,23 +102,33 @@ test("timed silence resolves as a finite physical selection", () =>
     assert.equal(selection.delayMs, 10500);
     assert.equal(selection.loop, false);
     assert.deepEqual(selection.matchIds, [ "1", "2" ]);
-    assert.deepEqual(selection.voiceLimit, {
+    assert.deepEqual(selection.voiceLimits, [ {
         counterId: "2",
         scope: "game-object",
         maxInstances: 1,
         behavior: "reject-newest",
-    });
+        onLimit: "kill",
+    } ]);
     assert.equal(selection.mediaID, undefined);
 });
 
 test("Sound voice-limit policy reaches every resolved physical selection", () =>
 {
-    const voiceLimit = {
+    const voiceLimits = [ {
         counterId: "77",
         scope: "game-object",
-        maxInstances: 1,
-        behavior: "reject-newest",
-    };
+        maxInstances: 2,
+        behavior: "kill-oldest",
+        onLimit: "virtual",
+    }, {
+        counterId: "bus:9",
+        scope: "global",
+        maxInstances: 30,
+        behavior: "kill-oldest",
+        onLimit: "kill",
+    } ];
+    const priority = { value: 60, distanceOffset: -50 };
+    const virtualVoice = { belowThreshold: "virtual", onReturn: "resume" };
     const engine = new CjsSfxEngine({
         graph: Graph(
             { capped: [ { nodeId: "1" } ] },
@@ -126,16 +136,19 @@ test("Sound voice-limit policy reaches every resolved physical selection", () =>
                 "1": {
                     type: "sound",
                     mediaId: "100",
-                    voiceLimit,
+                    voiceLimits,
+                    priority,
+                    virtualVoice,
                 },
             },
+            3,
         ),
     });
+    const selection = engine.ResolveEvent("capped", SfxControlsWith())[0];
 
-    assert.deepEqual(
-        engine.ResolveEvent("capped", SfxControlsWith())[0].voiceLimit,
-        voiceLimit,
-    );
+    assert.deepEqual(selection.voiceLimits, voiceLimits);
+    assert.deepEqual(selection.priority, priority);
+    assert.deepEqual(selection.virtualVoice, virtualVoice);
 });
 
 test("authored relative volume and pitch clamp after hierarchy accumulation", () =>
