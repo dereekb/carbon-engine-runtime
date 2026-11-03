@@ -72,35 +72,17 @@ export class EveBoosterSet2 extends EveEntity
   @type.float32
   staticTrailLength = 0;
 
-  /** m_trailsStaticOffsets[0] (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.vec3
-  trailsStaticOffsets0 = vec3.create();
-
-  /** m_trailsStaticOffsets[1] (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.vec3
-  trailsStaticOffsets1 = vec3.create();
-
-  /** m_trailsStaticOffsets[2] (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.vec3
-  trailsStaticOffsets2 = vec3.create();
-
-  /** m_trailsStaticOffsets[3] (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.vec3
-  trailsStaticOffsets3 = vec3.create();
-
-  /** m_trailsStaticOffsets[4] (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.vec3
-  trailsStaticOffsets4 = vec3.create();
+  /**
+   * m_trailsStaticOffsets[EVE_MAX_CONTROL_POINT_COUNT] (Vector3[5], private, EveBoosterSet2.h:340): the static trail control
+   * offsets. Carbon maps each element under its own name (EveBoosterSet2_Blue.cpp:136-140).
+   */
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "trailsStaticOffsets0", 0)
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "trailsStaticOffsets1", 1)
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "trailsStaticOffsets2", 2)
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "trailsStaticOffsets3", 3)
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "trailsStaticOffsets4", 4)
+  @type.array({ kind: "vec3" })
+  _trailsStaticOffsets = [ vec3.create(), vec3.create(), vec3.create(), vec3.create(), vec3.create() ];
 
   /** m_lightOffset (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -1157,13 +1139,7 @@ export class EveBoosterSet2 extends EveEntity
   static _UpdateStaticTrailOffsets(owner)
   {
     const step = owner.staticTrailLength / 4;
-    const offsets = [
-      owner.trailsStaticOffsets0,
-      owner.trailsStaticOffsets1,
-      owner.trailsStaticOffsets2,
-      owner.trailsStaticOffsets3,
-      owner.trailsStaticOffsets4
-    ];
+    const offsets = owner._trailsStaticOffsets;
     for (let index = 0; index < offsets.length; index++)
     {
       vec3.set(offsets[index], 0, 0, -step * index);

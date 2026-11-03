@@ -118,8 +118,8 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   assertVecNear(trails.GetTrailData()[0].transform.slice(12, 15), [10, 20, 29.5]);
 
   CjsSchema.setValues(boosters, { staticTrailLength: 40 });
-  assertVecNear(boosters.trailsStaticOffsets0, [0, 0, 0]);
-  assertVecNear(boosters.trailsStaticOffsets4, [0, 0, -40]);
+  assertVecNear(boosters._trailsStaticOffsets[0], [0, 0, 0]);
+  assertVecNear(boosters._trailsStaticOffsets[4], [0, 0, -40]);
   CjsSchema.setValues(boosters, { glowScale: 2.5 });
   assert.equal(glows.sprites.length, 6);
 
@@ -157,6 +157,9 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   assert.equal(restored.maxSize, boosters.maxSize);
   assertVecNear(restored._boosterBoundingSphere.subarray(0, 3), boosters._boosterBoundingSphere.subarray(0, 3));
   assert.equal(restored._boosterBoundingSphere[3], boosters._boosterBoundingSphere[3]);
+  // m_trailsStaticOffsets is one array; each element persists under its own name (EveBoosterSet2_Blue.cpp:136-140).
+  assert.deepEqual(Object.keys(values).filter(key => key.startsWith("trailsStaticOffsets")), [ "trailsStaticOffsets0", "trailsStaticOffsets1", "trailsStaticOffsets2", "trailsStaticOffsets3", "trailsStaticOffsets4" ]);
+  for (let index = 0; index < 5; index++) assertVecNear(restored._trailsStaticOffsets[index], boosters._trailsStaticOffsets[index]);
 
   boosters.Clear();
   assert.deepEqual(boosters.GetBoosterData(), []);
@@ -436,12 +439,12 @@ test("EveBoosterSet2.UpdateVisibility gates on display and reports glow visibili
 test("static trail offsets are rebuilt only while glows are attached", () =>
 {
   const boosters = new EveBoosterSet2();
-  const before = Array.from(boosters.trailsStaticOffsets4);
+  const before = Array.from(boosters._trailsStaticOffsets[4]);
   CjsSchema.setValues(boosters, { staticTrailLength: 40 });
-  assert.deepEqual(Array.from(boosters.trailsStaticOffsets4), before);
+  assert.deepEqual(Array.from(boosters._trailsStaticOffsets[4]), before);
   boosters.SetGlow(new EveSpriteSet());
   CjsSchema.setValues(boosters, { staticTrailLength: 80 });
-  assert.notDeepEqual(Array.from(boosters.trailsStaticOffsets4), before);
+  assert.notDeepEqual(Array.from(boosters._trailsStaticOffsets[4]), before);
 });
 
 

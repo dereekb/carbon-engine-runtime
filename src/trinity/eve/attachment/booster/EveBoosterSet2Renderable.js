@@ -845,13 +845,8 @@ export class EveBoosterSet2Renderable
    */
   static _GetStaticOffsets(boosterSet)
   {
-    return [
-      boosterSet.trailsStaticOffsets0,
-      boosterSet.trailsStaticOffsets1,
-      boosterSet.trailsStaticOffsets2,
-      boosterSet.trailsStaticOffsets3,
-      boosterSet.trailsStaticOffsets4
-    ];
+    // The set's private array, as Carbon reads m_boosterSet->m_trailsStaticOffsets.
+    return boosterSet._trailsStaticOffsets;
   }
 
   /**
