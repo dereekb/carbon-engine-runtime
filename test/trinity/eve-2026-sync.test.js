@@ -755,7 +755,7 @@ test("Carbon bounding-box providers publish local, world, mesh, and planet bound
   const effect = new EveEffectRoot2();
   assert.equal(CjsSchema.cast(effect, ITr2BoundingBox) !== null, true);
   vec3.set(effect.boundingSphereCenter, 1, 2, 3);
-  effect.boundingSphereRadius = 2;
+  effect._boundingSphere[3] = 2;
   vec3.set(effect.translation, 10, 0, 0);
   effect.UpdateSyncronous(UpdateContext({ time: 0 }));
   assert.equal(effect.GetLocalBoundingBox(min, max), true);

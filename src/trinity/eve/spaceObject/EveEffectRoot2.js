@@ -20,7 +20,7 @@ import { quat } from "#math/quat";
 import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IsMatch } from "#blue";
 import { ITr2LightOwner } from "../lights/ITr2LightOwner.js";
 import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
@@ -174,21 +174,41 @@ export class EveEffectRoot2 extends EveEntity
   secondaryLightingSphereRadius = 0.5;
 
   /**
-   * m_boundingSphere.xyz, exposed by Carbon's MAPFLOATARRAYSIZE Blue mapping.
-   *
-   * @adapted The schema scanner omits MAPFLOATARRAYSIZE; Carbon exposes the three persisted
-   *   center components separately from radius.
+   * m_boundingSphere (Vector4, private, EveEffectRoot2.h:186): the effect's minimum bounding sphere in local coordinates, centre
+   * in xyz and radius in w. The radius is exposed as its w (EveEffectRoot2_Blue.cpp:91); the centre through boundingSphereCenter.
    */
-  @blue.readwrite
-  @blue.persist
+  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "boundingSphereRadius", 3)
+  @type.vec4
+  _boundingSphere = vec4.create();
+
+  /** A view onto _boundingSphere's xyz, made once; the sphere is written in place and never replaced. */
+  _boundingSphereCenter = this._boundingSphere.subarray(0, 3);
+
+  /**
+   * The centre of the effect's minimum bounding sphere: the first three floats of _boundingSphere.
+   *
+   * @adapted Stands in for Carbon's MAPFLOATARRAYSIZE( "boundingSphereCenter", m_boundingSphere, ..., Be::READWRITE | Be::PERSIST, 3 )
+   *   (EveEffectRoot2_Blue.cpp:88) as a persisted property over the same floats.
+   * @returns {Float32Array} The live view.
+   */
+  @be.mapPropertyPersisted()
   @type.vec3
-  boundingSphereCenter = vec3.create();
+  get boundingSphereCenter()
+  {
+    return this._boundingSphereCenter;
+  }
 
-  /** m_boundingSphere.w (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.float32
-  boundingSphereRadius = 0;
+  /**
+   * Writes the centre into the sphere's first three floats, in place, so the view stays valid.
+   *
+   * @param {ArrayLike<number>} value The centre.
+   */
+  set boundingSphereCenter(value)
+  {
+    this._boundingSphereCenter[0] = value[0];
+    this._boundingSphereCenter[1] = value[1];
+    this._boundingSphereCenter[2] = value[2];
+  }
 
   /** m_modelTranslation (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -401,7 +421,7 @@ export class EveEffectRoot2 extends EveEntity
       this.boundingSphereCenter[0],
       this.boundingSphereCenter[1],
       this.boundingSphereCenter[2],
-      this.boundingSphereRadius
+      this._boundingSphere[3]
     );
     return true;
   }
@@ -414,7 +434,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapMethodAndWrap()
   GetBoundingSphereRadius()
   {
-    return this.boundingSphereRadius;
+    return this._boundingSphere[3];
   }
 
   /**
@@ -489,8 +509,8 @@ export class EveEffectRoot2 extends EveEntity
 
   GetLocalBoundingBox(min, max)
   {
-    if (this.boundingSphereRadius <= 0) return false;
-    const radius = this.boundingSphereRadius;
+    if (this._boundingSphere[3] <= 0) return false;
+    const radius = this._boundingSphere[3];
     vec3.set(
       min,
       this.boundingSphereCenter[0] - radius,
@@ -542,7 +562,7 @@ export class EveEffectRoot2 extends EveEntity
 
   IsBoundingBoxReady()
   {
-    return this.boundingSphereRadius > 0;
+    return this._boundingSphere[3] > 0;
   }
 
   /**
@@ -957,7 +977,7 @@ export class EveEffectRoot2 extends EveEntity
 
   GetRadius()
   {
-    return this.boundingSphereRadius;
+    return this._boundingSphere[3];
   }
 
   /**
@@ -1029,7 +1049,7 @@ export class EveEffectRoot2 extends EveEntity
     );
     const offsetLength = vec3.length(EveEffectRoot2._missOffset);
     if (offsetLength) vec3.scale(EveEffectRoot2._missOffset, EveEffectRoot2._missOffset, 1 / offsetLength);
-    return vec3.scaleAndAdd(out, out, EveEffectRoot2._missOffset, this.boundingSphereRadius * 1.125);
+    return vec3.scaleAndAdd(out, out, EveEffectRoot2._missOffset, this._boundingSphere[3] * 1.125);
   }
 
   /**

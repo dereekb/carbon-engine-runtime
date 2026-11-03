@@ -273,7 +273,7 @@ test("EveEffectRoot2 owns Carbon effect transforms, lifecycle, LOD, and target s
   };
   effect.translation.set([0, 2, 0]);
   effect.boundingSphereCenter.set([1, 0, 0]);
-  effect.boundingSphereRadius = 5;
+  effect._boundingSphere[3] = 5;
 
   assert.equal(effect.Initialize(), true);
   assert.equal(child.owner, effect);
@@ -340,7 +340,8 @@ test("EveEffectRoot2 owns Carbon effect transforms, lifecycle, LOD, and target s
 
   assert.equal(CjsSchema.getConstructor("EveEffectRoot2"), EveEffectRoot2);
   assert.equal(CjsSchema.getField(EveEffectRoot2, "boundingSphereCenter")?.type.kind, "vec3");
-  assert.equal(CjsSchema.getField(EveEffectRoot2, "boundingSphereRadius")?.type.kind, "float32");
+  const radiusRow = CjsSchema.getSchema(EveEffectRoot2).members.find(member => member.name === "boundingSphereRadius");
+  assert.deepEqual([ radiusRow.key, radiusRow.index, radiusRow.type.kind, radiusRow.edit.persist ], [ "_boundingSphere", 3, "float32", true ], "the radius is the sphere's w (EveEffectRoot2_Blue.cpp:91)");
   assert.equal(existsSync(new URL("../../src/trinity/generated/eve/spaceObject/EveEffectRoot2.js", import.meta.url)), false);
   assert.equal(new EvePlanet() instanceof EveEffectRoot2, true);
 });
