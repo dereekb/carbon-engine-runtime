@@ -13,23 +13,28 @@ import { Tr2GrannyTrack } from "./Tr2GrannyTrack.js";
  * curves together, exposing them as a translation vector, rotation quaternion
  * and scale vector.
  */
-@be.define("Tr2GrannyTransformTrack")
-@be.exposureChainTo(Tr2GrannyTrack)
+@be.define({
+  name: "Tr2GrannyTransformTrack",
+  // Tr2GrannyTransformTrack_Blue.cpp:10-21, in Carbon's order.
+  members: [
+    [ be.ATTR, "translation", be.READ ],
+    [ be.ATTR, "rotation", be.READ ],
+    [ be.ATTR, "scale", be.READ ],
+    [ be.ATTR, "compressCurves", be.READWRITE ]
+  ],
+  chainTo: Tr2GrannyTrack
+})
 export class Tr2GrannyTransformTrack extends Tr2GrannyTrack
 {
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   compressCurves = false;
 
-  @be.mapAttribute(be.READ)
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   translation = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   scale = vec3.create();
 

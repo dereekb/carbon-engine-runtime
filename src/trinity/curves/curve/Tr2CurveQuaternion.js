@@ -13,18 +13,29 @@ import { Tr2CurveQuaternionKey } from "../key/Tr2CurveQuaternionKey.js";
  * independent extrapolation modes before the first and after the last key.
  * JavaScript keeps time-first output-buffer calls instead of native output-first overloads.
  */
-@be.define("Tr2CurveQuaternion")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriQuaternionFunction)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveQuaternion",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveQuaternion_Blue.cpp:14-69, in Carbon's order.
+  interfaces: [ ITriQuaternionFunction, ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "keys", be.READ | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR_CHOOSER, "extrapolationBefore", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation" ],
+    [ be.ATTR_CHOOSER, "extrapolationAfter", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation" ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "OnKeysChanged", be.WRAP ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetExtrapolation", be.WRAP ]
+  ]
+})
 export class Tr2CurveQuaternion extends ITriQuaternionFunction
 {
   /**
    * Quaternion key records containing time, rotation, identifier and interpolation mode.
    * @type {Tr2CurveQuaternionKey[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.structList("Tr2CurveQuaternionKey")
   keys = [];
@@ -33,7 +44,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * Authored curve label stored as native std::string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -42,7 +52,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * Cached sampled quaternion in native x, y, z, w component order.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.quat
   currentValue = quat.create();
 
@@ -51,7 +60,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2CurveQuaternion_Blue.cpp:36); chooser Tr2CurveExtrapolationChooser (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:38).
    */
-  @be.mapAttributeWithChooser(be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation")
   @type.uint32
   @type.enum("trinity.Tr2CurveExtrapolation")
   extrapolationBefore = Tr2CurveExtrapolation.CLAMP;
@@ -61,7 +69,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2CurveQuaternion_Blue.cpp:42); chooser Tr2CurveExtrapolationChooser (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:38).
    */
-  @be.mapAttributeWithChooser(be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation")
   @type.uint32
   @type.enum("trinity.Tr2CurveExtrapolation")
   extrapolationAfter = Tr2CurveExtrapolation.CLAMP;
@@ -182,7 +189,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @param {Float32Array|number[]} out Caller-owned output storage.
    * @returns {Float32Array|number[]} The caller-owned quaternion output.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.Evaluate(out, time);
@@ -206,7 +212,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @adapted
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   OnKeysChanged()
   {
     this.keys.sort((a, b) => a.time - b.time);
@@ -222,7 +227,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @param {number} [interpolation = Tr2CurveInterpolation.LINEAR] Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, interpolation = Tr2CurveInterpolation.LINEAR)
   {
     const key = new Tr2CurveQuaternionKey();
@@ -241,7 +245,6 @@ export class Tr2CurveQuaternion extends ITriQuaternionFunction
    * @param {number} extrapolation Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetExtrapolation(extrapolation)
   {
     this.extrapolationAfter = this.extrapolationBefore = extrapolation;

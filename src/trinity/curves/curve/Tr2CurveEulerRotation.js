@@ -13,39 +13,45 @@ import { Tr2CurveScalar } from "./Tr2CurveScalar.js";
  * Quaternion curve built from three scalar curves supplying yaw, pitch and roll
  * in radians.
  */
-@be.define("Tr2CurveEulerRotation")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriQuaternionFunction)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveEulerRotation",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveEulerRotation_Blue.cpp:10-60, in Carbon's order.
+  interfaces: [ ITriQuaternionFunction, ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "yaw", be.READ | be.PERSIST ],
+    [ be.ATTR, "pitch", be.READ | be.PERSIST ],
+    [ be.ATTR, "roll", be.READ | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetExtrapolation", be.WRAP ]
+  ]
+})
 export class Tr2CurveEulerRotation extends ITriQuaternionFunction
 {
   /** Authored narrow-string name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Owned yaw component curve in radians. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   yaw = new Tr2CurveScalar();
 
   /** Owned pitch component curve in radians. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   pitch = new Tr2CurveScalar();
 
   /** Owned roll component curve in radians. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   roll = new Tr2CurveScalar();
 
   /** Cached quaternion; exposed read-only without persistence. */
-  @be.mapAttribute(be.READ)
   @type.quat
   currentValue = quat.create();
 
@@ -143,7 +149,6 @@ export class Tr2CurveEulerRotation extends ITriQuaternionFunction
    * @param {Float32Array|number[]} out Caller-owned quaternion.
    * @returns {Float32Array|number[]} The same output buffer.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);
@@ -163,7 +168,6 @@ export class Tr2CurveEulerRotation extends ITriQuaternionFunction
    * @param {number} [tangentType=Tr2CurveTangentType.AUTO_CLAMP] Tangent policy.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, interpolation = Tr2CurveInterpolation.HERMITE, leftTangent, rightTangent, tangentType = Tr2CurveTangentType.AUTO_CLAMP)
   {
     const useRightTangent = !!leftTangent && !!rightTangent;
@@ -179,7 +183,6 @@ export class Tr2CurveEulerRotation extends ITriQuaternionFunction
    * @param {number} extrapolation Native extrapolation enum value.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetExtrapolation(extrapolation)
   {
     this.yaw.SetExtrapolation(extrapolation);

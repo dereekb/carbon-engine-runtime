@@ -67,12 +67,90 @@ function BoundingSphereTransform(transform, sphere)
 const DEBUG_CENTER = vec3.create();
 
 /** Owns a hull's instanced turrets and drives their aiming, animation, firing, visibility, batches, shadows, and per-object data. */
-@be.define("EveTurretSet")
-@be.inherit(IInitialize, INotify, Tr2DeviceResource, ITr2Renderable, IShaderConfigurer, ITr2ControllerOwner, ITr2DebugRenderable, IEveShadowCaster)
-@be.mapInterface(EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2Renderable)
+@be.define({
+  name: "EveTurretSet",
+  inherit: [ IInitialize, INotify, Tr2DeviceResource, ITr2Renderable, IShaderConfigurer, ITr2ControllerOwner, ITr2DebugRenderable, IEveShadowCaster ],
+  // EveTurretSet_Blue.cpp:50-217, in Carbon's order.
+  interfaces: [ EveEntity, IInitialize, EveEntity, INotify, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "displayEffects", be.READWRITE ],
+    [ be.ATTR, "isOnline", be.READWRITE ],
+    [ be.ATTR, "visibleCount", be.READ ],
+    [ be.ATTR, "estimatedPixelDiameter", be.READ ],
+    [ be.ATTR, "lodLevel", be.READ ],
+    [ be.ATTR, "trackingInfluence", be.READ ],
+    [ be.ATTR, "maxTrackingTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "updatePitchPose", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "state", be.READ | be.PERSIST ],
+    [ be.ATTR, "boundingSphere", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "bottomClipHeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useDynamicBounds", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "locatorName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "slotNumber", be.READWRITE ],
+    [ be.ATTR, "swarmID", be.READWRITE ],
+    [ be.PROP, "targetObject" ],
+    [ be.ATTR, "target", be.READ ],
+    [ be.ATTR, "turretEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "geometryResource", be.READ ],
+    [ be.ATTR, "geometryResPath", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "useRandomFiringDelay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "randomFiringDelay", be.READ ],
+    [ be.ATTR, "maxCyclingFirePos", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cyclingFireGroupCount", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentCyclingFiresPos", be.READ ],
+    [ be.ATTR, "sysBoneHeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchMax", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch01Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch01Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch02Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch02Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch03Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch03Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "firingEffect", be.HIDDEN, "_firingEffect" ],
+    [ be.PROP, "firingEffect" ],
+    [ be.ATTR, "firingEffectResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useLowLodFiringTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lowLodFiringEffectScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lowLodFiringEffectRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lowLodFiringEffectTranslation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "laserMissBehaviour", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "projectileMissBehaviour", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "impactSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "impactBehaviour", be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.ImpactBehaviour" ],
+    [ be.ATTR, "chooseRandomLocator", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "randomizeExplosionRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ambientEffect", be.PERSISTONLY, "_ambientEffect" ],
+    [ be.PROP, "ambientEffect" ],
+    [ be.ATTR, "generatedDistributedAmbientEffect", be.READ ],
+    [ be.ATTR, "ambientEffectEditingMode", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "turretMovementObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "playMovementSound", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "idleToTargetingMovementAudioEvent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "targetingToIdleMovementAudioEvent", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "RebuildBoundingSphere", be.WRAP ],
+    [ be.METHOD, "FreezeHighDetailLOD", be.WRAP ],
+    [ be.METHOD, "EnterStateDeactive", be.WRAP ],
+    [ be.METHOD, "EnterStateIdle", be.WRAP ],
+    [ be.METHOD, "EnterStateTargeting", be.WRAP ],
+    [ be.METHOD, "EnterStateFiring", be.WRAP ],
+    [ be.METHOD, "EnterStateReloading", be.WRAP ],
+    [ be.METHOD, "ForceStateDeactive", be.WRAP ],
+    [ be.METHOD, "ForceStateTargeting", be.WRAP ],
+    [ be.METHOD, "SetShotMissed", be.WRAP ],
+    [ be.METHOD, "GetLastShotTime", be.WRAP ],
+    [ be.METHOD, "GetShotTimeVariance", be.WRAP ],
+    [ be.METHOD, "MissQueueSize", be.WRAP ],
+    [ be.METHOD, "GetFiringBoneWorldTransform", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "HandleControllerEvent", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ]
+  ]
+})
 export class EveTurretSet extends EveEntity
 {
 
@@ -80,7 +158,6 @@ export class EveTurretSet extends EveEntity
    * m_impactBehaviour (ImpactBehaviour::Type - enum ImpactBehaviour) [READWRITE, NOTIFY, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:116); chooser ImpactBehaviourChooser (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:34).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.ImpactBehaviour")
   @type.int32
   @type.enum("trinity.ImpactBehaviour")
   impactBehaviour = 0;
@@ -88,7 +165,6 @@ export class EveTurretSet extends EveEntity
   /** Hidden native backing member; not persisted (EveTurretSet_Blue.cpp:103).
    * Carbon: EveTurretSet::m_firingEffect (trinity/trinity/Eve/Turret/EveTurretSet.h:439); MAP_ATTRIBUTE (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:103).
    */
-  @be.mapAttribute(be.HIDDEN, "firingEffect")
 
   /** Carbon: m_firingEffect (trinity/trinity/Eve/Turret/EveTurretSet.h:439).
    */
@@ -102,7 +178,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveTurretFiringFX")
   get firingEffect()
   {
@@ -122,7 +197,6 @@ export class EveTurretSet extends EveEntity
   /** Persisted ambient backing member (EveTurretSet_Blue.cpp:121).
    * Carbon: EveTurretSet::m_ambientEffect (trinity/trinity/Eve/Turret/EveTurretSet.h:451); MAP_ATTRIBUTE (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:121).
    */
-  @be.mapAttribute(be.PERSISTONLY, "ambientEffect")
 
   /** Carbon: m_ambientEffect (trinity/trinity/Eve/Turret/EveTurretSet.h:451).
    */
@@ -135,7 +209,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceObjectChild")
   get ambientEffect()
   {
@@ -158,7 +231,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("ITriTargetable")
   get targetObject()
   {
@@ -176,309 +248,256 @@ export class EveTurretSet extends EveEntity
   }
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_firingEffectResPath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("object")
   firingEffectResPath = "";
 
   /** m_chooseRandomLocator (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   chooseRandomLocator = true;
 
   /** m_boundingSphere (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   boundingSphere = vec4.create();
 
   /** m_randomizeExplosionRotation (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   randomizeExplosionRotation = true;
 
   /** m_lodLevel (LOD - enum LOD) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.EveTurretSet.LOD")
   lodLevel = 0;
 
   /** m_currentCyclingFiresPos (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   currentCyclingFiresPos = 0;
 
   /** m_useRandomFiringDelay (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useRandomFiringDelay = true;
 
   /** m_bottomClipHeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   bottomClipHeight = 0;
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.resource("TriGeometryRes")
   geometryResource = null;
 
   /** m_maxTrackingTime (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxTrackingTime = 1;
 
   /** m_visibleCount (unsigned int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   visibleCount = 0;
 
   /** m_trackingInfluence (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   trackingInfluence = 0;
 
   /** m_swarmID (unsigned int) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   swarmID = 0;
 
   /** m_maxCyclingFirePos (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   maxCyclingFirePos = 1;
 
   /** m_playMovementSound (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   playMovementSound = true;
 
   /** m_isOnline (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   isOnline = true;
 
   /** m_target (EveTurretTargetPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("EveTurretTarget")
   target = new EveTurretTarget();
 
   /** m_locatorName (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   locatorName = "";
 
   /** m_sysBonePitchFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchFactor = 1;
 
   /** m_sysBonePitchMax (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchMax = 90;
 
   /** m_sysBonePitchMin (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchMin = 0;
 
   /** m_sysBonePitchOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchOffset = 0;
 
   /** m_sysBonePitch01Factor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch01Factor = 1;
 
   /** m_sysBonePitch01Offset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch01Offset = 0;
 
   /** m_sysBonePitch02Factor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch02Factor = 1;
 
   /** m_sysBonePitch02Offset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch02Offset = 0;
 
   /** m_sysBonePitch03Factor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch03Factor = 1;
 
   /** m_sysBonePitch03Offset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch03Offset = 0;
 
   /** m_updatePitchPose (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   updatePitchPose = false;
 
   /** m_geomResPath (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
   /** m_impactSize (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   impactSize = 0;
 
   /** m_state (State - enum State) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.int32
   @type.enum("trinity.EveTurretSet.State")
   state = 2;
 
   /** m_sysBoneHeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBoneHeight = 1;
 
   /** m_randomFiringDelay (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   randomFiringDelay = 0;
 
   /** m_turretEffect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   turretEffect = null;
 
   /** m_idleToTargetingMovementAudioEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   idleToTargetingMovementAudioEvent = "";
 
   /** m_targetingToIdleMovementAudioEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   targetingToIdleMovementAudioEvent = "";
 
   /** m_generatedDistributedAmbientEffect (EveChildInstanceContainerPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("EveChildInstanceContainer")
   generatedDistributedAmbientEffect = null;
 
   /** m_cyclingFireGroupCount (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   cyclingFireGroupCount = 1;
 
   /** m_turretMovementObserver (TriObserverLocalPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriObserverLocal")
   turretMovementObserver = null;
 
   /** m_slotNumber (int) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   slotNumber = -1;
 
   /** m_ambientEffectEditingMode (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   ambientEffectEditingMode = false;
 
   /** m_displayEffects (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   displayEffects = true;
 
   /** m_display (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
   /** m_useDynamicBounds (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   useDynamicBounds = false;
 
   /** m_estimatedPixelDiameter (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   estimatedPixelDiameter = -1;
 
   /** m_lowLodFiringEffectScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   lowLodFiringEffectScale = vec3.fromValues(1, 1, 1);
 
   /** m_lowLodFiringEffectTranslation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   lowLodFiringEffectTranslation = vec3.create();
 
   /** m_lowLodFiringEffectRotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   lowLodFiringEffectRotation = quat.create();
 
   /** m_useLowLodFiringTransform (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useLowLodFiringTransform = false;
 
   /** m_laserMissBehaviour (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   laserMissBehaviour = false;
 
   /** m_projectileMissBehaviour (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   projectileMissBehaviour = false;
@@ -654,7 +673,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted returns whether the existing resource output operation succeeded.
    */
-  @be.mapMethodAndWrap()
   RebuildBoundingSphere()
   {
     const resource = this.geometryResource;
@@ -736,7 +754,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ForceStateDeactive()
   {
     this.trackingInfluence = 0;
@@ -754,7 +771,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ForceStateTargeting()
   {
     this.trackingInfluence = this.maxTrackingTime;
@@ -769,7 +785,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   FreezeHighDetailLOD()
   {
     this.lodLevel = EveTurretSet.LOD.LOD_DISABLED;
@@ -903,7 +918,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetShotTimeVariance()
   {
     return EVE_TURRET_RANDOM_DELAY_MAX;
@@ -914,7 +928,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   MissQueueSize()
   {
     return this.target.MissQueueSize();
@@ -925,7 +938,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetLastShotTime()
   {
     return this.target.GetLastShotTime();
@@ -938,7 +950,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   EnterStateDeactive()
   {
     switch (this.state)
@@ -975,7 +986,6 @@ export class EveTurretSet extends EveEntity
    *   SetupFiringState owns ambient baseline/selected writes; the final state assignment
    *   does not broadcast. JS retains its Boolean success return for the native void method.
    */
-  @be.mapMethodAndWrap()
   EnterStateFiring()
   {
     if (!this.SetupFiringState()) return false;
@@ -1006,7 +1016,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   EnterStateIdle()
   {
     if (!this.isOnline) return;
@@ -1047,7 +1056,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted Animation calls are forwarded to hydrated turret/controller objects without Carbon's Granny controller.
    */
-  @be.mapMethodAndWrap()
   EnterStateReloading()
   {
     if (this.state === EveTurretSet.State.STATE_TARGETING || this.state === EveTurretSet.State.STATE_FIRING)
@@ -1070,7 +1078,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   EnterStateTargeting()
   {
     if (!this.isOnline) return;
@@ -1104,7 +1111,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted Controller ownership is represented by direct firing/ambient child forwarding.
    */
-  @be.mapMethodAndWrap()
   HandleControllerEvent(name)
   {
     if (this.firingEffect) this.firingEffect.HandleControllerEvent(name);
@@ -1119,7 +1125,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetFiringBoneWorldTransform(muzzle = 0, out)
   {
     let turretIndex = this._activeTurret;
@@ -1177,7 +1182,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted Controller ownership is represented by direct firing/ambient child forwarding.
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     if (this.firingEffect) this.firingEffect.SetControllerVariable(name, value);
@@ -1190,7 +1194,6 @@ export class EveTurretSet extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetShotMissed(missed)
   {
     this.target.SetShotMissed(missed);
@@ -1201,7 +1204,6 @@ export class EveTurretSet extends EveEntity
    *
    * @adapted Controller ownership is represented by direct firing/ambient child forwarding.
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     if (this.firingEffect) this.firingEffect.StartControllers();

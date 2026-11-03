@@ -13,11 +13,32 @@ import "#consts/graphics/trinityEnums";
  * dispatching either a named event to a listener or a queued callable, and
  * restarting the key cursor when time rewinds or a cycle wraps.
  */
-@be.define("TriEventCurve")
-@be.inherit(IInitialize, ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "TriEventCurve",
+  inherit: [ IInitialize, ITriCurveLength ],
+  // TriEventCurve_Blue.cpp:11-112, in Carbon's order.
+  interfaces: [ ITriFunction, IInitialize, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "time", be.READ ],
+    [ be.ATTR, "length", be.READ ],
+    [ be.ATTR, "localTime", be.READ ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "keys", be.PERSISTONLY ],
+    [ be.ATTR_CHOOSER, "extrapolation", be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIEXTRAPOLATION" ],
+    [ be.ATTR, "eventListener", be.READWRITE ],
+    [ be.METHOD, "AddKey", be.WRAP ],
+    [ be.METHOD, "AddCallableKey", be.WRAP ],
+    [ be.METHOD, "RemoveKey", be.WRAP ],
+    [ be.METHOD, "GetKeyCount", be.WRAP ],
+    [ be.METHOD, "GetKeyValue", be.WRAP ],
+    [ be.METHOD, "GetKeyTime", be.WRAP ],
+    [ be.METHOD, "SetKeyValue", be.WRAP ],
+    [ be.METHOD, "SetKeyTime", be.WRAP ],
+    [ be.METHOD, "GetCallableKeyValue", be.WRAP ],
+    [ be.METHOD, "GetCallableKeyArgs", be.WRAP ]
+  ]
+})
 export class TriEventCurve extends ITriFunction
 {
   /**
@@ -89,7 +110,6 @@ export class TriEventCurve extends ITriFunction
    * Authored name identifying the event track.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -98,7 +118,6 @@ export class TriEventCurve extends ITriFunction
    * Last accepted update time in seconds, retained to detect rewinds; native float64 metadata.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float64
   time = 0;
 
@@ -106,7 +125,6 @@ export class TriEventCurve extends ITriFunction
    * Cached final key time in seconds; zero prevents event advancement. Native float32 metadata.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   length = 0;
 
@@ -115,7 +133,6 @@ export class TriEventCurve extends ITriFunction
    * Rewind updates leave this cached value unchanged.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   localTime = 0;
 
@@ -123,7 +140,6 @@ export class TriEventCurve extends ITriFunction
    * Stored string value of the most recently triggered key; native wide string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   value = "";
@@ -132,7 +148,6 @@ export class TriEventCurve extends ITriFunction
    * Owned event keys, sorted by key time by initialization and editing helpers.
    * @type {BlueList<TriEventKey>}
    */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.list("TriEventKey")
   keys = new BlueList(TriEventKey, { className: "TriEventKey", listOps: 0 });
 
@@ -142,7 +157,6 @@ export class TriEventCurve extends ITriFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/TriEventCurve_Blue.cpp:47); chooser TriExtrapolation (trinity/trinity/TriConstants.cpp:94).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIEXTRAPOLATION")
   @type.int32
   @type.enum("blue.TRIEXTRAPOLATION")
   extrapolation = TRIEXTRAPOLATION.TRIEXT_NONE;
@@ -152,7 +166,6 @@ export class TriEventCurve extends ITriFunction
    * branch.
    * @type {IBlueEventListener|null}
    */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBlueEventListener")
   eventListener = null;
 
@@ -249,7 +262,6 @@ export class TriEventCurve extends ITriFunction
    * @param {string} eventName Event name.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   AddKey(time, eventName)
   {
     const key = new TriEventKey();
@@ -270,7 +282,6 @@ export class TriEventCurve extends ITriFunction
    * @param {*} args Callable arguments.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   AddCallableKey(time, callable, args)
   {
     const key = new TriEventKey();
@@ -302,7 +313,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} index Key index.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   RemoveKey(index)
   {
     if (index >= 0 && index < this.keys.length)
@@ -318,7 +328,6 @@ export class TriEventCurve extends ITriFunction
    * @implemented
    * @returns {number}
    */
-  @be.mapMethodAndWrap()
   GetKeyCount()
   {
     return this.keys.length;
@@ -331,7 +340,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} index Key index.
    * @returns {number}
    */
-  @be.mapMethodAndWrap()
   GetKeyTime(index)
   {
     return this.keys[index]?.time ?? 0;
@@ -344,7 +352,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} index Key index.
    * @returns {string}
    */
-  @be.mapMethodAndWrap()
   GetKeyValue(index)
   {
     return this.keys[index]?.value ?? "";
@@ -359,7 +366,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} time Time in seconds.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetKeyTime(index, time)
   {
     if (this.keys[index])
@@ -378,7 +384,6 @@ export class TriEventCurve extends ITriFunction
    * @param {string|null} value Event name.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetKeyValue(index, value)
   {
     if (this.keys[index])
@@ -394,7 +399,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} index Key index.
    * @returns {Function|null}
    */
-  @be.mapMethodAndWrap()
   GetCallableKeyValue(index)
   {
     return this.keys[index]?.callable ?? null;
@@ -407,7 +411,6 @@ export class TriEventCurve extends ITriFunction
    * @param {number} index Key index.
    * @returns {*}
    */
-  @be.mapMethodAndWrap()
   GetCallableKeyArgs(index)
   {
     return this.keys[index]?.callableArgs ?? null;

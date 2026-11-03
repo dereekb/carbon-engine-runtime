@@ -90,13 +90,22 @@ const DEBUG_PLANE_ZFAIL_COLOR = vec4.fromValues(0.0, 0.7, 0.9, 0.1);
  * A hull's authored textured planes, owning their static and per-bone bounds,
  * the four shared texture parameters and the plane lights.
  */
-@be.define("EvePlaneSet")
-@be.inherit(IInitialize, INotify, ITr2LightOwner, EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EvePlaneSet",
+  inherit: [ IInitialize, INotify, ITr2LightOwner, EveEntity ],
+  // EvePlaneSet_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ IInitialize, INotify, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hideOnLowQuality", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "pickBufferID", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "planes", be.READ | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EvePlaneSet extends IEveSpaceObjectAttachment
 {
   /**
@@ -111,38 +120,24 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
     return true;
   }
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.uint8
   pickBufferID = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   hideOnLowQuality = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   skinned = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EvePlaneSetItem")
   planes = [];
@@ -199,7 +194,6 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;

@@ -15,17 +15,23 @@ import { Tr2FollowCurveKeyInterpolation } from "../enums.js";
  * supplying its own position, tangents and interpolation for the segment that
  * follows it.
  */
-@be.define("Tr2FollowCurve")
-@be.inherit(IListNotify)
-@be.mapInterface(ITriVectorFunction)
-@be.mapInterface(ITriFunction)
+@be.define({
+  name: "Tr2FollowCurve",
+  inherit: [ IListNotify ],
+  // Tr2FollowCurve_Blue.cpp:10-16, in Carbon's order.
+  interfaces: [ ITriVectorFunction, ITriFunction ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "keys", be.READ | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ]
+  ]
+})
 export class Tr2FollowCurve extends ITriVectorFunction
 {
   /**
    * Authored name identifying the follow curve.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -35,7 +41,6 @@ export class Tr2FollowCurve extends ITriVectorFunction
    * removal notifications sort them by key time in seconds.
    * @type {BlueList<ITr2FollowCurveKey>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2FollowCurveKey")
   keys = new BlueList(ITr2FollowCurveKey, { className: null, listOps: 0 });
@@ -44,7 +49,6 @@ export class Tr2FollowCurve extends ITriVectorFunction
    * Cached three-component position from the latest UpdateValue or Update.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.vec3
   currentValue = vec3.create();
 

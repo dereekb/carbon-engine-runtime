@@ -21,27 +21,38 @@ import { Tr2FollowCurveKeyInterpolation, RotationSetting } from "../enums.js";
  * contracts. Vector output buffers retain the JS adapter.
  * Native destruction only clears references; no resource disposal is required.
  */
-@be.define("Tr2ObjectFollowCurveKey")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(ITr2FollowCurveKey)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2ObjectFollowCurveKey",
+  inherit: [ INotify, IInitialize ],
+  // Tr2FollowCurveKey_Blue.cpp:43-58, in Carbon's order.
+  interfaces: [ ITr2FollowCurveKey, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "object", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "time", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "interpolation", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2FollowCurveKeyInterpolation" ],
+    [ be.ATTR, "leftTangent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rightTangent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotatedLeftTangent", be.READ ],
+    [ be.ATTR, "rotatedRightTangent", be.READ ],
+    [ be.ATTR, "offsetLocatorName", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "rotationSetting", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ObjectFollowCurveKey.RotationSetting" ]
+  ]
+})
 export class Tr2ObjectFollowCurveKey extends ITr2FollowCurveKey
 {
   /** Authored key name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Runtime followed object; notified but not persisted. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("IRoot")
   object = null;
 
   /** Authored key time. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   time = 0;
@@ -50,42 +61,35 @@ export class Tr2ObjectFollowCurveKey extends ITr2FollowCurveKey
    * Authored interpolation of the outgoing segment.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:51); chooser Tr2FollowCurveKeyInterpolationChooser (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:24).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2FollowCurveKeyInterpolation")
   @type.int32
   @type.enum("trinity.Tr2FollowCurveKeyInterpolation")
   interpolation = Tr2FollowCurveKeyInterpolation.LINEAR;
 
   /** Authored incoming tangent. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   leftTangent = vec3.create();
 
   /** Authored outgoing tangent. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   rightTangent = vec3.create();
 
   /** Last sampled incoming tangent. */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rotatedLeftTangent = vec3.create();
 
   /** Last sampled outgoing tangent. */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rotatedRightTangent = vec3.create();
 
   /** Authored locator set name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   offsetLocatorName = "";
 
   /** Authored local position offset. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   offset = vec3.create();
@@ -94,7 +98,6 @@ export class Tr2ObjectFollowCurveKey extends ITr2FollowCurveKey
    * Authored rotation selection.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:58); chooser RotationChooser (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:11).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ObjectFollowCurveKey.RotationSetting")
   @type.int32
   @type.enum("trinity.Tr2ObjectFollowCurveKey.RotationSetting")
   rotationSetting = RotationSetting.NO_ROTATION;

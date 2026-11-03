@@ -12,33 +12,38 @@ const OFFSET_SCRATCH = vec3.create();
 const DIRECTION_SCRATCH = vec4.create();
 
 /** Wraps a position source, offsetting and scaling what it reports, optionally in view space. */
-@be.define("Tr2VectorFunctionModifier")
-@be.mapInterface(ITriVectorFunction)
+@be.define({
+  name: "Tr2VectorFunctionModifier",
+  // Tr2VectorFunctionModifier_Blue.cpp:9-37, in Carbon's order.
+  interfaces: [ ITriVectorFunction ],
+  members: [
+    [ be.ATTR, "clientBall", be.READWRITE ],
+    [ be.ATTR, "offsetPosition", be.READWRITE ],
+    [ be.ATTR, "scaleModifier", be.READWRITE ],
+    [ be.ATTR, "useViewSpace", be.READWRITE ],
+    [ be.ATTR, "useSystemCoordinates", be.READWRITE ]
+  ]
+})
 export class Tr2VectorFunctionModifier extends ITriVectorFunction
 {
 
   /** m_clientBall (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   clientBall = null;
 
   /** m_offsetPosition (Vector3) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   offsetPosition = vec3.create();
 
   /** m_scaleModifier (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   scaleModifier = 1;
 
   /** m_useViewSpace (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   useViewSpace = false;
 
   /** m_useSystemCoordinates (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   useSystemCoordinates = false;
 

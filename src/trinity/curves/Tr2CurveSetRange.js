@@ -10,30 +10,35 @@ import { type, blue } from "#schema";
  * Named sub-interval of a curve set's scaled timeline, giving a start and end
  * time and whether playback loops inside it.
  */
-@be.inherit(IRoot)
-@be.define("Tr2CurveSetRange")
+@be.define({
+  name: "Tr2CurveSetRange",
+  inherit: [ IRoot ],
+  // TriCurveSet_Blue.cpp:13-19, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "endTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "looped", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2CurveSetRange extends IRoot
 {
   /** Authored name used by TriCurveSet.PlayTimeRange. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** First scaled-time sample in seconds. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   startTime = 0;
 
   /** Last scaled-time sample in seconds. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   endTime = 1;
 
   /** Whether playback wraps within the interval. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   looped = false;

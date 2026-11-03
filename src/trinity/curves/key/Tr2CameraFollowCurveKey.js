@@ -22,21 +22,36 @@ import { Tr2FollowCurveKeyInterpolation } from "../enums.js";
  * is empty. Cached camera values and scratch buffers own no resources.
  * Existing ambient-context and gl-matrix framing adaptations are unchanged.
  */
-@be.define("Tr2CameraFollowCurveKey")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(ITr2FollowCurveKey)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2CameraFollowCurveKey",
+  inherit: [ INotify, IInitialize ],
+  // Tr2FollowCurveKey_Blue.cpp:65-83, in Carbon's order.
+  interfaces: [ ITr2FollowCurveKey, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "time", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "interpolation", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2FollowCurveKeyInterpolation" ],
+    [ be.ATTR, "leftTangent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rightTangent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotatedLeftTangent", be.READ ],
+    [ be.ATTR, "rotatedRightTangent", be.READ ],
+    [ be.ATTR, "objectBounds", be.READWRITE ],
+    [ be.ATTR, "angle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "angleZero", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fovMultiplication", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boxPosition", be.READ ],
+    [ be.ATTR, "enabled", be.READWRITE | be.NOTIFY ]
+  ]
+})
 export class Tr2CameraFollowCurveKey extends ITr2FollowCurveKey
 {
   /** Authored shared-string key name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Authored key time. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   time = 0;
@@ -45,70 +60,58 @@ export class Tr2CameraFollowCurveKey extends ITr2FollowCurveKey
    * Native follow-key segment interpolation.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:72); chooser Tr2FollowCurveKeyInterpolationChooser (trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:24).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2FollowCurveKeyInterpolation")
   @type.int32
   @type.enum("trinity.Tr2FollowCurveKeyInterpolation")
   interpolation = Tr2FollowCurveKeyInterpolation.LINEAR;
 
   /** Authored incoming tangent. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   leftTangent = vec3.create();
 
   /** Authored outgoing tangent. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   rightTangent = vec3.create();
 
   /** Last incoming tangent after the inverse-view coordinate transform. */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rotatedLeftTangent = vec3.create();
 
   /** Last outgoing tangent after the inverse-view coordinate transform. */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rotatedRightTangent = vec3.create();
 
   /** Runtime object bounds used for framing. */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   objectBounds = vec3.create();
 
   /** Authored angle around the view axis. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   angle = 0;
 
   /** Authored zero-angle reference, initially PI/2. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   angleZero = Math.PI / 2;
 
   /** Authored fraction of the field of view reserved inside the frame. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   fovMultiplication = 0.5;
 
   /** Authored camera-box offset. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   offset = vec3.create();
 
   /** Last calculated camera-box position. */
-  @be.mapAttribute(be.READ)
   @type.vec3
   boxPosition = vec3.create();
 
   /** Runtime switch between live and captured camera state. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   enabled = true;

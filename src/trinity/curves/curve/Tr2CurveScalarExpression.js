@@ -19,15 +19,30 @@ import { CjsControllerExpressionProgram } from "../../controllers/expression/Cjs
  * is claimed. Sampling retains the seconds overloads and returns numbers;
  * Be::Time overloads remain unimplemented. Programs are local state, not resources.
  */
-@be.define("Tr2CurveScalarExpression")
-@be.inherit(IInitialize)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriScalarFunction)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2CurveScalarExpression",
+  inherit: [ IInitialize ],
+  // Tr2CurveScalarExpression_Blue.cpp:11-81, in Carbon's order.
+  interfaces: [ ITriFunction, ITriScalarFunction, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "expression", be.PERSISTONLY, "_expression" ],
+    [ be.PROP, "expression" ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR, "inputs", be.READ | be.PERSIST ],
+    [ be.ATTR, "input1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "input2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "input3", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "input4", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "ResetRandomConstant", be.WRAP ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ]
+  ]
+})
 export class Tr2CurveScalarExpression extends ITriScalarFunction
 {
   /** Authored narrow-string name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -35,7 +50,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
   /** Native PERSISTONLY expression storage; readers bypass the live setter.
    * Carbon: Tr2CurveScalarExpression::m_expression (trinity/trinity/Curves/Tr2CurveScalarExpression.h:45); MAP_ATTRIBUTE (trinity/trinity/Curves/Tr2CurveScalarExpression_Blue.cpp:22).
    */
-  @be.mapAttribute(be.PERSISTONLY, "expression")
 
   @type.expression
   _expression = "";
@@ -45,7 +59,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.expression
   get expression()
   {
@@ -62,7 +75,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
   }
 
   /** Cached value after the last update. */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentValue = 0;
 
@@ -73,31 +85,26 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
   _compiledSource = "";
 
   /** Owned scalar input functions in native declaration order. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriScalarFunction")
   inputs = [];
 
   /** First authored scalar argument. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   input1 = 0;
 
   /** Second authored scalar argument. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   input2 = 0;
 
   /** Third authored scalar argument. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   input3 = 0;
 
   /** Fourth authored scalar argument. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   input4 = 0;
@@ -178,7 +185,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
    *
    * @adapted retains the JavaScript program and evaluation-result fallback.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time)
   {
     if (!this.expression)
@@ -288,7 +294,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ResetRandomConstant()
   {
     this.randomConstant = carbonRandom.triFloatRandom01();
@@ -299,7 +304,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
    *
    * @adapted returns the existing JavaScript expression-term records.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     return CjsControllerExpressionProgram.getCurveTermInfo();
@@ -310,7 +314,6 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
    *
    * @adapted retains the JavaScript compiler and zero-on-invalid result contract.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     const program = CjsControllerExpressionProgram.Compile(expression, {

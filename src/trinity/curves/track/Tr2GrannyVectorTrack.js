@@ -10,11 +10,16 @@ import { Tr2GrannyTrack } from "./Tr2GrannyTrack.js";
  * Granny track that samples a named one-dimensional vector track and exposes it
  * as a scalar value.
  */
-@be.define("Tr2GrannyVectorTrack")
-@be.exposureChainTo(Tr2GrannyTrack)
+@be.define({
+  name: "Tr2GrannyVectorTrack",
+  // Tr2GrannyVectorTrack_Blue.cpp:10-13, in Carbon's order.
+  members: [
+    [ be.ATTR, "value", be.READ ]
+  ],
+  chainTo: Tr2GrannyTrack
+})
 export class Tr2GrannyVectorTrack extends Tr2GrannyTrack
 {
-  @be.mapAttribute(be.READ)
   @type.float32
   value = 0;
 

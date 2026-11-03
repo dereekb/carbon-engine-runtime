@@ -15,20 +15,28 @@ import { CcpTime } from "#blue";
  * seconds about an axis fixed by two seed-derived random rotations applied
  * before and after the spin.
  */
-@be.define("Tr2CurveRandomAxisRotation")
-@be.inherit(IInitialize)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriQuaternionFunction)
+@be.define({
+  name: "Tr2CurveRandomAxisRotation",
+  inherit: [ IInitialize ],
+  // Tr2CurveRandomAxisRotation_Blue.cpp:10-45, in Carbon's order.
+  interfaces: [ ITriFunction, ITriQuaternionFunction ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "period", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "seed", be.PERSISTONLY, "_seed" ],
+    [ be.PROP, "seed" ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ]
+  ]
+})
 export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
 {
   /** Authored narrow-string name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Full rotation period in seconds; zero disables the middle spin. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   period = 1;
@@ -36,7 +44,6 @@ export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
   /** Native PERSISTONLY seed storage; readers bypass the live setter.
    * Carbon: Tr2CurveRandomAxisRotation::m_seed (trinity/trinity/Curves/Tr2CurveRandomAxisRotation.h:42); MAP_ATTRIBUTE (trinity/trinity/Curves/Tr2CurveRandomAxisRotation_Blue.cpp:27).
    */
-  @be.mapAttribute(be.PERSISTONLY, "seed")
 
   @type.uint32
   _seed = 0;
@@ -46,7 +53,6 @@ export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.uint32
   get seed()
   {
@@ -63,7 +69,6 @@ export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
   }
 
   /** Cached quaternion; exposed read-only without persistence. */
-  @be.mapAttribute(be.READ)
   @type.quat
   currentValue = quat.create();
 
@@ -209,7 +214,6 @@ export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
    * @param {Float32Array|number[]} out Caller-owned quaternion.
    * @returns {Float32Array|number[]} The same output buffer.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);

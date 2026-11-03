@@ -16,18 +16,25 @@ import "#consts/graphics/trinityEnums";
  * offset by white. Sampling retains the existing instance child scratch; native
  * sampling uses local temporaries. Numeric tick overloads remain unimplemented.
  */
-@be.define("TriColorSequencer")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriColorFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "TriColorSequencer",
+  inherit: [ ITriCurveLength ],
+  // TriSequencer_Blue.cpp:61-99, in Carbon's order.
+  interfaces: [ ITriFunction, ITriColorFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "operator", be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIOPERATOR" ],
+    [ be.ATTR, "functions", be.READ | be.PERSIST ]
+  ]
+})
 export class TriColorSequencer extends ITriColorFunction
 {
   /**
    * Authored name identifying the color sequencer; native wide string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   name = "";
@@ -37,7 +44,6 @@ export class TriColorSequencer extends ITriColorFunction
    * does not apply it.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int64
   start = 0;
@@ -47,7 +53,6 @@ export class TriColorSequencer extends ITriColorFunction
    * here.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   value = vec4.create();
@@ -58,7 +63,6 @@ export class TriColorSequencer extends ITriColorFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/TriSequencer_Blue.cpp:91); chooser TriOperator (trinity/trinity/TriConstants.cpp:185).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIOPERATOR")
   @type.int32
   @type.enum("blue.TRIOPERATOR")
   operator = TRIOPERATOR.TRIOP_MULTIPLY;
@@ -67,7 +71,6 @@ export class TriColorSequencer extends ITriColorFunction
    * Ordered child color functions sampled and combined at the supplied time.
    * @type {BlueList<ITriColorFunction>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriColorFunction")
   functions = new BlueList(ITriColorFunction, { className: null, listOps: 0 });

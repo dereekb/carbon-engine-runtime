@@ -18,11 +18,36 @@ const SPHERICAL_LINEAR = 4;
  * authored transform composed with that bone's current matrix and the object's
  * world transform rather than sampling its own keys.
  */
-@be.define("Tr2BoneMatrixCurve")
-@be.inherit(IInitialize, ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2BoneMatrixCurve",
+  inherit: [ IInitialize, ITriCurveLength ],
+  // Tr2BoneMatrixCurve_Blue.cpp:23-97, in Carbon's order.
+  interfaces: [ ITriFunction, IInitialize, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "length", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cycle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reversed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startValue", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR, "endValue", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinnedObject", be.READWRITE ],
+    [ be.ATTR, "keys", be.PERSISTONLY ],
+    [ be.PROP, "bone" ],
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "AddKey", be.WRAP ],
+    [ be.METHOD, "RemoveKey", be.WRAP ],
+    [ be.METHOD, "GetKeyCount", be.WRAP ],
+    [ be.METHOD, "GetValueAt", be.WRAP ],
+    [ be.METHOD, "GetKeyValue", be.WRAP ],
+    [ be.METHOD, "GetKeyTime", be.WRAP ],
+    [ be.METHOD, "GetKeyInterpolation", be.WRAP ],
+    [ be.METHOD, "SetKeyValue", be.WRAP ],
+    [ be.METHOD, "SetKeyTime", be.WRAP ],
+    [ be.METHOD, "SetKeyInterpolation", be.WRAP ],
+    [ be.METHOD, "Sort", be.WRAP ]
+  ]
+})
 export class Tr2BoneMatrixCurve extends ITriFunction
 {
   /**
@@ -41,7 +66,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Native curve-template name identifying this bone-matrix function (std::string m_name).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -50,7 +74,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Authored duration in seconds used by endpoint sampling and key sorting (native float m_length).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   length = 1;
@@ -59,7 +82,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Native repetition flag; sampling past length continues tracking the bone when enabled.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   cycle = true;
@@ -68,7 +90,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Native reverse flag; noncycling samples past length select startValue when enabled.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reversed = false;
@@ -77,7 +98,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Initial matrix returned for nonpositive sample time or duration (native Matrix m_startValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   startValue = mat4.create();
@@ -86,7 +106,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Matrix cached by the last UpdateValue call (native Matrix m_currentValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.mat4
   currentValue = mat4.create();
 
@@ -94,7 +113,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Final matrix returned past the duration of a noncycling forward curve (native Matrix m_endValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   endValue = mat4.create();
@@ -103,7 +121,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Source of the tracked bone matrix and world transform (native Tr2SkinnedObjectPtr).
    * @type {Tr2SkinnedObject|null}
    */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2SkinnedObject")
   skinnedObject = null;
 
@@ -111,7 +128,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Persisted matrix-key sequence retained for editing and endpoint rollover; bone tracking ignores key interpolation.
    * @type {Tr2MatrixKey[]}
    */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.list("Tr2MatrixKey")
   keys = [];
 
@@ -119,13 +135,11 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Additional transform applied in bone-local space before the bone and world transforms (native Matrix m_transform).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();
 
   /** Native live bone property; setting it uses the retained name lookup adapter. */
-  @be.mapProperty()
   @type.string
   get bone()
   {
@@ -214,7 +228,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @adapted the matrix is written into out rather than returned by value.
    */
-  @be.mapMethodAndWrap()
   GetValueAt(time, out)
   {
     // Native Tr2CurveBase gates precede bone interpolation; its key segments
@@ -241,7 +254,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Sort()
   {
     const keys = this.keys;
@@ -267,7 +279,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @adapted retains the JS direct key insertion and endpoint rollover helper.
    */
-  @be.mapMethodAndWrap()
   AddKey(time, value = null)
   {
     const keyValue = value ?? Tr2BoneMatrixCurve._identityMatrix;
@@ -316,7 +327,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyCount()
   {
     return this.keys.length;
@@ -327,7 +337,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyTime(index)
   {
     return Number(this.keys[index]?.time ?? this.length);
@@ -338,7 +347,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyTime(index, time)
   {
     if (this.keys[index])
@@ -350,7 +358,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
   /**
    * @adapted returns a detached matrix rather than the native const reference.
    */
-  @be.mapMethodAndWrap()
   GetKeyValue(index)
   {
     return mat4.clone(this.keys[index]?.value ?? this.endValue);
@@ -359,7 +366,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
   /**
    * @adapted validates and copies caller matrices into existing key storage.
    */
-  @be.mapMethodAndWrap()
   SetKeyValue(index, value)
   {
     if (this.keys[index])
@@ -377,7 +383,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyInterpolation(index)
   {
     const key = this.keys[index];
@@ -391,7 +396,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyInterpolation(index, interpolation)
   {
     const key = this.keys[index];
@@ -406,7 +410,6 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RemoveKey(index)
   {
     if (Number.isInteger(index) && index >= 0 && index < this.keys.length)

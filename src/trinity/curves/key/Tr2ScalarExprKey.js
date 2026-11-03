@@ -17,122 +17,128 @@ import "../../generated/include/enums.js";
  * produced by an expression over the key's inputs, its random constant and the
  * previous key.
  */
-@be.define("Tr2ScalarExprKey")
-@be.inherit(INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ScalarExprKey",
+  inherit: [ INotify ],
+  // Tr2ScalarExprKeyCurve_Blue.cpp:24-52, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "time", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "left", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "right", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "timeExpression", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "valueExpression", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "leftTangentExpression", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "rightTangentExpression", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "input1", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "input2", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "input3", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "input4", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "randomConstant", be.READ ],
+    [ be.ATTR, "randomMin", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "randomMax", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "prevKeyTime", be.READ ],
+    [ be.ATTR, "prevKeyValue", be.READ ],
+    [ be.ATTR_CHOOSER, "interpolation", be.READWRITE | be.PERSIST | be.ENUM, "trinity.ScalarInterpolationChooser" ],
+    [ be.METHOD, "RegenRandomConstant", be.WRAP ]
+  ]
+})
 export class Tr2ScalarExprKey extends IInitialize
 {
   /** Key time in seconds. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   time = 0;
 
   /** Scalar sample value. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   value = 0;
 
   /** Incoming tangent value. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   left = 0;
 
   /** Outgoing tangent value. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   right = 0;
 
   /** Authored expression source for time. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.expression
   timeExpression = "";
 
   /** Authored expression source for value. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.expression
   valueExpression = "";
 
   /** Authored expression source for leftTangent. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.expression
   leftTangentExpression = "";
 
   /** Authored expression source for rightTangent. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.expression
   rightTangentExpression = "";
 
   /** Authored expression input 1. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   input1 = 0;
 
   /** Authored expression input 2. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   input2 = 0;
 
   /** Authored expression input 3. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   input3 = 0;
 
   /** Authored expression input 4. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   input4 = 0;
 
   /** Runtime random constant; readable without persistence. */
-  @be.mapAttribute(be.READ)
   @type.float32
   randomConstant = 0;
 
   /** Minimum authored random range. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   randomMin = 0;
 
   /** Maximum authored random range. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   randomMax = 0;
 
   /** Runtime previous-key time; zero for the first key. */
-  @be.mapAttribute(be.READ)
   @type.float32
   prevKeyTime = 0;
 
   /** Runtime previous-key value; zero for the first key. */
-  @be.mapAttribute(be.READ)
   @type.float32
   prevKeyValue = 0;
 
@@ -142,7 +148,6 @@ export class Tr2ScalarExprKey extends IInitialize
    * CONSTANT/LINEAR/HERMITE choices as ScalarInterpolationChooser.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp:50); chooser ScalarInterpolationChooser (trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.ScalarInterpolationChooser")
   @type.int32
   @type.enum("trinity.ScalarInterpolationChooser")
   interpolation = Tr2CurveInterpolation.LINEAR;
@@ -193,7 +198,6 @@ export class Tr2ScalarExprKey extends IInitialize
    * @adapted
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   RegenRandomConstant()
   {
     this.randomConstant = this.randomMin + carbonRandom.triFloatRandom01() * (this.randomMax - this.randomMin);

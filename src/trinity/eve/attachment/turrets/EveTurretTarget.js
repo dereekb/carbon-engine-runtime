@@ -25,27 +25,36 @@ export const EVE_TURRET_RANDOM_DELAY_MAX = 0.6;
  * resolved impact and miss positions, and the queue of hit/miss results the
  * server has sent.
  */
-@be.define("EveTurretTarget")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveTurretTarget",
+  inherit: [ IRoot ],
+  // EveTurretTarget_Blue.cpp:10-36, in Carbon's order.
+  members: [
+    [ be.ATTR, "locator", be.READ ],
+    [ be.ATTR, "position", be.READ ],
+    [ be.ATTR, "targetPosition", be.READ ],
+    [ be.ATTR, "positionOld", be.READ ],
+    [ be.ATTR, "positionOldInfluence", be.READ ],
+    [ be.ATTR, "behaviour", be.READ ],
+    [ be.METHOD, "SetShotMissed", be.WRAP ],
+    [ be.METHOD, "GetLastShotTime", be.WRAP ],
+    [ be.METHOD, "GetShotTimeVariance", be.WRAP ],
+    [ be.METHOD, "MissQueueSize", be.WRAP ]
+  ]
+})
 export class EveTurretTarget extends IRoot
 {
-  @be.mapAttribute(be.READ)
   @type.vec3
   targetPosition = vec3.create();
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.ImpactBehaviour")
   behaviour = 0;
-  @be.mapAttribute(be.READ)
   @type.float32
   positionOldInfluence = -1;
-  @be.mapAttribute(be.READ)
   @type.vec3
   position = vec3.create();
-  @be.mapAttribute(be.READ)
   @type.vec3
   positionOld = vec3.create();
-  @be.mapAttribute(be.READ)
   @type.int32
   locator = -1;
 
@@ -419,7 +428,6 @@ export class EveTurretTarget extends IRoot
    * @param {boolean} missed Whether that shot will miss.
    * The shot time is TimeAsDouble( BeOS->GetActualTime() ), read here as Carbon reads it (EveTurretTarget.cpp:404-414).
    */
-  @be.mapMethodAndWrap()
   SetShotMissed(missed)
   {
     this._missQueue.push(!!missed);
@@ -432,7 +440,6 @@ export class EveTurretTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetLastShotTime()
   {
     return this._lastShotTime;
@@ -443,7 +450,6 @@ export class EveTurretTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   MissQueueSize()
   {
     return this._missQueue.length;
@@ -454,7 +460,6 @@ export class EveTurretTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetShotTimeVariance()
   {
     return EVE_TURRET_RANDOM_DELAY_MAX;

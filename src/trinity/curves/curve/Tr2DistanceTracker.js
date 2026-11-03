@@ -12,17 +12,29 @@ import { type } from "#schema";
  * the full separation or its projection onto a fixed direction, and optionally
  * signed by which side of that direction the target lies.
  */
-@be.define("Tr2DistanceTracker")
-@be.inherit(INotify)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2DistanceTracker",
+  inherit: [ INotify ],
+  // Tr2DistanceTracker_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ ITriFunction, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READ ],
+    [ be.ATTR, "signedDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distanceToClosest", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "direction", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObject", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "targetObject", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sourcePosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "targetPosition", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2DistanceTracker extends ITriFunction
 {
   /**
    * Authored name identifying this distance-tracking function; native wide string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   name = "";
@@ -32,7 +44,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * units when direction is normalized. Read-only metadata; not persisted.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   value = 0;
 
@@ -41,7 +52,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * nonnegative.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   signedDistance = true;
@@ -50,7 +60,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * Selects directional projection instead of full source-to-target separation.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   distanceToClosest = true;
@@ -60,7 +69,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * sampling uses the authored components unchanged.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   direction = vec3.create();
@@ -69,7 +77,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * Optional position function sampled into sourcePosition during updates.
    * @type {ITriVectorFunction|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("ITriVectorFunction")
@@ -79,7 +86,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * Optional position function sampled into targetPosition during updates.
    * @type {ITriVectorFunction|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("ITriVectorFunction")
@@ -90,7 +96,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * source function is attached.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   sourcePosition = vec3.create();
@@ -100,7 +105,6 @@ export class Tr2DistanceTracker extends ITriFunction
    * target function is attached.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   targetPosition = vec3.create();

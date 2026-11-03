@@ -10,11 +10,16 @@ import { Tr2GrannyTrack } from "./Tr2GrannyTrack.js";
  * Granny track that replays a text track's timed entries as engine events,
  * firing each entry once as the playhead crosses it.
  */
-@be.define("Tr2GrannyEventTrack")
-@be.exposureChainTo(Tr2GrannyTrack)
+@be.define({
+  name: "Tr2GrannyEventTrack",
+  // Tr2GrannyEventTrack_Blue.cpp:10-13, in Carbon's order.
+  members: [
+    [ be.ATTR, "eventListener", be.READWRITE ]
+  ],
+  chainTo: Tr2GrannyTrack
+})
 export class Tr2GrannyEventTrack extends Tr2GrannyTrack
 {
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBlueEventListener")
   eventListener = null;
 

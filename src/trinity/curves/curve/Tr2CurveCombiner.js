@@ -10,18 +10,24 @@ import { type } from "#schema";
  * Vector function returning the component-wise sum of every child vector
  * function sampled at the same time; its length is the longest child's length.
  */
-@be.define("Tr2CurveCombiner")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriVectorFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveCombiner",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveCombiner_Blue.cpp:10-34, in Carbon's order.
+  interfaces: [ ITriFunction, ITriVectorFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curves", be.READ | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ]
+  ]
+})
 export class Tr2CurveCombiner extends ITriVectorFunction
 {
   /**
    * Name identifying this vector-function combiner (native std::string m_name).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -30,7 +36,6 @@ export class Tr2CurveCombiner extends ITriVectorFunction
    * Typed child-vector list whose sampled values are summed (native PITriVectorFunctionVector m_curves).
    * @type {BlueList<ITriVectorFunction>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriVectorFunction")
   curves = new BlueList(ITriVectorFunction, { className: null, listOps: 0 });
@@ -39,7 +44,6 @@ export class Tr2CurveCombiner extends ITriVectorFunction
    * Three-component sum committed after all child updates succeed (native Vector3 m_currentValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.vec3
   currentValue = vec3.create();
 
@@ -153,7 +157,6 @@ export class Tr2CurveCombiner extends ITriVectorFunction
    * @param {Float32Array} out Destination value.
    * @returns {Float32Array} The destination.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);

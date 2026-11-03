@@ -15,18 +15,23 @@ import { type, blue } from "#schema";
  * uninitialized scalar. The identity matrix matches Matrix's default constructor
  * (math/include/Matrix_inline.h:7-11).
  */
-@be.inherit(IRoot)
-@be.define("Tr2MatrixKey")
+@be.define({
+  name: "Tr2MatrixKey",
+  inherit: [ IRoot ],
+  // Tr2BoneMatrixCurve_Blue.cpp:11-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "time", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2MatrixKey extends IRoot
 {
   /** Key time in seconds. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   time = 0;
 
   /** Owned matrix storage; each key has a distinct buffer. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   value = mat4.create();

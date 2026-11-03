@@ -19,73 +19,90 @@ import { mappedInterfaces } from "../../blue/compose/interface.js";
  * applying every curve and copying every binding each update while it is
  * playing.
  */
-@be.define("TriCurveSet")
-@be.inherit(ITr2Updateable, ISimTimeRebaseNotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2Updateable)
+@be.define({
+  name: "TriCurveSet",
+  inherit: [ ITr2Updateable, ISimTimeRebaseNotify ],
+  // TriCurveSet_Blue.cpp:28-159, in Carbon's order.
+  interfaces: [ IInitialize, ITr2Updateable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curves", be.READ | be.PERSIST ],
+    [ be.ATTR, "bindings", be.READ | be.PERSIST ],
+    [ be.ATTR, "driver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ranges", be.READ | be.PERSIST ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "playOnLoad", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isPlaying", be.READ ],
+    [ be.ATTR, "scaledTime", be.READWRITE ],
+    [ be.ATTR, "useSimTimeRebase", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "useRealTime", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Update", be.WRAP, "UpdateWithCurrentTime" ],
+    [ be.METHOD, "Play", be.WRAP ],
+    [ be.METHOD, "PlayFrom", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.METHOD, "StopOnNextFrame", be.WRAP ],
+    [ be.METHOD, "StopAfter", be.WRAP ],
+    [ be.METHOD, "GetMaxCurveDuration", be.WRAP ],
+    [ be.METHOD, "StopAfterWithCallback", be.WRAP ],
+    [ be.METHOD, "Apply", be.WRAP ],
+    [ be.METHOD, "SetTimeRange", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "ResetTimeRange", be.WRAP ],
+    [ be.METHOD, "HasTimeRange", be.WRAP ],
+    [ be.METHOD, "GetTimeRange", be.WRAP ]
+  ]
+})
 export class TriCurveSet extends IInitialize
 {
   /** Authored curve-set name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Functions sampled in stored order before bindings are copied. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   curves = new BlueList(ITriFunction, { className: null, listOps: 0 });
 
   /** Bindings copied after all function samples. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ValueBinding")
   bindings = new BlueList(ITr2ValueBinding, { className: null, listOps: 0 });
 
   /** Optional owner of the source-time conversion. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ICurveSetDriver")
   driver = null;
 
   /** Named playback intervals in scaled seconds. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2CurveSetRange")
   ranges = new BlueList(Tr2CurveSetRange, { className: "Tr2CurveSetRange", listOps: 0 });
 
   /** Multiplier applied to each source-time delta. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scale = 1;
 
   /** Whether Initialize starts playback. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   playOnLoad = true;
 
   /** Whether updates sample functions and copy bindings. */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isPlaying = false;
 
   /** Current scaled sample time in seconds. */
-  @be.mapAttribute(be.READWRITE)
   @type.float64
   scaledTime = 0;
 
   /** Whether initialization requests simulation-clock rebasing. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.boolean
   useSimTimeRebase = false;
 
   /** Whether the two-clock Update overload selects real time. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useRealTime = false;
@@ -201,7 +218,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Apply()
   {
     for (const curve of this.curves)
@@ -257,7 +273,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Play()
   {
     this.PlayFrom(0);
@@ -289,7 +304,6 @@ export class TriCurveSet extends IInitialize
    * @param {number} time Initial scaled sample time in seconds.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   PlayFrom(time)
   {
     this._startTime = -1;
@@ -310,7 +324,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     this.isPlaying = false;
@@ -322,7 +335,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   StopOnNextFrame()
   {
     this._stopOnNextFrame = true;
@@ -335,7 +347,6 @@ export class TriCurveSet extends IInitialize
    * @param {number} seconds Delay measured on the source timeline.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   StopAfter(seconds)
   {
     this._endTime = -seconds;
@@ -355,7 +366,6 @@ export class TriCurveSet extends IInitialize
    * @param {BlueScriptCallback|Function|object|null} callback Callback copied into the owned slot.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   StopAfterWithCallback(seconds, callback)
   {
     this.StopAfter(seconds);
@@ -493,7 +503,6 @@ export class TriCurveSet extends IInitialize
    * @adapted native BlueCastPtr checks the exact exposure table, with ITriDuration before ITriCurveLength; JavaScript keeps the same object identity for either interface.
    * @returns {number} Greatest reported duration, or zero.
    */
-  @be.mapMethodAndWrap()
   GetMaxCurveDuration()
   {
     let maxDuration = 0;
@@ -549,7 +558,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap("Update")
   UpdateWithCurrentTime()
   {
     this.Update(blue.os.GetCurrentFrameTime());
@@ -564,7 +572,6 @@ export class TriCurveSet extends IInitialize
    * @param {boolean} [looped=true] Whether the interval wraps.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   SetTimeRange(timeMin, timeMax, looped = true)
   {
     this._hasTimeRange = true;
@@ -579,7 +586,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   ResetTimeRange()
   {
     this._hasTimeRange = false;
@@ -593,7 +599,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {boolean} Whether an interval is active.
    */
-  @be.mapMethodAndWrap()
   HasTimeRange()
   {
     return this._hasTimeRange;
@@ -605,7 +610,6 @@ export class TriCurveSet extends IInitialize
    * @implemented
    * @returns {Array<number>} New pair of active interval endpoints.
    */
-  @be.mapMethodAndWrap()
   GetTimeRange()
   {
     return [this._timeRangeMin, this._timeRangeMax];

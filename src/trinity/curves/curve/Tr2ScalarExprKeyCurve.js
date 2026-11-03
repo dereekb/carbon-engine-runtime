@@ -15,18 +15,44 @@ import "../../generated/include/enums.js";
  * expressions re-evaluated on every sample, with optional cycling and reversed
  * playback over the key range.
  */
-@be.define("Tr2ScalarExprKeyCurve")
-@be.inherit(IInitialize, ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2ScalarExprKeyCurve",
+  inherit: [ IInitialize, ITriCurveLength ],
+  // Tr2ScalarExprKeyCurve_Blue.cpp:58-151, in Carbon's order.
+  interfaces: [ ITriFunction, IInitialize, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "length" ],
+    [ be.ATTR, "cycle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reversed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "timeOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "timeScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR_CHOOSER, "interpolation", be.READWRITE | be.PERSIST | be.ENUM, "trinity.ScalarInterpolationChooser" ],
+    [ be.ATTR, "keys", be.READ | be.PERSIST ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "RemoveKey", be.WRAP ],
+    [ be.METHOD, "GetKeyCount", be.WRAP ],
+    [ be.METHOD, "GetValueAt", be.WRAP ],
+    [ be.METHOD, "GetKeyValue", be.WRAP ],
+    [ be.METHOD, "GetKeyTime", be.WRAP ],
+    [ be.METHOD, "GetKeyLeftTangent", be.WRAP ],
+    [ be.METHOD, "GetKeyRightTangent", be.WRAP ],
+    [ be.METHOD, "GetKeyInterpolation", be.WRAP ],
+    [ be.METHOD, "SetKeyValue", be.WRAP ],
+    [ be.METHOD, "SetKeyTime", be.WRAP ],
+    [ be.METHOD, "SetKeyLeftTangent", be.WRAP ],
+    [ be.METHOD, "SetKeyRightTangent", be.WRAP ],
+    [ be.METHOD, "SetKeyInterpolation", be.WRAP ],
+    [ be.METHOD, "Sort", be.WRAP ]
+  ]
+})
 export class Tr2ScalarExprKeyCurve extends ITriFunction
 {
   /**
    * Authored name identifying the expression-key scalar curve.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -35,7 +61,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * Enables repeated sampling after remapped time passes the evaluated key range.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   cycle = false;
@@ -44,7 +69,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * Enables the native reverse-playback branch over the evaluated key span.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reversed = false;
@@ -53,7 +77,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * Offset in seconds subtracted after dividing sample time by timeScale.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   timeOffset = 0;
@@ -62,7 +85,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * Dimensionless divisor converting input seconds to curve-local time.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   timeScale = 1;
@@ -71,7 +93,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * Scalar cached by UpdateValue or the JavaScript Update convenience; native float.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentValue = 0;
 
@@ -82,7 +103,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp:71); chooser ScalarInterpolationChooser (trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.ScalarInterpolationChooser")
   @type.uint32
   @type.enum("trinity.ScalarInterpolationChooser")
   interpolation = Tr2CurveInterpolation.LINEAR;
@@ -92,7 +112,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * and tangents.
    * @type {BlueList<Tr2ScalarExprKey>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ScalarExprKey")
   keys = new BlueList(Tr2ScalarExprKey, { className: "Tr2ScalarExprKey", listOps: 0 });
@@ -102,7 +121,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * list. Reading this accessor does not reevaluate expressions.
    * @type {number}
    */
-  @be.mapPropertyReadOnly()
   @type.float32
   get length()
   {
@@ -174,7 +192,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * @adapted JS Number arithmetic and the existing scalar Hermite helper replace
    *   native float temporaries. Native key-value-based cycling/reversal is retained.
    */
-  @be.mapMethodAndWrap()
   GetValueAt(time)
   {
     if (!this.keys.length)
@@ -233,7 +250,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range zero fallback instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   GetKeyTime(index)
   {
     return Number(this.keys[index]?.time ?? 0);
@@ -244,7 +260,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range no-op instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   SetKeyTime(index, time)
   {
     if (this.keys[index])
@@ -258,7 +273,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range zero fallback instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   GetKeyValue(index)
   {
     return Number(this.keys[index]?.value ?? 0);
@@ -269,7 +283,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range no-op instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   SetKeyValue(index, value)
   {
     if (this.keys[index])
@@ -283,7 +296,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyCount()
   {
     return this.keys.length;
@@ -294,7 +306,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range zero fallback instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   GetKeyInterpolation(index)
   {
     return Number(this.keys[index]?.interpolation ?? 0);
@@ -305,7 +316,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @adapted retains the existing JS out-of-range no-op instead of native unchecked indexing.
    */
-  @be.mapMethodAndWrap()
   SetKeyInterpolation(index, interpolation)
   {
     if (this.keys[index])
@@ -319,7 +329,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyLeftTangent(index)
   {
     const key = this.keys[index];
@@ -331,7 +340,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyLeftTangent(index, tangent)
   {
     if (this.keys[index])
@@ -345,7 +353,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyRightTangent(index)
   {
     const key = this.keys[index];
@@ -357,7 +364,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyRightTangent(index, tangent)
   {
     if (this.keys[index])
@@ -395,7 +401,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * @adapted construction uses new and retains JS optional defaults and the existing
    *   insertion scan (NaN inserts first); native instance creation can fail.
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, leftTangent = 0, rightTangent = 0, interpolation = this.interpolation)
   {
     let index = 0;
@@ -419,7 +424,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    * @adapted invalid JS indexes are ignored; a negative index must not become the
    *   BlueList clear sentinel because the native method receives an unsigned index.
    */
-  @be.mapMethodAndWrap()
   RemoveKey(index)
   {
     if (Number.isInteger(index) && index >= 0) this.keys.Remove(index);
@@ -430,7 +434,6 @@ export class Tr2ScalarExprKeyCurve extends ITriFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Sort()
   {
     this._ReEvaluateKeys();

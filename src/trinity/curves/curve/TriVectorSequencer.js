@@ -14,16 +14,24 @@ import "#consts/graphics/trinityEnums";
  * zero. Sampling retains the existing instance child scratch; native sampling
  * uses local temporaries. Numeric tick overloads remain unimplemented.
  */
-@be.define("TriVectorSequencer")
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriVectorFunction)
+@be.define({
+  name: "TriVectorSequencer",
+  // TriSequencer_Blue.cpp:13-50, in Carbon's order.
+  interfaces: [ ITriFunction, ITriVectorFunction ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "operator", be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIOPERATOR" ],
+    [ be.ATTR, "functions", be.READ | be.PERSIST ]
+  ]
+})
 export class TriVectorSequencer extends ITriVectorFunction
 {
   /**
    * Authored name identifying the vector sequencer; native wide string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   name = "";
@@ -33,7 +41,6 @@ export class TriVectorSequencer extends ITriVectorFunction
    * does not apply it.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int64
   start = 0;
@@ -43,7 +50,6 @@ export class TriVectorSequencer extends ITriVectorFunction
    * depend on the child functions and selected operator.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   value = vec3.create();
@@ -54,7 +60,6 @@ export class TriVectorSequencer extends ITriVectorFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/TriSequencer_Blue.cpp:42); chooser TriOperator (trinity/trinity/TriConstants.cpp:185).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIOPERATOR")
   @type.int32
   @type.enum("blue.TRIOPERATOR")
   operator = TRIOPERATOR.TRIOP_MULTIPLY;
@@ -63,7 +68,6 @@ export class TriVectorSequencer extends ITriVectorFunction
    * Ordered child vector functions sampled and combined at the supplied time.
    * @type {BlueList<ITriVectorFunction>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriVectorFunction")
   functions = new BlueList(ITriVectorFunction, { className: null, listOps: 0 });

@@ -13,18 +13,30 @@ import { type } from "#schema";
  * applies saturation and brightness, exposing both the mixed color and its
  * linear-space conversion.
  */
-@be.define("Tr2CurveColorMixer")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriColorFunction)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveColorMixer",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveColorMixer_Blue.cpp:9-70, in Carbon's order.
+  interfaces: [ ITriColorFunction, ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lerpValue", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "saturation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "alphaOverride", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR, "convertedLinearValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ]
+  ]
+})
 export class Tr2CurveColorMixer extends ITriColorFunction
 {
   /**
    * Name identifying this color-mixing function (native std::string m_name).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -33,7 +45,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * First authored RGBA endpoint, selected when lerpValue is zero (native Color m_color1).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color1 = color.createLinear();
@@ -42,7 +53,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * Second authored RGBA endpoint, selected when lerpValue is one (native Color m_color2).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color2 = color.createLinear();
@@ -51,7 +61,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * Interpolation factor from color1 to color2, without clamping (native float m_lerpValue).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lerpValue = 0;
@@ -60,7 +69,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * Blend away from grayscale: zero gives grayscale and one preserves the mixed color (native float m_saturation).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   saturation = 1;
@@ -69,7 +77,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * Multiplier applied to all four mixed-color components (native float m_brightness).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   brightness = 1;
@@ -79,7 +86,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * override (native float m_alphaOverride).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   alphaOverride = -1;
@@ -88,7 +94,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * Mixed RGBA color cached by the last Update or UpdateValue call (native Color m_currentValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.color
   currentValue = color.createLinear();
 
@@ -96,7 +101,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * currentValue converted from sRGB to linear by UpdateValue, alpha copied unchanged (native Color m_convertedLinearValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.color
   convertedLinearValue = color.createLinear();
 
@@ -217,7 +221,6 @@ export class Tr2CurveColorMixer extends ITriColorFunction
    * @param {Float32Array} out Destination value.
    * @returns {Float32Array} The destination.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);

@@ -21,13 +21,47 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { EveUpdateContext } from "../../EveUpdateContext.js";
 
 /** Coordinates a turret set's multi-muzzle firing effects, delays, stretch endpoints, observers, and impact timing. */
-@be.define("EveTurretFiringFX")
-@be.inherit(IInitialize, INotify, IListNotify, ITr2ControllerOwner, ITr2DebugRenderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "EveTurretFiringFX",
+  inherit: [ IInitialize, INotify, IListNotify, ITr2ControllerOwner, ITr2DebugRenderable ],
+  // EveTurretFiringFX_Blue.cpp:12-69, in Carbon's order.
+  interfaces: [ IInitialize, INotify, IListNotify, ITr2ControllerOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "useMuzzleTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isFiring", be.READ ],
+    [ be.ATTR, "firingDuration", be.READ ],
+    [ be.ATTR, "firingDurationOverride", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "firingPeakTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isLoopFiring", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneName", be.READWRITE | be.PERSIST ],
+    [ be.PROP_PERSISTED, "firingDelay1" ],
+    [ be.PROP_PERSISTED, "firingDelay2" ],
+    [ be.PROP_PERSISTED, "firingDelay3" ],
+    [ be.PROP_PERSISTED, "firingDelay4" ],
+    [ be.PROP_PERSISTED, "firingDelay5" ],
+    [ be.PROP_PERSISTED, "firingDelay6" ],
+    [ be.PROP_PERSISTED, "firingDelay7" ],
+    [ be.PROP_PERSISTED, "firingDelay8" ],
+    [ be.PROP_PERSISTED, "firingDelay9" ],
+    [ be.PROP_PERSISTED, "firingDelay10" ],
+    [ be.PROP_PERSISTED, "firingDelay11" ],
+    [ be.PROP_PERSISTED, "firingDelay12" ],
+    [ be.ATTR, "stretch", be.READ | be.PERSIST ],
+    [ be.ATTR, "endPosition", be.READWRITE ],
+    [ be.ATTR, "scaleEffectTarget", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startCurveSet", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stopCurveSet", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationObserver", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "GetPerMuzzleEffectCount", be.WRAP ]
+  ]
+})
 export class EveTurretFiringFX extends EveEntity
 {
 
@@ -35,7 +69,6 @@ export class EveTurretFiringFX extends EveEntity
    * Curve set played when a muzzle starts firing.
    * @type {TriCurveSet|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriCurveSet")
   startCurveSet = null;
@@ -44,7 +77,6 @@ export class EveTurretFiringFX extends EveEntity
    * Curve set played when firing stops.
    * @type {TriCurveSet|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriCurveSet")
   stopCurveSet = null;
@@ -53,7 +85,6 @@ export class EveTurretFiringFX extends EveEntity
    * Firing elements associated with the muzzle slots.
    * @type {Array<IEveFiringEffectElement>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveFiringEffectElement")
   stretch = [];
@@ -62,7 +93,6 @@ export class EveTurretFiringFX extends EveEntity
    * Name identifying the firing effect.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -71,7 +101,6 @@ export class EveTurretFiringFX extends EveEntity
    * Offset into the burst used to time the target impact.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   firingPeakTime = 0;
@@ -80,7 +109,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 1 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay1()
   {
@@ -100,7 +128,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 2 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay2()
   {
@@ -120,7 +147,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 3 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay3()
   {
@@ -140,7 +166,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 4 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay4()
   {
@@ -160,7 +185,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 5 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay5()
   {
@@ -180,7 +204,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 6 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay6()
   {
@@ -200,7 +223,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 7 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay7()
   {
@@ -220,7 +242,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 8 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay8()
   {
@@ -240,7 +261,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 9 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay9()
   {
@@ -260,7 +280,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 10 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay10()
   {
@@ -280,7 +299,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 11 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay11()
   {
@@ -300,7 +318,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored start delay added to muzzle 12 when preparing a burst.
    * @returns {number}
    */
-  @be.mapPropertyPersisted()
   @type.float32
   get firingDelay12()
   {
@@ -320,7 +337,6 @@ export class EveTurretFiringFX extends EveEntity
    * World-space target point shared by the firing elements.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   endPosition = vec3.create();
 
@@ -328,7 +344,6 @@ export class EveTurretFiringFX extends EveEntity
    * Resolved duration used to expire non-looping muzzle effects.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   firingDuration = 1000;
 
@@ -336,7 +351,6 @@ export class EveTurretFiringFX extends EveEntity
    * Whether the effect is currently armed or firing.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isFiring = false;
 
@@ -344,7 +358,6 @@ export class EveTurretFiringFX extends EveEntity
    * Observer updated at the target endpoint.
    * @type {TriObserverLocal|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriObserverLocal")
   destinationObserver = null;
@@ -353,7 +366,6 @@ export class EveTurretFiringFX extends EveEntity
    * Observer updated from the first muzzle transform.
    * @type {TriObserverLocal|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriObserverLocal")
   sourceObserver = null;
@@ -362,7 +374,6 @@ export class EveTurretFiringFX extends EveEntity
    * Authored duration override; a negative value uses the element curve duration.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
@@ -372,7 +383,6 @@ export class EveTurretFiringFX extends EveEntity
    * Whether firing elements use the full muzzle transform instead of its translation.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useMuzzleTransform = false;
@@ -381,7 +391,6 @@ export class EveTurretFiringFX extends EveEntity
    * Whether muzzle effects remain active beyond the resolved firing duration.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isLoopFiring = false;
@@ -390,7 +399,6 @@ export class EveTurretFiringFX extends EveEntity
    * Bone name used to locate the firing muzzle.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   boneName = "Pos_Fire";
@@ -399,7 +407,6 @@ export class EveTurretFiringFX extends EveEntity
    * Whether active firing elements are registered for display.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   display = true;
@@ -408,7 +415,6 @@ export class EveTurretFiringFX extends EveEntity
    * Whether target radius controls destination-object scale.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   scaleEffectTarget = false;
@@ -417,7 +423,6 @@ export class EveTurretFiringFX extends EveEntity
    * Target radius mapped to the minimum destination-object scale.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minRadius = 30;
@@ -426,7 +431,6 @@ export class EveTurretFiringFX extends EveEntity
    * Target radius mapped to the maximum destination-object scale.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxRadius = 3000;
@@ -435,7 +439,6 @@ export class EveTurretFiringFX extends EveEntity
    * Destination-object scale at or below the minimum target radius.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minScale = 1;
@@ -980,7 +983,6 @@ export class EveTurretFiringFX extends EveEntity
    * Destination-object scale at or above the maximum target radius.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxScale = 10;
@@ -991,7 +993,6 @@ export class EveTurretFiringFX extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetPerMuzzleEffectCount()
   {
     return this.stretch.length;

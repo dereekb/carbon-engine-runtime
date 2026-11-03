@@ -13,11 +13,19 @@ import { CcpTime } from "#blue";
  * curves, ramping the blend from 0 to 1 over `length` seconds starting at
  * `start` (a Blue time) and clamping outside that window.
  */
-@be.define("Tr2QuaternionLerpCurve")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriQuaternionFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2QuaternionLerpCurve",
+  inherit: [ ITriCurveLength ],
+  // Tr2QuaternionLerpCurve_Blue.cpp:10-35, in Carbon's order.
+  interfaces: [ ITriFunction, ITriQuaternionFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "length", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "endCurve", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
 {
   /**
@@ -25,7 +33,6 @@ export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
    * Number, as every Be::Time is (blue-clock-epoch).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float64
   start = 0;
@@ -34,7 +41,6 @@ export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
    * Blend duration in seconds; a nonpositive duration leaves the sampling destination unchanged.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   length = 0;
@@ -44,7 +50,6 @@ export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
    * cannot produce a sample.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   value = quat.create();
@@ -54,7 +59,6 @@ export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
    * sample time.
    * @type {ITriQuaternionFunction|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   startCurve = null;
@@ -64,7 +68,6 @@ export class Tr2QuaternionLerpCurve extends ITriQuaternionFunction
    * time.
    * @type {ITriQuaternionFunction|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   endCurve = null;

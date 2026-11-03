@@ -13,7 +13,15 @@ const TRI_PI = Math.PI;
  * length, and also exposes a separate non-linear kick-in pulse that runs once
  * per fade-in.
  */
-@be.define("Tr2ScalarFader")
+@be.define({
+  name: "Tr2ScalarFader",
+  // Tr2ScalarFader_Blue.cpp:10-15, in Carbon's order.
+  members: [
+    [ be.ATTR, "value", be.READWRITE ],
+    [ be.ATTR, "fading", be.READWRITE ],
+    [ be.ATTR, "fadeTime", be.READ ]
+  ]
+})
 export class Tr2ScalarFader extends IRoot
 {
   /**
@@ -21,7 +29,6 @@ export class Tr2ScalarFader extends IRoot
    * to 1.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   value = 0;
 
@@ -29,7 +36,6 @@ export class Tr2ScalarFader extends IRoot
    * Signed rate of change in envelope units per second; zero stops the linear fade.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   fading = 0;
 
@@ -38,7 +44,6 @@ export class Tr2ScalarFader extends IRoot
    * zero.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   fadeTime = -1;
 

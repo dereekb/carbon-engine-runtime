@@ -16,39 +16,39 @@ import { CjsGrannyCurves } from "./CjsGrannyCurves.js";
  *
  * @abstract
  */
-@be.define("Tr2GrannyTrack")
-@be.inherit(ITriFunction, IInitialize, ITriCurveLength, INotify)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2GrannyTrack",
+  inherit: [ ITriFunction, IInitialize, ITriCurveLength, INotify ],
+  // Tr2GrannyTrack_Blue.cpp:11-21, in Carbon's order.
+  interfaces: [ ITriFunction, IInitialize, INotify ],
+  members: [
+    [ be.ATTR_CHOOSER, "grannyResPath", be.READWRITE | be.PERSIST | be.NOTIFY, "blue.TriGR2Chooser" ],
+    [ be.ATTR, "grannyRes", be.READ ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "group", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "duration", be.READ ],
+    [ be.ATTR, "cycle", be.READWRITE | be.PERSIST ]
+  ]
+})
 @be.abstract
 export class Tr2GrannyTrack extends IRoot
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2GrannyTrack_Blue.cpp:16); chooser TriGR2Chooser (trinity/trinity/TriConstants.cpp:87). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY, "blue.TriGR2Chooser")
   @type.path
   grannyResPath = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   cycle = false;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   duration = 0;
 
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGrannyRes")
   grannyRes = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string

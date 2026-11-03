@@ -13,11 +13,30 @@ import { Tr2CurveScalarKey } from "../key/Tr2CurveScalarKey.js";
  * Hermite interpolation and independent clamp, linear, cycle or mirror
  * extrapolation before the first and after the last key.
  */
-@be.define("Tr2CurveScalar")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriScalarFunction)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveScalar",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveScalar_Blue.cpp:62-159, in Carbon's order.
+  interfaces: [ ITriScalarFunction, ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "keys", be.READ | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR_CHOOSER, "extrapolationBefore", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation" ],
+    [ be.ATTR_CHOOSER, "extrapolationAfter", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation" ],
+    [ be.ATTR, "timeOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "timeScale", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "GetTangentAt", be.WRAP, "GetTangent" ],
+    [ be.METHOD, "OnKeysChanged", be.WRAP ],
+    [ be.METHOD, "GetTimeOffset", be.WRAP ],
+    [ be.METHOD, "SetTimeOffset", be.WRAP ],
+    [ be.METHOD, "GetTimeScale", be.WRAP ],
+    [ be.METHOD, "SetTimeScale", be.WRAP ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetExtrapolation", be.WRAP ]
+  ]
+})
 export class Tr2CurveScalar extends ITriScalarFunction
 {
   /**
@@ -199,7 +218,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * Scalar key records with time, value, tangents, identifier and interpolation settings.
    * @type {Tr2CurveScalarKey[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.structList("Tr2CurveScalarKey")
   keys = [];
@@ -208,7 +226,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * Authored curve label stored as native std::string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -217,7 +234,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * Offset subtracted after dividing incoming seconds by timeScale.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   timeOffset = 0;
@@ -226,7 +242,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * Time divisor used by the native time / timeScale - timeOffset mapping.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   timeScale = 1;
@@ -235,7 +250,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * Cached scalar produced by the most recent curve update.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentValue = 0;
 
@@ -244,7 +258,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:84); chooser Tr2CurveExtrapolationChooser (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:38).
    */
-  @be.mapAttributeWithChooser(be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation")
   @type.uint32
   @type.enum("trinity.Tr2CurveExtrapolation")
   extrapolationBefore = Tr2CurveExtrapolation.CLAMP;
@@ -254,7 +267,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:90); chooser Tr2CurveExtrapolationChooser (trinity/trinity/Curves/Tr2CurveScalar_Blue.cpp:38).
    */
-  @be.mapAttributeWithChooser(be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation")
   @type.uint32
   @type.enum("trinity.Tr2CurveExtrapolation")
   extrapolationAfter = Tr2CurveExtrapolation.CLAMP;
@@ -361,7 +373,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} time Time in seconds.
    * @returns {number} The curve result.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time)
   {
     const count = this.keys.length;
@@ -404,7 +415,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} time Time in seconds.
    * @returns {number} The curve result.
    */
-  @be.mapMethodAndWrap("GetTangentAt")
   GetTangent(time)
   {
     const count = this.keys.length;
@@ -470,7 +480,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @implemented
    * @returns {number} The curve result.
    */
-  @be.mapMethodAndWrap()
   GetTimeOffset()
   {
     return this.timeOffset;
@@ -483,7 +492,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} timeOffset Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetTimeOffset(timeOffset)
   {
     this.timeOffset = timeOffset;
@@ -495,7 +503,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @implemented
    * @returns {number} The curve result.
    */
-  @be.mapMethodAndWrap()
   GetTimeScale()
   {
     return this.timeScale;
@@ -508,7 +515,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} timeScale Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetTimeScale(timeScale)
   {
     this.timeScale = timeScale;
@@ -532,7 +538,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @adapted
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   OnKeysChanged()
   {
     this.keys.sort((a, b) => a.time - b.time);
@@ -587,7 +592,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} [tangentType = Tr2CurveTangentType.AUTO_CLAMP] Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, interpolation = Tr2CurveInterpolation.HERMITE, leftTangent = 0, rightTangent = 0, tangentType = Tr2CurveTangentType.AUTO_CLAMP)
   {
     const key = new Tr2CurveScalarKey();
@@ -609,7 +613,6 @@ export class Tr2CurveScalar extends ITriScalarFunction
    * @param {number} extrapolation Curve parameter.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetExtrapolation(extrapolation)
   {
     this.extrapolationAfter = this.extrapolationBefore = extrapolation;

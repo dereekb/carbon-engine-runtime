@@ -17,18 +17,31 @@ const CLAMP_MIN = vec4.create();
  * result is converted to gamma space when srgbOutput is set.
  * JavaScript combines native time overloads as seconds-first calls with output last.
  */
-@be.define("Tr2CurveColor")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriColorFunction)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveColor",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveColor_Blue.cpp:10-79, in Carbon's order.
+  interfaces: [ ITriColorFunction, ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "srgbOutput", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "r", be.READ | be.PERSIST ],
+    [ be.ATTR, "g", be.READ | be.PERSIST ],
+    [ be.ATTR, "b", be.READ | be.PERSIST ],
+    [ be.ATTR, "a", be.READ | be.PERSIST ],
+    [ be.ATTR, "timeOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetExtrapolation", be.WRAP ]
+  ]
+})
 export class Tr2CurveColor extends ITriColorFunction
 {
   /**
    * Name identifying this composite color curve (native std::string m_name).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -37,7 +50,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Requests gamma-space conversion of the sampled linear color (native bool m_srgbOutput).
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   srgbOutput = false;
@@ -46,7 +58,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Owned scalar curve supplying the red component (native PTr2CurveScalar m_r).
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   r = new Tr2CurveScalar();
@@ -55,7 +66,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Owned scalar curve supplying the green component (native PTr2CurveScalar m_g).
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   g = new Tr2CurveScalar();
@@ -64,7 +74,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Owned scalar curve supplying the blue component (native PTr2CurveScalar m_b).
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   b = new Tr2CurveScalar();
@@ -73,7 +82,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Owned scalar curve supplying alpha; the parent substitutes alpha one when this curve is empty (native PTr2CurveScalar m_a).
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   a = new Tr2CurveScalar();
@@ -82,7 +90,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * Seconds subtracted from sample time before evaluating component curves (native float m_timeOffset).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   timeOffset = 0;
@@ -91,7 +98,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * RGBA color cached by the last Update or UpdateValue call (native Color m_currentValue).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.color
   currentValue = color.createLinear();
 
@@ -176,7 +182,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * @param {Float32Array|number[]} out Caller-owned output.
    * @returns {Float32Array|number[]} The caller-owned output.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);
@@ -196,7 +201,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * @param {number} [tangentType = Tr2CurveTangentType.AUTO_CLAMP] Scalar tangent-maintenance rule.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, interpolation = Tr2CurveInterpolation.HERMITE, leftTangent, rightTangent, tangentType = Tr2CurveTangentType.AUTO_CLAMP)
   {
     const useRightTangent = !!leftTangent && !!rightTangent;
@@ -213,7 +217,6 @@ export class Tr2CurveColor extends ITriColorFunction
    * @param {number} extrapolation Before and after extrapolation mode.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetExtrapolation(extrapolation)
   {
     this.r.SetExtrapolation(extrapolation);

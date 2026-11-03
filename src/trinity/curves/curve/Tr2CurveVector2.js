@@ -13,17 +13,27 @@ import { Tr2CurveScalar } from "./Tr2CurveScalar.js";
  * its length is the longer of the two.
  * JavaScript writes native returned vectors into caller-owned output buffers.
  */
-@be.define("Tr2CurveVector2")
-@be.inherit(ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "Tr2CurveVector2",
+  inherit: [ ITriCurveLength ],
+  // Tr2CurveVector2_Blue.cpp:10-54, in Carbon's order.
+  interfaces: [ ITriFunction, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "x", be.READ | be.PERSIST ],
+    [ be.ATTR, "y", be.READ | be.PERSIST ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetExtrapolation", be.WRAP ]
+  ]
+})
 export class Tr2CurveVector2 extends ITriFunction
 {
   /**
    * Authored curve label stored as native std::string.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -32,7 +42,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * Owned scalar curve for the horizontal vector component.
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   x = new Tr2CurveScalar();
@@ -41,7 +50,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * Owned scalar curve for the vertical vector component.
    * @type {Tr2CurveScalar}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.embed("Tr2CurveScalar")
   y = new Tr2CurveScalar();
@@ -50,7 +58,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * Cached two-component vector assembled from the x and y scalar curves.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READ)
   @type.vec2
   currentValue = vec2.create();
 
@@ -88,7 +95,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * @param {Float32Array|number[]} out Caller-owned output.
    * @returns {Float32Array|number[]} The caller-owned output.
    */
-  @be.mapMethodAndWrap("GetValueAt")
   GetValue(time, out)
   {
     return this.GetValueAt(time, out);
@@ -108,7 +114,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * @param {number} [tangentType = Tr2CurveTangentType.AUTO_CLAMP] Scalar tangent-maintenance rule.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddKey(time, value, interpolation = Tr2CurveInterpolation.HERMITE, leftTangent, rightTangent, tangentType = Tr2CurveTangentType.AUTO_CLAMP)
   {
     const useRightTangent = !!leftTangent && !!rightTangent;
@@ -123,7 +128,6 @@ export class Tr2CurveVector2 extends ITriFunction
    * @param {number} extrapolation Before and after extrapolation mode.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   SetExtrapolation(extrapolation)
   {
     this.x.SetExtrapolation(extrapolation);
