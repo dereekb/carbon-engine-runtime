@@ -11,7 +11,7 @@ import { CjsWebmFormat } from "../../src/resource/formats/webm/CjsWebmFormat.js"
 import { CjsOggFormat } from "../../src/resource/formats/ogg/CjsOggFormat.js";
 import { CjsWavFormat } from "../../src/resource/formats/wav/CjsWavFormat.js";
 import { TestDataRes } from "../support/testDataRes.js";
-import { BlueResMan } from "../../npm/dist/blue/blue/BlueResMan.js";
+import { BlueResMan } from "../../npm/dist/blue/blue/resman/BlueResMan.js";
 import "../support/frameLoop.js";
 
 const { STREAM_AUDIO, STREAM_VIDEO, STREAM_AUDIO_VIDEO } = StreamType;

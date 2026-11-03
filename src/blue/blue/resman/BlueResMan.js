@@ -1,20 +1,20 @@
-import { requireRegisteredClassName } from "../compose/className.js";
+import { requireRegisteredClassName } from "../../compose/className.js";
 import { StreamType } from "#consts/media";
 // Source: blue/src/BlueResMan.h
 // Source: blue/src/BlueResMan.cpp
 // Consumer interface: blue/include/IBlueResMan.h (see IBlueResMan.js).
 import { assertNonNegativeInteger, assertNonNegativeNumber, assertPositiveInteger } from "#utils/validation";
 import { MotherLode, getMotherLodeKey } from "./MotherLode.js";
-import { BlueOS } from "./BlueOS.js";
-import { blue as blueService } from "./blue.js";
+import { BlueOS } from "../BlueOS.js";
+import { blue as blueService } from "../blue.js";
 import { CjsLoadingObject } from "./CjsLoadingObject.js";
-import { IBlueCallbackMan } from "./interfaces/IBlueCallbackMan.js";
+import { IBlueCallbackMan } from "../interfaces/IBlueCallbackMan.js";
 import { CjsSchema, meta } from "#schema";
-import { BlueResManQueue, IBlueResMan } from "./interfaces/IBlueResMan.js";
-import { IBlueEvents } from "./interfaces/IBlueEvents.js";
-import { IRoot } from "../blueexposure/IRoot.js";
-import { IBlueResource } from "./interfaces/IBlueResource.js";
-import * as CcpLog from "../../global/logging/ccpLog.js";
+import { BlueResManQueue, IBlueResMan } from "../interfaces/IBlueResMan.js";
+import { IBlueEvents } from "../interfaces/IBlueEvents.js";
+import { IRoot } from "../../blueexposure/IRoot.js";
+import { IBlueResource } from "../interfaces/IBlueResource.js";
+import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { hasOwnThen } from "#utils/object";
 import {
   getResourceExtension,
@@ -23,15 +23,15 @@ import {
   normalizeResourcePath
 } from "#utils/path";
 
-import { GetResources } from "./getResources.js";
-import { ResourceHandlerMode } from "../../global/consts/resourceHandlerMode.js";
-import { BlueCallbackMan } from "./BlueCallbackMan.js";
+import { GetResources } from "../getResources.js";
+import { ResourceHandlerMode } from "../../../global/consts/resourceHandlerMode.js";
+import { BlueCallbackMan } from "../BlueCallbackMan.js";
 import {
   CjsResManMainThreadLoader
-} from "./worker/CjsResManMainThreadLoader.js";
+} from "../worker/CjsResManMainThreadLoader.js";
 import {
   CjsResManWorkerLoader
-} from "./worker/CjsResManWorkerLoader.js";
+} from "../worker/CjsResManWorkerLoader.js";
 /** @type {WeakMap<object, CjsResourceReadContext>} */
 const READ_CONTEXTS = new WeakMap();
 
@@ -4345,7 +4345,7 @@ export class BlueResMan
    * The `?query` is the resource's own parameters: the file is opened without
    * it, as `DoOpenStream` opens `m_path.substr(0, query)` (BlueAsyncRes.cpp:380-384).
    *
-   * @param {import("./interfaces/IBluePaths.js").IBluePaths} paths The paths service.
+   * @param {import("../interfaces/IBluePaths.js").IBluePaths} paths The paths service.
    * @param {string} path Resource path.
    * @param {object} options Read options; `signal` aborts the read.
    * @returns {Promise<Uint8Array>} The bytes.

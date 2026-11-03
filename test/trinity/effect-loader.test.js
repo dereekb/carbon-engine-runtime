@@ -2,7 +2,7 @@ import { configureResourceManager } from "../support/configuredResMan.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { BlueResMan } from "../../npm/dist/blue/blue/BlueResMan.js";
+import { BlueResMan } from "../../npm/dist/blue/blue/resman/BlueResMan.js";
 import { blue, IBlueResMan } from "../../npm/dist/blue/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2EffectRes } from "../../npm/dist/trinity/shader/index.js";

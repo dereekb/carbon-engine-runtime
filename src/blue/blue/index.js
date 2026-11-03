@@ -57,7 +57,7 @@ export * from "./interfaces/IBlueResMan.js";
 export * from "./interfaces/IBlueResManNotifications.js";
 export * from "./interfaces/IBlueResource.js";
 export * from "./interfaces/IBlueAsyncResNotifyTarget.js";
-export * from "./BlueAsyncRes.js";
+export * from "./resman/BlueAsyncRes.js";
 export * from "../blueexposure/IPythonMethods.js";
 export * from "./interfaces/ICacheable.js";
 export * from "../blueexposure/IRoot.js";
@@ -98,13 +98,13 @@ export * from "./worker/BlueCallbackManWorker.js";
 // resource and register with it.
 export * from "../../global/consts/resourceHandlerMode.js";
 
-export * from "./CjsFormatStore.js";
+export * from "./resman/CjsFormatStore.js";
 
-export * from "./CjsLoadingObject.js";
-export * from "./MotherLode.js";
+export * from "./resman/CjsLoadingObject.js";
+export * from "./resman/MotherLode.js";
 export * from "./worker/CjsResManMainThreadLoader.js";
 export * from "./worker/CjsResManWorkerLoader.js";
-export * from "./BlueResMan.js";
+export * from "./resman/BlueResMan.js";
 export * from "./interfaces/IBluePaths.js";
 export * from "../blueexposure/IBlueClasses.js";
 export * from "../blueexposure/BlueClasses.js";
@@ -141,5 +141,5 @@ import "./values.js";
 // no manager or resource implementation, so resources and MotherLode can use
 // its live references without an import cycle or deferred constructor lookup.
 import { blue } from "./blue.js";
-import { BlueResMan } from "./BlueResMan.js";
+import { BlueResMan } from "./resman/BlueResMan.js";
 blue.resMan = new BlueResMan();

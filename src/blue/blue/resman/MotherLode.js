@@ -1,5 +1,5 @@
 import { CjsSchema } from "#schema";
-import { blue as blueService } from "./blue.js";
+import { blue as blueService } from "../blue.js";
 
 import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/validation";
 
@@ -7,10 +7,10 @@ import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/valida
 // Source: blue/src/MotherLode.h
 // Source: blue/src/MotherLode.cpp
 import { normalizeResourcePath } from "#utils/path";
-import { BlueOS } from "./BlueOS.js";
-import { ICacheable } from "./interfaces/ICacheable.js";
-import { IBlueResource } from "./interfaces/IBlueResource.js";
-import { IRoot } from "../blueexposure/IRoot.js";
+import { BlueOS } from "../BlueOS.js";
+import { ICacheable } from "../interfaces/ICacheable.js";
+import { IBlueResource } from "../interfaces/IBlueResource.js";
+import { IRoot } from "../../blueexposure/IRoot.js";
 
 /** Bytes in one megabyte, for the cache sizes below. */
 const MEGABYTE = 1024 * 1024;

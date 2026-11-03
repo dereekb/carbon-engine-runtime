@@ -17,7 +17,7 @@ export class IBlueAsyncResNotifyTarget
    * `ReleaseCachedData( BlueAsyncRes* p )` - drop data derived from the resource.
    *
    * @abstract
-   * @param {import("../BlueAsyncRes.js").BlueAsyncRes} _resource The notifying resource.
+   * @param {import("../resman/BlueAsyncRes.js").BlueAsyncRes} _resource The notifying resource.
    */
   ReleaseCachedData(_resource) {}
 
@@ -25,7 +25,7 @@ export class IBlueAsyncResNotifyTarget
    * `RebuildCachedData( BlueAsyncRes* p )` - rebuild data derived from the resource.
    *
    * @abstract
-   * @param {import("../BlueAsyncRes.js").BlueAsyncRes} _resource The notifying resource.
+   * @param {import("../resman/BlueAsyncRes.js").BlueAsyncRes} _resource The notifying resource.
    */
   RebuildCachedData(_resource) {}
 }

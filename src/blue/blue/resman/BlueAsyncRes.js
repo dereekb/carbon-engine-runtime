@@ -3,10 +3,10 @@
 // Source: blue/src/BlueAsyncRes_Blue.cpp
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
-import { blue } from "./blue.js";
-import { IBlueCallbackMan } from "./interfaces/IBlueCallbackMan.js";
-import { BlueResManQueue } from "./interfaces/IBlueResMan.js";
-import { IBlueResource } from "./interfaces/IBlueResource.js";
+import { blue } from "../blue.js";
+import { IBlueCallbackMan } from "../interfaces/IBlueCallbackMan.js";
+import { BlueResManQueue } from "../interfaces/IBlueResMan.js";
+import { IBlueResource } from "../interfaces/IBlueResource.js";
 
 /**
  * A resource loaded on the manager's background queue and prepared on its main
@@ -220,7 +220,7 @@ export class BlueAsyncRes
    *   (`BlueAsyncRes.ensureDependency`) instead of registering here. Carbon's
    *   destructors unregister their targets; JavaScript has none, so a
    *   registration kept its owner alive. Calling it is an error.
-   * @param {import("./interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
+   * @param {import("../interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
    * @throws {Error} Always.
    */
   AddNotifyTarget(_target)
@@ -233,7 +233,7 @@ export class BlueAsyncRes
    *
    * @notUsed Nothing registers (see `AddNotifyTarget`), so there is nothing
    *   to remove. Calling it is an error.
-   * @param {import("./interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
+   * @param {import("../interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
    * @throws {Error} Always.
    */
   RemoveNotifyTarget(_target)

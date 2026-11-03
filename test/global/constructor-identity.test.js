@@ -1,8 +1,8 @@
-import { BlueResMan } from "../../npm/dist/blue/blue/BlueResMan.js";
+import { BlueResMan } from "../../npm/dist/blue/blue/resman/BlueResMan.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
-import { CjsFormatStore } from "../../npm/dist/blue/blue/CjsFormatStore.js";
+import { CjsFormatStore } from "../../npm/dist/blue/blue/resman/CjsFormatStore.js";
 import { getArrayBufferViewName } from "../../npm/dist/global/utils/bytes.js";
 import { carbonValueToJsExpression } from "../../npm/dist/blue/schema/types/carbonTypes.js";
 import { TriStepRenderTexture } from "../../npm/dist/trinity/renderJob/step/TriStepRenderTexture.js";

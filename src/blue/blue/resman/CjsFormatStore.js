@@ -1,6 +1,6 @@
 import { CjsSchema } from "#schema/CjsSchema";
 
-import { requireRegisteredClassName } from "../compose/className.js";
+import { requireRegisteredClassName } from "../../compose/className.js";
 import { normalizeResourceExtension } from "#utils/path";
 
 /**
