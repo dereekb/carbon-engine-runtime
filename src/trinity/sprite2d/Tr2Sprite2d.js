@@ -14,31 +14,36 @@ const spriteIndices = new Uint16Array([0, 1, 3, 3, 1, 2, 4, 5, 7, 7, 5, 6, 8, 9,
  *
  * Prepares and gathers sprite quads through the native Sprite2D renderer contract.
  */
-@be.define("Tr2Sprite2d")
-@be.mapInterface(INotify)
-@be.exposureChainTo(Tr2TexturedSpriteObject)
+@be.define({
+  name: "Tr2Sprite2d",
+  // Tr2Sprite2d_Blue.cpp:11-39, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "pickRadius", be.READWRITE ],
+    [ be.ATTR, "useSizeFromTexture", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "saturation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "effectOpacity", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2TexturedSpriteObject
+})
 export class Tr2Sprite2d extends Tr2TexturedSpriteObject
 {
 
   /** m_effectOpacity (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   effectOpacity = 1;
 
   /** m_useSizeFromTexture (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   useSizeFromTexture = false;
 
   /** m_pickRadius (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   pickRadius = 0;
 
   /** m_saturation (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   saturation = 1;

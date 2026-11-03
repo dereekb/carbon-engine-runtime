@@ -21,22 +21,24 @@ const SCALED_PARAMS = Tr2GpuSharedEmitter._createParams();
  * GPU emitter owned by a single instance, adding parent scaling and a
  * per-instance attractor on top of the shared emitter parameters.
  */
-@be.define("Tr2GpuUniqueEmitter")
-@be.exposureChainTo(Tr2GpuSharedEmitter)
+@be.define({
+  name: "Tr2GpuUniqueEmitter",
+  // Tr2GpuUniqueEmitter_Blue.cpp:11-31, in Carbon's order.
+  members: [
+    [ be.ATTR, "scaledByParent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "attractorPosition", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "attractorStrength", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ],
+  chainTo: Tr2GpuSharedEmitter
+})
 export class Tr2GpuUniqueEmitter extends Tr2GpuSharedEmitter
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   scaledByParent = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   attractorPosition = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32

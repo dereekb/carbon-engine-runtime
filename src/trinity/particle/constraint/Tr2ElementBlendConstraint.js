@@ -7,8 +7,18 @@ import { vec4 } from "#math/vec4";
 import { Tr2ParticleElementDeclaration } from "../element/Tr2ParticleElementDeclaration.js";
 
 /** A constraint that rescales and offsets a single bound particle element by a constant factor and value each frame. */
-@be.mapInterface(ITr2GenericParticleConstraint)
-@be.define("Tr2ElementBlendConstraint")
+@be.define({
+  name: "Tr2ElementBlendConstraint",
+  // Tr2ElementBlendConstraint_Blue.cpp:12-39, in Carbon's order.
+  interfaces: [ ITr2GenericParticleConstraint ],
+  members: [
+    [ be.ATTR, "isValid", be.READ ],
+    [ be.ATTR_CHOOSER, "elementType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type" ],
+    [ be.ATTR, "customName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "originalFactor", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ElementBlendConstraint extends ITr2GenericParticleConstraint
 {
 
@@ -18,31 +28,26 @@ export class Tr2ElementBlendConstraint extends ITr2GenericParticleConstraint
    * m_name.m_type (Tr2ParticleElementDeclarationName::Type) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Particle/Tr2ElementBlendConstraint_Blue.cpp:22); chooser Tr2ParticleElementDeclarationNameTypeChooser (trinity/trinity/Particle/Tr2ParticleElementDeclaration_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type")
   @type.int32
   @type.enum("trinity.Tr2ParticleElementDeclarationName.Type")
   elementType = Tr2ParticleElementDeclaration.Type.CUSTOM;
 
   /** m_name.m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   customName = "";
 
   /** m_value (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   value = vec4.create();
 
   /** m_originalFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   originalFactor = 1;
 
   /** m_isValid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isValid = false;
 

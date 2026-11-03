@@ -49,11 +49,21 @@ function HalfToFloat(h)
 
 
 /** A one-shot particle emitter that spawns one particle per vertex of a geometry mesh on first update. */
-@be.define("Tr2StaticEmitter")
-@be.inherit(ITr2GenericEmitter, INotify, IInitialize)
-@be.mapInterface(ITr2GenericEmitter)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2StaticEmitter",
+  inherit: [ ITr2GenericEmitter, INotify, IInitialize ],
+  // Tr2StaticEmitter_Blue.cpp:10-39, in Carbon's order.
+  interfaces: [ ITr2GenericEmitter, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "geometryResourcePath", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "geometryResource", be.READ ],
+    [ be.ATTR, "particleSystem", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "meshIndex", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Spawn", be.WRAP ],
+    [ be.METHOD, "ForceSpawn", be.WRAP, "DoSpawn" ]
+  ]
+})
 export class Tr2StaticEmitter extends IRoot
 {
 
@@ -64,7 +74,6 @@ export class Tr2StaticEmitter extends IRoot
   hasSpawnedParticles = false;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -76,25 +85,21 @@ export class Tr2StaticEmitter extends IRoot
    * TriGrannyRes; ours has no load path, and TriGeometryRes carries the same
    * meshes in CMF form.
    */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
   geometryResource = null;
 
   /** m_meshIndex (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   meshIndex = 0;
 
   /** m_particleSystem (Tr2ParticleSystemPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2ParticleSystem")
   particleSystem = null;
 
   /** m_geometryResourcePath (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.path("TriGeometryRes")
@@ -105,7 +110,6 @@ export class Tr2StaticEmitter extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Spawn()
   {
     this.hasSpawnedParticles = false;
@@ -129,7 +133,6 @@ export class Tr2StaticEmitter extends IRoot
    *   Carbon would read on into the next vertex element.
    * @returns {void}
    */
-  @be.mapMethodAndWrap("ForceSpawn")
   DoSpawn()
   {
     const system = this.particleSystem;

@@ -9,8 +9,20 @@ import { bindParticleElement } from "../element/particleElementBinding.js";
 import { Tr2ParticleElementDeclaration } from "../element/Tr2ParticleElementDeclaration.js";
 
 /** Generates a per-particle attribute by sampling each component to a rounded integer within a minimum and maximum range. */
-@be.mapInterface(ITr2AttributeGenerator)
-@be.define("Tr2RandomIntegerAttributeGenerator")
+@be.define({
+  name: "Tr2RandomIntegerAttributeGenerator",
+  // Tr2RandomIntegerAttributeGenerator_Blue.cpp:12-27, in Carbon's order.
+  interfaces: [ ITr2AttributeGenerator ],
+  members: [
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR_CHOOSER, "elementType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type" ],
+    [ be.ATTR, "customName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "valid", be.READ ],
+    [ be.PROP_RO, "dimension" ]
+  ]
+})
 export class Tr2RandomIntegerAttributeGenerator extends ITr2AttributeGenerator
 {
 
@@ -20,31 +32,26 @@ export class Tr2RandomIntegerAttributeGenerator extends ITr2AttributeGenerator
    * m_name.m_type (Tr2ParticleElementDeclarationName::Type) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Particle/Tr2RandomIntegerAttributeGenerator_Blue.cpp:17); chooser Tr2ParticleElementDeclarationNameTypeChooser (trinity/trinity/Particle/Tr2ParticleElementDeclaration_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type")
   @type.int32
   @type.enum("trinity.Tr2ParticleElementDeclarationName.Type")
   elementType = Tr2ParticleElementDeclaration.Type.CUSTOM;
 
   /** m_name.m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   customName = "";
 
   /** m_maxRange (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   maxRange = vec4.create();
 
   /** m_minRange (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   minRange = vec4.create();
 
   /** m_valid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   valid = false;
 
@@ -55,7 +62,6 @@ export class Tr2RandomIntegerAttributeGenerator extends ITr2AttributeGenerator
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {
@@ -69,7 +75,6 @@ export class Tr2RandomIntegerAttributeGenerator extends ITr2AttributeGenerator
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get dimension()
   {

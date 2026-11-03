@@ -11,15 +11,21 @@ import { ITr2Sprite2dTextureNotifyTarget } from "./ITr2Sprite2dTextureNotifyTarg
  *
  * @abstract
  */
-@be.define("Tr2TexturedSpriteObject")
-@be.exposureChainTo(Tr2SpriteObject)
-@be.inherit(ITr2Sprite2dTextureNotifyTarget)
+@be.define({
+  name: "Tr2TexturedSpriteObject",
+  inherit: [ ITr2Sprite2dTextureNotifyTarget ],
+  // Tr2SpriteObject_Blue.cpp:239-252, in Carbon's order.
+  members: [
+    [ be.PROP, "texturePrimary" ],
+    [ be.PROP, "textureSecondary" ]
+  ],
+  chainTo: Tr2SpriteObject
+})
 @be.abstract
 export class Tr2TexturedSpriteObject extends Tr2SpriteObject
 {
 
   /** m_texturePrimary (ITr2Sprite2dTexturePtr) */
-  @be.mapProperty()
   @type.rootRef("ITr2Sprite2dTexture")
   get texturePrimary()
   {
@@ -32,7 +38,6 @@ export class Tr2TexturedSpriteObject extends Tr2SpriteObject
   }
 
   /** m_textureSecondary (ITr2Sprite2dTexturePtr) */
-  @be.mapProperty()
   @type.rootRef("ITr2Sprite2dTexture")
   get textureSecondary()
   {

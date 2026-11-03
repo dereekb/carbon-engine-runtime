@@ -7,8 +7,17 @@ import { vec3 } from "#math/vec3";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 
 /** Aggregates child forces within a spherical region, scaling their combined contribution by a falloff toward the sphere's edge. */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ForceSphereVolume")
+@be.define({
+  name: "Tr2ForceSphereVolume",
+  // Tr2ForceSphereVolume_Blue.cpp:10-17, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "forces", be.READ | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "exponent", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ForceSphereVolume extends ITr2ParticleForce
 {
 
@@ -17,25 +26,21 @@ export class Tr2ForceSphereVolume extends ITr2ParticleForce
   #contribution = vec3.create();
 
   /** m_exponent (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   exponent = 1;
 
   /** m_forces (PITr2ParticleForceVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ParticleForce")
   forces = [];
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_radius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   radius = 1;

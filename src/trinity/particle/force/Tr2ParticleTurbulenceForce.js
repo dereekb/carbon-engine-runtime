@@ -8,33 +8,38 @@ import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 
 /** A time-evolving four-dimensional Perlin turbulence force applied to particle motion. */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleTurbulenceForce")
+@be.define({
+  name: "Tr2ParticleTurbulenceForce",
+  // Tr2ParticleTurbulenceForce_Blue.cpp:10-17, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "amplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "frequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseLevel", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseRatio", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleTurbulenceForce extends ITr2ParticleForce
 {
 
   #time = 0;
 
   /** m_amplitude (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   amplitude = vec3.fromValues(1, 1, 1);
 
   /** m_frequency (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   frequency = vec4.fromValues(1, 1, 1, 1);
 
   /** m_noiseLevel (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   noiseLevel = 3;
 
   /** m_noiseRatio (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseRatio = 0.5;

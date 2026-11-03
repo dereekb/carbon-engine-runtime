@@ -24,21 +24,23 @@ const DEBUG_P1 = vec3.create();
  * Particle force of constant magnitude directed tangentially around an axis
  * through a fixed position, swirling particles about it.
  */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleVortexForce")
+@be.define({
+  name: "Tr2ParticleVortexForce",
+  // Tr2ParticleVortexForce_Blue.cpp:10-16, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "magnitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "axis", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleVortexForce extends ITr2ParticleForce
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   magnitude = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   axis = vec3.fromValues(0, 1, 0);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();

@@ -56,31 +56,36 @@ const srcVertexSegments = [0, 16, 32].map(start => srcVertices.slice(start, star
  * the frame's display extents (Tr2Sprite2dFrame.h:15-23). Vertices hold the sprite translation;
  * three 16-vertex segments carry the shadow, the frame and its glow.
  */
-@be.define("Tr2Sprite2dFrame")
-@be.exposureChainTo(Tr2TexturedSpriteObject)
+@be.define({
+  name: "Tr2Sprite2dFrame",
+  // Tr2Sprite2dFrame_Blue.cpp:11-38, in Carbon's order.
+  members: [
+    [ be.ATTR, "offset", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "cornerSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "cornerScale", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "fillCenter", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2TexturedSpriteObject
+})
 export class Tr2Sprite2dFrame extends Tr2TexturedSpriteObject
 {
 
   /** m_offset (int) [READWRITE, NOTIFY]: positive values make the frame smaller, negative bigger. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.int32
   offset = 0;
 
   /** m_cornerSize (unsigned int) [READWRITE, NOTIFY]: size of the frame corner, in texels. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.uint32
   cornerSize = 0;
 
   /** m_cornerScale (float) [READWRITE, NOTIFY]: corner scaling when rendering, for UI scaling. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   cornerScale = 1;
 
   /** m_fillCenter (bool) [READWRITE, NOTIFY]: whether the centre piece is drawn. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   fillCenter = true;

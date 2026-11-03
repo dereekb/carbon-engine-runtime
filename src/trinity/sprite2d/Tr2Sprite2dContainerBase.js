@@ -14,11 +14,18 @@ import { Tr2SpriteObjectBase } from "./Tr2SpriteObjectBase.js";
  *
  * @abstract
  */
-@be.define("Tr2Sprite2dContainerBase")
-@be.inherit(IListNotify)
-@be.mapInterface(ITr2SpriteObject)
-@be.mapInterface(IListNotify)
-@be.exposureChainTo(Tr2SpriteObjectBase)
+@be.define({
+  name: "Tr2Sprite2dContainerBase",
+  inherit: [ IListNotify ],
+  // Tr2Sprite2dContainer_Blue.cpp:11-35, in Carbon's order.
+  interfaces: [ ITr2SpriteObject, IListNotify ],
+  members: [
+    [ be.ATTR, "children", be.READ ],
+    [ be.ATTR, "background", be.READ ],
+    [ be.ATTR, "opacity", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2SpriteObjectBase
+})
 @be.abstract
 export class Tr2Sprite2dContainerBase extends Tr2SpriteObjectBase
 {
@@ -115,17 +122,14 @@ export class Tr2Sprite2dContainerBase extends Tr2SpriteObjectBase
   }
 
   /** m_background (PITr2SpriteObjectVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("ITr2SpriteObject")
   background = new BlueList(ITr2SpriteObject, { className: null, listOps: 0 });
 
   /** m_children (PITr2SpriteObjectVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("ITr2SpriteObject")
   children = new BlueList(ITr2SpriteObject, { className: null, listOps: 0 });
 
   /** m_opacity (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   opacity = 1;

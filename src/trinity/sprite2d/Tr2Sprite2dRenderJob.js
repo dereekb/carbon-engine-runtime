@@ -10,9 +10,15 @@ import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
 import { Tr2SpriteObjectBase } from "./Tr2SpriteObjectBase.js";
 
 /** A Sprite2D leaf that executes an authored render job. */
-@be.define("Tr2Sprite2dRenderJob")
-@be.mapInterface(ITr2SpriteObject)
-@be.exposureChainTo(Tr2SpriteObjectBase)
+@be.define({
+  name: "Tr2Sprite2dRenderJob",
+  // Tr2Sprite2dRenderJob_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ ITr2SpriteObject ],
+  members: [
+    [ be.ATTR, "renderJob", be.READWRITE ]
+  ],
+  chainTo: Tr2SpriteObjectBase
+})
 export class Tr2Sprite2dRenderJob extends Tr2SpriteObjectBase
 {
 
@@ -81,7 +87,6 @@ export class Tr2Sprite2dRenderJob extends Tr2SpriteObjectBase
   }
 
   /** m_renderJob (TriRenderJobPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriRenderJob")
   renderJob = null;
 

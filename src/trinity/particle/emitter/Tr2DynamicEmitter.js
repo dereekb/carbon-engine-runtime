@@ -7,11 +7,23 @@ import { hasUnboundParticleElements } from "../element/particleElementBinding.js
 import { ITr2GenericEmitterUpdateArguments, ITr2GenericEmitter } from "../ITr2GenericEmitter/index.js";
 
 /** A continuous-rate particle emitter that binds attribute generators to a particle system and spawns particles over time from an accumulated emission rate. */
-@be.define("Tr2DynamicEmitter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(ITr2GenericEmitter)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2DynamicEmitter",
+  inherit: [ INotify, IInitialize ],
+  // Tr2DynamicEmitter_Blue.cpp:10-25, in Carbon's order.
+  interfaces: [ ITr2GenericEmitter, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "generators", be.READ | be.PERSIST ],
+    [ be.ATTR, "isValid", be.READ ],
+    [ be.ATTR, "particleSystem", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rate", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxParticles", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "emittedParticles" ],
+    [ be.METHOD, "Rebind", be.WRAP ],
+    [ be.METHOD, "UpdateSimulation", be.WRAP ]
+  ]
+})
 export class Tr2DynamicEmitter extends ITr2GenericEmitter
 {
 
@@ -27,36 +39,30 @@ export class Tr2DynamicEmitter extends ITr2GenericEmitter
   #lastUpdate = 0;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_isValid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isValid = false;
 
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2AttributeGenerator")
   generators = [];
 
   /** m_maxParticles (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   maxParticles = -1;
 
   /** m_rate (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rate = 0;
 
   /** m_particleSystem (Tr2ParticleSystemPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2ParticleSystem")
@@ -69,7 +75,6 @@ export class Tr2DynamicEmitter extends ITr2GenericEmitter
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get emittedParticles()
   {
@@ -82,7 +87,6 @@ export class Tr2DynamicEmitter extends ITr2GenericEmitter
    * @adapted Browser attribute generators bind directly to the CPU particle-system adapter
    *   rather than native declaration pointers.
    */
-  @be.mapMethodAndWrap()
   Rebind()
   {
     this.#emittedParticles = 0;
@@ -114,7 +118,6 @@ export class Tr2DynamicEmitter extends ITr2GenericEmitter
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   UpdateSimulation(dt)
   {
     return this.SpawnParticles(new ITr2GenericEmitterUpdateArguments(), null, null, Math.max(0, Number(dt) || 0));

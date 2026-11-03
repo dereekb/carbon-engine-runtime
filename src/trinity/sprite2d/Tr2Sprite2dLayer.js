@@ -37,28 +37,37 @@ function toUint32(value)
  * has one base class, so the device resource comes through `@be.inherit`, and the layer
  * registers with `trinity` on use (EnsureGood in GatherSprites), as the other device resources do.
  */
-@be.define("Tr2Sprite2dLayer")
-@be.exposureChainTo(Tr2Sprite2dContainer)
-@be.inherit(Tr2DeviceResource, ITr2Sprite2dTextureNotifyTarget)
+@be.define({
+  name: "Tr2Sprite2dLayer",
+  inherit: [ Tr2DeviceResource, ITr2Sprite2dTextureNotifyTarget ],
+  // Tr2Sprite2dLayer_Blue.cpp:10-57, in Carbon's order.
+  members: [
+    [ be.ATTR, "backgroundColor", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "clearBackground", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "blendMode", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectBlendMode" ],
+    [ be.ATTR_CHOOSER, "spriteEffect", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect" ],
+    [ be.PROP, "textureSecondary" ],
+    [ be.ATTR, "children", be.READ | be.PERSIST ]
+  ],
+  chainTo: Tr2Sprite2dContainer
+})
 export class Tr2Sprite2dLayer extends Tr2Sprite2dContainer
 {
 
   /** m_backgroundColor (Color) [READWRITE, PERSIST, NOTIFY]: clear colour when `clearBackground` is set. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
   backgroundColor = vec4.fromValues(0, 0, 0, 0);
 
   /** m_color (Color) [READWRITE, PERSIST, NOTIFY]: tint of the layer sprite. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
   /** m_clearBackground (bool) [READWRITE, PERSIST, NOTIFY]: whether the target is cleared before the children draw. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -68,7 +77,6 @@ export class Tr2Sprite2dLayer extends Tr2Sprite2dContainer
    * m_blendMode (Tr2SpriteObjectBlendMode) [READWRITE, ENUM, NOTIFY]: how the layer blends with the background.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2Sprite2dLayer_Blue.cpp:31); chooser Tr2SpriteObjectBlendModeChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:17).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectBlendMode")
   @type.int32
   @type.enum("trinity.Tr2SpriteObjectBlendMode")
   blendMode = Tr2SpriteObjectBlendMode.TR2_SBM_NONE;
@@ -77,13 +85,11 @@ export class Tr2Sprite2dLayer extends Tr2Sprite2dContainer
    * m_spriteEffect (Tr2SpriteObjectEffect) [READWRITE, ENUM, NOTIFY]: Carbon's constructor sets TR2_SFX_COPY (Tr2Sprite2dLayer.cpp:16).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2Sprite2dLayer_Blue.cpp:38); chooser Tr2SpriteObjectEffectChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:32).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect")
   @type.int32
   @type.enum("trinity.Tr2SpriteObjectEffect")
   spriteEffect = Tr2SpriteObjectEffect.TR2_SFX_COPY;
 
   /** textureSecondary (MAP_PROPERTY GetTextureSecondary/SetTextureSecondary): secondary texture for the layer sprite. */
-  @be.mapProperty()
   @type.rootRef("ITr2Sprite2dTexture")
   get textureSecondary()
   {
@@ -104,7 +110,6 @@ export class Tr2Sprite2dLayer extends Tr2Sprite2dContainer
    * PERSIST, where Tr2Sprite2dContainerBase exposes it READ only. The redeclaration keeps the
    * list the base constructor created and wired for notifications.
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2SpriteObject")
   children = this.children;

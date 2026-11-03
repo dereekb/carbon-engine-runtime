@@ -74,43 +74,48 @@ function setVertex(vertex, x, y, u, v)
  * Vertices are local to the sprite; the translation is pushed on the scene while they are
  * submitted.
  */
-@be.define("Tr2Sprite2dStretchVertical")
-@be.exposureChainTo(Tr2TexturedSpriteObject)
+@be.define({
+  name: "Tr2Sprite2dStretchVertical",
+  // Tr2Sprite2dStretchVertical_Blue.cpp:10-49, in Carbon's order.
+  members: [
+    [ be.ATTR, "topEdgeSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "bottomEdgeSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "edgeScale", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "fillCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "saturation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "effectOpacity", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2TexturedSpriteObject
+})
 export class Tr2Sprite2dStretchVertical extends Tr2TexturedSpriteObject
 {
 
   /** m_topEdgeSize (unsigned int) [READWRITE, NOTIFY]: fixed pixels on the texture's top edge. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.uint32
   topEdgeSize = 0;
 
   /** m_bottomEdgeSize (unsigned int) [READWRITE, NOTIFY]: fixed pixels on the texture's bottom edge. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.uint32
   bottomEdgeSize = 0;
 
   /** m_edgeScale (float) [READWRITE, NOTIFY]: edge scaling when rendering, for UI scaling. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   edgeScale = 1;
 
   /** m_fillCenter (bool) [READWRITE, NOTIFY]: whether the centre piece is drawn. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   fillCenter = true;
 
   /** m_saturation (float) [READWRITE, NOTIFY]: used by TR2_SFX_COLOROVERLAY and TR2_SFX_SOFTLIGHT. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   saturation = 1;
 
   /** m_effectOpacity (float) [READWRITE, NOTIFY]: used by TR2_SFX_COLOROVERLAY and TR2_SFX_SOFTLIGHT. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   effectOpacity = 1;

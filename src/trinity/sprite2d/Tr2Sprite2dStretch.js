@@ -50,49 +50,55 @@ const srcVertexSegments = [0, 8, 16].map(start => srcVertices.slice(start, start
  * stretching the centre piece to the display width (Tr2Sprite2dStretch.h:21-27). Vertices are
  * local to the sprite; the translation is pushed on the scene while they are submitted.
  */
-@be.define("Tr2Sprite2dStretch")
-@be.exposureChainTo(Tr2TexturedSpriteObject)
+@be.define({
+  name: "Tr2Sprite2dStretch",
+  // Tr2Sprite2dStretch_Blue.cpp:27-80, in Carbon's order.
+  members: [
+    [ be.ATTR, "leftEdgeSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "rightEdgeSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "edgeScale", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "offset", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "fillCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "saturation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "effectOpacity", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "dpiScaleBehavior", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2StretchScaleBehavior" ]
+  ],
+  chainTo: Tr2TexturedSpriteObject
+})
 export class Tr2Sprite2dStretch extends Tr2TexturedSpriteObject
 {
 
   /** m_leftEdgeSize (unsigned int) [READWRITE, NOTIFY]: fixed pixels on the texture's left edge. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.uint32
   leftEdgeSize = 0;
 
   /** m_rightEdgeSize (unsigned int) [READWRITE, NOTIFY]: fixed pixels on the texture's right edge. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.uint32
   rightEdgeSize = 0;
 
   /** m_edgeScale (float) [READWRITE, NOTIFY]: edge scaling when rendering, for UI scaling. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   edgeScale = 1;
 
   /** m_offset (int) [READWRITE, NOTIFY]: shrinks the sprite horizontally and shifts it down. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.int32
   offset = 0;
 
   /** m_fillCenter (bool) [READWRITE, NOTIFY]: whether the centre piece is drawn. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   fillCenter = true;
 
   /** m_saturation (float) [READWRITE, NOTIFY]: used by TR2_SFX_COLOROVERLAY and TR2_SFX_SOFTLIGHT. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   saturation = 1;
 
   /** m_effectOpacity (float) [READWRITE, NOTIFY]: used by TR2_SFX_COLOROVERLAY and TR2_SFX_SOFTLIGHT. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   effectOpacity = 1;
@@ -102,7 +108,6 @@ export class Tr2Sprite2dStretch extends Tr2TexturedSpriteObject
    * exposes it but no Tr2Sprite2dStretch code reads it.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2Sprite2dStretch_Blue.cpp:73); chooser Tr2Sprite2dStretchDpiScaleBehaviorChooser (trinity/trinity/Sprite2d/Tr2Sprite2dStretch_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2StretchScaleBehavior")
   @type.int32
   @type.enum("trinity.Tr2StretchScaleBehavior")
   dpiScaleBehavior = Tr2StretchScaleBehavior.S2D_SSC_ALIGN_BOTTOMRIGHT;

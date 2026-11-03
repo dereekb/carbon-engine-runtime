@@ -7,47 +7,52 @@ import { type } from "#schema";
 import { Tr2Sprite2dContainerBase } from "./Tr2Sprite2dContainerBase.js";
 
 /** Defines a pickable 2D sprite container with clipping, depth range, coordinate mode, and optional content caching. */
-@be.define("Tr2Sprite2dContainer")
-@be.exposureChainTo(Tr2Sprite2dContainerBase)
+@be.define({
+  name: "Tr2Sprite2dContainer",
+  // Tr2Sprite2dContainer_Blue.cpp:40-90, in Carbon's order.
+  members: [
+    [ be.ATTR, "depthMin", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "depthMax", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "absoluteCoordinates", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "clip", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "pickRadius", be.READWRITE ],
+    [ be.ATTR, "cacheContents", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "isCachingContents", be.READ ]
+  ],
+  chainTo: Tr2Sprite2dContainerBase
+})
 export class Tr2Sprite2dContainer extends Tr2Sprite2dContainerBase
 {
 
   /** m_clip (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   clip = false;
 
   /** m_cacheContents (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isCachingContents = true;
 
   /** m_depthMax (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   depthMax = 1;
 
   /** m_depthMin (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   depthMin = -1;
 
   /** m_pickRadius (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   pickRadius = 0;
 
   /** m_cacheContentsHint (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   cacheContents = false;
 
   /** m_absoluteCoordinates (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   absoluteCoordinates = false;

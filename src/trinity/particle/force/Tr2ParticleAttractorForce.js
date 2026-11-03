@@ -17,16 +17,19 @@ const DEBUG_TO = vec3.create();
  * Particle force of constant magnitude pointing at a fixed position, regardless
  * of distance.
  */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleAttractorForce")
+@be.define({
+  name: "Tr2ParticleAttractorForce",
+  // Tr2ParticleAttractorForce_Blue.cpp:10-15, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "magnitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleAttractorForce extends ITr2ParticleForce
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   magnitude = 1;

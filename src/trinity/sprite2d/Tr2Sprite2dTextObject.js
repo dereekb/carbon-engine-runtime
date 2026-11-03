@@ -9,9 +9,23 @@ import { Tr2DeviceResource } from "../core/device/Tr2DeviceResource.js";
 import { Tr2SpriteObjectEffect, Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
 
 /** Defines a 2D text sprite's measured extent, primary texture, picking radius, shadow-effect mode, and tooltip flag. */
-@be.define("Tr2Sprite2dTextObject")
-@be.exposureChainTo(Tr2SpriteObject)
-@be.inherit(ITr2FontMeasurerNotifyTarget, Tr2DeviceResource)
+@be.define({
+  name: "Tr2Sprite2dTextObject",
+  inherit: [ ITr2FontMeasurerNotifyTarget, Tr2DeviceResource ],
+  // Tr2Sprite2dTextObject_Blue.cpp:11-70, in Carbon's order.
+  members: [
+    [ be.PROP, "fontMeasurer" ],
+    [ be.ATTR, "pickRadius", be.READWRITE ],
+    [ be.ATTR, "texturePrimary", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "useSizeFromTexture", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textWidth", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textHeight", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "shadowSpriteEffect", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect" ],
+    [ be.ATTR, "useShadowSpriteEffect", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "hasAuxiliaryTooltip", be.READWRITE ]
+  ],
+  chainTo: Tr2SpriteObject
+})
 export class Tr2Sprite2dTextObject extends Tr2SpriteObject
 {
 
@@ -19,47 +33,39 @@ export class Tr2Sprite2dTextObject extends Tr2SpriteObject
    * m_shadowSpriteEffect (Tr2SpriteObjectEffect - enum Tr2SpriteObjectEffect) [READWRITE, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2Sprite2dTextObject_Blue.cpp:49); chooser Tr2SpriteObjectEffectChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:32).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect")
   @type.int32
   @type.enum("trinity.Tr2SpriteObjectEffect")
   shadowSpriteEffect = 43;
 
   /** m_hasAuxiliaryTooltip (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   hasAuxiliaryTooltip = false;
 
   /** m_textHeight (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   textHeight = 0;
 
   /** m_useSizeFromTexture (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   useSizeFromTexture = false;
 
   /** m_useShadowSpriteEffect (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   useShadowSpriteEffect = false;
 
   /** m_texturePrimary (ITr2Sprite2dTexturePtr) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("ITr2Sprite2dTexture")
   texturePrimary = null;
 
   /** m_pickRadius (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   pickRadius = 0;
 
   /** m_textWidth (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   textWidth = 0;
@@ -70,7 +76,6 @@ export class Tr2Sprite2dTextObject extends Tr2SpriteObject
   _fontMeasurer = null;
 
   /** Native mapped property routes through subscription management. */
-  @be.mapProperty()
   @type.rootRef("Tr2FontMeasurer")
   get fontMeasurer()
   {

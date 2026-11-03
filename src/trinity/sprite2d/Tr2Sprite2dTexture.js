@@ -21,57 +21,69 @@ import { Tr2Sprite2dTextureSettings } from "../generated/sprite2d/enums.js";
  * Atlas resource acquisition remains unported; Apply uses the native scene
  * contract, whose GPU renderer is a separate unfinished implementation.
  */
-@be.define("Tr2Sprite2dTexture")
-@be.inherit(IInitialize, INotify, ITr2AtlasTextureNotifyTarget)
-@be.mapInterface(ITr2Sprite2dTexture)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2Sprite2dTexture",
+  inherit: [ IInitialize, INotify, ITr2AtlasTextureNotifyTarget ],
+  // Tr2Sprite2dTexture_Blue.cpp:12-112, in Carbon's order.
+  interfaces: [ ITr2Sprite2dTexture, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE ],
+    [ be.PROP, "resPath" ],
+    [ be.PROP, "srcX" ],
+    [ be.PROP, "srcY" ],
+    [ be.PROP, "srcWidth" ],
+    [ be.PROP, "srcHeight" ],
+    [ be.PROP, "tileX" ],
+    [ be.PROP, "tileY" ],
+    [ be.PROP, "repeatMode" ],
+    [ be.PROP, "atlasTexture" ],
+    [ be.ATTR, "useTransform", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "translation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "rotationCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scalingCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scalingRotation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scale", be.READWRITE | be.NOTIFY ]
+  ]
+})
 export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
 {
 
   /** m_rotationCenter (Vector2) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   rotationCenter = vec2.fromValues(0.5, 0.5);
 
   /** m_scalingCenter (Vector2) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   scalingCenter = vec2.fromValues(0.5, 0.5);
 
   /** m_useTransform (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   useTransform = false;
 
   /** m_name (std::wstring) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.wstring
   name = "";
 
   /** m_rotation (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   rotation = 0;
 
   /** m_scale (Vector2) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   scale = vec2.fromValues(1, 1);
 
   /** m_scalingRotation (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   scalingRotation = 0;
 
   /** m_translation (Vector2) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   translation = vec2.create();
@@ -521,7 +533,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue resPath property. */
-  @be.mapProperty()
   @type.path
   get resPath()
   {
@@ -535,7 +546,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue atlasTexture property. */
-  @be.mapProperty()
   @type.rootRef("Tr2AtlasTexture")
   get atlasTexture()
   {
@@ -549,7 +559,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue repeatMode property. */
-  @be.mapProperty()
   @type.int32
   get repeatMode()
   {
@@ -563,7 +572,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue srcX property. */
-  @be.mapProperty()
   @type.float32
   get srcX()
   {
@@ -577,7 +585,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue srcY property. */
-  @be.mapProperty()
   @type.float32
   get srcY()
   {
@@ -591,7 +598,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue srcWidth property. */
-  @be.mapProperty()
   @type.float32
   get srcWidth()
   {
@@ -605,7 +611,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue srcHeight property. */
-  @be.mapProperty()
   @type.float32
   get srcHeight()
   {
@@ -619,7 +624,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue tileX property. */
-  @be.mapProperty()
   @type.boolean
   get tileX()
   {
@@ -633,7 +637,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /** Native Blue tileY property. */
-  @be.mapProperty()
   @type.boolean
   get tileY()
   {

@@ -13,8 +13,19 @@ import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
  * Applies authored Sprite2D rotation and scaling around configurable centers.
  * Traverses and picks children using Carbon's distinct bounds and content transforms.
  */
-@be.define("Tr2Sprite2dTransform")
-@be.exposureChainTo(Tr2Sprite2dContainerBase)
+@be.define({
+  name: "Tr2Sprite2dTransform",
+  // Tr2Sprite2dTransform_Blue.cpp:13-52, in Carbon's order.
+  members: [
+    [ be.ATTR, "rotationCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scalingCenter", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scalingRotation", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "scale", be.READWRITE | be.NOTIFY ],
+    [ be.METHOD, "TransformPoint", be.WRAP ]
+  ],
+  chainTo: Tr2Sprite2dContainerBase
+})
 export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
 {
 
@@ -23,7 +34,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * Native m_rotationCenter (Vector2) [READWRITE, NOTIFY].
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   rotationCenter = vec2.create();
@@ -33,7 +43,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * Native m_rotation (float) [READWRITE, NOTIFY].
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   rotation = 0;
@@ -43,7 +52,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * Native m_scalingCenter (Vector2) [READWRITE, NOTIFY].
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   scalingCenter = vec2.create();
@@ -53,7 +61,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * Native m_scalingRotation (float) [READWRITE, NOTIFY].
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   scalingRotation = 0;
@@ -63,7 +70,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * Native m_scale (Vector2) [READWRITE, NOTIFY].
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   scale = vec2.fromValues(1, 1);
@@ -183,7 +189,6 @@ export class Tr2Sprite2dTransform extends Tr2Sprite2dContainerBase
    * @param {number} y Local vertical coordinate.
    * @returns {Float32Array} Newly allocated transformed point.
    */
-  @be.mapMethodAndWrap()
   TransformPoint(x, y)
   {
     const scalingCenterX = Math.floor(this.scalingCenter[0] * this.displayWidth + 0.5);

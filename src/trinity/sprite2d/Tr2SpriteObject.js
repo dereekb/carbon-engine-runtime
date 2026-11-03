@@ -14,8 +14,26 @@ import { Tr2SpriteObjectBlendMode, Tr2SpriteObjectEffect, Tr2SpriteTarget } from
  *
  * @abstract
  */
-@be.define("Tr2SpriteObject")
-@be.exposureChainTo(Tr2SpriteObjectBase)
+@be.define({
+  name: "Tr2SpriteObject",
+  // Tr2SpriteObject_Blue.cpp:144-234, in Carbon's order.
+  members: [
+    [ be.ATTR_CHOOSER, "blendMode", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectBlendMode" ],
+    [ be.ATTR_CHOOSER, "spriteTarget", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteTarget" ],
+    [ be.ATTR, "glowBrightness", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "spriteEffect", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect" ],
+    [ be.ATTR, "color", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "depth", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "shadowOffset", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "shadowColor", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "glowFactor", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "glowExpand", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "glowColor", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "outlineColor", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "outlineThreshold", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2SpriteObjectBase
+})
 @be.abstract
 export class Tr2SpriteObject extends Tr2SpriteObjectBase
 {
@@ -24,7 +42,6 @@ export class Tr2SpriteObject extends Tr2SpriteObjectBase
    * m_blendMode (Tr2SpriteObjectBlendMode - enum Tr2SpriteObjectBlendMode) [READWRITE, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:146); chooser Tr2SpriteObjectBlendModeChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:17).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectBlendMode")
   @type.int32
   @type.enum("trinity.Tr2SpriteObjectBlendMode")
   blendMode = 0;
@@ -33,7 +50,6 @@ export class Tr2SpriteObject extends Tr2SpriteObjectBase
    * m_spriteEffect (Tr2SpriteObjectEffect - enum Tr2SpriteObjectEffect) [READWRITE, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:166); chooser Tr2SpriteObjectEffectChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:32).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteObjectEffect")
   @type.int32
   @type.enum("trinity.Tr2SpriteObjectEffect")
   // Carbon TR2_SFX_COPY aliases ONE_TEXTURE.
@@ -43,67 +59,56 @@ export class Tr2SpriteObject extends Tr2SpriteObjectBase
    * m_target (Tr2SpriteTarget - enum Tr2SpriteTarget) [READWRITE, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:153); chooser Tr2SpriteTargetChooser (trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp:25).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.Tr2SpriteTarget")
   @type.int32
   @type.enum("trinity.Tr2SpriteTarget")
   spriteTarget = 1;
 
   /** m_color (Color) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
   /** m_depth (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   depth = 0;
 
   /** m_glowBrightness (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   glowBrightness = 1;
 
   /** m_glowColor (Color) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   glowColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_glowExpand (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   glowExpand = 0;
 
   /** m_glowFactor (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   glowFactor = 0;
 
   /** m_shadowOffset (Vector2) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   shadowOffset = vec2.create();
 
   /** m_outlineColor (Color) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   outlineColor = color.createLinear();
 
   /** m_outlineThreshold (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   outlineThreshold = 0;
 
   /** m_shadowColor (Color) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   shadowColor = color.createLinear();

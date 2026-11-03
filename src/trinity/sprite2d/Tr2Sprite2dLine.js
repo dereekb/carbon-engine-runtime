@@ -36,61 +36,66 @@ const verts = Array.from({ length: 4 }, () => new Tr2Sprite2dVertexBase()); // a
  * Tr2Sprite2dLine draws one textured quad from `translationFrom` to `translationTo`, with its
  * width and colour interpolated between the ends. The texture tiles along the line.
  */
-@be.define("Tr2Sprite2dLine")
-@be.exposureChainTo(Tr2TexturedSpriteObject)
+@be.define({
+  name: "Tr2Sprite2dLine",
+  // Tr2Sprite2dLine_Blue.cpp:11-68, in Carbon's order.
+  members: [
+    [ be.ATTR, "translationFrom", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "translationTo", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "widthFrom", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "colorFrom", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "widthTo", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textureWidth", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textureOffsetBase", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textureOffset", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "colorTo", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2TexturedSpriteObject
+})
 export class Tr2Sprite2dLine extends Tr2TexturedSpriteObject
 {
 
   /** m_translationFrom (Vector2) [READWRITE, NOTIFY]: start point, relative to the translation. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   translationFrom = vec2.create();
 
   /** m_translationTo (Vector2) [READWRITE, NOTIFY]: end point, relative to the translation. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.vec2
   translationTo = vec2.create();
 
   /** m_widthFrom (float) [READWRITE, NOTIFY]: line width at the start point. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   widthFrom = 0;
 
   /** m_colorFrom (Color) [READWRITE, NOTIFY]: line colour at the start point. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   colorFrom = vec4.fromValues(1, 1, 1, 1);
 
   /** m_widthTo (float) [READWRITE, NOTIFY]: line width at the end point. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   widthTo = 0;
 
   /** m_textureWidth (float) [READWRITE, NOTIFY]: texture repeat length along the line. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   textureWidth = 1;
 
   /** m_textureOffsetBase (float) [READWRITE, NOTIFY]: base texture offset, to hide seams between lines. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   textureOffsetBase = 0;
 
   /** m_textureOffset (float) [READWRITE, NOTIFY]: texture offset along the line, for animation. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   textureOffset = 0;
 
   /** m_colorTo (Color) [READWRITE, NOTIFY]: line colour at the end point. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   colorTo = vec4.fromValues(1, 1, 1, 1);

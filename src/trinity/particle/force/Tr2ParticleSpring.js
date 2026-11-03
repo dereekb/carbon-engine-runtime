@@ -17,16 +17,19 @@ const DEBUG_TO = vec3.create();
  * Linear spring pulling particles toward a fixed position with a force
  * proportional to displacement.
  */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleSpring")
+@be.define({
+  name: "Tr2ParticleSpring",
+  // Tr2ParticleSpring_Blue.cpp:10-15, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "springConstant", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleSpring extends ITr2ParticleForce
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   springConstant = 0;

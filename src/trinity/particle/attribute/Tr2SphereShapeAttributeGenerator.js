@@ -10,8 +10,29 @@ import { bindParticleElement } from "../element/particleElementBinding.js";
 import { Tr2ParticleElementDeclaration } from "../element/Tr2ParticleElementDeclaration.js";
 
 /** Generates particle position and velocity offsets sampled within a rotated spherical cone and radius range. */
-@be.mapInterface(ITr2AttributeGenerator)
-@be.define("Tr2SphereShapeAttributeGenerator")
+@be.define({
+  name: "Tr2SphereShapeAttributeGenerator",
+  // Tr2SphereShapeAttributeGenerator_Blue.cpp:11-42, in Carbon's order.
+  interfaces: [ ITr2AttributeGenerator ],
+  members: [
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minPhi", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxPhi", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minTheta", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxTheta", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distributionExponent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "controlPosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "controlVelocity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parentVelocityFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "valid", be.READ ]
+  ]
+})
 export class Tr2SphereShapeAttributeGenerator extends ITr2AttributeGenerator
 {
 
@@ -20,91 +41,76 @@ export class Tr2SphereShapeAttributeGenerator extends ITr2AttributeGenerator
   #velocityElement = null;
 
   /** m_minPhi (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minPhi = 0;
 
   /** m_maxPhi (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxPhi = 360;
 
   /** m_minTheta (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minTheta = 0;
 
   /** m_maxTheta (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxTheta = 360;
 
   /** m_distributionExponent (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   distributionExponent = 1;
 
   /** m_controlPosition (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   controlPosition = true;
 
   /** m_controlVelocity (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   controlVelocity = true;
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_parentVelocityFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   parentVelocityFactor = 1;
 
   /** m_maxSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxSpeed = 0;
 
   /** m_minSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minSpeed = 0;
 
   /** m_maxRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxRadius = 0;
 
   /** m_minRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minRadius = 0;
 
   /** m_valid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   valid = false;
 
@@ -115,7 +121,6 @@ export class Tr2SphereShapeAttributeGenerator extends ITr2AttributeGenerator
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {

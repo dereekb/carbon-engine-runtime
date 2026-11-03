@@ -95,108 +95,118 @@ function CheckEffect(effect)
 }
 
 /** Describes the GPU particle pipeline's capacity, visible-count controls, and compute and render effect stages. */
-@be.define("Tr2GpuParticleSystem")
-@be.inherit(IInitialize, INotify, IRenderCallback, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2GpuParticleSystem",
+  inherit: [ IInitialize, INotify, IRenderCallback, Tr2DeviceResource ],
+  // Tr2GpuParticleSystem_Blue.cpp:11-122, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "emit", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "render", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "clear", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "setDrawParameters", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "setSortParameters", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sort", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sortStep", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sortInner", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "enableEmit", be.READWRITE ],
+    [ be.ATTR, "enableUpdate", be.READWRITE ],
+    [ be.ATTR, "enableSort", be.READWRITE ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "maxParticles", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "emitTime" ],
+    [ be.PROP_RO, "updateTime" ],
+    [ be.PROP_RO, "sortTime" ],
+    [ be.PROP_RO, "renderTime" ],
+    [ be.ATTR, "updateVisibleCount", be.READWRITE ],
+    [ be.ATTR, "visibleCount", be.READ ],
+    [ be.PROP_RO, "hasParticles" ],
+    [ be.METHOD, "Clear", be.WRAP ]
+  ]
+})
 export class Tr2GpuParticleSystem
 {
 
   /** m_enableEmit (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableEmit = true;
 
   /** m_enableRender (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
   /** m_enableSort (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableSort = true;
 
   /** m_enableUpdate (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableUpdate = true;
 
   /** m_updateVisibleCount (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   updateVisibleCount = false;
 
   /** m_maxParticles (uint32_t) [READWRITE, PERSIST, NOTIFY]; the constructor's DEFAULT_MAX_PARTICLES (cpp:81). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   maxParticles = DEFAULT_MAX_PARTICLES;
 
   /** m_visibleCount (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   visibleCount = 0;
 
   /** m_clear (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   clear = null;
 
   /** m_emit (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   emit = null;
 
   /** m_sortInner (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   sortInner = null;
 
   /** m_sortStep (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   sortStep = null;
 
   /** m_sort (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   sort = null;
 
   /** m_render (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   render = null;
 
   /** m_update (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   update = null;
 
   /** m_setDrawParameters (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   setDrawParameters = null;
 
   /** m_setSortParameters (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
@@ -529,7 +539,6 @@ export class Tr2GpuParticleSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Clear()
   {
     this._clearRequested = true;
@@ -991,7 +1000,6 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
-  @be.mapPropertyReadOnly()
   get emitTime()
   {
     return this.GetEmitTime();
@@ -1014,7 +1022,6 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
-  @be.mapPropertyReadOnly()
   get updateTime()
   {
     return this.GetUpdateTime();
@@ -1037,7 +1044,6 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
-  @be.mapPropertyReadOnly()
   get sortTime()
   {
     return this.GetSortTime();
@@ -1060,7 +1066,6 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
-  @be.mapPropertyReadOnly()
   get renderTime()
   {
     return this.GetRenderTime();
@@ -1080,7 +1085,6 @@ export class Tr2GpuParticleSystem
   }
 
   /** Carbon MAP_PROPERTY_READONLY "hasParticles" over HasParticles (Tr2GpuParticleSystem_Blue.cpp:117). */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get hasParticles()
   {

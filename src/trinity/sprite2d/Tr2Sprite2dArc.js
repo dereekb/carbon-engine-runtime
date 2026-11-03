@@ -142,55 +142,60 @@ function prepareEdgeQuad(arc, verts, current, angle, innerRadius)
  * pie, or both. Carbon builds the vertices only when dirty, in a heap buffer sized by
  * `GetVertexCount`, and draws them with its own index list.
  */
-@be.define("Tr2Sprite2dArc")
-@be.exposureChainTo(Tr2SpriteObject)
+@be.define({
+  name: "Tr2Sprite2dArc",
+  // Tr2Sprite2dArc_Blue.cpp:10-60, in Carbon's order.
+  members: [
+    [ be.ATTR, "radius", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "lineWidth", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "lineColor", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "startAngle", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "endAngle", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "fill", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "texturePrimary", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "textureSecondary", be.READWRITE | be.NOTIFY ]
+  ],
+  chainTo: Tr2SpriteObject
+})
 export class Tr2Sprite2dArc extends Tr2SpriteObject
 {
 
   /** m_radius (float) [READWRITE, NOTIFY]. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   radius = 0;
 
   /** m_lineWidth (float) [READWRITE, NOTIFY]: width of the outline; 0 or less draws none. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   lineWidth = 1;
 
   /** m_lineColor (Color) [READWRITE, NOTIFY]: colour of the outline. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.color
   lineColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_startAngle (float) [READWRITE, NOTIFY]: start angle in radians. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   startAngle = 0;
 
   /** m_endAngle (float) [READWRITE, NOTIFY]: end angle in radians. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   endAngle = 0;
 
   /** m_fill (bool) [READWRITE, NOTIFY]: whether the arc is filled; otherwise only the line is drawn. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   fill = false;
 
   /** m_texturePrimary (ITr2Sprite2dTexturePtr) [READWRITE, NOTIFY]. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("ITr2Sprite2dTexture")
   texturePrimary = null;
 
   /** m_textureSecondary (ITr2Sprite2dTexturePtr) [READWRITE, NOTIFY]. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("ITr2Sprite2dTexture")
   textureSecondary = null;

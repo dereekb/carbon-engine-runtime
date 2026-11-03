@@ -24,8 +24,21 @@ blue.enums.Create("trinity.Tr2Sprite2dPickingMask.Channel_Chooser", Channel, {
 });
 
 /** Defines channel, threshold, edge, and texture-mask constraints used when hit-testing a 2D sprite. */
-@be.define("Tr2Sprite2dPickingMask")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2Sprite2dPickingMask",
+  inherit: [ IRoot ],
+  // Tr2Sprite2dPickingMask_Blue.cpp:24-72, in Carbon's order.
+  members: [
+    [ be.PROP, "maskPath" ],
+    [ be.ATTR_CHOOSER, "channel", be.READWRITE | be.ENUM, "trinity.Tr2Sprite2dPickingMask.Channel_Chooser" ],
+    [ be.ATTR, "threshold", be.READWRITE ],
+    [ be.ATTR, "leftEdge", be.READWRITE ],
+    [ be.ATTR, "topEdge", be.READWRITE ],
+    [ be.ATTR, "rightEdge", be.READWRITE ],
+    [ be.ATTR, "bottomEdge", be.READWRITE ],
+    [ be.ATTR, "mask", be.READ ]
+  ]
+})
 export class Tr2Sprite2dPickingMask extends IRoot
 {
 
@@ -37,7 +50,6 @@ export class Tr2Sprite2dPickingMask extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.wstring
   get maskPath()
   {
@@ -58,38 +70,31 @@ export class Tr2Sprite2dPickingMask extends IRoot
    * Native anonymous BGRA channel chooser. @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Sprite2d/Tr2Sprite2dPickingMask_Blue.cpp:35); chooser Channel_Chooser (trinity/trinity/Sprite2d/Tr2Sprite2dPickingMask_Blue.cpp:12).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2Sprite2dPickingMask.Channel_Chooser")
   @type.enum("trinity.Tr2Sprite2dPickingMask.Channel_Chooser")
   @type.uint32
   channel = 3;
 
   /** Sampled channel must exceed this native READWRITE threshold. @type {number} */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   threshold = 0;
 
   /** Native READWRITE mask edge in pixels. @type {number} */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   leftEdge = 0;
 
   /** Native READWRITE mask edge in pixels. @type {number} */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   topEdge = 0;
 
   /** Native READWRITE mask edge in pixels. @type {number} */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   rightEdge = 0;
 
   /** Native READWRITE mask edge in pixels. @type {number} */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   bottomEdge = 0;
 
   /** Native READ held image resource; excluded from value serialization. @type {Tr2ImageRes|null} */
-  @be.mapAttribute(be.READ)
   @type.resource("Tr2ImageRes")
   mask = null;
 

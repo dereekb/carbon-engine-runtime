@@ -6,8 +6,19 @@ import { type, blue } from "#schema";
 import { Tr2ParticleElementDeclarationName } from "./Tr2ParticleElementDeclarationName.js";
 
 /** Tr2ParticleElementDeclaration (particle) - generated from schema shapeHash 272e6639.... */
-@be.inherit(IRoot)
-@be.define("Tr2ParticleElementDeclaration")
+@be.define({
+  name: "Tr2ParticleElementDeclaration",
+  inherit: [ IRoot ],
+  // Tr2ParticleElementDeclaration_Blue.cpp:36-49, in Carbon's order.
+  members: [
+    [ be.ATTR_CHOOSER, "elementType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type" ],
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR, "customName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "dimension", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "usageIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "usedByGPU", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleElementDeclaration extends IRoot
 {
 
@@ -15,7 +26,6 @@ export class Tr2ParticleElementDeclaration extends IRoot
    * m_name.m_type (Tr2ParticleElementDeclarationName::Type) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Particle/Tr2ParticleElementDeclaration_Blue.cpp:39); chooser Tr2ParticleElementDeclarationNameTypeChooser (trinity/trinity/Particle/Tr2ParticleElementDeclaration_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ParticleElementDeclarationName.Type")
   @type.int32
   @type.enum("trinity.Tr2ParticleElementDeclarationName.Type")
   elementType = 4;
@@ -27,7 +37,6 @@ export class Tr2ParticleElementDeclaration extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {
@@ -35,25 +44,21 @@ export class Tr2ParticleElementDeclaration extends IRoot
   }
 
   /** m_name.m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   customName = "";
 
   /** m_dimension (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   dimension = 1;
 
   /** m_usedByGPU (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   usedByGPU = true;
 
   /** m_usageIndex (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   usageIndex = 0;

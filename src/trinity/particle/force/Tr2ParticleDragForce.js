@@ -8,12 +8,16 @@ import { type, blue } from "#schema";
 
 
 /** Linear particle drag: a force proportional to velocity and opposing it. */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleDragForce")
+@be.define({
+  name: "Tr2ParticleDragForce",
+  // Tr2ParticleDragForce_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "drag", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleDragForce extends ITr2ParticleForce
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   drag = 0.1;
 

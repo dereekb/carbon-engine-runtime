@@ -14,12 +14,16 @@ const DEBUG_P1 = vec3.create();
 
 
 /** Constant particle force vector, applied identically to every particle. */
-@be.mapInterface(ITr2ParticleForce)
-@be.define("Tr2ParticleDirectForce")
+@be.define({
+  name: "Tr2ParticleDirectForce",
+  // Tr2ParticleDirectForce_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ ITr2ParticleForce ],
+  members: [
+    [ be.ATTR, "force", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ParticleDirectForce extends ITr2ParticleForce
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   force = vec3.fromValues(1, 1, 1);
 
