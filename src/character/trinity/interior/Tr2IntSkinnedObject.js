@@ -19,6 +19,7 @@ import { Tr2InteriorLightSet } from "./Tr2InteriorLightSet.js";
 import { Tr2PickType } from "#consts/graphics/tr2PickType";
 import { TriBatchType } from "#consts/graphics";
 import { quat } from "#math/quat";
+import { vec4 } from "#math/vec4";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
 
@@ -42,10 +43,30 @@ const PI_F = Math.fround(3.14159265);
 export class Tr2IntSkinnedObject extends Tr2SkinnedObject
 {
 
-  /** m_boundingSphere[3] (float) [READ] */
-  @be.mapAttribute(be.READ)
-  @type.float32
-  boundingSphereRadius = 0;
+  /**
+   * m_boundingSphere (Vector4, protected): the bounding sphere, centre in xyz and radius in w. The radius is exposed as its
+   * element 3 (Tr2IntSkinnedObject_Blue.cpp:26); the centre through boundingSphereCenter.
+   */
+  @be.mapAttribute__Index(be.READ, "boundingSphereRadius", 3)
+  @type.vec4
+  _boundingSphere = vec4.create();
+
+  /** A view onto _boundingSphere's xyz, made once; the sphere is written in place and never replaced. */
+  _boundingSphereCenter = this._boundingSphere.subarray(0, 3);
+
+  /**
+   * The bounding sphere's centre: the first three floats of _boundingSphere.
+   *
+   * @adapted Stands in for Carbon's MAPFLOATARRAYSIZE( "boundingSphereCenter", m_boundingSphere, ..., 3 )
+   *   (Tr2IntSkinnedObject_Blue.cpp:23) as a read-only property over the same floats.
+   * @returns {Float32Array} The live view.
+   */
+  @be.mapPropertyReadOnly()
+  @type.vec3
+  get boundingSphereCenter()
+  {
+    return this._boundingSphereCenter;
+  }
 
   /** m_depthOffset (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

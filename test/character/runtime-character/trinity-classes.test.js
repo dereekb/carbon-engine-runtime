@@ -193,10 +193,18 @@ test("character interior classes retain their source-backed inheritance and scal
   const placeable = new Tr2InteriorPlaceable();
 
   assert.ok(object instanceof Tr2SkinnedObject);
-  assert.equal(object.boundingSphereRadius, 0);
-  assert.equal(placeable.boundingSphereRadius, 0);
-  assert.equal(CjsSchema.getField(Tr2IntSkinnedObject, "boundingSphereRadius")?.type?.kind, "float32");
-  assert.equal(CjsSchema.getField(Tr2InteriorPlaceable, "boundingSphereRadius")?.type?.kind, "float32");
+  // Carbon's m_boundingSphere is one Vector4: the radius is its element 3, the centre its first three floats (Tr2IntSkinnedObject_Blue.cpp:23,26;
+  // Tr2InteriorPlaceable_Blue.cpp:39,42).
+  for (const [ Class, value ] of [ [ Tr2IntSkinnedObject, object ], [ Tr2InteriorPlaceable, placeable ] ])
+  {
+    const schema = CjsSchema.getSchema(Class);
+    const radius = schema.members.find(member => member.name === "boundingSphereRadius");
+    assert.deepEqual([ radius.key, radius.index, radius.type.kind ], [ "_boundingSphere", 3, "float32" ]);
+    assert.equal(schema.properties.find(property => property.name === "boundingSphereCenter").exposure.macro, "MAP_PROPERTY_READONLY");
+    value._boundingSphere.set([ 1, 2, 3, 4 ]);
+    assert.deepEqual(Array.from(value.boundingSphereCenter), [ 1, 2, 3 ]);
+    assert.equal(value.boundingSphereCenter, value.boundingSphereCenter, "one view, not a copy per call");
+  }
   assert.equal(CjsSchema.getField(Tr2IntSkinnedObject, "visualModel")?.type?.className, "Tr2SkinnedModel");
 });
 

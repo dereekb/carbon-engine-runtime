@@ -13,6 +13,7 @@ import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { WodPlaceableRes } from "../wod/WodPlaceableRes.js";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
+import { vec4 } from "#math/vec4";
 import { ITr2Renderable } from "../../../trinity/core/ITr2Renderable.js";
 
 /** Interior placeable with typed resource loading and native uniqueness notifications. */
@@ -56,10 +57,30 @@ export class Tr2InteriorPlaceable extends IRoot
   @type.boolean
   display = true;
 
-  /** m_boundingSphere[3] (float) [READ] */
-  @be.mapAttribute(be.READ)
-  @type.float32
-  boundingSphereRadius = 0;
+  /**
+   * m_boundingSphere (Vector4, private): the bounding sphere, centre in xyz and radius in w. The radius is exposed as its
+   * element 3 (Tr2InteriorPlaceable_Blue.cpp:42); the centre through boundingSphereCenter.
+   */
+  @be.mapAttribute__Index(be.READ, "boundingSphereRadius", 3)
+  @type.vec4
+  _boundingSphere = vec4.create();
+
+  /** A view onto _boundingSphere's xyz, made once; the sphere is written in place and never replaced. */
+  _boundingSphereCenter = this._boundingSphere.subarray(0, 3);
+
+  /**
+   * The bounding sphere's centre: the first three floats of _boundingSphere.
+   *
+   * @adapted Stands in for Carbon's MAPFLOATARRAYSIZE( "boundingSphereCenter", m_boundingSphere, ..., 3 )
+   *   (Tr2InteriorPlaceable_Blue.cpp:39) as a read-only property over the same floats.
+   * @returns {Float32Array} The live view.
+   */
+  @be.mapPropertyReadOnly()
+  @type.vec3
+  get boundingSphereCenter()
+  {
+    return this._boundingSphereCenter;
+  }
 
   /** m_depthOffset (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
