@@ -6,9 +6,16 @@ import { TriRenderStep } from "./TriRenderStep.js";
 import { BlueScriptCallback } from "#blue";
 
 /** A render step that invokes a host-supplied callback at its point in the job order. */
-@be.define("TriStepPythonCB")
+@be.define({
+  name: "TriStepPythonCB",
+  // TriStepPythonCB_Blue.cpp:11-28, in Carbon's order.
+  members: [
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetCallback" ],
+    [ be.METHOD, "SetCallback", be.WRAP ]
+  ],
+  chainTo: TriRenderStep
+})
 
-@be.exposureChainTo(TriRenderStep)
 export class TriStepPythonCB extends TriRenderStep
 {
 
@@ -32,8 +39,6 @@ export class TriStepPythonCB extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
-  @be.mapMethodAndWrap()
   SetCallback(callback)
   {
     this.callback = BlueScriptCallback.from(callback);

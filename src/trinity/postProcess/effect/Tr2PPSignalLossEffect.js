@@ -5,14 +5,19 @@ import { type, blue } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 
 /** Carries the strength of a display-gated post-process signal-loss effect. */
-@be.define("Tr2PPSignalLossEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPSignalLossEffect",
+  // Tr2PPSignalLossEffect_Blue.cpp:10-15, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR, "strength", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPSignalLossEffect extends Tr2PPEffect
 {
 
   /** m_strength (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   strength = 0;

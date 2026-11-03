@@ -7,13 +7,18 @@ import { TriRenderJob } from "../TriRenderJob.js";
 
 
 /** Step that runs a nested render job in place, letting job graphs compose. */
-@be.define("TriStepRunJob")
+@be.define({
+  name: "TriStepRunJob",
+  // TriStepRunJob_Blue.cpp:11-27, in Carbon's order.
+  members: [
+    [ be.ATTR, "job", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetRenderJob" ]
+  ],
+  chainTo: TriRenderStep
+})
 
-@be.exposureChainTo(TriRenderStep)
 export class TriStepRunJob extends TriRenderStep
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("TriRenderJob")
   job = null;
 
@@ -32,7 +37,6 @@ export class TriStepRunJob extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetRenderJob(job)
   {
     this.job = job ?? null;

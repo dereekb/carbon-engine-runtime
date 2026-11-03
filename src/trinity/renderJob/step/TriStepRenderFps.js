@@ -5,29 +5,34 @@ import { type, blue } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 /** A step that averages the frame rate over a quarter second and reports it as text with a threshold colour. */
-@be.define("TriStepRenderFps")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepRenderFps",
+  // TriStepRenderFps_Blue.cpp:12-47, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [
+    [ be.ATTR, "displayX", be.READWRITE ],
+    [ be.ATTR, "displayY", be.READWRITE ],
+    [ be.ATTR, "alignRight", be.READWRITE ],
+    [ be.ATTR, "alignBottom", be.READWRITE ]
+  ],
+  chainTo: TriRenderStep
+})
 export class TriStepRenderFps extends TriRenderStep
 {
 
   /** m_alignBottom (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   alignBottom = true;
 
   /** m_alignRight (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   alignRight = true;
 
   /** m_displayX (int) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   displayX = 0;
 
   /** m_displayY (int) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   displayY = 0;
 

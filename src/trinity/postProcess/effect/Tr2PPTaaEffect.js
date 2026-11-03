@@ -11,25 +11,30 @@ import { blue, EnumRegistrationType } from "#blue";
  * Temporal anti-aliasing settings: quality level, the early-out threshold below
  * which pixels are left alone, and the debug visualization selector.
  */
-@be.define("Tr2PPTaaEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPTaaEffect",
+  // Tr2PPTaaEffect_Blue.cpp:27-35, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR_CHOOSER, "quality", be.READWRITE | be.ENUM, "trinity.Tr2PPTaaEffect.Quality" ],
+    [ be.ATTR_CHOOSER, "debug", be.READWRITE | be.ENUM, "trinity.Tr2PPTaaEffect.Debug" ],
+    [ be.ATTR, "earlyOutThreshold", be.READWRITE ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPTaaEffect extends Tr2PPEffect
 {
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp:31); chooser Tr2PPTaaEffectDebugChooser (trinity/trinity/PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp:17). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2PPTaaEffect.Debug")
   @type.int32
   @type.enum("trinity.Tr2PPTaaEffect.Debug")
   debug = Tr2PPTaaEffect.TAA_DEBUG_OFF;
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp:30); chooser Tr2PPTaaEffectQualityChooser (trinity/trinity/PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp:9). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2PPTaaEffect.Quality")
   @type.int32
   @type.enum("trinity.Tr2PPTaaEffect.Quality")
   quality = Tr2PPTaaEffect.TAA_HIGH;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   earlyOutThreshold = 0.001;
 

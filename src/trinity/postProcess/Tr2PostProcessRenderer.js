@@ -82,25 +82,45 @@ function effectAt(path, options = null)
  * Carbon's post-process renderer: the chain from the scene's colour buffer to
  * the back buffer, driven by the scene's combined Tr2PostProcess2.
  */
-@be.define("Tr2PostProcessRenderer")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2PostProcessRenderer",
+  inherit: [ IRoot ],
+  // Tr2PostProcessRenderer_Blue.cpp:24-48, in Carbon's order.
+  members: [
+    [ be.ATTR, "bloomHighPassFilter", be.READWRITE ],
+    [ be.ATTR, "godrayEffect", be.READWRITE ],
+    [ be.ATTR, "signalLossEffect", be.READWRITE ],
+    [ be.ATTR, "tonemappingEffect", be.READWRITE ],
+    [ be.ATTR, "dynamicExposureCreateHistogramShader", be.READWRITE ],
+    [ be.ATTR, "dynamicExposureMergeHistogramShader", be.READWRITE ],
+    [ be.ATTR, "dynamicExposureMeasureExposureShader", be.READWRITE ],
+    [ be.ATTR, "fogColorEffect", be.READWRITE ],
+    [ be.ATTR, "fogCompositeEffect", be.READWRITE ],
+    [ be.ATTR, "taaEffect", be.READWRITE ],
+    [ be.ATTR, "bloomDebugShader", be.READWRITE ],
+    [ be.ATTR, "depthOfFieldCoCShader", be.READWRITE ],
+    [ be.ATTR, "depthOfFieldBokehBlurShader", be.READWRITE ],
+    [ be.ATTR, "depthOfFieldBokehFillShader", be.READWRITE ],
+    [ be.ATTR, "dynamicExposureToTextureShader", be.READWRITE ],
+    [ be.ATTR_CHOOSER, "quality", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.PostProcess.Quality" ],
+    [ be.ATTR_CHOOSER, "bloomDebugMode", be.READWRITE | be.NOTIFY | be.ENUM, "trinity.Tr2PostProcessRenderer.BloomDebugMode" ],
+    [ be.ATTR, "useNewBloom", be.READWRITE | be.NOTIFY ]
+  ]
+})
 export class Tr2PostProcessRenderer extends IRoot
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Tr2PostProcessRenderer_Blue.cpp:47); chooser BloomDebugChooser (trinity/trinity/PostProcess/Tr2PostProcessRenderer_Blue.cpp:9). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.ENUM, "trinity.Tr2PostProcessRenderer.BloomDebugMode")
   @type.int32
   @type.enum("trinity.Tr2PostProcessRenderer.BloomDebugMode")
   bloomDebugMode = BloomDebugMode.BLOOM_DEBUG_NONE;
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Tr2PostProcessRenderer_Blue.cpp:46); chooser PostProcessQualityChooser (trinity/trinity/PostProcess/Effects/Tr2PPEffect_Blue.cpp:7). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.PostProcess.Quality")
   @type.int32
   @type.enum("trinity.PostProcess.Quality")
   quality = Quality.HIGH;
 
   // THE EFFECTS CARBON'S CONSTRUCTOR CREATES (cpp:537-635), in its order.
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   tonemappingEffect = effectAt(PostProcessEffectPaths.ToneMapping);
 
@@ -108,7 +128,6 @@ export class Tr2PostProcessRenderer extends IRoot
 
   _transparencyMaskEffect = effectAt(PostProcessEffectPaths.TransparencyMask);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   bloomHighPassFilter = effectAt(PostProcessEffectPaths.HighPassFilter);
 
@@ -120,19 +139,15 @@ export class Tr2PostProcessRenderer extends IRoot
 
   _upsamplerVertical = effectAt(PostProcessEffectPaths.Upsample, { UPSAMPLING_STEP: "UPSAMPLING_STEP_SECOND" });
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   dynamicExposureToTextureShader = effectAt(PostProcessEffectPaths.ExposureToTexture);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   dynamicExposureCreateHistogramShader = effectAt(PostProcessEffectPaths.CreateHistograms);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   dynamicExposureMergeHistogramShader = effectAt(PostProcessEffectPaths.MergeHistograms);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   dynamicExposureMeasureExposureShader = effectAt(PostProcessEffectPaths.MeasureExposure);
 
@@ -140,46 +155,37 @@ export class Tr2PostProcessRenderer extends IRoot
 
   _downsampleDepthEffect = effectAt(PostProcessEffectPaths.DownsampleDepth);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   fogColorEffect = effectAt(PostProcessEffectPaths.EnvironmentFogColor);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   fogCompositeEffect = effectAt(PostProcessEffectPaths.EnvironmentFogComposit);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   depthOfFieldBokehBlurShader = effectAt(PostProcessEffectPaths.Bokeh, { BOKEH_PIXEL_METHOD: "BOKEH_PIXEL_AVERAGE" });
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   depthOfFieldBokehFillShader = effectAt(PostProcessEffectPaths.Bokeh, { BOKEH_PIXEL_METHOD: "BOKEH_PIXEL_MAX" });
 
   _depthOfFieldBokehTAAShader = effectAt(PostProcessEffectPaths.BokehTAA);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   depthOfFieldCoCShader = effectAt(PostProcessEffectPaths.CircleOfConfusion);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   godrayEffect = effectAt(PostProcessEffectPaths.Godrays);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   signalLossEffect = effectAt(PostProcessEffectPaths.SignalLoss);
 
   _grainShader = Tr2PostProcessRenderer._createGrainShader();
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   taaEffect = effectAt(PostProcessEffectPaths.TAA);
 
   _taaCopyEffect = effectAt(PostProcessEffectPaths.TAACopy);
 
   /** Created on first use by RenderBloomDebug (cpp:1115-1144). */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   bloomDebugShader = null;
 
@@ -187,7 +193,6 @@ export class Tr2PostProcessRenderer extends IRoot
   _dynamicExposureDebugShader = null;
 
   /** m_useNewBloom, from the newBloom setting at construction (cpp:525). */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   useNewBloom = Tr2PostProcessRenderer.newBloom;

@@ -13,9 +13,13 @@ import { Tr2Renderer } from "../../core/Tr2Renderer.js";
  * Step that pops the render context's projection stack, restoring the projection saved
  * by an earlier push.
  */
-@be.define("TriStepPopProjection")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPopProjection",
+  // TriStepPopProjection_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPopProjection extends TriRenderStep
 {
   /**

@@ -10,12 +10,16 @@ import { type, blue } from "#schema";
  * Post-process described as a flat ordered list of Tr2Effect stages, in contrast
  * to Tr2PostProcess2's named effect slots.
  */
-@be.define("Tr2PostProcess")
-@be.inherit(IInitialize)
+@be.define({
+  name: "Tr2PostProcess",
+  inherit: [ IInitialize ],
+  // Tr2PostProcess_Blue.cpp:10-14, in Carbon's order.
+  members: [
+    [ be.ATTR, "stages", be.READ | be.PERSIST ]
+  ]
+})
 export class Tr2PostProcess extends IRoot
 {
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2Effect")
   stages = [];
 

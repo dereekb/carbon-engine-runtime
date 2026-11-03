@@ -8,9 +8,19 @@ import { ITr2RenderNode } from "#interfaces/ITr2RenderNode";
 import "#consts/graphics/trinityEnums";
 
 /** A render-graph node that binds named sources onto an effect and produces its output. */
-@be.define("Tr2RenderNodeEffect")
-@be.mapInterface(ITr2RenderNode)
-@be.inherit(ITr2RenderNode)
+@be.define({
+  name: "Tr2RenderNodeEffect",
+  inherit: [ ITr2RenderNode ],
+  // Tr2RenderNodeEffect_Blue.cpp:30-58, in Carbon's order.
+  interfaces: [ ITr2RenderNode ],
+  members: [
+    [ be.ATTR, "effect", be.READWRITE ],
+    [ be.ATTR, "viewport", be.READWRITE ],
+    [ be.ATTR_CHOOSER, "renderingMode", be.READWRITE | be.ENUM, "trinity.Tr2EffectStateManager.RenderingMode" ],
+    [ be.METHOD, "AddSource", be.WRAP_OPTIONAL_ARGS ],
+    [ be.ATTR, "inputNodes", be.READ | be.PERSIST ]
+  ]
+})
 export class Tr2RenderNodeEffect extends IRoot
 {
 
@@ -22,23 +32,19 @@ export class Tr2RenderNodeEffect extends IRoot
    * m_renderingMode (Tr2EffectStateManager::RenderingMode - enum RenderingMode) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2RenderNodeEffect_Blue.cpp:43); chooser TriRMChooser (trinity/trinity/Tr2RenderNodeEffect_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2EffectStateManager.RenderingMode")
   @type.int32
   @type.enum("trinity.Tr2EffectStateManager.RenderingMode")
   renderingMode = 8;
 
   /** m_effect (Tr2EffectPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_viewport (TriViewportPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriViewport")
   viewport = null;
 
   /** m_inputNodes (PITr2RenderNodeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2RenderNode")
   inputNodes = [];
@@ -91,7 +97,6 @@ export class Tr2RenderNodeEffect extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddSource(name, source, outputName = "")
   {
     if (!source) return false;

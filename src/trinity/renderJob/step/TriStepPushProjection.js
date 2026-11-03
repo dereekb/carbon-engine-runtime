@@ -10,9 +10,13 @@ import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 // projection (Tr2Renderer::PushProjection).
 
 /** Step that saves the current projection so a later pop can restore it. */
-@be.define("TriStepPushProjection")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPushProjection",
+  // TriStepPushProjection_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPushProjection extends TriRenderStep
 {
   /**

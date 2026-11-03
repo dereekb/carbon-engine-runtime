@@ -10,13 +10,18 @@ import { TriRenderStep } from "./TriRenderStep.js";
  * Step that installs a viewport, or restores the full-screen viewport when none
  * is authored.
  */
-@be.define("TriStepSetViewport")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepSetViewport",
+  // TriStepSetViewport_Blue.cpp:12-26, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [
+    [ be.ATTR, "viewport", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetViewport" ]
+  ],
+  chainTo: TriRenderStep
+})
 export class TriStepSetViewport extends TriRenderStep
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("TriViewport")
   viewport = null;
 
@@ -36,7 +41,6 @@ export class TriStepSetViewport extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetViewport(viewport)
   {
     this.viewport = viewport ?? null;

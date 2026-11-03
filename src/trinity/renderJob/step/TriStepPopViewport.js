@@ -12,9 +12,13 @@ import { TriRenderJob } from "../TriRenderJob.js";
  * Step that pops the render context's viewport stack, restoring the viewport saved by
  * an earlier push.
  */
-@be.define("TriStepPopViewport")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPopViewport",
+  // TriStepPopViewport_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPopViewport extends TriRenderStep
 {
   /**

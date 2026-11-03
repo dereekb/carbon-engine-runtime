@@ -12,89 +12,80 @@ import { Quality } from "../generated/postProcess/enums.js";
  * with per-effect quality thresholds deciding which of them a frame is allowed
  * to use.
  */
-@be.define("Tr2PostProcess2")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2PostProcess2",
+  inherit: [ IRoot ],
+  // Tr2PostProcess2_Blue.cpp:10-31, in Carbon's order.
+  members: [
+    [ be.ATTR, "signalLoss", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRays", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "bloom", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "dynamicExposure", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "filmGrain", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "desaturate", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fade", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "luts", be.READ | be.PERSIST ],
+    [ be.ATTR, "lut", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "vignette", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fog", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depthOfField", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "taa", be.READWRITE ],
+    [ be.ATTR, "tonemapping", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "colorCorrection", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "genericEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sharpeningStrength", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2PostProcess2 extends IRoot
 {
 
   // Carbon exposes this as a registered engine setting. Keeping it static makes
   // the graph deterministic while allowing a concrete backend to configure it.
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPSignalLossEffect")
   signalLoss = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPGodRaysEffect")
   godRays = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPBloomEffect")
   bloom = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPDynamicExposureEffect")
   dynamicExposure = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPFilmGrainEffect")
   filmGrain = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPDesaturateEffect")
   desaturate = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPFadeEffect")
   fade = null;
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2PPLutEffect")
   luts = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPLutEffect")
   lut = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPVignetteEffect")
   vignette = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPFogEffect")
   fog = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPDepthOfFieldEffect")
   depthOfField = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2PPTaaEffect")
   taa = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPTonemappingEffect")
   tonemapping = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2PPColorCorrectionEffect")
   colorCorrection = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PPGenericEffect")
   genericEffect = null;
@@ -108,7 +99,6 @@ export class Tr2PostProcess2 extends IRoot
    * (docs/research/carbon-version-drift.md). The renderer reads it only while
    * `Tr2PostProcessRenderer.useSharpeningStrength` is on.
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sharpeningStrength = 0.5;

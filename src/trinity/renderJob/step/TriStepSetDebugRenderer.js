@@ -5,14 +5,20 @@ import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 /** A render step that installs the debug renderer subsequent debug drawing routes through. */
-@be.define("TriStepSetDebugRenderer")
+@be.define({
+  name: "TriStepSetDebugRenderer",
+  // TriStepSetDebugRenderer_Blue.cpp:11-21, in Carbon's order.
+  members: [
+    [ be.ATTR, "renderer", be.READWRITE ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetDebugRenderer" ]
+  ],
+  chainTo: TriRenderStep
+})
 
-@be.exposureChainTo(TriRenderStep)
 export class TriStepSetDebugRenderer extends TriRenderStep
 {
 
   /** m_debugRenderer (ITr2DebugRendererPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITr2DebugRenderer")
   renderer = null;
 
@@ -31,7 +37,6 @@ export class TriStepSetDebugRenderer extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetDebugRenderer(renderer)
   {
     this.renderer = renderer ?? null;

@@ -7,13 +7,18 @@ import { TriRenderStep } from "./TriRenderStep.js";
 
 
 /** Step that installs an authored projection for the steps that follow. */
-@be.define("TriStepSetProjection")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepSetProjection",
+  // TriStepSetProjection_Blue.cpp:11-25, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [
+    [ be.ATTR, "projection", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetProjection" ]
+  ],
+  chainTo: TriRenderStep
+})
 export class TriStepSetProjection extends TriRenderStep
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("TriProjection")
   projection = null;
 
@@ -33,7 +38,6 @@ export class TriStepSetProjection extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetProjection(projection)
   {
     this.projection = projection ?? null;

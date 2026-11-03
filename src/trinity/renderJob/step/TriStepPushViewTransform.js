@@ -10,9 +10,13 @@ import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 // view transform (Tr2Renderer::PushViewTransform).
 
 /** Step that saves the current view transform so a later pop can restore it. */
-@be.define("TriStepPushViewTransform")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPushViewTransform",
+  // TriStepPushViewTransform_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPushViewTransform extends TriRenderStep
 {
   /**

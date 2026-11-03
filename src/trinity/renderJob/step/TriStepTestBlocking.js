@@ -5,14 +5,19 @@ import { type, blue } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 /** A test step that reports itself in progress until its flag is cleared, so a job's resume path can be exercised. */
-@be.define("TriStepTestBlocking")
+@be.define({
+  name: "TriStepTestBlocking",
+  // TriStepTestBlocking_Blue.cpp:11-20, in Carbon's order.
+  members: [
+    [ be.ATTR, "inProgress", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: TriRenderStep
+})
 
-@be.exposureChainTo(TriRenderStep)
 export class TriStepTestBlocking extends TriRenderStep
 {
 
   /** m_inProgress (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   inProgress = true;

@@ -11,24 +11,29 @@ import { TriRenderStep } from "./TriRenderStep.js";
  * Executes one render-graph node into a destination target, optionally clearing
  * the target when the node is absent or fails validation.
  */
-@be.define("Tr2StepExecuteRenderNode")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "Tr2StepExecuteRenderNode",
+  // Tr2StepExecuteRenderNode_Blue.cpp:16-35, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [
+    [ be.ATTR, "destinationTarget", be.READWRITE ],
+    [ be.ATTR, "node", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "clearTargetOnFailure", be.READWRITE ]
+  ],
+  chainTo: TriRenderStep
+})
 export class Tr2StepExecuteRenderNode extends TriRenderStep
 {
 
   /** m_destinationTarget (Tr2RenderTargetPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2RenderTarget")
   destinationTarget = null;
 
   /** m_clearTargetOnFailure (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   clearTargetOnFailure = true;
 
   /** m_node (ITr2RenderNodePtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITr2RenderNode")
   node = null;

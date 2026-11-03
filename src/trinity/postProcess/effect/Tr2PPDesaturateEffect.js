@@ -5,14 +5,19 @@ import { type, blue } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 
 /** Carries the intensity of a post-process desaturation effect. */
-@be.define("Tr2PPDesaturateEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPDesaturateEffect",
+  // Tr2PPDesaturateEffect_Blue.cpp:10-16, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPDesaturateEffect extends Tr2PPEffect
 {
 
   /** m_intensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   intensity = 1;

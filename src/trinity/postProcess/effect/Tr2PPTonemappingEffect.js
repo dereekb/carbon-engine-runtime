@@ -22,103 +22,93 @@ blueEnums.Create("trinity.TonemappingEffectMethodChooser", TonemappingEffectMeth
  * Tonemapping curve selection - Uncharted2, ACES or AgX - together with the toe,
  * shoulder and clipping parameters that shape it.
  */
-@be.define("Tr2PPTonemappingEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPTonemappingEffect",
+  // Tr2PPTonemappingEffect_Blue.cpp:17-53, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR_CHOOSER, "method", be.READWRITE | be.PERSIST | be.ENUM, "trinity.TonemappingEffectMethodChooser" ],
+    [ be.ATTR, "slope", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "toe", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shoulder", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blackClip", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "whiteClip", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blueCorrection", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useSweeteners", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shoulderStrength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "linearStrength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "linearAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "toeStrength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "toeNumerator", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "toeDenominator", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "whiteScale", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPTonemappingEffect extends Tr2PPEffect
 {
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Effects/Tr2PPTonemappingEffect_Blue.cpp:20); chooser TonemappingEffectMethodChooser (trinity/trinity/PostProcess/Effects/Tr2PPTonemappingEffect_Blue.cpp:8). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.TonemappingEffectMethodChooser")
   @type.int32
   @type.enum("trinity.TonemappingEffectMethodChooser")
   method = Tr2PPTonemappingEffect.Aces;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Aces (new)")
   toe = 0.55;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Aces (new)")
   shoulder = 0.26;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Aces (new)")
   blackClip = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Aces (new)")
   whiteClip = 0.04;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Aces (new)")
   blueCorrection = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Aces (new)")
   slope = 0.88;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Aces (new)")
   scale = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   @meta.ui.group("Aces (new)")
   useSweeteners = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   shoulderStrength = 0.125;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   linearStrength = 0.25;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   linearAngle = 0.1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   toeStrength = 0.15;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   toeNumerator = 0.021;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")
   toeDenominator = 0.3;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   @meta.ui.group("Uncharted 2 (old)")

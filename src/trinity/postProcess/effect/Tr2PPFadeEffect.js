@@ -6,20 +6,25 @@ import { Tr2PPEffect } from "./Tr2PPEffect.js";
 import { vec4 } from "#math/vec4";
 
 /** Carries the color and intensity of a display-gated post-process fade. */
-@be.define("Tr2PPFadeEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPFadeEffect",
+  // Tr2PPFadeEffect_Blue.cpp:10-16, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPFadeEffect extends Tr2PPEffect
 {
 
   /** m_color (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.create();
 
   /** m_intensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   intensity = 0;

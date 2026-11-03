@@ -7,9 +7,13 @@ import { TriRenderJob } from "../TriRenderJob.js";
 
 
 /** Step that pops the render context's depth-stencil stack, undoing an earlier push. */
-@be.define("TriStepPopDepthStencil")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPopDepthStencil",
+  // TriStepPopDepthStencil_Blue.cpp:12-17, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPopDepthStencil extends TriRenderStep
 {
   /**

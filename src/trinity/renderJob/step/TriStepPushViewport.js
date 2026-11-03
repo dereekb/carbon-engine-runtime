@@ -9,9 +9,13 @@ import { TriRenderJob } from "../TriRenderJob.js";
 // viewport onto the render context's ESM stack.
 
 /** Step that saves the current viewport so a later pop can restore it. */
-@be.define("TriStepPushViewport")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepPushViewport",
+  // TriStepPushViewport_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [],
+  chainTo: TriRenderStep
+})
 export class TriStepPushViewport extends TriRenderStep
 {
   /**

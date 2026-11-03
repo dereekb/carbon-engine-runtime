@@ -11,42 +11,43 @@ import { blue, EnumRegistrationType } from "#blue";
  * blur scale, bokeh shape - plus the process-wide switch that enables the effect
  * at all.
  */
-@be.define("Tr2PPDepthOfFieldEffect")
-@be.exposureChainTo(Tr2PPEffect)
-@be.mapInterface(Tr2PPEffect)
+@be.define({
+  name: "Tr2PPDepthOfFieldEffect",
+  // Tr2PPDepthOfFieldEffect_Blue.cpp:23-34, in Carbon's order.
+  interfaces: [ Tr2PPEffect ],
+  members: [
+    [ be.ATTR, "focalDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "focalLength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cocScale", be.READWRITE ],
+    [ be.ATTR, "foregroundBlurNeeded", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "bokehShape", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2Bokeh.Shape" ],
+    [ be.ATTR, "useTAAFriendlyBokeh", be.READWRITE ]
+  ],
+  chainTo: Tr2PPEffect
+})
 export class Tr2PPDepthOfFieldEffect extends Tr2PPEffect
 {
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/PostProcess/Effects/Tr2PPDepthOfFieldEffect_Blue.cpp:31); chooser BokehShapeChooser (trinity/trinity/PostProcess/Effects/Tr2PPDepthOfFieldEffect_Blue.cpp:10). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2Bokeh.Shape")
   @type.int32
   @type.enum("trinity.Tr2Bokeh.Shape")
   bokehShape = Tr2PPDepthOfFieldEffect.Disk;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   scale = 0;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   cocScale = 1;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   useTAAFriendlyBokeh = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   focalLength = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   foregroundBlurNeeded = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   focalDistance = 0;

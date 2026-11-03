@@ -12,17 +12,21 @@ import { mat4 } from "#math/mat4";
  * Step that installs the view transform for the steps that follow, taken either
  * from an authored view or from a camera updated against the current viewport.
  */
-@be.define("TriStepSetView")
-@be.mapInterface(TriRenderStep)
-@be.exposureChainTo(TriRenderStep)
+@be.define({
+  name: "TriStepSetView",
+  // TriStepSetView_Blue.cpp:12-27, in Carbon's order.
+  interfaces: [ TriRenderStep ],
+  members: [
+    [ be.ATTR, "view", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "camera", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetViewCameraParent" ]
+  ],
+  chainTo: TriRenderStep
+})
 export class TriStepSetView extends TriRenderStep
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("TriView")
   view = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveCamera")
   camera = null;
@@ -43,7 +47,6 @@ export class TriStepSetView extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetViewCameraParent(view, camera)
   {
     this.view = view ?? null;

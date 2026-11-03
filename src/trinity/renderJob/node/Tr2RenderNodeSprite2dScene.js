@@ -6,20 +6,25 @@ import { type, blue } from "#schema";
 import { ITr2RenderNode } from "#interfaces/ITr2RenderNode";
 
 /** A render-graph node that draws a sprite scene into a destination texture, over an optional background node. */
-@be.define("Tr2RenderNodeSprite2dScene")
-@be.mapInterface(ITr2RenderNode)
-@be.inherit(ITr2RenderNode)
+@be.define({
+  name: "Tr2RenderNodeSprite2dScene",
+  inherit: [ ITr2RenderNode ],
+  // Tr2RenderNodeSprite2dScene_Blue.cpp:12-21, in Carbon's order.
+  interfaces: [ ITr2RenderNode ],
+  members: [
+    [ be.ATTR, "background", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scene", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2RenderNodeSprite2dScene extends IRoot
 {
 
   /** m_scene (Tr2Sprite2dScenePtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Sprite2dScene")
   scene = null;
 
   /** m_background (ITr2RenderNodePtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITr2RenderNode")
   background = null;
