@@ -278,7 +278,7 @@ export function compareBag(bag, rows)
 }
 
 /** A scanned Carbon row as the bag would write it: its family, bag kind (null when the bag has none), flags and acceptable JS keys. */
-function carbonRow(row)
+export function carbonRow(row)
 {
     if (row.kind === "ICACHEABLE") return { family: "ICACHEABLE", kind: "ICACHEABLE_METHODS", name: null, label: "ICACHEABLE_METHODS" };
     if (row.kind === "PROP")
