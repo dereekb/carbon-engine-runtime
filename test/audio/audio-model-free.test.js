@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { AudGeometry, AudPosition, AudStaticDataRepository, ITr2AudGeometry } from "../../npm/dist/audio/index.js";
-import { IBluePlacementObserver, IInitialize, INotify } from "../../npm/dist/blue/blue/index.js";
+import { IBluePlacementObserver, IInitialize, INotify } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 

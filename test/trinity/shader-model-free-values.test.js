@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { DictReader, IInitialize, INotify, IListNotify, ICopierCustomAssignment } from "../../npm/dist/blue/blue/index.js";
+import { DictReader, IInitialize, INotify, IListNotify, ICopierCustomAssignment } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Tr2Effect, Tr2Material, TriTextureParameter, Tr2Matrix4Parameter, Tr2Vector4Parameter, Tr2TextureReference } from "../../npm/dist/trinity/index.js";
 

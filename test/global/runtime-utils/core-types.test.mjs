@@ -1,6 +1,6 @@
-import "../../../src/blue/blue/values.js";
+import "../../../src/blue/values.js";
 import { Copier } from "../../../src/blue/exposure/Copier.js";
-import { blue } from "../../../src/blue/blue/index.js";
+import { blue } from "../../../src/blue/index.js";
 
 // Preorder over blue.EnumerateChildren, once per object.
 function preorder(root)
@@ -18,7 +18,7 @@ function preorder(root)
     if (root) visit(root);
     return visited;
 }
-import { GetResources } from "../../../src/blue/blue/getResources.js";
+import { GetResources } from "../../../src/blue/getResources.js";
 import { ensureRuntimeState, getRuntimeState } from "../../../src/blue/compose/runtimeState.js";
 import assert from "node:assert/strict";
 import test from "node:test";

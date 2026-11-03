@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DictReader } from "../../../npm/dist/blue/blue/formats/graph/DictReader.js";
+import { DictReader } from "../../../npm/dist/blue/formats/graph/DictReader.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { Tr2CurveConstant } from "../../../npm/dist/trinity/curves/curve/Tr2CurveConstant.js";
 import { EveSOFDataArea } from "../../../npm/dist/sof/shared/EveSOFDataArea.js";

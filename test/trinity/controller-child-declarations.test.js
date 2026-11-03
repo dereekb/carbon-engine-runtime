@@ -6,7 +6,7 @@ import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
 import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { IListNotify } from "../../npm/dist/blue/exposure/IListNotify.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
-import { ISimTimeRebaseNotify } from "../../npm/dist/blue/blue/interfaces/ISimTimeRebaseNotify.js";
+import { ISimTimeRebaseNotify } from "../../npm/dist/blue/interfaces/ISimTimeRebaseNotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2StateMachine.js";

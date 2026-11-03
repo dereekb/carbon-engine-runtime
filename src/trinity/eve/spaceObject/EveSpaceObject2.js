@@ -37,7 +37,7 @@ import { quat } from "#math/quat";
 import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { addChild, removeChild, clearChildren } from "../../../blue/blue/children.js";
+import { addChild, removeChild, clearChildren } from "../../../blue/children.js";
 import { ccpHashFnv1 } from "#utils";
 import { BLUELISTEVENT } from "#consts/blue";
 import { EveComponentType, EntityComponents } from "../EntityComponents.js";

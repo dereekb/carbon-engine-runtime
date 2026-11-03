@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test, beforeEach, afterEach } from "node:test";
 
 import { TriStorageFlags } from "../../../npm/dist/global/consts/graphics/index.js";
-import { MotherLode } from "../../../npm/dist/blue/blue/resman/MotherLode.js";
-import { blue, BlueResMan, CjsLoadingObject } from "../../../npm/dist/blue/blue/index.js";
+import { MotherLode } from "../../../npm/dist/blue/resman/MotherLode.js";
+import { blue, BlueResMan, CjsLoadingObject } from "../../../npm/dist/blue/index.js";
 import { TriGeometryRes } from "../../../npm/dist/trinity/resources/geometry/index.js";
 import { CjsCmfFormat } from "../../../npm/dist/resource/formats/cmf/CjsCmfFormat.js";
 import { configureResourceManager } from "../../support/configuredResMan.js";

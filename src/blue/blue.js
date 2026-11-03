@@ -1,0 +1,123 @@
+// Source: blue/include/IBlueResMan.h:135, blue/include/IBluePaths.h:49,
+//   blue/include/IBlueOS.h:226, blue/src/BlueResMan.cpp:98-123.
+// Shared definitions are available before application startup. Each enum
+// registers at its defining module; the holder starts no service on import.
+import "../global/consts/graphics/trinityEnums.js";
+import "../global/consts/trinity.js";
+import "../global/consts/renderContext/presentation.js";
+import "../global/consts/renderContext/window.js";
+import "../global/consts/renderContext/formats.js";
+import "../global/consts/renderContext/upscaling.js";
+import "../global/consts/renderContext/resources.js";
+import { CjsSchema } from "#schema";
+import { IBlueEvents } from "./interfaces/IBlueEvents.js";
+import { IBlueResMan } from "./interfaces/IBlueResMan.js";
+import { IBluePaths } from "./interfaces/IBluePaths.js";
+import { IBlueOS } from "./interfaces/IBlueOS.js";
+import { ICjsWwiseSoundEngine } from "../global/audio/ICjsWwiseSoundEngine.js";
+import { CjsBlue } from "./services/CjsBlue.js";
+
+/** Shared service references; the public Blue entry composes its resource manager. */
+export const blue = new CjsBlue();
+
+
+// Carbon's private s_tickCookie in BlueResMan::Initialize/Shutdown. This
+// registration belongs to composition; unrelated host cookies remain intact.
+const RES_MAN_TICK_COOKIE = Symbol("BeResMan");
+let tickPair = null;
+let installingServices = false;
+
+/**
+ * Installs named references and the composition-owned resource-manager tick pair.
+ *
+ * Custom synchronous composition step, called by CjsLibrary.Initialize. Slots
+ * and the active pair are independent: initial startup registers even unchanged
+ * defaults; restoring an unstarted snapshot detaches without starting anything.
+ * Validate every slot first, register the candidate, detach the previous pair,
+ * then publish. Failed hooks run inverse operations and preserve the primary
+ * error, reporting failed compensation in an AggregateError. Borrowed services
+ * are never configured, pumped, initialized or destroyed here.
+ *
+ * @param {object} [services={}] Named resMan, paths, os, sof, characterLibrary and audio references.
+ * @param {boolean} [running=true] Whether the installed manager should receive ticks.
+ * @returns {object} Previous references and running state for explicit restoration.
+ */
+export function installBlueServices(services = {}, running = true)
+{
+  if (!services || typeof services !== "object" || Array.isArray(services))
+    throw new TypeError("Blue service installation requires named service references.");
+  if (typeof running !== "boolean") throw new TypeError("Blue service running state must be boolean.");
+  if (installingServices) throw new Error("Blue service installation cannot be reentered.");
+  installingServices = true;
+  try
+  {
+    const previous = {
+      resMan: blue.resMan, paths: blue.paths, os: blue.os,
+      sof: blue.sof, characterLibrary: blue.characterLibrary, audio: blue.audio, running: tickPair !== null
+    };
+    const next = { ...previous };
+    for (const [name, Contract] of [["resMan", IBlueResMan], ["paths", IBluePaths], ["os", IBlueOS], ["audio", ICjsWwiseSoundEngine]])
+    {
+      if (!Object.hasOwn(services, name)) continue;
+      const value = services[name];
+      if (!CjsSchema.cast(value, Contract)
+        || (name === "resMan" && !CjsSchema.cast(value, IBlueEvents)))
+        throw new TypeError(`Blue service ${name} does not implement its required interfaces.`);
+      next[name] = value;
+    }
+    if (Object.hasOwn(services, "sof"))
+    {
+      next.sof = services.sof;
+    }
+    if (Object.hasOwn(services, "characterLibrary"))
+    {
+      next.characterLibrary = services.characterLibrary;
+    }
+
+    const candidate = running ? { os: next.os, resMan: next.resMan } : null;
+    if (candidate?.os !== tickPair?.os || candidate?.resMan !== tickPair?.resMan)
+    {
+      if (candidate)
+      {
+        try { candidate.os.RegisterForTicks(candidate.resMan, RES_MAN_TICK_COOKIE); }
+        catch (error)
+        {
+          const failures = [error];
+          try { candidate.os.UnregisterForTicks(candidate.resMan, RES_MAN_TICK_COOKIE); }
+          catch (cleanupError) { failures.push(cleanupError); }
+          if (failures.length > 1)
+            throw new AggregateError(failures, "Blue service registration compensation failed.", { cause: error });
+          throw error;
+        }
+      }
+      if (tickPair)
+      {
+        try { tickPair.os.UnregisterForTicks(tickPair.resMan, RES_MAN_TICK_COOKIE); }
+        catch (error)
+        {
+          const failures = [error];
+          try { tickPair.os.RegisterForTicks(tickPair.resMan, RES_MAN_TICK_COOKIE); }
+          catch (cleanupError) { failures.push(cleanupError); }
+          if (candidate)
+          {
+            try { candidate.os.UnregisterForTicks(candidate.resMan, RES_MAN_TICK_COOKIE); }
+            catch (cleanupError) { failures.push(cleanupError); }
+          }
+          if (failures.length > 1)
+            throw new AggregateError(failures, "Blue service transfer compensation failed.", { cause: error });
+          throw error;
+        }
+      }
+    }
+    blue.resMan = next.resMan;
+    blue.paths = next.paths;
+    blue.os = next.os;
+    blue.sof = next.sof;
+    blue.characterLibrary = next.characterLibrary;
+    blue.audio = next.audio;
+    tickPair = candidate;
+    return previous;
+  }
+  finally { installingServices = false; }
+}
+

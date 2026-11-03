@@ -4,7 +4,7 @@
 // from the owner's side when the revision it built from is out of date.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { BlueAsyncRes, BlueResMan, blue } from "../../../npm/dist/blue/blue/index.js";
+import { BlueAsyncRes, BlueResMan, blue } from "../../../npm/dist/blue/index.js";
 import { RegisterDataLoader } from "../../support/testDataRes.js";
 import "../../support/frameLoop.js";
 

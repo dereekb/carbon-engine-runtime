@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { DictReader, DictWriter, Copier } from "../../npm/dist/blue/blue/index.js";
+import { DictReader, DictWriter, Copier } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { GaussianData } from "../../npm/dist/trinity/postProcess/GaussianData.js";
 import { Float4x3 } from "../../npm/dist/trinity/utilities/Float4x3.js";

@@ -4,9 +4,9 @@ import { CjsSchema } from "../../src/blue/schema/index.js";
 import { BlueList } from "../../src/blue/exposure/BlueList.js";
 import { IList } from "../../src/blue/exposure/IList.js";
 import { IListNotify } from "../../src/blue/exposure/IListNotify.js";
-import { DictReader, CreateAnchorTable } from "../../src/blue/blue/formats/graph/DictReader.js";
+import { DictReader, CreateAnchorTable } from "../../src/blue/formats/graph/DictReader.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
-import { ReadValues } from "../../src/blue/blue/values.js";
+import { ReadValues } from "../../src/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;

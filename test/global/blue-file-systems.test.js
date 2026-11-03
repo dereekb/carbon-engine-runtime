@@ -12,7 +12,7 @@ import {
   CjsBlueResFileSystemCallback,
   CjsBlueResFileSystemFetch,
   IBlueResFileSystem
-} from "../../npm/dist/blue/blue/index.js";
+} from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { MarkerTag } from "../support/markerTags.js";
 

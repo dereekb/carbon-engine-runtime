@@ -6,7 +6,7 @@ import { exposure as be } from "#be";
 import { CjsSchema } from "../../src/blue/schema/index.js";
 import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
-import { blueEnums } from "../../src/blue/blue/enums/CjsBlueEnumRegistry.js";
+import { blueEnums } from "../../src/blue/enums/CjsBlueEnumRegistry.js";
 
 blueEnums.RegisterEnum("test.BagProbeEnum", { NONE: 0, ONE: 1 }, { chooser: [ { name: "NONE", value: 0 }, { name: "ONE", value: 1 } ] });
 
@@ -156,7 +156,7 @@ test("an index row on a float vector member reads as its float component", async
     const radius = Class => CjsSchema.getSchema(Class).members.find(member => member.name === "radius");
     assert.deepEqual(comparable(radius(BagProbeSphere)), comparable(radius(BagProbeSphereRows)), "the bag and the per-member decorator agree");
     assert.deepEqual([ radius(BagProbeSphere).key, radius(BagProbeSphere).index, radius(BagProbeSphere).type.kind ], [ "sphere", 3, "float32" ]);
-    const { IRootReaderBase } = await import("../../src/blue/blue/format/IRootReaderBase.js");
+    const { IRootReaderBase } = await import("../../src/blue/format/IRootReaderBase.js");
     const readDictionaryValue = IRootReaderBase.readDictionaryValue;
     assert.equal(readDictionaryValue(new BagProbeSphere(), radius(BagProbeSphere)), 4);
 });

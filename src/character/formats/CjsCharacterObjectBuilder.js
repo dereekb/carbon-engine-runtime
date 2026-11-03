@@ -1,6 +1,6 @@
 import { CjsSchema } from "../../blue/schema/CjsSchema.js";
 import { getResourceExtension, normalizeResourcePath } from "#utils/path";
-import { CjsLoadingObject } from "../../blue/blue/resman/CjsLoadingObject.js";
+import { CjsLoadingObject } from "../../blue/resman/CjsLoadingObject.js";
 import { CjsYamlFormat } from "../../resource/formats/yaml/CjsYamlFormat.js";
 import { CjsYamlReader } from "../../resource/formats/yaml/core/CjsYamlReader.js";
 import { CjsCharacterLibraryConfiguration } from "../library/CjsCharacterLibraryConfiguration.js";

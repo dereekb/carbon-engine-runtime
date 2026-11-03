@@ -3,7 +3,7 @@ import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import {
   blue, BlueAsyncRes, BlueResMan, BlueResManQueue, IBlueAsyncResNotifyTarget, IBlueCallbackMan, IBlueResMan, IBluePaths, IBlueResource
-} from "../../npm/dist/blue/blue/index.js";
+} from "../../npm/dist/blue/index.js";
 import "../support/frameLoop.js";
 
 /** Records queued callbacks so a test can run them as the queue would. */

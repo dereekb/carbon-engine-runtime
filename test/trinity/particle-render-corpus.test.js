@@ -5,8 +5,8 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { blue } from "../../npm/dist/blue/blue/index.js";
-import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
 import { EveChildParticleSystem, Tr2EffectStateManager, ITr2GenericEmitterUpdateArguments,
   Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/index.js";

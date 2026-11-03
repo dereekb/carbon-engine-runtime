@@ -4,7 +4,7 @@
 // growing that list is a regression, shrinking it should update the list.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { blue } from "../../npm/dist/blue/blue/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import * as trinity from "../../npm/dist/trinity/index.js";
 

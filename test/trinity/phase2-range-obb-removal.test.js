@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { DictReader, DictWriter, Copier } from "../../npm/dist/blue/blue/index.js";
+import { DictReader, DictWriter, Copier } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Range } from "../../npm/dist/trinity/utilities/Range.js";
 import { Obb } from "../../npm/dist/trinity/utilities/Obb.js";

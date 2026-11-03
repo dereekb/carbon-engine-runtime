@@ -4,7 +4,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { ICurveSetDriver, blue } from "@carbonenginejs/runtime/blue";
 import { CjsSchema } from "@carbonenginejs/runtime/schema";
-import { ICurveSetDriver as DirectDriver } from "../../src/blue/blue/interfaces/ICurveSetDriver.js";
+import { ICurveSetDriver as DirectDriver } from "../../src/blue/interfaces/ICurveSetDriver.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
 

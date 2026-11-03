@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 import { TriBatchType } from "../../../npm/dist/global/consts/graphics/index.js";
-import { blue, BlueResFileSystemForm, IBlueResFileSystem } from "../../../npm/dist/blue/blue/index.js";
+import { blue, BlueResFileSystemForm, IBlueResFileSystem } from "../../../npm/dist/blue/index.js";
 import {
   CjsSofLibraryBuilder,
   EveSOF,

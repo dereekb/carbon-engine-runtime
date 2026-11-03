@@ -14,7 +14,7 @@ import { buildVta } from "../support/vtaFixture.js";
 import { ImageIO, HostBitmap, LoadParameters, ImageIOResult, Metadata } from "../../npm/dist/resource/imageio/index.js";
 import { CjsDdsFormat } from "../../npm/dist/resource/formats/dds/index.js";
 import { PixelFormat as F, TextureType } from "../../npm/dist/global/consts/renderContext/index.js";
-import { blue, BlueResMan } from "../../npm/dist/blue/blue/index.js";
+import { blue, BlueResMan } from "../../npm/dist/blue/index.js";
 import { MarkerTag } from "../support/markerTags.js";
 
 // The composing application registers formats once with each table that maps an

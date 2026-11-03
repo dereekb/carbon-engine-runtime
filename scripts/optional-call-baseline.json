@@ -2,16 +2,16 @@
   "typeofMethod": {
     "src/audio/CjsAudioMan.js": 7,
     "src/audio/library-builder/CjsAudioLibraryBuilder.js": 2,
-    "src/blue/blue/resman/BlueResMan.js": 2,
-    "src/blue/blue/formats/graph/DictReader.js": 2,
-    "src/blue/blue/formats/graph/DictWriter.js": 1,
-    "src/blue/blue/values.js": 2,
-    "src/blue/blue/worker/CjsResManMainThreadLoader.js": 2,
-    "src/blue/blue/worker/CjsResManWorker.js": 2,
-    "src/blue/blue/worker/CjsResManWorkerLoader.js": 1,
-    "src/blue/blue/worker/protocol.js": 1,
+    "src/blue/resman/BlueResMan.js": 2,
+    "src/blue/formats/graph/DictReader.js": 2,
+    "src/blue/formats/graph/DictWriter.js": 1,
+    "src/blue/values.js": 2,
+    "src/blue/worker/CjsResManMainThreadLoader.js": 2,
+    "src/blue/worker/CjsResManWorker.js": 2,
+    "src/blue/worker/CjsResManWorkerLoader.js": 1,
+    "src/blue/worker/protocol.js": 1,
     "src/blue/schema/hydration.js": 2,
-    "src/blue/blue/formats/black/CjsBlueReader.js": 1,
+    "src/blue/formats/black/CjsBlueReader.js": 1,
     "src/resource/formats/cmf/core/helpers.js": 1,
     "src/resource/formats/cmf/core/shared.js": 1,
     "src/resource/formats/cmf/core/utils/hydration.js": 1,
@@ -28,11 +28,11 @@
     "src/trinityal/renderContextAL.js": 1
   },
   "held": {
-    "src/blue/blue/values.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
-    "src/blue/blue/formats/graph/DictReader.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
-    "src/blue/blue/formats/graph/DictWriter.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
+    "src/blue/values.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
+    "src/blue/formats/graph/DictReader.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
+    "src/blue/formats/graph/DictWriter.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/blue/schema/hydration.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
-    "src/blue/blue/formats/black/CjsBlueReader.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
+    "src/blue/formats/black/CjsBlueReader.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/resource/formats/cmf/core/helpers.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/resource/formats/cmf/core/shared.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/resource/formats/cmf/core/utils/hydration.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
@@ -40,7 +40,7 @@
     "src/resource/formats/gr2/core/shared.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/resource/formats/obj/core/json.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
     "src/resource/formats/stl/core/json.js": "Values-engine class SetValues/GetValues/Initialize hook: held for the values-on-IRoot pass (R5 follow-up), not swept per site.",
-    "src/blue/blue/worker/CjsResManMainThreadLoader.js": "Format-reader protocol (static read/readAsync or instance Read/ReadAsync): held until the resources move settles how a format declares what resMan may call.",
-    "src/blue/blue/worker/CjsResManWorker.js": "Format-reader protocol (static read/readAsync or instance Read/ReadAsync): held until the resources move settles how a format declares what resMan may call."
+    "src/blue/worker/CjsResManMainThreadLoader.js": "Format-reader protocol (static read/readAsync or instance Read/ReadAsync): held until the resources move settles how a format declares what resMan may call.",
+    "src/blue/worker/CjsResManWorker.js": "Format-reader protocol (static read/readAsync or instance Read/ReadAsync): held until the resources move settles how a format declares what resMan may call."
   }
 }

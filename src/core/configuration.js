@@ -1,4 +1,4 @@
-import { CjsBlackFormat } from "../blue/blue/formats/black/CjsBlackFormat.js";
+import { CjsBlackFormat } from "../blue/formats/black/CjsBlackFormat.js";
 import { CjsPngFormat } from "../resource/formats/png/CjsPngFormat.js";
 import { CjsVtaFormat } from "../resource/formats/vta/CjsVtaFormat.js";
 import { CjsGr2Format } from "../resource/formats/gr2/CjsGr2Format.js";

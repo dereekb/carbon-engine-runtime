@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync,existsSync} from 'node:fs';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
-import {blue,IInitialize,INotify,NotifyModified} from '../../npm/dist/blue/blue/index.js';
+import {blue,IInitialize,INotify,NotifyModified} from '../../npm/dist/blue/index.js';
 import {finalizeReaderObject} from '../../npm/dist/blue/schema/hydration.js';
 import {Tr2GrannyPrimitiveSet,Tr2PrimitiveSet,Tr2LineSet,Tr2SolidSet,TriDevice,trinity,Tr2EffectStateManager,
   Tr2RenderContext_GetMainThreadRenderContext,RawData} from '../../npm/dist/trinity/index.js';

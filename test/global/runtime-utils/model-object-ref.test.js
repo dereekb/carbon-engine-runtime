@@ -1,4 +1,4 @@
-import "../../../src/blue/blue/values.js";
+import "../../../src/blue/values.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../../src/blue/schema/index.js";

@@ -9,7 +9,7 @@ import { ImportAllDistModules, ImportDist } from "../support/allDistClasses.js";
 await ImportAllDistModules();
 const { CjsSchema } = await ImportDist("blue/schema/CjsSchema.js");
 const { getClassRegistrations } = await ImportDist("blue/exposure/classes/registry.js");
-const { ClassInfo, BlueClasses } = await ImportDist("blue/blue/index.js");
+const { ClassInfo, BlueClasses } = await ImportDist("blue/index.js");
 
 const classes = new BlueClasses();
 const registrations = getClassRegistrations();

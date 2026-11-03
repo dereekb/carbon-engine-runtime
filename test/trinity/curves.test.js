@@ -1,7 +1,7 @@
 import { EveSpaceObject2 } from "../../npm/dist/trinity/eve/spaceObject/EveSpaceObject2.js";
 import { EveLocatorSets } from "../../npm/dist/trinity/eve/locator/EveLocatorSets.js";
-import { ITriVectorFunction, ITriColorFunction, ITriCurveLength } from "../../npm/dist/blue/blue/index.js";
-import { ITriFunction } from "../../npm/dist/blue/blue/interfaces/ITriFunction.js";
+import { ITriVectorFunction, ITriColorFunction, ITriCurveLength } from "../../npm/dist/blue/index.js";
+import { ITriFunction } from "../../npm/dist/blue/interfaces/ITriFunction.js";
 import { ITriDuration } from "../../npm/dist/trinity/curves/ITriDuration.js";
 import { ITr2ValueBinding } from "../../npm/dist/trinity/curves/ITr2ValueBinding.js";
 import test from "node:test";

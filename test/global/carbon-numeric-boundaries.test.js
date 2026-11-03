@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { num } from "../../npm/dist/global/math/num.js";
-import { CcpTime } from "../../npm/dist/blue/blue/CcpTime.js";
-import { BlueCallbackMan } from "../../npm/dist/blue/blue/services/BlueCallbackMan.js";
-import { BlueOS } from "../../npm/dist/blue/blue/services/BlueOS.js";
+import { CcpTime } from "../../npm/dist/blue/CcpTime.js";
+import { BlueCallbackMan } from "../../npm/dist/blue/services/BlueCallbackMan.js";
+import { BlueOS } from "../../npm/dist/blue/services/BlueOS.js";
 import { SpatialAudioSettings } from "../../npm/dist/audio/trinity/audio/SpatialAudioSettings.js";
 import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/expression/Tr2ControllerFloatVariable.js";
 import { Tr2CurveScalar } from "../../npm/dist/trinity/curves/curve/Tr2CurveScalar.js";

@@ -1,0 +1,403 @@
+// Source: blue/src/IRootWriter.h
+// Source: blue/src/IRootWriter.cpp
+//
+// The half of Blue's persistence every writer shares: walk an object's members
+// and hand each value to the writer's primitives by the member's type. A
+// writer subclass decides what a value becomes on the way out (`DictWriter`
+// builds a values bag).
+//
+// WHICH MEMBERS ARE WRITTEN. Carbon writes PERSIST members through
+// `BlueMemberIterator` and, with `m_skipDefaults` (on by default), leaves out
+// any member equal to a freshly constructed instance's (IRootWriter.cpp:25-37).
+// Ours writes every declared field, or the persisted ones when
+// `options.persistOnly` asks. DictWriter retains the full shape (operator
+// ruling 2026-09-27; research page `blue-values-engine.md`); YamlWriter opts
+// into Carbon's persisted-only traversal and default comparison.
+import { IRootReaderBase } from "./IRootReaderBase.js";
+import { exposure as be } from "#be";
+import { CjsSchema, meta } from "#schema";
+import { IRoot } from "../exposure/IRoot.js";
+import { omitRuntimeValues } from "../schema/CjsSchema.js";
+import { exportCarbonValue } from "../schema/types/index.js";
+import { ICustomPersist } from "../exposure/ICustomPersist.js";
+import { isWritableField } from "../compose/values.js";
+import { BeObjectMetadata } from "../services/BlueObjectMetadata.js";
+import { BLUE_OBJECT_METADATA_KEY } from "../interfaces/IBlueObjectMetadata.js";
+
+/** Kinds written as an object that may be shared (IROOTPTR). */
+const OBJECT_KINDS = new Set([ "rootRef" ]);
+
+/** Kinds written as a list (BlueList). */
+const LIST_KINDS = new Set([ "list", "array" ]);
+
+/**
+ * `IRootWriter` - writes an object's members through a writer's primitives.
+ *
+ * @abstract
+ */
+export class IRootWriter extends IRoot
+{
+  /** Shared second-sight reference bookkeeping, with writer-owned representations. */
+  _written = new Map();
+  /** References written only in members which readers skip. */
+  _writtenReadOnly = new Map();
+  /** Current read-only member nesting. */
+  _readOnlyDepth = 0;
+  /** m_skipDefaults: off; see the head comment. */
+  _skipDefaults = false;
+
+  /**
+   * Writes each member of an object (`WriteMembers`, IRootWriter.cpp:9-157).
+   *
+   * @adapted
+   * @param {object} instance The object.
+   * @param {object} options `persistOnly`, and what the writer reads.
+   */
+  WriteMembers(instance, options = {})
+  {
+    const defaults = options.skipDefaults
+      ? options.defaultInstance ?? new instance.constructor()
+      : null;
+    for (const field of IRootReaderBase.getDictionaryDeclarations(instance.constructor).fields)
+    {
+      if (!CjsSchema.isFieldExported(field, options)) continue;
+
+      if (field.type?.binary === true)
+      {
+        // BINARYBLOCK (IRootWriter.cpp:56-67): the instance supplies the bytes,
+        // and the writer writes the member name itself.
+        const persist = CjsSchema.cast(instance, ICustomPersist);
+        if (persist) this.WriteBinaryBlock(persist, field.name);
+        continue;
+      }
+
+      const kind = field.type?.kind;
+      const value = IRootReaderBase.readDictionaryValue(instance, field);
+      if (defaults && IRootWriter._EqualDefault(value, IRootReaderBase.readDictionaryValue(defaults, field), field.type)) continue;
+      // An empty slot of a type-indexed array (an area's m_materials[type]) is
+      // not written; reading leaves it null. The slot names stay the only keys.
+      if (field.index !== undefined && value === null) continue;
+      this.WriteMemberName(field.name);
+
+      const readOnly = !isWritableField(field);
+      if (readOnly) this.BeginReadOnlyMember();
+      try
+      {
+        // An object is written as one - and so can be aliased - whatever the
+        // member declares: our interchange lets any member hold one.
+        if (kind === "structList")
+        {
+          this.WriteStructureList(value, field.type);
+        }
+        else if (kind === "root")
+        {
+          this.WriteIRoot__Reference(value, defaults ? IRootReaderBase.readDictionaryValue(defaults, field) : null, DeclaredClassName(field.type));
+        }
+        else if (OBJECT_KINDS.has(kind) || kind === "rootWeak" || IRootWriter._IsObject(value))
+        {
+          this.WriteIRoot(value, DeclaredClassName(field.type));
+        }
+        else if (Array.isArray(value) && (LIST_KINDS.has(kind) || value.some(IRootWriter._IsObject)))
+        {
+          this.WriteList(value, DeclaredClassName(field.type), field.type?.itemType);
+        }
+        else
+        {
+          this.WriteNestedValue(value, field.type);
+        }
+      }
+      finally
+      {
+        if (readOnly) this.EndReadOnlyMember();
+      }
+    }
+  }
+
+  /**
+   * Marks the start of a READ-only member's value, which a reader skips.
+   * Carbon's writers have no such hook; a writer that aliases objects needs it
+   * so it never anchors an object where the reader will not see the anchor.
+   *
+   * @returns {void}
+   */
+  BeginReadOnlyMember()
+  {
+    this._readOnlyDepth++;
+  }
+
+  /**
+   * Marks the end of a READ-only member's value.
+   *
+   * @returns {void}
+   */
+  EndReadOnlyMember()
+  {
+    this._readOnlyDepth--;
+  }
+
+  /**
+   * Shares YamlWriter's second-sight rule with DictWriter without prescribing
+   * YAML nodes or dictionary markers. Adapted: JS representations replace events.
+   */
+  _FindWrittenObject(instance, refs = true)
+  {
+    if (!refs) return null;
+    return this._written.get(instance)
+      ?? (this._readOnlyDepth > 0 ? this._writtenReadOnly.get(instance) : null)
+      ?? null;
+  }
+
+  /** Records the first mapping before visiting members, so cycles can refer to it. */
+  _RememberWrittenObject(instance, representation)
+  {
+    (this._readOnlyDepth > 0 ? this._writtenReadOnly : this._written).set(instance, representation);
+  }
+
+  /**
+   * Shares type-first and side-table metadata ordering (YamlWriter.cpp:322-345).
+   * Adapted: the sink chooses its type key and encodes the returned header.
+   */
+  _ObjectHeader(instance, declaredClassName, options, typeKey)
+  {
+    const header = {};
+    const className = CjsSchema.getClassName(instance.constructor);
+    if (options.forceTypeTags || (options.typeTags && className && className !== declaredClassName))
+    {
+      header[typeKey] = className;
+    }
+    const metadata = BeObjectMetadata.GetMetadata(instance);
+    if (metadata) header[BLUE_OBJECT_METADATA_KEY] = { ...metadata };
+    return header;
+  }
+
+  /**
+   * The values writer's existing struct-list representation. A textual writer
+   * overrides this to emit Carbon's structure definition and packed rows.
+   */
+  WriteStructureList(value, type)
+  {
+    if (value === null || value === undefined) return this.WriteNestedValue(value, type);
+    if (value.some(IRootWriter._IsObject)) this.WriteList(value, DeclaredClassName(type), type?.itemType);
+    else this.WriteNestedValue(value, type);
+  }
+
+  /**
+   * Writes a list (`WriteList`, IRootWriter.cpp:173-183): objects through
+   * `WriteIRoot`, which may alias them, and values as values.
+   *
+   * @adapted
+   * @param {Array} list The list.
+   * @param {string|null} declaredClassName The list's declared item class.
+   * @param {*} [itemType] Complete declared type for plain list items.
+   */
+  WriteList(list, declaredClassName, itemType = declaredClassName)
+  {
+    this.WriteVectorBegin(list.length);
+    for (const item of list)
+    {
+      if (IRootWriter._IsObject(item)) this.WriteIRoot(item, declaredClassName);
+      else this.WriteNestedValue(item, itemType);
+    }
+    this.WriteVectorEnd(list.length);
+  }
+
+  /**
+   * Writes a value. A plain record or array holding objects below its top
+   * level (a raw struct's records, `Tr2EffectPassParameters.stageInput`) is
+   * walked, so each object is written as one and may be aliased; anything
+   * else is exported as a value. Carbon's typed members cannot nest objects in
+   * a value; ours can.
+   *
+   * @param {*} value The value.
+   * @param {*} [type] Declared type for filtering plain nested resource fields.
+   */
+  WriteNestedValue(value, type = null)
+  {
+    value = omitRuntimeValues(value, type);
+    if (value instanceof Map)
+    {
+      this.WriteRecordBegin();
+      for (const [key, item] of value)
+      {
+        this.WriteMemberName(String(key));
+        if (IRootWriter._IsObject(item)) this.WriteIRoot(item, DeclaredClassName(type?.valueType));
+        else this.WriteNestedValue(item, type?.valueType);
+      }
+      this.WriteRecordEnd();
+      return;
+    }
+    if (value instanceof Set)
+    {
+      this.WriteList(Array.from(value), DeclaredClassName(type?.itemType), type?.itemType);
+      return;
+    }
+    if (!IRootWriter._HasNestedObject(value))
+    {
+      this.WriteValue(exportCarbonValue(value));
+      return;
+    }
+    if (Array.isArray(value))
+    {
+      this.WriteVectorBegin(value.length);
+      for (const item of value)
+      {
+        if (IRootWriter._IsObject(item)) this.WriteIRoot(item, null);
+        else this.WriteNestedValue(item);
+      }
+      this.WriteVectorEnd(value.length);
+      return;
+    }
+    this.WriteRecordBegin();
+    for (const key of Object.keys(value))
+    {
+      // As exportCarbonValue: underscored keys are private state.
+      if (key.startsWith("_")) continue;
+      this.WriteMemberName(key);
+      const item = value[key];
+      if (IRootWriter._IsObject(item)) this.WriteIRoot(item, null);
+      else this.WriteNestedValue(item);
+    }
+    this.WriteRecordEnd();
+  }
+
+  /**
+   * Writes a binary block from an ICustomPersist (`WriteBinaryBlock`, IRootWriter.h:52); a writer provides it.
+   *
+   * @abstract
+   */
+  WriteBinaryBlock(_persist, _propertyName) {}
+
+  /** Begins a plain record inside a value; a writer provides it. */
+  WriteRecordBegin()
+  {
+    throw new Error("IRootWriter.WriteRecordBegin is provided by a writer.");
+  }
+
+  /** Ends the plain record being written; a writer provides it. */
+  WriteRecordEnd()
+  {
+    throw new Error("IRootWriter.WriteRecordEnd is provided by a writer.");
+  }
+
+  /**
+   * Writes the next member's name; a writer provides it.
+   *
+   * @abstract
+   */
+  WriteMemberName(_name) {}
+
+  /**
+   * Writes one value. Adapted: Carbon has a primitive per C++ type
+   * (`WriteInt32`, `WriteFloat`, `WriteChar`...); a JavaScript value carries its
+   * own type, so one primitive takes them all.
+   *
+   * @adapted
+   */
+  WriteValue(_value)
+  {
+    throw new Error("IRootWriter.WriteValue is provided by a writer.");
+  }
+
+  /**
+   * Writes an object, or an alias to one already written; a writer provides it.
+   *
+   * @abstract
+   */
+  WriteIRoot(_instance, _declaredClassName) {}
+
+  /**
+   * Embedded-object overload. The values writer retains its pointer-style
+   * representation; the YAML writer uses the supplied embedded default.
+   */
+  WriteIRoot__Reference(instance, _defaultInstance, declaredClassName)
+  {
+    this.WriteIRoot(instance, declaredClassName);
+  }
+
+  /**
+   * Begins a list; a writer provides it.
+   *
+   * @abstract
+   */
+  WriteVectorBegin(_size) {}
+
+  /**
+   * Ends a list; a writer provides it.
+   *
+   * @abstract
+   */
+  WriteVectorEnd(_size) {}
+
+  /** Whether a list item is an object rather than a value. */
+  /** Whether a plain record or array holds an object at any depth. */
+  static _HasNestedObject(value)
+  {
+    if (value instanceof Map || value instanceof Set) return Array.from(value.values()).some(item => IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item));
+    if (Array.isArray(value)) return value.some(item => IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item));
+    if (!value || typeof value !== "object" || ArrayBuffer.isView(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return false;
+    for (const key in value)
+    {
+      const item = value[key];
+      if (item && typeof item === "object" && (IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item))) return true;
+    }
+    return false;
+  }
+
+  static _IsObject(value)
+  {
+    return value !== null && typeof value === "object" && !Array.isArray(value) && !ArrayBuffer.isView(value)
+      && CjsSchema.getClassName(value.constructor) !== null;
+  }
+
+  /** Compares scalar/storage defaults without following object pointers or cycles. */
+  static _EqualDefault(value, other, type)
+  {
+    const kind = type?.kind;
+    // BlueVariable.cpp:199-203,225: scalar float subtraction is float32.
+    if (kind === "float32") return Math.abs(Math.fround(Math.fround(value) - Math.fround(other))) < Math.fround(1e-6);
+    if (kind === "float64") return Math.abs(value - other) < 1e-12;
+    if (kind === "root") return false;
+    if (value === other) return true;
+    if (ArrayBuffer.isView(value) && ArrayBuffer.isView(other) &&
+      /^(?:vec|vector|mat|matrix|color|quat)/.test(kind))
+    {
+      // Runtime float64 math descriptors retain their declared precision.
+      if (type.scalar === "float64")
+      {
+        return value.length === other.length && value.every((item, index) => Math.abs(item - other[index]) < 1e-12);
+      }
+      // CE-202, BlueVariable.cpp:39-49 quirk: NaN differences do not fail this >= test.
+      return value.length === other.length && value.every((item, index) =>
+        !(Math.abs(Math.fround(item - other[index])) >= Math.fround(1e-6)));
+    }
+    // BlueVariable.cpp:274-320 only empty embedded collections compare equal.
+    if (Array.isArray(value) && Array.isArray(other)) return value.length === 0 && other.length === 0;
+    if (value instanceof Map && other instanceof Map) return value.size === 0 && other.size === 0;
+    return false;
+  }
+}
+
+/** The class a field declares for the objects it holds, or null. */
+export function DeclaredClassName(fieldType)
+{
+  if (!fieldType) return null;
+  if (typeof fieldType === "string") return fieldType;
+  if (LIST_KINDS.has(fieldType.kind))
+  {
+    const item = fieldType.itemType ?? null;
+    return typeof item === "string" ? item : item?.className ?? null;
+  }
+  return fieldType.className ?? null;
+}
+
+CjsSchema.exposure.inherit(IRoot)(IRootWriter);
+
+CjsSchema.exposure.abstract(IRootWriter);
+be.define("IRootWriter")(IRootWriter);
+CjsSchema.decorateMethod(IRootWriter, "WriteBinaryBlock", meta.abstract);
+CjsSchema.decorateMethod(IRootWriter, "WriteMemberName", meta.abstract);
+CjsSchema.decorateMethod(IRootWriter, "WriteIRoot", meta.abstract);
+CjsSchema.decorateMethod(IRootWriter, "WriteVectorBegin", meta.abstract);
+CjsSchema.decorateMethod(IRootWriter, "WriteVectorEnd", meta.abstract);

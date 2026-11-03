@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { EveSOF, CjsSofLibraryBuilder } from "../../../npm/dist/sof/index.js";
-import { BeObjectMetadata } from "../../../npm/dist/blue/blue/services/BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../../npm/dist/blue/services/BlueObjectMetadata.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { EveSpaceObjectDecal } from "../../../npm/dist/trinity/index.js";
 

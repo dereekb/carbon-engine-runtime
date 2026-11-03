@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { meta, type } from "../../npm/dist/blue/schema/index.js";
-import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
 import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
-import { BeObjectMetadata } from "../../npm/dist/blue/blue/services/BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../npm/dist/blue/services/BlueObjectMetadata.js";
 import { registerClass, unregisterClass } from "../../npm/dist/blue/exposure/classes/registry.js";
 
 let sequence = 0;

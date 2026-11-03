@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { IInitialize, INotify } from "../../npm/dist/blue/blue/index.js";
+import { IInitialize, INotify } from "../../npm/dist/blue/index.js";
 import { Tr2GpuSharedEmitter, Tr2GpuUniqueEmitter, ITr2GenericEmitter } from "../../npm/dist/trinity/index.js";
 
 test("real pillar GPU emitter initializes and Setup hashes copied structs exactly once on CPU", () =>

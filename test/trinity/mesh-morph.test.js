@@ -147,7 +147,7 @@ test("morph preparation rejects invalid values, duplicate names, and unsupported
 
 test("a mesh res path loads its geometry through the resource manager", async () =>
 {
-  const { blue } = await import("../../npm/dist/blue/blue/index.js");
+  const { blue } = await import("../../npm/dist/blue/index.js");
   const { composeStubResMan } = await import("../support/stubResMan.js");
   const previous = blue.resMan;
   const requested = [];
@@ -188,7 +188,7 @@ test("a mesh res path loads its geometry through the resource manager", async ()
 
 test("a missing mesh falls back to its _lowdetail sibling when the index has one", async () =>
 {
-  const { blue } = await import("../../npm/dist/blue/blue/index.js");
+  const { blue } = await import("../../npm/dist/blue/index.js");
   const { composeStubResMan } = await import("../support/stubResMan.js");
   const previousManager = blue.resMan;
   const requested = [];

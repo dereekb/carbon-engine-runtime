@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { blue } from "../../../npm/dist/blue/blue/index.js";
+import { blue } from "../../../npm/dist/blue/index.js";
 import { CjsCharacterBackdrops, Tr2InteriorScene } from "../../../npm/dist/character/index.js";
 
 test("the backdrop list is the creator's backgrounds without their thumbnails, numbered first", t =>

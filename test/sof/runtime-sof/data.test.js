@@ -119,7 +119,7 @@ test("SOF blink data exposes Carbon enum values and lookup behavior", () => {
 });
 
 test("SOF enum fields expose their shared chooser values through schema metadata", async () => {
-  const { blue } = await import("../../../npm/dist/blue/blue/index.js");
+  const { blue } = await import("../../../npm/dist/blue/index.js");
   const { Tr2Lod } = await import("../../../npm/dist/global/consts/trinity.js");
   const { ReflectionMode } = await import("../../../npm/dist/global/consts/graphics/index.js");
   const cases = [

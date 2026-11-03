@@ -5,9 +5,9 @@ import test from "node:test";
 
 import "../../npm/dist/trinity/index.js";
 import "../../npm/dist/sof/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
-import { CjsBlackPropertyReaders } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackPropertyReaders.js";
-import { CjsBlackBinaryReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackBinaryReader.js";
+import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { CjsBlackPropertyReaders } from "../../npm/dist/blue/formats/black/core/CjsBlackPropertyReaders.js";
+import { CjsBlackBinaryReader } from "../../npm/dist/blue/formats/black/core/CjsBlackBinaryReader.js";
 
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { type } from "../../npm/dist/blue/schema/index.js";

@@ -2,7 +2,7 @@ import { prepareResourceFixture } from "../support/resourceFixtures.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {blue,NotifyModified,IInitialize,INotify} from '../../npm/dist/blue/blue/index.js';
+import {blue,NotifyModified,IInitialize,INotify} from '../../npm/dist/blue/index.js';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
 import {mat4} from '../../npm/dist/global/math/mat4.js';
 import {TriBatchType} from '../../npm/dist/global/consts/graphics/index.js';

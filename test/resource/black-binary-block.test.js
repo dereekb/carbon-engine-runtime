@@ -5,10 +5,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { Copier, ICustomPersist } from "../../npm/dist/blue/blue/index.js";
-import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
-import "../../npm/dist/blue/blue/values.js";
+import { Copier, ICustomPersist } from "../../npm/dist/blue/index.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
+import { YamlReader } from "../../npm/dist/blue/formats/yaml/YamlReader.js";
+import "../../npm/dist/blue/values.js";
 import { EveSOFDataDecalIndexBuffer } from "../../npm/dist/sof/index.js";
 import { clientResources } from "../support/clientResources.js";
 

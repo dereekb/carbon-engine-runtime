@@ -8,8 +8,8 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { blue, BlueResMan } from "../../npm/dist/blue/blue/index.js";
-import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
+import { blue, BlueResMan } from "../../npm/dist/blue/index.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { EveChildContainer, ExecuteMainThreadActions, Tr2ControllerReference } from "../../npm/dist/trinity/index.js";
 import { StubResMan } from "../support/stubResMan.js";
 

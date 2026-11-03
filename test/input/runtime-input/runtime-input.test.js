@@ -9,7 +9,7 @@ import {
     UIScancode
 } from "../../../npm/dist/input/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { blue } from "../../../npm/dist/blue/blue/index.js";
+import { blue } from "../../../npm/dist/blue/index.js";
 
 class FakeTarget
 {

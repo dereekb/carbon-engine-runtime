@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2PostProcessAttributes } from "../../npm/dist/trinity/index.js";
 

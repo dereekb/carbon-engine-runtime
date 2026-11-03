@@ -1,7 +1,7 @@
 import { prepareResourceFixture } from "../../support/resourceFixtures.js";
 import { getRegisteredClassName } from "../../../npm/dist/blue/compose/className.js";
-import { blue, NotifyModified } from "../../../npm/dist/blue/blue/index.js";
-import * as distBlue from "../../../npm/dist/blue/blue/index.js";
+import { blue, NotifyModified } from "../../../npm/dist/blue/index.js";
+import * as distBlue from "../../../npm/dist/blue/index.js";
 import { TriGeometryRes } from "../../../npm/dist/resource/index.js";
 import { ITr2AnimationUpdater, Tr2Mesh } from "../../../npm/dist/trinity/index.js";
 import { RawData } from "../../../npm/dist/trinity/core/index.js";

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {existsSync,readFileSync} from 'node:fs';
-import {INotify,NotifyModified} from '../../npm/dist/blue/blue/index.js';
+import {INotify,NotifyModified} from '../../npm/dist/blue/index.js';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
 import {Tr2Sprite2dTexture} from '../../npm/dist/trinity/index.js';
 

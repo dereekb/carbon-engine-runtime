@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { blue, Copier, DictReader, IInitialize, INotify } from "../../npm/dist/blue/blue/index.js";
-import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
+import { blue, Copier, DictReader, IInitialize, INotify } from "../../npm/dist/blue/index.js";
+import { GetResources } from "../../npm/dist/blue/getResources.js";
 import { Tr2ControllerFloatVariable, Tr2ControllerExpression, Tr2BindingPoint, Tr2Controller, Tr2StateMachine } from "../../npm/dist/trinity/controllers/index.js";
 
 test("float variable is a native Blue class while expression and binding are plain helpers", () =>

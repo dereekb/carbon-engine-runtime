@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { blue, BlueResMan, IBlueResManNotifications } from "../../../npm/dist/blue/blue/index.js";
+import { blue, BlueResMan, IBlueResManNotifications } from "../../../npm/dist/blue/index.js";
 import { RegisterDataLoader, TestDataRes } from "../../support/testDataRes.js";
 import "../../support/frameLoop.js";
 

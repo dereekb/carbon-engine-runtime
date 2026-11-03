@@ -135,7 +135,7 @@ function expandGlobalAlias(layers)
 {
     const aliases = {
         global: Object.keys(layers).filter(name => name.startsWith("global/")),
-        blue: Object.keys(layers).filter(name => name.startsWith("blue/"))
+        blue: Object.keys(layers).filter(name => name === "blue" || name.startsWith("blue/"))
     };
 
     for (const layer of Object.values(layers))

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../../npm/dist/blue/compose/interface.js";
-import { blue, IInitialize, INotify } from "../../../npm/dist/blue/blue/index.js";
+import { blue, IInitialize, INotify } from "../../../npm/dist/blue/index.js";
 import { StubResMan } from "../../support/stubResMan.js";
 import { Tr2Model, Tr2SkinnedModel, Tr2InteriorLightSource, ITr2InteriorLight, ITr2InteriorCullable } from "../../../npm/dist/character/index.js";
 import { Tr2Mesh } from "../../../npm/dist/trinity/index.js";

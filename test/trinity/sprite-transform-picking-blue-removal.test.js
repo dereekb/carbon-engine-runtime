@@ -1,10 +1,10 @@
 import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { blue, GetResources } from "../../npm/dist/blue/blue/index.js";
+import { blue, GetResources } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
+import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../npm/dist/blue/formats/graph/DictWriter.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Tr2Sprite2dPickingMask } from "../../npm/dist/trinity/sprite2d/Tr2Sprite2dPickingMask.js";
 import { Tr2Sprite2dTransform } from "../../npm/dist/trinity/sprite2d/Tr2Sprite2dTransform.js";

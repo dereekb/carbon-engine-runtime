@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../../npm/dist/blue/compose/interface.js";
-import { Copier, DictReader, IInitialize } from "../../../npm/dist/blue/blue/index.js";
-import { blue } from "../../../npm/dist/blue/blue/index.js";
-import { GetResources } from "../../../npm/dist/blue/blue/getResources.js";
+import { Copier, DictReader, IInitialize } from "../../../npm/dist/blue/index.js";
+import { blue } from "../../../npm/dist/blue/index.js";
+import { GetResources } from "../../../npm/dist/blue/getResources.js";
 import {
   EveSOF, EveSOFDataPointLightAttachment, EveSOFDataSpotLightAttachment,
   EveSOFDataHullSpriteSetItem, EveSOFDataHullSpotlightSetItem,

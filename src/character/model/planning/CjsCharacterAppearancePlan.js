@@ -1,5 +1,5 @@
 import { meta, type } from "#schema";
-import { createChild, addChild, removeChild, deleteChild, clearChildren } from "../../../blue/blue/children.js";
+import { createChild, addChild, removeChild, deleteChild, clearChildren } from "../../../blue/children.js";
 import "./CjsCharacterAppearanceBinding.js";
 import "./CjsCharacterAppearanceColorSelection.js";
 import "./CjsCharacterAppearanceDiagnostic.js";

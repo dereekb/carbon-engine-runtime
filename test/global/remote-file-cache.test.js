@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { BlueResFileSystemRemote, BluePaths, RemoteFileCache } from "../../npm/dist/blue/blue/index.js";
+import { BlueResFileSystemRemote, BluePaths, RemoteFileCache } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { normalizeResPath } from "../../npm/dist/global/utils/index.js";
 import { localFileSystem } from "../support/localFileSystem.js";

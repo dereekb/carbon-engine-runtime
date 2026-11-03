@@ -14,7 +14,7 @@ import { claimAbstractMethods, decorateAbstractMethod, installAbstractMethod, is
 import { CJS_CLASS_NAME, getRegisteredClassName, requireRegisteredClassName } from "../compose/className.js";
 import { carbonInheritDecorator, carbonInterfaceDecorator, carbonChainToDecorator, cast, mappedInterfaces, setInterfaceClassResolver } from "../compose/interface.js";
 import { composeValuesDecorator, createValuesTransport, isExportableField, isTransportedDeclaration, isWritableField } from "../compose/values.js";
-import { blueEnums, CjsBlueEnumRegistry } from "../blue/enums/CjsBlueEnumRegistry.js";
+import { blueEnums, CjsBlueEnumRegistry } from "../enums/CjsBlueEnumRegistry.js";
 import { TriSettingNames } from "../../global/consts/trinity.js";
 import { CjsUnusedMethodError } from "../../global/utils/errors/CjsUnusedMethodError.js";
 import { registerClass, unregisterClass, getRegisteredConstructor, getClassRegistrationRevision, ClassRegistrarNullFactory } from "../exposure/classes/registry.js";

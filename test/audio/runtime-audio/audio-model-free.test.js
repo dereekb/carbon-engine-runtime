@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../../npm/dist/blue/compose/interface.js";
-import { BlueList, IInitialize, INotify, IListNotify, ITriFunction, ITriCurveLength } from "../../../npm/dist/blue/blue/index.js";
+import { BlueList, IInitialize, INotify, IListNotify, ITriFunction, ITriCurveLength } from "../../../npm/dist/blue/index.js";
 import { ITr2DebugRenderable } from "../../../npm/dist/global/interfaces/index.js";
 import { AudEventCurve, AudEmitter, AudGameObjResource, AudParameter, Tr2AudioStretchBase, Tr2AudioStretchAuto, ITr2Audio } from "../../../npm/dist/audio/index.js";
 import "../../../npm/dist/trinity/index.js";

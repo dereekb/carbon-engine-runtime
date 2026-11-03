@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { IInitialize, DictReader, DictWriter, Copier } from "../../npm/dist/blue/blue/index.js";
+import { IInitialize, DictReader, DictWriter, Copier } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
 import { quat } from "../../npm/dist/global/math/quat.js";

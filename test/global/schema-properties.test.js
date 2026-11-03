@@ -5,13 +5,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import { blue } from "../../src/blue/blue/index.js";
-import { DictReader } from "../../src/blue/blue/formats/graph/DictReader.js";
+import { blue } from "../../src/blue/index.js";
+import { DictReader } from "../../src/blue/formats/graph/DictReader.js";
 import { INotify } from "../../src/blue/exposure/INotify.js";
-import { DictWriter } from "../../src/blue/blue/formats/graph/DictWriter.js";
-import { CjsBlackReader } from "../../src/blue/blue/formats/black/core/CjsBlackReader.js";
-import { CjsGraphFormat } from "../../src/blue/blue/formats/graph/index.js";
-import { YamlReader } from "../../src/blue/blue/formats/yaml/YamlReader.js";
+import { DictWriter } from "../../src/blue/formats/graph/DictWriter.js";
+import { CjsBlackReader } from "../../src/blue/formats/black/core/CjsBlackReader.js";
+import { CjsGraphFormat } from "../../src/blue/formats/graph/index.js";
+import { YamlReader } from "../../src/blue/formats/yaml/YamlReader.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const legacyBlue = CjsSchema.be;

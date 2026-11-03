@@ -6,7 +6,7 @@ import { IList } from "../../npm/dist/blue/exposure/IList.js";
 import { IListNotify } from "../../npm/dist/blue/exposure/IListNotify.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
-import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
+import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;

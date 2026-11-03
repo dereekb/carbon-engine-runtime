@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { EveSOF } from "../../../npm/dist/sof/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { BeObjectMetadata } from "../../../npm/dist/blue/blue/services/BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../../npm/dist/blue/services/BlueObjectMetadata.js";
 import { EveShip2, EveChildContainer } from "../../../npm/dist/trinity/index.js";
 import { composeStubResMan } from "../../support/stubResMan.js";
 

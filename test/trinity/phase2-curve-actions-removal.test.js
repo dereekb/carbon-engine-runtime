@@ -3,7 +3,7 @@ import { ITr2CurveSetOwner } from "../../npm/dist/trinity/curves/ITr2CurveSetOwn
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { blue, DictReader, DictWriter, Copier, BlueList, INotify } from "../../npm/dist/blue/blue/index.js";
+import { blue, DictReader, DictWriter, Copier, BlueList, INotify } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
 import { ITr2Updateable } from "../../npm/dist/trinity/core/ITr2Updateable.js";

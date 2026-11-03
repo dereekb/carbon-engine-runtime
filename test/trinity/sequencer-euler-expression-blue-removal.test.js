@@ -3,10 +3,10 @@ import { getRegisteredClassName } from "../../npm/dist/blue/compose/className.js
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { blue, BlueList, ITriFunction, ITriVectorFunction, ITriColorFunction, ITriQuaternionFunction, ITriScalarFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/blue/index.js";
+import { blue, BlueList, ITriFunction, ITriVectorFunction, ITriColorFunction, ITriQuaternionFunction, ITriScalarFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
+import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../npm/dist/blue/formats/graph/DictWriter.js";
 import { ITriDuration } from "../../npm/dist/trinity/curves/ITriDuration.js";
 import { TriVectorSequencer } from "../../npm/dist/trinity/curves/curve/TriVectorSequencer.js";
 import { TriColorSequencer } from "../../npm/dist/trinity/curves/curve/TriColorSequencer.js";

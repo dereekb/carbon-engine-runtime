@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {blue,INotify,IInitialize,NotifyModified} from '../../../npm/dist/blue/blue/index.js';
+import {blue,INotify,IInitialize,NotifyModified} from '../../../npm/dist/blue/index.js';
 import {CjsSchema} from '../../../npm/dist/blue/schema/index.js';
 import {Tr2InteriorScene} from '../../../npm/dist/character/index.js';
 import {Tr2RenderContext,Tr2RenderContext_GetMainThreadRenderContext,Tr2VariableStore} from '../../../npm/dist/trinity/index.js';

@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../../npm/dist/blue/exposure/IRoot.js"
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { blue, IInitialize, INotify, DictReader, DictWriter, Copier, GetResources } from "../../../npm/dist/blue/blue/index.js";
+import { blue, IInitialize, INotify, DictReader, DictWriter, Copier, GetResources } from "../../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../../npm/dist/blue/compose/interface.js";
 import { EveSOFDataGenericSwarm as Swarm } from "../../../npm/dist/sof/generic/EveSOFDataGenericSwarm.js";
 import { EveSOFDataGenericVariant as Variant } from "../../../npm/dist/sof/generic/EveSOFDataGenericVariant.js";

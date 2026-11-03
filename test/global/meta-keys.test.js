@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import "../../src/blue/blue/values.js";
+import "../../src/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;

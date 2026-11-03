@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { TriBatchType } from "../../npm/dist/global/consts/graphics/index.js";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
-import { blue } from "../../npm/dist/blue/blue/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { makePerObjectStore } from "./helpers/perObjectStore.js";

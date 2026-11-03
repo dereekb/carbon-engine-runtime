@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 // blue/blue is raw source (no decorators), so its own tests import src.
-import { blue, BlueObjectProxy, CcpTime, IBlueObjectBuilder, IBlueObjectProxy, IUnloadable } from "../../src/blue/blue/index.js";
+import { blue, BlueObjectProxy, CcpTime, IBlueObjectBuilder, IBlueObjectProxy, IUnloadable } from "../../src/blue/index.js";
 import { CjsSchema } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
@@ -11,7 +11,7 @@ const legacyBlue = CjsSchema.be;
 // with that build's own Blue realm. Until npm/dist is rebuilt from a source
 // tree containing BlueObjectProxy, those two tests report why they are skipped.
 const dist = {
-  blue: await import("../../npm/dist/blue/blue/index.js"),
+  blue: await import("../../npm/dist/blue/index.js"),
   character: await import("../../npm/dist/character/index.js")
 };
 const lodSkip = "BlueObjectProxy" in dist.blue ? false
@@ -236,7 +236,7 @@ test("CcpTime.timeFromDouble scales whole and fractional seconds separately (Ccp
 
 test("CjsBlackReader is an IBlueObjectBuilder, as Carbon's BlackReader is (BlackReader.h:16-19)", async () =>
 {
-  const { CjsBlackReader } = await import("../../src/blue/blue/formats/black/core/CjsBlackReader.js");
+  const { CjsBlackReader } = await import("../../src/blue/formats/black/core/CjsBlackReader.js");
   const reader = Object.create(CjsBlackReader.prototype);
   assert.equal(CjsSchema.cast(reader, IBlueObjectBuilder), reader);
   // The interface's empty bodies (IBlueObjectBuilder.h:19-22); the proxy calls them directly.

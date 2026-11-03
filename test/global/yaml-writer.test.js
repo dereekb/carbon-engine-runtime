@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parse } from "yaml";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { YamlWriter, DictWriter, BeObjectMetadata } from "../../npm/dist/blue/blue/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
+import { YamlWriter, DictWriter, BeObjectMetadata } from "../../npm/dist/blue/index.js";
+import { YamlReader } from "../../npm/dist/blue/formats/yaml/YamlReader.js";
 
 let serial = 0;
 function register(Constructor, fields, extra = {})

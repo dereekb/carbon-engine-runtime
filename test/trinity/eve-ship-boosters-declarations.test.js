@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
-import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
+import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../npm/dist/blue/formats/graph/DictWriter.js";
 import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
+import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 import { EveBoosterSet2, EveComponentRegistry, EveComponentType, EveShip2, TriDevice, trinity, Tr2Renderer } from "../../npm/dist/trinity/index.js";
 
 test("EveShip2 preserves distinct native stored and live booster declarations", () =>

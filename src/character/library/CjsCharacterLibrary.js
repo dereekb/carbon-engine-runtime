@@ -3,8 +3,8 @@ import { CjsCharacterLibraryConfiguration } from "./CjsCharacterLibraryConfigura
 import { CjsCharacterGeneric } from "../model/source/CjsCharacterGeneric.js";
 import { normalizeResourcePath } from "#utils/path";
 import { CjsSchema, meta, type } from "#schema";
-import { DictWriter } from "../../blue/blue/formats/graph/DictWriter.js";
-import { ReadValues } from "../../blue/blue/values.js";
+import { DictWriter } from "../../blue/formats/graph/DictWriter.js";
+import { ReadValues } from "../../blue/values.js";
 import { CjsCharacterLibraryDocuments } from "./CjsCharacterLibraryDocuments.js";
 import { CjsCharacterTextureMetadata } from "../model/catalog/CjsCharacterTextureMetadata.js";
 import { CjsCharacterUnresolvedRelationship } from "../model/resolution/CjsCharacterUnresolvedRelationship.js";

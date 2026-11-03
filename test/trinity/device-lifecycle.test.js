@@ -1,8 +1,8 @@
-import { addChild, removeChild } from "../../npm/dist/blue/blue/children.js";
+import { addChild, removeChild } from "../../npm/dist/blue/children.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { blue } from "../../npm/dist/blue/blue/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
 import {
   trinity,
   Tr2RenderContext_GetMainThreadRenderContext,

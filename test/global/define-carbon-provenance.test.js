@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import { blue } from "../../src/blue/blue/index.js";
+import { blue } from "../../src/blue/index.js";
 import { mappedInterfaces, exposureChainTo } from "../../src/blue/compose/interface.js";
 
 /**

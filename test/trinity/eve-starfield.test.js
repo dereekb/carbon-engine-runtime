@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {existsSync,readFileSync} from 'node:fs';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
-import {NotifyModified} from '../../npm/dist/blue/blue/index.js';
+import {NotifyModified} from '../../npm/dist/blue/index.js';
 import {EveStarfield,EveSpaceScene,Tr2EffectStateManager,Tr2Renderer,TriDevice,trinity,Tr2RenderContext_GetMainThreadRenderContext} from '../../npm/dist/trinity/index.js';
 import {Tr2RenderContextALStub,ALResult} from '../../npm/dist/trinityal/index.js';
 import {SharedGeometryBuffer} from '../../npm/dist/trinity/core/mesh/TriGeometryResAllocations.js';

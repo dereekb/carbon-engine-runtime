@@ -1,4 +1,4 @@
-import { blue } from "../../npm/dist/blue/blue/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
 import { PixelFormat } from "../../npm/dist/global/consts/renderContext/index.js";
 import assert from "node:assert/strict";
 import { test, beforeEach, afterEach } from "node:test";

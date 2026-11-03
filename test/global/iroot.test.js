@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { IRoot, BlueClasses, ClassInfo } from "../../src/blue/blue/index.js";
+import { IRoot, BlueClasses, ClassInfo } from "../../src/blue/index.js";
 import { CjsSchema } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */

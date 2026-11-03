@@ -3,7 +3,7 @@ import { getRegisteredClassName } from "../../npm/dist/blue/compose/className.js
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { blue, DictReader, DictWriter, Copier, BlueList, INotify } from "../../npm/dist/blue/blue/index.js";
+import { blue, DictReader, DictWriter, Copier, BlueList, INotify } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
 import { Tr2ActionPlayMeshAnimation } from "../../npm/dist/trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Tr2FontManager, Tr2FontMeasurer, Tr2SBitWrapper, TR2_FONT_FALLBACK } from '../../npm/dist/trinity/index.js';
 import * as fontModule from '../../npm/dist/trinity/font/Tr2FontManager.js';
 import { trinity } from "../../npm/dist/trinity/CjsTrinity.js";
-import { blue } from '../../npm/dist/blue/blue/index.js';
+import { blue } from '../../npm/dist/blue/index.js';
 import { CjsSchema } from '../../npm/dist/blue/schema/index.js';
 import { InitializeTrinityStub } from "../support/trinityStub.js";
 

@@ -22,7 +22,7 @@ import { EveChildInstanceContainer } from "../../npm/dist/trinity/eve/child/EveC
 import { EveChildPlug } from "../../npm/dist/trinity/eve/child/EveChildPlug.js";
 import { EveChildParticleSphere } from "../../npm/dist/trinity/eve/child/EveChildParticleSphere.js";
 import { EveChildRef } from "../../npm/dist/trinity/eve/child/EveChildRef.js";
-import { blue, BlueList } from "../../npm/dist/blue/blue/index.js";
+import { blue, BlueList } from "../../npm/dist/blue/index.js";
 import { EveChildSocket } from "../../npm/dist/trinity/eve/child/EveChildSocket.js";
 import { EveCloudVolumeBall } from "../../npm/dist/trinity/eve/child/EveCloudVolumeBall.js";
 import { EveSpaceObjectChild } from "../../npm/dist/trinity/eve/child/EveSpaceObjectChild.js";

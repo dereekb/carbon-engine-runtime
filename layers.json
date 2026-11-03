@@ -38,7 +38,7 @@
         "global/math",
         "global/consts",
         "global/interfaces",
-        "blue/blue",
+        "blue",
         "blue/schema",
         "global/model",
         "resource",
@@ -60,7 +60,7 @@
         "global/math",
         "global/consts",
         "global/interfaces",
-        "blue/blue",
+        "blue",
         "blue/schema",
         "global/model",
         "global/logging",
@@ -71,7 +71,7 @@
       "mayImport": [
         "resource",
         "global/model",
-        "blue/blue",
+        "blue",
         "trinity",
         "trinityal",
         "character",
@@ -106,9 +106,9 @@
     "yaml"
   ],
   "externalDynamicImports": [
-    "blue/blue/worker/CjsResManWorker.js",
-    "blue/blue/services/BlueCallbackMan.js",
-    "blue/blue/worker/BlueCallbackManWorker.js"
+    "blue/worker/CjsResManWorker.js",
+    "blue/services/BlueCallbackMan.js",
+    "blue/worker/BlueCallbackManWorker.js"
   ],
   "layers": {
     "global/logging": {
@@ -131,7 +131,7 @@
     },
     "global/consts": {
       "mayImport": [
-        "blue/blue/enums"
+        "blue/enums"
       ]
     },
     "global/imageio": {
@@ -152,7 +152,7 @@
     },
     "blue/schema": {
       "mayImport": [
-        "blue/blue/enums",
+        "blue/enums",
         "blue/exposure/classes",
         "blue/compose",
         "global/utils",
@@ -172,20 +172,20 @@
         "global/math",
         "global/consts",
         "blue/schema",
-        "blue/blue",
+        "blue",
         "blue/exposure"
       ],
       "why": [
         "CjsModel.get/set delegate to Blue's values engine (DictReader,",
         "DictWriter): the reader and writer are Blue's, CjsModel only wraps",
-        "the editing contract around them. blue/blue does not import model."
+        "the editing contract around them. blue does not import model."
       ]
     },
     "global/interfaces": {
       "mayImport": [
         "blue/schema",
         "global/math",
-        "blue/blue",
+        "blue",
         "blue/exposure"
       ],
       "why": [
@@ -216,19 +216,19 @@
       "why": [
         "Carbon's blueexposure layer (decorator-upgrade.md § 000): IRoot, BlueClasses, the exposure decorators (be),",
         "Copier, BlueList, BlueScriptCallback and the interfaces Carbon declares there. Carbon's blueexposure links",
-        "only CcpCore and Python and blue links it, never the reverse, so this imports nothing from blue/blue."
+        "only CcpCore and Python and blue links it, never the reverse, so this imports nothing from blue."
       ]
     },
-    "blue/blue/enums": {
+    "blue/enums": {
       "mayImport": [],
       "why": [
         "Dependency-free enum identity and registration shared by constant definition sites, schema and Blue. Constants may not import the Blue holder or services."
       ]
     },
-    "blue/blue": {
+    "blue": {
       "mayImport": [
         "global/consts",
-        "blue/blue/enums",
+        "blue/enums",
         "blue/exposure/classes",
         "blue/compose",
         "blue/schema",

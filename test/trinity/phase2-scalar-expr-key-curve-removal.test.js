@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { BlueList, DictReader, DictWriter, Copier, ITriFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/blue/index.js";
+import { BlueList, DictReader, DictWriter, Copier, ITriFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Tr2ScalarExprKeyCurve } from "../../npm/dist/trinity/curves/curve/Tr2ScalarExprKeyCurve.js";
 import { Tr2ScalarExprKey } from "../../npm/dist/trinity/curves/key/Tr2ScalarExprKey.js";

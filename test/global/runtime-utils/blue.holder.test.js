@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { blue, BlueResManQueue, BluePaths, BlueResMan, IBlueEvents, IBlueOS, IBluePaths, IBlueResMan } from "../../../npm/dist/blue/blue/index.js";
-import * as blueExports from "../../../npm/dist/blue/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue/blue.js";
+import { blue, BlueResManQueue, BluePaths, BlueResMan, IBlueEvents, IBlueOS, IBluePaths, IBlueResMan } from "../../../npm/dist/blue/index.js";
+import * as blueExports from "../../../npm/dist/blue/index.js";
+import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 
 test("the slots are filled before anything can read them", () =>

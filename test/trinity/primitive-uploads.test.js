@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {CjsSchema} from "../../npm/dist/blue/schema/index.js";
-import {IInitialize} from "../../npm/dist/blue/blue/index.js";
+import {IInitialize} from "../../npm/dist/blue/index.js";
 import {finalizeReaderObject} from "../../npm/dist/blue/schema/hydration.js";
 import {Tr2LineSet,Tr2SolidSet,Tr2GrannyPrimitiveSet,Tr2PrimitiveSet,TriDevice, trinity,Tr2EffectStateManager,
   Tr2RenderContext_GetMainThreadRenderContext} from "../../npm/dist/trinity/index.js";

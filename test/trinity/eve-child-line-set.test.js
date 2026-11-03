@@ -3,7 +3,7 @@ import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
-import {blue, IInitialize, INotify, NotifyModified} from '../../npm/dist/blue/blue/index.js';
+import {blue, IInitialize, INotify, NotifyModified} from '../../npm/dist/blue/index.js';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
 import {mat4} from '../../npm/dist/global/math/mat4.js';
 import {quat} from '../../npm/dist/global/math/quat.js';

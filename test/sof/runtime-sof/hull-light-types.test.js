@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { EveSOF, EveSOFDNA } from "../../../npm/dist/sof/index.js";
 import { EveSOFDataHullLightSetSpotLight } from "../../../npm/dist/sof/hull/EveSOFDataHullLightSetSpotLight.js";
-import { CjsBlackFormat } from "../../../npm/dist/blue/blue/formats/black/index.js";
+import { CjsBlackFormat } from "../../../npm/dist/blue/formats/black/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { Tr2PointLight, Tr2TexturedPointLight, Tr2SpotLight } from "../../../npm/dist/trinity/index.js";
 import { SofValuesBuilder } from "../../../src/sof/SofValuesBuilder.js";

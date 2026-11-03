@@ -1,5 +1,5 @@
 import { configureResourceManager } from "../support/configuredResMan.js";
-import { blue } from "../../npm/dist/blue/blue/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
 import { CjsVtaFormat } from "../../npm/dist/resource/formats/vta/index.js";
 import { ImageIO } from "../../npm/dist/resource/imageio/index.js";
 import assert from "node:assert/strict";

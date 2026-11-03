@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
 import { type } from "../../src/blue/schema/index.js";
-import { blue } from "../../src/blue/blue/index.js";
-import { GetResources } from "../../src/blue/blue/getResources.js";
+import { blue } from "../../src/blue/index.js";
+import { GetResources } from "../../src/blue/getResources.js";
 
 class Graph
 {

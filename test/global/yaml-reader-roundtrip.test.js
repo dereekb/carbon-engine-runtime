@@ -3,10 +3,10 @@ import test from "node:test";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { YamlWriter, BeObjectMetadata, blue } from "../../npm/dist/blue/blue/index.js";
-import { IRootReaderBase } from "../../npm/dist/blue/blue/format/IRootReaderBase.js";
-import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
+import { YamlWriter, BeObjectMetadata, blue } from "../../npm/dist/blue/index.js";
+import { IRootReaderBase } from "../../npm/dist/blue/format/IRootReaderBase.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
+import { YamlReader } from "../../npm/dist/blue/formats/yaml/YamlReader.js";
 import "../../npm/dist/trinity/index.js";
 import { StubResMan } from "../support/stubResMan.js";
 

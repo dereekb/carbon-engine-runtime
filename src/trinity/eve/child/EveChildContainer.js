@@ -12,7 +12,7 @@ import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../EveEntity.js";
 import { IInitialize } from "#exposure/IInitialize";
 import { BLUELISTEVENT } from "#consts/blue";
-import { addChild, removeChild, clearChildren } from "../../../blue/blue/children.js";
+import { addChild, removeChild, clearChildren } from "../../../blue/children.js";
 import { mat4 } from "#math/mat4";
 import { IEveInheritPropertiesOwner } from "../IEveInheritPropertiesOwner.js";
 import { quat } from "#math/quat";

@@ -3,7 +3,7 @@ import { createDdsBitmap } from "../../npm/dist/resource/formats/dds/ddsBitmap.j
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Worker } from "node:worker_threads";
-import { BlueResManQueue, BlueResMan, CjsResManWorkerLoader } from "../../npm/dist/blue/blue/index.js";
+import { BlueResManQueue, BlueResMan, CjsResManWorkerLoader } from "../../npm/dist/blue/index.js";
 import { CjsGr2Format } from "../../npm/dist/resource/formats/gr2/index.js";
 import { CjsDdsFormat } from "../../npm/dist/resource/formats/dds/index.js";
 import { CjsPngFormat } from "../../npm/dist/resource/formats/png/index.js";

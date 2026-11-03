@@ -1,5 +1,5 @@
-import { GetResources } from "../../../src/blue/blue/getResources.js";
-import "../../../src/blue/blue/values.js";
+import { GetResources } from "../../../src/blue/getResources.js";
+import "../../../src/blue/values.js";
 // GetResources is the dependency set that readiness, renewal and revival all
 // fold over, so under-reporting it is not a cosmetic bug: an all-or-nothing
 // readiness check would pass while a child's textures were still loading, which

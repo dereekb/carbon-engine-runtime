@@ -1,6 +1,6 @@
 import { Tr2EffectRes } from "../../npm/dist/trinity/shader/index.js";
 import { ITriEffectParameter } from "../../npm/dist/trinity/shader/parameter/ITriEffectParameter.js";
-import { NotifyModified } from "../../npm/dist/blue/blue/index.js";
+import { NotifyModified } from "../../npm/dist/blue/index.js";
 import { composeStubResMan } from "../support/stubResMan.js";
 
 // blue.resMan throws until something composes a manager, so a test that

@@ -1,0 +1,53 @@
+import { CjsSchema } from "#schema/CjsSchema";
+import { blue } from "../blue.js";
+import { BlueAsyncRes } from "./BlueAsyncRes.js";
+import { ResourceHandlerMode } from "../../global/consts/resourceHandlerMode.js";
+
+/**
+ * Internal asynchronous object reader. JavaScript cannot block on Carbon's
+ * LoadObject read, so resMan retains its builder and constructs per caller.
+ * LoadObject exposes the graph, never this handler's native notify surface.
+ * It lives in resMan's loadObjectCache, never in MotherLode: GetResource
+ * serves Res classes only.
+ */
+export class CjsLoadingObject extends BlueAsyncRes
+{
+  /** Internal data carrier, not a domain resource. */
+  static isResource = false;
+  /** Object routes construct independently for each LoadObject caller. */
+  static handlerMode = ResourceHandlerMode.OBJECT;
+
+  /**
+   * Read through the configured reader; resMan retains plain data/builders.
+   *
+   * @adapted
+   */
+  _DoLoad()
+  {
+    return blue.resMan._LoadObjectData(this);
+  }
+
+  /**
+   * No device preparation is needed for a cached object builder.
+   *
+   * @adapted
+   */
+  _DoPrepare()
+  {
+    return true;
+  }
+
+  /**
+   * Drop retained builder data at explicit JS cleanup, honoring MotherLode policy.
+   *
+   * @adapted
+   * @param {object} [options={}] Existing releasePayload switch.
+   * @returns {void}
+   */
+  _OnShutdown(options = {})
+  {
+    if (options.releasePayload !== false) blue.resMan.ReleaseResourcePayload(this);
+  }
+}
+
+CjsSchema.meta.define("CjsLoadingObject")(CjsLoadingObject);

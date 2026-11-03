@@ -12,7 +12,7 @@ import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { INotify } from "../../../blue/exposure/INotify.js";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import "#consts/trinity";
-import { addChild, removeChild, clearChildren } from "../../../blue/blue/children.js";
+import { addChild, removeChild, clearChildren } from "../../../blue/children.js";
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 import { box3 } from "#math/box3";

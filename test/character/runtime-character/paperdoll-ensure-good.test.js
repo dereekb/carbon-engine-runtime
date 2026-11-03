@@ -1,7 +1,7 @@
 // CjsPaperDoll.EnsureGood keeps a hidden character's owned resources through resMan's idle purge.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { BlueResMan, blue } from "../../../npm/dist/blue/blue/index.js";
+import { BlueResMan, blue } from "../../../npm/dist/blue/index.js";
 import { CjsPaperDoll } from "../../../npm/dist/character/application/CjsPaperDoll.js";
 import { CjsPaperDollCompositor } from "../../../npm/dist/character/application/compositor/CjsPaperDollCompositor.js";
 import { RegisterDataLoader } from "../../support/testDataRes.js";

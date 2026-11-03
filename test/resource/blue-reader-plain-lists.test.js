@@ -8,9 +8,9 @@ import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { CjsSchema, meta } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
-import { CjsBlueReader } from "../../npm/dist/blue/blue/formats/black/CjsBlueReader.js";
-import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
-import "../../npm/dist/blue/blue/values.js";
+import { CjsBlueReader } from "../../npm/dist/blue/formats/black/CjsBlueReader.js";
+import { YamlReader } from "../../npm/dist/blue/formats/yaml/YamlReader.js";
+import "../../npm/dist/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;

@@ -14,7 +14,7 @@ import { EveEntity } from "../EveEntity.js";
 import { CjsSchema, type } from "#schema";
 import { IsMatch } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
-import { addChild, removeChild, clearChildren } from "../../../blue/blue/children.js";
+import { addChild, removeChild, clearChildren } from "../../../blue/children.js";
 import { EveChildTransform } from "./EveChildTransform.js";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 

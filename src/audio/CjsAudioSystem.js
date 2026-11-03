@@ -7,7 +7,7 @@
 // pass one (or a factory) only when sound should actually be realized. Without
 // it, the graph runs in Carbon's null-manager/headless mode untouched.
 import { CjsSchema } from "../blue/schema/CjsSchema.js";
-import { blue } from "../blue/blue/blue.js";
+import { blue } from "../blue/blue.js";
 import { AudGameObjResource } from "./trinity/audio/AudGameObjResource.js";
 import { AudEmitter } from "./trinity/audio/AudEmitter.js";
 import { AudManager } from "./trinity/audio/AudManager.js";

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {blue,IInitialize,INotify} from '../../npm/dist/blue/blue/index.js';
+import {blue,IInitialize,INotify} from '../../npm/dist/blue/index.js';
 import {CjsSchema} from '../../npm/dist/blue/schema/index.js';
 import {Tr2ImpostorManager,Tr2QuadRenderer,Tr2Renderer,TriDevice,trinity,Tr2VariableStore,Tr2RenderTarget,TriRenderBatchAccumulator,Tr2RenderContext_GetMainThreadRenderContext} from '../../npm/dist/trinity/index.js';
 import {Tr2RenderContextALStub,ALResult} from '../../npm/dist/trinityal/index.js';

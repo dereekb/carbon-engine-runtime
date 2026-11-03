@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test, { beforeEach, afterEach } from "node:test";
-import { blue, BlueResMan, IBlueResource, ICacheable } from "../../../npm/dist/blue/blue/index.js";
+import { blue, BlueResMan, IBlueResource, ICacheable } from "../../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { TriTextureRes, Tr2ImageRes } from "../../../npm/dist/trinity/resources/texture/index.js";
 import { Tr2LightProfileRes } from "../../../npm/dist/resource/index.js";

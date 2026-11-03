@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { ICacheable, IRoot } from "../../../npm/dist/blue/blue/index.js";
+import { ICacheable, IRoot } from "../../../npm/dist/blue/index.js";
 import { HostBitmap } from "../../../npm/dist/global/imageio/index.js";
 import { PixelFormat } from "../../../npm/dist/global/consts/renderContext/index.js";
 import { CjsCarbonEffectWriter } from "../../../npm/dist/resource/format/index.js";
