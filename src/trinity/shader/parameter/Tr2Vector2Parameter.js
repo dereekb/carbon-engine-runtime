@@ -424,7 +424,7 @@ export class Tr2Vector2Parameter extends ITriEffectParameter
   {
     if (!this.isSrgb) return;
 
-    this.linearValue ??= vec2.create();
+    if (!this.linearValue) this.linearValue = vec2.create();
     this.linearValue[0] = num.gammaToLinearCarbon(this.value[0]);
     this.linearValue[1] = num.gammaToLinearCarbon(this.value[1]);
   }
