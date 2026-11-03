@@ -26,5 +26,3 @@ export class CjsCharacterColorSelection
     colorBC = null;
 
 }
-
-export default CjsCharacterColorSelection;

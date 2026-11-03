@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { deflateSync } from "node:zlib";
-import CjsFbxFormat, { CjsFbxFormat as NamedCjsFbxFormat } from "../../../../../src/resource/formats/fbx/index.js";
+import { CjsFbxFormat } from "../../../../../src/resource/formats/fbx/index.js";
+import * as CjsFbxFormatModule from "../../../../../src/resource/formats/fbx/index.js";
 
 const FBX_TICKS_PER_SECOND = 46186158000;
 
-test("exports default and named CjsFbxFormat", () =>
+test("exports CjsFbxFormat by name only, with no default", () =>
 {
-    assert.equal(CjsFbxFormat, NamedCjsFbxFormat);
+    assert.equal("default" in CjsFbxFormatModule, false);
     assert.deepEqual(CjsFbxFormat.extensions, [ ".fbx" ]);
     assert.equal("gr2", "gr2");
     assert.deepEqual(Object.values(CjsFbxFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), [ "gr2", "cmf" ]);

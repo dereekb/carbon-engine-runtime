@@ -920,5 +920,3 @@ export const CjsFormatReadMode = Object.freeze({
   SYNC: READ_MODE_SYNC,
   ASYNC: READ_MODE_ASYNC
 });
-
-export default CjsFormat;

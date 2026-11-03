@@ -1,1 +1,1 @@
-export { CjsFbxFormat, default } from "./CjsFbxFormat.js";
+export { CjsFbxFormat } from "./CjsFbxFormat.js";

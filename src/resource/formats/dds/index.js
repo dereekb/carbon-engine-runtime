@@ -1,1 +1,1 @@
-export { CjsDdsFormat, CjsDdsFormat as default } from "./CjsDdsFormat.js";
+export { CjsDdsFormat } from "./CjsDdsFormat.js";

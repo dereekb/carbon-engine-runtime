@@ -85,5 +85,3 @@ export class CjsAvatarPartMetaData extends CjsCharacterRecord
     wap = null;
 
 }
-
-export default CjsAvatarPartMetaData;

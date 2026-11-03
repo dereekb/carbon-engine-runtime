@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import { buildMinimalVertexDxbc } from "./synthetic.js";
 
 test("BuildShaderIr lowers SM5.0 DXBC into immutable front-end records", () =>

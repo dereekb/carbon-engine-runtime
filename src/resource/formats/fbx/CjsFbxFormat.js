@@ -325,5 +325,4 @@ export class CjsFbxFormat extends CjsGeometryFormat
     static extensions = [ ".fbx" ];
 }
 
-export default CjsFbxFormat;
 

@@ -46,5 +46,3 @@ export class CjsCharacterAppearanceColorSelection
     origin = null;
 
 }
-
-export default CjsCharacterAppearanceColorSelection;

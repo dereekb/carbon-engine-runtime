@@ -41,5 +41,3 @@ export class CjsCharacterPartSource extends CjsCharacterRecord
     materialBindings = [];
 
 }
-
-export default CjsCharacterPartSource;

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import CjsRedFormat, * as entry from "../../../../../npm/dist/blue/blue/formats/red/index.js";
+import { CjsRedFormat } from "../../../../../npm/dist/blue/blue/formats/red/index.js";
+import * as entry from "../../../../../npm/dist/blue/blue/formats/red/index.js";
 import { CjsFormat } from "../../../../../npm/dist/resource/format/CjsFormat.js";
 import { CjsSchema } from "../../../../../npm/dist/blue/schema/index.js";
 import { YamlReader } from "../../../../../npm/dist/blue/blue/YamlReader.js";
@@ -47,7 +48,7 @@ position: [0.123456789, 2, 3]
 
 test("the public Red entry exports only its object-loading format", () =>
 {
-    assert.deepEqual(Object.keys(entry).sort(), ["CjsRedFormat", "default"]);
+    assert.deepEqual(Object.keys(entry).sort(), ["CjsRedFormat"]);
     assert.equal(entry.CjsRedFormat, CjsRedFormat);
     CjsFormat.validateContract(CjsRedFormat);
     assert.deepEqual(CjsRedFormat.extensions, [".red"]);

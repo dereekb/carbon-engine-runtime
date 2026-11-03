@@ -138,5 +138,4 @@ export class FsdList
     static className = "FsdList";
 }
 
-export default FsdList;
 

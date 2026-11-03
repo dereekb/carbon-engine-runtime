@@ -473,5 +473,4 @@ export class CjsPngFormat extends CjsImageFormat
 }
 
 
-export default CjsPngFormat;
 

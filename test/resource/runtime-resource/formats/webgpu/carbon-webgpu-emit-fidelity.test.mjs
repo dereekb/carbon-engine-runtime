@@ -4,7 +4,7 @@ import path from "node:path";
 import { readFile, readdir, stat } from "node:fs/promises";
 
 import { CjsCarbonEffectReader } from "../../../../../src/resource/format/carbonEffect/CjsCarbonEffectReader.js";
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 
 /**
  * Proves the WebGPU emit preserves what the shared codec preserves.

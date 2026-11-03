@@ -22,5 +22,3 @@ export class CjsCharacterAvatarBehavior extends CjsCharacterRecord
     resGender = 0;
 
 }
-
-export default CjsCharacterAvatarBehavior;

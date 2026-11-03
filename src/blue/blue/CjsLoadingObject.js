@@ -50,8 +50,4 @@ export class CjsLoadingObject extends BlueAsyncRes
   }
 }
 
-export default CjsLoadingObject;
 CjsSchema.meta.define("CjsLoadingObject")(CjsLoadingObject);
-
-
-

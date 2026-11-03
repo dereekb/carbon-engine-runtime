@@ -531,5 +531,3 @@ export function looksLikeCarbonEffectContainer(bytes)
         && bytes[2] === 0
         && bytes[3] === 0;
 }
-
-export default CjsCarbonEffectReader;

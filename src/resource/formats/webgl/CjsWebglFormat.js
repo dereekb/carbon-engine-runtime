@@ -228,4 +228,3 @@ export class CjsWebglFormat extends CjsFormat
 
 }
 
-export default CjsWebglFormat;

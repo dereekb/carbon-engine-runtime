@@ -206,5 +206,4 @@ function NormalizeBytes(input)
     throw error;
 }
 
-export default CjsFsd64Reader;
 

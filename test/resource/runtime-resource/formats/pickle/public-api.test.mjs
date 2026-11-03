@@ -6,18 +6,16 @@ import {
   CjsLoadingObject,
   BlueResMan
 } from "../../../../../npm/dist/resource/index.js";
-import CjsPickleFormat, {
-  CjsPickleFormat as NamedCjsPickleFormat
-} from "../../../../../src/resource/formats/pickle/index.js";
+import { CjsPickleFormat } from "../../../../../src/resource/formats/pickle/index.js";
+import * as CjsPickleFormatModule from "../../../../../src/resource/formats/pickle/index.js";
 import "../../../../support/frameLoop.js";
 
 test("package subpath exports one public pickle format class", async () =>
 {
   const mod = await import("../../../../../src/resource/formats/pickle/index.js");
 
-  assert.deepEqual(Object.keys(mod).sort(), [ "CjsPickleFormat", "default" ]);
-  assert.equal(mod.default, CjsPickleFormat);
-  assert.equal(NamedCjsPickleFormat, CjsPickleFormat);
+  assert.deepEqual(Object.keys(mod).sort(), [ "CjsPickleFormat" ]);
+  assert.equal("default" in CjsPickleFormatModule, false);
 });
 
 test("pickle facade declares protocol 0 and the standard format vocabulary", () =>

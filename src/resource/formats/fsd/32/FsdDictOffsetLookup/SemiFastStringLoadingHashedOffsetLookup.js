@@ -124,5 +124,4 @@ function Utf8Key(key)
     return ByteKey(encoder.encode(key));
 }
 
-export default SemiFastStringLoadingHashedOffsetLookup;
 

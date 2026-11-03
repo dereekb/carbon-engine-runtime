@@ -125,5 +125,3 @@ export function inspectGlslEffectContainer(input, values = {})
         ...bodies
     };
 }
-
-export default inspectGlslEffectContainer;

@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-import CjsDxbcFormat from "../../../../../src/resource/formats/dxbc/index.js";
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsDxbcFormat } from "../../../../../src/resource/formats/dxbc/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 
 /**
  * Optional corpus sweep: scans the directory supplied by WEBGL_CORPUS_DIR for

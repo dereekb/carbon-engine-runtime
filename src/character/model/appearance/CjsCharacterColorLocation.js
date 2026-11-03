@@ -19,5 +19,3 @@ export class CjsCharacterColorLocation extends CjsCharacterRecord
     hasWeight = 0;
 
 }
-
-export default CjsCharacterColorLocation;

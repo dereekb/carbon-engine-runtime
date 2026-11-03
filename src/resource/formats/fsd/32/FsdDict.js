@@ -142,5 +142,4 @@ export class FsdDict
     static className = "FsdDict";
 }
 
-export default FsdDict;
 

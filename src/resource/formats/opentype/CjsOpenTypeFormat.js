@@ -200,5 +200,4 @@ export class CjsOpenTypeFormat extends CjsFormat
     });
 }
 
-export default CjsOpenTypeFormat;
 

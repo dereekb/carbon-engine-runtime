@@ -751,6 +751,5 @@ function BinaryMembers(Constructor)
     return CjsSchema.getSchema(Constructor).members.filter(member => member.type?.binary === true);
 }
 
-export default CjsBlueReader;
 
 CjsSchema.meta.define("CjsBlueReader")(CjsBlueReader);

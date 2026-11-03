@@ -190,5 +190,3 @@ export function enumerateUniqueEffectBodies(header)
             variant)
     }));
 }
-
-export default enumerateUniqueEffectBodies;

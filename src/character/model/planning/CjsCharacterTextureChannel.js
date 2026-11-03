@@ -16,5 +16,3 @@ export class CjsCharacterTextureChannel
     channel = "a";
 
 }
-
-export default CjsCharacterTextureChannel;

@@ -306,4 +306,3 @@ export class CjsStringTable
     }
 }
 
-export default CjsStringTable;

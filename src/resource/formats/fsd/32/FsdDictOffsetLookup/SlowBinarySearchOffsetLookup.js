@@ -60,5 +60,4 @@ export class SlowBinarySearchOffsetLookup extends FsdDictOffsetLookup
     static className = "SlowBinarySearchOffsetLookup";
 }
 
-export default SlowBinarySearchOffsetLookup;
 

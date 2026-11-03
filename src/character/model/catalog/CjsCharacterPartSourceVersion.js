@@ -54,5 +54,3 @@ export class CjsCharacterPartSourceVersion
     textureCandidateInput = null;
 
 }
-
-export default CjsCharacterPartSourceVersion;

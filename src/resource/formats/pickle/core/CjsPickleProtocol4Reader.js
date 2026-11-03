@@ -559,5 +559,4 @@ function readStackGlobal(state, offset)
   return createGlobalMarker(state, `${module}.${attribute}`, offset);
 }
 
-export default CjsPickleProtocol4Reader;
 

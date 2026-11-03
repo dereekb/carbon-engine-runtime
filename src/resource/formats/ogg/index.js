@@ -1,1 +1,1 @@
-export { CjsOggFormat, CjsOggFormat as default } from "./CjsOggFormat.js";
+export { CjsOggFormat } from "./CjsOggFormat.js";

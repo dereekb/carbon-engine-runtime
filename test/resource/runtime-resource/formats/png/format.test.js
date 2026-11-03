@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { deflateSync } from "node:zlib";
 import test from "node:test";
 import { BlueResMan } from "../../../../../src/blue/blue/BlueResMan.js";
-import CjsPngFormat, { CjsPngFormat as NamedCjsPngFormat } from "../../../../../src/resource/formats/png/index.js";
+import { CjsPngFormat } from "../../../../../src/resource/formats/png/index.js";
+import * as CjsPngFormatModule from "../../../../../src/resource/formats/png/index.js";
 import { ReadData } from "../../../../support/loadData.js";
 
-test("exports default and named CjsPngFormat", () =>
+test("exports CjsPngFormat by name only, with no default", () =>
 {
-    assert.equal(CjsPngFormat, NamedCjsPngFormat);
+    assert.equal("default" in CjsPngFormatModule, false);
     assert.deepEqual(CjsPngFormat.extensions, [ ".png" ]);
 });
 

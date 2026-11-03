@@ -283,5 +283,4 @@ function Normalize(input) {
   throw SchemaBoundError("A schema-bound container must be supplied as bytes.");
 }
 
-export default CjsSchemaBoundFormat;
 

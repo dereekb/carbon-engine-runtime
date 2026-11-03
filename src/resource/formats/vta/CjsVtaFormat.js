@@ -290,5 +290,4 @@ export class CjsVtaFormat extends CjsImageFormat
     static extensions = [ ".vta" ];
 }
 
-export default CjsVtaFormat;
 

@@ -280,5 +280,4 @@ export class CjsPickleFormat extends CjsFormat
   });
 }
 
-export default CjsPickleFormat;
 

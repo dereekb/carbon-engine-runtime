@@ -102,4 +102,3 @@ export function validateEffectContainer(container, options = {})
     }
 }
 
-export default validateEffectContainer;

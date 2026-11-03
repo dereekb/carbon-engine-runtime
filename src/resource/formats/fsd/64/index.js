@@ -1,2 +1,2 @@
-export { CjsFsd64Format, default } from "./CjsFsd64Format.js";
+export { CjsFsd64Format } from "./CjsFsd64Format.js";
 export * from "./core/index.js";

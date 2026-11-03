@@ -309,5 +309,4 @@ export class CjsStlFormat extends CjsGeometryFormat
 
 }
 
-export default CjsStlFormat;
 

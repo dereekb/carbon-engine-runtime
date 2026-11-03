@@ -404,5 +404,3 @@ export function deriveInfo(container, options = {})
         uniqueBodyCount: graph.bodies.length
     };
 }
-
-export default deriveAnalysis;

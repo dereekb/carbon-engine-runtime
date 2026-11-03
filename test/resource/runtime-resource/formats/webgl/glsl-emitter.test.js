@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import CjsDxbcFormat from "../../../../../src/resource/formats/dxbc/index.js";
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsDxbcFormat } from "../../../../../src/resource/formats/dxbc/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 import { clientResources } from "../../../../support/clientResources.js";
 import {
     buildComparisonSamplePixelDxbc,

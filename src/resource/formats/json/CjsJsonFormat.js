@@ -128,5 +128,3 @@ function SourceName(options)
 {
     return typeof options.source === "string" && options.source ? options.source : "input";
 }
-
-export default CjsJsonFormat;

@@ -213,5 +213,4 @@ export class CjsGifFormat extends CjsImageFormat
     static extensions = [ ".gif" ];
 }
 
-export default CjsGifFormat;
 

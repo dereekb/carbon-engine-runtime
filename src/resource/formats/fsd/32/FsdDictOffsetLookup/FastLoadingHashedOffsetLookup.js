@@ -123,5 +123,4 @@ export class FastLoadingHashedOffsetLookup extends FsdDictOffsetLookup
     static className = "FastLoadingHashedOffsetLookup";
 }
 
-export default FastLoadingHashedOffsetLookup;
 

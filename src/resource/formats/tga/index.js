@@ -1,1 +1,1 @@
-export { CjsTgaFormat, CjsTgaFormat as default } from "./CjsTgaFormat.js";
+export { CjsTgaFormat } from "./CjsTgaFormat.js";

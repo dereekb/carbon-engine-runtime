@@ -23,5 +23,3 @@ export class CjsCharacterArchetype extends CjsCharacterRecord
     titleID = "";
 
 }
-
-export default CjsCharacterArchetype;

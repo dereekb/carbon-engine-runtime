@@ -207,5 +207,4 @@ function NormalizeBytes(input, options)
     throw error;
 }
 
-export default CjsFsd32Format;
 

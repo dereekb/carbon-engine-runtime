@@ -47,5 +47,3 @@ export class CjsCharacterBloodline extends CjsCharacterRecord
     willpower = 0;
 
 }
-
-export default CjsCharacterBloodline;

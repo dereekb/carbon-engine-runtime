@@ -1292,5 +1292,3 @@ async function LoadTexture(path)
     await blue.resMan.Ready(resource);
     return resource;
 }
-
-export default CjsCharacterLibraryManager;

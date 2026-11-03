@@ -65,7 +65,6 @@ export class Tr2VideoDriver extends IRoot
     }
 }
 
-export default Tr2VideoDriver;
 
 be.inherit(IRoot)(Tr2VideoDriver);
 

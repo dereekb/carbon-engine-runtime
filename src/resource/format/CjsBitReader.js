@@ -321,4 +321,3 @@ export class CjsBitReader extends CjsReader
     }
 }
 
-export default CjsBitReader;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import {
     buildResourceTransformPlan
 } from "../../../../../src/resource/formats/webgpu/core/wgsl/buildResourceTransformPlan.js";

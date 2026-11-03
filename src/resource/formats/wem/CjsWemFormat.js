@@ -289,5 +289,4 @@ export class CjsWemFormat extends CjsFormat
     static extensions = [ ".wem" ];
 }
 
-export default CjsWemFormat;
 

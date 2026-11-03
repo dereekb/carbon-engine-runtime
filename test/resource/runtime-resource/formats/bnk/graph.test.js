@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsBnkFormat from "../../../../../src/resource/formats/bnk/index.js";
+import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
 
 // Fixture mirrors EVE's split-bank layout (bank generator version 150): an
 // "events" bank holding only Event + Action objects, and a "media" bank

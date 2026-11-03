@@ -275,6 +275,5 @@ export class CjsWebGLProbe
     }
 }
 
-export default CjsWebGLProbe;
 
 CjsSchema.meta.define("CjsWebGLProbe")(CjsWebGLProbe);

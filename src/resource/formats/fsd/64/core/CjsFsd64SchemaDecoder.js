@@ -887,5 +887,4 @@ function SchemaError(message)
     return error;
 }
 
-export default CjsFsd64SchemaDecoder;
 

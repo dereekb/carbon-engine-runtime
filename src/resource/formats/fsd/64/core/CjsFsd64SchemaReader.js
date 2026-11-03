@@ -77,5 +77,4 @@ export class CjsFsd64SchemaReader
 
 }
 
-export default CjsFsd64SchemaReader;
 

@@ -115,4 +115,3 @@ export class CjsFormatWriteError extends Error
     }
 }
 
-export default CjsFormatReadError;

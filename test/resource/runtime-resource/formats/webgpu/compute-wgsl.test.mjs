@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import { readEffectAnalysis } from "../../../../../src/resource/formats/webgpu/core/effectAnalysis.js";
 import { lowerComputeProgram } from "../../../../../src/resource/formats/webgpu/core/wgsl/lowerComputeProgram.js";
 import { isSortComputeProfile } from "../../../../../src/resource/formats/webgpu/core/wgsl/lowerSortComputeProgram.js";

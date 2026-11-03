@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 import { buildTwoSamplerPixelDxbc } from "./synthetic.js";
 
 /**

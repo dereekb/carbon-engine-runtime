@@ -41,5 +41,3 @@ export class CjsCharacterResolvedPart
     origin = null;
 
 }
-
-export default CjsCharacterResolvedPart;

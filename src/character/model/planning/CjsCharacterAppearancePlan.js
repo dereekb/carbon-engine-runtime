@@ -356,5 +356,3 @@ export class CjsCharacterAppearancePlan
     diagnostics = [];
 
 }
-
-export default CjsCharacterAppearancePlan;

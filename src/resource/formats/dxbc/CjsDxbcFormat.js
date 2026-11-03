@@ -224,4 +224,3 @@ export class CjsDxbcFormat extends CjsFormat
 
 }
 
-export default CjsDxbcFormat;

@@ -236,5 +236,4 @@ export class CjsGltfFormat extends CjsGeometryFormat
 
 }
 
-export default CjsGltfFormat;
 

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsObjFormat, { CjsObjFormat as NamedFormat } from "../../../../../src/resource/formats/obj/index.js";
+import { CjsObjFormat } from "../../../../../src/resource/formats/obj/index.js";
+import * as CjsObjFormatModule from "../../../../../src/resource/formats/obj/index.js";
 
 const QUAD_OBJ = `
 # simple quad
@@ -27,8 +28,8 @@ function almostEqual(actual, expected, epsilon = 1e-6)
     }
 }
 
-test("default export and named export are the same CjsObjFormat class", () => {
-    assert.equal(CjsObjFormat, NamedFormat);
+test("CjsObjFormat is a named export with no default", () => {
+    assert.equal("default" in CjsObjFormatModule, false);
     assert.equal("json", "json");
     assert.equal("objJson", "objJson");
     assert.equal("shared", "shared");

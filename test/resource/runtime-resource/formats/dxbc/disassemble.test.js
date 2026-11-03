@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import CjsDxbcFormat from "../../../../../src/resource/formats/dxbc/index.js";
+import { CjsDxbcFormat } from "../../../../../src/resource/formats/dxbc/index.js";
 import { disassembleInstructions, formatOperand } from "../../../../../src/resource/formats/dxbc/core/disassemble.js";
 import { buildMinimalVertexDxbc } from "./synthetic.js";
 

@@ -331,5 +331,4 @@ export class CjsBnkFormat extends CjsFormat
     static extensions = [ ".bnk" ];
 }
 
-export default CjsBnkFormat;
 

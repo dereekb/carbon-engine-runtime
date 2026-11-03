@@ -379,4 +379,3 @@ export class CjsByteReader extends CjsReader
     }
 }
 
-export default CjsByteReader;

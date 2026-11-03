@@ -1,1 +1,1 @@
-export { CjsJsonFormat, default } from "./CjsJsonFormat.js";
+export { CjsJsonFormat } from "./CjsJsonFormat.js";

@@ -272,5 +272,4 @@ export class CjsTgaFormat extends CjsImageFormat
 }
 
 
-export default CjsTgaFormat;
 

@@ -1,1 +1,1 @@
-export { CjsStlFormat, default } from "./CjsStlFormat.js";
+export { CjsStlFormat } from "./CjsStlFormat.js";

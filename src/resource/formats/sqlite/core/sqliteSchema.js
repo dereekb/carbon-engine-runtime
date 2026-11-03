@@ -108,4 +108,3 @@ export function ReadColumns(sql) {
   return { names, rowidAlias };
 }
 
-export default ReadColumns;

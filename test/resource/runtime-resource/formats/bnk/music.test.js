@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsBnkFormat from "../../../../../src/resource/formats/bnk/index.js";
+import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
 
 // Synthetic music-hierarchy payloads (bank generator version 150 layouts,
 // field order hand-verified against EVE's music banks 2026-07-19). The bytes

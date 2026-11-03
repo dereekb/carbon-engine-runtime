@@ -103,5 +103,3 @@ export function buildCarbonEffectContainer(
         options
     );
 }
-
-export default buildCarbonEffectContainer;

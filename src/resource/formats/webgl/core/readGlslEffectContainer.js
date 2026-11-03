@@ -278,5 +278,3 @@ export function readGlslEffectContainer(input, values = {})
         bodyCount: bodyKeyByOffset.size
     };
 }
-
-export default readGlslEffectContainer;

@@ -17,5 +17,3 @@ export class CjsCharacterModifierLocation extends CjsCharacterRecord
     variationKey = "";
 
 }
-
-export default CjsCharacterModifierLocation;

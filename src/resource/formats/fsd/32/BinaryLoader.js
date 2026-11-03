@@ -480,5 +480,4 @@ export function ReadComponents(data, offset, count, isDouble)
     return result;
 }
 
-export default BinaryLoader;
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsJpegFormat from "../../../../../src/resource/formats/jpeg/index.js";
+import { CjsJpegFormat } from "../../../../../src/resource/formats/jpeg/index.js";
 
 
 /** An opaque RGBA payload in the shape the image formats emit for `rgba`. */

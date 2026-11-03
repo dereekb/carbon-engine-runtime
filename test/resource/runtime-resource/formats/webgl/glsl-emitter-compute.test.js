@@ -10,7 +10,7 @@ const fixtureTest = HAVE_FIXTURES
     ? test
     : (name, fn) => test.skip(`${name} (needs local EVE compute fixtures in test/formats/webgl/fixtures/)`, fn);
 
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 import { buildDoubleStoreComputeDxbc } from "./synthetic.js";
 
 /**

@@ -26,5 +26,3 @@ export class CjsCharacterCompositionInput
     value = null;
 
 }
-
-export default CjsCharacterCompositionInput;

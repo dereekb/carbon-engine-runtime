@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsMp3Format, { CjsMp3Format as NamedCjsMp3Format } from "../../../../../src/resource/formats/mp3/index.js";
+import { CjsMp3Format } from "../../../../../src/resource/formats/mp3/index.js";
+import * as CjsMp3FormatModule from "../../../../../src/resource/formats/mp3/index.js";
 
-test("exports default and named CjsMp3Format", () =>
+test("exports CjsMp3Format by name only, with no default", () =>
 {
-    assert.equal(CjsMp3Format, NamedCjsMp3Format);
+    assert.equal("default" in CjsMp3FormatModule, false);
     assert.deepEqual(CjsMp3Format.extensions, [ ".mp3" ]);
     assert.deepEqual(Object.values(CjsMp3Format.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), []);
     assert.deepEqual(Object.values(CjsMp3Format.outputs).filter(entry => entry.role === "debug").map(entry => entry.output), [ "mp3Json", "raw" ]);

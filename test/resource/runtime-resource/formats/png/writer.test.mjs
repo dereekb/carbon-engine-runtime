@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsPngFormat from "../../../../../src/resource/formats/png/index.js";
+import { CjsPngFormat } from "../../../../../src/resource/formats/png/index.js";
 
 /** An RGBA payload in the shape the image formats emit for `rgba`. */
 function payload(width, height, fill)

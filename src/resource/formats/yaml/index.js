@@ -1,1 +1,1 @@
-export { CjsYamlFormat, default } from "./CjsYamlFormat.js";
+export { CjsYamlFormat } from "./CjsYamlFormat.js";

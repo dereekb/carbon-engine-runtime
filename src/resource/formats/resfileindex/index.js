@@ -1,1 +1,1 @@
-export { CjsResFileIndexFormat, CjsResFileIndexFormat as default } from "./CjsResFileIndexFormat.js";
+export { CjsResFileIndexFormat } from "./CjsResFileIndexFormat.js";

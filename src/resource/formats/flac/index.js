@@ -1,1 +1,1 @@
-export { CjsFlacFormat, CjsFlacFormat as default } from "./CjsFlacFormat.js";
+export { CjsFlacFormat } from "./CjsFlacFormat.js";

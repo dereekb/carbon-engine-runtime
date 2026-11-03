@@ -187,5 +187,3 @@ export class CjsCharacterPaperdoll extends CjsCharacterRecord
     neverRender = 0;
 
 }
-
-export default CjsCharacterPaperdoll;

@@ -83,5 +83,4 @@ export class CjsIESFormat extends CjsFormat
     });
 }
 
-export default CjsIESFormat;
 

@@ -1,1 +1,1 @@
-export { CjsWebmFormat, CjsWebmFormat as default } from "./CjsWebmFormat.js";
+export { CjsWebmFormat } from "./CjsWebmFormat.js";

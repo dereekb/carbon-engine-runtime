@@ -1,6 +1,6 @@
 import { toJsonWithCollections as toJsonValue } from "../../../format/jsonPolicies.js";
 import { asUint8Array } from "#utils/bytes";
-import CjsDxbcFormat from "../../dxbc/index.js";
+import { CjsDxbcFormat } from "../../dxbc/index.js";
 import { normalizeBytecodeBytes, readEffectAnalysis } from "./effectAnalysis.js";
 
 import { CarbonWebgpuContainer, looksLikeCarbonWebgpuContainer } from "./carbonWebgpu/CarbonWebgpuContainer.js";

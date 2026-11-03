@@ -13,4 +13,3 @@ export function SchemaBoundError(message, extra = null) {
   return Object.assign(error, extra || {});
 }
 
-export default SchemaBoundError;

@@ -1109,7 +1109,6 @@ function IsCompleteLibraryValue(value)
         && (value.schemaVersion === 13 || Object.hasOwn(value, "documents"));
 }
 
-export default CjsCharacterLibrary;
 
 // These are format-version fields, not generic schema defaults. Raw document
 // values are opaque and must never be traversed as model declarations.
@@ -1204,4 +1203,3 @@ function ValidateKindNames(kind, records, names)
     if (names.some(name => typeof name !== "string" || !name.trim()) || new Set(names).size !== names.length)
         throw new TypeError(`Character ${kind} source names must be nonempty and unique.`);
 }
-

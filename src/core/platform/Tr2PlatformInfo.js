@@ -536,4 +536,3 @@ export class Tr2PlatformInfo
     }
 }
 
-export default Tr2PlatformInfo;

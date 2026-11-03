@@ -54,5 +54,4 @@ export class FsdDictOffsetLookup
     static OFFSET_LOOKUP_RESULT = OFFSET_LOOKUP_RESULT;
 }
 
-export default FsdDictOffsetLookup;
 

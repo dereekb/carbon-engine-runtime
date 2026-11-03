@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsTgaFormat from "../../../../../src/resource/formats/tga/index.js";
+import { CjsTgaFormat } from "../../../../../src/resource/formats/tga/index.js";
 
 /** An RGBA payload in the shape the image formats emit for `rgba`. */
 function payload(width, height, fill)

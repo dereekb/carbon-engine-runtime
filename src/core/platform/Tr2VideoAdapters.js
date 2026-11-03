@@ -239,7 +239,6 @@ export class Tr2VideoAdapters
     }
 }
 
-export default Tr2VideoAdapters;
 
 be.inherit(IRoot)(Tr2VideoAdapters);
 

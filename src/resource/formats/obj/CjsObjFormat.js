@@ -210,5 +210,4 @@ export class CjsObjFormat extends CjsGeometryFormat
 
 }
 
-export default CjsObjFormat;
 

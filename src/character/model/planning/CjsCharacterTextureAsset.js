@@ -46,5 +46,3 @@ export class CjsCharacterTextureAsset
     origin = null;
 
 }
-
-export default CjsCharacterTextureAsset;

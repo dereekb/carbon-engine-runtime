@@ -54,5 +54,3 @@ export class Tr2ShaderPermuteTag extends IRoot
   precompileHint = 0;
 
 }
-
-export default Tr2ShaderPermuteTag;

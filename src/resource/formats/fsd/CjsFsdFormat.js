@@ -113,5 +113,4 @@ export class CjsFsdFormat extends CjsFormat
     });
 }
 
-export default CjsFsdFormat;
 

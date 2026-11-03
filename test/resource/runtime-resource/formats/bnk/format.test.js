@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsBnkFormat, { CjsBnkFormat as NamedCjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
+import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
+import * as CjsBnkFormatModule from "../../../../../src/resource/formats/bnk/index.js";
 
-test("exports default and named CjsBnkFormat", () =>
+test("exports CjsBnkFormat by name only, with no default", () =>
 {
-    assert.equal(CjsBnkFormat, NamedCjsBnkFormat);
+    assert.equal("default" in CjsBnkFormatModule, false);
     assert.deepEqual(CjsBnkFormat.extensions, [ ".bnk" ]);
 });
 

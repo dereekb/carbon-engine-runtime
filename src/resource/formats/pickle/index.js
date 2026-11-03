@@ -1,1 +1,1 @@
-export { CjsPickleFormat as default, CjsPickleFormat } from "./CjsPickleFormat.js";
+export { CjsPickleFormat } from "./CjsPickleFormat.js";

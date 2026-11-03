@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsBnkFormat from "../../../../../src/resource/formats/bnk/index.js";
+import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
 
 function busPayload({
     parentId = 0,

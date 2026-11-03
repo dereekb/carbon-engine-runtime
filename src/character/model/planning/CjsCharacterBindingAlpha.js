@@ -16,5 +16,3 @@ export class CjsCharacterBindingAlpha
     coverage = null;
 
 }
-
-export default CjsCharacterBindingAlpha;

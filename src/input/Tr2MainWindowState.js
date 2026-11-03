@@ -181,4 +181,3 @@ CjsSchema.decorateField(Tr2MainWindowState, "top", type.int32, be.mapAttribute(b
 CjsSchema.decorateField(Tr2MainWindowState, "showState", type.int32, type.enum("trinity.Tr2WindowShowState"), be.mapAttribute(be.READWRITE | be.PERSIST));
 CjsSchema.exposure.define("Tr2MainWindowState")(Tr2MainWindowState);
 
-export default Tr2MainWindowState;

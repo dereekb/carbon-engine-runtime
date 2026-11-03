@@ -47,5 +47,3 @@ export class CjsCharacterResource extends CjsCharacterRecord
     resGender = null;
 
 }
-
-export default CjsCharacterResource;

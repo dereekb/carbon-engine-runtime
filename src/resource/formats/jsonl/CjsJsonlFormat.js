@@ -401,5 +401,4 @@ function AssertJSONValue(value, active = new Set())
     active.delete(value);
 }
 
-export default CjsJsonlFormat;
 

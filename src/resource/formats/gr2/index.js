@@ -7,4 +7,4 @@
  * and publication belong to `CjsResMan`; GPU realization belongs to engines.
  * The package root does not import or register this format.
  */
-export { CjsGr2Format, default } from "./CjsGr2Format.js";
+export { CjsGr2Format } from "./CjsGr2Format.js";

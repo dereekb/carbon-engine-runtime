@@ -1,5 +1,5 @@
 import { clonePlain } from "#utils/object";
-import CjsDxbcFormat from "../../../dxbc/index.js";
+import { CjsDxbcFormat } from "../../../dxbc/index.js";
 import { analyzeRegisterValues, operandRoles } from "./analyzeRegisterValues.js";
 import { buildControlFlow } from "./buildControlFlow.js";
 import { resolveRegisterFlow } from "./resolveRegisterFlow.js";

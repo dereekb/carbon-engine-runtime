@@ -7,7 +7,7 @@
 // D3D11 rules these exercise (Direct3D 11.3 functional specification, UAV
 // access): an out-of-bounds UAV read returns 0; an out-of-bounds UAV write or
 // atomic changes no memory, and a returning atomic then yields 0.
-import CjsWebgpuFormat from "../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../src/resource/formats/webgpu/index.js";
 import { buildWgslBindingPlan } from "../../src/resource/formats/webgpu/core/wgsl/buildWgslBindingPlan.js";
 
 function register(typeName, registerIndex, { componentCount = 4, mask = "", swizzle = "", selected = "" } = {})

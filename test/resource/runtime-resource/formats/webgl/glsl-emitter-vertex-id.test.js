@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
-import CjsDxbcFormat from "../../../../../src/resource/formats/dxbc/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsDxbcFormat } from "../../../../../src/resource/formats/dxbc/index.js";
 import { buildVertexIdCornerDxbc, buildMinimalVertexDxbc, buildIntegerInputMoveDxbc } from "./synthetic.js";
 
 const bytes = buildVertexIdCornerDxbc();

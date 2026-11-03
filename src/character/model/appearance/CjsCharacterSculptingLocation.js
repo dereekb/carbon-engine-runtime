@@ -15,5 +15,3 @@ export class CjsCharacterSculptingLocation extends CjsCharacterRecord
     weightKeyPrefix = "";
 
 }
-
-export default CjsCharacterSculptingLocation;

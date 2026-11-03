@@ -2450,4 +2450,3 @@ export function writeSharedFbx(input, options = {})
     return writeFbx(buildCmfFromShared(unpackSharedTangentsForFbx(input), options), options);
 }
 
-export default writeFbx;

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import "../../../../../npm/dist/blue/blue/values.js";
 import { CjsSchema } from "../../../../../npm/dist/blue/schema/CjsSchema.js";
 
-import CjsBlackFormat, { CjsBlackFormat as NamedCjsBlackFormat } from "../../../../../npm/dist/blue/blue/formats/black/index.js";
+import { CjsBlackFormat } from "../../../../../npm/dist/blue/blue/formats/black/index.js";
+import * as CjsBlackFormatModule from "../../../../../npm/dist/blue/blue/formats/black/index.js";
 
 /** A reader payload: a null-prototype data dictionary. */
 const bag = values => Object.assign(Object.create(null), values);
@@ -52,10 +53,9 @@ test("package root exports the format and object builder", async () =>
 {
     const mod = await import("../../../../../npm/dist/blue/blue/formats/black/index.js");
 
-    assert.deepEqual(Object.keys(mod).sort(), [ "CjsBlackFormat", "CreateBlackObjectBuilder", "default" ]);
-    assert.equal(mod.default, CjsBlackFormat);
+    assert.deepEqual(Object.keys(mod).sort(), [ "CjsBlackFormat", "CreateBlackObjectBuilder" ]);
     assert.equal(mod.CjsBlackFormat, CjsBlackFormat);
-    assert.equal(NamedCjsBlackFormat, CjsBlackFormat);
+    assert.equal("default" in CjsBlackFormatModule, false);
 });
 
 test("reader exposes the standard public profile API", () =>

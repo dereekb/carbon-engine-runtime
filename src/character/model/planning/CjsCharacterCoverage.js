@@ -31,5 +31,3 @@ export class CjsCharacterCoverage
     origin = null;
 
 }
-
-export default CjsCharacterCoverage;

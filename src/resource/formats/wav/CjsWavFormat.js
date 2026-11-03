@@ -199,5 +199,4 @@ export class CjsWavFormat extends CjsFormat
     static extensions = [ ".wav" ];
 }
 
-export default CjsWavFormat;
 

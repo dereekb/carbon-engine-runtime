@@ -31,4 +31,3 @@ export class CjsReader
     }
 }
 
-export default CjsReader;

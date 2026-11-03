@@ -270,5 +270,4 @@ export class CjsJpegFormat extends CjsImageFormat
 }
 
 
-export default CjsJpegFormat;
 

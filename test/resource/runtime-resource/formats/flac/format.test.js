@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsFlacFormat, { CjsFlacFormat as NamedCjsFlacFormat } from "../../../../../src/resource/formats/flac/index.js";
+import { CjsFlacFormat } from "../../../../../src/resource/formats/flac/index.js";
+import * as CjsFlacFormatModule from "../../../../../src/resource/formats/flac/index.js";
 
 test("exports the FLAC metadata/raw contract", () =>
 {
-    assert.equal(CjsFlacFormat, NamedCjsFlacFormat);
+    assert.equal("default" in CjsFlacFormatModule, false);
     assert.deepEqual(CjsFlacFormat.extensions, [ ".flac" ]);
     assert.equal(CjsFlacFormat.getOutputCapability("pcm"), null);
 });

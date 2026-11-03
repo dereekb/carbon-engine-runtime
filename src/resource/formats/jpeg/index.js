@@ -1,1 +1,1 @@
-export { CjsJpegFormat, CjsJpegFormat as default } from "./CjsJpegFormat.js";
+export { CjsJpegFormat } from "./CjsJpegFormat.js";

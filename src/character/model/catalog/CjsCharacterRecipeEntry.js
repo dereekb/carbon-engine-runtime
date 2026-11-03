@@ -79,5 +79,3 @@ export class CjsCharacterRecipeEntry
     patternRotation = 0;
 
 }
-
-export default CjsCharacterRecipeEntry;

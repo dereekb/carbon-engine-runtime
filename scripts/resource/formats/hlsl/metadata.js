@@ -3,7 +3,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import CjsCarbonEffectFormat from "../../../../src/resource/formats/carbonEffect/index.js";
+import { CjsCarbonEffectFormat } from "../../../../src/resource/formats/carbonEffect/index.js";
 
 const COMMAND_METADATA = "metadata";
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsBnkFormat from "../../../../../src/resource/formats/bnk/index.js";
+import { CjsBnkFormat } from "../../../../../src/resource/formats/bnk/index.js";
 import { readWwiseVar } from "../../../../../src/resource/formats/bnk/core/helpers.js";
 
 const SOUND_A = 1001;

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsStlFormat, { CjsStlFormat as NamedCjsStlFormat } from "../../../../../src/resource/formats/stl/index.js";
+import { CjsStlFormat } from "../../../../../src/resource/formats/stl/index.js";
+import * as CjsStlFormatModule from "../../../../../src/resource/formats/stl/index.js";
 
 const TETRA = Object.freeze({
     grannyFileFormatRevision: 0,
@@ -64,7 +65,7 @@ const OPEN_TRIANGLE = Object.freeze({
 
 test("package root exports one public class", () =>
 {
-    assert.equal(CjsStlFormat, NamedCjsStlFormat);
+    assert.equal("default" in CjsStlFormatModule, false);
     assert.equal("json", "json");
     assert.equal("stlJson", "stlJson");
     assert.equal("shared", "shared");

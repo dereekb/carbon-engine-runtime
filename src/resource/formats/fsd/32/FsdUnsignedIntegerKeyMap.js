@@ -128,5 +128,4 @@ export class FsdUnsignedIntegerKeyMap
     static className = "FsdUnsignedIntegerKeyMap";
 }
 
-export default FsdUnsignedIntegerKeyMap;
 

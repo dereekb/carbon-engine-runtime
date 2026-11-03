@@ -1,1 +1,1 @@
-export { CjsWebpFormat, CjsWebpFormat as default } from "./CjsWebpFormat.js";
+export { CjsWebpFormat } from "./CjsWebpFormat.js";

@@ -41,5 +41,3 @@ export class CjsCharacterAppearanceBinding
     origin = null;
 
 }
-
-export default CjsCharacterAppearanceBinding;

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsWebmFormat, { CjsWebmFormat as NamedCjsWebmFormat } from "../../../../../src/resource/formats/webm/index.js";
+import { CjsWebmFormat } from "../../../../../src/resource/formats/webm/index.js";
+import * as CjsWebmFormatModule from "../../../../../src/resource/formats/webm/index.js";
 
-test("exports default and named CjsWebmFormat", () =>
+test("exports CjsWebmFormat by name only, with no default", () =>
 {
-    assert.equal(CjsWebmFormat, NamedCjsWebmFormat);
+    assert.equal("default" in CjsWebmFormatModule, false);
     assert.deepEqual(CjsWebmFormat.extensions, [ ".webm" ]);
 });
 

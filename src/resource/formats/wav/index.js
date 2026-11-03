@@ -1,1 +1,1 @@
-export { CjsWavFormat, CjsWavFormat as default } from "./CjsWavFormat.js";
+export { CjsWavFormat } from "./CjsWavFormat.js";

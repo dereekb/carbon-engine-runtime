@@ -70,5 +70,4 @@ export class BinaryLoaderHelper
     }
 }
 
-export default BinaryLoaderHelper;
 

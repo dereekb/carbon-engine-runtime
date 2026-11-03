@@ -784,5 +784,4 @@ function RequireExtractedInt(value, dictKey)
     return out;
 }
 
-export default FsdSchemaAttributes;
 

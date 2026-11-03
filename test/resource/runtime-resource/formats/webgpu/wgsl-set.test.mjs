@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 
 function emitted(stage, bindings = [])
 {

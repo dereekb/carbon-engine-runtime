@@ -609,7 +609,6 @@ function OmitResourceOptions(options)
     return result;
 }
 
-export default CjsCharacterLibraryBuilder;
 
 // The recovered character texture naming policy is applied at preparation,
 // never by the renderer. A shorthand channel needs an explicitly qualified

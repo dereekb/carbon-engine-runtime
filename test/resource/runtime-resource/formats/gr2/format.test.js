@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsGr2Format, {
-    CjsGr2Format as NamedCjsGr2Format
-} from "../../../../../src/resource/formats/gr2/index.js";
+import { CjsGr2Format } from "../../../../../src/resource/formats/gr2/index.js";
+import * as CjsGr2FormatModule from "../../../../../src/resource/formats/gr2/index.js";
 import { CjsFormat } from "../../../../../src/resource/format/CjsFormat.js";
 import { gr2Type, writeGr2Container } from "../../../../../src/resource/formats/gr2/core/container.js";
 import { GRANNY_MEMBER_TYPES } from "../../../../../src/resource/formats/gr2/core/reader.js";
@@ -65,9 +64,9 @@ function createReferenceChain(length)
     return writeGr2Container(nodeType, root, [ nodeType ]);
 }
 
-test("exports one public class as default and named", () =>
+test("exports one public class, by name only", () =>
 {
-    assert.equal(CjsGr2Format, NamedCjsGr2Format);
+    assert.equal("default" in CjsGr2FormatModule, false);
 });
 
 test("satisfies the runtime-resource format contract", () =>

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsCmfFormat from "../../../../../src/resource/formats/cmf/index.js";
+import { CjsCmfFormat } from "../../../../../src/resource/formats/cmf/index.js";
 import {
     convertGr2Animation,
     convertGr2Skeleton,

@@ -33,5 +33,3 @@ export class CjsCharacterAppearanceLayer
     origin = null;
 
 }
-
-export default CjsCharacterAppearanceLayer;

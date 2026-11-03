@@ -50,5 +50,3 @@ export function createFsdDictOffsetLookup(data, offset, schemaAttributes)
             return new SlowBinarySearchOffsetLookup(footerData, schemaAttributes.dictAttributes.keyFooterSchema, footerOffsetHasSize);
     }
 }
-
-export default createFsdDictOffsetLookup;

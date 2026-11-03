@@ -552,5 +552,4 @@ export class CjsYamlReader extends CjsReader
     }
 }
 
-export default CjsYamlReader;
 

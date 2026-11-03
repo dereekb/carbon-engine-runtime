@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsDdsFormat, { CjsDdsFormat as NamedCjsDdsFormat } from "../../../../../src/resource/formats/dds/index.js";
+import { CjsDdsFormat } from "../../../../../src/resource/formats/dds/index.js";
+import * as CjsDdsFormatModule from "../../../../../src/resource/formats/dds/index.js";
 
-test("exports default and named CjsDdsFormat", () =>
+test("exports CjsDdsFormat by name only, with no default", () =>
 {
-    assert.equal(CjsDdsFormat, NamedCjsDdsFormat);
+    assert.equal("default" in CjsDdsFormatModule, false);
     assert.deepEqual(CjsDdsFormat.extensions, [ ".dds" ]);
 });
 

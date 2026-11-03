@@ -66,5 +66,3 @@ export function detailMapTransformFor(plan, layoutKey)
 {
     return textureArrayTransformFor(plan, layoutKey);
 }
-
-export default recogniseDetailMapFamily;

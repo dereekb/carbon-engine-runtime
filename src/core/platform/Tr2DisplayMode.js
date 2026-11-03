@@ -93,7 +93,6 @@ export class Tr2DisplayMode extends IRoot
     }
 }
 
-export default Tr2DisplayMode;
 
 be.inherit(IRoot)(Tr2DisplayMode);
 

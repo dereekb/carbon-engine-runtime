@@ -307,4 +307,3 @@ export function disassembleInstructions(decoder, options = {})
     return lines.join("\n");
 }
 
-export default disassembleInstructions;

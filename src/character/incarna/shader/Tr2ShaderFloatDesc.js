@@ -45,5 +45,3 @@ export class Tr2ShaderFloatDesc extends IRoot
   section = "";
 
 }
-
-export default Tr2ShaderFloatDesc;

@@ -84,7 +84,6 @@ export class CjsRedFormat extends CjsFormat
     });
 }
 
-export default CjsRedFormat;
 
 CjsSchema.meta.define("CjsRedFormat")(CjsRedFormat);
 

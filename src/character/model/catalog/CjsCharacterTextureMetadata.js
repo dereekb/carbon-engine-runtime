@@ -209,5 +209,3 @@ function RequireDimension(value, name)
     }
     return result;
 }
-
-export default CjsCharacterTextureMetadata;

@@ -39,5 +39,3 @@ export class CjsCharacterUnresolvedRelationship
     targetID = "";
 
 }
-
-export default CjsCharacterUnresolvedRelationship;

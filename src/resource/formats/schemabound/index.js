@@ -1,1 +1,1 @@
-export { CjsSchemaBoundFormat as default, CjsSchemaBoundFormat } from "./CjsSchemaBoundFormat.js";
+export { CjsSchemaBoundFormat } from "./CjsSchemaBoundFormat.js";

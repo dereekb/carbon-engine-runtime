@@ -1,1 +1,1 @@
-export { CjsResourceGroupFormat, CjsResourceGroupFormat as default } from "./CjsResourceGroupFormat.js";
+export { CjsResourceGroupFormat } from "./CjsResourceGroupFormat.js";

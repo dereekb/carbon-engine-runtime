@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import CjsJsonlFormat, {
-    CjsJsonlFormat as NamedCjsJsonlFormat,
-} from "../../../../../npm/dist/resource/formats/jsonl/index.js";
+import { CjsJsonlFormat } from "../../../../../npm/dist/resource/formats/jsonl/index.js";
+import * as CjsJsonlFormatModule from "../../../../../npm/dist/resource/formats/jsonl/index.js";
 
 const SAMPLE = [
     "{\"_key\":\"sde\",\"buildNumber\":3489895}",
@@ -17,7 +16,7 @@ test("jsonl reads one record per non-blank line, in order", () =>
 {
     const records = CjsJsonlFormat.read(SAMPLE);
 
-    assert.equal(NamedCjsJsonlFormat, CjsJsonlFormat);
+    assert.equal("default" in CjsJsonlFormatModule, false);
     assert.deepEqual(records, [
         { _key: "sde", buildNumber: 3489895 },
         { typeID: 587, name: "Rifter" },

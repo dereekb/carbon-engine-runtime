@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsGifFormat, { CjsGifFormat as NamedCjsGifFormat } from "../../../../../src/resource/formats/gif/index.js";
+import { CjsGifFormat } from "../../../../../src/resource/formats/gif/index.js";
+import * as CjsGifFormatModule from "../../../../../src/resource/formats/gif/index.js";
 
 test("exports GIF reader metadata and output contract", () =>
 {
-    assert.equal(CjsGifFormat, NamedCjsGifFormat);
+    assert.equal("default" in CjsGifFormatModule, false);
     assert.deepEqual(CjsGifFormat.extensions, [ ".gif" ]);
     assert.deepEqual(Object.values(CjsGifFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), [ "image", "rgba" ]);
 });

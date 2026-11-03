@@ -854,5 +854,3 @@ export class CjsIncarnaEmulator
   }
 
 }
-
-export default CjsIncarnaEmulator;

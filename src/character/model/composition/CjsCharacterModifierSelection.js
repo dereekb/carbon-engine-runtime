@@ -18,5 +18,3 @@ export class CjsCharacterModifierSelection
     paperdollResourceVariation = 0;
 
 }
-
-export default CjsCharacterModifierSelection;

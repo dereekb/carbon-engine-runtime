@@ -429,5 +429,3 @@ export class CarbonWebgpuContainer
         };
     }
 }
-
-export default CarbonWebgpuContainer;

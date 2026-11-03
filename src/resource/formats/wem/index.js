@@ -1,1 +1,1 @@
-export { CjsWemFormat, CjsWemFormat as default } from "./CjsWemFormat.js";
+export { CjsWemFormat } from "./CjsWemFormat.js";

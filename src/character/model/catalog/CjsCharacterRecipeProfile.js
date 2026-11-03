@@ -29,5 +29,3 @@ export class CjsCharacterRecipeProfile extends CjsCharacterRecord
     entries = [];
 
 }
-
-export default CjsCharacterRecipeProfile;

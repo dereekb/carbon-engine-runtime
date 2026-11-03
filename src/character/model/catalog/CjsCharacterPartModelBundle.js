@@ -37,5 +37,3 @@ export class CjsCharacterPartModelBundle
     modelFamilyOrigin = "";
 
 }
-
-export default CjsCharacterPartModelBundle;

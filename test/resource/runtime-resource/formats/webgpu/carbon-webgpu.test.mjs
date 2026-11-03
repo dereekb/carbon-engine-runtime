@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 
 
 import { readContainer } from "./support/readContainer.js";
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import { validateEffectContainer } from "../../../../../src/resource/formats/webgpu/core/carbonWebgpu/validateContainer.js";
 import { buildEffectAnalysis } from "../../../../../src/resource/formats/webgpu/core/helpers.js";
 import {

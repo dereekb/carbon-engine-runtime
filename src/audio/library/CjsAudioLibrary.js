@@ -190,6 +190,5 @@ export class CjsAudioLibrary
     }
 }
 
-export default CjsAudioLibrary;
 
 CjsSchema.meta.define("CjsAudioLibrary")(CjsAudioLibrary);

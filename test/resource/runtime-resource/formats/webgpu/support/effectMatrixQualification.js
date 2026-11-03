@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import CjsCarbonEffectFormat from "../../../../../../src/resource/formats/carbonEffect/index.js";
-import CjsDxbcFormat from "../../../../../../src/resource/formats/dxbc/index.js";
-import CjsWebgpuFormat from "../../../../../../src/resource/formats/webgpu/index.js";
+import { CjsCarbonEffectFormat } from "../../../../../../src/resource/formats/carbonEffect/index.js";
+import { CjsDxbcFormat } from "../../../../../../src/resource/formats/dxbc/index.js";
+import { CjsWebgpuFormat } from "../../../../../../src/resource/formats/webgpu/index.js";
 import { buildResourceTransformPlan } from "../../../../../../src/resource/formats/webgpu/core/wgsl/buildResourceTransformPlan.js";
 import {
     isParticleClearEffectCandidate,

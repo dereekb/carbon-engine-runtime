@@ -425,4 +425,3 @@ export class CjsWebgpuFormat extends CjsFormat
     static packageVersion = FORMAT_WEBGPU_PACKAGE_VERSION;
 }
 
-export default CjsWebgpuFormat;

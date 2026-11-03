@@ -80,5 +80,3 @@ export function buildGlslEffectContainer(
         options
     );
 }
-
-export default buildGlslEffectContainer;

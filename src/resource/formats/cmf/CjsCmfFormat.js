@@ -527,5 +527,4 @@ export class CjsCmfFormat extends CjsGeometryFormat
     static extensions = [ ".cmf" ];
 }
 
-export default CjsCmfFormat;
 

@@ -26,5 +26,3 @@ export class CjsCharacterAppearanceDiagnostic
     origin = null;
 
 }
-
-export default CjsCharacterAppearanceDiagnostic;

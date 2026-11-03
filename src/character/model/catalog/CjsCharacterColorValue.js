@@ -11,5 +11,3 @@ export class CjsCharacterColorValue
     value = vec4.fromValues(0, 0, 0, 1);
 
 }
-
-export default CjsCharacterColorValue;

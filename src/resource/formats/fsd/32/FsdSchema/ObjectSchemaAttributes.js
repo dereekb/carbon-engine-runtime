@@ -31,5 +31,4 @@ export class ObjectSchemaAttributes
     static className = "ObjectSchemaAttributes";
 }
 
-export default ObjectSchemaAttributes;
 

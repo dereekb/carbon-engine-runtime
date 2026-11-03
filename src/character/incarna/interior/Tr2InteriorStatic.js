@@ -440,5 +440,3 @@ export class Tr2InteriorStatic extends IRoot
   }
 
 }
-
-export default Tr2InteriorStatic;

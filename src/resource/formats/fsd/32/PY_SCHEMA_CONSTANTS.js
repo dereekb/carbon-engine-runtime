@@ -92,5 +92,4 @@ export class PY_SCHEMA_CONSTANTS
     static LIST_LENGTH = "length";
 }
 
-export default PY_SCHEMA_CONSTANTS;
 

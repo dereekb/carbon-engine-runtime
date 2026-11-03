@@ -203,7 +203,6 @@ export class Tr2MouseCursor
     }
 }
 
-export default Tr2MouseCursor;
 
 be.inherit(IRoot)(Tr2MouseCursor);
 

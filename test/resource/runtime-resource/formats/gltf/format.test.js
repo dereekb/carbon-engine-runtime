@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsGltfFormat, { CjsGltfFormat as NamedFormat } from "../../../../../src/resource/formats/gltf/index.js";
-import CjsCmfFormat from "../../../../../src/resource/formats/cmf/index.js";
+import { CjsGltfFormat } from "../../../../../src/resource/formats/gltf/index.js";
+import * as CjsGltfFormatModule from "../../../../../src/resource/formats/gltf/index.js";
+import { CjsCmfFormat } from "../../../../../src/resource/formats/cmf/index.js";
 
 function align4(value)
 {
@@ -244,8 +245,8 @@ function buildGlb(gltf, binary)
     return glb;
 }
 
-test("default export and named export are the same CjsGltfFormat class", () => {
-    assert.equal(CjsGltfFormat, NamedFormat);
+test("CjsGltfFormat is a named export with no default", () => {
+    assert.equal("default" in CjsGltfFormatModule, false);
     assert.equal("json", "json");
     assert.equal("gltfJson", "gltfJson");
     assert.equal("shared", "shared");

@@ -1,1 +1,1 @@
-export { CjsSqliteFormat as default, CjsSqliteFormat } from "./CjsSqliteFormat.js";
+export { CjsSqliteFormat } from "./CjsSqliteFormat.js";

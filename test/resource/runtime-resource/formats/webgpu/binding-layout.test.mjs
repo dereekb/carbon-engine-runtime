@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import { lowerComputeBindingLayout } from "../../../../../src/resource/formats/webgpu/core/wgsl/lowerComputeProgram.js";
 import { lowerBindingLayout } from "../../../../../src/resource/formats/webgpu/core/wgsl/lowerBindingLayout.js";
 

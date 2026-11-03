@@ -11,5 +11,3 @@ export class CjsCharacterRecord
     recordID = "";
 
 }
-
-export default CjsCharacterRecord;

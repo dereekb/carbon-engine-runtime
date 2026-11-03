@@ -22,5 +22,3 @@ export class CjsCharacterSculptSelection
     sculptingLocation = null;
 
 }
-
-export default CjsCharacterSculptSelection;

@@ -31,5 +31,3 @@ export class CjsCharacterDefinition extends CjsCharacterRecord
     sourceText = "";
 
 }
-
-export default CjsCharacterDefinition;

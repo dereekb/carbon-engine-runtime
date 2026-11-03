@@ -60,5 +60,3 @@ export class CjsCharacterPartType extends CjsCharacterRecord
     partSources = [];
 
 }
-
-export default CjsCharacterPartType;

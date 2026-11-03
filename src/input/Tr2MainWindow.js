@@ -734,7 +734,6 @@ function sanitizeDimension(value, maximum, minimum)
     return Math.min(maximum, Math.max(minimum, requested || maximum));
 }
 
-export default Tr2MainWindow;
 
 be.inherit(IRoot, IBlueEvents)(Tr2MainWindow);
 

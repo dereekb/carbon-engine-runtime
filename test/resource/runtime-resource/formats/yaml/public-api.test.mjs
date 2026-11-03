@@ -2,14 +2,14 @@ import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import CjsYamlFormat, { CjsYamlFormat as NamedCjsYamlFormat } from "../../../../../src/resource/formats/yaml/index.js";
+import { CjsYamlFormat } from "../../../../../src/resource/formats/yaml/index.js";
+import * as CjsYamlFormatModule from "../../../../../src/resource/formats/yaml/index.js";
 
 test("package root exports one public format class", async () =>
 {
     const mod = await import("../../../../../src/resource/formats/yaml/index.js");
-    assert.deepEqual(Object.keys(mod).sort(), [ "CjsYamlFormat", "default" ]);
-    assert.equal(mod.default, CjsYamlFormat);
-    assert.equal(NamedCjsYamlFormat, CjsYamlFormat);
+    assert.deepEqual(Object.keys(mod).sort(), [ "CjsYamlFormat" ]);
+    assert.equal("default" in CjsYamlFormatModule, false);
 });
 
 test("format facade exposes the standard reusable API", () =>

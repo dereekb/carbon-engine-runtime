@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import CjsSchemaBoundFormat, {
-  CjsSchemaBoundFormat as NamedCjsSchemaBoundFormat
-} from "../../../../../src/resource/formats/schemabound/index.js";
+import { CjsSchemaBoundFormat } from "../../../../../src/resource/formats/schemabound/index.js";
+import * as CjsSchemaBoundFormatModule from "../../../../../src/resource/formats/schemabound/index.js";
 
 /**
  * These containers are laid out byte by byte rather than produced by an encoder.
@@ -52,9 +51,8 @@ const KEY_FOOTER = {
 test("package subpath exports one public class", async () => {
   const module = await import("../../../../../src/resource/formats/schemabound/index.js");
 
-  assert.deepEqual(Object.keys(module).sort(), [ "CjsSchemaBoundFormat", "default" ]);
-  assert.equal(module.default, CjsSchemaBoundFormat);
-  assert.equal(NamedCjsSchemaBoundFormat, CjsSchemaBoundFormat);
+  assert.deepEqual(Object.keys(module).sort(), [ "CjsSchemaBoundFormat" ]);
+  assert.equal("default" in CjsSchemaBoundFormatModule, false);
 });
 
 test("the offset table shrinks when an optional is absent", () => {

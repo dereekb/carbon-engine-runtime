@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import CjsWebglFormat from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 import {
     inspectGlslEffectContainer
 } from "../../../../../src/resource/formats/webgl/core/inspectGlslEffectContainer.js";

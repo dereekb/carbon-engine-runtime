@@ -208,5 +208,4 @@ export class CjsOggFormat extends CjsFormat
     static extensions = [ ".ogg", ".oga", ".ogv" ];
 }
 
-export default CjsOggFormat;
 

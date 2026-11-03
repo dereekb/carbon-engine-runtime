@@ -259,5 +259,4 @@ export class CjsYamlFormat extends CjsFormat
     });
 }
 
-export default CjsYamlFormat;
 

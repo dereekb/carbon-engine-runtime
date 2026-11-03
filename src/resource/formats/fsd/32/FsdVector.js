@@ -204,5 +204,4 @@ export class FsdVector
     static VectorType = VectorType;
 }
 
-export default FsdVector;
 

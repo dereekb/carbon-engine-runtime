@@ -51,5 +51,3 @@ export class CjsCharacterMaterialProfile extends CjsCharacterRecord
     patternOrigin = null;
 
 }
-
-export default CjsCharacterMaterialProfile;

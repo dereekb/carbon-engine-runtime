@@ -45,9 +45,9 @@ test("the core subpaths are import-inert and share package identities", () =>
                     throw new Error("Shared audio identity mismatch: " + name);
             }
 
-            if (core.default !== core.CjsLibrary)
+            if ("default" in core || typeof core.CjsLibrary !== "function")
             {
-                throw new Error("Core default export must be CjsLibrary");
+                throw new Error("Core exports CjsLibrary by name only, with no default");
             }
             if (root.CjsLibrary !== core.CjsLibrary)
             {

@@ -421,4 +421,3 @@ export class CjsCarbonEffectWriter
 }
 
 export { CARBON_EFFECT_RECORD_BYTES, CARBON_EFFECT_SOURCE_HASH_BYTES };
-export default CjsCarbonEffectWriter;

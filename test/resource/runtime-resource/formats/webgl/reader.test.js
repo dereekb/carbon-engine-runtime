@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import CjsWebglFormat, { CjsWebglFormat as NamedCjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
+import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
+import * as CjsWebglFormatModule from "../../../../../src/resource/formats/webgl/index.js";
 import { buildMinimalStagedEffectBytes } from "./synthetic.js";
 
 /**
@@ -25,10 +26,9 @@ test("package root exports one public class", async () =>
 {
     const mod = await import("../../../../../src/resource/formats/webgl/index.js");
 
-    assert.deepEqual(Object.keys(mod).sort(), [ "CjsWebglFormat", "default" ].sort());
-    assert.equal(mod.default, CjsWebglFormat);
+    assert.deepEqual(Object.keys(mod).sort(), [ "CjsWebglFormat" ].sort());
     assert.equal(mod.CjsWebglFormat, CjsWebglFormat);
-    assert.equal(NamedCjsWebglFormat, CjsWebglFormat);
+    assert.equal("default" in CjsWebglFormatModule, false);
 });
 
 test("static read and instance Read share one code path", () =>

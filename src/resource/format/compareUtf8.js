@@ -34,4 +34,3 @@ export function compareUtf8(left, right)
     return a.length - b.length;
 }
 
-export default compareUtf8;

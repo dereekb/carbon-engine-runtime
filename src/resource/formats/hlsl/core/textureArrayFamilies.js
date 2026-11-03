@@ -293,5 +293,3 @@ export function textureArrayTransformFor(plan, layoutKey)
         }))
     };
 }
-
-export default recogniseTextureArrayFamilies;

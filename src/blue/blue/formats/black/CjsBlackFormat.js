@@ -347,5 +347,4 @@ function getBlackProbeView(input)
     return new DataView(input.buffer, input.byteOffset, input.byteLength);
 }
 
-export default CjsBlackFormat;
 

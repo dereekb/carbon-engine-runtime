@@ -3,7 +3,7 @@
  *
  * How this module works is in ../README.md.
  */
-export { CjsFsd32Format, default } from "./CjsFsd32Format.js";
+export { CjsFsd32Format } from "./CjsFsd32Format.js";
 export { BinaryLoader } from "./BinaryLoader.js";
 export { BinaryLoaderHelper } from "./BinaryLoaderHelper.js";
 export { FsdObject } from "./FsdObject.js";

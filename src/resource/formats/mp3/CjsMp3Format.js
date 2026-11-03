@@ -192,5 +192,4 @@ export class CjsMp3Format extends CjsFormat
     static extensions = [ ".mp3" ];
 }
 
-export default CjsMp3Format;
 

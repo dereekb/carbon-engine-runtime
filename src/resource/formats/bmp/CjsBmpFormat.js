@@ -168,4 +168,3 @@ export class CjsBmpFormat extends CjsImageFormat
     });
 }
 
-export default CjsBmpFormat;

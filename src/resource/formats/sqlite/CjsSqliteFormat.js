@@ -307,5 +307,4 @@ function Normalize(input) {
   throw SqliteError("A SQLite container must be supplied as bytes.");
 }
 
-export default CjsSqliteFormat;
 

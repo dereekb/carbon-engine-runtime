@@ -11,4 +11,4 @@
  *
  * How this module works is in README.md in this folder.
  */
-export { CjsWebgpuFormat, default } from "./CjsWebgpuFormat.js";
+export { CjsWebgpuFormat } from "./CjsWebgpuFormat.js";

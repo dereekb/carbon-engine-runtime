@@ -1342,6 +1342,5 @@ function AddDiagnostic(plan, code, message, severity, origin = null)
     return plan.CreateDiagnostic({ code, message, severity, origin });
 }
 
-export default CjsCharacterAppearanceResolver;
 
 CjsSchema.meta.define("CjsCharacterAppearanceResolver")(CjsCharacterAppearanceResolver);

@@ -60,5 +60,3 @@ export class Tr2HighLevelShader extends IRoot
   parameterDescriptions = [];
 
 }
-
-export default Tr2HighLevelShader;

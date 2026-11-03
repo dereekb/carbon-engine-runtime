@@ -15,5 +15,3 @@ export class CjsCharacterColorName extends CjsCharacterRecord
     hairColor = 0;
 
 }
-
-export default CjsCharacterColorName;

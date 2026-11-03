@@ -16,5 +16,3 @@ export class CjsCharacterAppearanceSelection
     origin = null;
 
 }
-
-export default CjsCharacterAppearanceSelection;

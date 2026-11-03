@@ -10,4 +10,3 @@ export const ResourceHandlerMode = Object.freeze({
   OBJECT: "object"
 });
 
-export default ResourceHandlerMode;

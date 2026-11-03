@@ -19,5 +19,4 @@ export class FooterOffsetSize
     static className = "FooterOffsetSize";
 }
 
-export default FooterOffsetSize;
 

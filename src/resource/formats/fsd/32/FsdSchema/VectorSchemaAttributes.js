@@ -18,5 +18,4 @@ export class VectorSchemaAttributes
     static className = "VectorSchemaAttributes";
 }
 
-export default VectorSchemaAttributes;
 

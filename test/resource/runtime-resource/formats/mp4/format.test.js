@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsMp4Format, { CjsMp4Format as NamedCjsMp4Format } from "../../../../../src/resource/formats/mp4/index.js";
+import { CjsMp4Format } from "../../../../../src/resource/formats/mp4/index.js";
+import * as CjsMp4FormatModule from "../../../../../src/resource/formats/mp4/index.js";
 
-test("exports default and named CjsMp4Format", () =>
+test("exports CjsMp4Format by name only, with no default", () =>
 {
-    assert.equal(CjsMp4Format, NamedCjsMp4Format);
+    assert.equal("default" in CjsMp4FormatModule, false);
     assert.deepEqual(CjsMp4Format.extensions, [ ".mp4", ".m4v", ".m4a" ]);
 });
 

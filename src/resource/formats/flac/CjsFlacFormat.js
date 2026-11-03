@@ -171,5 +171,4 @@ export class CjsFlacFormat extends CjsFormat
     static extensions = [ ".flac" ];
 }
 
-export default CjsFlacFormat;
 

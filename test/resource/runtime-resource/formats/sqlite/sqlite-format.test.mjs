@@ -5,9 +5,8 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 
-import CjsSqliteFormat, {
-  CjsSqliteFormat as NamedCjsSqliteFormat
-} from "../../../../../src/resource/formats/sqlite/index.js";
+import { CjsSqliteFormat } from "../../../../../src/resource/formats/sqlite/index.js";
+import * as CjsSqliteFormatModule from "../../../../../src/resource/formats/sqlite/index.js";
 
 /**
  * Builds a real SQLite container from statements, and returns its bytes.
@@ -66,9 +65,8 @@ function Oracle(path, bigints = false) {
 test("package subpath exports one public sqlite format class", async () => {
   const mod = await import("../../../../../src/resource/formats/sqlite/index.js");
 
-  assert.deepEqual(Object.keys(mod).sort(), [ "CjsSqliteFormat", "default" ]);
-  assert.equal(mod.default, CjsSqliteFormat);
-  assert.equal(NamedCjsSqliteFormat, CjsSqliteFormat);
+  assert.deepEqual(Object.keys(mod).sort(), [ "CjsSqliteFormat" ]);
+  assert.equal("default" in CjsSqliteFormatModule, false);
 });
 
 test("recognises a container by signature and refuses anything else", () => {

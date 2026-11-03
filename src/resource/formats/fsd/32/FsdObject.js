@@ -189,6 +189,5 @@ function ThrowUnlistedOptional(attributeName, path)
     throw error;
 }
 
-export default FsdObject;
 
 CjsSchema.exposure.define("FsdObject")(FsdObject);

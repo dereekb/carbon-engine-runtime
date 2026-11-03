@@ -36,5 +36,3 @@ export class CjsCharacterMorphTargetWeight
     origin = null;
 
 }
-
-export default CjsCharacterMorphTargetWeight;

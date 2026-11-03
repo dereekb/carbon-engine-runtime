@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MeshoptEncoder } from "meshoptimizer/encoder";
-import CjsCmfFormat, { CjsCmfFormat as NamedCjsCmfFormat } from "../../../../../src/resource/formats/cmf/index.js";
+import { CjsCmfFormat } from "../../../../../src/resource/formats/cmf/index.js";
+import * as CjsCmfFormatModule from "../../../../../src/resource/formats/cmf/index.js";
 import { crc32 } from "../../../../../src/resource/formats/cmf/core/binary.js";
 
-test("exports default and named CjsCmfFormat", () =>
+test("exports CjsCmfFormat by name only, with no default", () =>
 {
-    assert.equal(CjsCmfFormat, NamedCjsCmfFormat);
+    assert.equal("default" in CjsCmfFormatModule, false);
     assert.deepEqual(Object.values(CjsCmfFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), [ "cmf", "gr2", "shared" ]);
     assert.deepEqual(Object.values(CjsCmfFormat.outputs).filter(entry => entry.role === "debug").map(entry => entry.output), [ "json", "cmfJson", "raw" ]);
 });

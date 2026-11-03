@@ -259,5 +259,3 @@ function RequireDocumentRecord(documentName, record)
     }
     return record;
 }
-
-export default CjsCharacterLibraryDocuments;

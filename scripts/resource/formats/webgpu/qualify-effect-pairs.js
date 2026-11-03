@@ -3,8 +3,8 @@ import { readFile, readdir } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 
 import { readEffectAnalysis } from "../../../../src/resource/formats/webgpu/core/effectAnalysis.js";
-import CjsFormatDxbc from "../../../../src/resource/formats/dxbc/index.js";
-import CjsFormatWebgpu from "../../../../src/resource/formats/webgpu/index.js";
+import { CjsDxbcFormat as CjsFormatDxbc } from "../../../../src/resource/formats/dxbc/index.js";
+import { CjsWebgpuFormat as CjsFormatWebgpu } from "../../../../src/resource/formats/webgpu/index.js";
 
 const summaryOnly = process.argv.includes("--summary");
 const [ dx11Argument, dx12Argument, ...requestedPaths ] = process.argv.slice(2).filter((argument) => argument !== "--summary");

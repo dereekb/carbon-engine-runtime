@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsWemFormat, { CjsWemFormat as NamedCjsWemFormat } from "../../../../../src/resource/formats/wem/index.js";
+import { CjsWemFormat } from "../../../../../src/resource/formats/wem/index.js";
+import * as CjsWemFormatModule from "../../../../../src/resource/formats/wem/index.js";
 import { BitReader, OggPageWriter, ilog, oggChecksum } from "../../../../../src/resource/formats/wem/core/bitStream.js";
 import { bookMaptype1Quantvals, parseCodebookLibrary, rebuildCodebook } from "../../../../../src/resource/formats/wem/core/codebookLibrary.js";
 import { getPackedCodebooksAotuv603 } from "../../../../../src/resource/formats/wem/core/packedCodebooksAotuv603.js";
@@ -30,9 +31,9 @@ function withPtadpcm(run)
     }
 }
 
-test("exports default and named CjsWemFormat", () =>
+test("exports CjsWemFormat by name only, with no default", () =>
 {
-    assert.equal(CjsWemFormat, NamedCjsWemFormat);
+    assert.equal("default" in CjsWemFormatModule, false);
     assert.deepEqual(CjsWemFormat.extensions, [ ".wem" ]);
 });
 

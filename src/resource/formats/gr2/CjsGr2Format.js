@@ -480,6 +480,3 @@ export class CjsGr2Format extends CjsGeometryFormat
     }
 
 }
-
-export default CjsGr2Format;
-

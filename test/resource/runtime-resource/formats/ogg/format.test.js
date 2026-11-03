@@ -4,14 +4,15 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import CjsOggFormat, { CjsOggFormat as NamedCjsOggFormat } from "../../../../../src/resource/formats/ogg/index.js";
+import { CjsOggFormat } from "../../../../../src/resource/formats/ogg/index.js";
+import * as CjsOggFormatModule from "../../../../../src/resource/formats/ogg/index.js";
 import { dctIv, imdct, vorbisWindowSlope } from "../../../../../src/resource/formats/ogg/core/imdct.js";
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "fixtures", "ogg");
 
 test("exports the Ogg reader with Vorbis PCM decode", () =>
 {
-    assert.equal(CjsOggFormat, NamedCjsOggFormat);
+    assert.equal("default" in CjsOggFormatModule, false);
     assert.deepEqual(CjsOggFormat.extensions, [ ".ogg", ".oga", ".ogv" ]);
     assert.deepEqual(Object.values(CjsOggFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), [ "pcm", "audio" ]);
 });

@@ -27,5 +27,3 @@ export class Tr2ShaderManager extends IRoot
   shaderLibrary = [];
 
 }
-
-export default Tr2ShaderManager;

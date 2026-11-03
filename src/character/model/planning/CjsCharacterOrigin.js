@@ -36,5 +36,3 @@ export class CjsCharacterOrigin
     rule = "";
 
 }
-
-export default CjsCharacterOrigin;

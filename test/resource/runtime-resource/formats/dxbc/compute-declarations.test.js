@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import CjsDxbcFormat from "../../../../../src/resource/formats/dxbc/CjsDxbcFormat.js";
+import { CjsDxbcFormat } from "../../../../../src/resource/formats/dxbc/CjsDxbcFormat.js";
 import { DxbcContainer } from "../../../../../src/resource/formats/dxbc/core/DxbcContainer.js";
 import { DxbcInstructionDecoder } from "../../../../../src/resource/formats/dxbc/core/decoder.js";
 import { DxbcShaderProgram } from "../../../../../src/resource/formats/dxbc/core/DxbcShaderProgram.js";

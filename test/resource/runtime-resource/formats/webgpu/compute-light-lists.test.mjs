@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import CjsWebgpuFormat from "../../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat } from "../../../../../src/resource/formats/webgpu/index.js";
 import { readEffectAnalysis } from "../../../../../src/resource/formats/webgpu/core/effectAnalysis.js";
 import { buildWgslBindingPlan } from "../../../../../src/resource/formats/webgpu/core/wgsl/buildWgslBindingPlan.js";
 import {

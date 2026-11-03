@@ -126,7 +126,6 @@ export class Tr2VideoAdapter extends IRoot
     }
 }
 
-export default Tr2VideoAdapter;
 
 be.inherit(IRoot)(Tr2VideoAdapter);
 

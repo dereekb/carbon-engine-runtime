@@ -258,5 +258,3 @@ export function buildGlslBackendBodySet(input)
         bodies: emittedBodies
     };
 }
-
-export default buildGlslBackendBodySet;

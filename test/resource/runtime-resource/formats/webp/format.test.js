@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsWebpFormat, { CjsWebpFormat as NamedCjsWebpFormat } from "../../../../../src/resource/formats/webp/index.js";
+import { CjsWebpFormat } from "../../../../../src/resource/formats/webp/index.js";
+import * as CjsWebpFormatModule from "../../../../../src/resource/formats/webp/index.js";
 
 test("exports the WEBP reader and metadata-only contract", () =>
 {
-    assert.equal(CjsWebpFormat, NamedCjsWebpFormat);
+    assert.equal("default" in CjsWebpFormatModule, false);
     assert.deepEqual(CjsWebpFormat.extensions, [ ".webp" ]);
     assert.deepEqual(Object.values(CjsWebpFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), []);
 });

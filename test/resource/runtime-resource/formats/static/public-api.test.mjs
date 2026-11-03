@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import CjsStaticFormat, {
-  CJS_STATIC_FAMILIES,
-  CjsStaticFormat as NamedCjsStaticFormat
-} from "../../../../../src/resource/formats/static/index.js";
+import { CjsStaticFormat, CJS_STATIC_FAMILIES } from "../../../../../src/resource/formats/static/index.js";
+import * as CjsStaticFormatModule from "../../../../../src/resource/formats/static/index.js";
 
 const SQLITE_HEADER = "SQLite format 3\0";
 
@@ -39,11 +37,9 @@ test("the subpath exports the identification format and the container readers", 
     "CjsStaticFormat",
     "ReadEmbeddedSchemaContainer",
     "ReadSchemaBoundContainer",
-    "ReadStaticContainer",
-    "default"
+    "ReadStaticContainer"
   ]);
-  assert.equal(mod.default, CjsStaticFormat);
-  assert.equal(NamedCjsStaticFormat, CjsStaticFormat);
+  assert.equal("default" in CjsStaticFormatModule, false);
 });
 
 test("identifies a SQLite container and now decodes it", () =>

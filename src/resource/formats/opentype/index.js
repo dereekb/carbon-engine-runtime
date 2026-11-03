@@ -1,1 +1,1 @@
-export { CjsOpenTypeFormat, default } from "./CjsOpenTypeFormat.js";
+export { CjsOpenTypeFormat } from "./CjsOpenTypeFormat.js";

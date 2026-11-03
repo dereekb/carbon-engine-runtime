@@ -61,5 +61,3 @@ export class CjsCharacterCompositionPass
     origin = null;
 
 }
-
-export default CjsCharacterCompositionPass;

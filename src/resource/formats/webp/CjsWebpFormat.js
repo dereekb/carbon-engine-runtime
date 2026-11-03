@@ -218,5 +218,4 @@ export class CjsWebpFormat extends CjsFormat
     static extensions = [ ".webp" ];
 }
 
-export default CjsWebpFormat;
 

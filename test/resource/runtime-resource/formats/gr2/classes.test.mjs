@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import CjsGr2Format, { CjsGr2Format as NamedCjsGr2Format } from "../../../../../src/resource/formats/gr2/index.js";
+import { CjsGr2Format } from "../../../../../src/resource/formats/gr2/index.js";
+import * as CjsGr2FormatModule from "../../../../../src/resource/formats/gr2/index.js";
 import { buildCmfFromRaw } from "../../../../../src/resource/formats/gr2/core/targets.js";
 import { decompressAnimationCurves } from "../../../../../src/resource/formats/gr2/core/curves.js";
 import { CLASS_KEYS, emitJson } from "../../../../../src/resource/formats/gr2/core/json.js";
@@ -408,10 +409,9 @@ test("formats/gr2 subpath exports the runtime class and the migrated engine", as
 
     // One public class, like every other format: no internal engine class leaks
     // out of the barrel.
-    assert.deepEqual(Object.keys(mod).sort(), [ "CjsGr2Format", "default" ]);
-    assert.equal(mod.default, CjsGr2Format);
+    assert.deepEqual(Object.keys(mod).sort(), [ "CjsGr2Format" ]);
     assert.equal(mod.CjsGr2Format, CjsGr2Format);
-    assert.equal(NamedCjsGr2Format, CjsGr2Format);
+    assert.equal("default" in CjsGr2FormatModule, false);
 });
 
 test("curves module exports decoded curve helpers", async () =>

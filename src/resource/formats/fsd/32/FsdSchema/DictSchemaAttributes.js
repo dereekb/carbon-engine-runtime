@@ -34,5 +34,4 @@ export class DictSchemaAttributes
     static className = "DictSchemaAttributes";
 }
 
-export default DictSchemaAttributes;
 

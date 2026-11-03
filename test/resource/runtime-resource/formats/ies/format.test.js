@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import DefaultFormat, { CjsIESFormat } from "@carbonenginejs/runtime/resource/formats/ies";
+import { CjsIESFormat as DefaultFormat, CjsIESFormat } from "@carbonenginejs/runtime/resource/formats/ies";
 import { CjsFormat } from "../../../../../src/resource/format/CjsFormat.js";
 
 // Synthetic two-plane photometry: deliberately unequal slices and a multiplier

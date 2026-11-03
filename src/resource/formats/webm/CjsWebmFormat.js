@@ -198,5 +198,4 @@ export class CjsWebmFormat extends CjsFormat
     static extensions = [ ".webm" ];
 }
 
-export default CjsWebmFormat;
 

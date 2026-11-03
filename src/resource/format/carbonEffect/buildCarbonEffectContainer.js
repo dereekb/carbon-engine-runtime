@@ -8,7 +8,7 @@ import {
     annotatedViewFormat
 } from "../../formats/hlsl/core/carbonTypedViews.js";
 import { CjsFormatWriteError } from "../CjsFormatError.js";
-import CjsDxbcFormat from "../../formats/dxbc/index.js";
+import { CjsDxbcFormat } from "../../formats/dxbc/index.js";
 import { RegisterType } from "#consts/render-context";
 
 /**
@@ -338,5 +338,3 @@ export function buildCarbonEffectContainer(
         bodyCount: describedByBodyKey.size
     };
 }
-
-export default buildCarbonEffectContainer;

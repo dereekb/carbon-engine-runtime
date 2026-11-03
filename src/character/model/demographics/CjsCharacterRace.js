@@ -27,5 +27,3 @@ export class CjsCharacterRace extends CjsCharacterRecord
     shipTypeID = "";
 
 }
-
-export default CjsCharacterRace;

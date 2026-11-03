@@ -211,5 +211,3 @@ export class Tr2ShaderMaterial extends IRoot
   }
 
 }
-
-export default Tr2ShaderMaterial;

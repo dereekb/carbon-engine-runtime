@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsCmfFormat from "../../../../../src/resource/formats/cmf/index.js";
+import { CjsCmfFormat } from "../../../../../src/resource/formats/cmf/index.js";
 import { buildGr2Animations, buildGr2Models } from "../../../../../src/resource/formats/cmf/core/gr2Compat.js";
 
 function floatBytes(values)

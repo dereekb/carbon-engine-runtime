@@ -1,1 +1,1 @@
-export { CjsCmfFormat, default } from "./CjsCmfFormat.js";
+export { CjsCmfFormat } from "./CjsCmfFormat.js";

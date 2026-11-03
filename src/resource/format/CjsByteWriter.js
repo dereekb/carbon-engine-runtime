@@ -305,4 +305,3 @@ export class CjsByteWriter
     }
 }
 
-export default CjsByteWriter;

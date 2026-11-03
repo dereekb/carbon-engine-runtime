@@ -520,5 +520,4 @@ function decodeSimpleEscape(byte)
   return Object.hasOwn(values, byte) ? values[byte] : null;
 }
 
-export default CjsPickleProtocol0Reader;
 

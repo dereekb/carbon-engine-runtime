@@ -281,4 +281,3 @@ function Attribute(attributes, name) {
   return attribute;
 }
 
-export default ReadValue;

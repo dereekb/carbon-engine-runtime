@@ -294,5 +294,3 @@ export class CjsCarbonEffectFormat extends CjsFormat
     static extensions = [ ".sm_hi", ".sm_lo", ".sm_depth" ];
 
 }
-
-export default CjsCarbonEffectFormat;

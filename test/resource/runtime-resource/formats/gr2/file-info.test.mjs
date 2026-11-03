@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readGr2Raw } from "../../../../../src/resource/formats/gr2/core/reader.js";
-import CjsGr2Format from "../../../../../src/resource/formats/gr2/index.js";
+import { CjsGr2Format } from "../../../../../src/resource/formats/gr2/index.js";
 import { clientResources } from "../../../../support/clientResources.js";
 
 const client = await clientResources();

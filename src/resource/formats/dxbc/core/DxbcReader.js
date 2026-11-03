@@ -17,4 +17,3 @@ export class DxbcReader extends CjsByteReader
     static endOfDataMessage = "Unexpected end of effect data";
 }
 
-export default DxbcReader;

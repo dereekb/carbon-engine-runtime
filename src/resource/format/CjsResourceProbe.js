@@ -143,4 +143,3 @@ function normalizeCapability(input)
   };
 }
 
-export default CjsResourceProbe;

@@ -1,1 +1,1 @@
-export { CjsIESFormat, default } from "./CjsIESFormat.js";
+export { CjsIESFormat } from "./CjsIESFormat.js";

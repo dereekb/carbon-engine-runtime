@@ -193,5 +193,4 @@ export class CjsMp4Format extends CjsFormat
     static extensions = [ ".mp4", ".m4v", ".m4a" ];
 }
 
-export default CjsMp4Format;
 

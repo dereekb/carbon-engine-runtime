@@ -146,5 +146,3 @@ export class CjsProjectedDecal extends CjsCharacterRecord
     yaw = 0;
 
 }
-
-export default CjsProjectedDecal;

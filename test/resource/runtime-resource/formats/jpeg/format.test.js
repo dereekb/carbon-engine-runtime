@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsJpegFormat, { CjsJpegFormat as NamedCjsJpegFormat } from "../../../../../src/resource/formats/jpeg/index.js";
+import { CjsJpegFormat } from "../../../../../src/resource/formats/jpeg/index.js";
+import * as CjsJpegFormatModule from "../../../../../src/resource/formats/jpeg/index.js";
 
-test("exports default and named CjsJpegFormat", () =>
+test("exports CjsJpegFormat by name only, with no default", () =>
 {
-    assert.equal(CjsJpegFormat, NamedCjsJpegFormat);
+    assert.equal("default" in CjsJpegFormatModule, false);
     assert.deepEqual(CjsJpegFormat.extensions, [ ".jpg", ".jpeg" ]);
     assert.deepEqual(Object.values(CjsJpegFormat.outputs).filter(entry => entry.role === "runtime").map(entry => entry.output), [ "image", "rgba" ]);
 });

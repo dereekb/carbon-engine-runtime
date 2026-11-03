@@ -27,5 +27,3 @@ export class CjsCharacterModifierReference
     weight = null;
 
 }
-
-export default CjsCharacterModifierReference;

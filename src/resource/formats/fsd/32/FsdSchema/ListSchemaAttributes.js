@@ -25,5 +25,4 @@ export class ListSchemaAttributes
     static className = "ListSchemaAttributes";
 }
 
-export default ListSchemaAttributes;
 

@@ -1,7 +1,7 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
-import CjsFormatWebgpu from "../../../../src/resource/formats/webgpu/index.js";
+import { CjsWebgpuFormat as CjsFormatWebgpu } from "../../../../src/resource/formats/webgpu/index.js";
 import {
     parsePackageEffectArguments,
     validatePackageEffectPaths

@@ -208,5 +208,4 @@ export class CjsPsdFormat extends CjsImageFormat
     });
 }
 
-export default CjsPsdFormat;
 

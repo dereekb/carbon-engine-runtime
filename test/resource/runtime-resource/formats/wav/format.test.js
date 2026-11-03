@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsWavFormat, { CjsWavFormat as NamedCjsWavFormat } from "../../../../../src/resource/formats/wav/index.js";
+import { CjsWavFormat } from "../../../../../src/resource/formats/wav/index.js";
+import * as CjsWavFormatModule from "../../../../../src/resource/formats/wav/index.js";
 
-test("exports default and named CjsWavFormat", () =>
+test("exports CjsWavFormat by name only, with no default", () =>
 {
-    assert.equal(CjsWavFormat, NamedCjsWavFormat);
+    assert.equal("default" in CjsWavFormatModule, false);
     assert.deepEqual(CjsWavFormat.extensions, [ ".wav" ]);
 });
 

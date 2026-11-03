@@ -459,5 +459,4 @@ export class CjsDdsFormat extends CjsImageFormat
 }
 
 
-export default CjsDdsFormat;
 

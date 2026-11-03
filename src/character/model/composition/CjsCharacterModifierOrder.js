@@ -216,6 +216,5 @@ function DefaultGroup(value)
     return value?.group ?? "";
 }
 
-export default CjsCharacterModifierOrder;
 
 CjsSchema.meta.define("CjsCharacterModifierOrder")(CjsCharacterModifierOrder);

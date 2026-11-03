@@ -22,5 +22,3 @@ export class CjsCharacterPortraitResource extends CjsCharacterRecord
     typeID = "";
 
 }
-
-export default CjsCharacterPortraitResource;

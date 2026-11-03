@@ -1,1 +1,1 @@
-export { CjsGltfFormat, default } from "./CjsGltfFormat.js";
+export { CjsGltfFormat } from "./CjsGltfFormat.js";

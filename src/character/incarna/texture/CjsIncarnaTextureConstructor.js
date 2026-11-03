@@ -162,6 +162,3 @@ export function RegisterIncarnaTextures(resourceManager)
   resourceManager.RegisterResourceConstructor("incarna", new CjsIncarnaTextureConstructor());
   return resourceManager;
 }
-
-export default CjsIncarnaTextureConstructor;
-

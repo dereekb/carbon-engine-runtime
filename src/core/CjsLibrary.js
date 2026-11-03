@@ -413,7 +413,6 @@ CjsSchema.meta.define(CjsLibrary, {
     CreateOverlay2D: [] }
 });
 
-export default CjsLibrary;
 
 /** Keeps live owner settings; reader registrations and LOAD policy wait for reboot. */
 function LiveConfiguration(configuration, settings)
@@ -523,5 +522,3 @@ function ValidateConfiguration(configuration)
     }
   }
 }
-
-

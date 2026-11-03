@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CjsTgaFormat, { CjsTgaFormat as NamedCjsTgaFormat } from "../../../../../src/resource/formats/tga/index.js";
+import { CjsTgaFormat } from "../../../../../src/resource/formats/tga/index.js";
+import * as CjsTgaFormatModule from "../../../../../src/resource/formats/tga/index.js";
 
-test("exports default and named CjsTgaFormat", () =>
+test("exports CjsTgaFormat by name only, with no default", () =>
 {
-    assert.equal(CjsTgaFormat, NamedCjsTgaFormat);
+    assert.equal("default" in CjsTgaFormatModule, false);
     assert.deepEqual(CjsTgaFormat.extensions, [ ".tga" ]);
 });
 

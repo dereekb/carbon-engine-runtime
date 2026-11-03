@@ -1,14 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import CjsJsonFormat, {
-    CjsJsonFormat as NamedCjsJsonFormat,
-} from "../../../../../npm/dist/resource/formats/json/index.js";
+import { CjsJsonFormat } from "../../../../../npm/dist/resource/formats/json/index.js";
+import * as CjsJsonFormatModule from "../../../../../npm/dist/resource/formats/json/index.js";
 import { CjsJsonFormat as BarrelCjsJsonFormat } from "../../../../../npm/dist/resource/formats/index.js";
 
 test("CjsJsonFormat is exported by name, by default and from the formats barrel", () =>
 {
-    assert.equal(CjsJsonFormat, NamedCjsJsonFormat);
+    assert.equal("default" in CjsJsonFormatModule, false);
     assert.equal(BarrelCjsJsonFormat, CjsJsonFormat);
     assert.deepEqual(CjsJsonFormat.extensions, [ ".json" ]);
     assert.equal(CjsJsonFormat.id, "CjsJsonFormat");

@@ -1,1 +1,1 @@
-export { CjsObjFormat, default } from "./CjsObjFormat.js";
+export { CjsObjFormat } from "./CjsObjFormat.js";

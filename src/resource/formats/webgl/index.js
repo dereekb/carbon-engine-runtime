@@ -17,4 +17,4 @@
  * binding, uploads, draws and context recovery. Runtime code reads the emitted
  * container bytes directly; this module never imports a toolchain.
  */
-export { CjsWebglFormat, default } from "./CjsWebglFormat.js";
+export { CjsWebglFormat } from "./CjsWebglFormat.js";

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { packTangentFrames } from "#math/tangent";
-import CjsFbxFormat from "../../../../../src/resource/formats/fbx/index.js";
+import { CjsFbxFormat } from "../../../../../src/resource/formats/fbx/index.js";
 
 class ValueNode
 {
