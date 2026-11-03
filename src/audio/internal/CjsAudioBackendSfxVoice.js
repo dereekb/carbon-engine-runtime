@@ -6,6 +6,12 @@ import { CjsSchema } from "#schema";
 /** Owns one realized SFX voice's authored, runtime, and Web Audio state. */
 export class CjsAudioBackendSfxVoice
 {
+    /** A playback limit parked it: no source, and only the arbiter's return restarts it. */
+    voiceLimitVirtual = false;
+
+    /** The context time it was parked at. */
+    voiceLimitVirtualAt = null;
+
     /** Initializes one voice from its resolved descriptor and owned nodes. */
     constructor({
         gameObjID,

@@ -127,14 +127,44 @@ value when the transition catalog names them. An unset group or a State with
 no authored case contributes 0.
 
 **Voice limits.** A selection's `voiceLimits` (SFX v3; a v2 `voiceLimit`
-reads as a one-counter list) are checked when the Play resolves, before media
-loads. Enforced today: a per-object max-1 reject-newest counter reserves per
-game object, and a second selection of the same counter on that object is
-rejected without loading media. Other authored counters (higher maxima,
-kill-oldest, global and bus counters) are admitted unenforced until the
-backend arbiter applies them. Cancellation, failed loading,
-Stop and natural completion release the reservation. A limited selection with
-a positive delay throws, so a limit is never reserved early.
+reads as a one-counter list) are admitted when the Play resolves, before media
+loads, by the backend's arbiter (`internal/CjsAudioBackendSfxVoiceLimitLedger.js`).
+
+- **Counters.** A `game-object` counter is keyed per posting object, a
+  `global` one (node-global or `bus:<id>`) across all objects. A selection
+  holds one reservation in every counter it names.
+- **The loser.** When a counter is full, the loser is chosen among its playing
+  members and the newcomer: the lowest effective priority (`priority.value`,
+  default 50, plus `priority.distanceOffset` times the emitter's distance over
+  the attenuation's max radius, clamped to 0..1), then on a tie the oldest
+  under `kill-oldest` and the newcomer under `reject-newest`. A member still
+  loading is never chosen; when only loading members tie with or beat the
+  newcomer, the newcomer loses. The choice is atomic across a selection's
+  counters: if any counter refuses the newcomer, nothing is evicted.
+- **Outcomes.** `onLimit: "kill"` kills the loser (a refused newcomer never
+  loads; a playing voice stops with a 50 ms fade). `onLimit: "virtual"` follows
+  the loser's `virtualVoice.belowThreshold`: `continue` keeps it playing (the
+  counter may pass its maximum, as in Wwise), `kill` kills it, `virtual` parks
+  it, and `kill-if-finite-else-virtual` parks a loop and kills a one-shot.
+- **Virtual voices.** Only a plain voice (one buffer from a play action, no
+  Continuous container behind its slot) parks: a playing one pauses with a
+  50 ms fade, a newcomer is realized without a source. Neither is counted. When
+  a counter frees a slot, the highest-priority parked voice (ties: the earliest
+  parked) returns from the beginning, from its elapsed time, or by resuming its
+  position (`virtualVoice.onReturn`). A finite from-elapsed voice that runs past
+  its media while parked ends. A parked voice keeps its record alive; a stop
+  drops it. A continuation-slot voice that loses with `virtual` is killed and
+  counted as `virtualAsKill`.
+- **Host policy.** `SetVoiceLimitExemptGameObject(id)` exempts one object (the
+  listener's own ship) from global counters: not counted, never a loser. Its
+  per-object counters still apply. `GetVoiceLimitReport()` gives the counters
+  now and the outcome counts since start.
+
+Admission is at post time, so a kill-oldest decision is made before the
+newcomer is audible (Wwise decides at voice start); the gap is the media load.
+Cancellation, failed loading, Stop and natural completion release the
+reservation. A limited selection with a positive delay throws, so a limit is
+never reserved early.
 
 **Continuous containers.** Disabled and Delay advance after the whole selected
 batch ends (Delay then waits its sampled duration). Trigger Rate arms the next

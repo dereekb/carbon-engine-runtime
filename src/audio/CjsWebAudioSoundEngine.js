@@ -55,6 +55,8 @@ import {
 } from "./internal/CjsAudioBackendSfxProgramSlot.js";
 import {
     CjsAudioBackendSfxVoiceLimitLedger,
+    VOICE_LIMIT_DEFAULT_PRIORITY,
+    VOICE_LIMIT_KILL_FADE_MS,
 } from "./internal/CjsAudioBackendSfxVoiceLimitLedger.js";
 import {
     CjsAudioBackendSfxVoice,
@@ -125,6 +127,8 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     _voiceLimitLedger = new CjsAudioBackendSfxVoiceLimitLedger({
         isOwnerActive: owner =>
             this._playing.get(owner.playingID) === owner,
+        priorityOf: reservation => this._VoiceLimitPriority(reservation),
+        onReturn: reservation => this._ReturnVirtualSfxVoice(reservation),
     });
 
     _scheduledSfxActions = [];
@@ -1768,6 +1772,7 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
         this._ProcessRtpcTransitions();
         this._ProcessStatePropertyTransitions();
         this._FinalizeDueSfxPauses();
+        this._ExpireVirtualSfxVoices();
         this._ProcessTriggerRateSlots();
         this._ProcessCrossfadeSlots();
         this._musicEngine?.Process();
@@ -1903,6 +1908,31 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     GetPlayingCount()
     {
         return this._playing.size;
+    }
+
+    /**
+     * Exempts one game object from the authored global playback limits.
+     *
+     * Ours: a host policy (no Wwise counterpart) for the listener's own
+     * object, typically the player's ship: global and bus counters neither
+     * count it nor pick it as a loser; its per-object limits still apply.
+     * Voices admitted while exempt stay uncounted until they end. 0 clears it.
+     */
+    SetVoiceLimitExemptGameObject(gameObjID)
+    {
+        this._voiceLimitLedger.SetExemptGameObject(gameObjID);
+    }
+
+    /**
+     * Reports the authored playback limits' state and outcomes.
+     *
+     * Ours: `{ exempt, counters, full, members, virtual }` now, and the counts
+     * since start `{ admitted, rejected, killed, virtualized, returned,
+     * virtualAsKill }`.
+     */
+    GetVoiceLimitReport()
+    {
+        return this._voiceLimitLedger.Report();
     }
 
     /** Stops every backend-owned event, including direct music posts. */
@@ -2045,6 +2075,23 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             voice.programSlotId !== undefined
             && record.programSlots?.get(voice.programSlotId)?.advanceMode,
         );
+    }
+
+    /**
+     * Returns whether one voice is plain: one buffer from a play action whose
+     * slot has no Continuous container (sequence, trigger rate, crossfade or
+     * switch) to advance. Only plain voices can wait virtual.
+     */
+    _IsPlainSfxVoice(record, voice)
+    {
+        const slot = voice.programSlotId === undefined
+            ? null
+            : record.programSlots?.get(voice.programSlotId);
+
+        return !slot
+            || (slot.advanceMode === "completion"
+                && !slot.continuation
+                && !slot.continuousNodeId);
     }
 
     /** Returns whether Wwise ignores Seek for this Continuous transition. */
@@ -2324,103 +2371,295 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
         return true;
     }
 
-    /** Reserves supported Sound caps before any asynchronous media request. */
+    /**
+     * Admits a program's authored playback limits before any asynchronous
+     * media request, then applies the evictions the arbiter chose.
+     */
     _ReserveSfxProgram(record, program)
     {
         if (!Array.isArray(program))
         {
             throw new TypeError("Resolved SFX program is invalid");
         }
-        const created = [];
-
-        try
+        for (const operation of program)
         {
-            return program.map(operation =>
+            for (const selection of operation.kind === "play"
+                ? operation.selections ?? []
+                : [])
             {
-                if (operation.kind !== "play")
+                if (selection.voiceLimits === undefined)
                 {
-                    return operation;
+                    continue;
                 }
-                const originalSelections = operation.selections ?? [];
-                const selections = [];
-
-                for (const selection of originalSelections)
+                CjsAudioBackendSfxVoiceLimitLedger.Validate(
+                    selection.voiceLimits,
+                );
+                // The builder never limits a delayed Sound: admission happens
+                // at post time and cannot hold a slot for a future start.
+                if (Number(selection.delayMs) > 0)
                 {
-                    const limits = selection.voiceLimits;
-
-                    if (limits === undefined)
-                    {
-                        selections.push(selection);
-                        continue;
-                    }
-                    if (!Array.isArray(limits))
-                    {
-                        throw new TypeError(
-                            "Resolved SFX voice limit is unsupported",
-                        );
-                    }
-                    // Enforced so far: the per-object cap-one reject-newest
-                    // counter; the other authored counters are admitted.
-                    const limit = limits.find(value =>
-                        value?.scope === "game-object"
-                        && Number(value.maxInstances) === 1
-                        && value.behavior === "reject-newest");
-
-                    if (limit === undefined)
-                    {
-                        selections.push(selection);
-                        continue;
-                    }
-                    const counterNumber = Number(limit?.counterId);
-
-                    if (!Number.isSafeInteger(counterNumber)
-                        || counterNumber <= 0
-                        || counterNumber > 0xffffffff
-                        || String(counterNumber) !== String(limit.counterId)
-                        || Number(selection.delayMs) > 0)
-                    {
-                        throw new TypeError(
-                            "Resolved SFX voice limit is unsupported",
-                        );
-                    }
-
-                    const reservationID = this._voiceLimitLedger.Reserve(
-                        record,
-                        String(counterNumber),
+                    throw new TypeError(
+                        "Resolved SFX voice limit is unsupported",
                     );
-
-                    if (reservationID === null)
-                    {
-                        selections.push({
-                            ...selection,
-                            voiceLimitRejected: true,
-                        });
-                        continue;
-                    }
-                    created.push(reservationID);
-                    selections.push({
-                        ...selection,
-                        voiceLimitReservationId: reservationID,
-                    });
                 }
+            }
+        }
 
+        const evictions = [];
+        const admitted = program.map(operation =>
+        {
+            if (operation.kind !== "play")
+            {
+                return operation;
+            }
+            const selections = (operation.selections ?? []).map(selection =>
+            {
+                if (selection.voiceLimits === undefined)
+                {
+                    return selection;
+                }
+                const decision = this._voiceLimitLedger.Admit(
+                    record,
+                    selection,
+                );
+
+                if (!decision.admitted)
+                {
+                    return { ...selection, voiceLimitRejected: true };
+                }
+                evictions.push(...decision.evict);
                 return {
-                    ...operation,
-                    selections: selections,
+                    ...selection,
+                    voiceLimitReservationId: decision.reservationID,
                 };
             });
-        }
-        catch (error)
+
+            return { ...operation, selections };
+        });
+        const now = Number(this._context?.currentTime) || 0;
+
+        for (const eviction of evictions)
         {
-            for (const reservationID of created)
-            {
-                this._voiceLimitLedger.Release(
-                    record,
-                    reservationID,
-                );
-            }
-            throw error;
+            this._ApplyVoiceLimitEviction(eviction, now);
         }
+        return admitted;
+    }
+
+    /** Kills (a 50 ms fade) or parks one playing voice a limit evicted. */
+    _ApplyVoiceLimitEviction({ reservation, outcome }, now)
+    {
+        const record = reservation.owner;
+        const voice = reservation.voice;
+
+        if (!voice || voice.ended)
+        {
+            return;
+        }
+        if (outcome === "virtual" && this._IsPlainSfxVoice(record, voice))
+        {
+            voice.voiceLimitVirtual = true;
+            voice.voiceLimitVirtualAt = now;
+            this._PauseSfxVoice(
+                voice,
+                {
+                    actionTime: now,
+                    transitionMs: VOICE_LIMIT_KILL_FADE_MS,
+                    curve: LINEAR_FADE_CURVE,
+                },
+                now,
+            );
+            return;
+        }
+        if (outcome === "virtual")
+        {
+            // Continuation slots own their successor's timing; only a plain
+            // voice can park, so these lose the limit outright.
+            this._voiceLimitLedger.Release(record, reservation.id);
+            this._voiceLimitLedger.CountVirtualAsKill();
+        }
+        this._StopSfxProgramVoice(
+            voice,
+            now,
+            VOICE_LIMIT_KILL_FADE_MS,
+            LINEAR_FADE_CURVE,
+            now,
+        );
+        if (voice.ended)
+        {
+            this._SetSfxProgramSlotEnded(record.playingID, record, voice);
+            this._MaybeFinishSfxProgram(record.playingID, record);
+        }
+    }
+
+    /** Parks a newly realized voice the arbiter admitted as virtual. */
+    _ParkVirtualSfxVoice(voice, reservation)
+    {
+        if (!reservation?.virtual)
+        {
+            return;
+        }
+        voice.voiceLimitVirtual = true;
+        voice.voiceLimitVirtualAt = Number(this._context?.currentTime) || 0;
+        voice.paused = true;
+        voice.offsetSeconds = 0;
+        SetAudioParam(voice.stopGain.gain, 0, this._context);
+    }
+
+    /** Restarts one virtual voice whose counters have room again. */
+    _ReturnVirtualSfxVoice(reservation)
+    {
+        const record = reservation.owner;
+        const voice = reservation.voice;
+
+        if (!voice?.voiceLimitVirtual
+            || voice.ended
+            || voice.stopping
+            || this._playing.get(record.playingID) !== record)
+        {
+            return;
+        }
+        const now = Number(this._context?.currentTime) || 0;
+        const onReturn = reservation.selection?.virtualVoice?.onReturn
+            ?? "from-beginning";
+
+        if (voice.pausing && voice.source)
+        {
+            this._FinalizeSfxVoicePause(voice, now);
+        }
+        if (onReturn === "from-beginning")
+        {
+            voice.offsetSeconds = 0;
+            voice.repeatRemainingSeconds = null;
+        }
+        else if (onReturn === "from-elapsed")
+        {
+            voice.offsetSeconds = (Number(voice.offsetSeconds) || 0)
+                + Math.max(0, now - voice.voiceLimitVirtualAt)
+                    * (Number(voice.playbackRate) || 1);
+        }
+        voice.voiceLimitVirtual = false;
+        voice.voiceLimitVirtualAt = null;
+        if (voice.pauseDepth > 0)
+        {
+            // An authored Pause still holds it; its Resume restarts it.
+            return;
+        }
+        this._ResumeSfxVoice(
+            record.playingID,
+            record,
+            voice,
+            {
+                actionTime: now,
+                transitionMs: VOICE_LIMIT_KILL_FADE_MS,
+                curve: LINEAR_FADE_CURVE,
+            },
+            now,
+        );
+        if (voice.ended)
+        {
+            this._EndExpiredVirtualSfxVoice(record, voice);
+        }
+    }
+
+    /** Ends finite from-elapsed virtual voices that ran past their media. */
+    _ExpireVirtualSfxVoices()
+    {
+        const ledger = this._voiceLimitLedger;
+
+        if (ledger.VirtualCount() === 0)
+        {
+            return;
+        }
+        const now = Number(this._context?.currentTime) || 0;
+
+        for (const reservation of ledger.VirtualReservations())
+        {
+            const voice = reservation.voice;
+            const duration = Number(voice?.buffer?.duration);
+
+            if (!voice?.voiceLimitVirtual
+                || voice.loop
+                || voice.ended
+                || reservation.selection?.virtualVoice?.onReturn
+                    !== "from-elapsed"
+                || !(duration > 0)
+                || (Number(voice.playCount) || 1) > 1)
+            {
+                continue;
+            }
+            const elapsed = (Number(voice.offsetSeconds) || 0)
+                + Math.max(0, now - voice.voiceLimitVirtualAt)
+                    * (Number(voice.playbackRate) || 1);
+
+            if (elapsed >= duration)
+            {
+                voice.voiceLimitVirtual = false;
+                voice.paused = false;
+                voice.stopping = true;
+                voice.ended = true;
+                this._EndExpiredVirtualSfxVoice(reservation.owner, voice);
+            }
+        }
+    }
+
+    /** Closes one logical voice that ended without a playing source. */
+    _EndExpiredVirtualSfxVoice(record, voice)
+    {
+        this._voiceLimitLedger.Release(record, voice.voiceLimitReservationId);
+        if (record.sfxProgram)
+        {
+            this._SetSfxProgramSlotEnded(record.playingID, record, voice);
+            this._MaybeFinishSfxProgram(record.playingID, record);
+        }
+        else if (record.voices.every(value => value.ended))
+        {
+            this._FinishSfxPlaying(record.playingID);
+        }
+    }
+
+    /**
+     * Effective priority of one limited voice: its authored value plus the
+     * distance offset scaled by distance over the attenuation's max radius.
+     */
+    _VoiceLimitPriority(reservation)
+    {
+        const priority = reservation.selection?.priority;
+        const value = Number(priority?.value ?? VOICE_LIMIT_DEFAULT_PRIORITY);
+        const offset = Number(priority?.distanceOffset);
+        const nodes = reservation.owner?.emitterNodes;
+        const listener = this._listenerPosition;
+        const curve = reservation.voice?.dryVolumeCurve
+            ?? reservation.selection?.dryVolumeCurve;
+        const spatial = reservation.voice?.spatial
+            ?? reservation.selection?.spatial;
+        const points = curve?.points;
+        const radius = Array.isArray(points) && points.length
+            ? Number(points[points.length - 1]?.x)
+            : NaN;
+
+        if (!Number.isFinite(offset)
+            || offset === 0
+            || spatial === false
+            || !(radius > 0)
+            || !Array.isArray(nodes?.position)
+            || !Array.isArray(listener))
+        {
+            return value;
+        }
+        const scale = Number(nodes.scalingFactor);
+        const maxDistance = radius
+            * (Number.isFinite(scale) && scale > 0 ? scale : 1);
+        const distance = Math.hypot(
+            Number(nodes.position[0]) - Number(listener[0]),
+            Number(nodes.position[1]) - Number(listener[1]),
+            Number(nodes.position[2]) - Number(listener[2]),
+        );
+
+        if (!Number.isFinite(distance))
+        {
+            return value;
+        }
+        return value + offset * Math.min(1, Math.max(0, distance / maxDistance));
     }
 
     /** Releases reservations whose selected media never became a voice. */
@@ -3565,7 +3804,10 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
     /** Restarts one paused logical voice at its preserved media position. */
     _ResumeSfxVoice(playingID, record, voice, action, now)
     {
-        if (voice.stopping || voice.ended || voice.pauseDepth > 0)
+        if (voice.stopping
+            || voice.ended
+            || voice.pauseDepth > 0
+            || voice.voiceLimitVirtual)
         {
             return;
         }
@@ -5106,9 +5348,12 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
         this._ApplyVoiceFilters(voice);
         this._ApplyVoiceSourceEffects(voice);
         this._ApplyVoicePlaybackRate(voice);
-        this._voiceLimitLedger.Bind(
+        this._ParkVirtualSfxVoice(
             voice,
-            descriptor.voiceLimitReservationId,
+            this._voiceLimitLedger.Bind(
+                voice,
+                descriptor.voiceLimitReservationId,
+            ),
         );
         return voice;
     }
@@ -5174,6 +5419,24 @@ export class CjsWebAudioSoundEngine extends ICjsWwiseSoundEngine
             if (pendingBreak && voice.playCount > 1 && !continuous)
             {
                 voice.playCount = 1;
+            }
+            if (voice.voiceLimitVirtual
+                && !voice.source
+                && !this._IsPlainSfxVoice(record, voice))
+            {
+                // Continuation slots own their successor's timing; only a
+                // plain voice can wait virtual, so this one loses outright.
+                this._voiceLimitLedger.Release(
+                    record,
+                    voice.voiceLimitReservationId,
+                );
+                this._voiceLimitLedger.CountVirtualAsKill();
+                voice.voiceLimitVirtual = false;
+                voice.paused = false;
+                voice.stopping = true;
+                voice.ended = true;
+                this._SetSfxProgramSlotEnded(playingID, record, voice);
+                continue;
             }
             if (voice.stopping
                 || voice.pauseDepth > 0
@@ -8404,7 +8667,8 @@ function ApplySlotPauseDepth(voice, slot)
     );
 
     voice.pauseDepth = depth;
-    voice.paused = depth > 0;
+    // A voice parked by a playback limit stays parked until it returns.
+    voice.paused = depth > 0 || voice.voiceLimitVirtual === true;
 }
 
 function CreateProgramSelectionMetadata(selection, baseContextTime)
