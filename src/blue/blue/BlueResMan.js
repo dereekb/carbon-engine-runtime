@@ -307,9 +307,9 @@ export class BlueResMan
    * MotherLode, and so is ours: its entries keep the same keep-alive, load
    * lock, trim, opt-in idle sweep and revival as `motherLode`'s. It reads
    * `motherLode`'s clock, because the manager stamps one activity time on
-   * every handle (`activityTime`).
+   * every handle (`activityTime`). Created in the constructor; null before.
    */
-  loadObjectCache = createLoadObjectCache(this.loadObjectCacheSize, () => this.motherLode.GetActivityTime());
+  loadObjectCache = null;
 
   /** Default source for later requests, or null for blue.paths (SetSource). */
   source = null;
@@ -331,11 +331,11 @@ export class BlueResMan
   /** Direct execution strategy (SetMainThreadLoader). */
   mainThreadLoader = new CjsResManMainThreadLoader();
 
-  /** Worker execution strategy, falling back to the main-thread loader; null when removed. */
-  workerLoader = new CjsResManWorkerLoader({ fallback: this.mainThreadLoader });
+  /** Worker execution strategy, falling back to the main-thread loader; null when removed. Created in the constructor. */
+  workerLoader = null;
 
-  /** The selected execution strategy: the worker loader or the main-thread loader. */
-  resourceLoader = this.workerLoader;
+  /** The selected execution strategy: the worker loader or the main-thread loader. Set in the constructor. */
+  resourceLoader = null;
 
   /**
    * Background-queue concurrency, the configuration input for Carbon's
@@ -472,6 +472,9 @@ export class BlueResMan
    * @throws {TypeError} If registration, queue, source, or format options are invalid.
    */
   constructor(options = {}) {
+    this.loadObjectCache = createLoadObjectCache(this.loadObjectCacheSize, () => this.motherLode.GetActivityTime());
+    this.workerLoader = new CjsResManWorkerLoader({ fallback: this.mainThreadLoader });
+    this.resourceLoader = this.workerLoader;
     this.Register(options);
   }
 
