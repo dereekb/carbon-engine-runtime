@@ -17,7 +17,9 @@
 //   flags (as Carbon's EDITFLAGS values, so READ | WRITE is READWRITE);
 // - the JS key a row lands on: for an attribute, Carbon's member without m_,
 //   or `_` plus it for a member the class keeps private; for a method,
-//   Carbon's C++ method name;
+//   Carbon's C++ method name, or an overload variant of it (`Name__Suffix`).
+//   A property is checked by exposed name only: it sits on an accessor or on
+//   the plain field that stores it under that name;
 // - the order of the member rows;
 // - interfaces and chainTo, as sets. Carbon's MAP_INTERFACE of the class
 //   itself is implied by the bag and not listed in it.
@@ -259,7 +261,9 @@ export function compareBag(bag, rows)
             findings.push({ key: `${carbon.label} kind`, detail: `Carbon writes ${carbon.row.macro} (${where}); the bag writes ${label(member)}.` });
         if (carbon.flags !== undefined && member.flags !== undefined && carbon.flags !== member.flags)
             findings.push({ key: `${carbon.label} flags`, detail: `Carbon's flags are ${carbon.row.flags.join(" | ")} (${where}); the bag's evaluate to ${member.flags === null ? "an expression it cannot read" : `0x${member.flags.toString(16)}`}.` });
-        if (carbon.keys && !carbon.keys.includes(member.key))
+        // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds.
+        const key = carbon.family === "METHOD" && member.key ? member.key.replace(/__\w+$/, "") : member.key;
+        if (carbon.keys && !carbon.keys.includes(key))
             findings.push({ key: `${carbon.label} key`, detail: `${carbon.label} lands on "${member.key}"; Carbon's ${carbon.source} (${where}) gives ${carbon.keys.map(key => `"${key}"`).join(" or ")}.` });
     }
 

@@ -84,6 +84,13 @@ test("a method lands on Carbon's C++ method name", () =>
     assert.deepEqual(keys(bagSource({ rows })), [ "method IsReady key" ]);
 });
 
+test("a method key may be an overload variant of the C++ name", () =>
+{
+    const rows = name => [ ...members.slice(0, 4), `[ be.METHOD, "IsReady", be.WRAP, "${name}" ]`, members[5] ];
+    assert.deepEqual(keys(bagSource({ rows: rows("IsDataReady__Frame") })), []);
+    assert.deepEqual(keys(bagSource({ rows: rows("IsDataReadyNow") })), [ "method IsReady key" ]);
+});
+
 test("the macro and method mode must match", () =>
 {
     const rows = [ ...members.slice(0, 4), "[ be.METHOD, \"IsReady\", undefined, \"IsDataReady\" ]", members[5] ];
