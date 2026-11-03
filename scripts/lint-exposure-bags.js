@@ -15,8 +15,10 @@
 // - the bag's name names a Carbon exposure block;
 // - each member row's kind (macro, method mode included), exposed name and
 //   flags (as Carbon's EDITFLAGS values, so READ | WRITE is READWRITE);
-// - the JS key a row lands on: for an attribute, Carbon's member without m_,
-//   or `_` plus it for a member the class keeps private; for a method,
+// - the JS key a row lands on: for an attribute, its exposed name; `_` plus
+//   Carbon's member without m_ only when the exposed name cannot be the key
+//   (the block also has a property under that name, or the member is exposed
+//   by element through index rows); for a method,
 //   Carbon's C++ method name, or an overload variant of it (`Name__Suffix`).
 //   A property is checked by exposed name only: it sits on an accessor or on
 //   the plain field that stores it under that name;
@@ -243,6 +245,8 @@ export function compareBag(bag, rows)
 
     // Member rows, paired by family and exposed name, in order of occurrence.
     const carbonMembers = rows.filter(row => [ "ATTR", "PROP", "METHOD", "ICACHEABLE" ].includes(row.kind)).map(row => ({ ...carbonRow(row), row }));
+    const propertyNames = new Set(carbonMembers.filter(carbon => carbon.family === "PROP").map(carbon => carbon.name));
+    for (const carbon of carbonMembers) if (carbon.family === "ATTR") carbon.keys = attributeKeys(carbon, propertyNames);
     const unpaired = carbonMembers.slice();
     const pairs = [];
     for (const member of bag.members)
@@ -272,7 +276,7 @@ export function compareBag(bag, rows)
         // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds.
         const key = carbon.family === "METHOD" && member.key ? member.key.replace(/__\w+$/, "") : member.key;
         if (carbon.keys && !carbon.keys.includes(key))
-            findings.push({ key: `${carbon.label} key`, detail: `${carbon.label} lands on "${member.key}"; Carbon's ${carbon.source} (${where}) gives ${carbon.keys.map(key => `"${key}"`).join(" or ")}.` });
+            findings.push({ key: `${carbon.label} key`, detail: `${carbon.label} lands on "${member.key}"; the key is ${carbon.keys.map(key => `"${key}"`).join(" or ")} (${carbon.source}, ${where}).` });
     }
 
     // Order: the paired rows in the bag's order against Carbon's.
@@ -316,11 +320,24 @@ export function carbonRow(row)
     const kind = row.macro === "MAP_ATTRIBUTE_WITH_CHOOSER" ? "ATTR_CHOOSER" : row.macro === "MAP_ATTRIBUTE" ? (indexed ? "ATTR_INDEX" : "ATTR") : null;
     const member = (row.member ?? "").replace(/\[.*$/, "").trim();
     const plain = /^m_(\w+)$/.exec(member);
-    return {
-        family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`,
-        flags,
-        keys: plain ? [ plain[1], `_${plain[1]}` ] : undefined, source: `member ${member}`
-    };
+    // The acceptable keys depend on the rest of the block, so compareBag derives them (attributeKeys).
+    return { family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`, flags, indexed, member: plain ? plain[1] : null, source: `member ${member}` };
+}
+
+/**
+ * The JS keys an attribute row may land on (operator rule, 2026-11-03): its exposed name, with no fourth element. `_` plus Carbon's
+ * member name (without `m_`) only where the exposed name cannot be the key: the block also has a property under that exposed name
+ * (EveShip2 `boosters`), or the member is exposed by element (index rows on one array or vector member).
+ *
+ * @param {object} carbon An attribute row from carbonRow.
+ * @param {Set<string>} propertyNames The exposed names of the block's property rows.
+ * @returns {string[]|undefined} The keys, or undefined when an index row's member is not a plain `m_` name.
+ */
+export function attributeKeys(carbon, propertyNames)
+{
+    const underscore = carbon.member ? `_${carbon.member}` : null;
+    if (carbon.indexed) return underscore ? [ underscore ] : undefined;
+    return underscore && propertyNames.has(carbon.name) ? [ carbon.name, underscore ] : [ carbon.name ];
 }
 
 function family(kind)

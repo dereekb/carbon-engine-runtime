@@ -1,1 +1,5 @@
-{}
+{
+  "EveChildSpherePin#attribute color key": "attribute color lands on \"pinColor\"; the key is \"color\" (member m_pinColor, trinity/trinity/Eve/SpaceObject/Children/EveChildSpherePin_Blue.cpp:18).",
+  "EveChildTurret#attribute target key": "attribute target lands on \"_target\"; the key is \"target\" (member m_target, trinity/trinity/Eve/SpaceObject/Children/EveChildTurret_Blue.cpp:23).",
+  "EveVirtualCameraBehaviourVector3Damping#attribute m_dampingRatio key": "attribute m_dampingRatio lands on \"dampingRatio\"; the key is \"m_dampingRatio\" (member m_dampingRatio, trinity/trinity/Eve/VirtualCamera/EveVirtualCameraBehaviour_Blue.cpp:206)."
+}

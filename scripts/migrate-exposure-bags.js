@@ -237,6 +237,11 @@ function planClass(node, source, carbon)
         bagRows.push(js);
     }
     for (const js of unpaired) unresolved.push(`JS row with no Carbon row: be.${js.fn} "${js.exposed ?? ""}" on ${js.key ?? "the class"}`);
+    // Several index rows on one field register in reverse order from a bag (EveSOFDataArea's materials came out Turret first,
+    // Carbon writes Primary first: EveSOFData_Blue.cpp:135-144). Left until the bag registers them in its order.
+    const indexKeys = bagRows.filter(js => js.kind === "ATTR_INDEX").map(js => js.key);
+    for (const key of new Set(indexKeys.filter((key, index) => indexKeys.indexOf(key) !== index)))
+        unresolved.push(`several index rows on ${key}: a bag registers them in reverse order, not Carbon's`);
 
     // Interfaces, in Carbon's order with the JS identifiers; the class's own MAP_INTERFACE is implied by the bag.
     const carbonInterfaces = entry.rows.filter(row => row.kind === "INTERFACE" && row.name !== name);
