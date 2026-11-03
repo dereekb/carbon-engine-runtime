@@ -86,6 +86,15 @@ test("an attribute lands on its exposed name; underscore plus Carbon's member on
     }
 });
 
+test("an exposed name that starts with m_ is keyed without it, the row keeping Carbon's name", () =>
+{
+    order = 0;
+    const rows = [ row("ATTR", { name: "m_dampingRatio", member: "m_dampingRatio", flags: [ "READWRITE", "PERSIST" ], macro: "MAP_ATTRIBUTE" }) ];
+    const source = key => bagSource({ rows: [ `[ be.ATTR, "m_dampingRatio", be.READWRITE | be.PERSIST${key ? `, "${key}"` : ""} ]` ], interfaces: "[]", chainTo: null });
+    assert.deepEqual(keys(source("dampingRatio"), rows), []);
+    assert.deepEqual(keys(source(null), rows), [ "attribute m_dampingRatio key" ]);
+});
+
 test("a method lands on Carbon's C++ method name", () =>
 {
     const rows = [ ...members.slice(0, 4), "[ be.METHOD, \"IsReady\", be.WRAP ]", members[5] ];

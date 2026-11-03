@@ -337,7 +337,10 @@ export function attributeKeys(carbon, propertyNames)
 {
     const underscore = carbon.member ? `_${carbon.member}` : null;
     if (carbon.indexed) return underscore ? [ underscore ] : undefined;
-    return underscore && propertyNames.has(carbon.name) ? [ carbon.name, underscore ] : [ carbon.name ];
+    // We never put m_ into a JS name (operator, 2026-11-03): an exposed name that starts with it (EveVirtualCameraBehaviourVector3Damping
+    // "m_dampingRatio", TriStepToggleCubemap "m_showCubemap") is keyed without it, and the row keeps the exposed name.
+    const exposed = carbon.name.replace(/^m_/, "");
+    return underscore && propertyNames.has(carbon.name) ? [ exposed, underscore ] : [ exposed ];
 }
 
 function family(kind)
