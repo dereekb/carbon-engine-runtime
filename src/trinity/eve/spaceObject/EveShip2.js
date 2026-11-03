@@ -14,20 +14,28 @@ import { EveEntity } from "../EveEntity.js";
 import { TriFloat } from "../../core/variable/TriFloat.js";
 
 /** A ship space object: booster drive, speed state, and ship shader data. */
-@be.define("EveShip2")
-@be.inherit(IListNotify, IInitialize)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IListNotify)
-@be.exposureChainTo(EveMobile)
+@be.define({
+  name: "EveShip2",
+  inherit: [ IListNotify, IInitialize ],
+  // EveShip2_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2Renderable, IListNotify ],
+  members: [
+    [ be.ATTR, "speed", be.READ ],
+    [ be.ATTR, "maxSpeed", be.READWRITE ],
+    [ be.ATTR, "displayKillCounterValue", be.READWRITE ],
+    [ be.PROP, "audioSpeedParameter" ],
+    [ be.ATTR, "boosters", be.PERSISTONLY, "_boosters" ],
+    [ be.PROP, "boosters" ],
+    [ be.METHOD, "RebuildBoosterSet", be.WRAP ]
+  ],
+  chainTo: EveMobile
+})
 export class EveShip2 extends EveMobile
 {
 
   /** Hidden persisted m_boosters storage (EveShip2_Blue.cpp:21), separate from its live property.
    * Carbon: EveShip2::m_boosters (trinity/trinity/Eve/SpaceObject/EveShip2.h:69); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/EveShip2_Blue.cpp:21).
    */
-  @be.mapAttribute(be.PERSISTONLY, "boosters")
-
   /** Carbon: m_boosters (trinity/trinity/Eve/SpaceObject/EveShip2.h:69).
    */
   @type.object.ref("EveBoosterSet2")
@@ -38,7 +46,6 @@ export class EveShip2 extends EveMobile
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveBoosterSet2")
   get boosters()
   {
@@ -56,17 +63,14 @@ export class EveShip2 extends EveMobile
   }
 
   /** m_displayKillCounterValue (uint32_t) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   displayKillCounterValue = 0;
 
   /** m_maxSpeed (float) [READWRITE] - the maximum speed of the ship. */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   maxSpeed = 0;
 
   /** m_speed (TriFloatPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriFloat")
   speed = null;
 
@@ -80,7 +84,6 @@ export class EveShip2 extends EveMobile
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("IRoot")
   get audioSpeedParameter()
   {
@@ -454,7 +457,6 @@ export class EveShip2 extends EveMobile
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RebuildBoosterSet()
   {
     if (!this.boosters) return;

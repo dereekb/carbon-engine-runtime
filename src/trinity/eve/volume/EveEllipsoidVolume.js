@@ -37,42 +37,37 @@ const RAY_DIR = vec3.create();
  * Oriented ellipsoid of influence with a hollow inner ellipsoid, weighting
  * points by falloff and seeding random points between the two shells.
  */
-@be.define("EveEllipsoidVolume")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(IEveVolume)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveEllipsoidVolume",
+  inherit: [ INotify, IInitialize ],
+  // EveEllipsoidVolume_Blue.cpp:9-23, in Carbon's order: shape before innerShape, which Setup clamps against it on read.
+  interfaces: [ IEveVolume, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "shape", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "innerShape", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "debugShowIntersection", be.READWRITE ]
+  ]
+})
 export class EveEllipsoidVolume extends IEveVolume
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   position = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   innerShape = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
-
   @type.vec3
   shape = vec3.create();
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugShowIntersection = false;
 
