@@ -7,7 +7,8 @@ test("the min entry is ESM with renamed constructors and stable Blue registratio
 {
     const manifest = JSON.parse(await fs.readFile(new URL("../../npm/package.json", import.meta.url), "utf8"));
     assert.equal(manifest.exports["./min"], "./dist/carbonenginejs.min.js");
-    assert.ok(manifest.sideEffects.includes("./dist/carbonenginejs.min.js"));
+    // Every file has side effects (self-registering classes and math extensions), so bundlers must keep them all.
+    assert.equal(manifest.sideEffects, true);
     assert.notEqual(runtime.EveShip2.name, "EveShip2", "keepNames must not mask identity dependencies");
     assert.equal(runtime.blue.classes.GetClassRegistration("EveShip2").type, runtime.EveShip2);
     assert.equal(runtime.blue.classes.CreateInstanceFromName("EveShip2").constructor, runtime.EveShip2);
