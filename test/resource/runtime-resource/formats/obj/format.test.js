@@ -199,7 +199,7 @@ test("hydrates configured node classes", () => {
     assert.ok(json.meshes[0] instanceof Mesh);
     assert.ok(json.meshes[0].indices[0] instanceof IndexGroup);
     assert.equal(json.__setValuesCalls, 1);
-    assert.deepEqual(json.__setValuesOptions, { source: "memory", skipUpdate: true, skipEvents: true });
+    assert.deepEqual(json.__setValuesOptions, { source: "memory", skipUpdate: true });
     assert.equal(json.meshes[0].__setValuesCalls, 1);
     assert.equal(json.meshes[0].indices[0].__setValuesCalls, 1);
     assert.equal(format.HasClass("Mesh"), true);

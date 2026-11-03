@@ -89,8 +89,7 @@ test("hydrates the complete native CMF graph through one shared implementation",
         assert.equal(instance.setValuesCalls, 1);
         assert.deepEqual(instance.hydrationOptions, {
             source: "test.cmf",
-            skipUpdate: true,
-            skipEvents: true
+            skipUpdate: true
         });
     }
 });

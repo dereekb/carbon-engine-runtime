@@ -3387,10 +3387,6 @@ export class BlueResMan
 
 }
 
-// The notify surface arrives by composition rather than `extends
-// CjsEventEmitter` - functional form so the resource tree stays plain ESM
-// that loads from source without a transform.
-meta.events(BlueResMan);
 
 /**
  * Deep-copy supported registered format defaults into a detached snapshot.

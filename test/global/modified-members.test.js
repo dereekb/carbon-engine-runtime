@@ -31,7 +31,6 @@ function fixture(model, liveB = false)
   if (!model)
   {
     CjsSchema.meta.values(Probe, { kind: "class" });
-    CjsSchema.meta.events(Probe, { kind: "class" });
   }
   return new Probe();
 }
@@ -124,22 +123,14 @@ test("writes before a later setter failure survive without replaying names", () 
   assert.equal(p.IsDirty(), false);
 });
 
-test("nested edits emit in completion order with each call's changed names", () =>
+test("a nested edit settles inside the outer hook with its own changed names", () =>
 {
   const p = fixture(false);
-  const events = [];
-  p.OnEvent("modified", (name, target, detail) => events.push({ target, detail }));
   p.action = name => { if (name === "a") p.SetValues({ b: 2 }); };
-  const source = {};
-  p.SetValues({ a: 1 }, { source });
-  assert.equal(events.length, 2);
-  assert.deepEqual([...events[0].detail.changedFields], ["b"]);
-  assert.deepEqual([...events[1].detail.changedFields], ["a"]);
-  assert.equal(events[1].detail.source, source);
-  assert.equal(events[1].target, p);
+  p.SetValues({ a: 1 });
+  assert.deepEqual(p.seen, ["a", "b"]);
   p.action = null;
-  p.SetValues({ a: 3 }, { skipEvents: true });
-  assert.equal(events.length, 2);
+  p.SetValues({ a: 3 });
   assert.deepEqual(p.seen, ["a", "b", "a"]);
 });
 
@@ -160,14 +151,11 @@ test("a refused or throwing batch stays dirty without automatic retries", () =>
   for (const throws of [false, true])
   {
     const p = fixture(false);
-    const events = [];
-    p.OnEvent("modified", (...args) => events.push(args));
     p.action = () => { if (throws) throw new Error("rejected"); return false; };
     if (throws) assert.throws(() => p.SetValues({ a: 1, b: 1 }), /rejected/);
     else p.SetValues({ a: 1, b: 1 });
     assert.equal(p.IsDirty(), true);
     assert.deepEqual(p.seen, [["a", "b"]]);
-    assert.equal(events.length, 0);
     p.action = null;
     p.SetValues({ a: 2 });
     assert.deepEqual(p.seen, [["a", "b"], "a"]);
@@ -175,16 +163,13 @@ test("a refused or throwing batch stays dirty without automatic retries", () =>
 });
 
 
-test("explicit notification deduplicates names and isolates hook mutations from events", () =>
+test("explicit notification deduplicates names and isolates hook mutations from the caller", () =>
 {
   const p = fixture(false);
   const input = ["a", "a", "b"];
-  let detail;
-  p.OnEvent("modified", (event, target, value) => { detail = value; });
   p.action = names => { assert.deepEqual(names, ["a", "b"]); names.push("quiet"); };
   assert.equal(NotifyModified(p, input), true);
   assert.deepEqual(input, ["a", "a", "b"]);
-  assert.deepEqual([...detail.changedFields], ["a", "b"]);
   assert.equal(NotifyModified(p, []), true);
   assert.equal(p.seen.length, 1);
   p.action = null;

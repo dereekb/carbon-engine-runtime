@@ -12,7 +12,6 @@ import {
 } from "./types/carbonTypes.js";
 import { claimAbstractMethods, decorateAbstractMethod, installAbstractMethod, isAbstractMethod } from "../compose/abstract.js";
 import { CJS_CLASS_NAME, getRegisteredClassName, requireRegisteredClassName } from "../compose/className.js";
-import { composeNotifyDecorator } from "../compose/notify.js";
 import { carbonInheritDecorator, carbonInterfaceDecorator, carbonChainToDecorator, cast, mappedInterfaces, setInterfaceClassResolver } from "../compose/interface.js";
 import { composeValuesDecorator, createValuesTransport, isExportableField, isTransportedDeclaration, isWritableField } from "../compose/values.js";
 import { blueEnums, CjsBlueEnumRegistry } from "../blue/enums/CjsBlueEnumRegistry.js";
@@ -834,7 +833,6 @@ export class CjsSchema
     // not here: `meta.abstract` and `blue.abstract` both describe and install
     // (`abstractDecorator`, ruling 2026-10-17).
     static #compose = {
-        notify: composeNotifyDecorator,
         values: composeValuesDecorator(CjsSchema._statelessTransport)
     };
 
@@ -1013,7 +1011,6 @@ export class CjsSchema
             if (!Number.isSafeInteger(index) || index < 0) throw new TypeError("meta.keyIndex requires a nonnegative safe integer.");
             return fieldDecorator("keyIndex", index);
         },
-        events: this.#compose.notify,
         values: this.#compose.values,
         /**
          * Marks a static field as the value behind a named engine setting,

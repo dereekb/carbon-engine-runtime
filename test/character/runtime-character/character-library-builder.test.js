@@ -1,4 +1,3 @@
-import { NOTIFY_METHODS } from "../../../npm/dist/blue/compose/notify.js";
 import { Copier } from "../../../npm/dist/blue/blueexposure/Copier.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import test from "node:test";
@@ -727,18 +726,12 @@ test("adds already-hydrated editor records without cloning or rehydrating them",
     assert.equal(roundTrip.Get("characterResources", 22).resPath, resource.resPath);
 });
 
-test("creates, removes, deletes, and clears records through observable library methods", () =>
+test("creates, removes, deletes, and clears records through library methods", () =>
 {
     const library = CjsCharacterLibrary.from(
         CjsCharacterLibraryBuilder.build(CreateDocuments())
     );
-    const events = [];
     let deleted = null;
-
-    for (const eventName of [ "recordadded", "recordremoved", "recorddeleted", "documentcleared" ])
-    {
-        NOTIFY_METHODS.OnEvent.call(library, eventName, (_name, _owner, payload) => events.push([ eventName, payload ]));
-    }
 
     const created = library.Create("characterResources", {
         recordID: "22",
@@ -749,13 +742,9 @@ test("creates, removes, deletes, and clears records through observable library m
 
     assert.ok(created instanceof CjsCharacterResource);
     assert.strictEqual(library.Get("characterResources", 22), created);
-    assert.equal(events[0][0], "recordadded");
-    assert.equal(events[0][1].documentName, "characterResources");
-    assert.strictEqual(events[0][1].record, created);
 
     assert.equal(library.Remove("characterResources", created), true);
     assert.equal(library.Get("characterResources", 22), null);
-    assert.equal(events[1][0], "recordremoved");
 
     const existing = library.Get("characterResources", 21);
     assert.equal(library.Delete("characterResources", existing, {
@@ -766,17 +755,10 @@ test("creates, removes, deletes, and clears records through observable library m
     }), true);
     assert.strictEqual(deleted, existing);
     assert.equal(library.Get("characterResources", 21), null);
-    assert.deepEqual(events.slice(2, 4).map(([ name ]) => name), [
-        "recordremoved",
-        "recorddeleted"
-    ]);
 
-    const count = library.GetDocument("races").length;
     assert.equal(library.Clear("races"), true);
     assert.deepEqual(library.GetDocument("races"), []);
     assert.equal(library.Get("races", 3), null);
-    assert.equal(events.at(-1)[0], "documentcleared");
-    assert.equal(events.at(-1)[1].count, count);
 
     const quiet = library.Create("characterResources", {
         recordID: "23",
@@ -784,12 +766,10 @@ test("creates, removes, deletes, and clears records through observable library m
         typeID: "9003",
         resGender: 1
     }, {
-        notify: false,
-        skipEvents: true
+        notify: false
     });
 
     assert.strictEqual(library.Get("characterResources", 23), quiet);
-    assert.equal(events.at(-1)[0], "documentcleared");
 });
 
 test("inspects extension-neutral resource data through one resident resource-manager path", async () =>
@@ -797,7 +777,6 @@ test("inspects extension-neutral resource data through one resident resource-man
     const library = CjsCharacterLibrary.from(
         CjsCharacterLibraryBuilder.build(CreateDocuments())
     );
-    const events = [];
     const requests = [];
     const bytes = new Uint8Array(0);
     const resMan = {
@@ -823,7 +802,6 @@ test("inspects extension-neutral resource data through one resident resource-man
     };
 
     library.SetResourceManager(resMan);
-    NOTIFY_METHODS.OnEvent.call(library, "recordadded", (_name, _owner, payload) => events.push(payload));
     const [ first, second ] = await Promise.all([
         library.InspectResourceForData("RES:/Character/Pants.DDS"),
         library.InspectResourceForData("res:/character/pants.png")
@@ -851,9 +829,6 @@ test("inspects extension-neutral resource data through one resident resource-man
         "res:/character/pants.png",
         { emit: "raw", cacheSource: true }
     ] ]);
-    assert.equal(events.length, 1);
-    assert.equal(events[0].documentName, "characterTextureMetadata");
-    assert.strictEqual(events[0].record, first);
 
     assert.strictEqual(
         await library.InspectResourceForData("res:/character/pants"),

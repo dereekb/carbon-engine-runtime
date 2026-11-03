@@ -1,7 +1,6 @@
 // Optional values methods and batched editing state for explicitly composed classes.
 // Schema services use the same write/notification operations without an instance base.
 // State is created lazily on the first edit or event subscription.
-import { NOTIFY_METHODS } from "./notify.js";
 import { ensureRuntimeState, getRuntimeState } from "./runtimeState.js";
 
 
@@ -219,7 +218,7 @@ export function applyValues(target, options, populate)
 
     if (changed.size && options.markDirty !== false && options.skipUpdate !== true)
     {
-        dispatchModified(target, [...notified], options, changed);
+        dispatchModified(target, [...notified]);
     }
 
     function recordWrite(field, didChange)
@@ -259,7 +258,7 @@ export function NotifyModified(target, names, options = {})
     if (!changed.size || options.markDirty === false) return true;
     ensureRuntimeState(target).dirty = true;
     if (options.skipUpdate === true) return true;
-    return dispatchModified(target, options.notify === false ? [] : [...changed], options, changed);
+    return dispatchModified(target, options.notify === false ? [] : [...changed]);
 }
 
 /** Preserves the composed UpdateValues options form without retaining a queue. */
@@ -273,11 +272,17 @@ function updateValues(target, options = {}, changedFields = null)
     if (options.markDirty === false) return true;
     ensureRuntimeState(target).dirty = true;
     if (options.skipUpdate === true) return true;
-    return dispatchModified(target, options.notify === false ? [] : null, options, null);
+    return dispatchModified(target, options.notify === false ? [] : null);
 }
 
-/** Calls the hook once, then emits this operation's event after acceptance. */
-function dispatchModified(target, names, options, changedFields)
+/**
+ * Calls the owner's `OnModified` once (INotify) and clears the dirty flag
+ * unless the hook refuses or throws.
+ * @param {object} target The owner.
+ * @param {string[]|null} names The modified members; null for "everything".
+ * @returns {boolean} Whether the hook accepted the edit.
+ */
+function dispatchModified(target, names)
 {
     const state = ensureRuntimeState(target);
     // Clear before the hook: nested skipped or failed edits must stay dirty.
@@ -299,10 +304,6 @@ function dispatchModified(target, names, options, changedFields)
     {
         state.dirty = true;
         throw error;
-    }
-    if (options.skipEvents !== true && !state.suppressEvents && state.HasListener())
-    {
-        NOTIFY_METHODS.EmitEvent.call(target, "modified", target, { source: options.source ?? target, changedFields });
     }
     return true;
 }

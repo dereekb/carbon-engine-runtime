@@ -11,7 +11,7 @@ import { ICacheable } from "../../../npm/dist/blue/blue/index.js";
 import * as runtimeResource from "../../../npm/dist/resource/index.js";
 import { CjsBlackFormat } from "../../../npm/dist/blue/blue/formats/black/index.js";
 import { CjsRedFormat } from "../../../npm/dist/blue/blue/formats/red/index.js";
-import { CjsEventEmitter, Tr2ImageRes, TriGeometryRes, TriTextureRes, MotherLode, CjsLoadingObject, BlueResMan, BlueAsyncRes, CjsResourceProbe, ResourceHandlerMode, Tr2GrannyStateRes, Tr2LightProfileRes, TriGrannyRes, getMotherLodeKey } from "../../../npm/dist/resource/index.js";
+import { Tr2ImageRes, TriGeometryRes, TriTextureRes, MotherLode, CjsLoadingObject, BlueResMan, BlueAsyncRes, CjsResourceProbe, ResourceHandlerMode, Tr2GrannyStateRes, Tr2LightProfileRes, TriGrannyRes, getMotherLodeKey } from "../../../npm/dist/resource/index.js";
 import { Tr2EffectRes, Tr2MaterialRes } from "../../../npm/dist/trinity/shader/index.js";
 import { LoadData } from "../../support/loadData.js";
 import { RegisterDataLoader, TestDataRes } from "../../support/testDataRes.js";
@@ -38,8 +38,8 @@ async function readDecodedData(manager, path, options)
   return manager.ReadFormatOnce(resource, descriptor, bytes, options);
 }
 
-test("runtime-resource does not export an event scope layer", () => {
-  assert.equal(runtimeResource.CjsEventEmitter, CjsEventEmitter);
+test("runtime-resource does not export an event emitter or scope layer", () => {
+  assert.equal("CjsEventEmitter" in runtimeResource, false);
   assert.equal("CjsEventEmitterScope" in runtimeResource, false);
   assert.equal("CjsResourceState" in runtimeResource, false);
   assert.equal("isTerminalResourceState" in runtimeResource, false);
@@ -54,118 +54,6 @@ test("runtime-resource does not export an event scope layer", () => {
   ]) {
     assert.equal(name in runtimeResource, false);
   }
-});
-
-test("CjsEventEmitter supports direct source subscriptions", () => {
-  const emitter = new CjsEventEmitter();
-  const source = { count: 0 };
-  const seen = [];
-
-  function listener(name, value) {
-    this.count += value;
-    seen.push([ name, value ]);
-  }
-
-  assert.equal(Object.prototype.hasOwnProperty.call(emitter, "__state"), false);
-  assert.equal(emitter.OnEvent("Loaded", listener, source), emitter);
-
-  assert.equal(emitter.__state.events instanceof Map, true);
-  assert.equal(emitter.HasListener("loaded", listener, source), true);
-  assert.deepEqual(emitter.GetEventNames(), ["loaded"]);
-
-  emitter.EmitEvent("LOADED", 2);
-
-  assert.deepEqual(seen, [ [ "loaded", 2 ] ]);
-  assert.equal(source.count, 2);
-
-  emitter.OffEvent("LoAdEd", listener, source);
-  assert.equal(Object.prototype.hasOwnProperty.call(emitter.__state, "events"), false);
-  emitter.EmitEvent("loaded", 2);
-
-  assert.deepEqual(seen, [ [ "loaded", 2 ] ]);
-  assert.equal(emitter.HasListener("loaded"), false);
-});
-
-test("CjsEventEmitter once listeners are removed before callback completion", () => {
-  const emitter = new CjsEventEmitter();
-  let count = 0;
-
-  emitter.OnceEvent("fail", () => {
-    count += 1;
-    throw new Error("boom");
-  });
-
-  assert.throws(() => emitter.EmitEvent("fail"), /boom/u);
-  assert.equal(count, 1);
-  assert.equal(emitter.HasListener("fail"), false);
-
-  emitter.EmitEvent("fail");
-
-  assert.equal(count, 1);
-});
-
-test("CjsEventEmitter clears event groups and supports AddEvents once suffix", () => {
-  const emitter = new CjsEventEmitter();
-  const values = [];
-  const source = { value: 3 };
-
-  assert.equal(emitter.AddEvents({
-    changed(name, value) {
-      values.push(value);
-    },
-    "changed.once": [function(name, value) {
-      values.push(value + this.value);
-    }, source]
-  }), emitter);
-
-  emitter.EmitEvent("changed", 4);
-  emitter.EmitEvent("changed", 5);
-
-  assert.deepEqual(values, [4, 7, 5]);
-  assert.equal(emitter.HasListener("changed"), true);
-
-  emitter.ClearEvent("*");
-
-  assert.equal(emitter.HasListener("*"), false);
-});
-
-test("CjsEventEmitter independently removes external listener sources", () => {
-  const ship = {};
-  const scene = {};
-  const resource = new CjsEventEmitter();
-  const shipValues = [];
-  const sceneValues = [];
-
-  function onShipLoaded(name, value) {
-    shipValues.push(value);
-  }
-
-  function onSceneLoaded(name, value) {
-    sceneValues.push(value);
-  }
-
-  resource.OnEvent("loaded", onShipLoaded, ship);
-  resource.OnEvent("loaded", onSceneLoaded, scene);
-
-  assert.equal(resource.GetEventListenerCount("loaded"), 2);
-
-  resource.EmitEvent("loaded", 7);
-
-  assert.deepEqual(shipValues, [7]);
-  assert.deepEqual(sceneValues, [7]);
-
-  resource.OffEvent("loaded", null, ship);
-  resource.EmitEvent("loaded", 9);
-
-  assert.deepEqual(shipValues, [7]);
-  assert.deepEqual(sceneValues, [7, 9]);
-  assert.equal(resource.GetEventListenerCount("loaded"), 1);
-
-  resource.ClearEvent("*");
-  resource.EmitEvent("loaded", 11);
-
-  assert.deepEqual(sceneValues, [7, 9]);
-  assert.equal(resource.HasListener("loaded"), false);
 });
 
 test("resource path helpers normalize Carbon-style paths", () => {

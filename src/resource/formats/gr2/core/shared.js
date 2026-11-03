@@ -83,7 +83,7 @@ function build(classes, key, props, hydrationOptions = {})
  *
  * @param {object} instance Newly constructed node instance.
  * @param {object} props Fields to populate onto the instance.
- * @param {object} [hydrationOptions] Extra `SetValues` options; `skipUpdate` and `skipEvents` are forced on.
+ * @param {object} [hydrationOptions] Extra `SetValues` options; `skipUpdate` is forced on.
  * @returns {object} The populated instance.
  * @throws {TypeError} When the instance has no `SetValues` method.
  */
@@ -93,7 +93,7 @@ function populate(instance, props, hydrationOptions = {})
     {
         throw new TypeError("CjsGr2Format class population requires classes to implement SetValues(values)");
     }
-    instance.SetValues(props, { ...hydrationOptions, skipUpdate: true, skipEvents: true });
+    instance.SetValues(props, { ...hydrationOptions, skipUpdate: true });
     return instance;
 }
 

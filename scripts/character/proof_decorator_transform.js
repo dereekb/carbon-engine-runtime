@@ -20,48 +20,40 @@ function entryText(kind) {
 import { CjsSchema, meta } from "#schema";
 import * as character from "${base}";
 
-// The composition half of the proof (the @meta.events installer): pins that
+// The composition half of the proof (the @meta.values installer): pins that
 // Babel's 2023-11 class-decorator output applies prototype mutations to the
 // SAME prototype object in both pipelines - which schema metadata cannot see.
 export function captureComposition() {
-  @meta.events
-  class EventProbe {}
-  const proto = EventProbe.prototype;
+  @meta.values
+  class ValuesProbe {}
+  const proto = ValuesProbe.prototype;
   const result = {
     ownNames: Object.getOwnPropertyNames(proto).sort(),
-    // The extends is genuinely gone: nothing re-inherited the surface.
+    // No extends: nothing re-inherited the surface.
     baseIsObject: Object.getPrototypeOf(proto) === Object.prototype,
     methods: {}
   };
-  for (const name of ["AddEvents", "OnEvent", "OnceEvent", "OffEvent", "EmitEvent",
-    "HasEvent", "ClearEvent", "GetEventNames", "GetEventListenerCount"]) {
+  for (const name of ["GetValues", "SetValues", "UpdateValues", "OnModified", "IsDirty", "MarkDirty"]) {
     const fn = proto[name];
-    // fn.length catches default-parameter arity drift under transform - the
-    // realistic Babel hazard for OffEvent(eventName = "*", ...).
+    // fn.length catches default-parameter arity drift under transform.
     result.methods[name] = { type: typeof fn, length: fn?.length ?? -1, name: fn?.name ?? null };
   }
 
-  // Behavioural round-trip, including the lazy-allocate/lazy-teardown state
-  // contract no other proof covers.
-  const instance = new EventProbe();
-  let observed = 0;
-  const listener = () => { observed += 1; };
-  instance.OnEvent("probe", listener);
-  instance.EmitEvent("probe");
-  result.observed = observed;
-  result.namesWhileSubscribed = instance.GetEventNames();
-  instance.OffEvent("probe", listener);
-  result.stateTornDown = instance.__state === undefined || instance.__state.events === undefined;
+  // Behavioural round-trip through the installed dirty flag.
+  const instance = new ValuesProbe();
+  result.dirtyBefore = instance.IsDirty();
+  instance.MarkDirty();
+  result.dirtyAfter = instance.IsDirty();
 
-  // Install-if-absent: a class declaring its own OnEvent keeps it. The
+  // Install-if-absent: a class declaring its own OnModified keeps it. The
   // functional form also verifies direct installation independently of the
   // decorated local probe transformed in both source and dist pipelines.
-  class OwnOnEventProbe {
-    OnEvent() { return "own"; }
+  class OwnOnModifiedProbe {
+    OnModified() { return "own"; }
   }
-  meta.events(OwnOnEventProbe);
-  result.ownMethodSurvives = new OwnOnEventProbe().OnEvent() === "own";
-  result.probeGainsRest = typeof OwnOnEventProbe.prototype.EmitEvent === "function";
+  meta.values(OwnOnModifiedProbe);
+  result.ownMethodSurvives = new OwnOnModifiedProbe().OnModified() === "own";
+  result.probeGainsRest = typeof OwnOnModifiedProbe.prototype.SetValues === "function";
 
   return structuredClone(result);
 }
@@ -151,5 +143,5 @@ const dist = await import(pathToFileURL(distBundle));
 assert.deepEqual(structuredClone(source.capture()), structuredClone(dist.capture()));
 assert.deepEqual(source.captureComposition(), dist.captureComposition());
 assert.equal(dist.captureComposition().baseIsObject, true, "the extends is gone in dist");
-assert.equal(dist.captureComposition().observed, 1, "composed emitter dispatches in dist");
-console.log("decorator transform proof passed for all decorated character classes, including the installed event surface");
+assert.equal(dist.captureComposition().dirtyAfter, true, "composed values surface works in dist");
+console.log("decorator transform proof passed for all decorated character classes, including the installed values surface");

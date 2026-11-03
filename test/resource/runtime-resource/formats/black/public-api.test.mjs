@@ -417,7 +417,6 @@ test("the DEFAULT adapter drives SetValues and Initialize", () =>
     assert.equal(runtime.root instanceof LiveRoot, true);
     assert.equal(runtime.root.captured.name, "root");
     assert.equal(runtime.root.lifecycleOptions.skipUpdate, true);
-    assert.equal(runtime.root.lifecycleOptions.skipEvents, true);
     // A reader no longer suppresses the dirty mark: it cannot build what the
     // values ask for (vertices, buffers), so the work is outstanding when the
     // read ends and the object must carry its declared tokens.

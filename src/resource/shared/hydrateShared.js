@@ -37,7 +37,7 @@ function populate(instance, props, hydrationOptions = {})
     const setValues = instance["SetValues"];
     if (typeof setValues !== "function")
       throw new TypeError("Shared geometry class population requires classes to implement SetValues(values)");
-    setValues.call(instance, props, { ...hydrationOptions, skipUpdate: true, skipEvents: true });
+    setValues.call(instance, props, { ...hydrationOptions, skipUpdate: true });
     return instance;
 }
 

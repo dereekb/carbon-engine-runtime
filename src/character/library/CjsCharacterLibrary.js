@@ -5,7 +5,6 @@ import { normalizeResourcePath } from "#utils/path";
 import { CjsSchema, meta, type } from "#schema";
 import { DictWriter } from "../../blue/blue/DictWriter.js";
 import { ReadValues } from "../../blue/blue/values.js";
-import { NOTIFY_METHODS } from "../../blue/compose/notify.js";
 import { CjsCharacterLibraryDocuments } from "./CjsCharacterLibraryDocuments.js";
 import { CjsCharacterTextureMetadata } from "../model/catalog/CjsCharacterTextureMetadata.js";
 import { CjsCharacterUnresolvedRelationship } from "../model/resolution/CjsCharacterUnresolvedRelationship.js";
@@ -397,7 +396,7 @@ export class CjsCharacterLibrary
     static from(values = {}, options = {})
     {
         const instance = new this();
-        instance.SetValues(this.validateValues(values), { ...options, skipEvents: true });
+        instance.SetValues(this.validateValues(values), options);
         return instance;
     }
 
@@ -621,7 +620,6 @@ export class CjsCharacterLibrary
 
         const record = this.documents.Create(key, values, options);
         this._documentIndexes.delete(key);
-        EmitRecordEvent(this, "recordadded", key, record, options);
         return record;
     }
 
@@ -639,7 +637,6 @@ export class CjsCharacterLibrary
 
         this.documents.Add(key, record, options);
         this._documentIndexes.delete(key);
-        EmitRecordEvent(this, "recordadded", key, record, options);
         return record;
     }
 
@@ -653,7 +650,6 @@ export class CjsCharacterLibrary
         if (removed)
         {
             this._documentIndexes.delete(key);
-            EmitRecordEvent(this, "recordremoved", key, record, options);
         }
         return removed;
     }
@@ -668,8 +664,6 @@ export class CjsCharacterLibrary
         if (deleted)
         {
             this._documentIndexes.delete(key);
-            EmitRecordEvent(this, "recordremoved", key, record, options);
-            EmitRecordEvent(this, "recorddeleted", key, record, options);
         }
         return deleted;
     }
@@ -678,13 +672,11 @@ export class CjsCharacterLibrary
     Clear(documentName, options = {})
     {
         const key = RequireDocumentName(documentName);
-        const count = this.documents[key].length;
         const cleared = this.documents.Clear(key, options);
 
         if (cleared)
         {
             this._documentIndexes.delete(key);
-            EmitRecordEvent(this, "documentcleared", key, null, options, { count });
         }
         return cleared;
     }
@@ -895,21 +887,6 @@ function ThrowDuplicateRecord(documentName, recordID)
     throw new Error(
         `Character library document ${JSON.stringify(documentName)} already contains record ${JSON.stringify(recordID)}`
     );
-}
-
-// Nothing outside the tests listens to the record events (recordadded,
-// recordremoved, recorddeleted, documentcleared; checked 2026-10-14). Left for
-// the character work, which is expected to move them onto the new event system
-// rather than drop them.
-function EmitRecordEvent(library, eventName, documentName, record, options, extra = {})
-{
-    if (options.skipEvents === true) return;
-    NOTIFY_METHODS.EmitEvent.call(library, eventName, library, {
-        documentName,
-        record,
-        source: options.source ?? library,
-        ...extra
-    });
 }
 
 function CreateDocumentIndex(name, document, typeName, revision)

@@ -30,7 +30,6 @@ import * as types from "../../../src/blue/schema/types/index.js";
 const coreTypes = { ...lifecycle, ...model, ...schema, ...types };
 const {
     CARBON_TYPE,
-    CjsEventEmitter,
     CjsLifecycleState,
     CJS_LIFECYCLE,
     CjsSchema,
@@ -41,14 +40,6 @@ const {
     normalizeCarbonValue,
     normalizeCarbonTypeDescriptor
 } = coreTypes;
-
-test("the runtime model foundation exposes the raw emitter without an event scope layer", () => {
-    assert.equal(coreTypes.CjsEventEmitter, CjsEventEmitter);
-    assert.equal("CjsEventEmitterScope" in coreTypes, false);
-});
-
-
-
 
 
 test("lifecycle state can be installed on a plain object", () => {
@@ -228,86 +219,6 @@ test("EnumerateChildren walks are cycle-safe and GetResources visits every model
     // Prior contents are replaced, not accumulated into.
     assert.deepEqual(new Set(GetResources(root, [resourceC])), new Set([resourceA, resourceB, resourceC]));
     assert.equal(GetResources(root, []).length, 3);
-});
-
-test("CjsEventEmitter normalizes names and supports external method sources", () => {
-    const source = { count: 0 };
-    const target = new CjsEventEmitter();
-    const values = [];
-
-    function onLoaded(name, value)
-    {
-        this.count++;
-        values.push([this, name, value]);
-    }
-
-    assert.deepEqual(Object.getOwnPropertyNames(target), []);
-    assert.equal(target.OnEvent("Loaded", onLoaded, source), target);
-    assert.deepEqual(Object.getOwnPropertyNames(target), ["__state"]);
-    assert.equal(Object.keys(target).includes("__state"), false);
-    assert.equal(target.__state.events instanceof Map, true);
-    assert.equal(target.HasListener("loaded", onLoaded, source), true);
-    assert.deepEqual(target.GetEventNames(), ["loaded"]);
-
-    target.EmitEvent("LOADED", 3);
-
-    assert.deepEqual(values, [[source, "loaded", 3]], "the emitted name arrives normalized");
-    assert.equal(source.count, 1);
-    assert.equal(target.GetEventListenerCount("loaded"), 1);
-
-    target.OffEvent("LoAdEd", onLoaded, source);
-    target.EmitEvent("loaded", 4);
-
-    assert.deepEqual(values, [[source, "loaded", 3]]);
-    assert.equal(target.HasListener("loaded"), false);
-    assert.equal(Object.hasOwn(target.__state, "events"), false);
-});
-
-test("CjsEventEmitter removes once listeners before callback completion", () => {
-    const emitter = new CjsEventEmitter();
-    let count = 0;
-
-    emitter.OnceEvent("loaded", () => {
-        count += 1;
-        throw new Error("once failure");
-    });
-
-    assert.throws(() => emitter.EmitEvent("loaded"), /once failure/);
-    emitter.EmitEvent("loaded");
-
-    assert.equal(count, 1);
-    assert.equal(emitter.GetEventListenerCount(), 0);
-    assert.equal(emitter.HasListener("loaded"), false);
-    assert.equal(Object.hasOwn(emitter.__state, "events"), false);
-});
-
-test("CjsEventEmitter removes one source across every event name", () => {
-    const emitter = new CjsEventEmitter();
-    const firstSource = {};
-    const secondSource = {};
-    const seen = [];
-
-    function listener(name, value)
-    {
-        seen.push([this, name, value]);
-    }
-
-    emitter
-        .OnEvent("loaded", listener, firstSource)
-        .OnEvent("changed", listener, firstSource)
-        .OnEvent("loaded", listener, secondSource);
-
-    emitter.OffEvent("*", null, firstSource);
-
-    assert.equal(emitter.HasListener("loaded", listener, firstSource), false);
-    assert.equal(emitter.HasListener("changed", listener, firstSource), false);
-    assert.equal(emitter.HasListener("loaded", listener, secondSource), true);
-
-    emitter.EmitEvent("loaded", 1);
-    emitter.EmitEvent("changed", 2);
-
-    assert.deepEqual(seen, [[secondSource, "loaded", 1]]);
-    assert.equal(emitter.GetEventListenerCount(), 1);
 });
 
 test("normalizes carbon values and exports plain JSON values", () => {
@@ -786,18 +697,18 @@ test("uses schema metadata as the default schema value shape", () => {
 
     const source = {};
     (ensureRuntimeState(node).dirty = false);
-    CjsSchema.setValues(node, { position: [4, 5, 6] }, { source, skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(node, { position: [4, 5, 6] }, { source, skipUpdate: true });
     assert.equal(node.__state.dirty, true);
 
     (ensureRuntimeState(node).dirty = false);
-    CjsSchema.setValues(node, { position: [4, 5, 6] }, { source, skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(node, { position: [4, 5, 6] }, { source, skipUpdate: true });
     assert.equal((getRuntimeState(node)?.dirty === true), false, "an equal write does not mark dirty or notify");
 
-    CjsSchema.setValues(node, { position: [7, 8, 9] }, { notify: false, source, skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(node, { position: [7, 8, 9] }, { notify: false, source, skipUpdate: true });
     assert.equal(node.__state.dirty, true);
 
     (ensureRuntimeState(node).dirty = false);
-    CjsSchema.setValues(node, { name: "renamed" }, { source, skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(node, { name: "renamed" }, { source, skipUpdate: true });
     assert.equal(node.__state.dirty, true);
 });
 
@@ -883,7 +794,7 @@ test("registered struct fields copy values into their constructor-owned instance
     const position = data.position;
     const incoming = CjsSchema.from(CjsSchema.getClassName(ValueStruct), { position: [1, 2, 3], radius: 4 });
 
-    CjsSchema.setValues(owner, { data: incoming }, { skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(owner, { data: incoming }, { skipUpdate: true });
 
     assert.equal(owner.data, data);
     assert.notEqual(owner.data, incoming);
@@ -896,7 +807,7 @@ test("registered struct fields copy values into their constructor-owned instance
     assert.deepEqual(Array.from(owner.data.position), [1, 2, 3]);
     assert.equal(owner.data.radius, 4);
 
-    CjsSchema.setValues(owner, { data: { position: [5, 6, 7], radius: 8 } }, { skipEvents: true, skipUpdate: true });
+    CjsSchema.setValues(owner, { data: { position: [5, 6, 7], radius: 8 } }, { skipUpdate: true });
     assert.equal(owner.data, data);
     assert.equal(owner.data.position, position);
     assert.deepEqual(Array.from(owner.data.position), [5, 6, 7]);

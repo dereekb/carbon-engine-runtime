@@ -145,8 +145,7 @@ export class CjsBlueReader extends CjsReader
         this.adapter = resolveHydrationAdapter(options);
         this.hydrationOptions = {
             ...options,
-            skipUpdate: true,
-            skipEvents: true
+            skipUpdate: true
         };
         this.ResetBlueReadState();
     }

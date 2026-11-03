@@ -129,7 +129,7 @@ test("EveCamera derives notified orbit rotation and edge-triggers invalid-state 
 {
   const camera = new EveCamera();
   const authored = quat.fromYawPitchRollCarbon(quat.create(), 0.7, -0.35, 0);
-  assert.equal(CjsSchema.setValues(camera, { rotationAroundParent: authored }, { skipEvents: true, returnBoolean: true }), true);
+  assert.equal(CjsSchema.setValues(camera, { rotationAroundParent: authored }, { returnBoolean: true }), true);
   camera.frontClip = 1;
   camera.translationFromParent = 5;
   camera.Update(0, 1, 0);
@@ -158,7 +158,7 @@ test("EveCamera notifications preserve active spring targets", () =>
   camera.SetOrbit(0, 0);
   camera.OrbitParent(1, 0);
 
-  CjsSchema.setValues(camera, { rotationAroundParent: quat.fromYawPitchRollCarbon(quat.create(), 0.2, 0, 0) }, { skipEvents: true });
+  CjsSchema.setValues(camera, { rotationAroundParent: quat.fromYawPitchRollCarbon(quat.create(), 0.2, 0, 0) });
   // One second of scene ticks: Carbon takes the frame delta as TimeAsDouble(realTime - m_time) (EveCamera.cpp:243).
   camera.Update(10_000_000, 1, 10_000_000);
 

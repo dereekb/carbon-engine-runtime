@@ -261,6 +261,6 @@ function hydrateNode(type, fields, classes, hydrationOptions, populationLabel)
         throw new TypeError(`${populationLabel} class population requires classes to implement SetValues(values)`);
     }
 
-    instance.SetValues(fields, { ...hydrationOptions, skipUpdate: true, skipEvents: true });
+    instance.SetValues(fields, { ...hydrationOptions, skipUpdate: true });
     return instance;
 }

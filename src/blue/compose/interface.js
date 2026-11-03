@@ -145,7 +145,7 @@ function CollectMembers(Contract)
 /**
  * Installs a contract's members onto a class's prototype, install-if-absent.
  *
- * Install-if-absent is the same rule `installNotify` follows: a member the
+ * Install-if-absent is the same rule the `@compose.values` installer follows: a member the
  * class or its `extends` chain already answers keeps its own, so declaring a
  * contract never silently replaces a real implementation. That is also why the
  * decorator can be applied to a class that already satisfies part of its

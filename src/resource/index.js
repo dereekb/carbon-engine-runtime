@@ -13,7 +13,6 @@ export * from "../trinity/resources/texture/index.js";
 export * from "../core/platform/video/index.js";
 export * from "./format/CjsResourceProbe.js";
 export * from "./format/CjsFormat.js";
-export { CjsEventEmitter } from "#model";
 // The manager core moved to Blue (blue/blue); re-exported for consumers of
 // @carbonenginejs/runtime/resource.
 export {

@@ -5,7 +5,6 @@ import { CjsSchema } from "../schema/index.js";
 import { DictReader, CreateAnchorTable } from "./DictReader.js";
 import { ensureRuntimeState } from "../compose/runtimeState.js";
 import { NotifyModified } from "../compose/values.js";
-import { NOTIFY_METHODS } from "../compose/notify.js";
 import { BLUELISTEVENT } from "../../global/consts/blue.js";
 
 const CHILD_COLLECTION_KINDS = new Set([ "array", "list" ]);
@@ -50,7 +49,6 @@ export function addChild(target, property, child, options = {})
 
     const payload = createChildEventPayload(target, field.name, child, index, options);
     invokeChildCallback(options.onAdded, target, payload, "onAdded");
-    emitChildEvent(target, "childadded", payload, options);
     settleChildMutation(target, field, options);
     return child;
 }
@@ -72,7 +70,6 @@ export function removeChild(target, property, child, options = {})
 
     const payload = createChildEventPayload(target, field.name, child, index, options);
     invokeChildCallback(options.onRemoved, target, payload, "onRemoved");
-    emitChildEvent(target, "childremoved", payload, options);
     settleChildMutation(target, field, options);
     return true;
 }
@@ -100,7 +97,6 @@ export function deleteChild(target, property, child, options = {})
 
     const payload = createChildEventPayload(target, field.name, child, index, options);
     invokeChildCallback(options.onDeleted, target, payload, "onDeleted");
-    emitChildEvent(target, "childdeleted", payload, options);
     settleChildMutation(target, field, options);
     return true;
 }
@@ -128,7 +124,6 @@ export function clearChildren(target, property, options = {})
         source: options.source ?? target
     };
     invokeChildCallback(options.onCleared, target, payload, "onCleared");
-    emitChildEvent(target, "childrencleared", payload, options);
     settleChildMutation(target, field, options);
     return true;
 }
@@ -210,44 +205,11 @@ function invokeChildCallback(callback, target, payload, optionName)
     callback.call(target, payload);
 }
 
-// Nothing outside the tests listens to the child events (childadded,
-// childremoved, childdeleted, childrencleared) or the "modified" events raised
-// below (checked 2026-10-14). Left for the new event system, which is expected
-// to carry them rather than drop them.
-function emitChildEvent(target, eventName, payload, options)
-{
-    if (options.skipEvents !== true)
-    {
-        NOTIFY_METHODS.EmitEvent.call(target, eventName, target, payload);
-    }
-}
-
 function settleChildMutation(target, field, options)
 {
     if (options.skipUpdate === true) return;
 
-    if (options.markDirty === false)
-    {
-        if (options.skipEvents !== true)
-        {
-            NOTIFY_METHODS.EmitEvent.call(target, "modified", target, createModifiedPayload(
-                new Set([ field.name ]),
-                options.source ?? target
-            ));
-        }
-        return;
-    }
-
-    const accepted = NotifyModified(target, field.name, { ...options, notify: options.notify !== false && !!field.edit?.notify, skipEvents: true });
-    if (accepted && options.skipEvents !== true)
-    {
-        NOTIFY_METHODS.EmitEvent.call(target, "modified", target, { source: options.source ?? target });
-    }
+    if (options.markDirty === false) return;
+    NotifyModified(target, field.name, { ...options, notify: options.notify !== false && !!field.edit?.notify });
 }
 
-
-/** Constructs the mutation event payload independently of runtime state. */
-function createModifiedPayload(properties, source)
-{
-    return { properties: new Set(properties), source };
-}

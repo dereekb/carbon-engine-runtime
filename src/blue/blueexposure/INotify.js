@@ -10,7 +10,7 @@ import { IRoot } from "./IRoot.js";
 //
 // So it fires when something OUTSIDE the object edits a mapped member - a tool,
 // a reader, a script - and the object then sorts itself out. It is not a
-// broadcast, it has one implementor per class, and it is not the event emitter.
+// broadcast and it has one implementor per class: no listener is told.
 // The exposure gate above is not universal: explicit callers such as Copier
 // have their own selection rules. Keep those rules at the calling site.
 //

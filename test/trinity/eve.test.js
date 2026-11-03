@@ -81,7 +81,7 @@ test("ellipse list mutations bind and release owner callbacks with Carbon event 
   }
   const set = new EveEllipseSet();
   const ellipse = new TrackedEllipse();
-  const options = { skipUpdate: true, skipEvents: true };
+  const options = { skipUpdate: true };
   addChild(set, "ellipses", ellipse, { ...options, listNotify: set });
   assertEquals(typeof ellipse.bindings[0], "function");
   removeChild(set, "ellipses", ellipse, { ...options, listNotify: set });

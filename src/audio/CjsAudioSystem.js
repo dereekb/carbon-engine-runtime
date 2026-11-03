@@ -530,7 +530,7 @@ export class CjsAudioSystem
         {
             this.manager.RegisterGameObject(emitter.ID, emitter);
         }
-        CjsSchema.setValues(emitter, {}, { skipEvents: true });
+        CjsSchema.setValues(emitter, {});
         this._adoptedEmitters.add(emitter);
         if (this.manager.enabled)
         {

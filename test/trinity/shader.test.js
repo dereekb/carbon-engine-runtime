@@ -1,7 +1,6 @@
 import { Tr2EffectRes } from "../../npm/dist/trinity/shader/index.js";
 import { ITriEffectParameter } from "../../npm/dist/trinity/shader/parameter/ITriEffectParameter.js";
 import { NotifyModified } from "../../npm/dist/blue/blue/index.js";
-import { NOTIFY_METHODS } from "../../npm/dist/blue/compose/notify.js";
 import { composeStubResMan } from "../support/stubResMan.js";
 
 // blue.resMan throws until something composes a manager, so a test that
@@ -308,7 +307,6 @@ test("Tr2Effect populates and prunes shader parameters from reflection data", ()
 test("SetEffectPathName always initializes; equal values-door writes do not", () =>
 {
   const effect = new Tr2Effect();
-  const events = [];
   let initializeCount = 0;
   const initialize = effect.Initialize.bind(effect);
   effect.Initialize = () =>
@@ -316,19 +314,15 @@ test("SetEffectPathName always initializes; equal values-door writes do not", ()
     initializeCount++;
     return initialize();
   };
-  NOTIFY_METHODS.OnEvent.call(effect, "modified", (_name, _subject, data) => events.push(data));
 
-  // Carbon's setter stores and initializes on every call (Tr2Effect.cpp) and
-  // emits nothing; notifications belong to the values door.
+  // Carbon's setter stores and initializes on every call (Tr2Effect.cpp).
   effect.SetEffectPathName("res:/effect/test.sm_hi");
   effect.SetEffectPathName("res:/effect/test.sm_hi");
   assertEquals(initializeCount, 2);
-  assertEquals(events.length, 0);
   // The values door skips an equal write.
   CjsSchema.setValues(effect, { effectFilePath: "res:/effect/other.sm_hi" });
   CjsSchema.setValues(effect, { effectFilePath: "res:/effect/other.sm_hi" });
   assertEquals(initializeCount, 3);
-  assertEquals(events.length, 1);
   assertEquals(CjsSchema.getField(Tr2Effect, "effectFilePath")?.edit?.notify, true);
   effect.effectFilePath = "res:\\effect\\Ship\\main.sm_hi";
   class TestEffectRes extends Tr2EffectRes
@@ -565,7 +559,7 @@ test("promoted variable, transform, and shader buffer classes expose graph behav
     modifiedOrder.push("name");
     return rebuildEffectHandles(...args);
   };
-  NotifyModified(variable, ["name", "variableName"], { skipEvents: true });
+  NotifyModified(variable, ["name", "variableName"]);
   assertEquals(modifiedOrder.join(","), "name,variableName");
   const shader = new Tr2Shader();
   shader.effect.techniques = [Object.assign(new Tr2EffectTechnique(), {
@@ -770,22 +764,16 @@ test("Tr2Vector4Parameter handles Carbon sRGB reroute rules", () =>
 test("TriTextureParameter stays graph-owned and backend-free", () =>
 {
   const parameter = new TriTextureParameter();
-  const modified = [];
-  NOTIFY_METHODS.OnEvent.call(parameter, "modified", (_name, _target, payload) => modified.push(payload));
   parameter.name = "DiffuseMap";
   parameter.SetResourcePath("res:/texture/diffuse.dds");
   assertEquals(parameter.resourcePath, "res:/texture/diffuse.dds");
   assertEquals(parameter.GetResourcePath(), "res:/texture/diffuse.dds");
   assert(parameter.SupportsDirtyNotification());
-  // Carbon's SetResourcePath calls OnModified internally and tells no one else;
-  // outward "modified" events belong to the values door.
-  assertEquals(modified.length, 0);
   // A real TriTextureRes: Carbon reads LOD through m_textureRes, the
   // resource cast to TriTextureRes (TriTextureParameter.cpp:237).
   const runtime = new TriTextureRes().Initialize("res:/runtime.dds");
   runtime.originalResolution = 1024;
   parameter.SetResource(runtime);
-  assertEquals(modified.length, 0);
   assertEquals(parameter.GetResourcePath(), "res:/runtime.dds");
   parameter.EnableTextureLoding([2, 4, 0, 0, 0]);
   const lod = parameter.UsedWithScreenSize(512, 64, [2]);

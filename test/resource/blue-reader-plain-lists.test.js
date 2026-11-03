@@ -206,7 +206,6 @@ test("a custom applyValues keeps the whole incoming bag and takes precedence ove
   assert.equal(calls[0].incoming, values);
   assert.equal(calls[0].context.declared, true);
   assert.equal(calls[0].context.options.skipUpdate, true);
-  assert.equal(calls[0].context.options.skipEvents, true);
   assert.equal(owner.customApplied, true);
   AssertOwned(owner);
   assert.equal(owner.items.length, 0);
@@ -229,7 +228,6 @@ test("a registered SetValues convention keeps its incoming values and legacy hyd
   reader.ApplyRuntimeValues(owner, values, kind);
   assert.equal(owner.legacyCall.values, values);
   assert.equal(owner.legacyCall.options.skipUpdate, true);
-  assert.equal(owner.legacyCall.options.skipEvents, true);
   AssertOwned(owner);
   assert.equal(owner.items.length, 0);
   assert.deepEqual(owner.events, []);

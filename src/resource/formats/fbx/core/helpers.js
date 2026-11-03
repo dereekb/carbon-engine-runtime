@@ -7374,7 +7374,7 @@ function populate(instance, fields, hydrationOptions = {})
     {
         throw new TypeError("CjsFbxFormat class population requires classes to implement SetValues(values)");
     }
-    instance.SetValues(fields, { ...hydrationOptions, skipUpdate: true, skipEvents: true });
+    instance.SetValues(fields, { ...hydrationOptions, skipUpdate: true });
     return instance;
 }
 

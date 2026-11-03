@@ -27,7 +27,7 @@ function populate(instance, props, hydrationOptions = {})
     {
         throw new TypeError("CjsObjFormat class population requires classes to implement SetValues(values)");
     }
-    instance.SetValues(props, { ...hydrationOptions, skipUpdate: true, skipEvents: true });
+    instance.SetValues(props, { ...hydrationOptions, skipUpdate: true });
     return instance;
 }
 
