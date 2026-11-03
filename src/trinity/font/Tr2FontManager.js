@@ -47,7 +47,7 @@ import { Tr2Renderer } from "../core/Tr2Renderer.js";
 import { PixelFormat } from "#consts/render-context";
 import { TriStorageFlags } from "#consts/graphics";
 import { blue, IBlueEvents } from "#blue";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { trinity } from "../CjsTrinity.js";
 import { Tr2DeviceResource } from "../core/device/Tr2DeviceResource.js";
 
@@ -82,7 +82,7 @@ const INT_MAX = 0x7fffffff;
  * @abstract
  */
 @be.define("Tr2FontManager")
-@legacyBlue.inherit(IRoot, IBlueEvents, Tr2DeviceResource)
+@be.inherit(IRoot, IBlueEvents, Tr2DeviceResource)
 @be.abstract
 export class Tr2FontManager extends IRoot
 {
@@ -392,7 +392,6 @@ export class Tr2FontManager extends IRoot
    * @param {number} charCode Unicode code point.
    * @returns {number} Glyph index, or -1.
    */
-  @legacyBlue.method
   LookupGlyphIndex(faceID, charCode)
   {
     if (!Number.isInteger(faceID))
@@ -461,7 +460,6 @@ export class Tr2FontManager extends IRoot
    * @param {number} height Pixel height.
    * @returns {{ascender: number, descender: number, height: number}} 26.6 metrics.
    */
-  @legacyBlue.method
   LookupMetrics(faceID, width, height)
   {
     const size = height || width;

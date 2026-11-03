@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Tr2PerObjectData.h:152-190
 // Source: trinity/trinity/Tr2PerObjectData.cpp:147-214
-import { blue } from "#schema";
+import { meta } from "#schema";
 import { ShaderType } from "#consts/render-context";
 import { Failed } from "../../../trinityal/ALResult.js";
 import { Tr2PerObjectData } from "../../../trinity/core/rawData/perObjectData/Tr2PerObjectData.js";
@@ -9,7 +9,7 @@ import { PER_OBJECT_VS } from "../../../trinity/core/Tr2Renderer.js";
 import { Tr2PerObjectDataSkinned, TR2_MAX_BONES_PER_MESHAREA } from "./Tr2PerObjectDataSkinned.js";
 
 /** A mesh area's copied joint palette and reference to its object's shared data. */
-@blue.define("Tr2PerAreaDataSkinned")
+@meta.carbon("Tr2PerAreaDataSkinned")
 export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
 {
   /** m_jointCount. */
@@ -26,7 +26,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @implemented
    */
-  @blue.method
   SetJointCount(n)
   {
     this._jointCount = Math.min(n, TR2_MAX_BONES_PER_MESHAREA);
@@ -37,7 +36,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @adapted
    */
-  @blue.method
   SetJointTransform(ix, data)
   {
     if (ix < 0 || ix >= TR2_MAX_BONES_PER_MESHAREA) throw new RangeError("Skinned joint index exceeds the per-area palette.");
@@ -50,7 +48,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @implemented
    */
-  @blue.method
   SetPerObjectData(perObjectData)
   {
     this._perObjectDataPtr = perObjectData;
@@ -61,7 +58,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @implemented
    */
-  @blue.method
   GetJointCount()
   {
     return this._jointCount;
@@ -72,7 +68,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @implemented
    */
-  @blue.method
   GetMatrices()
   {
     return this._jointTransforms;
@@ -84,7 +79,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    * @adapted the AL returns a mapped Uint8Array instead of void* (cpp:147-182).
    *   Unused joints and the reserved register remain untouched, as in Carbon.
    */
-  @blue.method
   SetPerObjectDataToDevice(buffers, constantTypeMask, renderContext)
   {
     let uploaded = 0;
@@ -115,7 +109,6 @@ export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
    *
    * @notImplemented
    */
-  @blue.method
   ApplyConstantBuffers(_writer, _renderContext)
   {
     throw new Error("Tr2PerAreaDataSkinned.ApplyConstantBuffers: indirect draw is unported.");

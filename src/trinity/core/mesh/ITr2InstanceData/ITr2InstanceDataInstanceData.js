@@ -1,12 +1,12 @@
 // Source: trinity/trinity/Include/ITr2InstanceData.h
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 
 /**
  * ITr2InstanceData::InstanceData, a plain nested record returned by a provider.
  * The flattened JavaScript constructor name is retained for existing consumers.
  * Its enclosing interface is not a base and supplies no record lifecycle.
  */
-@blue.define("ITr2InstanceDataInstanceData")
+@meta.carbon("ITr2InstanceDataInstanceData")
 export class ITr2InstanceDataInstanceData
 {
   /**

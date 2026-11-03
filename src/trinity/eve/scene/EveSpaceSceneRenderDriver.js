@@ -20,7 +20,7 @@ import { exposure as be } from "#be";
 // Carbon's BeginRender/GatherBatches into scene-owned CPU methods that a driver
 // calls in order; that contract is written on EveSpaceScene itself, and this is
 // the driver it describes.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { ITr2RenderNode } from "#interfaces/ITr2RenderNode";
 import { vec4 } from "#math/vec4";
 import { mat4 } from "#math/mat4";
@@ -70,7 +70,7 @@ const CARBON_DEFAULT_SETTINGS = new EveSpaceSceneRenderDriverSettings();
 
 /** Collects camera, quality, pass-toggle, overlay, background, and post-process state for driving an EVE space-scene frame. */
 @be.define("EveSpaceSceneRenderDriver")
-@legacyBlue.inherit(ITr2RenderNode, Tr2DeviceResource)
+@be.inherit(ITr2RenderNode, Tr2DeviceResource)
 @be.mapInterface(ITr2RenderNode)
 export class EveSpaceSceneRenderDriver
 {
@@ -78,7 +78,7 @@ export class EveSpaceSceneRenderDriver
   /**
    * Carbon's constructor (EveSpaceSceneRenderDriver.cpp:143-160) takes
    * Tr2DeviceResource as its second C++ base (h:27-29), whose constructor
-   * registers with the device (Tr2DeviceResource.cpp:6-9). `@blue.inherit`
+   * registers with the device (Tr2DeviceResource.cpp:6-9). `@be.inherit`
    * has no constructor to run, so the registration is made here; Destruct
    * unregisters, where Carbon's base destructor would.
    */

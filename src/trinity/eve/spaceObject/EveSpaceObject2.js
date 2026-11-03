@@ -109,7 +109,7 @@ const BOUNDING_CENTER_SCRATCH = vec3.create();
 @be.mapInterface(IEveSpaceObjectDecalOwner)
 @be.mapInterface(ITr2LightOwner)
 @be.mapInterface(IEveSpaceObjectAttachmentOwner)
-@legacyBlue.inherit(IInitialize, ITr2Renderable, IEveSpaceObject2, IEveShadowCaster, ITr2Pickable, ITr2BoundingBox, ITriTargetable, IWorldPosition, ITr2ShLightingReceiver, INotify, ITr2SecondaryLightSource, ITr2ImpostorSource, ITr2DebugRenderable, IListNotify, ITr2CurveSetOwner, IEveEffectChildrenOwner, IShaderConfigurer, ITr2SoundEmitterOwner, ITr2ControllerOwner, IEveInheritPropertiesOwner, ITr2LightOwner, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner)
+@be.inherit(IInitialize, ITr2Renderable, IEveSpaceObject2, IEveShadowCaster, ITr2Pickable, ITr2BoundingBox, ITriTargetable, IWorldPosition, ITr2ShLightingReceiver, INotify, ITr2SecondaryLightSource, ITr2ImpostorSource, ITr2DebugRenderable, IListNotify, ITr2CurveSetOwner, IEveEffectChildrenOwner, IShaderConfigurer, ITr2SoundEmitterOwner, ITr2ControllerOwner, IEveInheritPropertiesOwner, ITr2LightOwner, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner)
 @be.abstract
 export class EveSpaceObject2 extends EveEntity
 {
@@ -3051,7 +3051,6 @@ export class EveSpaceObject2 extends EveEntity
   }
 
   /** Releases every active raycast preparation session used by damage filtering. */
-  @legacyBlue.method
   _ReleaseDamageFilterSessions()
   {
     if (this._damageFilterState !== 2) return;
@@ -3149,7 +3148,6 @@ export class EveSpaceObject2 extends EveEntity
   }
 
   /** Rebuilds the enabled mask by testing each locator ray against occluders. */
-  @legacyBlue.method
   _RefreshDamageLocatorMask(damageLocators)
   {
     this._damageLocatorEnabled = damageLocators.map(locator =>
@@ -3540,7 +3538,6 @@ export class EveSpaceObject2 extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   GetGoodLocatorIndex(position, locatorSetName)
   {
     return this.GetCloseLocatorIndex(position, locatorSetName);
@@ -4120,7 +4117,6 @@ export class EveSpaceObject2 extends EveEntity
    * Forwards a playback request to the animation updater, which owns all
    * animation state; a hull without an updater does nothing, as in Carbon.
    */
-  @legacyBlue.method
   _PlayAnimation(animName, replace, loopCount, delay, speed, clearWhenDone)
   {
     this.animationUpdater?.PlayAnimation(String(animName ?? ""), replace, loopCount, delay, speed, clearWhenDone);
@@ -4662,7 +4658,6 @@ export class EveSpaceObject2 extends EveEntity
   }
 
   /** Creates and synchronizes the damage overlay owned by one child-locator range. */
-  @legacyBlue.method
   EnsureChildDamageOverlay(range)
   {
     let overlay = range.owner.GetPartDamageOverlay(range.partTag);
@@ -4977,7 +4972,6 @@ export class EveSpaceObject2 extends EveEntity
    * world position - 0 when the set is missing, -1 when no locator faces the
    * position.
    */
-  @legacyBlue.method
   GetClosestLocatorIndex(position, locatorSetName)
   {
     const locators = this.GetLocatorsForSet(locatorSetName);

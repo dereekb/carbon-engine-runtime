@@ -15,7 +15,7 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { IInitialize } from "#blueexposure/IInitialize";
 import { IListNotify } from "#blueexposure/IListNotify";
 import { INotify } from "#blueexposure/INotify";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { BlueList } from "#blueexposure/BlueList";
 import { AudParameter } from "./AudParameter.js";
 import { quat } from "#math/quat";
@@ -73,7 +73,7 @@ function NowMs()
  * @abstract
  */
 @be.define("AudGameObjResource")
-@legacyBlue.inherit(IInitialize, IListNotify, INotify, IPrioritizedObject)
+@be.inherit(IInitialize, IListNotify, INotify, IPrioritizedObject)
 @be.mapInterface(IInitialize)
 @be.mapInterface(IListNotify)
 @be.mapInterface(INotify)

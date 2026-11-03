@@ -19,7 +19,7 @@ import { INotify } from "../../blue/blueexposure/INotify.js";
 // THE RENDER CONTEXT. Carbon reaches the main-thread context through
 // USE_MAIN_THREAD_RENDER_CONTEXT(); ours is Tr2RenderContext_GetMainThreadRenderContext(),
 // the default here, with an optional trailing context.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { mat4 } from "#math/mat4";
@@ -51,7 +51,7 @@ const COPY_MIP_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/Co
 
 /** Filters a cube into the prefiltered HDR reflection cube Eve's scene binds as its environment map. */
 @be.define("Tr2ReflectionProbe")
-@legacyBlue.inherit(INotify)
+@be.inherit(INotify)
 @be.mapInterface(INotify)
 export class Tr2ReflectionProbe
 {

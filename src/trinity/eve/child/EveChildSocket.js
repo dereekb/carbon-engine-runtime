@@ -13,7 +13,7 @@ import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { IsMatch, blue } from "#blue";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { EveChildPlug } from "./EveChildPlug.js";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { quat } from "#math/quat";
@@ -153,7 +153,6 @@ export class EveChildSocket extends EveChildTransform
    *
    * @implemented
    */
-  @legacyBlue.method
   Rebind()
   {
     this.BindParameters();

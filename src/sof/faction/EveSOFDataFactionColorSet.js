@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:177-243
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.cpp:42-52
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:10-56, 153-198
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { ColorType } from "#consts/graphics";
 import { color } from "#math/color";
 import { vec4 } from "#math/vec4";
@@ -14,7 +14,7 @@ import { vec4 } from "#math/vec4";
  * name. Declarations keep the order this class has always exported.
  */
 @be.define("EveSOFDataFactionColorSet")
-@legacyBlue.inherit(IRoot)
+@be.inherit(IRoot)
 export class EveSOFDataFactionColorSet extends IRoot
 {
   static ColorType = ColorType;

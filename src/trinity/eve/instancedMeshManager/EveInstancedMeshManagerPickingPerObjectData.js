@@ -1,5 +1,5 @@
 // Source: trinity/trinity/Eve/EveInstancedMeshManager.cpp:23-28
-import { blue } from "#schema";
+import { meta } from "#schema";
 import { Tr2PerObjectData } from "../../core/rawData/perObjectData/Tr2PerObjectData.js";
 
 
@@ -16,7 +16,7 @@ import { Tr2PerObjectData } from "../../core/rawData/perObjectData/Tr2PerObjectD
  *
  * Carbon: PickingPerObjectData (trinity/trinity/Eve/EveInstancedMeshManager.cpp:23)
  */
-@blue.define({ className: "EveInstancedMeshManagerPickingPerObjectData" })
+@meta.carbon("EveInstancedMeshManagerPickingPerObjectData")
 export class EveInstancedMeshManagerPickingPerObjectData extends Tr2PerObjectData
 {
 

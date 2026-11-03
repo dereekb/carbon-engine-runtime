@@ -5,7 +5,7 @@ import { ITr2InteriorDynamic } from "./ITr2InteriorDynamic.js";
 import { ITr2Pickable } from "../../../trinity/core/ITr2Pickable.js";
 import { ITr2BoundingBox } from "#interfaces/ITr2BoundingBox";
 // Source: trinity/trinity/Interior/Tr2IntSkinnedObject.h
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IInitialize, INotify } from "#blue";
 import { Tr2SkinnedObject } from "../trinityCore/Tr2SkinnedObject.js";
 import { Tr2PerObjectDataSkinned, TR2_MAX_BONES_PER_MESHAREA } from "../trinityCore/Tr2PerObjectDataSkinned.js";
@@ -166,7 +166,6 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
    *
    * @implemented
    */
-  @blue.method
   GetPerObjectData(accumulator)
   {
     return this.visualModel && this.DoDisplay()
@@ -179,7 +178,6 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
    *
    * @implemented
    */
-  @blue.method
   GetPerObjectDataWithPerInstanceLighting(accumulator, lightSet, objectToWorldMatrix)
   {
     return this.visualModel ? this.GetPerObjectDataGpuSkinning(accumulator, lightSet, objectToWorldMatrix) : null;
@@ -192,7 +190,6 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
    *   removing the native stack-struct memcpy. Explicit zeroing preserves memset,
    *   including unused light slots and non-identity unused spotlight matrices.
    */
-  @blue.method
   GetPerObjectDataGpuSkinning(accumulator, lightSet, objectToWorldMatrix)
   {
     this.UpdatePerObjectData();
@@ -218,7 +215,6 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
    *   (Tr2RenderContext.eveSpacePickingFramework), so without it every skinned
    *   object picked as candidate 0.
    */
-  @blue.method
   GetBatches(batches, batchType, perObjectData, _reason)
   {
     if (!this.DoDisplay()) return;
@@ -421,7 +417,6 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
    * @param {vec3} max Receives the world maximum.
    * @returns {boolean} Whether local bounds were available.
    */
-  @blue.method
   GetWorldBoundingBox(min, max)
   {
     if (!this.GetLocalBoundingBox(min, max)) return false;

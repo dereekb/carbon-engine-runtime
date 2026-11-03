@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Particle/Tr2ParticleElementDeclaration.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema particle/Tr2ParticleElementDeclarationName.json).
-import { type, blue as legacyBlue, meta } from "#schema";
+import { type, meta } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 
 /** Tr2ParticleElementDeclarationName (particle) - generated from schema shapeHash 115c80e5.... */
@@ -76,7 +76,6 @@ export class Tr2ParticleElementDeclarationName
   }
 
   /** Carbon GetName - human-readable name; CUSTOM returns the custom name. */
-  @legacyBlue.method
   GetName()
   {
     if (this.type >= Tr2ParticleElementDeclarationName.Type.CUSTOM)
@@ -91,7 +90,6 @@ export class Tr2ParticleElementDeclarationName
    * (LIFETIME->TANGENT, POSITION->POSITION, VELOCITY->NORMAL,
    * MASS->BITANGENT, CUSTOM->TEXCOORD).
    */
-  @legacyBlue.method
   GetD3DUsage()
   {
     return Tr2ParticleElementDeclarationName.#usageCodes[this.type];

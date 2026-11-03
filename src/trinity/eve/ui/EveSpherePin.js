@@ -4,7 +4,7 @@ import { ITr2Pickable } from "../../core/ITr2Pickable.js";
 // Source: trinity/trinity/Eve/UI/EveSpherePin.h
 // Source: trinity/trinity/Eve/UI/EveSpherePin.cpp
 // Hand-maintained after promotion from generated schema intake.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 import { IEveTransform } from "../IEveTransform.js";
 import { mat4 } from "#math/mat4";
@@ -35,7 +35,7 @@ const treeMap = new WeakMap();
 
 /** A UI sphere pin: authored SRT placement plus the pin constant record. */
 @be.define("EveSpherePin")
-@legacyBlue.inherit(IInitialize, ITr2Renderable, IEveTransform, IEveSpaceObject2, ITr2Pickable, INotify, Tr2DeviceResource)
+@be.inherit(IInitialize, ITr2Renderable, IEveTransform, IEveSpaceObject2, ITr2Pickable, INotify, Tr2DeviceResource)
 @be.mapInterface(IInitialize)
 @be.mapInterface(ITr2Renderable)
 @be.mapInterface(IEveTransform)

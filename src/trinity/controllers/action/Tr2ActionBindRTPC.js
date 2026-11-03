@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionBindRTPC.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionBindRTPC.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionBindRTPC_Blue.cpp
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { IsMatch, blue, INotify } from "#blue";
 import { CjsControllerExpressionProgram } from "../expression/CjsControllerExpressionProgram.js";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
@@ -206,7 +206,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * @adapted retains the JS explicit lazy-compilation helper. The live property
    *   observes the retained program without compiling.
    */
-  @legacyBlue.method
   IsExpressionValid()
   {
     return this.CompileExpression().IsValid();

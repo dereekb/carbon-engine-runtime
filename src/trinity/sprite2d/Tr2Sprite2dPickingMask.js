@@ -6,7 +6,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 //   maskPath property pair)
 // Hand-maintained from Carbon source, promoted out of generated intake
 // 2026-09-06.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { blue } from "#blue";
 import { PixelFormat } from "#consts/render-context";
 
@@ -25,8 +25,7 @@ blue.enums.Create("trinity.Tr2Sprite2dPickingMask.Channel_Chooser", Channel, {
 
 /** Defines channel, threshold, edge, and texture-mask constraints used when hit-testing a 2D sprite. */
 @be.define("Tr2Sprite2dPickingMask")
-@legacyBlue.interface()
-@legacyBlue.inherit(IRoot)
+@be.inherit(IRoot)
 export class Tr2Sprite2dPickingMask extends IRoot
 {
 

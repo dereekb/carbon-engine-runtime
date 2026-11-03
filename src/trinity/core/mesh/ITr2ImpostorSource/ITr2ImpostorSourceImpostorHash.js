@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Tr2ImpostorManager.h
 import { vec3 } from "#math/vec3";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 
 /**
  * ITr2ImpostorSource::ImpostorHash, a plain nested pair of camera directions.
@@ -8,7 +8,7 @@ import { meta, type, blue } from "#schema";
  * defaults are retained; native code fills the vectors before using the hash.
  * The record neither inherits its enclosing interface nor owns capture work.
  */
-@blue.define("ITr2ImpostorSourceImpostorHash")
+@meta.carbon("ITr2ImpostorSourceImpostorHash")
 export class ITr2ImpostorSourceImpostorHash
 {
   /**

@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveLocalPositionCurve.cpp
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { ITriTargetable } from "../../../core/ITriTargetable.js";
 import { EveSpaceObject2 } from "../../spaceObject/EveSpaceObject2.js";
@@ -81,7 +81,6 @@ export class EveLocalPositionCurve extends ITriVectorFunction
    *
    * @implemented
    */
-  @legacyBlue.method
   __init__(behavior = EveLocalPositionCurve.LocalPositionBehavior.POS_NONE)
   {
     this.SetBehavior(behavior);

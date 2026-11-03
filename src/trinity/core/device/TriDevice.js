@@ -6,7 +6,7 @@ import { DestroyGlobalGpuResourcePool, Tr2GpuResourcePool } from "../Tr2GpuResou
 // unported Carbon behaviour, not a boundary: Carbon holds its handles on this
 // class and calls the AL from it.
 import * as CcpLog from "../../../global/logging/ccpLog.js";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { PresentInterval, SwapEffect, UpscalingSetting, UpscalingTechnique } from "#consts/render-context";
 import {
   convertProjectionCoordToWorldPickRay,
@@ -607,7 +607,6 @@ export class TriDevice extends IRoot
    * @implemented
    * @returns {boolean} Whether the ambient context has a live backend.
    */
-  @legacyBlue.method
   DoesD3DDeviceExist()
   {
     return this.DeviceExists();

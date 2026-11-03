@@ -1,7 +1,7 @@
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/TriTextureParameter.h
 // Source: trinity/trinity/Shader/Parameter/TriTextureParameter.cpp
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { ICopierCustomAssignment } from "#blue";
 import { INotify } from "#blue";
 import { IInitialize } from "#blue";
@@ -33,9 +33,7 @@ import { RealizeTexture } from "../../core/Tr2ImageIOHelpers.js";
 export class TriTextureParameter extends ITriEffectTextureParameter
 {
 
-  @legacyBlue.notify
-  @legacyBlue.readwrite
-  @legacyBlue.persist
+  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, null)
   @type.path("TriTextureRes")
   resourcePath = "";
 

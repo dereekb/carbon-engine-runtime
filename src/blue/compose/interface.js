@@ -12,7 +12,7 @@
 // A class takes its PRIMARY Carbon base with ordinary `extends`, and declares
 // each ADDITIONAL base with this decorator:
 //
-//   @blue.inherit(Tr2RenderContextAL)
+//   @be.inherit(Tr2RenderContextAL)
 //   class Tr2RenderContext extends Tr2RenderContextBase { }
 //
 // The primary base uses the prototype chain; additional declared bases supply
@@ -269,7 +269,7 @@ export function cast(value, Contract)
  * the first base declaring a member is the one that supplies it, exactly as
  * C++ resolves an unqualified name against the base list left to right.
  *
- * INHERITING IS NOT MAPPING, and `@blue.interface` below is the other
+ * INHERITING IS NOT MAPPING, and `@be.mapInterface` below is the other
  * half. This one is Carbon's base list: it decides which members a class has
  * and what `dynamic_cast` accepts. Mapping is the separate `_Blue.cpp`
  * exposure that `BlueCastPtr` reads, and it decides real behaviour - see that
@@ -458,10 +458,10 @@ function OwnInterfaceTable(Constructor, decoratorName)
 
 
 /**
- * The `@blue.interface(X, Y, ...)` class decorator: Carbon's
+ * The `@be.mapInterface(X, Y, ...)` class decorator: Carbon's
  * `MAP_INTERFACE` lines (BlueExposureMacros.h:171-175). IRoot and the class
  * precede the explicit entries, as `EXPOSURE_BEGIN` adds both.
- * Without `chainTo` the table ends here, as `EXPOSURE_END()` does. Called with
+ * Without `exposureChainTo` the table ends here, as `EXPOSURE_END()` does. Called with
  * no interfaces it declares a table holding IRoot and the class itself.
  *
  * WHY THIS IS NOT THE SAME FACT AS THE BASE LIST, with the case that settles
@@ -525,7 +525,7 @@ export function carbonInterfaceDecorator(Interfaces, sourceOrder = false)
 
 
 /**
- * The `@blue.chainTo(Parent)` class decorator: Carbon's
+ * The `@be.exposureChainTo(Parent)` class decorator: Carbon's
  * `EXPOSURE_CHAINTO( Parent )` (BlueExposureMacros.h:136-138). After the
  * class's own entries, QueryInterface continues into `Parent`'s table
  * (BlueClasses.cpp:388-400). The chain is declared, not taken from `extends`.

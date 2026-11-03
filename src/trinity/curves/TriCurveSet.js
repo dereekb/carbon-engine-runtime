@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/TriCurveSet.cpp
 // Source: trinity/trinity/Curves/TriCurveSet_Blue.cpp
 import * as CcpLog from "../../global/logging/ccpLog.js";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { BlueScriptCallback, IInitialize, ISimTimeRebaseNotify, blue, BlueList, CcpTime } from "#blue";
 import { ITriFunction } from "../../blue/blue/ITriFunction.js";
 import { ITriCurveLength } from "../../blue/blue/ITriCurveLength.js";
@@ -159,7 +159,6 @@ export class TriCurveSet extends IInitialize
    * @param {number} time Source seconds before optional driver conversion.
    * @returns {void}
    */
-  @legacyBlue.method
   Update(time)
   {
     if (this.driver)

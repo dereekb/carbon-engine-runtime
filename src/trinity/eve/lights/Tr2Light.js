@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { color } from "#math/color";
-import { meta, type, blue as legacyBlue } from "#schema";
+import { meta, type } from "#schema";
 import { IsMatch, blue, IInitialize, INotify } from "#blue";
 import { PerLightShadowSetting } from "../../generated/eve/lights/enums.js";
 import { Tr2LightFlags } from "#consts/graphics";
@@ -22,8 +22,7 @@ import { LightFeatures } from "./LightFeatures.js";
  * @abstract
  */
 @be.define("Tr2Light")
-@legacyBlue.inherit(IInitialize, INotify)
-@legacyBlue.interface()
+@be.inherit(IInitialize, INotify)
 @be.abstract
 export class Tr2Light
 {

@@ -197,7 +197,6 @@ export class EveSmartLightPointLight extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   UpdateAsyncronous__Distribution(_updateContext, _params, _distribution)
   {
   }
@@ -207,7 +206,6 @@ export class EveSmartLightPointLight extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   UpdateVisibility(_updateContext, _parentTransform, _parentLod)
   {
   }
@@ -217,7 +215,6 @@ export class EveSmartLightPointLight extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   GetRenderables(renderables)
   {
     return renderables;
@@ -228,7 +225,6 @@ export class EveSmartLightPointLight extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   AddQuadsToQuadRenderer(_placements, _size, _frustum, _quadRenderer)
   {
   }
@@ -238,7 +234,6 @@ export class EveSmartLightPointLight extends EveEntity
    *
    * @adapted
    */
-  @legacyBlue.method
   RegisterWithQuadRenderer(_quadRenderer)
   {
   }

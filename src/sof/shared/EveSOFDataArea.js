@@ -2,7 +2,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:352-383
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:113-145
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 
 /**
@@ -32,7 +32,7 @@ const AreaType = {
  * read or written and stays null. Native IRoot-only data with no lifecycle.
  */
 @be.define("EveSOFDataArea")
-@legacyBlue.inherit(IRoot)
+@be.inherit(IRoot)
 export class EveSOFDataArea extends IRoot
 {
   static AreaType = AreaType;

@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2SkinnedModel.h
 // Source: trinity/trinity/Tr2SkinnedModel.cpp
 import { BlueAsyncRes, blue, IsMatch, IInitialize, INotify, IListNotify } from "#blue";
-import { meta, type, blue as legacyBlue } from "#schema";
+import { meta, type } from "#schema";
 import { Tr2Model } from "./Tr2Model.js";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
@@ -39,7 +39,6 @@ export class Tr2SkinnedModel extends Tr2Model
    *
    * @adapted no arena copy of the matrix is needed; the native helper never reads it.
    */
-  @legacyBlue.method
   GetBatches(batches, batchType, m, data)
   {
     BlueAsyncRes.ensureDependency(this.geometryRes, this, "geometry");
@@ -60,7 +59,6 @@ export class Tr2SkinnedModel extends Tr2Model
    *   objectId picking revision did (92483097^, Tr2SkinnedModel.cpp:75), which our
    *   objectId picking reads (Tr2RenderContext.eveSpacePickingFramework).
    */
-  @legacyBlue.method
   _GetBatchesForArea(areas, mesh, batches, _pm, skinnedData)
   {
     if (!mesh.GetDisplay()) return;
@@ -118,9 +116,7 @@ export class Tr2SkinnedModel extends Tr2Model
   _dependencyRevisions = new Map();
 
   /** m_geometryResPath (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @legacyBlue.notify
-  @legacyBlue.readwrite
-  @legacyBlue.persist
+  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, null)
   @type.path("TriGeometryRes")
   geometryResPath = "";
 

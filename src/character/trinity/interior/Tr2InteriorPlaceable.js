@@ -7,7 +7,7 @@ import { ITr2BoundingBox } from "#interfaces/ITr2BoundingBox";
 // Source: trinity/trinity/Interior/Tr2InteriorPlaceable.h
 // Source: trinity/trinity/Interior/Tr2InteriorPlaceable.cpp
 // Source: trinity/trinity/Interior/Tr2InteriorPlaceable_Blue.cpp
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { blue, IInitialize, INotify, IsMatch, BlueClasses } from "#blue";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { WodPlaceableRes } from "../wod/WodPlaceableRes.js";
@@ -29,9 +29,7 @@ export class Tr2InteriorPlaceable extends IRoot
 {
 
   /** m_placeableResPath (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @legacyBlue.notify
-  @legacyBlue.readwrite
-  @legacyBlue.persist
+  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY, null)
   @type.path("object")
   placeableResPath = "";
 

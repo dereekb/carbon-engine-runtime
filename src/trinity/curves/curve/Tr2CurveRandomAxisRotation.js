@@ -6,7 +6,7 @@ import { blue } from "#blue";
 import { random } from "#math/random";
 import { fromYawPitchRollCarbon, quat } from "#math/quat";
 import { ITriQuaternionFunction, ITriFunction, IInitialize } from "#blue";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { CcpTime } from "#blue";
 
 
@@ -129,7 +129,6 @@ export class Tr2CurveRandomAxisRotation extends ITriQuaternionFunction
    * @param {Float32Array|number[]} out Caller-owned quaternion.
    * @returns {Float32Array|number[]} The same output buffer.
    */
-  @legacyBlue.method
   GetValueAt(time, out)
   {
     return this.Evaluate(out, time);

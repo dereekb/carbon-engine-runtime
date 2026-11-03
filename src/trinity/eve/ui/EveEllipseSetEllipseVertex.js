@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Eve/UI/EveEllipseSet.cpp:18-23
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { meta, type } from "#schema";
 
 
 /**
@@ -20,7 +20,7 @@ import { type, blue } from "#schema";
  *
  * Carbon: EllipseVertex (trinity/trinity/Eve/UI/EveEllipseSet.cpp:18)
  */
-@blue.define({ className: "EveEllipseSetEllipseVertex" })
+@meta.carbon("EveEllipseSetEllipseVertex")
 export class EveEllipseSetEllipseVertex
 {
 

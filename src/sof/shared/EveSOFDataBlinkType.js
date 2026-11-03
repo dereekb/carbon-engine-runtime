@@ -2,7 +2,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:301-324
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:70-77, 1140-1147
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 
 /**
@@ -24,7 +24,7 @@ const BlinkType = {
  * the slots. Native IRoot-only data with no lifecycle.
  */
 @be.define("EveSOFDataBlinkType")
-@legacyBlue.inherit(IRoot)
+@be.inherit(IRoot)
 export class EveSOFDataBlinkType extends IRoot
 {
   static BlinkType = BlinkType;

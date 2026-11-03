@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject.cpp
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp
 // Promoted to hand-maintained source 2026-08-22; portable sprite state is maintained here.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { ITr2SpriteObject } from "./ITr2SpriteObject.js";
 import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
 import { blue, INotify } from "#blue";
@@ -19,7 +19,7 @@ import { blue, INotify } from "#blue";
  * @abstract
  */
 @be.define("Tr2SpriteObjectBase")
-@legacyBlue.inherit(INotify)
+@be.inherit(INotify)
 @be.mapInterface(ITr2SpriteObject)
 @be.mapInterface(INotify)
 @be.abstract
@@ -33,7 +33,7 @@ export class Tr2SpriteObjectBase extends ITr2SpriteObject
    * @abstract
    * @param {Tr2Sprite2dScene} _renderer The scene gathering sprites.
    */
-  @legacyBlue.abstract
+  @be.abstract
   GatherSprites(_renderer) {}
 
   /**
@@ -47,7 +47,7 @@ export class Tr2SpriteObjectBase extends ITr2SpriteObject
    * @param {Tr2Sprite2dScene} _renderer The scene being picked.
    * @returns {ITr2SpriteObject|null} The picked object.
    */
-  @legacyBlue.abstract
+  @be.abstract
   PickPoint(_x, _y, _renderer) {}
 
   /**

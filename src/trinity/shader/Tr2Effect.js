@@ -2,7 +2,7 @@ import { BlueAsyncRes } from "#blue";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { CjsSchema, normalizeCarbonValue, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, normalizeCarbonValue, type } from "#schema";
 import { Tr2RegisterMapAL, Tr2ResourceSetDescriptionAL } from "#trinityal";
 import { Tr2Material } from "./Tr2Material.js";
 import { vec4 } from "#math/vec4";
@@ -330,7 +330,6 @@ export class Tr2Effect extends Tr2Material
    * @adapted
    * @param {object} [resource] Resource that finished loading.
    */
-  @legacyBlue.method
   RebuildCachedData(resource)
   {
     if (resource === undefined)

@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IsMatch, INotify } from "#blue";
 import { IInitialize } from "#blue";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { blue } from "#blue";
 import { ITr2GpuBuffer } from "../../core/ITr2GpuBuffer.js";
 import { FNV1_INITIAL, hashFnv1String } from "#utils/hash";
@@ -22,9 +22,7 @@ export class Tr2GeometryBufferParameter extends ITriEffectResourceParameter
 
   /** m_resourcePath (std::wstring) [READWRITE, NOTIFY, PERSIST] */
 
-  @legacyBlue.notify
-  @legacyBlue.readwrite
-  @legacyBlue.persist
+  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, null)
   @type.wpath
   resourcePath = "";
 

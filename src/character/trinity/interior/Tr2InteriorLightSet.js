@@ -1,5 +1,5 @@
 // Source: trinity/trinity/Interior/Tr2InteriorLightSet.h
-import { CjsSchema, meta, blue } from "#schema";
+import { CjsSchema, meta } from "#schema";
 import { Tr2InteriorPerObjectLightData } from "../../generated/interior/Tr2InteriorPerObjectLightData.js";
 import { Tr2InteriorLightSource } from "./Tr2InteriorLightSource.js";
 
@@ -52,7 +52,6 @@ export class Tr2InteriorLightSet
    *   Native lightCount is the full list size even when only ten records fit.
    *   The first four viewProjection matrices are already packed: copy raw.
    */
-  @blue.method
   PopulateLightData(perObjectPSData)
   {
     perObjectPSData.Set("lightCount", this.GetNumOfActiveLights());

@@ -6,7 +6,7 @@ import { TriDebugFont } from "../../../trinity/core/TriDebugTextRenderer.js";
 import { color } from "#math/color";
 import { ITr2SkinnedObject } from "./ITr2SkinnedObject.js";
 // Source: trinity/trinity/Tr2SkinnedObject.h
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IsMatch, IListNotify, INotify } from "#blue";
 import { IWorldPosition } from "../../../trinity/core/IWorldPosition.js";
 import { mat4 } from "#math/mat4";
@@ -63,7 +63,6 @@ export class Tr2SkinnedObject extends IRoot
    *
    * @implemented
    */
-  @blue.method
   GetBatches(batches, batchType, perObjectData, _reason)
   {
     if (this.visualModel && perObjectData && this.DoDisplay())
@@ -77,7 +76,6 @@ export class Tr2SkinnedObject extends IRoot
    *
    * @implemented
    */
-  @blue.method
   DoDisplay()
   {
     return this.display;
@@ -148,7 +146,6 @@ export class Tr2SkinnedObject extends IRoot
    * @adapted the existing immediate CPU skinning path has no delayed transform
    *   queue, so this returns the native empty-queue value, the current transform.
    */
-  @blue.method
   GetSkinningTransform()
   {
     return this.transform;
@@ -159,7 +156,6 @@ export class Tr2SkinnedObject extends IRoot
    *
    * @implemented
    */
-  @blue.method
   UpdatePerObjectData()
   {
   }
@@ -178,7 +174,6 @@ export class Tr2SkinnedObject extends IRoot
    *
    * @implemented
    */
-  @blue.method
   GetLocalBoundingBox(min, max)
   {
     if (this.useExplicitBounds)

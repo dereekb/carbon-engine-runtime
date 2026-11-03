@@ -2,7 +2,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:260-284
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:60-66, 1125-1133
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 import { EveSOFDataLogo } from "./EveSOFDataLogo.js";
 
@@ -24,7 +24,7 @@ const LogoType = {
  * Native IRoot-only data with no lifecycle.
  */
 @be.define("EveSOFDataLogoSet")
-@legacyBlue.inherit(IRoot)
+@be.inherit(IRoot)
 export class EveSOFDataLogoSet extends IRoot
 {
   static LogoType = LogoType;

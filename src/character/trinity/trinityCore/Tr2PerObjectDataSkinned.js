@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Tr2PerObjectData.h:100-150
 // Source: trinity/trinity/Tr2PerObjectData.cpp:75-145
-import { blue } from "#schema";
+import { meta } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec4 } from "#math/vec4";
 import { ShaderType } from "#consts/render-context";
@@ -14,7 +14,7 @@ import { PER_OBJECT_VS } from "../../../trinity/core/Tr2Renderer.js";
 export const TR2_MAX_BONES_PER_MESHAREA = 69;
 
 /** Shared world/mirror and pixel data; the area supplies the remapped palette. */
-@blue.define("Tr2PerObjectDataSkinned")
+@meta.carbon("Tr2PerObjectDataSkinned")
 export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
 {
   /** Native VS allocation: 207 joint registers, world, one unwritten register, mirror. */
@@ -40,7 +40,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   SetSkinningMatrices(n, data)
   {
     this._jointCount = n;
@@ -52,7 +51,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   GetSkinningMatrices()
   {
     return this._data;
@@ -61,7 +59,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
   /**
    * @adapted a typed view replaces the pointer into twelve packed floats (cpp:142).
    */
-  @blue.method
   GetSkinningMatrix(ix)
   {
     return this._data.subarray(ix * 12, (ix + 1) * 12);
@@ -72,7 +69,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   SetWorldMatrix(worldMat)
   {
     mat4.copy(this._worldMat, worldMat);
@@ -83,7 +79,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   SetMirrorMatrix(mirrorMat)
   {
     mat4.copy(this._mirrorMatrix, mirrorMat);
@@ -94,7 +89,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   GetMirrorMatrix()
   {
     return this._mirrorMatrix;
@@ -105,7 +99,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @implemented
    */
-  @blue.method
   SetWorldPosition(worldPos)
   {
     vec4.set(this._worldPos, worldPos[0], worldPos[1], worldPos[2], 0);
@@ -117,7 +110,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    * @adapted the AL's mapped Uint8Array replaces void* (cpp:128-132).
    *   These two memcpy sites do not transpose, unlike most per-object producers.
    */
-  @blue.method
   UpdateVertexShaderCBMirror(destination, _renderContext)
   {
     const floats = new Float32Array(destination.buffer, destination.byteOffset, destination.byteLength / 4); // alloc: view of the AL's mapped shader buffer
@@ -137,7 +129,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    * @adapted the inherited RawData lease supplies PS bytes and the AL returns
    *   its mapped byte view instead of filling an output pointer.
    */
-  @blue.method
   SetPerObjectDataToDevice(buffers, constantTypeMask, renderContext)
   {
     let uploaded = Tr2PerObjectData.setPerObjectDataToDevice(
@@ -165,7 +156,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @notImplemented
    */
-  @blue.method
   ApplyConstantBuffers(_writer, _renderContext)
   {
     throw new Error("Tr2PerObjectDataSkinned.ApplyConstantBuffers: indirect draw is unported.");
@@ -176,7 +166,6 @@ export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
    *
    * @notImplemented
    */
-  @blue.method
   ApplyPsConstantBuffers(_writer, _renderContext)
   {
     throw new Error("Tr2PerObjectDataSkinned.ApplyPsConstantBuffers: indirect draw is unported.");

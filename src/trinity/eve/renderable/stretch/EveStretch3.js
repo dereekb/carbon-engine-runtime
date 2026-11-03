@@ -12,7 +12,7 @@ import { vec4 } from "#math/vec4";
 import { sph3 } from "#math/sph3";
 import { quat } from "#math/quat";
 import { Tr2Lod } from "../../EveLODHelper.js";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { IEveFiringEffectElement } from "../../IEveFiringEffectElement.js";
 import { TriFloat } from "../../../core/variable/TriFloat.js";
@@ -1037,7 +1037,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @adapted
    */
-  @legacyBlue.method
   SetIntensity(_intensity)
   {
   }

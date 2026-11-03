@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveCombiner.cpp
 import { vec3 } from "#math/vec3";
 import { ITriFunction, ITriVectorFunction, ITriCurveLength, BlueList, blue, BlueClasses } from "#blue";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 
 
 /**
@@ -184,7 +184,6 @@ export class Tr2CurveCombiner extends ITriVectorFunction
    * @param {Float32Array} out Destination value.
    * @returns {Float32Array} The destination.
    */
-  @legacyBlue.method
   GetValueAt(time, out)
   {
     vec3.zero(out);

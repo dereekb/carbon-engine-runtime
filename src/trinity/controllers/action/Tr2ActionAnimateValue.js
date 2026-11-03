@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionAnimateValue.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionAnimateValue.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionAnimateValue_Blue.cpp
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { IsMatch, blue } from "#blue";
 import { INotify } from "#blueexposure/INotify";
 import { CjsControllerExpressionProgram } from "../expression/CjsControllerExpressionProgram.js";
@@ -251,7 +251,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    * @adapted retains compile-on-query behavior; native observes its retained
    *   evaluator without compiling. Queries can therefore adopt unnotified edits.
    */
-  @legacyBlue.method
   IsExpressionValid()
   {
     return this.CompileExpression().IsValid();
