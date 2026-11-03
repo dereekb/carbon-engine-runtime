@@ -14,62 +14,56 @@ import { meta, type, blue } from "#schema";
  * One authored plane: its bone attachment, placement, colour, two independently
  * transformed and scrolling texture layers, mask atlas slot and blink data.
  */
-@be.define("EvePlaneSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EvePlaneSetItem",
+  inherit: [ IRoot ],
+  // EvePlaneSetItem_Blue.cpp:10-23, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer1Transform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer2Transform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer1Scroll", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer2Scroll", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maskAtlasID", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EvePlaneSetItem extends IRoot
 {
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec4
   layer1Transform = vec4.fromValues(1, 1, 0, 0);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   layer2Transform = vec4.fromValues(1, 1, 0, 0);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec4
   layer1Scroll = vec4.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   layer2Scroll = vec4.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   maskAtlasID = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   boneIndex = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();

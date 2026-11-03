@@ -13,77 +13,68 @@ import { type, blue } from "#schema";
  * One authored run of identical sprites, laid out either evenly along a line or
  * distributed around a circle, with the blink timing and colour they share.
  */
-@be.define("EveSpriteLineSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSpriteLineSetItem",
+  inherit: [ IRoot ],
+  // EveSpriteLineSetItem_Blue.cpp:10-26, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isCircle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spacing", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blinkRate", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blinkPhase", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blinkPhaseShift", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "falloff", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSpriteLineSetItem extends IRoot
 {
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isCircle = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   spacing = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   blinkRate = 0.1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   blinkPhase = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   blinkPhaseShift = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minScale = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   maxScale = 10;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   falloff = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);

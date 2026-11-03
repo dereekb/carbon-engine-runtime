@@ -33,12 +33,26 @@ import { trinity } from "../../../CjsTrinity.js";
  * optional bone attachment, per-LOD triangle index lists and screen-size
  * visibility ramp.
  */
-@be.define("EveSpaceObjectDecal")
-@be.inherit(IInitialize, INotify, ITr2Pickable, ITr2Renderable, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(ITr2Pickable)
+@be.define({
+  name: "EveSpaceObjectDecal",
+  inherit: [ IInitialize, INotify, ITr2Pickable, ITr2Renderable, Tr2DeviceResource ],
+  // EveSpaceObjectDecal_Blue.cpp:10-34, in Carbon's order.
+  interfaces: [ INotify, IInitialize, ITr2Renderable, ITr2Pickable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "position", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "parentBoneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "decalEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "batchType", be.READ ],
+    [ be.PROP_RO, "hasStaticIndexBuffers" ],
+    [ be.METHOD, "GetDecalPrimitiveCounts", be.WRAP ],
+    [ be.METHOD, "GetStaticIndexBuffers", be.WRAP ]
+  ]
+})
 export class EveSpaceObjectDecal
 {
   /**
@@ -104,50 +118,34 @@ export class EveSpaceObjectDecal
     return true;
   }
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.TriBatchType")
   batchType = 1;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.vec3
   position = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   minScreenSize = 0;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
-
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   parentBoneIndex = -1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   decalEffect = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
@@ -219,7 +217,6 @@ export class EveSpaceObjectDecal
    * Property form of HasStaticIndexBuffers: whether any LOD carries decal
    * triangle indices.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get hasStaticIndexBuffers()
   {
@@ -425,7 +422,6 @@ export class EveSpaceObjectDecal
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetStaticIndexBuffers()
   {
     return this.staticIndexBuffers.map(lod => lod.slice());
@@ -448,7 +444,6 @@ export class EveSpaceObjectDecal
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetDecalPrimitiveCounts()
   {
     return this.staticIndexBuffers.map(lod => Math.trunc(lod.length / 3));

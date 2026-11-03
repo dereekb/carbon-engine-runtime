@@ -26,39 +26,43 @@ const INSTANCE_VERTEX_SIZE = 16;
  * A booster set's trails: one trail mesh drawn once per booster, instanced,
  * its shape bent along each booster renderable's spline in the vertex shader.
  */
-@be.define("EveTrailsSet")
-@be.inherit(IInitialize, INotify, Tr2DeviceResource)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveTrailsSet",
+  inherit: [ IInitialize, INotify, Tr2DeviceResource ],
+  // EveTrailsSet_Blue.cpp:10-22, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "geometryResPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "fadeSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "geometryResource", be.READ ]
+  ]
+})
 export class EveTrailsSet
 {
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
   geometryResource = null;
 
   /** m_fadeSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   fadeSpeed = 1;
 
   /** m_effect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_geometryResPath (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
   /** m_display (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 

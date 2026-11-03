@@ -60,40 +60,39 @@ import { Tr2DeviceResourceState } from "../../../core/device/deviceResourceState
  * A hull's authored banner quads, owning their static and per-bone bounds, the
  * largest single banner radius its LOD is measured on, and the banner lights.
  */
-@be.define("EveBannerSet")
-@be.inherit(IInitialize, ITr2LightOwner, EveEntity, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EveBannerSet",
+  inherit: [ IInitialize, ITr2LightOwner, EveEntity, Tr2DeviceResource ],
+  // EveBannerSet_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ IInitialize, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "key", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "isPickable", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "banners", be.READ | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ],
+    [ be.METHOD, "GetReference", be.WRAP ]
+  ]
+})
 export class EveBannerSet extends IEveSpaceObjectAttachment
 {
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.structList("EveBannerItem")
   banners = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   isPickable = false;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   key = 0;
@@ -171,7 +170,6 @@ export class EveBannerSet extends IEveSpaceObjectAttachment
    *   prepared, and otherwise by _OnPrepareResources, so a build allocates nothing
    *   (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;
@@ -733,7 +731,6 @@ export class EveBannerSet extends IEveSpaceObjectAttachment
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetReference(index)
   {
     return this.banners[index].reference;

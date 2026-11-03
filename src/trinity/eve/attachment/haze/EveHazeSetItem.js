@@ -14,41 +14,39 @@ import { type, blue } from "#schema";
  * One authored haze volume: its bone attachment, placement, colour and the
  * four-component haze shaping data.
  */
-@be.define("EveHazeSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveHazeSetItem",
+  inherit: [ IRoot ],
+  // EveHazeSetItem_Blue.cpp:10-20, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hazeData", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveHazeSetItem extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   boneIndex = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   hazeData = vec4.fromValues(4, 0.2, 2, 0);

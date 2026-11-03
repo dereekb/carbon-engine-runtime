@@ -52,43 +52,40 @@ function colorByte(value)
  * A hull's authored blinking sprites, owning their static and per-bone bounds
  * and the point lights the sprites emit.
  */
-@be.define("EveSpriteSet")
-@be.inherit(IInitialize, ITr2LightOwner, EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EveSpriteSet",
+  inherit: [ IInitialize, ITr2LightOwner, EveEntity ],
+  // EveSpriteSet_Blue.cpp:11-49, in Carbon's order.
+  interfaces: [ IInitialize, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sprites", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EveSpriteSet extends IEveSpaceObjectAttachment
 {
-
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
 
 
   @type.list("EveSpriteSetItem")
   sprites = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   skinned = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   intensity = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
@@ -307,7 +304,6 @@ export class EveSpriteSet extends IEveSpaceObjectAttachment
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;

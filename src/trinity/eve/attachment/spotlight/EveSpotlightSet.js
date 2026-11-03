@@ -74,46 +74,42 @@ const DEBUG_CONE_OFFSET = vec3.fromValues(0, 0, 0.5);
  * A hull's authored spotlights, owning their static and per-bone bounds, the
  * cone and glow effects that draw them, and the spot lights they emit.
  */
-@be.define("EveSpotlightSet")
-@be.inherit(IInitialize, ITr2LightOwner, EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EveSpotlightSet",
+  inherit: [ IInitialize, ITr2LightOwner, EveEntity ],
+  // EveSpotlightSet_Blue.cpp:10-54, in Carbon's order.
+  interfaces: [ IInitialize, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "glowEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spotlightItems", be.READ | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EveSpotlightSet extends IEveSpaceObjectAttachment
 {
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSpotlightSetItem")
   spotlightItems = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2Effect")
   coneEffect = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   glowEffect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   skinned = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   intensity = 1;
@@ -161,7 +157,6 @@ export class EveSpotlightSet extends IEveSpaceObjectAttachment
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;

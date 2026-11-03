@@ -14,46 +14,43 @@ import { type, blue } from "#schema";
  * cone, flare and sprite colours drawn for it, and whether booster gain
  * modulates it.
  */
-@be.define("EveSpotlightSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSpotlightSetItem",
+  inherit: [ IRoot ],
+  // EveSpotlightSetItem_Blue.cpp:10-24, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spriteColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "flareColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boosterGainInfluence", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spriteScale", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSpotlightSetItem extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.color
   coneColor = vec4.fromValues(1, 1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   flareColor = vec4.fromValues(1, 1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.color
   spriteColor = vec4.fromValues(1, 1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   spriteScale = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   boosterGainInfluence = false;

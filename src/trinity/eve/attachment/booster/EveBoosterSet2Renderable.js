@@ -22,50 +22,59 @@ import { EveBoosterSet2 } from "./EveBoosterSet2.js";
  * and rotation, derives the booster and trail intensities, and maintains the
  * five-point trail spline and its LOD flags.
  */
-@be.define("EveBoosterSet2Renderable")
-@be.inherit(ITr2Renderable)
-@be.mapInterface(ITr2Renderable)
+@be.define({
+  name: "EveBoosterSet2Renderable",
+  inherit: [ ITr2Renderable ],
+  // EveBoosterSet2_Blue.cpp:9-24, in Carbon's order.
+  interfaces: [ ITr2Renderable ],
+  members: [
+    [ be.ATTR, "overallIntensity", be.READ ],
+    [ be.ATTR, "parentSpeed", be.READWRITE ],
+    [ be.ATTR, "parentRotation", be.READWRITE ],
+    [ be.ATTR, "trailsBoundsMin", be.READ ],
+    [ be.ATTR, "trailsBoundsMax", be.READ ],
+    [ be.ATTR, "trailsTimeDelta", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "trailIntensity", be.READ ],
+    [ be.ATTR, "trailsTotalLength", be.READ ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "trailsVisible", be.READ ],
+    [ be.ATTR, "boostersVisible", be.READ ],
+    [ be.ATTR, "boosterHighLod", be.READ ]
+  ]
+})
 export class EveBoosterSet2Renderable
 {
 
   /** m_trailIntensity (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   trailIntensity = 0;
 
   /** m_trailsTotalLength (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   trailsTotalLength = 0;
 
   /** m_isVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = false;
 
   /** m_trailsVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   trailsVisible = false;
 
   /** m_boostersVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   boostersVisible = false;
 
   /** m_trailsTimeDelta (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   trailsTimeDelta = 1;
 
   /** m_boosterHighLod (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   boosterHighLod = false;
 
   /** m_trailsBoundsMax (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   trailsBoundsMax = vec3.fromValues(
     -EveBoosterSet2Renderable._floatMax,
@@ -74,7 +83,6 @@ export class EveBoosterSet2Renderable
   );
 
   /** m_trailsBoundsMin (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   trailsBoundsMin = vec3.fromValues(
     EveBoosterSet2Renderable._floatMax,
@@ -83,17 +91,14 @@ export class EveBoosterSet2Renderable
   );
 
   /** m_overallIntensity (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   overallIntensity = 0;
 
   /** m_parentRotation (Quaternion) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.quat
   parentRotation = quat.create();
 
   /** m_parentSpeed (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   parentSpeed = 0;
 

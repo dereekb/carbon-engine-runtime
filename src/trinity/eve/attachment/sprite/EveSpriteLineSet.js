@@ -41,39 +41,38 @@ const DEBUG_MISSING_BONE_ZFAIL_COLOR = vec4.fromValues(0.9, 0.2, 0.2, 0.1);
  * A hull's authored sprite runs - lines and circles of evenly spaced sprites -
  * owning their static and per-bone bounds and the point lights they emit.
  */
-@be.define("EveSpriteLineSet")
-@be.inherit(IInitialize, ITr2LightOwner, EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EveSpriteLineSet",
+  inherit: [ IInitialize, ITr2LightOwner, EveEntity ],
+  // EveSpriteLineSet_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ IInitialize, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effectHash", be.READ ],
+    [ be.ATTR, "spriteLines", be.READ | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EveSpriteLineSet extends IEveSpaceObjectAttachment
 {
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSpriteLineSetItem")
   spriteLines = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   skinned = false;
 
-  @be.mapAttribute(be.READ)
   @type.uint32
   effectHash = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -108,7 +107,6 @@ export class EveSpriteLineSet extends IEveSpaceObjectAttachment
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;

@@ -79,31 +79,30 @@ const DEBUG_BOX_MAX = vec3.fromValues(0.5, 0.5, 0.5);
  * A hull's authored haze volumes, owning their per-bone bounds and the point
  * lights the haze emits.
  */
-@be.define("EveHazeSet")
-@be.inherit(IInitialize, Tr2DeviceResource, ITr2LightOwner, EveEntity)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObjectAttachment)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "EveHazeSet",
+  inherit: [ IInitialize, Tr2DeviceResource, ITr2LightOwner, EveEntity ],
+  // EveHazeSet_Blue.cpp:10-22, in Carbon's order.
+  interfaces: [ IInitialize, IEveSpaceObjectAttachment, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hazes", be.READ | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EveHazeSet extends IEveSpaceObjectAttachment
 {
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveHazeSetItem")
   hazes = [];
@@ -208,7 +207,6 @@ export class EveHazeSet extends IEveSpaceObjectAttachment
    *   its first use (docs internal/decisions/device-resource-registration.md,
    *   Revised lifecycle § 2).
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this._rebuildRevision++;
