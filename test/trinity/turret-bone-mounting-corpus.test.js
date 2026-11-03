@@ -72,7 +72,7 @@ async function assets(t, slots = [1, 2, 8])
   const sets = slots.map(slot =>
   {
     const set = CjsSchema.from("EveTurretSet", CjsBlackFormat.readPayload(data.turretBytes).object);
-    set.geometryResPath = turretGeometryPath;
+    set._geomResPath = turretGeometryPath;
     set.slotNumber = slot;
     set.lodLevel = EveTurretSet.LOD.LOD_HIGHEST;
     set.Initialize();

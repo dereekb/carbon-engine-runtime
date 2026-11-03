@@ -349,11 +349,11 @@ export class EveTurretSet extends EveEntity
   updatePitchPose = false;
 
   /** m_geomResPath (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
+  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST, "geometryResPath")
 
 
   @type.path("TriGeometryRes")
-  geometryResPath = "";
+  _geomResPath = "";
 
   /** m_impactSize (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -1277,8 +1277,8 @@ export class EveTurretSet extends EveEntity
     this._dependencyRevisions.delete("geometry");
     this.Cleanup();
     if (this.lodLevel !== EveTurretSet.LOD.LOD_DISABLED && this.lodLevel !== EveTurretSet.LOD.LOD_HIGHEST) return;
-    if (!this.geometryResPath) return;
-    this.geometryResource = blue.resMan.GetResource(this.geometryResPath);
+    if (!this._geomResPath) return;
+    this.geometryResource = blue.resMan.GetResource(this._geomResPath);
     BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry");
   }
 
