@@ -13,7 +13,7 @@ import { ICacheable } from "../../interfaces/ICacheable.js";
 import { IInitialize } from "../../../blueexposure/IInitialize.js";
 import { INotify } from "../../../blueexposure/INotify.js";
 import { IList } from "../../../blueexposure/IList.js";
-import { BeObjectMetadata } from "../../BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
 import { getClassRegistration } from "../../../blueexposure/classes/registry.js";
 import { mappedInterfaces } from "../../../compose/interface.js";

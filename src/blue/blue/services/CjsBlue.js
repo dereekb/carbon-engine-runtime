@@ -15,10 +15,10 @@
 import { CjsSchema } from "#schema";
 import { BluePaths } from "./BluePaths.js";
 import { BlueOS } from "./BlueOS.js";
-import { BlueClasses } from "../blueexposure/BlueClasses.js";
-import { BeClasses } from "../blueexposure/classes/registry.js";
-import { blueEnums } from "./enums/CjsBlueEnumRegistry.js";
-import { CjsWwiseSoundEngineStub } from "../../global/audio/CjsWwiseSoundEngineStub.js";
+import { BlueClasses } from "../../blueexposure/BlueClasses.js";
+import { BeClasses } from "../../blueexposure/classes/registry.js";
+import { blueEnums } from "../enums/CjsBlueEnumRegistry.js";
+import { CjsWwiseSoundEngineStub } from "../../../global/audio/CjsWwiseSoundEngineStub.js";
 
 /**
  * Inert holder of the process-wide Blue facilities. Construction creates only

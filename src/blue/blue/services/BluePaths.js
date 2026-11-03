@@ -38,8 +38,8 @@
 import { CjsSchema } from "#schema";
 import { normalizeResPath } from "#utils/path";
 import { BlueFileUtil } from "./BlueFileUtil.js";
-import { IBluePaths } from "./interfaces/IBluePaths.js";
-import { BlueResFileSystemForm } from "./interfaces/IBlueResFileSystem.js";
+import { IBluePaths } from "../interfaces/IBluePaths.js";
+import { BlueResFileSystemForm } from "../interfaces/IBlueResFileSystem.js";
 
 const { BYTES, TEXT, STREAM, VALUE } = BlueResFileSystemForm;
 
@@ -72,13 +72,13 @@ export const BluePathsBeforeOrAfter = Object.freeze({ BEFORE: 0, AFTER: 1 });
  */
 export class BluePaths extends IBluePaths
 {
-  /** @type {import("./interfaces/IBlueResFileSystem.js").IBlueResFileSystem|null} */
+  /** @type {import("../interfaces/IBlueResFileSystem.js").IBlueResFileSystem|null} */
   _localFileSystem = null;
 
-  /** @type {import("./interfaces/IBlueResFileSystem.js").IBlueResFileSystem[]} */
+  /** @type {import("../interfaces/IBlueResFileSystem.js").IBlueResFileSystem[]} */
   _resFileSystems = [];
 
-  /** @type {import("./io/RemoteFileCache.js").RemoteFileCache|null} */
+  /** @type {import("../io/RemoteFileCache.js").RemoteFileCache|null} */
   _remoteFileCache = null;
 
   /** Paths known to exist locally; Carbon never removes one (cpp:152-166). */
@@ -93,7 +93,7 @@ export class BluePaths extends IBluePaths
    * Custom: Carbon creates its local file system over the disk. A browser has
    * no disk, so the host supplies what "this machine" means.
    *
-   * @param {import("./interfaces/IBlueResFileSystem.js").IBlueResFileSystem|null} fileSystem Local file system.
+   * @param {import("../interfaces/IBlueResFileSystem.js").IBlueResFileSystem|null} fileSystem Local file system.
    * @returns {BluePaths} This service.
    */
   SetLocalFileSystem(fileSystem)
@@ -124,7 +124,7 @@ export class BluePaths extends IBluePaths
    * Registering the cache as a file system is separate, as in Carbon:
    * `RegisterFileSystem(new BlueResFileSystemRemote(cache), AFTER)`.
    *
-   * @param {import("./io/RemoteFileCache.js").RemoteFileCache|null} remoteFileCache Remote file cache.
+   * @param {import("../io/RemoteFileCache.js").RemoteFileCache|null} remoteFileCache Remote file cache.
    * @returns {BluePaths} This service.
    */
   SetRemoteFileCache(remoteFileCache)
@@ -146,7 +146,7 @@ export class BluePaths extends IBluePaths
    *
    * @adapted takes the instance, where Carbon takes a class-name suffix and
    *   creates it, so a host can pass a file system bound to one build's cache.
-   * @param {import("./interfaces/IBlueResFileSystem.js").IBlueResFileSystem} fileSystem File system.
+   * @param {import("../interfaces/IBlueResFileSystem.js").IBlueResFileSystem} fileSystem File system.
    * @param {number} [beforeOrAfter=BluePathsBeforeOrAfter.AFTER] `BluePathsBeforeOrAfter`.
    * @returns {BluePaths} This service.
    */
@@ -390,7 +390,7 @@ export class BluePaths extends IBluePaths
    * @param {object} [options={}] Read options.
    * @param {string[]} [options.accept=["bytes"]] Accepted `BlueResFileSystemForm`s, preferred first.
    * @param {AbortSignal|null} [options.signal=null] Cancels the read.
-   * @returns {Promise<import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null`.
+   * @returns {Promise<import("../interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null`.
    * @throws {TypeError} When the path has no protocol.
    * @throws {Error} `CJS_BEPATHS_NO_FILE_SYSTEM` when no file system serves the protocol,
    *   `CJS_BEPATHS_NO_FORM` when none that does can produce an accepted form.

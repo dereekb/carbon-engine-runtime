@@ -7,7 +7,7 @@ import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/valida
 // Source: blue/src/MotherLode.h
 // Source: blue/src/MotherLode.cpp
 import { normalizeResourcePath } from "#utils/path";
-import { BlueOS } from "../BlueOS.js";
+import { BlueOS } from "../services/BlueOS.js";
 import { ICacheable } from "../interfaces/ICacheable.js";
 import { IBlueResource } from "../interfaces/IBlueResource.js";
 import { IRoot } from "../../blueexposure/IRoot.js";

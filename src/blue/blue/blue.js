@@ -15,7 +15,7 @@ import { IBlueResMan } from "./interfaces/IBlueResMan.js";
 import { IBluePaths } from "./interfaces/IBluePaths.js";
 import { IBlueOS } from "./interfaces/IBlueOS.js";
 import { ICjsWwiseSoundEngine } from "../../global/audio/ICjsWwiseSoundEngine.js";
-import { CjsBlue } from "./CjsBlue.js";
+import { CjsBlue } from "./services/CjsBlue.js";
 
 /** Shared service references; the public Blue entry composes its resource manager. */
 export const blue = new CjsBlue();

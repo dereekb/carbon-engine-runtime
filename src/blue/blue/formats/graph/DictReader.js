@@ -47,7 +47,7 @@ import { normalizeCarbonValue } from "../../../schema/types/index.js";
 import { IRoot } from "../../../blueexposure/IRoot.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
-import { BeObjectMetadata } from "../../BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
 import { getClassRegistration } from "../../../blueexposure/classes/registry.js";
 // Exposure is read from the table directly, not through blue.classes: the standalone

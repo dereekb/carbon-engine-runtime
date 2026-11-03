@@ -22,7 +22,7 @@
 // twin: the client ships red files compiled.
 import { CjsSchema } from "#schema";
 import { normalizePath, normalizeResourcePath } from "#utils/path";
-import { BlueFileUtil } from "../BlueFileUtil.js";
+import { BlueFileUtil } from "../services/BlueFileUtil.js";
 import { BlueResFileSystemForm, IBlueResFileSystem } from "../interfaces/IBlueResFileSystem.js";
 
 /** HTTP statuses that mean the file is not there: the paths service asks the next file system. */

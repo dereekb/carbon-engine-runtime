@@ -6,7 +6,7 @@ import { CjsFormat } from "../../../../../npm/dist/resource/format/CjsFormat.js"
 import { CjsSchema } from "../../../../../npm/dist/blue/schema/index.js";
 import { YamlReader } from "../../../../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
 import { IInitialize } from "../../../../../npm/dist/blue/blueexposure/IInitialize.js";
-import { BeObjectMetadata } from "../../../../../npm/dist/blue/blue/BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../../../../npm/dist/blue/blue/services/BlueObjectMetadata.js";
 import "../../../../../npm/dist/blue/blue/values.js";
 
 class RedContractLeaf

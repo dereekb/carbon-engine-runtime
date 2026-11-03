@@ -1,7 +1,7 @@
 import { blue } from "../blue/blue/index.js";
 import { installBlueServices } from "../blue/blue/blue.js";
-import { BeCallbackMan } from "../blue/blue/BlueCallbackMan.js";
-import { BlueCallbackManTicker } from "../blue/blue/BlueCallbackManTicker.js";
+import { BeCallbackMan } from "../blue/blue/services/BlueCallbackMan.js";
+import { BlueCallbackManTicker } from "../blue/blue/services/BlueCallbackManTicker.js";
 import { CjsSchema, meta } from "#schema";
 import { CjsOverlay2D } from "./overlay/CjsOverlay2D.js";
 

@@ -9,7 +9,7 @@
 // `BeRemoteFileCache`, so a host serving several builds can hold one per build.
 import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
-import { BlueFileUtil } from "../BlueFileUtil.js";
+import { BlueFileUtil } from "../services/BlueFileUtil.js";
 import { BlueResFileSystemForm, IBlueResFileSystem } from "../interfaces/IBlueResFileSystem.js";
 
 const { substituteBlackForRedInFilename, substituteRedForBlackInFilename } = BlueFileUtil;

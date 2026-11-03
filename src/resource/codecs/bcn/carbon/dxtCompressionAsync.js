@@ -9,7 +9,7 @@
 // dropped (CallbackMan.cpp:405). Carbon's encoder also polls its cancel flag
 // at every block row (cpp:653-660); a worker cannot see a main-thread flag
 // without shared memory, so a running encode here always completes.
-import { BeCallbackMan, BlueCallbackMan } from "#blue/BlueCallbackMan";
+import { BeCallbackMan, BlueCallbackMan } from "#blue/services/BlueCallbackMan";
 
 /** The callback name the encode is queued under. */
 const COMPRESS_CALLBACK = "dds.compress";

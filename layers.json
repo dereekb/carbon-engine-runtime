@@ -107,7 +107,7 @@
   ],
   "externalDynamicImports": [
     "blue/blue/worker/CjsResManWorker.js",
-    "blue/blue/BlueCallbackMan.js",
+    "blue/blue/services/BlueCallbackMan.js",
     "blue/blue/worker/BlueCallbackManWorker.js"
   ],
   "layers": {

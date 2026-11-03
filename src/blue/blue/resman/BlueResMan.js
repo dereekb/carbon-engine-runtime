@@ -5,7 +5,7 @@ import { StreamType } from "#consts/media";
 // Consumer interface: blue/include/IBlueResMan.h (see IBlueResMan.js).
 import { assertNonNegativeInteger, assertNonNegativeNumber, assertPositiveInteger } from "#utils/validation";
 import { MotherLode, getMotherLodeKey } from "./MotherLode.js";
-import { BlueOS } from "../BlueOS.js";
+import { BlueOS } from "../services/BlueOS.js";
 import { blue as blueService } from "../blue.js";
 import { CjsLoadingObject } from "./CjsLoadingObject.js";
 import { IBlueCallbackMan } from "../interfaces/IBlueCallbackMan.js";
@@ -25,7 +25,7 @@ import {
 
 import { GetResources } from "../getResources.js";
 import { ResourceHandlerMode } from "../../../global/consts/resourceHandlerMode.js";
-import { BlueCallbackMan } from "../BlueCallbackMan.js";
+import { BlueCallbackMan } from "../services/BlueCallbackMan.js";
 import {
   CjsResManMainThreadLoader
 } from "../worker/CjsResManMainThreadLoader.js";

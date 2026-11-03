@@ -11,7 +11,7 @@ import { IRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
 import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
-import { BeObjectMetadata } from "../../npm/dist/blue/blue/BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../npm/dist/blue/blue/services/BlueObjectMetadata.js";
 import "../../npm/dist/blue/blue/values.js";
 
 let serial = 0;

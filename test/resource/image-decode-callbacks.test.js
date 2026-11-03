@@ -2,7 +2,7 @@ import { configureResourceManager } from "../support/configuredResMan.js";
 import assert from "node:assert/strict";
 import test, { after } from "node:test";
 import { Worker } from "node:worker_threads";
-import { BeCallbackMan } from "../../npm/dist/blue/blue/BlueCallbackMan.js";
+import { BeCallbackMan } from "../../npm/dist/blue/blue/services/BlueCallbackMan.js";
 import { BlueResMan } from "../../npm/dist/blue/blue/index.js";
 import * as CcpLog from "../../npm/dist/global/logging/ccpLog.js";
 import { CjsPngFormat } from "../../npm/dist/resource/formats/png/index.js";

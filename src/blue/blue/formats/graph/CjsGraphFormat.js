@@ -3,7 +3,7 @@ import { readEnvelope, writeEnvelope } from "./core/text.js";
 import { CjsSchema } from "../../../schema/CjsSchema.js";
 import { getClassRegistration } from "../../../blueexposure/classes/registry.js";
 import { mappedInterfaces } from "../../../compose/interface.js";
-import { BeObjectMetadata } from "../../BlueObjectMetadata.js";
+import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { dataType, isRecord, memberPath, put } from "./core/dataTypes.js";
 const RESERVED = new Set(["_type", "_id", "_ref", "__bluemetadata__"]);
 
