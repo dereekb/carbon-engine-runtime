@@ -580,10 +580,11 @@ export class EveBoosterSet2Renderable
       return sph3.empty(out);
     }
     const position = sph3.$position(out);
-    vec3.copy(position, boosterSet.boosterBoundingSphereCenter);
-    position[2] -= 0.5 * boosterSet.boosterBoundingSphereRadius;
+    const sphere = boosterSet.boosterBoundingSphere;
+    vec3.copy(position, sphere);
+    position[2] -= 0.5 * sphere[3];
     vec3.transformMat4(position, position, this._parentTransform);
-    out[3] = 2 * boosterSet.boosterBoundingSphereRadius;
+    out[3] = 2 * sphere[3];
     return out;
   }
 

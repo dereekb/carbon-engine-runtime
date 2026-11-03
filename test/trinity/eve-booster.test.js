@@ -129,9 +129,13 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   const dataSnapshot = boosters.GetBoosterData();
   dataSnapshot[0].transform[12] = 500;
   assert.equal(boosters.GetBoosterData()[0].transform[12], 10);
-  assert.equal(typeof boosters.boosterBoundingSphereRadius, "number");
-  assert.equal(boosters.boosterBoundingSphereCenter.length, 3);
+  assert.equal(boosters.boosterBoundingSphere.length, 4, "one Vector4: centre xyz, radius w (EveBoosterSet2.h:296)");
   assert.deepEqual(EveBoosterSet2.Shape, { STAR: 0, BOX: 1, SHAPE_COUNT: 2 });
+  // Carbon exposes the centre as a float array over the first three floats and the radius as w (EveBoosterSet2_Blue.cpp:50,53).
+  const sphereRows = Object.fromEntries(CjsSchema.getSchema(EveBoosterSet2).members.filter(member => member.key === "boosterBoundingSphere").map(member => [ member.name, member ]));
+  assert.deepEqual(Object.keys(sphereRows).sort(), [ "boosterBoundingSphereCenter", "boosterBoundingSphereRadius" ]);
+  assert.deepEqual([ sphereRows.boosterBoundingSphereCenter.size, sphereRows.boosterBoundingSphereCenter.type.kind, sphereRows.boosterBoundingSphereCenter.exposure.macro ], [ 3, "vec3", "MAPFLOATARRAYSIZE" ]);
+  assert.deepEqual([ sphereRows.boosterBoundingSphereRadius.index, sphereRows.boosterBoundingSphereRadius.type.kind ], [ 3, "float32" ]);
 
   // Values carry the booster and trail records; a set built from them derives
   // the same flares, bounds and max size as the set Add built.
@@ -143,8 +147,8 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   assert.equal(restored.glows.sprites.length, 6);
   assert.deepEqual(restored.trails.GetTrailData(), trails.GetTrailData());
   assert.equal(restored.maxSize, boosters.maxSize);
-  assertVecNear(restored.boosterBoundingSphereCenter, boosters.boosterBoundingSphereCenter);
-  assert.equal(restored.boosterBoundingSphereRadius, boosters.boosterBoundingSphereRadius);
+  assertVecNear(restored.boosterBoundingSphere.subarray(0, 3), boosters.boosterBoundingSphere.subarray(0, 3));
+  assert.equal(restored.boosterBoundingSphere[3], boosters.boosterBoundingSphere[3]);
 
   boosters.Clear();
   assert.deepEqual(boosters.GetBoosterData(), []);
@@ -152,7 +156,7 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   assert.deepEqual(trails.GetTrailData(), []);
   // Carbon's Clear leaves the max size (EveBoosterSet2.cpp:748-767).
   assert.equal(boosters.maxSize, 3);
-  assert.equal(boosters.boosterBoundingSphereRadius, 0);
+  assert.equal(boosters.boosterBoundingSphere[3], 0);
 });
 
 test("EveBoosterSet2Renderable follows Carbon intensity damping and owner update lifecycle", () =>
@@ -306,7 +310,7 @@ function MakeBoosterFrustum(viewportWidth = 1024)
 function MakeBoosterAt(distance)
 {
   const set = new EveBoosterSet2();
-  set.boosterBoundingSphereRadius = 10;
+  set.boosterBoundingSphere[3] = 10;
   set.SetCount(1);
   const renderable = set.instances[0];
   const parentMatrix = mat4.fromTranslation(mat4.create(), [0, 0, distance]);
