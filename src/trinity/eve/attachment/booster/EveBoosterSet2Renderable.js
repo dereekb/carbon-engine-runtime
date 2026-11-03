@@ -580,7 +580,8 @@ export class EveBoosterSet2Renderable
       return sph3.empty(out);
     }
     const position = sph3.$position(out);
-    const sphere = boosterSet.boosterBoundingSphere;
+    // The set's private sphere, as Carbon reads m_boosterSet->m_boosterBoundingSphere (EveBoosterSet2.cpp:294).
+    const sphere = boosterSet._boosterBoundingSphere;
     vec3.copy(position, sphere);
     position[2] -= 0.5 * sphere[3];
     vec3.transformMat4(position, position, this._parentTransform);

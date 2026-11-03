@@ -2053,11 +2053,6 @@ function validateDeclaration(entry)
     {
         throw new TypeError("CjsSchema declaration index must be a nonnegative safe integer.");
     }
-    // A float-array row (MAPFLOATARRAYSIZE) names the first `size` floats of its member, from `index`.
-    if (Object.hasOwn(entry, "size") && (!Number.isSafeInteger(entry.size) || entry.size < 1 || !Object.hasOwn(entry, "index")))
-    {
-        throw new TypeError("CjsSchema declaration size must be a positive safe integer on an indexed declaration.");
-    }
     return entry;
 }
 
@@ -2085,7 +2080,7 @@ function applyDeclarationNamespace(entry, namespace, value)
     if (namespace === "type") RejectRetiredTypeKinds(value);
     if (namespace === "declaration")
     {
-        for (const key of [ "name", "role", "index", "size" ])
+        for (const key of [ "name", "role", "index" ])
         {
             if (Object.hasOwn(value, key)) entry[key] = value[key];
         }
@@ -2143,7 +2138,7 @@ function refreshLegacyFields(schema)
 /** Whether an exposure record is one of Carbon's attribute or property rows. Our own `meta.mapAttribute` flags merge into the Carbon row instead. */
 function isRowExposure(exposure)
 {
-    return Boolean(exposure) && typeof exposure.macro === "string" && /^(MAP_(ATTRIBUTE|PROPERTY)|MAPFLOATARRAYSIZE$)/.test(exposure.macro);
+    return Boolean(exposure) && typeof exposure.macro === "string" && /^MAP_(ATTRIBUTE|PROPERTY)/.test(exposure.macro);
 }
 
 /**
@@ -2304,9 +2299,6 @@ function getCanonicalDeclarations(Constructor, role)
 /** Float vector kinds whose components are float32, for an indexed row on one of them. */
 const FLOAT_VECTOR_KINDS = new Set([ "vec2", "vec3", "vec4", "quat", "color" ]);
 
-/** The float vector a float-array row of a given size reads as. */
-const FLOAT_ARRAY_TYPES = { 2: { kind: "vec2" }, 3: { kind: "vec3" }, 4: { kind: "vec4" } };
-
 function resolveInheritedDeclaration(Owner, record)
 {
     const { entry } = record;
@@ -2315,11 +2307,9 @@ function resolveInheritedDeclaration(Owner, record)
         const host = record.aliasOf ?? CLASS_SCHEMA.get(Owner).legacyDeclarationsByKey.get(entry.key);
         const base = host ? resolveInheritedDeclaration(Owner, host) : {};
         const shared = Object.fromEntries(Object.entries(base).filter(([ namespace ]) =>
-            ![ "name", "key", "role", "index", "size", "declaringClass", "edit", "carbon", "exposure", "property", "impl", "mapsInherited" ].includes(namespace)));
-        // An indexed row's type is the element type of the array it names; one component of a float vector is a float; a float-array
-        // row's (MAPFLOATARRAYSIZE) is a float vector of its size.
-        if (entry.size !== undefined) shared.type = FLOAT_ARRAY_TYPES[entry.size] ?? { kind: "floatArray" };
-        else if (entry.index !== undefined && shared.type?.itemType !== undefined) shared.type = shared.type.itemType;
+            ![ "name", "key", "role", "index", "declaringClass", "edit", "carbon", "exposure", "property", "impl", "mapsInherited" ].includes(namespace)));
+        // An indexed row's type is the element type of the array it names; one component of a float vector is a float.
+        if (entry.index !== undefined && shared.type?.itemType !== undefined) shared.type = shared.type.itemType;
         else if (entry.index !== undefined && FLOAT_VECTOR_KINDS.has(shared.type?.kind)) shared.type = { kind: "float32" };
         return { ...shared, ...entry };
     }
@@ -3869,7 +3859,6 @@ function abstractParts(blue)
  * - `[ATTR, name, flags, field?]` - `MAP_ATTRIBUTE`; `field` is the JS member when it differs from the name.
  * - `[ATTR_CHOOSER, name, flags, chooser, field?]` - `MAP_ATTRIBUTE_WITH_CHOOSER`.
  * - `[ATTR_INDEX, name, flags, index, field]` - `MAP_ATTRIBUTE` on one element of an array member.
- * - `[ATTR_FLOAT_ARRAY, name, flags, size, field]` - `MAPFLOATARRAYSIZE`, the first `size` floats of a member.
  * - `[PROP | PROP_RO | PROP_PERSISTED, name, field?]` - `MAP_PROPERTY`, `_READONLY`, `_PERSISTED`; on an accessor when the
  *   class has one under that key, else on the plain field that stores the value.
  * - `[METHOD, name, mode?, method?]` - `MAP_METHOD`, or with `WRAP`, `WRAP_OPTIONAL_ARGS` or `AS_METHOD` the matching macro;
@@ -3881,7 +3870,7 @@ function abstractParts(blue)
 function exposureRowConstants()
 {
     return {
-        ATTR: "attribute", ATTR_CHOOSER: "attributeWithChooser", ATTR_INDEX: "attributeIndex", ATTR_FLOAT_ARRAY: "attributeFloatArray",
+        ATTR: "attribute", ATTR_CHOOSER: "attributeWithChooser", ATTR_INDEX: "attributeIndex",
         PROP: "property", PROP_RO: "propertyReadOnly", PROP_PERSISTED: "propertyPersisted",
         METHOD: "method", WRAP: "wrap", WRAP_OPTIONAL_ARGS: "wrapOptionalArgs", AS_METHOD: "asMethod",
         ICACHEABLE_METHODS: "icacheableMethods"
@@ -3978,13 +3967,6 @@ function applyExposureRow(Constructor, row, blue, context)
             if (typeof field !== "string" || !field) throw new TypeError(`Exposure row ${name}: ATTR_INDEX needs the array field.`);
             defineField(field, exposureIndexDecorator(flags, name, index, blue));
             return { kind, role: "member", key: field, name, macro: "MAP_ATTRIBUTE", flags, index };
-        }
-        case ROW.ATTR_FLOAT_ARRAY:
-        {
-            const [ , , flags, size, field ] = row;
-            if (typeof field !== "string" || !field) throw new TypeError(`Exposure row ${name}: ATTR_FLOAT_ARRAY needs the member field.`);
-            defineField(field, exposureFloatArrayDecorator(flags, size, name, blue));
-            return { kind, role: "member", key: field, name, macro: "MAPFLOATARRAYSIZE", flags, size };
         }
         case ROW.PROP:
         case ROW.PROP_RO:
@@ -4086,8 +4068,6 @@ function createMapNamespace(blue)
         mapAttribute: (flags, name) => inheritedAware(ns, "mapAttribute", "member", name, key => exposureAttributeDecorator("MAP_ATTRIBUTE", flags, undefined, key, blue)),
         // Carbon's `MAP_ATTRIBUTE( name, member[index], ... )` for one element of an array member: the row sits on the array field.
         mapAttribute__Index: (flags, name, index) => exposureIndexDecorator(flags, name, index, blue),
-        // Carbon's `MAPFLOATARRAYSIZE`: the first `size` floats of the member under their own exposed name.
-        mapFloatArraySize: (flags, size, name) => exposureFloatArrayDecorator(flags, size, name, blue),
         mapAttributeWithChooser: (flags, chooser, name) => inheritedAware(ns, "mapAttributeWithChooser", "member", name, key => exposureAttributeDecorator("MAP_ATTRIBUTE_WITH_CHOOSER", flags, chooser, key, blue)),
         mapProperty: name => inheritedAware(ns, "mapProperty", "property", name, key => exposurePropertyDecorator("MAP_PROPERTY", key, false, blue)),
         mapPropertyReadOnly: name => inheritedAware(ns, "mapPropertyReadOnly", "property", name, key => exposurePropertyDecorator("MAP_PROPERTY_READONLY", key, false, blue)),
@@ -4248,30 +4228,6 @@ function exposureIndexDecorator(flags, name, index, blue)
         ...(blue ? { carbon: { member: true } } : {}),
         exposure: exposureRecord("MAP_ATTRIBUTE", { flags }, blue),
         declaration: { name: exposureName(name), index }
-    });
-}
-
-/**
- * Carbon's `MAPFLOATARRAYSIZE( name, member, interface, doc, flags, size )` (BlueExposureMacrosDeprecated.h:107-109): the first
- * `size` floats of a member as one float array under its own exposed name. The row sits on the member, as an index row does, from
- * element 0.
- *
- * @param {number} flags Carbon's flags.
- * @param {number} size How many floats.
- * @param {string} name The exposed name.
- * @param {boolean} blue Whether the row is Carbon's exposure.
- * @returns {Function} The field decorator.
- */
-function exposureFloatArrayDecorator(flags, size, name, blue)
-{
-    if (typeof flags !== "number") throw new TypeError("mapFloatArraySize requires the Carbon flags first.");
-    if (!Number.isSafeInteger(size) || size < 1) throw new TypeError("mapFloatArraySize requires the float count.");
-    if (typeof name !== "string" || !name.trim()) throw new TypeError("mapFloatArraySize requires the exposed name.");
-    return combinedFieldDecorator({
-        edit: exposureEditFlags(flags),
-        ...(blue ? { carbon: { member: true } } : {}),
-        exposure: exposureRecord("MAPFLOATARRAYSIZE", { flags, size }, blue),
-        declaration: { name: exposureName(name), index: 0, size }
     });
 }
 

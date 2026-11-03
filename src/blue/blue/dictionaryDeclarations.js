@@ -51,8 +51,6 @@ export function getDictionaryDeclarations(Constructor)
 export function readDictionaryValue(instance, field)
 {
   const { target, key } = dictionaryTarget(instance, field);
-  // A float-array row (MAPFLOATARRAYSIZE) reads its floats as a view over the member, as Carbon reads them in place.
-  if (field.size !== undefined) return target.subarray(key, key + field.size);
   return field.role === "property" ? target[key] : dataValue(target, key);
 }
 
@@ -65,11 +63,6 @@ export function readDictionaryValue(instance, field)
 export function writeDictionaryValue(instance, field, value)
 {
   const { target, key } = dictionaryTarget(instance, field);
-  if (field.size !== undefined)
-  {
-    for (let i = 0; i < field.size; i++) target[key + i] = value[i];
-    return;
-  }
   if (field.role === "member") dataValue(target, key);
   target[key] = value;
 }
@@ -90,7 +83,7 @@ function dictionaryTarget(instance, field)
     {
       throw new TypeError(`Dictionary member ${field.name} requires existing indexed storage.`);
     }
-    if (field.index + (field.size ?? 1) > value.length)
+    if (field.index >= value.length)
     {
       throw new RangeError(`Dictionary member ${field.name} exceeds its indexed storage length.`);
     }

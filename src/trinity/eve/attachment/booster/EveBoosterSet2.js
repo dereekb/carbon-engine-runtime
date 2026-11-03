@@ -261,14 +261,29 @@ export class EveBoosterSet2 extends EveEntity
   maxSize = 0;
 
   /**
-   * m_boosterBoundingSphere (Vector4) [READ]: the boosters' minimum bounding sphere, centre in xyz and radius in w. Carbon exposes
-   * the centre as a float array over its first three floats (MAPFLOATARRAYSIZE, EveBoosterSet2_Blue.cpp:50) and the radius as its w
-   * (EveBoosterSet2_Blue.cpp:53).
+   * m_boosterBoundingSphere (Vector4) [READ]: the boosters' minimum bounding sphere, centre in xyz and radius in w. The radius is
+   * exposed as its w (EveBoosterSet2_Blue.cpp:53); the centre through boosterBoundingSphereCenter.
    */
-  @be.mapFloatArraySize(be.READ, 3, "boosterBoundingSphereCenter")
   @be.mapAttribute__Index(be.READ, "boosterBoundingSphereRadius", 3)
   @type.vec4
-  boosterBoundingSphere = vec4.create();
+  _boosterBoundingSphere = vec4.create();
+
+  /** A view onto _boosterBoundingSphere's xyz, made once; the sphere is written in place and never replaced. */
+  _boosterBoundingSphereCenter = this._boosterBoundingSphere.subarray(0, 3);
+
+  /**
+   * The centre of the boosters' minimum bounding sphere: the first three floats of _boosterBoundingSphere.
+   *
+   * @adapted Stands in for Carbon's MAPFLOATARRAYSIZE( "boosterBoundingSphereCenter", m_boosterBoundingSphere, ..., 3 )
+   *   (EveBoosterSet2_Blue.cpp:50) as a read-only property over the same floats.
+   * @returns {Float32Array} The live view.
+   */
+  @be.mapPropertyReadOnly()
+  @type.vec3
+  get boosterBoundingSphereCenter()
+  {
+    return this._boosterBoundingSphereCenter;
+  }
 
   /** m_warpIntensity (float) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
@@ -624,7 +639,7 @@ export class EveBoosterSet2 extends EveEntity
     this._singleBoosters.length = 0;
     this.glows?.Clear();
     this.trails?.Clear();
-    vec4.set(this.boosterBoundingSphere, 0, 0, 0, 0);
+    vec4.set(this._boosterBoundingSphere, 0, 0, 0, 0);
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
@@ -696,7 +711,7 @@ export class EveBoosterSet2 extends EveEntity
       }
       owner.glows.Rebuild();
     }
-    vec4.set(owner.boosterBoundingSphere, 0, 0, 0, 0);
+    vec4.set(owner._boosterBoundingSphere, 0, 0, 0, 0);
     owner.maxSize = 0;
     for (const booster of owner._singleBoosters)
     {
@@ -1122,7 +1137,7 @@ export class EveBoosterSet2 extends EveEntity
    */
   static _UpdateBoundingSphere(owner, position)
   {
-    const sphere = owner.boosterBoundingSphere;
+    const sphere = owner._boosterBoundingSphere;
     const delta = vec3.subtract(vec3.create(), position, sphere);
     const distance = vec3.length(delta);
     const radius = sphere[3];
