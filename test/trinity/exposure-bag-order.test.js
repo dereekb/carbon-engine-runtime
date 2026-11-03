@@ -5,14 +5,14 @@ import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import "../../npm/dist/trinity/index.js";
 import { YamlWriter } from "../../npm/dist/blue/blue/YamlWriter.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
-import { getDictionaryDeclarations } from "../../npm/dist/blue/blue/dictionaryDeclarations.js";
+import { IRootReaderBase } from "../../npm/dist/blue/blue/IRootReaderBase.js";
 
 // decorator-upgrade.md § 000a: a class declared with an exposure bag writes, copies and lists its members in Carbon's order.
 
 /** The class's own transported members, in the order the writers visit them. */
 function ownOrder(Class)
 {
-    return getDictionaryDeclarations(Class).fields.filter(field => field.declaringClass === Class).map(field => field.name);
+    return IRootReaderBase.getDictionaryDeclarations(Class).fields.filter(field => field.declaringClass === Class).map(field => field.name);
 }
 
 test("EveShip2 writes its members in EveShip2_Blue.cpp's order", () =>

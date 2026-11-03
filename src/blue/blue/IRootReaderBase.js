@@ -34,7 +34,7 @@ import { mappedInterfaces } from "../compose/interface.js";
 import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
 import { IRootReaderException } from "./IRootReaderException.js";
 import { InvalidAttributeException } from "./InvalidAttributeException.js";
-import { getDictionaryDeclarations, readDictionaryValue, writeDictionaryValue } from "./dictionaryDeclarations.js";
+
 
 /** Kinds read as an object reference (IROOTPTR). */
 const OBJECT_KINDS = new Set([ "rootRef" ]);
@@ -44,6 +44,8 @@ const CONTAINER_KINDS = new Set([ "list", "array", "map", "set" ]);
 
 /** Kinds read as a list of objects or values (BlueList). */
 const LIST_KINDS = new Set([ "list", "array" ]);
+import { isTransportedDeclaration } from "../compose/values.js";
+const VIEWS = new WeakMap();
 
 /**
  * `IRootReaderBase` - reads one member of an instance by the member's type.
@@ -119,7 +121,7 @@ export class IRootReaderBase
   _ReadMember(instance, field, notification = null)
   {
     const kind = field.type?.kind;
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
 
     // A BlueStructureList holds records by value; it is never a list of objects.
     if (kind === "structList")
@@ -165,7 +167,7 @@ export class IRootReaderBase
     // pending `{ _ref }` still has to fill.
     if (this.HasNestedObjects(source))
     {
-      writeDictionaryValue(instance, field, this.ReadNestedObjects(source));
+      IRootReaderBase.writeDictionaryValue(instance, field, this.ReadNestedObjects(source));
       return true;
     }
 
@@ -175,7 +177,7 @@ export class IRootReaderBase
     if (inPlace !== null) return inPlace;
 
     const next = normalizeCarbonValue(source, field.type);
-    writeDictionaryValue(instance, field, next);
+    IRootReaderBase.writeDictionaryValue(instance, field, next);
     return !IRootReaderBase.areEquivalent(current, next);
   }
 
@@ -190,14 +192,14 @@ export class IRootReaderBase
    */
   HandlePropertyIRoot(instance, field)
   {
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
     if (current && typeof current === "object")
     {
       return this.ReadIRoot(current, field);
     }
 
     const created = this.ReadIRootClass(field);
-    writeDictionaryValue(instance, field, created);
+    IRootReaderBase.writeDictionaryValue(instance, field, created);
     return created !== current;
   }
 
@@ -219,7 +221,7 @@ export class IRootReaderBase
   ReadStructureList(instance, field)
   {
     const source = this.ReadValue();
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
     if (source === current) return false;
     const className = field.type.className;
     const Item = CjsSchema.getConstructor(className);
@@ -248,13 +250,13 @@ export class IRootReaderBase
       list.length = 0;
       for (const item of next) list.push(item);
     }
-    else writeDictionaryValue(instance, field, next);
+    else IRootReaderBase.writeDictionaryValue(instance, field, next);
     return changed;
   }
 
   /**
    * Finds an exposed dictionary declaration or its selected alias. Adapted:
-   * dictionaryDeclarations owns the JS values-view precedence; native
+   * IRootReaderBase.getDictionaryDeclarations owns the JS values-view precedence; native
    * DictReader::FindEntry instead selects by persistence/write eligibility.
    *
    * @adapted
@@ -264,7 +266,7 @@ export class IRootReaderBase
    */
   FindEntry(name, Constructor)
   {
-    const declarations = getDictionaryDeclarations(Constructor);
+    const declarations = IRootReaderBase.getDictionaryDeclarations(Constructor);
     return declarations.byName.get(name) ?? null;
   }
 
@@ -370,6 +372,112 @@ export class IRootReaderBase
     }
 
     return false;
+  }
+
+  /**
+   * Selects the JavaScript dictionary values view, not native persistence.
+   * Derived owners claim exposed names first; within one owner stored members
+   * precede live properties. A property takes part only when it is persisted
+   * (`isTransportedDeclaration`). Filters run after selection, without falling back
+   * to a shadowed declaration; a decorated redeclaration already carries the
+   * metadata it inherits, resolved by the schema. This keeps export/import
+   * addressing identical, including the unrestricted all-fields values view.
+   * @param {Function} Constructor Declared class.
+   * @returns {object} Selected fields and their exact-name lookup map.
+   */
+  static getDictionaryDeclarations(Constructor)
+  {
+      const schema = CjsSchema.getSchema(Constructor);
+      const previous = VIEWS.get(Constructor);
+      // getSchema invalidates its identity on schema and registration revisions.
+      if (previous?.schema === schema) return previous;
+
+      const fields = [];
+      const byName = new Map();
+      for (let owner = Constructor; typeof owner === "function"; owner = Object.getPrototypeOf(owner))
+      {
+          for (const declarations of [schema.members, schema.properties])
+          {
+              for (const field of declarations)
+              {
+                  if (field.declaringClass !== owner || byName.has(field.name) || !isTransportedDeclaration(field)) continue;
+                  byName.set(field.name, field);
+                  fields.push(field);
+              }
+          }
+      }
+
+      // A class whose exposure is a bag walks in Carbon's member order (CjsSchema.orderByExposureRows); others keep this order.
+      const view = { schema, fields: CjsSchema.orderByExposureRows(Constructor, fields), byName };
+      VIEWS.set(Constructor, view);
+      return view;
+  }
+
+  /**
+   * Reads stored key/index data, or invokes an explicitly live property.
+   * @param {object} instance Dictionary target.
+   * @param {object} field Selected canonical declaration.
+   * @returns {*} Current value.
+   */
+  static readDictionaryValue(instance, field)
+  {
+      const { target, key } = IRootReaderBase._dictionaryTarget(instance, field);
+      return field.role === "property" ? target[key] : IRootReaderBase._dataValue(target, key);
+  }
+
+  /**
+   * Writes the same key/index addressed by dictionary export.
+   * @param {object} instance Dictionary target.
+   * @param {object} field Selected canonical declaration.
+   * @param {*} value Decoded value.
+   */
+  static writeDictionaryValue(instance, field, value)
+  {
+      const { target, key } = IRootReaderBase._dictionaryTarget(instance, field);
+      if (field.role === "member") IRootReaderBase._dataValue(target, key);
+      target[key] = value;
+  }
+
+  /** Resolves an existing indexed slot without inventing storage or invoking stored accessors. */
+  static _dictionaryTarget(instance, field)
+  {
+      let target = instance;
+      let key = field.key;
+      if (field.index !== undefined)
+      {
+          const value = field.role === "property" ? target[key] : IRootReaderBase._dataValue(target, key);
+          if (!Number.isInteger(field.index) || field.index < 0)
+          {
+              throw new TypeError(`Dictionary member ${field.name} has an invalid storage index.`);
+          }
+          if (!Array.isArray(value) && !(ArrayBuffer.isView(value) && !(value instanceof DataView)))
+          {
+              throw new TypeError(`Dictionary member ${field.name} requires existing indexed storage.`);
+          }
+          if (field.index >= value.length)
+          {
+              throw new RangeError(`Dictionary member ${field.name} exceeds its indexed storage length.`);
+          }
+          target = value;
+          key = field.index;
+      }
+      return { target, key };
+  }
+
+  /** Stored-member reads inspect data descriptors; only the property role runs accessors. */
+  static _dataValue(target, key)
+  {
+      for (let current = target; current !== null; current = Object.getPrototypeOf(current))
+      {
+          const descriptor = Object.getOwnPropertyDescriptor(current, key);
+          if (!descriptor) continue;
+          if (!Object.hasOwn(descriptor, "value"))
+          {
+              throw new TypeError(`Dictionary storage ${String(key)} is an accessor; declare its backing key.`);
+          }
+          return descriptor.value;
+      }
+      return undefined;
   }
 }
 

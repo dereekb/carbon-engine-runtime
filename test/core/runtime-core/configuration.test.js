@@ -6,7 +6,7 @@ import { ImageIO } from "../../../npm/dist/resource/imageio/ImageIO.js";
 import { CjsPngFormat } from "../../../npm/dist/resource/formats/png/CjsPngFormat.js";
 import { CjsVtaFormat } from "../../../npm/dist/resource/formats/vta/CjsVtaFormat.js";
 import { TriSettingsRegistrar } from "../../../npm/dist/trinity/core/TriSettingsRegistrar.js";
-import { CreateBlackObjectBuilder } from "../../../npm/dist/blue/blue/formats/black/CreateBlackObjectBuilder.js";
+import { CjsBlackFormat } from "../../../npm/dist/blue/blue/formats/black/CjsBlackFormat.js";
 import { TriGeometryRes } from "../../../npm/dist/trinity/resources/geometry/TriGeometryRes.js";
 import { TriGrannyRes } from "../../../npm/dist/trinity/resources/geometry/granny/TriGrannyRes.js";
 import { TriTextureRes } from "../../../npm/dist/trinity/resources/texture/TriTextureRes.js";
@@ -82,9 +82,9 @@ test("Initialize configures the chosen owners and preserves loader and geometry 
   assert.notEqual(blue.resMan.GetFormat("gr2"), blue.resMan.GetFormat("gr2", "raw"));
   assert.equal(blue.resMan.GetFormat("gr2").GetValues().grannyFileInfo, true, "geometry reads the granny file info");
   assert.equal(blue.resMan.GetFormat("gr2", "raw").GetValues().rebuildMissingBounds, true);
-  assert.equal(owners.resMan.GetObjectLoader("red"), CreateBlackObjectBuilder);
-  assert.equal(owners.resMan.GetObjectLoader("black"), CreateBlackObjectBuilder);
-  assert.equal(owners.resMan.GetObjectLoader("yaml"), CreateBlackObjectBuilder);
+  assert.equal(owners.resMan.GetObjectLoader("red"), CjsBlackFormat.createBlackObjectBuilder);
+  assert.equal(owners.resMan.GetObjectLoader("black"), CjsBlackFormat.createBlackObjectBuilder);
+  assert.equal(owners.resMan.GetObjectLoader("yaml"), CjsBlackFormat.createBlackObjectBuilder);
   assert.throws(() => owners.resMan.GetObjectLoader("red")(new Uint8Array(), { path: "a.red" }), /a\.red: not a Black or YAML object file/);
   const state = library.GetConfiguration();
   assert.equal(state.owners.resMan, owners.resMan);
@@ -185,7 +185,7 @@ test("failed initialization restores service references, retains registration ev
   await assert.rejects(library.Initialize(owners), error => error === failure);
   assert.equal(blue.resMan, original);
   assert.equal(owners.os.IsRegisteredForTicks(owners.resMan), false);
-  assert.equal(library.GetConfiguration().configured.objectBuilders.black, CreateBlackObjectBuilder);
+  assert.equal(library.GetConfiguration().configured.objectBuilders.black, CjsBlackFormat.createBlackObjectBuilder);
   assert.equal(library.GetConfiguration().initialized, false);
   await other.Initialize(services());
 });
@@ -204,8 +204,8 @@ test("failed initial policy installation can retry on the same resource manager"
   await assert.rejects(library.Initialize(owners), /initial policy failure/);
   fail = false;
   await library.Initialize(owners);
-  assert.equal(owners.resMan.GetObjectLoader("red"), CreateBlackObjectBuilder);
-  assert.equal(library.GetConfiguration().configured.objectBuilders.red, CreateBlackObjectBuilder);
+  assert.equal(owners.resMan.GetObjectLoader("red"), CjsBlackFormat.createBlackObjectBuilder);
+  assert.equal(library.GetConfiguration().configured.objectBuilders.red, CjsBlackFormat.createBlackObjectBuilder);
 });
 
 test("plain provider objects remain borrowed references including readback", async t =>

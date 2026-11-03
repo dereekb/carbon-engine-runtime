@@ -1,6 +1,6 @@
+import { CjsBlackReader } from "./CjsBlackReader.js";
 import { CjsSchema } from "#schema/CjsSchema";
 
-import { structClassLayout } from "./blackClassStructures.js";
 import { CjsBlackPropertyReaders } from "./CjsBlackPropertyReaders.js";
 
 /**
@@ -115,7 +115,7 @@ export class CjsBlackSchemaRegistry
             // BlueStructureList: the item class supplies the layout through meta.struct,
             // and a runtime read builds each record as an instance of it.
             if (Object.hasOwn(type, "structure")) throw new TypeError("Inline structure layouts are removed; use meta.struct on the item class.");
-            const structure = structClassLayout(type.className);
+            const structure = CjsBlackReader.structClassLayout(type.className);
             return CjsBlackSchemaRegistry.compactBlackType("IROOT", { kind: "structList", className: type.className }, {
                 container: "list", cppType: "StructureList", structure, itemClassName: type.className
             });

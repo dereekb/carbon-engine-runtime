@@ -16,7 +16,6 @@ import { IList } from "../blueexposure/IList.js";
 import { BeObjectMetadata } from "./BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "./IBlueObjectMetadata.js";
 import { getClassRegistration } from "../blueexposure/classes/registry.js";
-import { getDictionaryDeclarations, readDictionaryValue, writeDictionaryValue } from "./dictionaryDeclarations.js";
 import { mappedInterfaces } from "../compose/interface.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import * as CcpLog from "../../global/logging/ccpLog.js";
@@ -685,7 +684,7 @@ export class YamlReader extends IRootReaderBase
 
   FindEntry(name, Constructor)
   {
-    const field = getDictionaryDeclarations(Constructor).byName.get(name);
+    const field = IRootReaderBase.getDictionaryDeclarations(Constructor).byName.get(name);
     return field && CjsSchema.isFieldExported(field, { persistOnly: true }) ? field : null;
   }
 
@@ -698,7 +697,7 @@ export class YamlReader extends IRootReaderBase
 
   _ReadMember(instance, field)
   {
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
     const type = field.type;
     const kind = type?.kind;
     if (kind === "root")
@@ -714,7 +713,7 @@ export class YamlReader extends IRootReaderBase
         const Declared = typeof type.className === "function" ? type.className : CjsSchema.getConstructor(type.className);
         if (!Declared || !YamlReader._QueryInterface(value, Declared)) this._ReportError("Incorrect type for member");
       }
-      writeDictionaryValue(instance, field, value);
+      IRootReaderBase.writeDictionaryValue(instance, field, value);
     }
     else if (kind === "structList") this._ReadStructureList(current, type);
     else if (kind === "list" || kind === "array") this._ReadList(current);
@@ -723,7 +722,7 @@ export class YamlReader extends IRootReaderBase
     {
       this._ReadFloatArray(current, current.length, type?.scalar === "float64");
     }
-    else writeDictionaryValue(instance, field, this._ReadDeclaredScalar(kind));
+    else IRootReaderBase.writeDictionaryValue(instance, field, this._ReadDeclaredScalar(kind));
     return true;
   }
 

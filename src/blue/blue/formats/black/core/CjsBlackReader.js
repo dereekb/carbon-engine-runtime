@@ -1,9 +1,7 @@
 import { CjsSchema, meta } from "#schema";
 import { applyReaderMember, finalizeReaderObject, getReaderMemberValue, isReaderIList } from "#schema/hydration";
-
 import { CjsBlueReader } from "../../../CjsBlueReader.js";
 import { IBlueObjectBuilder } from "../../../IBlueObjectBuilder.js";
-
 import {
     CJS_BLACK_FORMAT_ID,
     CJS_BLACK_FOURCC,
@@ -11,7 +9,6 @@ import {
 } from "./blackConstants.js";
 import { CjsBlackBinaryReader } from "./CjsBlackBinaryReader.js";
 import { CjsBlackPropertyReaders } from "./CjsBlackPropertyReaders.js";
-import { classStructureLayout } from "./blackClassStructures.js";
 import { CjsBlackSchemaRegistry } from "./CjsBlackSchemaRegistry.js";
 
 /** Carbon's `BLUE_OBJECT_METADATA_KEY` (blue/include/IBlueObjectMetadata.h:5). */
@@ -1082,7 +1079,7 @@ export class CjsBlackReader extends CjsBlueReader
 
     /**
      * A structure-list field's descriptor with its layout taken from the
-     * registered item class (blackClassStructures.js), which wins over the
+     * registered item class (CjsBlackReader.classStructureLayout), which wins over the
      * snapshot's; unchanged for any other field.
      *
      * @param {import("./helpers.js").BlackSourceField} field Resolved schema field.
@@ -1096,8 +1093,46 @@ export class CjsBlackReader extends CjsBlueReader
         if (field.declaration) return field;
         const black = field?.black;
         if (!black || black.container !== "list" || !/StructureList/u.test(String(black.cppType ?? ""))) return field;
-        const layout = classStructureLayout(className, fieldName);
+        const layout = CjsBlackReader.classStructureLayout(className, fieldName);
         return { ...field, black: { ...black, structure: layout } };
+    }
+
+    /**
+     * Returns the registered class's explicit BlueStructureDefinition.
+     *
+     * @param {string|Function} className Registered item class name, or the class itself.
+     * @returns {import("./helpers.js").BlackStructureLayout} The structure definition.
+     * @throws {TypeError} When the class is unregistered or has no structureDefinition.
+     */
+    static structClassLayout(className)
+    {
+                    const Item = typeof className === "function" ? className : CjsSchema.getConstructor(className);
+                    if (!Item) throw new TypeError(`Black struct item class ${className} is not registered (import its package)`);
+                    const definition = CjsSchema.getSchema(Item).structureDefinition;
+                    if (!definition) throw new TypeError(`Black struct ${CjsSchema.getClassName(Item)} has no structureDefinition`);
+                    return { ...definition };
+    }
+
+    /**
+     * Resolves a StructureList's item through schema metadata without domain imports.
+     *
+     * @param {string} ownerClass Registered name of the class that owns the list.
+     * @param {string} fieldName Name of the StructureList member.
+     * @returns {import("./helpers.js").BlackStructureLayout} The item class layout.
+     * @throws {TypeError} When the owner is unregistered or the member declares no item class.
+     */
+    static classStructureLayout(ownerClass, fieldName)
+    {
+                    const Owner = CjsSchema.getConstructor(ownerClass);
+                    // Layouts live on the classes, so an owner whose package was never imported is unregistered, not undeclared.
+                    if (!Owner) throw new TypeError(`Black struct ${ownerClass}.${fieldName}: class ${ownerClass} is not registered (import its package)`);
+                    const declaration = CjsSchema.getSchema(Owner).members.find(member => member.name === fieldName);
+                    const type = declaration?.type ?? CjsSchema.getField(Owner, fieldName)?.type;
+                    // type.structList names its record class directly.
+                    const itemType = type?.kind === "structList" ? type.className : type?.itemType;
+                    const itemName = typeof itemType === "string" || typeof itemType === "function" ? itemType : itemType?.className;
+                    if (!itemName) throw new TypeError(`Black struct ${ownerClass}.${fieldName} has no declared item class`);
+                    return CjsBlackReader.structClassLayout(itemName);
     }
 }
 

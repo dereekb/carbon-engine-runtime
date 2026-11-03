@@ -49,7 +49,6 @@ import { IRootReaderBase } from "./IRootReaderBase.js";
 import { IRootReaderException } from "./IRootReaderException.js";
 import { BeObjectMetadata } from "./BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "./IBlueObjectMetadata.js";
-import { getDictionaryDeclarations, readDictionaryValue, writeDictionaryValue } from "./dictionaryDeclarations.js";
 import { getClassRegistration } from "../blueexposure/classes/registry.js";
 // Exposure is read from the table directly, not through blue.classes: the standalone
 // format readers import this file and must load without the blue singleton
@@ -387,7 +386,7 @@ export class DictReader extends IRootReaderBase
   ReadStructureList(instance, field, notify = null, onRead = null)
   {
     const source = this._currentSource;
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
     const pending = current && PENDING_LIST_READS.get(current);
     if (pending) pending.cancel();
     if (source === current)
@@ -438,7 +437,7 @@ export class DictReader extends IRootReaderBase
     }
     list.length = 0;
     for (const item of next) list.push(item);
-    if (list !== current) writeDictionaryValue(instance, field, list);
+    if (list !== current) IRootReaderBase.writeDictionaryValue(instance, field, list);
     const complete = () =>
     {
       if (notify && field.edit?.notify) notify.OnModified(field.name);
@@ -601,11 +600,11 @@ export class DictReader extends IRootReaderBase
   ReadIRootPtr(instance, field, notification = null)
   {
     const source = this._currentSource;
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
 
     if (source === null || source === undefined)
     {
-      writeDictionaryValue(instance, field, null);
+      IRootReaderBase.writeDictionaryValue(instance, field, null);
       return current !== null && current !== undefined;
     }
     if (DictReader._IsReference(source))
@@ -616,21 +615,21 @@ export class DictReader extends IRootReaderBase
         if (notification) notification.deferred = true;
         this._anchors.defer(source._ref, object =>
         {
-          writeDictionaryValue(instance, field, object);
+          IRootReaderBase.writeDictionaryValue(instance, field, object);
           // JavaScript forward aliases postpone the write; the native
           // write-then-NOTIFY order therefore belongs to this callback.
           if (notification) notification.target.OnModified(field.name);
         });
         return true;
       }
-      writeDictionaryValue(instance, field, resolved);
+      IRootReaderBase.writeDictionaryValue(instance, field, resolved);
       return resolved !== current;
     }
     // A non-plain object in an object member is a reference to it (values
     // transport ruling 3, 2026-09-14): the declared type decides, not the value.
     if (typeof source === "object" && !DictReader._IsPlainObject(source) && !Array.isArray(source) && !ArrayBuffer.isView(source))
     {
-      writeDictionaryValue(instance, field, source);
+      IRootReaderBase.writeDictionaryValue(instance, field, source);
       return source !== current;
     }
 
@@ -648,7 +647,7 @@ export class DictReader extends IRootReaderBase
     }
 
     const created = this.ReadIRootClass(field);
-    writeDictionaryValue(instance, field, created);
+    IRootReaderBase.writeDictionaryValue(instance, field, created);
     return true;
   }
 
@@ -681,10 +680,10 @@ export class DictReader extends IRootReaderBase
         const values = {};
         const metadata = BeObjectMetadata.GetMetadata(source);
         if (metadata) values[BLUE_OBJECT_METADATA_KEY] = { ...metadata };
-        for (const declaration of getDictionaryDeclarations(source.constructor).fields)
+        for (const declaration of IRootReaderBase.getDictionaryDeclarations(source.constructor).fields)
         {
           if (!CjsSchema.isFieldExported(declaration)) continue;
-          values[declaration.name] = readDictionaryValue(source, declaration);
+          values[declaration.name] = IRootReaderBase.readDictionaryValue(source, declaration);
         }
         source = values;
       }
@@ -748,7 +747,7 @@ export class DictReader extends IRootReaderBase
   ReadList(instance, field)
   {
     const source = this._currentSource;
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
 
     const patch = this._listPatches?.get(field.name);
     if (patch) return this._ReadListPatch(instance, field, current, patch);
@@ -774,8 +773,8 @@ export class DictReader extends IRootReaderBase
         this._ReadLiveList(instance, field, current, [], null, next);
         return current !== next;
       }
-      writeDictionaryValue(instance, field, next);
-      return current !== readDictionaryValue(instance, field);
+      IRootReaderBase.writeDictionaryValue(instance, field, next);
+      return current !== IRootReaderBase.readDictionaryValue(instance, field);
     }
     if (!Array.isArray(source)) this._ThrowError("Expected a list");
 
@@ -791,7 +790,7 @@ export class DictReader extends IRootReaderBase
     if (!holdsObjects)
     {
       const next = normalizeCarbonValue(omitRuntimeValues(source, field.type), field.type);
-      writeDictionaryValue(instance, field, next);
+      IRootReaderBase.writeDictionaryValue(instance, field, next);
       return !IRootReaderBase.areEquivalent(current, next);
     }
 
@@ -818,7 +817,7 @@ export class DictReader extends IRootReaderBase
     this._contextStack.push(parent);
     this._currentSource = source;
 
-    if (!inPlace) writeDictionaryValue(instance, field, list);
+    if (!inPlace) IRootReaderBase.writeDictionaryValue(instance, field, list);
     return !IRootReaderBase.areEquivalent(before, list);
   }
 
@@ -843,7 +842,7 @@ export class DictReader extends IRootReaderBase
     {
       if (!Object.hasOwn(source, name)) continue;
       const field = this.FindEntry(name, instance.constructor);
-      const current = field && readDictionaryValue(instance, field);
+      const current = field && IRootReaderBase.readDictionaryValue(instance, field);
       const itemType = field?.type?.itemType;
       const itemClass = typeof itemType === "string" ? itemType : itemType?.className;
       const desired = source[name];
@@ -960,7 +959,7 @@ export class DictReader extends IRootReaderBase
             if (item != null) instance.OnListModified(BLUELISTEVENT.BELIST_INSERTED, list.length, 0, item, list);
             if (!active) return;
           }
-          if (replacement !== list) writeDictionaryValue(instance, field, replacement);
+          if (replacement !== list) IRootReaderBase.writeDictionaryValue(instance, field, replacement);
         }
         finally { edit.cancel(); }
       }
@@ -1131,14 +1130,14 @@ export class DictReader extends IRootReaderBase
     // Keep direct object lists on their established in-place ReadList path.
     if (["list", "array"].includes(type.kind) && !["list", "array", "map", "set"].includes(type.itemType?.kind)) return undefined;
     const source = this._currentSource;
-    const current = readDictionaryValue(instance, field);
+    const current = IRootReaderBase.readDictionaryValue(instance, field);
     if (source === null || source === undefined)
     {
-      writeDictionaryValue(instance, field, normalizeCarbonValue(source, type));
-      return current !== readDictionaryValue(instance, field);
+      IRootReaderBase.writeDictionaryValue(instance, field, normalizeCarbonValue(source, type));
+      return current !== IRootReaderBase.readDictionaryValue(instance, field);
     }
-    const value = this._ReadDeclaredValue(source, type, value => writeDictionaryValue(instance, field, value), current);
-    writeDictionaryValue(instance, field, value);
+    const value = this._ReadDeclaredValue(source, type, value => IRootReaderBase.writeDictionaryValue(instance, field, value), current);
+    IRootReaderBase.writeDictionaryValue(instance, field, value);
     return true;
   }
 
@@ -1265,14 +1264,14 @@ export class DictReader extends IRootReaderBase
         {
           if (!instance || typeof instance !== "object" || visited.has(instance)) return;
           visited.add(instance);
-          for (const field of getDictionaryDeclarations(instance.constructor).fields)
+          for (const field of IRootReaderBase.getDictionaryDeclarations(instance.constructor).fields)
           {
             if (field.type?.runtimeOnly === true) continue;
             if (field.role === "property" && !this._WasRead(instance, field)) continue;
             // Values input accepts typed objects even in scalar-declared slots.
             // Actual stored values determine dependencies; primitive/buffer values
             // are cheap no-ops, without widening access to unrelated live getters.
-            visitValue(readDictionaryValue(instance, field));
+            visitValue(IRootReaderBase.readDictionaryValue(instance, field));
           }
           if (this._created.has(instance)) finalizeReaderObject(instance, { initialize: this._doInitialize && this._options.initialize !== false });
         };
@@ -1433,7 +1432,7 @@ export class DictReader extends IRootReaderBase
     if (CjsSchema.getClassName(current.constructor))
     {
       if (source._type !== undefined && !CjsSchema.isInstanceOf(source._type, current)) return false;
-      const declarations = getDictionaryDeclarations(current.constructor);
+      const declarations = IRootReaderBase.getDictionaryDeclarations(current.constructor);
       for (const name of Object.keys(source))
       {
         if (name === "_type") continue;
@@ -1445,7 +1444,7 @@ export class DictReader extends IRootReaderBase
         const field = declarations.byName.get(name);
         if (!field) return false;
         if (!CjsSchema.isFieldWritable(field) || field.type?.runtimeOnly === true) continue;
-        const value = readDictionaryValue(current, field);
+        const value = IRootReaderBase.readDictionaryValue(current, field);
         const kind = field.type?.kind;
         if (["rootRef", "root", "list", "array", "structList"].includes(kind))
         {
@@ -1589,13 +1588,13 @@ export function CreateAnchorTable()
       {
         if (visited.has(instance)) return;
         visited.add(instance);
-        const fields = getDictionaryDeclarations(instance.constructor).fields;
+        const fields = IRootReaderBase.getDictionaryDeclarations(instance.constructor).fields;
         for (let index = fields.length - 1; index >= 0; index--)
         {
           const field = fields[index];
           if (field.type?.runtimeOnly === true) continue;
           if (field.role === "property" && !readProperties.get(instance)?.has(field.name)) continue;
-          visitValue(readDictionaryValue(instance, field));
+          visitValue(IRootReaderBase.readDictionaryValue(instance, field));
         }
         if (created.has(instance)) created.get(instance)(options);
       };

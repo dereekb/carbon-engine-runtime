@@ -13,12 +13,12 @@
 // `options.persistOnly` asks. DictWriter retains the full shape (operator
 // ruling 2026-09-27; research page `blue-values-engine.md`); YamlWriter opts
 // into Carbon's persisted-only traversal and default comparison.
+import { IRootReaderBase } from "./IRootReaderBase.js";
 import { exposure as be } from "#be";
 import { CjsSchema, meta } from "#schema";
 import { IRoot } from "../blueexposure/IRoot.js";
 import { omitRuntimeValues } from "../schema/CjsSchema.js";
 import { exportCarbonValue } from "../schema/types/index.js";
-import { getDictionaryDeclarations, readDictionaryValue } from "./dictionaryDeclarations.js";
 import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
 import { isWritableField } from "../compose/values.js";
 import { BeObjectMetadata } from "./BlueObjectMetadata.js";
@@ -58,7 +58,7 @@ export class IRootWriter extends IRoot
     const defaults = options.skipDefaults
       ? options.defaultInstance ?? new instance.constructor()
       : null;
-    for (const field of getDictionaryDeclarations(instance.constructor).fields)
+    for (const field of IRootReaderBase.getDictionaryDeclarations(instance.constructor).fields)
     {
       if (!CjsSchema.isFieldExported(field, options)) continue;
 
@@ -72,8 +72,8 @@ export class IRootWriter extends IRoot
       }
 
       const kind = field.type?.kind;
-      const value = readDictionaryValue(instance, field);
-      if (defaults && IRootWriter._EqualDefault(value, readDictionaryValue(defaults, field), field.type)) continue;
+      const value = IRootReaderBase.readDictionaryValue(instance, field);
+      if (defaults && IRootWriter._EqualDefault(value, IRootReaderBase.readDictionaryValue(defaults, field), field.type)) continue;
       // An empty slot of a type-indexed array (an area's m_materials[type]) is
       // not written; reading leaves it null. The slot names stay the only keys.
       if (field.index !== undefined && value === null) continue;
@@ -91,7 +91,7 @@ export class IRootWriter extends IRoot
         }
         else if (kind === "root")
         {
-          this.WriteIRoot__Reference(value, defaults ? readDictionaryValue(defaults, field) : null, DeclaredClassName(field.type));
+          this.WriteIRoot__Reference(value, defaults ? IRootReaderBase.readDictionaryValue(defaults, field) : null, DeclaredClassName(field.type));
         }
         else if (OBJECT_KINDS.has(kind) || kind === "rootWeak" || IRootWriter._IsObject(value))
         {

@@ -53,7 +53,7 @@ test("package root exports the format and object builder", async () =>
 {
     const mod = await import("../../../../../npm/dist/blue/blue/formats/black/index.js");
 
-    assert.deepEqual(Object.keys(mod).sort(), [ "CjsBlackFormat", "CreateBlackObjectBuilder" ]);
+    assert.deepEqual(Object.keys(mod).sort(), [ "CjsBlackFormat" ]);
     assert.equal(mod.CjsBlackFormat, CjsBlackFormat);
     assert.equal("default" in CjsBlackFormatModule, false);
 });

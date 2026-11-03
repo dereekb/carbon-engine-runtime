@@ -1,14 +1,13 @@
+import { IRootReaderBase } from "./IRootReaderBase.js";
 import { CjsSchema } from "#schema/CjsSchema";
 import { DictReader } from "./DictReader.js";
 import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
-import { readDictionaryValue } from "./dictionaryDeclarations.js";
 import { resolveHydrationAdapter } from "#schema/hydration";
 import {
     CARBON_TYPE,
     normalizeCarbonTypeDescriptor,
     normalizeCarbonValue
 } from "#schema/types";
-
 import { CjsReader } from "../../resource/format/CjsReader.js";
 
 /**
@@ -312,7 +311,7 @@ export class CjsBlueReader extends CjsReader
         if (!member) return undefined;
         const instance = new Constructor();
         if (!this.ReadBinaryBlock(instance, propertyName, bytes)) return undefined;
-        return readDictionaryValue(instance, member);
+        return IRootReaderBase.readDictionaryValue(instance, member);
     }
 
     /**

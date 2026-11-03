@@ -4,7 +4,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { YamlWriter, BeObjectMetadata, blue } from "../../npm/dist/blue/blue/index.js";
-import { getDictionaryDeclarations, readDictionaryValue } from "../../npm/dist/blue/blue/dictionaryDeclarations.js";
+import { IRootReaderBase } from "../../npm/dist/blue/blue/IRootReaderBase.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import "../../npm/dist/trinity/index.js";
@@ -58,10 +58,10 @@ function compareGraphs(before, after)
     {
       ++result.objects;
       if (className !== CjsSchema.getClassName(right.constructor)) changed(path, "class");
-      for (const field of getDictionaryDeclarations(left.constructor).fields)
+      for (const field of IRootReaderBase.getDictionaryDeclarations(left.constructor).fields)
       {
         if (!CjsSchema.isFieldExported(field, { persistOnly: true })) continue;
-        visit(readDictionaryValue(left, field), readDictionaryValue(right, field), className + "." + field.name);
+        visit(IRootReaderBase.readDictionaryValue(left, field), IRootReaderBase.readDictionaryValue(right, field), className + "." + field.name);
       }
       return;
     }

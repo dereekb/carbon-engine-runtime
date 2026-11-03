@@ -1,8 +1,9 @@
 // Source: trinity/trinity/Controllers/Tr2BindingPoint.h
 // Source: trinity/trinity/Controllers/Tr2BindingPoint.cpp
+import { IRootReaderBase } from "../../../blue/blue/IRootReaderBase.js";
 import { blue, BlueClasses, IList, INotify } from "#blue";
 import { meta, CjsSchema, CARBON_TYPE, getCarbonTypeDefinition, normalizeCarbonTypeDescriptor, type } from "#schema";
-import { getDictionaryDeclarations, readDictionaryValue, writeDictionaryValue } from "../../../blue/blue/dictionaryDeclarations.js";
+
 
 
 /** Component offsets of a one-letter swizzle (cpp:411-431). */
@@ -132,15 +133,15 @@ export class Tr2BindingPoint
     const kind = Tr2BindingPoint._Kind(this._entry);
     if (kind === CARBON_TYPE.BOOLEAN)
     {
-      writeDictionaryValue(this._destinationObject, this._entry, float !== 0);
+      IRootReaderBase.writeDictionaryValue(this._destinationObject, this._entry, float !== 0);
     }
     else if (SCALAR_KINDS.has(kind))
     {
-      writeDictionaryValue(this._destinationObject, this._entry, float);
+      IRootReaderBase.writeDictionaryValue(this._destinationObject, this._entry, float);
     }
     else
     {
-      const components = readDictionaryValue(this._destinationObject, this._entry);
+      const components = IRootReaderBase.readDictionaryValue(this._destinationObject, this._entry);
       if (this._entryOffset === -1)
       {
         for (let i = 0; i < this._arraySize; i++) components[i] = float;
@@ -163,7 +164,7 @@ export class Tr2BindingPoint
   {
     if (!this.IsValid()) return null;
     const kind = Tr2BindingPoint._Kind(this._entry);
-    const value = readDictionaryValue(this._destinationObject, this._entry);
+    const value = IRootReaderBase.readDictionaryValue(this._destinationObject, this._entry);
     if (kind === CARBON_TYPE.BOOLEAN) return value ? 1 : 0;
     if (SCALAR_KINDS.has(kind)) return Math.fround(value);
     return Math.fround(value[Math.max(this._entryOffset, 0)]);
@@ -294,7 +295,7 @@ export class Tr2BindingPoint
   static _FindEntry(object, name)
   {
     if (!object || typeof object !== "object" || !CjsSchema.getClassName(object.constructor)) return null;
-    const entry = getDictionaryDeclarations(object.constructor).byName.get(name);
+    const entry = IRootReaderBase.getDictionaryDeclarations(object.constructor).byName.get(name);
     return entry && entry.role === "member" ? entry : null;
   }
 
@@ -309,7 +310,7 @@ export class Tr2BindingPoint
   {
     const entry = Tr2BindingPoint._FindEntry(object, name);
     if (!entry || !OBJECT_KINDS.has(Tr2BindingPoint._Kind(entry))) return null;
-    return readDictionaryValue(object, entry) ?? null;
+    return IRootReaderBase.readDictionaryValue(object, entry) ?? null;
   }
 
   /** Carbon GetStringAttribute (cpp:52-76). */
@@ -317,7 +318,7 @@ export class Tr2BindingPoint
   {
     const entry = Tr2BindingPoint._FindEntry(object, name);
     if (!entry || !STRING_KINDS.has(Tr2BindingPoint._Kind(entry))) return null;
-    return readDictionaryValue(object, entry);
+    return IRootReaderBase.readDictionaryValue(object, entry);
   }
 
   /**

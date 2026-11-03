@@ -1,3 +1,4 @@
+import { CjsBlackFormat } from "../blue/blue/formats/black/CjsBlackFormat.js";
 import { CjsPngFormat } from "../resource/formats/png/CjsPngFormat.js";
 import { CjsVtaFormat } from "../resource/formats/vta/CjsVtaFormat.js";
 import { CjsGr2Format } from "../resource/formats/gr2/CjsGr2Format.js";
@@ -5,7 +6,6 @@ import { TriTextureRes } from "../trinity/resources/texture/TriTextureRes.js";
 import { Tr2ImageRes } from "../trinity/resources/texture/Tr2ImageRes.js";
 import { TriGeometryRes } from "../trinity/resources/geometry/TriGeometryRes.js";
 import { Tr2EffectRes } from "../trinity/shader/Tr2EffectRes.js";
-import { CreateBlackObjectBuilder } from "../blue/blue/formats/black/CreateBlackObjectBuilder.js";
 import { SolidColorTextureConstructor } from "../trinity/resources/procedural/SolidColorTextureConstructor.js";
 import { CjsTextureArrayConstructor } from "../trinity/resources/texture/CjsTextureArrayConstructor.js";
 import { CjsTexturePackConstructor } from "../trinity/resources/texture/CjsTexturePackConstructor.js";
@@ -66,9 +66,9 @@ export const DefaultConfiguration = {
   // Carbon's LoadObject chooses its reader by header, so a YAML object file (a
   // character lighting rig) loads through the same builder (BlueResMan.cpp:806-840).
   objectBuilders: {
-    black: CreateBlackObjectBuilder,
-    red: CreateBlackObjectBuilder,
-    yaml: CreateBlackObjectBuilder
+    black: CjsBlackFormat.createBlackObjectBuilder,
+    red: CjsBlackFormat.createBlackObjectBuilder,
+    yaml: CjsBlackFormat.createBlackObjectBuilder
   },
 
   resourceConstructors: {

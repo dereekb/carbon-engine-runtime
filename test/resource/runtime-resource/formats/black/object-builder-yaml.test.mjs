@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "../../../../../npm/dist/trinity/index.js";
 import "../../../../../npm/dist/character/index.js";
-import { CreateBlackObjectBuilder } from "../../../../../npm/dist/blue/blue/formats/black/index.js";
+import { CjsBlackFormat } from "../../../../../npm/dist/blue/blue/formats/black/index.js";
 
 // Carbon's LoadObject reads bytes without a Black header as YAML (BlueResMan.cpp:806-840).
 const yaml = `type: Tr2InteriorScene
@@ -16,7 +16,7 @@ lights:
 
 test("object bytes without a Black header build through a caching YamlReader", () =>
 {
-    const builder = CreateBlackObjectBuilder(new TextEncoder().encode(yaml), { path: "res:/test/rig.yaml" });
+    const builder = CjsBlackFormat.createBlackObjectBuilder(new TextEncoder().encode(yaml), { path: "res:/test/rig.yaml" });
     const first = builder.CreateObject(0), second = builder.CreateObject(0);
     assert.notEqual(first, second, "each LoadObject builds a fresh object");
     assert.equal(first.lights.length, 1);
@@ -27,5 +27,5 @@ test("object bytes without a Black header build through a caching YamlReader", (
 
 test("bytes that are neither Black nor YAML objects fail with the reader's message", () =>
 {
-    assert.throws(() => CreateBlackObjectBuilder(new TextEncoder().encode("- just a list"), { path: "res:/test/list.yaml" }), /res:\/test\/list\.yaml/);
+    assert.throws(() => CjsBlackFormat.createBlackObjectBuilder(new TextEncoder().encode("- just a list"), { path: "res:/test/list.yaml" }), /res:\/test\/list\.yaml/);
 });

@@ -5,7 +5,7 @@ import { type } from "../../src/blue/schema/index.js";
 import { Copier } from "../../src/blue/blueexposure/Copier.js";
 import { CjsBlackReader } from "../../src/blue/blue/formats/black/core/CjsBlackReader.js";
 import { CjsBlackSchemaRegistry } from "../../src/blue/blue/formats/black/core/CjsBlackSchemaRegistry.js";
-import { classStructureLayout } from "../../src/blue/blue/formats/black/core/blackClassStructures.js";
+
 
 
 const member = (name, kind, extra = {}) => ({
@@ -202,7 +202,7 @@ test("Black structure layouts exclude marked fields independently of erroneous P
     CjsSchema.define(StructureOwner, { className: "ResourceBlackCopyStructureOwner", fields: {
         items: [type.list("ResourceBlackCopyStructureItem"), CjsSchema.be.persist]
     } });
-    const layout = classStructureLayout("ResourceBlackCopyStructureOwner", "items");
+    const layout = CjsBlackReader.classStructureLayout("ResourceBlackCopyStructureOwner", "items");
     assert.equal(layout.size, 8);
     assert.deepEqual(layout.members.map(({ name, offset }) => [name, offset]), [["first", 0], ["second", 4]]);
 });

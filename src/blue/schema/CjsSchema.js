@@ -2639,7 +2639,7 @@ function importDeclaredValue(value, field)
 
 // Values select a declaration before applying its runtime-only exclusion.
 // Keep this schema-local: schema transports cannot depend on Blue readers.
-// A property is selected only when persisted, as dictionaryDeclarations does.
+// A property is selected only when persisted, as IRootReaderBase.getDictionaryDeclarations does.
 function findValuesDeclaration(Constructor, name, storage = false)
 {
     if (typeof Constructor !== "function") return null;

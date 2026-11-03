@@ -23,9 +23,9 @@
 //   written at every reference, reads back as independent copies, and a cycle
 //   never ends. A flat copy of a large shared graph can be gigabytes (the
 //   mdeha01 hangar passed 12 GB).
+import { IRootReaderBase } from "./IRootReaderBase.js";
 import { CjsSchema } from "#schema";
 import { IRootWriter } from "./IRootWriter.js";
-import { getDictionaryDeclarations } from "./dictionaryDeclarations.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 /**
@@ -193,7 +193,7 @@ export class DictWriter extends IRootWriter
     Object.assign(out, this._ObjectHeader(instance, declaredClassName, options, "_type"));
 
     // Fieldless custom formats retain their explicit GetValues contract.
-    const fields = getDictionaryDeclarations(instance.constructor).fields;
+    const fields = IRootReaderBase.getDictionaryDeclarations(instance.constructor).fields;
     if (!fields.length && typeof instance.GetValues === "function")
     {
       Object.assign(out, instance.GetValues(options), out);
