@@ -191,6 +191,10 @@ function planClass(node, source, carbon)
             // Above the class, a be.map* names a member the class inherits. A bag row on an inherited key does not yet register like
             // that decorator: an attribute loses the base member's type (EveChildParticleSystem.useSRT read as "missing").
             unresolved.push(`class-level be.${fn} maps an inherited member; bag rows on inherited members are not supported yet`);
+            // Its rows still pair with Carbon's, so the class's other reasons are reported and nothing reads as missing.
+            const nameArg = args[spec.name];
+            for (const n of nameArg?.type === "ArrayExpression" ? nameArg.elements : [ nameArg ])
+                if (n?.type === "StringLiteral") jsRows.push(rowFrom(spec, args, n.value, n.value, d, text));
         }
     }
 
