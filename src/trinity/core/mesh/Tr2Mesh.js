@@ -152,7 +152,14 @@ export class Tr2Mesh extends Tr2MeshBase
     this.SetGeometryRes(geometry);
   }
 
-  /** Carbon cpp:115-118: the sibling path, inserting _lowdetail before the extension. */
+  /**
+   * The low-detail sibling of a mesh path, `_lowdetail` inserted before the extension, as SetMeshResPath
+   * builds it inline (Tr2Mesh.cpp:115-119).
+   *
+   * @cjs Carbon has no method for it; factored out of SetMeshResPath, its one caller.
+   * @param {string} path The authored mesh path.
+   * @returns {string|null} The sibling path, or null for a path without an extension.
+   */
   static _lowDetailPath(path)
   {
     const dot = String(path).lastIndexOf(".");
@@ -505,7 +512,13 @@ export class Tr2Mesh extends Tr2MeshBase
     return lod ? lod.isBakedMorphTarget : null;
   }
 
-  /** LOD 0 of this mesh, which Carbon's morph accessors read (GetMeshLod( GetMeshIndex(), 0 ), the lodIndex overload). */
+  /**
+   * LOD 0 of this mesh, which Carbon's morph accessors each read inline (`GetMeshLod( GetMeshIndex(), 0 )`, the
+   * lodIndex overload).
+   *
+   * @cjs Carbon has no method for it; factored out of the morph accessors that repeat the lookup.
+   * @returns {object|null} The LOD, or null without a geometry resource.
+   */
   _GetMorphLod()
   {
     const geometry = this.GetGeometryResource();
