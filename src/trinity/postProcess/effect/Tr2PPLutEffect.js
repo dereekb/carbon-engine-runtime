@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPLutEffect.h
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema postProcess/Tr2PPLutEffect.json.).
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 
 /** Carries a color lookup texture and influence for post-process grading. */

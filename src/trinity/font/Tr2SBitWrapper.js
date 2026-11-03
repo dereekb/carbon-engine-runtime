@@ -4,7 +4,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Font/Tr2SBit.cpp
 // Source: trinity/trinity/Font/Tr2Sbit_Blue.cpp
 // Maintained browser-font adapter; native interfaces retain their Carbon names.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * Carbon's `RGBA::BlendOverAlpha` (Tr2FontMeasurer.cpp:1427-1442), for the

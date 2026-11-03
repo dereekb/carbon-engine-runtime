@@ -2,7 +2,6 @@ import { exposure as be } from "#be";
 import { IRoot } from "#blueexposure/IRoot";
 // Source: audio/src/AudStaticDataRepository.h + AudStaticDataRepository.cpp
 import * as CcpLog from "../../../global/logging/ccpLog.js";
-import { blue } from "#schema";
 
 
 // Wwise AK_INVALID_UNIQUE_ID - the C++ GetEventID default.

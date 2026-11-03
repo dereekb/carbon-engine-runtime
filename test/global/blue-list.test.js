@@ -2,10 +2,13 @@ import { IRoot as ExposureRoot } from "../../src/blue/blueexposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { BlueList, IList, IListNotify, ICopierCustomAssignment, Copier, ICopier, blue } from "@carbonenginejs/runtime/blue";
-import { CjsSchema, type, blue as legacyBlue } from "@carbonenginejs/runtime/schema";
+import { CjsSchema, type } from "@carbonenginejs/runtime/schema";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 class Item
 {

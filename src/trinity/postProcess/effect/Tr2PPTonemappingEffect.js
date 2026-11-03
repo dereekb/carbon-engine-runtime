@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPTonemappingEffect.h
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPTonemappingEffect.cpp
-import { meta, type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { meta, type } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 import { blueEnums } from "#blue/enums/CjsBlueEnumRegistry";
 

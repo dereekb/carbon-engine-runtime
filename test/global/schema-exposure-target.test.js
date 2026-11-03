@@ -6,9 +6,12 @@ import decoratorsPlugin from "@babel/plugin-proposal-decorators";
 import { IRoot } from "../../src/blue/blueexposure/IRoot.js";
 import { unregisterClass, getClassRegistration, getClassRegistrationRevision } from "../../src/blue/blueexposure/classes/registry.js";
 import { exposure } from "#be";
-import { CjsSchema, meta, blue, type } from "../../src/blue/schema/index.js";
+import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { hasOwnInterfaceTable, mappedInterfaces, ownMappedInterfaces } from "../../src/blue/compose/interface.js";
 import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 // All explicit member/decorator rows of the five preparation samples. Bodies
 // are inert: this test proves declaration parity, not engine behaviour.

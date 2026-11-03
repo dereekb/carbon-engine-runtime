@@ -3,7 +3,7 @@ import { IRoot } from "../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDNA.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDNA.cpp
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import * as CcpLog from "../global/logging/ccpLog.js";
 import { ReflectionMode, TriBatchType } from "#consts/graphics";
 import { EveSOFDataMgr } from "./EveSOFDataMgr.js";

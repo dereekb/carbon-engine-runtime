@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
+import { exposure as be } from "#be";
 //   SOF_PARAM_DECLARE( EveSOFDataParameterInt, ... ) - Carbon declares the six typed
 //   parameters through one macro beside their base.
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:20-38
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.cpp:85-102
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 

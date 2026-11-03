@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/TriEventCurve.h
 // Source: trinity/trinity/Curves/TriEventCurve.cpp
+import { exposure as be } from "#be";
 import { ITriFunction, IInitialize, ITriCurveLength, BlueList } from "#blue";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { TRIEXTRAPOLATION } from "#consts/graphics";
 import { TriEventKey } from "../key/TriEventKey.js";
 import "#consts/graphics/trinityEnums";

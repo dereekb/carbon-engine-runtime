@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Marker step: Carbon registers the class with zero attributes; the mip
 // generation itself happens where the pipeline is executed.
 import * as CcpLog from "../../global/logging/ccpLog.js";
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 
 // Source: trinity/trinity/Resources/TexturePipeline/ITr2TexturePipelineStep.h:26
 const s_texturePipelineChannel = CcpLog.CCP_LOG_DEFINE_CHANNEL("TexturePipeline", "trinity");

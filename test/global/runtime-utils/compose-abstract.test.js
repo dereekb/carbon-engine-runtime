@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { CjsSchema, meta, blue } from "../../../npm/dist/blue/schema/index.js";
+import { CjsSchema, meta } from "../../../npm/dist/blue/schema/index.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 function probeInterface()
 {

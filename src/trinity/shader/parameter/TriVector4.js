@@ -3,7 +3,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.h
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.cpp
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /** One vec4 row of a TriFloatArrayParameter's value list. */

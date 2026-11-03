@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2DebugRenderer.h
 // Source: trinity/trinity/Tr2DebugRenderer.cpp
 // Source: trinity/trinity/Tr2DebugRenderer_Blue.cpp
+import { exposure as be } from "#be";
 //
 // The concrete debug renderer. Every Draw__* call appends Vertex records to
 // a line list or a triangle list, remembering where each owner's primitives

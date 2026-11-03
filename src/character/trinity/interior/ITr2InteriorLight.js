@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Include/ITr2Interior.h
+import { exposure as be } from "#be";
 import { ITr2InteriorCullable } from "./ITr2InteriorCullable.js";
 
 /** Native interior-light interface identity; it has no persisted model fields. */

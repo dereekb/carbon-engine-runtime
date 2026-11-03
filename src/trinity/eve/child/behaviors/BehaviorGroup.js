@@ -8,7 +8,7 @@ import { INotify } from "../../../../blue/blueexposure/INotify.js";
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/BehaviorGroup.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { ITr2LightOwner } from "../../lights/ITr2LightOwner.js";
 import { EveEntity } from "../../EveEntity.js";
 import { mat4 } from "#math/mat4";

@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SeekTarget.h
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

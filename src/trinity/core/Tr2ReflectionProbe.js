@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2ReflectionProbe.h
 // Source: trinity/trinity/Tr2ReflectionProbe.cpp
 // Source: trinity/trinity/Tr2ReflectionProbe_Blue.cpp
+import { exposure as be } from "#be";
 import { INotify } from "../../blue/blueexposure/INotify.js";
 //
 // Filters a cube into the prefiltered reflection EveSpaceSceneEnvMap reads:

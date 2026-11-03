@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { EveSOFDataHullLightSetItem } from "./EveSOFDataHullLightSetItem.js";
 
 /** Extends a hull light item with a texture resource while hiding the inherited light-color schema field used by other light types. */

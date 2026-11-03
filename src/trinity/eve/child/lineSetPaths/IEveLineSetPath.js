@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/IEveLineSetPath.h
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { EveChildTransform } from "../EveChildTransform.js";

@@ -1,7 +1,7 @@
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Include/TriMatrix.h, TriMatrix.cpp, TriMatrix_Blue.cpp
-import { blue } from "#schema";
 import { IPythonMethods } from "#blue";
 import { ITriMatrix } from "./ITriMatrix.js";
 import { mat4 } from "#math/mat4";
@@ -22,7 +22,7 @@ const ELEMENTS = [
  * Matrix has gl-matrix's byte layout, so `_41.._43` is the translation at [12..14].
  * Compositions swap operands, since Carbon is row-vector and gl-matrix column-vector.
  */
-@blue.define({
+@CjsSchema.blue.define({
   className: "TriMatrix",
   members: ELEMENTS.map((name, index) => ({
     name, key: "_matrix", index, type: { kind: "float32" }, edit: { read: true, write: true, persist: true }

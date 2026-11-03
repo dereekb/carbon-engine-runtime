@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/EveMissile.h
 // Source: trinity/trinity/Eve/SpaceObject/EveMissile.cpp
+import { exposure as be } from "#be";
 
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { mat4 } from "#math/mat4";

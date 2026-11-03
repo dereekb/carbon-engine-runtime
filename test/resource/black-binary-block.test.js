@@ -4,13 +4,16 @@
 // and the Copier never copies one (Copier.cpp:173-176 with a 0-size member).
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CjsSchema, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Copier, ICustomPersist } from "../../npm/dist/blue/blue/index.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import "../../npm/dist/blue/blue/values.js";
 import { EveSOFDataDecalIndexBuffer } from "../../npm/dist/sof/index.js";
 import { clientResources } from "../support/clientResources.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const sofData = await clientResources();
 

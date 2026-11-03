@@ -4,7 +4,7 @@ import { ITr2Pickable } from "../ITr2Pickable.js";
 // Source: trinity/trinity/Tr2LineSet.h
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2PrimitiveSet } from "./Tr2PrimitiveSet.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";

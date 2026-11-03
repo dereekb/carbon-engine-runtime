@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Source: trinity/trinity/Shader/Tr2Effect.cpp:84-107
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { TextureAddressMode, TextureFilter } from "#consts/render-context";
 
 /**

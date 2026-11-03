@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { IPrioritizedObject } from "../../npm/dist/audio/trinity/audio/IPrioritizedObject.js";
-import { CjsSchema, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const methods = [
   "GetID", "GetPosition", "SetDistanceSqFromListener", "CalculateCullingWeight",

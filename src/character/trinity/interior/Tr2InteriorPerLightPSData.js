@@ -1,6 +1,6 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Interior/Tr2InteriorConstantBufferFormats.h
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec4 } from "#math/vec4";
 import { Tr2InteriorPerObjectLightData } from "../../generated/interior/Tr2InteriorPerObjectLightData.js";

@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { IBehavior } from "./IBehavior.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { color } from "#math/color";

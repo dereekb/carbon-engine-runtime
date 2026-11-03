@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildLink.h
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { EveSpaceObject2 } from "../spaceObject/EveSpaceObject2.js";
 import { EveChildMesh } from "./EveChildMesh.js";
 import { mat4 } from "#math/mat4";

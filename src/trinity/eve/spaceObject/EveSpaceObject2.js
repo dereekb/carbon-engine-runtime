@@ -16,7 +16,7 @@ import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { ITr2ImpostorSource } from "../../core/mesh/ITr2ImpostorSource/ITr2ImpostorSource.js";
 import "#consts/graphics/trinityEnums";
 import "#consts/trinity";
-import { CjsSchema, meta, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { blue } from "#blue";
 import { IInitialize } from "#blueexposure/IInitialize";
 import { INotify } from "#blueexposure/INotify";
@@ -616,7 +616,7 @@ export class EveSpaceObject2 extends EveEntity
    * Current model-to-world transform, including model offsets and scale.
    * @type {Float32Array}
    */
-  @legacyBlue.read
+  @be.mapAttribute(be.READ)
   @type.mat4
   worldTransform = mat4.create();
 
@@ -630,7 +630,7 @@ export class EveSpaceObject2 extends EveEntity
    * Inverse of the current model-to-world transform.
    * @type {Float32Array}
    */
-  @legacyBlue.read
+  @be.mapAttribute(be.READ)
   @type.mat4
   inverseWorldTransform = mat4.create();
 
@@ -638,7 +638,7 @@ export class EveSpaceObject2 extends EveEntity
    * Previous world transform retained for motion and shader data.
    * @type {Float32Array}
    */
-  @legacyBlue.read
+  @be.mapAttribute(be.READ)
   @type.mat4
   lastWorldTransform = mat4.create();
 

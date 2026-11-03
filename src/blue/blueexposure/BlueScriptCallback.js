@@ -4,7 +4,7 @@
 // Stores a JavaScript function, the script callable Carbon's BlueScriptCallback
 // holds. Call returns its result; CallVoid discards it. Invocation adaptations
 // are documented on those methods.
-import { CjsSchema, blue } from "../schema/index.js";
+import { CjsSchema } from "../schema/index.js";
 
 /**
  * A stored script callback that can be invoked later.

@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/TriRigidOrientation.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema trinityCore/TriTorque.json.).
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 

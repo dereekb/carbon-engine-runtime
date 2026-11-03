@@ -1,13 +1,13 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2TextureReference.h
 // Source: trinity/trinity/Tr2TextureReference.cpp
 // Source: trinity/trinity/Tr2TextureReference_Blue.cpp
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source.
 //
 // Carbon holds its AL texture by value. Create/Destroy mutate that value;
 // owners broadcast its native event after each change.
 import { Tr2Event } from "./Tr2Event.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2TextureProvider } from "./ITr2TextureProvider.js";
 import { Tr2TextureAL } from "../../trinityal/Tr2TextureAL/index.js";
 

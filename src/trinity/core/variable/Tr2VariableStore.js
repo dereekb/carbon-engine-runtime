@@ -3,7 +3,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Tr2VariableStore.h
 // Source: trinity/trinity/Tr2VariableStore.cpp
 // Source: trinity/trinity/Tr2VariableStore_Blue.cpp
-import { CjsSchema, type, blue, meta } from "#schema";
+import { CjsSchema, type, meta } from "#schema";
 import { Tr2TextureAL } from "../../../trinityal/Tr2TextureAL/Tr2TextureAL.js";
 import { Tr2TextureReference } from "../Tr2TextureReference.js";
 import { TriVariable } from "./TriVariable.js";

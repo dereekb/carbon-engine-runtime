@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dContainer.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dContainer.cpp
+import { exposure as be } from "#be";
 // Hand-maintained Sprite2D traversal, picking and cache policy.
 import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
 import { type } from "#schema";

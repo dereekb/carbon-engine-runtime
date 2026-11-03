@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:532-543
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /** Declares the parameters and textures accepted by a decal shader and builds its configuration record.
  * Native IRoot-only data with a self-only Blue table. Independently initialized

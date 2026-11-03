@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetValue.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetValue.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetValue_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { INotify } from "#blueexposure/INotify";
 import { type } from "#schema";

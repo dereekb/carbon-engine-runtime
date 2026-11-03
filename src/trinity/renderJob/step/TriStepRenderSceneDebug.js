@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepRenderSceneDebug.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 /** A render step that draws a scene through its debug representation rather than its normal path. */

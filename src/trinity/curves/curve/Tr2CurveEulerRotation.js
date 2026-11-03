@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveEulerRotation.h
 // Source: trinity/trinity/Curves/Tr2CurveEulerRotation.cpp
 // Source: trinity/trinity/Curves/Tr2CurveEulerRotation_Blue.cpp
+import { exposure as be } from "#be";
 import { fromYawPitchRollCarbon, quat } from "#math/quat";
 import { ITriQuaternionFunction, ITriFunction, ITriCurveLength } from "#blue";
 import { type } from "#schema";

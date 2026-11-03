@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceContainer.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema eve/child/EveChildInstanceTransform.json).
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 

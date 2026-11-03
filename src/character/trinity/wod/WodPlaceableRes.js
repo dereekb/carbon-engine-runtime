@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Wod/WodPlaceableRes.h
 // Source: trinity/trinity/Wod/WodPlaceableRes.cpp
 // Source: trinity/trinity/Wod/WodPlaceableRes_Blue.cpp
-import { type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { type } from "#schema";
 import { IRoot } from "#blue";
 import { vec3 } from "#math/vec3";
 

@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepPopDepthStencil.h
 // Source: trinity/trinity/RenderJob/TriStepPopDepthStencil.cpp
-import { blue } from "#schema";
+import { exposure as be } from "#be";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { TriRenderJob } from "../TriRenderJob.js";
 

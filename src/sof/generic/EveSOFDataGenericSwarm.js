@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Defaults: trinity/trinity/Eve/SpaceObject/EveSwarm.h:137-164
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:485-514
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /** Stores swarm anchor, speed, cohesion, alignment, separation, formation, wander, and deceleration settings.
  * Native IRoot-only data with a self-only Blue table. Field initializers

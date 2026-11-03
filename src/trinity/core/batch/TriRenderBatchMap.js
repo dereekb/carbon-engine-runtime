@@ -1,4 +1,4 @@
-import { CjsSchema, type, blue, meta } from "#schema";
+import { CjsSchema, type, meta } from "#schema";
 // Source: trinity/Eve/EveSpaceScene.h  (BatchMap typedef)
 //   trinity/Eve/EveSpaceScene.cpp (GetBatchesFromRenderables / FinalizeBatches / ClearBatches)
 //

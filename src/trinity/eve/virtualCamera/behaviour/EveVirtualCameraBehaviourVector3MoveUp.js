@@ -1,8 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/VirtualCamera/EveVirtualCameraBehaviour.h
 // Source: trinity/trinity/Eve/VirtualCamera/EveVirtualCameraBehaviour.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
-import { blue } from "#schema";
 import { INotify } from "#blue";
 import { EveVirtualCameraBehaviourVector3MoveForward } from "./EveVirtualCameraBehaviourVector3MoveForward.js";
 

@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepClear.h
 // Source: trinity/trinity/RenderJob/TriStepClear.cpp
 // Source: trinity/trinity/RenderJob/TriStepClear_Blue.cpp
+import { exposure as be } from "#be";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TriRenderJob } from "../TriRenderJob.js";
 import { TriRenderStep } from "./TriRenderStep.js";
 

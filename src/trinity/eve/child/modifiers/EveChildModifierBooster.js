@@ -1,9 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierBooster.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
-import { blue } from "#schema";
 import { EveChildModifierTransformCommon } from "./EveChildModifierTransformCommon.js";
 
 

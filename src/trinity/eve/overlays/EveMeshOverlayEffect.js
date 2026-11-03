@@ -8,7 +8,7 @@ import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
 import { TriBatchType } from "#consts/graphics";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { Tr2RenderBatch, TriRenderBatchAreaBlock } from "../../core/batch/TriRenderBatch/index.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";

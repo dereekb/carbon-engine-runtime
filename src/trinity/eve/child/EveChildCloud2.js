@@ -4,7 +4,7 @@ import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildCloud2.h
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import "#consts/graphics/trinityEnums";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BlueList, IListNotify, IInitialize, INotify, IsMatch } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { DepthStencilFormat, ExFlag, Tr2GpuUsage, Tr2CpuUsage, TextureType, PixelFormat, ShaderType } from "#consts/render-context";

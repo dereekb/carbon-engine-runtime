@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey.h
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey.cpp
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:45-64
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

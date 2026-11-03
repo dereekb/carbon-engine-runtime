@@ -2,7 +2,7 @@ import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js
 import { getRegisteredClassName } from "../../npm/dist/blue/compose/className.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsSchema, blue as legacyBlue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { blue, BlueList, ITriFunction, ITriVectorFunction, ITriColorFunction, ITriQuaternionFunction, ITriScalarFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
@@ -18,6 +18,9 @@ import { TriCurveSet } from "../../npm/dist/trinity/curves/TriCurveSet.js";
 import { quat, fromYawPitchRollCarbon } from "../../npm/dist/global/math/quat.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { vec4 } from "../../npm/dist/global/math/vec4.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 for(const [Class,Base,table] of [
  [TriVectorSequencer,ITriVectorFunction,[TriVectorSequencer,ITriFunction,ITriVectorFunction]],

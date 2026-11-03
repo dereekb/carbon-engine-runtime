@@ -9,7 +9,7 @@ import { IListNotify } from "../../blue/blueexposure/IListNotify.js";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
 import { color } from "#math/color";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 import { TriDebugFont } from "../core/TriDebugTextRenderer.js";
 import { Tr2CurveInterpolation, Tr2CurveTangentType } from "../curves/enums.js";

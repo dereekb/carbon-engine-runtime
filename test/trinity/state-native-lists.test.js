@@ -8,7 +8,7 @@ import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { CjsSchema, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
 import { ExecuteMainThreadActions } from "../../npm/dist/trinity/core/continueOnMainThread.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
@@ -21,6 +21,9 @@ import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2Sta
 import { Tr2StateMachineState } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineState.js";
 import { Tr2StateMachineTransition } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineTransition.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const {
   BELIST_INSERTED, BELIST_REMOVED, BELIST_UNLOADSTART, BELIST_LOADFINISHED,

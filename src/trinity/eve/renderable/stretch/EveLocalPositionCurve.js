@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveLocalPositionCurve.h
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveLocalPositionCurve.cpp
+import { exposure as be } from "#be";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { CjsSchema, type } from "#schema";

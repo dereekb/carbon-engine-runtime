@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Tr2Controller.h
 // Source: trinity/trinity/Controllers/Tr2Controller.cpp
 // Source: trinity/trinity/Controllers/Tr2Controller_Blue.cpp
+import { exposure as be } from "#be";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { type } from "#schema";
 import { UnlinkReason } from "./enums.js";

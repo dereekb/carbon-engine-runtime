@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:752-760
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * Stores a named texture binding and supports assignment and composition.

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2PyValueBinding.h
 // Source: trinity/trinity/Tr2PyValueBinding.cpp
 // Source: trinity/trinity/Tr2PyValueBinding_Blue.cpp
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { INotify } from "#blueexposure/INotify";
 import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";

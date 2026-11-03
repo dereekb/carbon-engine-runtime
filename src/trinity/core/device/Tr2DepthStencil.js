@@ -23,7 +23,7 @@ import { ITr2TextureProvider } from "../ITr2TextureProvider.js";
 // THE RENDER CONTEXT IS A PARAMETER. Carbon reaches the main-thread context
 // through USE_MAIN_THREAD_RENDER_CONTEXT(), a global we deliberately do not
 // have; the same reason Tr2Blitter takes one.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2Event } from "../Tr2Event.js";
 import { ConvertDepthStencilFormat, DepthStencilFormat, ExFlag, Tr2GpuUsage } from "#consts/render-context";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";

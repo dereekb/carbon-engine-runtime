@@ -7,7 +7,7 @@
 // uploaded whole as the bloom upsample constant buffer, so `byteSize` and
 // `pack` reproduce its C++ layout: Vector3 + uint32 in the first 16 bytes,
 // then MAX_FILTER_STEPS / 2 Vector4s.
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 

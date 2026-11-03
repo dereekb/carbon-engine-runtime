@@ -1,13 +1,13 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EvePlanet.h
 // Source: trinity/trinity/Eve/EvePlanet.cpp
+import { exposure as be } from "#be";
 import { ITr2BoundingBox } from "../../../../global/interfaces/ITr2BoundingBox.js";
 import { IWorldPosition } from "../../../core/IWorldPosition.js";
 import { ITr2SoundEmitterOwner } from "../../ITr2SoundEmitterOwner.js";
 import { ITr2CurveSetOwner } from "../../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 // Hand-maintained after promotion from generated schema intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IShaderConfigurer } from "../../../shader/IShaderConfigurer.js";
 import { IEveEffectChildrenOwner } from "../../child/IEveEffectChildrenOwner.js";
 import { EveEffectRoot2 } from "../EveEffectRoot2.js";

@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudPosition.h + AudPosition.cpp
+import { exposure as be } from "#be";
 // Hand-owned behavior port. Verify against audio/AudPosition.json.
-import { blue } from "#schema";
 import { IBluePlacementObserver } from "#blue/IBluePlacementObserver";
 import { vec3 } from "#math/vec3";
 

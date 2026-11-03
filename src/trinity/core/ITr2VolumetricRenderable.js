@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/ITr2VolumetricRenderable.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildCloud2_Blue.cpp:7 (BLUE_DEFINE_INTERFACE)
+import { exposure as be } from "#be";
 //
 // Carbon also registers this as the "VolumetricRenderable" component type
 // (ITr2VolumetricRenderable.h:55, REGISTER_COMPONENT_TYPE); the component
@@ -10,7 +10,6 @@ import { exposure as be } from "#be";
 // not ported as classes here: callers pass plain records carrying their
 // fields (EveChildCloud2.SetSceneInformation, EveSpaceScene).
 import { IRoot } from "#blueexposure/IRoot";
-import { blue } from "#schema";
 
 
 /**

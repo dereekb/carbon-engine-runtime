@@ -4,7 +4,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Curves/Tr2ScalarExprKeyCurve.cpp
 // Source: trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp
 import { finiteNumberOr } from "#utils/validation";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IInitialize, INotify } from "#blue";
 import { noise } from "#math/noise";
 import { CjsControllerExpressionProgram } from "../../controllers/expression/CjsControllerExpressionProgram.js";

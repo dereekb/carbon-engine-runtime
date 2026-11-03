@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Particle/Tr2ParticleSpring.h
 // Source: trinity/trinity/Particle/Tr2ParticleSpring.cpp
 // Source: trinity/trinity/Particle/Tr2ParticleSpring_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { ITr2ParticleForce } from "./ITr2ParticleForce.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 
 // RenderDebugInfo scratch (debug drawing is single-threaded).

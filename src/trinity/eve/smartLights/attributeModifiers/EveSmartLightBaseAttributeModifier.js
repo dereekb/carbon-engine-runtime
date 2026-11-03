@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { INotify } from "#blue";
 import { LifeTimeFormulas } from "./enums.js";
 

@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudManager.h + AudManager.cpp
+import { exposure as be } from "#be";
 // Hand-owned since 2026-07-18 (behavior port); the generator skips this file.
 // Verify against audio/AudManager.json.
 //

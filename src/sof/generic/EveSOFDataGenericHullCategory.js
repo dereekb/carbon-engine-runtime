@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:557-566
 import "#consts/graphics/trinityEnums";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ReflectionMode } from "#consts/graphics";
 
 /** Names a generic hull category and records its reflection mode.

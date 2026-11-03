@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/RenderJob/Tr2RenderJobs.h
 // Source: trinity/trinity/RenderJob/Tr2RenderJobs.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2RenderContext, Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { TriRenderJob } from "./TriRenderJob.js";
 

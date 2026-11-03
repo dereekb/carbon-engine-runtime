@@ -6,7 +6,7 @@ import { EveEntity } from "../../EveEntity.js";
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 import { box3 } from "#math/box3";
 import { mat4 } from "#math/mat4";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { IEveSpaceObjectAttachment } from "../IEveSpaceObjectAttachment.js";
 import { EveSpriteLight } from "./EveSpriteLight.js";
 import { EveComponentType } from "../../EntityComponents.js";

@@ -14,7 +14,6 @@ import { meta } from "#schema";
 // it as its own plain C++ interface (not a BLUE_INTERFACE), so it has no Blue
 // exposure. Implemented in Carbon by Tr2Sprite2dTextObject
 // (Sprite2d/Tr2Sprite2dTextObject.h:17).
-import { blue } from "#schema";
 
 /**
  * Receives change notifications from a font measurer it registered with.

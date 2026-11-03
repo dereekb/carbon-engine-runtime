@@ -1,5 +1,5 @@
 // Source: blueexposure/include/BlueListUtil.h:172-347,459-476,506-781
-import { CjsSchema, blue as legacyBlue } from "#schema";
+import { CjsSchema } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { BlueClasses } from "./BlueClasses.js";
 import { BeClasses } from "./classes/registry.js";
@@ -393,11 +393,11 @@ function SameListType(source, dest)
 
 // Array methods create ordinary arrays, never pass a result length as ItemType.
 Object.defineProperty(BlueList, Symbol.species, { value: Array });
-legacyBlue.inherit(IList, ICopierCustomAssignment)(BlueList, { kind: "class" });
+CjsSchema.blue.inherit(IList, ICopierCustomAssignment)(BlueList, { kind: "class" });
 CjsSchema.exposure.mapInterface(IList)(BlueList);
 CjsSchema.exposure.mapInterface(ICopierCustomAssignment)(BlueList);
-for (const name of [ "GetSize", "Clear", "Replace" ]) CjsSchema.decorateMethod(BlueList, name, legacyBlue.method);
+for (const name of [ "GetSize", "Clear", "Replace" ]) CjsSchema.decorateMethod(BlueList, name, CjsSchema.blue.method);
 for (const name of [ "GetInfo", "Insert", "Append", "Remove", "GetAt", "FindKey", "Swap", "Move", "Sort", "SetNotify", "GetAllItems", "AssignFrom", "AssignTo" ])
 {
-  CjsSchema.decorateMethod(BlueList, name, legacyBlue.method);
+  CjsSchema.decorateMethod(BlueList, name, CjsSchema.blue.method);
 }

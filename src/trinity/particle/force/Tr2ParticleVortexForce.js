@@ -1,11 +1,11 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Particle/Tr2ParticleVortexForce.h
 // Source: trinity/trinity/Particle/Tr2ParticleVortexForce.cpp
 // Source: trinity/trinity/Particle/Tr2ParticleVortexForce_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
 import { ITr2ParticleForce } from "./ITr2ParticleForce.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 
 // DirectXMath XM_2PI as the float Carbon multiplies by.

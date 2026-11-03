@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/Wander.h
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/Wander.cpp
 import { IBehavior } from "./IBehavior.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { perlin1DCarbon } from "#math/noise";
 import { ProcessPriority } from "./enums.js";

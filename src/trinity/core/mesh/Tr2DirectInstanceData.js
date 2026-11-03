@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2DirectInstanceData.h
+import { exposure as be } from "#be";
 //   trinity/trinity/Tr2DirectInstanceData.cpp
 //   trinity/trinity/Tr2DirectInstanceData_Blue.cpp
 import { vec3 } from "#math/vec3";

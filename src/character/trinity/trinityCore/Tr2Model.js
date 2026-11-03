@@ -3,7 +3,7 @@ import { IRoot } from "#blueexposure/IRoot";
 // Source: trinity/trinity/Tr2Model.h
 // Source: trinity/trinity/Tr2Model.cpp
 // Source: trinity/trinity/Tr2Model_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { TriBatchType } from "#consts/graphics";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../../trinity/core/context/Tr2RenderContext.js";

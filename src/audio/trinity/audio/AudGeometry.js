@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudGeometry.h + AudGeometry.cpp
+import { exposure as be } from "#be";
 // Hand-owned browser/backend adaptation. Verify against audio/AudGeometry.json.
-import { blue } from "#schema";
 import { ITr2AudGeometry } from "../trinityAudioApi/ITr2AudGeometry.js";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 

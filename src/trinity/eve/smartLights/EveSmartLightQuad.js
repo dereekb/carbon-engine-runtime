@@ -1,12 +1,12 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightQuad.h
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { EveSmartLightBaseGroup } from "./EveSmartLightBaseGroup.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { EveChildTransform } from "../child/EveChildTransform.js";
 import { EveChildQuad } from "../../eve/child/EveChildQuad.js";
 import { resolveGroupColor } from "../../eve/smartLights/EveSmartLightBaseGroup.js";
@@ -87,28 +87,23 @@ export class EveSmartLightQuad extends EveChildTransform
   // this class carries these fields).
 
   /** m_selectedColor (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM] (EveSmartLightBaseGroup.h:31) */
-  @blue.notify
-  @blue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
   @type.int32
-  @blue.readwrite
   factionColor = -1;
 
   /** m_useFactionColor (bool) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:32) */
-  @blue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.boolean
-  @blue.readwrite
   useFactionColor = false;
 
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] (EveSmartLightBaseGroup.h:29) */
-  @blue.persist
+  @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("IEveSmartLightGroupAttributeModifier")
-  @blue.read
   attributeModifiers = [];
 
   /** m_color (Color) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:30) */
-  @blue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.color
-  @blue.readwrite
   customColor = color.createLinear();
 
   /** m_parentColorSet (const Color*) - inherited faction color set, never persisted. */

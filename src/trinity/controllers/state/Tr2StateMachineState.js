@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Tr2StateMachineState.h
 // Source: trinity/trinity/Controllers/Tr2StateMachineState.cpp
 // Source: trinity/trinity/Controllers/Tr2StateMachineState_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch, BlueList, IListNotify, INotify, blue, BlueClasses } from "#blue";
 import { type } from "#schema";
 import { UnlinkReason } from "../enums.js";

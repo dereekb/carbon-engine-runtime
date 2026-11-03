@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/TriVariable.h
 // Source: trinity/trinity/TriVariable.cpp
-import { CjsSchema, meta, type, blue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { IBlueResource } from "#blue";
 import { Tr2ColorSpace } from "#consts/render-context";
 import { ITr2EffectValue, ResourceFlags } from "../../shader/parameter/ITr2EffectValue.js";

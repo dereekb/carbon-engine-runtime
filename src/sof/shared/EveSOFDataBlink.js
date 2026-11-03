@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
-import { blue } from "#schema";
 
 /** Empty native IRoot blink settings record; self exposure is in EveSOFData_Blue2.cpp:137-142. */
 @be.define({

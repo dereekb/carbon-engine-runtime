@@ -2,7 +2,6 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/EveEntity.h
 //   trinity/trinity/Eve/EveEntity.cpp
-import { blue } from "#schema";
 
 /**
  * Base for Eve objects that publish themselves to a scene's component registry,

@@ -8,7 +8,7 @@ import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 // Source: trinity/trinity/Eve/SpaceObject/EveSwarm.h
 // Source: trinity/trinity/Eve/SpaceObject/EveSwarm.cpp
 // Source: trinity/trinity/Eve/SpaceObject/EveSwarm_Blue.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IsMatch, CcpTime } from "#blue";
 import { EveShip2 } from "../EveShip2.js";
 import { EveSpaceObject2 } from "../EveSpaceObject2.js";

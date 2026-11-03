@@ -1,7 +1,7 @@
 import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CjsSchema, blue as legacyBlue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { BlueList, Copier, DictReader, IInitialize, INotify, IListNotify, blue } from "../../npm/dist/blue/blue/index.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
@@ -13,6 +13,9 @@ import { Tr2TimelineController } from "../../npm/dist/trinity/controllers/timeli
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { ITr2Controller } from "../../npm/dist/trinity/controllers/index.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 class Action extends ITr2ControllerAction
 {

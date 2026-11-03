@@ -4068,6 +4068,8 @@ function createExposureNamespace(legacy)
         interface: name => exposureClassDecorator(name, true, true),
         inherit: (...Bases) => CjsSchema.blue.inherit(...Bases),
         abstract: legacy.abstract,
+        // A Carbon method that takes its context tier first (CjsSchema.carbon.contextual).
+        contextual: legacy.contextual,
         ...createMapNamespace(true)
     };
 }

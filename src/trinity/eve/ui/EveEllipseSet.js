@@ -11,7 +11,7 @@ import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { sph3 } from "#math/sph3";
-import { CjsSchema, meta, type, blue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { quat } from "#math/quat";
 import { BLUELISTEVENT } from "#consts/blue";
 import { TriBatchType, TriStorageFlags } from "#consts/graphics";

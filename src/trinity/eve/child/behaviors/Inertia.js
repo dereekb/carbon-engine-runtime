@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/Inertia.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { IBehavior } from "./IBehavior.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 

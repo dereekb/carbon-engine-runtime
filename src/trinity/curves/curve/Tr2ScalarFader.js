@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Fader/Tr2ScalarFader.h
 // Source: trinity/trinity/Curves/Fader/Tr2ScalarFader.cpp
 import { num } from "#math/num";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 const TRI_PI = Math.PI;

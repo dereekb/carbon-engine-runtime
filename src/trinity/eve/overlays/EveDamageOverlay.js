@@ -7,7 +7,7 @@ import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { random } from "#math/random";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TriBatchType } from "#consts/graphics";
 import { Tr2ScalarFader } from "../../curves/curve/Tr2ScalarFader.js";
 import { ImpactConfiguration } from "../../generated/include/enums.js";

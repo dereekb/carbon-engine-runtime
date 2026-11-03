@@ -1,5 +1,5 @@
 // Source: trinity/trinity/Shader/Tr2EffectDescription.h
-import { meta, blue } from "#schema";
+import { meta } from "#schema";
 
 /**
  * Mutable authored option on the Tr2Effect facade.

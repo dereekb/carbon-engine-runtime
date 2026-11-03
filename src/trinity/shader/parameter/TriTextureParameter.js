@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/TriTextureParameter.h
 // Source: trinity/trinity/Shader/Parameter/TriTextureParameter.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { ICopierCustomAssignment } from "#blue";
 import { INotify } from "#blue";

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepRenderDebug.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { TriLineSet } from "../../core/line/TriLineSet.js";
 import { vec3 } from "#math/vec3";

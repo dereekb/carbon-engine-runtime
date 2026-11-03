@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/EveShip2.h
 // Source: trinity/trinity/Eve/SpaceObject/EveShip2.cpp
+import { exposure as be } from "#be";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
@@ -8,7 +8,7 @@ import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 // Hand-maintained after promotion from generated schema intake.
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { EveMobile } from "./EveMobile.js";
 import { EveEntity } from "../EveEntity.js";
 import { TriFloat } from "../../core/variable/TriFloat.js";

@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/TriProjection.cpp
 // Source: trinity/trinity/TriProjection_Blue.cpp
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2Renderer } from "../Tr2Renderer.js";
 
 /** SetProjection__RenderContext's viewport adjustment, rebuilt on each call. */
@@ -57,7 +57,7 @@ export class TriProjection extends IRoot
   @type.mat4
   customTransform = mat4.create();
 
-  @blue.read
+  @be.mapAttribute(be.READ)
   @type.mat4
   transform = mat4.create();
 

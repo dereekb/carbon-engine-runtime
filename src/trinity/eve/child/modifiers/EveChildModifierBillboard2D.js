@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierBillboard2D.cpp
+import { exposure as be } from "#be";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
-import { blue } from "#schema";
 import { EveChildModifierTransformCommon } from "./EveChildModifierTransformCommon.js";
 
 

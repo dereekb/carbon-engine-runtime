@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Resources/TexturePipeline/Tr2TexturePipelineStepCompress.h
 // Schema: format-carbon resources/Tr2TexturePipelineStepCompress.json; maintained by the runtime resource layer.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { compressBitmapAsync } from "#resource/codecs/bcn";
 import { createDdsBitmap } from "../../resource/formats/dds/ddsBitmap.js";
 import { PixelFormat as P } from "#consts/render-context";

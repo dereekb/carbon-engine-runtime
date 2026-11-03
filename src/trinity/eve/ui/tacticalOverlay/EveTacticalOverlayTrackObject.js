@@ -4,7 +4,7 @@ import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay.cpp
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay_Blue.cpp
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * One object tracked by the tactical overlay, sampling a translation curve for

@@ -3,7 +3,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBulletStorm.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBulletStorm.cpp
 // Hand-maintained after promotion from generated schema intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { INotify, IsMatch } from "#blue";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";

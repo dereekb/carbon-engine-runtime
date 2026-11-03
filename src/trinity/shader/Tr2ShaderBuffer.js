@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Shader/Tr2ShaderBuffer.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ShaderType } from "#consts/render-context";
 import { PER_OBJECT_PS, PER_OBJECT_VS } from "../core/Tr2Renderer.js";
 import { Tr2RenderUtils } from "../core/Tr2RenderUtils.js";

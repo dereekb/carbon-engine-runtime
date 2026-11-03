@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2GStateParameter.h
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { IInitialize } from "#blueexposure/IInitialize";
 

@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { meta, blue } from "#schema";
+import { meta } from "#schema";
 import { vec4 } from "#math/vec4";
 
 /**

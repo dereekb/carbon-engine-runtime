@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepRemoteSync.h
 // Source: trinity/trinity/RenderJob/TriStepRemoteSync.cpp
+import { exposure as be } from "#be";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 

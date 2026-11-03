@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveVector3Lerp.cpp
 import { vec3 } from "#math/vec3";
 import { ITriFunction, ITriVectorFunction } from "#blue";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { Tr2CurveVector3LerpKeyInterpolation } from "../enums.js";
 
 

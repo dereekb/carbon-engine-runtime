@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2ImpostorManager.h
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 
 /** Contract for an object that can be captured into an impostor atlas. */

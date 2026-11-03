@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

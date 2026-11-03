@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Particle/Tr2ConsecutiveIntegerAttributeGenerator.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
 import { ITr2AttributeGenerator } from "./ITr2AttributeGenerator.js";

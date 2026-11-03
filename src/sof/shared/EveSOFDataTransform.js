@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.cpp:456-463
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:815-825
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

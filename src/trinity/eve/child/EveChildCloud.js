@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildCloud.h
+import { exposure as be } from "#be";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { INotify, IsMatch } from "../../../blue/blueexposure/INotify.js";

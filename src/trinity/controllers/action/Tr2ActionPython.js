@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPython.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPython.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPython_Blue.cpp
+import { exposure as be } from "#be";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 import { ITr2Updateable } from "../../core/ITr2Updateable.js";
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { IsMatch, blue, INotify, IInitialize, ICustomPersist, CcpTime } from "#blue";
 import { ContinueOnMainThread } from "../../core/continueOnMainThread.js";
 
@@ -147,7 +147,7 @@ export class Tr2ActionPython extends ITr2ControllerAction
    *   no Python; a JavaScript host receives the bytes through OnLoad as they are.
    * @type {Uint8Array}
    */
-  @legacyBlue.persistOnly
+  @be.mapAttribute(be.PERSISTONLY)
   @type.binary
   @type.uint8Array
   state = new Uint8Array(0);

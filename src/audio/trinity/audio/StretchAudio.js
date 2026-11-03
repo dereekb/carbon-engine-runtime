@@ -4,7 +4,7 @@ import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 // Hand-owned since 2026-07-18 (behavior port); the generator skips this file.
 // Verify against audio/StretchAudio.json.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { IStretchAudio } from "../trinityAudioApi/IStretchAudio.js";
 import { AudEmitter } from "./AudEmitter.js";

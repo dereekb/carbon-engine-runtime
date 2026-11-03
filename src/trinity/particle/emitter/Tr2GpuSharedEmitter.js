@@ -8,7 +8,7 @@ import { ccpHashFnv1 } from "#utils/hash";
 import { color } from "#math/color";
 import { vec3 } from "#math/vec3";
 import { IInitialize, INotify, CcpTime } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2GenericEmitter } from "../ITr2GenericEmitter/index.js";
 
 /** Carbon `const float MAXIMUM_FRAME_TIME = 1.f / 15.f` (Tr2GpuSharedEmitter.cpp:8): the float clamp on a frame delta. */

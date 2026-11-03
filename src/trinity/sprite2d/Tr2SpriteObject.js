@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject.h
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject.cpp
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { Tr2SpriteObjectBase } from "./Tr2SpriteObjectBase.js";
 import { color } from "#math/color";

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2PrimitiveScene.h
 // Source: trinity/trinity/Tr2PrimitiveScene.cpp
 // Source: trinity/trinity/Tr2PrimitiveScene_Blue.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { ITr2Scene } from "../ITr2Scene.js";

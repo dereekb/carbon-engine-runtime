@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2MeshArea.h
 // Source: trinity/trinity/Tr2MeshArea.cpp
 // Source: trinity/trinity/Tr2MeshArea_Blue.cpp
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 
 
 /**
@@ -60,7 +60,7 @@ export class Tr2MeshArea extends IRoot
 
   /** m_castsShadows - per-batch-type shadow participation (SOF-stamped). */
 
-  @blue.persist
+  @be.mapAttribute(be.PERSIST)
   @type.boolean
   castsShadows = true;
 

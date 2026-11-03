@@ -8,7 +8,7 @@ import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * One authored haze volume: its bone attachment, placement, colour and the

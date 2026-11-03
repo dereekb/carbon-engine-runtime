@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/IEveDistributionModifier.h
-import { blue } from "#schema";
 
 
 /** Required distribution attribute-modifier contract. */

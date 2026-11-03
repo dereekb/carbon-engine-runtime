@@ -3,7 +3,7 @@ import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRendera
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 // Source: trinity/trinity/Eve/VirtualCamera/EveVirtualCameraSystem.h
 // Source: trinity/trinity/Eve/VirtualCamera/EveVirtualCameraSystem.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { assertFiniteNumber } from "#utils/validation";
 import { EveVirtualCamera } from "./EveVirtualCamera.js";
 import { EveVirtualCameraTransitionCut } from "./transition/EveVirtualCameraTransitionCut.js";

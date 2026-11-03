@@ -3,7 +3,7 @@ import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/EveComponentRegistry.h
 // Source: trinity/trinity/Eve/EveComponentRegistry.cpp
 // Hand-maintained after promotion from generated schema intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { EveComponentCollection } from "./EveComponentCollection.js";
 import { EveComponentRequiredMethods, EveComponentType } from "../../EntityComponents.js";
 import { ITr2FroxelFogSettings } from "../../child/ITr2FroxelFogSettings.js";

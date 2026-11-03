@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceContainer.h
+import { exposure as be } from "#be";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
 import { INotify } from "../../../blue/blueexposure/INotify.js";

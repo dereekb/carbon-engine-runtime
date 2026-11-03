@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveCloudEditableVolume.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
+import { exposure as be } from "#be";
 // Hand-maintained after promotion from generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BlueList, BlueOS, IInitialize, INotify, IListNotify } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { PixelFormat } from "#consts/render-context";

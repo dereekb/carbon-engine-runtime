@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Particle/Tr2CapsuleShapeAttributeGenerator.h
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2AttributeGenerator } from "./ITr2AttributeGenerator.js";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

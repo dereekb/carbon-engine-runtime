@@ -20,7 +20,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Resources/TriTextureRes.h
 // Source: trinity/trinity/Resources/TriTextureRes.cpp
 // Source: trinity/trinity/Resources/TriTextureRes_Blue.cpp
-import { CjsSchema, meta, type, blue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { HostBitmap, LoadParameters, Metadata } from "#imageio";
 import { TriStorageFlags, Tr2ALMemoryType } from "#consts/graphics";
 import { BlueAsyncRes, ICacheable } from "#blue";
@@ -1031,13 +1031,13 @@ function getPayloadMemoryUsage(payload)
 // in that order.
 
 CjsSchema.decorateField(TriTextureRes, "format", type.int32, type.enum("trinity.ImageIO.PixelFormat"), be.mapAttributeWithChooser(be.READ | be.ENUM, "trinity.ImageIO.PixelFormat"));
-CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), blue.read, blue.persist);
+CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), CjsSchema.blue.read, CjsSchema.blue.persist);
 CjsSchema.decorateField(TriTextureRes, "averageColor", type.color, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "depth", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutHeight", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "height", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "lodEnabled", type.boolean, be.mapAttribute(be.READ));
-CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, blue.read);
+CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, CjsSchema.blue.read);
 CjsSchema.decorateField(TriTextureRes, "cpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "gpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "wrappedRenderTarget", type.object.ref("Tr2RenderTarget"), be.mapAttribute(be.READ));

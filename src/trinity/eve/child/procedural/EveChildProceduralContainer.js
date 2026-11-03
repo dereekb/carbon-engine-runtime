@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/EveChildProceduralContainer.h
+import { exposure as be } from "#be";
 import { INotify } from "../../../../blue/blueexposure/INotify.js";
 import { IShaderConfigurer } from "../../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../../EveEntity.js";
@@ -10,7 +10,7 @@ import { ITr2CurveSetOwner } from "../../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObjectChild } from "../IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "../EveSpaceObjectChild.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IsMatch } from "#blue";
 import { quat } from "#math/quat";
 import { IEveInheritPropertiesOwner } from "../../IEveInheritPropertiesOwner.js";

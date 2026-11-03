@@ -2,7 +2,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2RenderNodeEffect.h
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { RenderingMode } from "#consts/graphics";
 import { ITr2RenderNode } from "#interfaces/ITr2RenderNode";
 import "#consts/graphics/trinityEnums";

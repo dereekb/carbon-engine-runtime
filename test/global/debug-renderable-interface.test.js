@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { ITr2DebugRenderable, ITr2DebugRenderer2 } from "@carbonenginejs/runtime/interfaces";
-import { CjsSchema, blue } from "@carbonenginejs/runtime/schema";
+import { CjsSchema } from "@carbonenginejs/runtime/schema";
 import { vec3 } from "@carbonenginejs/runtime/math/vec3";
 import { vec4 } from "@carbonenginejs/runtime/math/vec4";
 import { mat4 } from "@carbonenginejs/runtime/math/mat4";
@@ -14,6 +14,9 @@ import { Tr2DebugColor } from "../../src/global/interfaces/Tr2DebugColor.js";
 import { Tr2DebugObjectReference } from "../../src/global/interfaces/Tr2DebugObjectReference.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 test("ITr2DebugRenderable has one registered identity and its two native abstract methods", () =>
 {

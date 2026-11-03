@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Include/IEveReferencePoint.h
-import { blue } from "#schema";
 
 
 /** Required time-varying world reference-point contract. */

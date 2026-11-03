@@ -1,5 +1,5 @@
 // Source: trinity/trinity/Tr2Event.h
-import { meta, blue } from "#schema";
+import { meta } from "#schema";
 
 /** Native weak-owner multicast event. JavaScript passes template method arguments explicitly. */
 @meta.carbon("Tr2Event")

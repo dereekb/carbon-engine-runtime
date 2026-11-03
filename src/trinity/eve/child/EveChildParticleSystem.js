@@ -9,7 +9,7 @@ import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { EveEntity } from "../EveEntity.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import "#consts/graphics/trinityEnums";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { quat } from "#math/quat";
 import { EveChildTransform, applyTransformModifiers } from "./EveChildTransform.js";
 import { mat4 } from "#math/mat4";

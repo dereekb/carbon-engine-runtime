@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2InstancedMesh.h
 // Source: trinity/trinity/Tr2InstancedMesh.cpp
 // Source: trinity/trinity/Tr2InstancedMesh_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
 import { box3 } from "#math/box3";

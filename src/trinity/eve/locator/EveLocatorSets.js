@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveLocatorSets.cpp
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { MatrixCopyFrom3x4 } from "../lights/lightConversion.js";
 import { Locator } from "./Locator.js";
 

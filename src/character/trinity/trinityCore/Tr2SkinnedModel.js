@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2SkinnedModel.h
 // Source: trinity/trinity/Tr2SkinnedModel.cpp
+import { exposure as be } from "#be";
 import { BlueAsyncRes, blue, IsMatch, IInitialize, INotify, IListNotify } from "#blue";
 import { meta, type } from "#schema";
 import { Tr2Model } from "./Tr2Model.js";

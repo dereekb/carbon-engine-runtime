@@ -7,7 +7,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Carbon's swap chain HOLDS its AL object (`m_swapChain`) and forwards to it:
 // `Present` is `m_swapChain.Present(...)`, and `GetWidth`/`GetHeight` ask the
 // AL rather than reporting stored numbers. This class does the same.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Succeeded } from "../../../trinityal/ALResult.js";
 import { Tr2SwapChainAL } from "../../../trinityal/Tr2SwapChainAL/index.js";
 

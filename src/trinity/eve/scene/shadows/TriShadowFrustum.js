@@ -1,5 +1,4 @@
 import { meta } from "#schema";
-import { blue } from "#schema";
 // Source: trinity/trinity/Eve/IEveShadowCaster.h
 // Methods implemented from IEveShadowCaster.h:107-135 (TriShadowFrustum, the
 // perspective IEveShadowFrustum adapter). Transient per-shadow-pass CPU cull

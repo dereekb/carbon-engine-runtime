@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 import { IInitialize } from "../../blue/blueexposure/IInitialize.js";
 // Source: trinity/trinity/Tr2PostProcess.h
 // Source: trinity/trinity/Tr2PostProcess.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

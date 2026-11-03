@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
+import { exposure as be } from "#be";
 //   trinity/trinity/Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveFxAttribute } from "./IEveFxAttribute.js";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";

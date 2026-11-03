@@ -1,4 +1,4 @@
-import { meta, blue } from "#schema";
+import { meta } from "#schema";
 // Source: audio/src/AudObstructionOcclusion.h + AudObstructionOcclusion.cpp
 // Headless behavior port. The host supplies blockage; this class performs no
 // ray casting and leaves the audible obstruction/occlusion law to the backend.

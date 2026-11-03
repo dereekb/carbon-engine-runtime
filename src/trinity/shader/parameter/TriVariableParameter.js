@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/TriVariableParameter.h
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IsMatch, IInitialize } from "#blue";
 import { INotify } from "#blue";
 import { ITriEffectParameter } from "./ITriEffectParameter.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { FNV1_INITIAL, hashFnv1String } from "#utils/hash";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
 

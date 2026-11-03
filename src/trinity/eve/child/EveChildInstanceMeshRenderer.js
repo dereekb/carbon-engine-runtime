@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.h
+import { exposure as be } from "#be";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 import { IEveShadowCaster } from "../IEveShadowCaster.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
@@ -14,7 +14,7 @@ import { quat } from "#math/quat";
 import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { CjsSchema, meta, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { EveChildMesh } from "./EveChildMesh.js";
 import { EntityComponents } from "../EntityComponents.js";
 import { Tr2InstancedMesh } from "../../core/mesh/Tr2InstancedMesh.js";
@@ -174,7 +174,7 @@ export class EveChildInstanceMeshRenderer extends EveChildMesh
    *   sphere and threshold policy are unchanged.
    */
 
-  @legacyBlue.contextual(["camera"])
+  @be.contextual(["camera"])
   IsVisible(updateContext)
   {
     if (this.GetNumberOfEntities() === 0 || this._boundingSphere[3] === 0)

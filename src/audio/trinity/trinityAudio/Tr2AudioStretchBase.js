@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Audio/Tr2AudioStretchBase.h
+import { exposure as be } from "#be";
 // Promoted from generated output 2026-07-18; now hand-owned by the audio
 // layer. Verify against trinityAudio/Tr2AudioStretchBase.json.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IInitialize } from "#blueexposure/IInitialize";
 import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 import { ITr2Audio } from "../trinityAudioApi/ITr2Audio.js";

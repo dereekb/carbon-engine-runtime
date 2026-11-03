@@ -1,11 +1,11 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierSRT.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierSRT.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

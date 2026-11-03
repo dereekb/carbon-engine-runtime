@@ -6,7 +6,7 @@ import { IsMatch, CcpTime } from "#blue";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 //   trinity/trinity/Eve/EveCamera.cpp
 //   trinity/trinity/Eve/EveCamera_Blue.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { fromYawPitchRollCarbon, quat } from "#math/quat";
 import { mat4 } from "#math/mat4";

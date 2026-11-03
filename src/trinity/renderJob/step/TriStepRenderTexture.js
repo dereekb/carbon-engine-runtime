@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepRenderTexture.h
+import { exposure as be } from "#be";
 import { Tr2RenderTarget } from "../../core/device/Tr2RenderTarget.js";
 import { Tr2DepthStencil } from "../../core/device/Tr2DepthStencil.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { vec2 } from "#math/vec2";
 

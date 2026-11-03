@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 //   trinity/trinity/TriView.cpp
 //   trinity/trinity/TriView_Blue.cpp
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /** The camera view matrix, together with the look-at helper that builds it. */

@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Curves/Tr2BoneMatrixCurve_Blue.cpp
 // Source: trinity/trinity/include/Tr2Curve.h:26-33
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

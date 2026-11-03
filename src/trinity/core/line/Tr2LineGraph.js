@@ -2,7 +2,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2LineGraph.h
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { vec4 } from "#math/vec4";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 

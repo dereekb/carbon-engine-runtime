@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudActionLog.h + AudActionLog.cpp
+import { exposure as be } from "#be";
 // Hand-owned behavior port. Verify against audio/AudActionLogCB.json and the
 // AudActionRecord*.json schema documents.
 

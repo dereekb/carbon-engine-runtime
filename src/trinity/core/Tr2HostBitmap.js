@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2HostBitmap.h
 // Source: trinity/trinity/Tr2HostBitmap.cpp
 // Source: trinity/trinity/Tr2HostBitmap_Blue.cpp
+import { exposure as be } from "#be";
 // Maintained promotion: native ImageIO storage replaces the generated model snapshots.
 // Async saving and the explicit unimplemented Trinity methods remain unsupported.
 import { CjsSchema, meta } from "#schema";

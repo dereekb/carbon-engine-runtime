@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { optionalString, snapshotFeatures, snapshotWebIdl } from "./browserHelpers.js";
 import { Tr2VideoDriver } from "./Tr2VideoDriver.js";
@@ -138,6 +138,6 @@ CjsSchema.decorateField(Tr2VideoAdapter, "vendorID", be.mapAttribute(be.READ));
 CjsSchema.decorateField(Tr2VideoAdapter, "deviceID", be.mapAttribute(be.READ));
 CjsSchema.decorateField(Tr2VideoAdapter, "subSystemID", be.mapAttribute(be.READ));
 CjsSchema.decorateField(Tr2VideoAdapter, "revision", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", blue.read);
+CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", CjsSchema.blue.read);
 CjsSchema.decorateMethod(Tr2VideoAdapter, "GetDriverInfo", be.mapMethodAndWrap());
 CjsSchema.exposure.define("Tr2VideoAdapter")(Tr2VideoAdapter);

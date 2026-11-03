@@ -1,12 +1,12 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2FollowCurve.h
 // Source: trinity/trinity/Curves/Tr2FollowCurve.cpp
 // Source: trinity/trinity/Curves/Tr2FollowCurve_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { BlueList, ITriFunction, ITriVectorFunction, IListNotify } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2FollowCurveKey } from "../ITr2FollowCurveKey.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2FollowCurveKeyInterpolation } from "../enums.js";
 
 

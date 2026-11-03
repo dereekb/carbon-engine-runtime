@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EveSpaceSceneRenderDriver.{h,cpp}
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 //
 // THE FRAME DRIVER. Carbon's EveSpaceScene::Render is an empty function body

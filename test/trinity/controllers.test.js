@@ -1,6 +1,6 @@
 import { ITr2CurveSetOwner } from "../../npm/dist/trinity/curves/ITr2CurveSetOwner.js";
 import test from "node:test";
-import { type, blue as legacyBlue } from "../../npm/dist/blue/schema/index.js";
+import { type } from "../../npm/dist/blue/schema/index.js";
 import { CjsControllerExpressionProgram, ExecuteMainThreadActions, EveChildUpdateParams, ITr2ControllerAction, ITr2GenericEmitterUpdateArguments, ITr2StateMachineStateFinalizer, Tr2ActionAnimateCurveSet, Tr2ActionAnimateValue, Tr2ActionBindRTPC, Tr2ActionCallback, Tr2ActionChildEffect, Tr2ActionOverlay, Tr2ActionPlayCurveSet, Tr2ActionPlayMeshAnimation, Tr2ActionPlaySound, Tr2ActionPython, Tr2ActionResetClipSphereCenter, Tr2ActionSetAttenuationScaling, Tr2ActionSetAudioEmitterPrefix, Tr2ActionSetAudioSwitch, Tr2ActionSetExternalControllerVariable, Tr2ActionSetShaderOption, Tr2ActionSetValue, Tr2ActionSpawnParticles, Tr2BindingPoint, Tr2Controller, Tr2ControllerEventHandler, Tr2ControllerExpression, Tr2ControllerFloatVariable, Tr2ControllerReference, Tr2StateMachine, Tr2StateMachineState, Tr2StateMachineTransition, Tr2SyncToAnimation, Tr2TimelineController, PlayAction, ResetBehavior, StopAction, Type } from "../../npm/dist/trinity/index.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
@@ -8,6 +8,9 @@ import { blue, DictReader, INotify } from "../../npm/dist/blue/blue/index.js";
 import { ITr2SoundEmitterOwner } from "../../npm/dist/trinity/eve/ITr2SoundEmitterOwner.js";
 import { EveSpaceObject2 } from "../../npm/dist/trinity/eve/spaceObject/EveSpaceObject2.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 
 function assert(condition, message = "assertion failed")

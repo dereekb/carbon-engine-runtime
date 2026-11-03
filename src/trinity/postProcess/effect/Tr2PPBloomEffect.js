@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPBloomEffect.h
+import { exposure as be } from "#be";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 
 

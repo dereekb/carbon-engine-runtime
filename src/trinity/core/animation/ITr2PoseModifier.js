@@ -1,6 +1,5 @@
 import { meta } from "#schema";
 // Source: trinity/Include/ITr2PoseModifier.h (created by 6b7e9e5c, 2026-09-01)
-import { blue } from "#schema";
 
 
 /**

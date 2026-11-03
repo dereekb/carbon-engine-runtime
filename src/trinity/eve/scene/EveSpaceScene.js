@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EveSpaceScene.h
 // Source: trinity/trinity/Eve/EveSpaceScene.cpp
+import { exposure as be } from "#be";
 //
 // Hand-maintained (promoted from src/trinity/generated/eve/scene; the generator skips it
 // while this file exists). Fields mirror the generated schema shell; the

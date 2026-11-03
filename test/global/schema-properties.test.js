@@ -4,7 +4,7 @@
 // macro: READWRITE, READ, READWRITE | PERSIST. Decision 2026-10-18.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CjsSchema, meta, type, blue as legacyBlue } from "../../src/blue/schema/index.js";
+import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { blue } from "../../src/blue/blue/index.js";
 import { DictReader } from "../../src/blue/blue/DictReader.js";
 import { INotify } from "../../src/blue/blueexposure/INotify.js";
@@ -12,6 +12,9 @@ import { DictWriter } from "../../src/blue/blue/DictWriter.js";
 import { CjsBlackReader } from "../../src/blue/blue/formats/black/core/CjsBlackReader.js";
 import { CjsGraphFormat } from "../../src/blue/blue/formats/graph/index.js";
 import { YamlReader } from "../../src/blue/blue/YamlReader.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 /** BlueTypes.h EDITFLAGS: READ 0x1, WRITE 0x2, PERSIST 0x10. */
 const READ = 0x1, WRITE = 0x2, PERSIST = 0x10;

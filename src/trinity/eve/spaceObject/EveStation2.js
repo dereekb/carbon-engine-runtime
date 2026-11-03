@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/EveStation2.h
 // Source: trinity/trinity/Eve/SpaceObject/EveStation2.cpp
-import { blue } from "#schema";
+import { exposure as be } from "#be";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 

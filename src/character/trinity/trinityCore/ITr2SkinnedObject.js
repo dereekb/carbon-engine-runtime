@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 import { IRoot } from "#blueexposure/IRoot";
 // Source: trinity/trinity/ITr2SkinnedObject.h:7-13
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 
 /** Carbon skinned-object transform interface; IRoot has no JavaScript base. */
 export class ITr2SkinnedObject extends IRoot

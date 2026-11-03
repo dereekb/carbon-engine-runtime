@@ -4,7 +4,7 @@ import { random as carbonRandom } from "#math/random";
 import { IsMatch, BlueList, IListNotify, INotify } from "#blue";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2GenericEmitter } from "../ITr2GenericEmitter/ITr2GenericEmitter.js";
 import { ITr2GenericParticleConstraint } from "./ITr2GenericParticleConstraint.js";

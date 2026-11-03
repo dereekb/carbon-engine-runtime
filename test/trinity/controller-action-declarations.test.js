@@ -9,7 +9,7 @@ import { ICustomPersist } from "../../npm/dist/blue/blueexposure/ICustomPersist.
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { CjsSchema, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { ITr2Updateable } from "../../npm/dist/trinity/core/ITr2Updateable.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
@@ -31,6 +31,9 @@ import { Tr2ActionSetExternalControllerVariable } from "../../npm/dist/trinity/c
 import { Tr2ActionSetShaderOption } from "../../npm/dist/trinity/controllers/action/Tr2ActionSetShaderOption.js";
 import { Tr2ActionSetValue } from "../../npm/dist/trinity/controllers/action/Tr2ActionSetValue.js";
 import { Tr2ActionSpawnParticles } from "../../npm/dist/trinity/controllers/action/Tr2ActionSpawnParticles.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const A = ITr2ControllerAction, U = ITr2Updateable, N = INotify, I = IInitialize, P = ICustomPersist;
 
@@ -337,7 +340,7 @@ test("all action null-chain tables isolate a temporary native parent query mappi
   execFileSync(process.execPath, [
     ...process.execArgv, "--input-type=module", "--eval", `
       import assert from "node:assert/strict";
-      import { meta, blue, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))};
+      import { meta, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))}; const blue = CjsSchema.blue;
       import { mappedInterfaces } from ${JSON.stringify(moduleURL("blue/compose/interface.js"))};
       import { IRoot } from ${JSON.stringify(moduleURL("blue/blueexposure/IRoot.js"))};
             import { ICustomPersist } from ${JSON.stringify(moduleURL("blue/blueexposure/ICustomPersist.js"))};

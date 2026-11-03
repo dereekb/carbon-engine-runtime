@@ -1,5 +1,4 @@
 import { meta } from "#schema";
-import { blue } from "#schema";
 // Source: trinity/trinity/Eve/IEveShadowCaster.h
 // Methods implemented from IEveShadowCaster.h:28-105 (TriShadowOrthoFrustum,
 // the cascaded-shadow-map IEveShadowFrustum adapter). Transient per-shadow-pass

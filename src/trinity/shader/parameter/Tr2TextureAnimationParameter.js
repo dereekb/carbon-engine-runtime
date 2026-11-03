@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/Tr2TextureAnimationParameter.h
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IsMatch, INotify } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2ColorSpace } from "#consts/render-context";
 import { FNV1_INITIAL, hashFnv1Identity } from "#utils/hash";
 import { ITriEffectResourceParameter } from "./ITriEffectResourceParameter.js";

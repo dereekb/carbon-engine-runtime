@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: blue/src/DictReader.h
 // Source: blue/src/DictReader.cpp
 // Source: blue/src/YamlReader.cpp (anchors: ExtractAnchorFromMappingStart, ReadIRootClass)
 // Source: blue/src/BlackReader.cpp (Initialize after an object's members, :394-403)
+import { exposure as be } from "#be";
 //
 // Blue's dictionary reader: builds objects from, and reads values into
 // objects from, a plain dictionary - the values bag every `SetValues` and

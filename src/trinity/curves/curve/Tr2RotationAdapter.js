@@ -5,7 +5,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Curves/Tr2RotationAdapter.cpp
 import { quat } from "#math/quat";
 import { ITriQuaternionFunction } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CcpTime } from "#blue";
 
 

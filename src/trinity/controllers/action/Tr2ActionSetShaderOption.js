@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetShaderOption.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetShaderOption.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetShaderOption_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 
 

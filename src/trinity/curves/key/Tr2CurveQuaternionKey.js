@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.h
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.cpp
 import { quat } from "#math/quat";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { Tr2CurveInterpolation } from "../enums.js";
 
 

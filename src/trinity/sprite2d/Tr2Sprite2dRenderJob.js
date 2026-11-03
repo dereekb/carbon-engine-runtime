@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dRenderJob.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dRenderJob.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dRenderJob_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; all portable behavior is implemented here.
 import { vec2 } from "#math/vec2";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2SpriteObject } from "./ITr2SpriteObject.js";
 import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
 import { Tr2SpriteObjectBase } from "./Tr2SpriteObjectBase.js";

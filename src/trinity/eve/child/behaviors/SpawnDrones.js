@@ -5,7 +5,7 @@ import { random as carbonRandom } from "#math/random";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/SpawnDrones.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { IBehavior } from "./IBehavior.js";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { ProcessLifetime } from "./lifecycle/ProcessLifetime.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";

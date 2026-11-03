@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 

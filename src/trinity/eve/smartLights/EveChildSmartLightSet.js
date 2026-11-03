@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveChildSmartLightSet.h
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
@@ -7,7 +7,7 @@ import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRendera
 import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "../child/EveSpaceObjectChild.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveInheritPropertiesOwner } from "../IEveInheritPropertiesOwner.js";
 import { EveChildTransform } from "../child/EveChildTransform.js";
 import { EveChildInheritProperties } from "../child/EveChildInheritProperties.js";

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2RuntimeInstanceData.h
 // Source: trinity/trinity/Tr2RuntimeInstanceData.cpp
 // Source: trinity/trinity/Tr2RuntimeInstanceData_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { Failed } from "../../../trinityal/ALResult.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
@@ -10,7 +10,7 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2Rende
 import { SharedGeometryBuffer } from "./TriGeometryResAllocations.js";
 import { ReadValues } from "../../../blue/blue/values.js";
 import { vec3 } from "#math/vec3";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { Tr2ParticleElementDeclaration } from "../../particle/element/Tr2ParticleElementDeclaration.js";
 import { Tr2VertexUsageCode } from "../vertex/usageCode.js";
 import { ITr2InstanceDataInstanceData, ITr2InstanceData } from "./ITr2InstanceData/index.js";
@@ -69,8 +69,7 @@ export class Tr2RuntimeInstanceData
   // .black files never populate these fields.
 
 
-  @blue.notify
-  @blue.persist
+  @be.mapAttribute(be.PERSIST | be.NOTIFY)
   @type.array("unknown")
   layout = [];
 
@@ -99,8 +98,7 @@ export class Tr2RuntimeInstanceData
    * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
    * @type {vec3}
    */
-  @blue.read
-  @blue.persist
+  @be.mapAttribute(be.READ | be.PERSIST)
   @type.vec3
   aabbMin = vec3.create();
 
@@ -111,8 +109,7 @@ export class Tr2RuntimeInstanceData
    * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
    * @type {vec3}
    */
-  @blue.read
-  @blue.persist
+  @be.mapAttribute(be.READ | be.PERSIST)
   @type.vec3
   aabbMax = vec3.create();
 

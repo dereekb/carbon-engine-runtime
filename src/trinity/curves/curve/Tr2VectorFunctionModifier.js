@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2VectorFunctionModifier.h
 // Source: trinity/trinity/Tr2VectorFunctionModifier.cpp
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITriVectorFunction } from "#blue";
 import { vec3 } from "#math/vec3";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";

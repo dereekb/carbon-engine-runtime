@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/TriValueBinding.h
 // Source: trinity/trinity/TriValueBinding.cpp
 // Source: trinity/trinity/TriValueBinding_Blue.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { INotify } from "#blueexposure/INotify";
 import { ITriReroutable } from "../ITriReroutable.js";

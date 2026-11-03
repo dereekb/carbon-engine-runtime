@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepSetVariableStore.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { Tr2VariableStore } from "../../core/variable/Tr2VariableStore.js";
 import { TriVariable } from "../../core/variable/TriVariable.js";
@@ -23,7 +23,7 @@ export class TriStepSetVariableStore extends TriRenderStep
   @type.string
   variableName = "";
 
-  @blue.readwrite
+  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("TriVariableValue")
   value = null;
 

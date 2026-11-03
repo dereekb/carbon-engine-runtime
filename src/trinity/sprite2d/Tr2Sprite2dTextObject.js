@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTextObject.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTextObject.cpp
+import { exposure as be } from "#be";
 // Maintained implementation promoted from generated metadata.
 import { type } from "#schema";
 import { Tr2SpriteObject } from "./Tr2SpriteObject.js";

@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Utilities/Range.h
 // Source: trinity/trinity/Utilities/Range.cpp
 // Source: trinity/trinity/Utilities/Range_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

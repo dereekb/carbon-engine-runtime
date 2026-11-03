@@ -1,14 +1,14 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey.h
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey.cpp
 // Source: trinity/trinity/Curves/Tr2FollowCurveKey_Blue.cpp:63-85
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { IsMatch, INotify, IInitialize } from "#blue";
 import { ITr2FollowCurveKey } from "../ITr2FollowCurveKey.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2FollowCurveKeyInterpolation } from "../enums.js";
 
 

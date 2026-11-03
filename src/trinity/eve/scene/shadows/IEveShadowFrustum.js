@@ -1,6 +1,5 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/IEveShadowCaster.h
-import { blue } from "#schema";
 
 
 /**

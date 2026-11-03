@@ -2,7 +2,7 @@ import { meta } from "#schema";
 // Source: trinity/trinity/Eve/UI/EveLineSet.h
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /** One line in an EveLineSet: two endpoints, each with its own colour. */

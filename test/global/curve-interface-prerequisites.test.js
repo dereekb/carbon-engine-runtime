@@ -7,7 +7,7 @@ import {
   ITriFunction, ITriScalarFunction, ITriVectorFunction, ITriQuaternionFunction,
   ITriColorFunction, ITriCurveLength, blue
 } from "@carbonenginejs/runtime/blue";
-import { CjsSchema, blue as legacyBlue } from "@carbonenginejs/runtime/schema";
+import { CjsSchema } from "@carbonenginejs/runtime/schema";
 import { ITriFunction as DirectFunction } from "../../src/blue/blue/ITriFunction.js";
 import { ITriScalarFunction as DirectScalar } from "../../src/blue/blue/ITriScalarFunction.js";
 import { ITriVectorFunction as DirectVector } from "../../src/blue/blue/ITriVectorFunction.js";
@@ -18,6 +18,9 @@ import { ITriDuration } from "../../src/trinity/curves/ITriDuration.js";
 import { ITr2ValueBinding } from "../../src/trinity/curves/ITr2ValueBinding.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 const contracts = [
   {

@@ -5,12 +5,15 @@ import { IList } from "../../npm/dist/blue/blueexposure/IList.js";
 import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
-import { CjsSchema, meta, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema, meta } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { CjsBlueReader } from "../../npm/dist/blue/blue/CjsBlueReader.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import "../../npm/dist/blue/blue/values.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
 const itemName = "BlueReaderPlainListItem";

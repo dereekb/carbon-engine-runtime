@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/EveBezierCurve.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/EveBezierCurve.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/EveBezierCurve_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 import { INotify } from "../../../../blue/blueexposure/INotify.js";

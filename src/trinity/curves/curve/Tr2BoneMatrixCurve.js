@@ -1,12 +1,12 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2BoneMatrixCurve.h
 // Source: trinity/trinity/Curves/Tr2BoneMatrixCurve.cpp
 // Source: trinity/trinity/Curves/Tr2BoneMatrixCurve_Blue.cpp
 // Source: trinity/trinity/Include/Tr2Curve.h
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { isArrayLike } from "#utils/is";
 import { ITriFunction, ITriCurveLength, IInitialize } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2MatrixKey } from "../key/Tr2MatrixKey.js";
 
 

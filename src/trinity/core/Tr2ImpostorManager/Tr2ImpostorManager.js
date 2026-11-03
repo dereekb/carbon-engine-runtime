@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2ImpostorManager.h
 // Source: trinity/trinity/Tr2ImpostorManager.cpp
 // Source: trinity/trinity/Tr2ImpostorManager_Blue.cpp
+import { exposure as be } from "#be";
 // Hand-maintained after promotion from generated intake.
 import { type } from "#schema";
 import { IInitialize, INotify } from "#blue";

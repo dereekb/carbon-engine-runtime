@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/TriRigidOrientation.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITriFunction, ITriQuaternionFunction, CcpTime } from "#blue";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

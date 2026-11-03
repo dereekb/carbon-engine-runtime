@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSpawnParticles.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSpawnParticles_Blue.cpp
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmitter/index.js";
 
 

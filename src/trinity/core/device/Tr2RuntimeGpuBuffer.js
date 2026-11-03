@@ -4,7 +4,6 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2RuntimeGpuBuffer.cpp
 import { Tr2BufferAL } from "../../../trinityal/Tr2BufferAL/index.js";
 // Hand-maintained from Carbon source; the AL buffer is backend-private state.
-import { blue } from "#schema";
 import { ITr2GpuBuffer } from "../ITr2GpuBuffer.js";
 
 /**

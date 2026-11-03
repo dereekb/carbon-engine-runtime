@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetExternalControllerVariable.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetExternalControllerVariable.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetExternalControllerVariable_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch, INotify } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 
 

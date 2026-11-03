@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dFrame.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dFrame.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dFrame_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-10-12 from the generated property shell.
 import { type } from "#schema";
 import { vec4 } from "#math/vec4";

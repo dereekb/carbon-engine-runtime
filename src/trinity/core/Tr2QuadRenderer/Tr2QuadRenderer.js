@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2QuadRenderer.h
+import { exposure as be } from "#be";
 //   trinity/trinity/Tr2QuadRenderer.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.
 // The CPU half was implemented 2026-07-23 and the GPU half on 2026-09-27: the

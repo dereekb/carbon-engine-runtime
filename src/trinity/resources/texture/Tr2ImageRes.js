@@ -4,7 +4,7 @@ import { blue as blueService } from "#blue/blue";
 // Source: trinity/trinity/Resources/Tr2ImageRes_Blue.cpp
 import { exposure as be } from "#be";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
-import { CjsSchema, meta, type, blue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { BlueAsyncRes, ICacheable } from "#blue";
 import { HostBitmap } from "#imageio";
 import { PixelFormat } from "#consts/render-context";
@@ -205,8 +205,8 @@ export class Tr2ImageRes extends BlueAsyncRes
 // source without a transform. Field order is key order, and GetValues() exports
 // in that order.
 
-CjsSchema.decorateField(Tr2ImageRes, "width", type.int32, blue.read, meta.persist);
-CjsSchema.decorateField(Tr2ImageRes, "height", type.int32, blue.read, meta.persist);
+CjsSchema.decorateField(Tr2ImageRes, "width", type.int32, CjsSchema.blue.read, meta.persist);
+CjsSchema.decorateField(Tr2ImageRes, "height", type.int32, CjsSchema.blue.read, meta.persist);
 CjsSchema.decorateMethod(Tr2ImageRes, "GetPixelColor", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(Tr2ImageRes, "IsPixelOpaque", be.mapMethodAndWrap());
 CjsSchema.exposure.mapICacheableMethods()(Tr2ImageRes);

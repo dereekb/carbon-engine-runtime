@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepPopViewport.h
 // Source: trinity/trinity/RenderJob/TriStepPopViewport.cpp
-import { blue } from "#schema";
+import { exposure as be } from "#be";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { TriRenderJob } from "../TriRenderJob.js";
 

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepSetRenderState.cpp
 // Source: trinity/trinity/RenderJob/TriStepSetRenderState_Blue.cpp
-import { type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { type } from "#schema";
 import { TriRenderJob } from "../TriRenderJob.js";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { RenderState } from "#consts/render-context";

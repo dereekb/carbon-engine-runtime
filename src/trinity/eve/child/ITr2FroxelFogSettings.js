@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2VolumetricsRenderer.h
+import { exposure as be } from "#be";
 import { EveChildTransform } from "./EveChildTransform.js";
 
 

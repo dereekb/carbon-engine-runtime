@@ -1,4 +1,4 @@
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { blue as blueService } from "./blue.js";
 
 import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/validation";
@@ -1566,14 +1566,14 @@ function defaultNow()
 }
 
 
-CjsSchema.decorateMethod(MotherLode, "Insert", blue.method);
-CjsSchema.decorateMethod(MotherLode, "Lookup", blue.method);
-CjsSchema.decorateMethod(MotherLode, "Delete", blue.method);
-CjsSchema.decorateMethod(MotherLode, "Clear", blue.method);
-CjsSchema.decorateMethod(MotherLode, "ClearCached", blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetKeys", blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetValues", blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetSize", blue.method);
+CjsSchema.decorateMethod(MotherLode, "Insert", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "Lookup", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "Delete", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "Clear", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "ClearCached", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "GetKeys", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "GetValues", CjsSchema.blue.method);
+CjsSchema.decorateMethod(MotherLode, "GetSize", CjsSchema.blue.method);
 CjsSchema.blue.define(MotherLode, {
   className: "MotherLode"
 });

@@ -35,7 +35,7 @@
 // service asks for a form both sides share, or one a cheap bridge turns into
 // an accepted one: bytes to text and back, a stream to bytes or text. No
 // shared or bridgeable form is an error, never a guess.
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { normalizeResPath } from "#utils/path";
 import { BlueFileUtil } from "./BlueFileUtil.js";
 import { IBluePaths } from "./IBluePaths.js";
@@ -440,11 +440,11 @@ export class BluePaths extends IBluePaths
 }
 
 CjsSchema.exposure.mapInterface(IBluePaths)(BluePaths);
-CjsSchema.decorateMethod(BluePaths, "UnregisterFileSystem", blue.method);
-CjsSchema.decorateMethod(BluePaths, "IsFileSystemRegistered", blue.method);
-CjsSchema.decorateMethod(BluePaths, "IsDirectory", blue.method);
-CjsSchema.decorateMethod(BluePaths, "FileExists", blue.method);
-CjsSchema.decorateMethod(BluePaths, "FileExistsLocally", blue.method);
+CjsSchema.decorateMethod(BluePaths, "UnregisterFileSystem", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BluePaths, "IsFileSystemRegistered", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BluePaths, "IsDirectory", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BluePaths, "FileExists", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BluePaths, "FileExistsLocally", CjsSchema.blue.method);
 CjsSchema.blue.define(BluePaths, {
   className: "BluePaths",
   members: [ { name: "cacheFileExistance", key: "_cacheFileExistance", type: { kind: "boolean" }, edit: { read: true, write: true }, carbon: { member: true } } ]

@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudioCurveSetDriver.h
 // Source: audio/src/AudioCurveSetDriver.cpp
 // Source: audio/src/AudioCurveSetDriver_Blue.cpp
-import { type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { type } from "#schema";
 import { ICurveSetDriver } from "#blue/ICurveSetDriver";
 import { IInitialize } from "#blueexposure/IInitialize";
 import { AudGameObjResource } from "./AudGameObjResource.js";

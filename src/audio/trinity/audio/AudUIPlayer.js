@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudUIPlayer.h + AudUIPlayer.cpp
+import { exposure as be } from "#be";
 // Hand-owned since 2026-07-23 (behavior port); the generator skips this file.
 // Verify against audio/AudUIPlayer.json.
 import { type } from "#schema";

@@ -1,6 +1,6 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/FollowASpline.h
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

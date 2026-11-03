@@ -15,7 +15,7 @@ import { Tr2TextureAL } from "../../../trinityal/Tr2TextureAL/index.js";
 // the default here. Each verb also takes an optional trailing context, for a
 // caller composing its own.
 //
-// The `@blue.read` properties are the Blue READ projection, refreshed wherever
+// The `@be.mapAttribute(be.READ)` properties are the Blue READ projection, refreshed wherever
 // the texture changes.
 import { type } from "#schema";
 import { Tr2Event } from "../Tr2Event.js";

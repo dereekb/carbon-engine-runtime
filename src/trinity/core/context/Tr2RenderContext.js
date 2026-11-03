@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2RenderContext.h (name/role)
+import { exposure as be } from "#be";
 //   trinity/trinityal/*/Tr2RenderContext*.h (command surface)
 // Hand-maintained amalgam of two Carbon surfaces (audited 2026-07-18):
 // 1. The command surface (PushRenderTarget/Clear/SetViewport/Present/
@@ -14,7 +14,7 @@ import { exposure as be } from "#be";
 //    (2026-09-06) and the RenderBatches family is next; GetBackBuffer is not.
 //    Fork/Join parallel encoding is deliberately omitted - it exists to spread
 //    batch encoding across threads, and there is one.
-import { CjsSchema, meta, blue } from "#schema";
+import { CjsSchema, meta } from "#schema";
 import { ALResult, Failed } from "../../../trinityal/ALResult.js";
 import { Tr2ConstantBufferAL } from "../../../trinityal/Tr2ConstantBufferAL/index.js";
 import { ConstantBufferSlot, TextureAddressMode, TextureFilter, Topology } from "#consts/render-context";

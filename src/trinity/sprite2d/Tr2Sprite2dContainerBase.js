@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dContainer.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dContainer.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dContainer_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; portable child ownership is maintained here.
 import { type } from "#schema";
 import { BlueList, IListNotify } from "#blue";

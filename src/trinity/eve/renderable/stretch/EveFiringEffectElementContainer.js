@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveFiringEffectElementContainer.h
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveFiringEffectElementContainer.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 import { vec3 } from "#math/vec3";

@@ -79,7 +79,7 @@ test("controller exposure follows its explicit EveThrottleable parent table", ()
   const moduleURL = path => new URL(`../../npm/dist/${path}`, import.meta.url).href;
   execFileSync(process.execPath, ["--input-type=module", "--eval", `
     import assert from "node:assert/strict";
-    import { meta, blue } from ${JSON.stringify(moduleURL("blue/schema/index.js"))};
+    import { meta, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))}; const blue = CjsSchema.blue;
     import { mappedInterfaces } from ${JSON.stringify(moduleURL("blue/compose/interface.js"))};
     import { EveThrottleable } from ${JSON.stringify(moduleURL("trinity/eve/EveThrottleable.js"))};
     import { Tr2Controller } from ${JSON.stringify(moduleURL("trinity/controllers/Tr2Controller.js"))};

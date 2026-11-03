@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "#blueexposure/IRoot";
 // Source: trinityaudioapi/include/IStretchAudio.h
-import { blue } from "#schema";
 
 
 /** Required stretch-audio component contract. */

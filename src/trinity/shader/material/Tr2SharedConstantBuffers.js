@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Shader/Tr2Material.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /** Tracks shared constant-buffer contents by size and hash together with its backing buffer and reference count. */
 @meta.carbon("Tr2SharedConstantBuffers")

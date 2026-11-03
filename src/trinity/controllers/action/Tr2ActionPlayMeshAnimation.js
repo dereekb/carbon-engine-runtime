@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { INotify } from "#blueexposure/INotify";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { DestinationType, PlayAction, StopAction } from "../enums.js";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 import { Tr2BindingPoint } from "../expression/Tr2BindingPoint.js";

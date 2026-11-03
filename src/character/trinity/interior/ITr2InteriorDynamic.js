@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Include/ITr2Interior.h
+import { exposure as be } from "#be";
 import { ITr2Interior } from "./ITr2Interior.js";
 
 /** Carbon's ITr2InteriorDynamic nominal interior contract. */

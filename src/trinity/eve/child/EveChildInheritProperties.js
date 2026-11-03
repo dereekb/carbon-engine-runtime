@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInheritProperties.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInheritProperties_Blue.cpp
 import { vec4 } from "#math/vec4";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 
 
 const COLOR_PROPERTIES = Object.freeze([

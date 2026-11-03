@@ -3,7 +3,7 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/UI/Tr2PresentParameters.h
 // Source: trinity/trinity/UI/Tr2PresentParameters.cpp
 // Source: trinity/trinity/UI/Tr2PresentParameters_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { PresentInterval, SwapEffect } from "#consts/render-context";
 import { Tr2PresentParametersAL } from "../../trinityal/Tr2PresentParametersAL.js";
 

@@ -1,7 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EveParticleSpringAttractor.h
 // Source: trinity/trinity/Eve/EveParticleSpringAttractor_Blue.cpp
-import { blue } from "#schema";
+import { exposure as be } from "#be";
 import { Tr2ParticleSpring } from "../../../particle/force/Tr2ParticleSpring.js";
 
 

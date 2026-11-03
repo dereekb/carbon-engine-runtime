@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2GrannyTrack.cpp
 import { IsMatch } from "#blue";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { INotify, ITriFunction, ITriCurveLength } from "#blue";
 import { CjsGrannyCurves } from "./CjsGrannyCurves.js";
 

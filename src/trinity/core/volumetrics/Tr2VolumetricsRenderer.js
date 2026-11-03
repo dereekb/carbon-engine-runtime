@@ -4,7 +4,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Tr2VolumetricsRenderer.h
 // Source: trinity/trinity/Tr2VolumetricsRenderer.cpp
 // Source: trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec2 } from "#math/vec2";
 import { vec3 } from "#math/vec3";

@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildSpherePin.h
+import { exposure as be } from "#be";
 //   trinity/trinity/Eve/SpaceObject/Children/EveChildSpherePin.cpp
 import { type } from "#schema";
 import { EveChildMesh } from "./EveChildMesh.js";

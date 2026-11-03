@@ -1,4 +1,5 @@
 import { exposure as be } from "#be";
+import { CjsSchema } from "#schema";
 import { Tr2Sprite2dDisplayList } from "./Tr2Sprite2dDisplayList.js";
 import { Tr2Sprite2dDisplayListEntry } from "./Tr2Sprite2dDisplayListEntry.js";
 import { Tr2Effect } from "../shader/Tr2Effect.js";
@@ -18,7 +19,6 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dScene.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dScene.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dScene_Blue.cpp
-import { blue } from "#schema";
 import { IsMatch, INotify, BlueList } from "#blue";
 import { ITr2Scene } from "../core/ITr2Scene.js";
 import { ITr2Updateable } from "../core/ITr2Updateable.js";
@@ -63,7 +63,7 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
  * Complete canonical members retain native order and indexed aliases. Legacy
  * getField/getDefaults expose no Scene fields; use Blue declaration consumers.
  */
-@blue.define({
+@CjsSchema.blue.define({
   className: "Tr2Sprite2dScene",
   members: [
     {"carbon":{"member":true},"name":"name","type":{"kind":"wstring"},"edit":{"read":true,"write":true,"persist":true}},

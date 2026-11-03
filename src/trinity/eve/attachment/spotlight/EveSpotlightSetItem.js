@@ -7,7 +7,7 @@ import { box3 } from "#math/box3";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * One authored spotlight: its bone attachment, placement matrix, the separate

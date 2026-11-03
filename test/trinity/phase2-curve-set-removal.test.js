@@ -4,7 +4,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { CjsSchema, blue as legacyBlue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
@@ -26,6 +26,9 @@ import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveMeshOverlayEffect } from "../../npm/dist/trinity/eve/overlays/EveMeshOverlayEffect.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { StubResMan } from "../support/stubResMan.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 class SampleFunction extends ITriFunction
 {

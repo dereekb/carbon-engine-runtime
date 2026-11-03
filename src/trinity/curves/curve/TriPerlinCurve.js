@@ -4,7 +4,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/TriSequencer.h
 // Source: trinity/trinity/TriSequencer.cpp
 // Source: trinity/trinity/TriMath.cpp
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { ITriScalarFunction } from "#blue/ITriScalarFunction";
 import { ITriFunction } from "#blue/ITriFunction";
 import { CcpTime } from "#blue/CcpTime";

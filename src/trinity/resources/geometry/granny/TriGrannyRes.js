@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Resources/TriGrannyRes.h
 // Source: trinity/trinity/Resources/TriGrannyRes.cpp
 // Source: trinity/trinity/Resources/TriGrannyRes_Blue.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { BlueAsyncRes, ICacheable, blue as blueService } from "#blue";
 import * as CcpLog from "../../../../global/logging/ccpLog.js";

@@ -1,7 +1,7 @@
 import { blue as blueService } from "#blue/blue";
 // Source: trinity/trinity/Resources/TriGeometryRes.h
 // Source: trinity/trinity/Resources/TriGeometryRes.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BlueAsyncRes } from "#blue";
 
 

@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayCurveSet.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayCurveSet.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionPlayCurveSet_Blue.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { blue, CcpTime } from "#blue";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";

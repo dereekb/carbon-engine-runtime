@@ -4,7 +4,7 @@ import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 // Source: trinity/trinity/Interior/Tr2InteriorLightSource.h
 //   trinity/trinity/Interior/Tr2InteriorLightSource.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CcpTime, IInitialize, INotify, IsMatch } from "#blue";
 import { ITr2InteriorLight } from "./ITr2InteriorLight.js";
 import { color } from "#math/color";

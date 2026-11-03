@@ -1,12 +1,11 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/GrannyBoneOffset.h
 // Source: trinity/trinity/GrannyBoneOffset.cpp
 // Source: trinity/trinity/GrannyBoneOffset_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { IInitialize } from "#blueexposure/IInitialize";
-import { blue } from "#schema";
 
 
 /**

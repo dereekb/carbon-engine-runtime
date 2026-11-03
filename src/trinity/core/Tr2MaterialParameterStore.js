@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2MaterialParameterStore.h
 // Source: trinity/trinity/Tr2MaterialParameterStore.cpp
 // Source: trinity/trinity/Tr2MaterialParameterStore_Blue.cpp
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { IsMatch, blue, IInitialize, INotify, BlueClasses } from "#blue";
 import * as CcpLog from "../../global/logging/ccpLog.js";

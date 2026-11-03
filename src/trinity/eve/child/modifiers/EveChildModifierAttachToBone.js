@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierAttachToBone.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierAttachToBone.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierAttachToBone_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
 
 /**

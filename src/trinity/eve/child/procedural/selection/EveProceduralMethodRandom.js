@@ -4,7 +4,7 @@ import { random as carbonRandom } from "#math/random";
 import { IsMatch, INotify, IListNotify } from "#blue";
 import { IInitialize } from "../../../../../blue/blueexposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { EveProceduralMethodRandomParameter } from "./EveProceduralMethodRandomParameter.js";
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
 

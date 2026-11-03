@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/Tr2StepExecuteRenderNode.h
 // Source: trinity/trinity/RenderJob/Tr2StepExecuteRenderNode.cpp
 // Source: trinity/trinity/RenderJob/Tr2StepExecuteRenderNode_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted from generated source to supply TriRenderStep.Execute.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 
 

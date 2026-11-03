@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2KelvinColor.h
 // Source: trinity/trinity/Tr2KelvinColor.cpp
 // Source: trinity/trinity/Tr2KelvinColor_Blue.cpp
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { IInitialize } from "#blueexposure/IInitialize";
 import { vec3 } from "#math/vec3";

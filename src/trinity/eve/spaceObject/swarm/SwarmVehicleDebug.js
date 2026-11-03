@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/SpaceObject/EveSwarm.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema eve/spaceObject/swarm/SwarmVehicleDebug.json.).
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 
 /** SwarmVehicleDebug (eve/spaceObject/swarm) - generated from schema shapeHash f53e5a64.... */

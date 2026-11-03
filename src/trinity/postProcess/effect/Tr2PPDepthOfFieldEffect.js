@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPDepthOfFieldEffect.h
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPDepthOfFieldEffect.cpp
+import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 import { blue, EnumRegistrationType } from "#blue";

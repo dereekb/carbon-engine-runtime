@@ -4,12 +4,15 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import { transformSync } from "@babel/core";
 import decorators from "@babel/plugin-proposal-decorators";
-import { CjsSchema, type, blue } from "../../src/blue/schema/index.js";
+import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { composedContracts, mappedInterfaces, ownMappedInterfaces } from "../../src/blue/compose/interface.js";
 import { Copier } from "../../src/blue/blueexposure/Copier.js";
 import { IInitialize } from "../../src/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../src/blue/blueexposure/INotify.js";
 import { applyReaderMember, finalizeReaderObject } from "../../src/blue/schema/hydration.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 test("the own table holds IRoot, the class, then explicit interfaces in Carbon order", () =>
 {
@@ -101,7 +104,7 @@ test("chainTo resolves its named parent after the own entries, not the JS parent
 test("Stage-3 and imperative declarations share the public Blue exposure facade", async () =>
 {
   const source = `
-    import { blue } from ${JSON.stringify(new URL("../../src/blue/schema/index.js", import.meta.url).href)};
+    import { CjsSchema } from ${JSON.stringify(new URL("../../src/blue/schema/index.js", import.meta.url).href)}; const blue = CjsSchema.blue;
     import { INotify } from ${JSON.stringify(new URL("../../src/blue/blueexposure/INotify.js", import.meta.url).href)};
     @blue.interface()
     export class Parent {}

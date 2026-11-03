@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: blue/src/YamlReader.h
 // Source: blue/src/YamlReader.cpp
 // Source: blue/src/YamlReader_Blue.cpp
+import { exposure as be } from "#be";
 import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
 import { CjsSchema, type } from "#schema";
 import { IRootReaderBase } from "./IRootReaderBase.js";

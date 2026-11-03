@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetAudioSwitch.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetAudioSwitch.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetAudioSwitch_Blue.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { CjsSchema, type } from "#schema";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 import { ITr2SoundEmitterOwner } from "../../eve/ITr2SoundEmitterOwner.js";
 

@@ -17,7 +17,7 @@
 // NOTE ON DECORATORS: this folder cannot use `@` syntax (see CcpTime.js), so
 // the declarations are made imperatively at the bottom of the file.
 import { exposure as be } from "#be";
-import { CjsSchema, type, blue as legacyBlue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { blue } from "./blue.js";
 import { IBlueObjectProxy } from "./IBlueObjectProxy.js";
 import { IUnloadable } from "./IUnloadable.js";
@@ -314,11 +314,11 @@ export class BlueObjectProxy extends IBlueObjectProxy
   }
 }
 
-CjsSchema.decorateField(BlueObjectProxy, "object", legacyBlue.property(), type.object.ref("IRoot"));
+CjsSchema.decorateField(BlueObjectProxy, "object", CjsSchema.blue.property(), type.object.ref("IRoot"));
 CjsSchema.decorateField(BlueObjectProxy, "builder", be.mapAttribute(be.READWRITE), type.object.ref("IBlueObjectBuilder"));
 CjsSchema.decorateField(BlueObjectProxy, "objectMarker", be.mapAttribute(be.READWRITE), type.uint32);
-CjsSchema.decorateField(BlueObjectProxy, "temporary", legacyBlue.property(), type.boolean);
-CjsSchema.decorateField(BlueObjectProxy, "isResident", legacyBlue.property(), type.boolean);
+CjsSchema.decorateField(BlueObjectProxy, "temporary", CjsSchema.blue.property(), type.boolean);
+CjsSchema.decorateField(BlueObjectProxy, "isResident", CjsSchema.blue.property(), type.boolean);
 CjsSchema.decorateMethod(BlueObjectProxy, "Freeze", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(BlueObjectProxy, "SetObjectFromBuilder", be.mapMethodAndWrap());
 CjsSchema.blue.define(BlueObjectProxy, {

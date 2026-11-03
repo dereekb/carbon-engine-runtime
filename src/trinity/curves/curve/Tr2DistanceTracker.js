@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2DistanceTracker.h
 // Source: trinity/trinity/Curves/Tr2DistanceTracker.cpp
 // Source: trinity/trinity/Curves/Tr2DistanceTracker_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { blue, ITriFunction, INotify, CcpTime } from "#blue";
 import { type } from "#schema";

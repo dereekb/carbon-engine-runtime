@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/TriDevice.h
 // Source: trinity/trinity/TriDevice.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { UpscalingSetting, UpscalingTechnique } from "#consts/render-context";
 import "#consts/renderContext/upscaling";
 

@@ -3,7 +3,7 @@ import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
 // Source: trinity/trinity/Eve/UI/EveTacticalTrails.h
 // Source: trinity/trinity/Eve/UI/EveTacticalTrails.cpp
 // Hand-maintained after promotion from generated schema intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CcpTime } from "#blue";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";

@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/TriSequencer.h
 // Source: trinity/trinity/TriSequencer.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { ITriFunction, ITriVectorFunction, BlueList } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TRIOPERATOR } from "#consts/graphics";
 import "#consts/graphics/trinityEnums";
 

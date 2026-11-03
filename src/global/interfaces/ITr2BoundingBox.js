@@ -1,6 +1,6 @@
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Include/ITr2BoundingBox.h
-import { CjsSchema, blue, meta } from "../../blue/schema/index.js";
+import { CjsSchema, meta } from "../../blue/schema/index.js";
 
 
 /**

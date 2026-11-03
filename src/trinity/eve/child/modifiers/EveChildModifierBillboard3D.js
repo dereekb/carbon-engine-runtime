@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierBillboard3D.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierBillboard3D.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierBillboard3D_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
 import { EveChildModifierTransformCommon } from "./EveChildModifierTransformCommon.js";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";

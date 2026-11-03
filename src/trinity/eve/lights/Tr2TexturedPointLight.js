@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Lights/Tr2TexturedPointLight.h
 // Source: trinity/trinity/Lights/Tr2TexturedPointLight.cpp
 // Source: trinity/trinity/Lights/Tr2TexturedPointLight_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch, IInitialize, INotify } from "#blue";
 import { type } from "#schema";
 import { blue } from "#blue";

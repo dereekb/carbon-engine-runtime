@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
@@ -8,7 +8,7 @@ import { EveEntity } from "../EveEntity.js";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { BehaviorGroup } from "./behaviors/BehaviorGroup.js";
 import { SplineTunnelGroup } from "./behaviors/tunnels/SplineTunnelGroup.js";

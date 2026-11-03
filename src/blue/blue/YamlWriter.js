@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: blue/src/YamlWriter.h
 // Source: blue/src/YamlWriter.cpp
+import { exposure as be } from "#be";
 import { Alias, Document, Pair, Scalar, YAMLMap, YAMLSeq, isSeq } from "yaml";
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { IRootWriter } from "./IRootWriter.js";
 import { BLUE_OBJECT_METADATA_KEY } from "./IBlueObjectMetadata.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";

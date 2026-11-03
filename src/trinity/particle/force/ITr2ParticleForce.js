@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Particle/ITr2ParticleForce.h
-import { blue } from "#schema";
 
 
 /** Required particle-force contract. */

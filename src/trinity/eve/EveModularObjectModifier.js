@@ -7,7 +7,7 @@ import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { EveChildPartData, EveChildPartDataPartData } from "./child/EveChildPartData/index.js";
 import { EveChildInstancedMeshes } from "./child/EveChildInstancedMeshes/index.js";
 import { EveStation2 } from "./spaceObject/EveStation2.js";

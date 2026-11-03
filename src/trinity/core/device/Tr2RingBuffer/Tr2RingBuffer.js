@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2RingBuffer.h
 // Source: trinity/trinity/Tr2RingBuffer.cpp
+import { exposure as be } from "#be";
 //
 // One shared arena that many objects upload per-frame rows into, and a small
 // per-consumer cursor that remembers where this frame's rows and last frame's

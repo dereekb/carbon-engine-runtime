@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/PostProcess/Effects/Tr2PPGenericEffect.h
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { Tr2PPEffect } from "./Tr2PPEffect.js";
 import { Quality } from "../../generated/postProcess/enums.js";

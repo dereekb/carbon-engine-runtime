@@ -3,7 +3,7 @@ import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 // Source: trinity/trinity/Eve/UI/EveUiObject.h
 // Source: trinity/trinity/Eve/UI/EveUiObject.cpp
 // Source: trinity/trinity/Eve/UI/EveUiObject_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { EveSpaceObject2 } from "../spaceObject/EveSpaceObject2.js";
 import { TriBatchType } from "#consts/graphics";
 import { Tr2Lod } from "#consts/trinity";

@@ -1,7 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/Volume/IEveVolume.h
-import { blue } from "#schema";
 
 
 /** Required EVE volume contract (IEveVolume.h:10-20). */

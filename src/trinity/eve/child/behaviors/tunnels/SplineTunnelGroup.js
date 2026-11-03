@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { INotify } from "../../../../../blue/blueexposure/INotify.js";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/SplineTunnelGroup.cpp
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";

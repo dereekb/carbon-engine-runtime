@@ -14,7 +14,7 @@ import { IInitialize } from "../../blue/blueexposure/IInitialize.js";
 // with TriDevice and whose PrepareResources gates OnPrepareResources. There is
 // no JS base, so both halves are on the class, and JavaScript has no
 // destructor, so Release() stands in for ~Tr2DataTextureManager.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
 import { Succeeded } from "../../trinityal/ALResult.js";

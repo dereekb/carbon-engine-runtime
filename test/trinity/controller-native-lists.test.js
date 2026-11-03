@@ -3,13 +3,16 @@ import test from "node:test";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
-import { CjsSchema, blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { Tr2ControllerEventHandler } from "../../npm/dist/trinity/controllers/Tr2ControllerEventHandler.js";
 import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/expression/Tr2ControllerFloatVariable.js";
 import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2StateMachine.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const fields = [
   ["stateMachines", Tr2StateMachine, "Tr2StateMachine"],

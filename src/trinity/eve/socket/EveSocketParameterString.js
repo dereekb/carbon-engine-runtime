@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SocketParameters/EveSocketParameter.h
+import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
 import { IEveSocketParameter } from "./IEveSocketParameter.js";
 

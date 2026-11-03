@@ -10,7 +10,7 @@ import { mat4 } from "#math/mat4";
 import { sph3 } from "#math/sph3";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
-import { CjsSchema, meta, type, blue } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
 import { TriTextureRes } from "#trinity/resources";
 import { IEveSpaceObjectAttachment } from "../IEveSpaceObjectAttachment.js";

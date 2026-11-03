@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/DroneAgent.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema eve/child/behaviors/DroneAgent.json.).
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2GrannyTransformTrack.h
 // Source: trinity/trinity/Curves/Tr2GrannyTransformTrack.cpp
+import { exposure as be } from "#be";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CjsGrannyCurves } from "./CjsGrannyCurves.js";
 import { Tr2GrannyTrack } from "./Tr2GrannyTrack.js";
 

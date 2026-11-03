@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes_Blue.cpp
+import { exposure as be } from "#be";
 import { EveEntity } from "../../EveEntity.js";
 import { IEveShadowCaster } from "../../IEveShadowCaster.js";
 import { IEveSpaceObjectChild } from "../IEveSpaceObjectChild.js";

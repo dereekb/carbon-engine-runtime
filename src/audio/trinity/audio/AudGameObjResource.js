@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudGameObjResource.h + AudGameObjResource.cpp
+import { exposure as be } from "#be";
 import { blue, BlueOS, IsMatch } from "#blue";
 import { CjsWwiseSoundEngineStub } from "../../../global/audio/CjsWwiseSoundEngineStub.js";
 // Hand-owned since 2026-07-18 (behavior port); the generator skips this file.

@@ -1,5 +1,5 @@
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:112-120
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 

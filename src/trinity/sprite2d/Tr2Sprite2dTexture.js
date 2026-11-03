@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTexture.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTexture.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTexture_Blue.cpp
+import { exposure as be } from "#be";
 // Hand-maintained after promotion from generated schema intake.
 import { ITr2Sprite2dTexture } from "./ITr2Sprite2dTexture.js";
 // Imported for the listener set's JSDoc type and so the interface is in the build graph.

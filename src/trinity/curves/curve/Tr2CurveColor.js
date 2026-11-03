@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveColor.h
 // Source: trinity/trinity/Curves/Tr2CurveColor.cpp
+import { exposure as be } from "#be";
 import { color } from "#math/color";
 import { vec4 } from "#math/vec4";
 import { ITriColorFunction, ITriFunction, ITriCurveLength } from "#blue";

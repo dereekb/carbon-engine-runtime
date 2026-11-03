@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionCallback.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionCallback_Blue.cpp
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

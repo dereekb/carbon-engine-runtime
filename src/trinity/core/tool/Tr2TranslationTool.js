@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2TranslationTool.h
 // Source: trinity/trinity/Tr2TranslationTool.cpp
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
 import { Tr2ManipulationTool } from "./Tr2ManipulationTool.js";

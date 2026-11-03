@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Shader/Tr2Material.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2SamplerStateAL } from "../../../trinityal/Tr2SamplerStateAL/index.js";
 
 /**

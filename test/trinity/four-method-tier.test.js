@@ -1,4 +1,4 @@
-import { blue } from "../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { ITriVectorFunction } from "../../npm/dist/blue/blue/index.js";
 import { HostBitmap } from "../../npm/dist/global/imageio/index.js";
 import { PixelFormat } from "../../npm/dist/global/consts/renderContext/index.js";
@@ -21,6 +21,9 @@ import {
 import { Tr2MainWindowState } from "../../npm/dist/input/index.js";
 import { Tr2ImageRes } from "../../npm/dist/trinity/resources/texture/index.js";
 import { EveSOFDataDecalIndexBuffer } from "../../npm/dist/sof/shared/index.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 /**
  * The four-method-tier ports.

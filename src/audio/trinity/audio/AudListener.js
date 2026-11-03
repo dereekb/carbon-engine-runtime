@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudListener.h + AudListener.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 import { LISTENER_GAME_OBJ_ID } from "./SoundPrioritization.js";

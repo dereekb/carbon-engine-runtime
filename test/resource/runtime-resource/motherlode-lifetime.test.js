@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import {test, beforeEach, afterEach} from "node:test";
-import {CjsSchema, blue as exposure} from "../../../npm/dist/blue/schema/index.js";
+import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import {blue, BlueAsyncRes, BlueResMan, MotherLode, ICacheable, getMotherLodeKey} from "../../../npm/dist/blue/blue/index.js";
 import {TriTextureRes} from "../../../npm/dist/resource/index.js";
 import {normalizeResourcePath} from "#utils/path";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const exposure = CjsSchema.blue;
 
 /** A device-resource fixture owning a small value and real device adapter slots. */
 class CacheFixture extends TriTextureRes

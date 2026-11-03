@@ -4,7 +4,10 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CjsSchema, meta, type, blue } from "../../../src/blue/schema/index.js";
+import { CjsSchema, meta, type } from "../../../src/blue/schema/index.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 test("lookups on a registered class return the one table registration built", () =>
 {

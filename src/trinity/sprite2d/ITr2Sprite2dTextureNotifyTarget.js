@@ -12,7 +12,6 @@ import { meta } from "#schema";
 // declares it as its own plain C++ interface (not a BLUE_INTERFACE), so it has
 // no Blue exposure. Implemented in Carbon by Tr2TexturedSpriteObject
 // (Tr2SpriteObject.h:121) and Tr2Sprite2dLayer (Tr2Sprite2dLayer.h:18).
-import { blue } from "#schema";
 
 /**
  * Receives change notifications from a Sprite2D texture it registered with.

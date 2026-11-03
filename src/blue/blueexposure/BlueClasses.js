@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: blueexposure/BlueClasses.h
 // Source: blueexposure/BlueClasses.cpp
 // Source: blueexposure/include/BlueTypes.h:409-419 (Be::ClassRegistration)
 // Source: blueexposure/include/Find.h, blueexposure/Find.cpp (the Find functions, as statics)
+import { exposure as be } from "#be";
 //
 // The registry behind `blue.classes` (`BeClasses`).
 //
@@ -36,7 +36,7 @@ import { exposure as be } from "#be";
 // blueexposure/TypeInfo.cpp:66-190 (PyGetTypeInfo), blueexposure/Find.cpp:147-246
 // (FindSingle, PyFindImpl).
 import { registerClass, unregisterClass, getClassRegistration, getClassRegistrations, BeClasses, setBeClasses } from "./classes/registry.js";
-import { CjsSchema, meta, blue } from "#schema";
+import { CjsSchema, meta } from "#schema";
 import { getCarbonTypeDefinition, inferCarbonTypeFromCpp } from "../schema/types/carbonTypes.js";
 import { mappedInterfaces, ownMappedInterfaces, exposureChainTo } from "../compose/interface.js";
 import { IBlueClasses } from "./IBlueClasses.js";
@@ -1128,17 +1128,17 @@ export class BlueClasses extends IBlueClasses
 
 
 CjsSchema.exposure.mapInterface(IBlueClasses)(BlueClasses);
-CjsSchema.decorateMethod(BlueClasses, "CreateInstance", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetClassTypes", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "LiveCount", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "LockCount", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetWrapperList", blue.method);
+CjsSchema.decorateMethod(BlueClasses, "CreateInstance", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "GetClassTypes", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "LiveCount", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "LockCount", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "GetWrapperList", CjsSchema.blue.method);
 CjsSchema.decorateMethod(BlueClasses, "LiveList", be.mapMethod(), meta.notUsed);
-CjsSchema.decorateMethod(BlueClasses, "ProcessAllPendingDeletes", blue.method, meta.noop);
-CjsSchema.decorateMethod(BlueClasses, "Copy", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "Find", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetTypeInfo", blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetPersistedClassesReport", blue.method);
+CjsSchema.decorateMethod(BlueClasses, "ProcessAllPendingDeletes", CjsSchema.blue.method, meta.noop);
+CjsSchema.decorateMethod(BlueClasses, "Copy", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "Find", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "GetTypeInfo", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "GetPersistedClassesReport", CjsSchema.blue.method);
 CjsSchema.blue.define(BlueClasses, {
   className: "BlueClasses",
   unused: [

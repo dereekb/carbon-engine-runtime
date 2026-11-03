@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/CollisionAvoidance.h
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/CollisionAvoidance.cpp
 import { IBehavior } from "./IBehavior.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { ProcessPriority } from "./enums.js";
 

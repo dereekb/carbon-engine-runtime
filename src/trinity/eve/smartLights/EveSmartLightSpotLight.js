@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; the renderer obligation remains explicit.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2Light } from "../lights/Tr2Light.js";
 import { EveSmartLightPointLight } from "./EveSmartLightPointLight.js";
 import { num } from "#math/num";

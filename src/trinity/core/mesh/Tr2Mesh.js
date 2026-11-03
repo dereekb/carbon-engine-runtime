@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2Mesh.h
 // Source: trinity/trinity/Tr2Mesh.cpp
 // Source: trinity/trinity/Tr2Mesh_Blue.cpp
-import { type, blue as legacyBlue } from "#schema";
+import { exposure as be } from "#be";
+import { type } from "#schema";
 import { BlueAsyncRes, IsMatch, blue, IInitialize, INotify } from "#blue";
 import { Tr2MeshBase } from "./Tr2MeshBase.js";
 import { Tr2SerializedMorphAnimation } from "./Tr2SerializedMorphAnimation.js";
@@ -44,7 +44,7 @@ export class Tr2Mesh extends Tr2MeshBase
   geometry = null;
 
   /** m_lowResGeometryResource: the stand-in rendered while the authored mesh loads. */
-  @legacyBlue.read
+  @be.mapAttribute(be.READ)
   /** Carbon: m_lowResGeometryResource (trinity/trinity/Tr2Mesh.h:93).
    */
   @type.object.ref("TriGeometryRes")

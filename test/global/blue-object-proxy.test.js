@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 // blue/blue is raw source (no decorators), so its own tests import src.
 import { blue, BlueObjectProxy, CcpTime, IBlueObjectBuilder, IBlueObjectProxy, IUnloadable } from "../../src/blue/blue/index.js";
-import { CjsSchema, blue as legacyBlue } from "../../src/blue/schema/index.js";
+import { CjsSchema } from "../../src/blue/schema/index.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 // The LOD holder is decorated character source, so it comes from npm/dist,
 // with that build's own Blue realm. Until npm/dist is rebuilt from a source

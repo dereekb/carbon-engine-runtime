@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveSpaceObjectChild.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveSpaceObjectChild.cpp
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { Origin } from "../../generated/eve/child/enums.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";

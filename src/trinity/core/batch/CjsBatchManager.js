@@ -1,4 +1,4 @@
-import { CjsSchema, type, blue, meta } from "#schema";
+import { CjsSchema, type, meta } from "#schema";
 // CarbonEngineJS composition class (no Carbon counterpart).
 //
 // Library-level batch orchestrator: one per backend/CjsLibrary. Owns the

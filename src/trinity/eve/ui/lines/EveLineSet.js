@@ -4,7 +4,7 @@ import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
 // Source: trinity/trinity/Eve/UI/EveLineSet.cpp
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 // Hand-maintained after promotion from generated schema intake.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 import { IEveTransform } from "../../IEveTransform.js";
 import { mat4 } from "#math/mat4";

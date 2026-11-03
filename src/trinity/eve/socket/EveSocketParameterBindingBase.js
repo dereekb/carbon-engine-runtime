@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SocketParameters/EveSocketParameter.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { exposure as be } from "#be";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { IEveSocketParameter } from "./IEveSocketParameter.js";
 
 /**
@@ -19,8 +19,7 @@ export class EveSocketParameterBindingBase extends IEveSocketParameter
 {
 
   /** name (m_name =) */
-  @blue.readwrite
-  @blue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.string
   name = "";
 

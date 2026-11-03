@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: audio/src/AudEmitter.h + AudEmitter.cpp
+import { exposure as be } from "#be";
 // Hand-owned since 2026-07-18 (behavior port); the generator skips this file.
 // Verify against audio/AudEmitter.json.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 import { IBlueEventListener, IBluePlacementObserver } from "#blue";
 import { quat } from "#math/quat";

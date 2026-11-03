@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Shader/Tr2Material.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /** Maps a named effect value onto a contiguous shader-register span. */
 @meta.carbon("Tr2EffectParam")

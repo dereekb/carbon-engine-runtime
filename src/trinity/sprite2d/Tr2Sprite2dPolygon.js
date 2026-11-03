@@ -6,7 +6,7 @@ import { BlueList, IListNotify } from "#blue";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dPolygon_Blue.cpp
 // Promoted to hand-maintained source 2026-08-22; portable value helpers are maintained here.
 import { Tr2SpriteObjectPickState } from "../generated/sprite2d/enums.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2TexturedSpriteObject } from "./Tr2TexturedSpriteObject.js";
 import { Tr2Sprite2dTriangle } from "./Tr2Sprite2dTriangle.js";
 import { Tr2Sprite2dVertex } from "./Tr2Sprite2dVertex.js";

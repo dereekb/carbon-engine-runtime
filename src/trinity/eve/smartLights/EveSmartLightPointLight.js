@@ -1,11 +1,11 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightPointLight.h
+import { exposure as be } from "#be";
 import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
 import { EveSmartLightBaseGroup } from "./EveSmartLightBaseGroup.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { type, blue as legacyBlue } from "#schema";
+import { type } from "#schema";
 import { IsMatch, blue } from "#blue";
 import { EveEntity } from "../EveEntity.js";
 import { resolveGroupColor } from "../../eve/smartLights/EveSmartLightBaseGroup.js";
@@ -149,28 +149,23 @@ export class EveSmartLightPointLight extends EveEntity
   // this class carries these fields).
 
   /** m_selectedColor (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM] (EveSmartLightBaseGroup.h:31) */
-  @legacyBlue.notify
-  @legacyBlue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
   @type.int32
-  @legacyBlue.readwrite
   factionColor = -1;
 
   /** m_useFactionColor (bool) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:32) */
-  @legacyBlue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.boolean
-  @legacyBlue.readwrite
   useFactionColor = false;
 
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] (EveSmartLightBaseGroup.h:29) */
-  @legacyBlue.persist
+  @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("IEveSmartLightGroupAttributeModifier")
-  @legacyBlue.read
   attributeModifiers = [];
 
   /** m_color (Color) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:30) */
-  @legacyBlue.persist
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.color
-  @legacyBlue.readwrite
   customColor = color.createLinear();
 
   /** m_lightType (Tr2Light::LIGHT_TYPE) - POINT_LIGHT here, SPOT_LIGHT on the subclass (EveSmartLightPointLight.cpp:15). */

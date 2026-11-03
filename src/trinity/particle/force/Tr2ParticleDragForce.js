@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Particle/Tr2ParticleDragForce.h
 // Source: trinity/trinity/Particle/Tr2ParticleDragForce.cpp
 // Source: trinity/trinity/Particle/Tr2ParticleDragForce_Blue.cpp
+import { exposure as be } from "#be";
 import { vec3 } from "#math/vec3";
 import { ITr2ParticleForce } from "./ITr2ParticleForce.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /** Linear particle drag: a force proportional to velocity and opposing it. */

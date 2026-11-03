@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2ScalarExprKeyCurve.h
 // Source: trinity/trinity/Curves/Tr2ScalarExprKeyCurve.cpp
 // Source: trinity/trinity/Curves/Tr2ScalarExprKeyCurve_Blue.cpp
+import { exposure as be } from "#be";
 import { num } from "#math/num";
 import { BlueList, ITriFunction, IInitialize, ITriCurveLength } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2CurveInterpolation } from "../enums.js";
 import { Tr2ScalarExprKey } from "../key/Tr2ScalarExprKey.js";
 import "../../generated/include/enums.js";

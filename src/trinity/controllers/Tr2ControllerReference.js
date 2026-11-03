@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Tr2ControllerReference.h
 // Source: trinity/trinity/Controllers/Tr2ControllerReference.cpp
 // Source: trinity/trinity/Controllers/Tr2ControllerReference_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch, blue, INotify, IInitialize, BlueClasses } from "#blue";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { type } from "#schema";

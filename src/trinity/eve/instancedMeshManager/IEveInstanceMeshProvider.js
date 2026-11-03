@@ -1,6 +1,5 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Eve/EveInstancedMeshManager.h:297-302
-import { blue } from "#schema";
 
 
 /**

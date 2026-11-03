@@ -1,10 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/TransformModifiers/EveChildModifierCameraOrientedRotationConstrained.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
-import { blue } from "#schema";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 
 

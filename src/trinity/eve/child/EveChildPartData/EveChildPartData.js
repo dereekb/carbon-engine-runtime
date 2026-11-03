@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildPartData.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildPartData.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildPartData_Blue.cpp
-import { meta, type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { meta, type } from "#schema";
 import { IEveSpaceObjectChild } from "../IEveSpaceObjectChild.js";
 
 import { EveSpaceObjectChild } from "../EveSpaceObjectChild.js";

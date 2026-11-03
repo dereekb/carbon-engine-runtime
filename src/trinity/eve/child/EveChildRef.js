@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildRef.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildRef.cpp
+import { exposure as be } from "#be";
 import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../EveEntity.js";
 import { ITr2SoundEmitterOwner } from "../ITr2SoundEmitterOwner.js";

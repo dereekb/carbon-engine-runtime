@@ -8,7 +8,7 @@ import { box3 } from "#math/box3";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { IEveSpaceObjectAttachment } from "../IEveSpaceObjectAttachment.js";
 import { EveSpotlightLight } from "./EveSpotlightLight.js";
 import { EveSpotlightSetSpotlightData } from "./EveSpotlightSetSpotlightData.js";

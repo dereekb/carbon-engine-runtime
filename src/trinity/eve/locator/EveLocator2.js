@@ -3,7 +3,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveLocator2.h
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveLocator2.cpp
 import { mat4 } from "#math/mat4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

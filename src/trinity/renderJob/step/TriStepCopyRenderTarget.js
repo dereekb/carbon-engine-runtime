@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/RenderJob/TriStepCopyRenderTarget.h
 // Source: trinity/trinity/RenderJob/TriStepCopyRenderTarget.cpp
 // Source: trinity/trinity/RenderJob/TriStepCopyRenderTarget_Blue.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { CjsSchema, type } from "#schema";
 import { TriRenderJob } from "../TriRenderJob.js";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { ALResult, Failed, Tr2TextureSubresource } from "#trinityal";

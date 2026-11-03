@@ -6,7 +6,7 @@ import { ccpHashFnv1 } from "#utils";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDataMgr.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDataMgr.cpp
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFDataMgr_Blue.cpp
-import { CjsSchema, blue } from "#schema";
+import { CjsSchema } from "#schema";
 import { BeObjectMetadata } from "#blue";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";

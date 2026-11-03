@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionChildEffect.h
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionChildEffect.cpp
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionChildEffect_Blue.cpp
+import { exposure as be } from "#be";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { blue, BlueClasses } from "#blue";
 import { CjsSchema, type } from "#schema";

@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2QuaternionLerpCurve.h
 // Source: trinity/trinity/Curves/Tr2QuaternionLerpCurve.cpp
+import { exposure as be } from "#be";
 import { num } from "#math/num";
 import { quat } from "#math/quat";
 import { ITriFunction, ITriQuaternionFunction, ITriCurveLength } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CcpTime } from "#blue";
 
 

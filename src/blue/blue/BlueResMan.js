@@ -9,7 +9,7 @@ import { BlueOS } from "./BlueOS.js";
 import { blue as blueService } from "./blue.js";
 import { CjsLoadingObject } from "./CjsLoadingObject.js";
 import { IBlueCallbackMan } from "./IBlueCallbackMan.js";
-import { CjsSchema, meta, blue } from "#schema";
+import { CjsSchema, meta } from "#schema";
 import { BlueResManQueue, IBlueResMan } from "./IBlueResMan.js";
 import { IBlueEvents } from "./IBlueEvents.js";
 import { IRoot } from "../blueexposure/IRoot.js";
@@ -4462,20 +4462,20 @@ function createExtensionTargetError(resource, message, cause = null)
 CjsSchema.meta.inherit(IBlueResMan, IBlueEvents)(BlueResMan);
 CjsSchema.exposure.mapInterface(IBlueResMan)(BlueResMan);
 
-CjsSchema.decorateMethod(BlueResMan, "GetResource", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "GetResourceW", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "WaitUrgent", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "SaveObject", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "SaveObjectW", blue.method);
+CjsSchema.decorateMethod(BlueResMan, "GetResource", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "GetResourceW", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "WaitUrgent", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "SaveObject", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "SaveObjectW", CjsSchema.blue.method);
 for (const method of [ "ReserveBackgroundLoadMemory", "ReleaseBackgroundLoadMemory" ])
 {
-  CjsSchema.decorateMethod(BlueResMan, method, blue.method, meta.noop);
+  CjsSchema.decorateMethod(BlueResMan, method, CjsSchema.blue.method, meta.noop);
 }
-CjsSchema.decorateMethod(BlueResMan, "SetUrgentResourceLoads", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "Wait", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "RegisterResourceConstructor", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "UnregisterResourceConstructor", blue.method);
-CjsSchema.decorateMethod(BlueResMan, "LoadObject", blue.method);
+CjsSchema.decorateMethod(BlueResMan, "SetUrgentResourceLoads", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "Wait", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "RegisterResourceConstructor", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "UnregisterResourceConstructor", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "LoadObject", CjsSchema.blue.method);
 CjsSchema.exposure.define("BlueResMan")(BlueResMan);
 
 

@@ -3,7 +3,7 @@ import { IRoot } from "../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/TriFloat.h
 // Source: trinity/trinity/TriFloat.cpp
 // Source: trinity/trinity/TriFloat_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * Separate scalar storage that breaks stretch-to-binding reference cycles.

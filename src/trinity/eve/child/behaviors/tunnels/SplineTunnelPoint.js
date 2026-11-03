@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SplineTunnelGroup.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema eve/child/behaviors/SplineTunnelPoint.json.).
-import { type, blue, meta } from "#schema";
+import { type, meta } from "#schema";
 import { vec3 } from "#math/vec3";
 
 /** SplineTunnelPoint (eve/child/behaviors) - generated from schema shapeHash da3b5246.... */

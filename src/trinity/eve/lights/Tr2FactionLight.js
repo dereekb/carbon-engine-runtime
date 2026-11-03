@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Lights/Tr2FactionLight.h
+import { exposure as be } from "#be";
 import { IsMatch, IInitialize, INotify } from "#blue";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { IEveInheritPropertiesOwner } from "../IEveInheritPropertiesOwner.js";
 import { color } from "#math/color";
 import { quat } from "#math/quat";

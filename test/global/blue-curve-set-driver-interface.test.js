@@ -3,10 +3,13 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { ICurveSetDriver, blue } from "@carbonenginejs/runtime/blue";
-import { CjsSchema, blue as legacyBlue } from "@carbonenginejs/runtime/schema";
+import { CjsSchema } from "@carbonenginejs/runtime/schema";
 import { ICurveSetDriver as DirectDriver } from "../../src/blue/blue/ICurveSetDriver.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const legacyBlue = CjsSchema.blue;
 
 test("ICurveSetDriver has one registered identity and an abstract native method", () =>
 {

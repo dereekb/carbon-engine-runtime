@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Lights/Tr2SpotLight.cpp
 // Source: trinity/trinity/Lights/Tr2SpotLight_Blue.cpp
+import { exposure as be } from "#be";
 import { IInitialize, INotify } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { color } from "#math/color";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

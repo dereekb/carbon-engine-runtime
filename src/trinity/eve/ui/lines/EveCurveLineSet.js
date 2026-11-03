@@ -1,12 +1,12 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/UI/EveCurveLineSet.h
 // Source: trinity/trinity/Eve/UI/EveCurveLineSet.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 import { IEveTransform } from "../../IEveTransform.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2CurveLineSet } from "../../../core/line/Tr2CurveLineSet.js";
 import { Tr2PerObjectDataStandard } from "../../../core/rawData/perObjectData/Tr2PerObjectDataStandard.js";
 import { Tr2Effect } from "../../../shader/Tr2Effect.js";
@@ -91,7 +91,7 @@ export class EveCurveLineSet extends Tr2CurveLineSet
    * @implemented
    */
 
-  @blue.contextual(["camera"])
+  @be.contextual(["camera"])
   UpdateVisibility(updateContext, parentTransform)
   {
     this.isVisible = false;

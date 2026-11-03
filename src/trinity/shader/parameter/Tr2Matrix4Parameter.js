@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/Tr2Matrix4Parameter.h
 // Source: trinity/trinity/Shader/Parameter/Tr2Matrix4Parameter.cpp
+import { exposure as be } from "#be";
 import { ITriEffectParameter } from "./ITriEffectParameter.js";
 import { ITriReroutable } from "../../core/ITriReroutable.js";
 import { mat4 } from "#math/mat4";

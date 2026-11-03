@@ -14,7 +14,7 @@
 // Field types verified against Carbon EveUpdateContext.h. Per the engine field
 // rules: only reference fields (rootRef) default to null; scalars default to
 // 0 / false and fixed vectors to a zero vector.
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { TriFrustum } from "../core/view/TriFrustum.js";
 import { CcpTime } from "../../blue/blue/CcpTime.js";

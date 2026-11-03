@@ -6,7 +6,7 @@ import { random as carbonRandom } from "#math/random";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { ITriVectorFunction } from "#blue";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { CcpTime } from "#blue";
 
 

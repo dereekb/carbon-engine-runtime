@@ -17,7 +17,7 @@ import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { color } from "#math/color";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { TriBatchType } from "#consts/graphics";
 import { EveBasicPerObjectData } from "../../core/rawData/perObjectData/EveBasicPerObjectData.js";
 import { Tr2Transform } from "../../core/Tr2Transform.js";

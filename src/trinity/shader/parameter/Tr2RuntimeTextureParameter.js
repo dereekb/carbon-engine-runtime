@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/Tr2RuntimeTextureParameter.h
 // Source: trinity/trinity/Shader/Parameter/Tr2RuntimeTextureParameter.cpp
 // Source: trinity/trinity/Shader/Parameter/Tr2RuntimeTextureParameter_Blue.cpp
+import { exposure as be } from "#be";
 import { IsMatch, INotify, IBlueResource } from "#blue";
 import { CjsSchema, type } from "#schema";
 import { FNV1_INITIAL, hashFnv1Identity } from "#utils/hash";

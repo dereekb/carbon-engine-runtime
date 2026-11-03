@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject.h
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject.cpp
 // Source: trinity/trinity/Sprite2d/Tr2SpriteObject_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; portable sprite state is maintained here.
 import { type } from "#schema";
 import { ITr2SpriteObject } from "./ITr2SpriteObject.js";

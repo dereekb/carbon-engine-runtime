@@ -3,7 +3,7 @@ import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/EvePicking.h
 // Source: trinity/trinity/Eve/EvePicking.cpp
 // Source: trinity/trinity/Eve/EvePicking_Blue.cpp
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * Holds the outstanding picking readbacks and the most recent pick result -

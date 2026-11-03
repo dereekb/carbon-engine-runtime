@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { IRoot } from "../../blue/blueexposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:187-195
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /** Stores named material parameters and assigns them to a target with an optional parameter prefix.
  * Native IRoot-only data with a self-only Blue table. Owned authored records

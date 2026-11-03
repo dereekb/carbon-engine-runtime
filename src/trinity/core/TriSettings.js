@@ -2,7 +2,6 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/TriSettings.h
 //   trinity/trinity/TriSettings_Blue.cpp
-import { blue } from "#schema";
 
 
 /**

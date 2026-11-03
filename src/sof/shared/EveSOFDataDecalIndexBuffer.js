@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:101-111
-import { type, blue } from "#schema";
+import { exposure as be } from "#be";
+import { type } from "#schema";
 import { ICustomPersist } from "#blue";
 
 /**
@@ -16,7 +16,7 @@ export class EveSOFDataDecalIndexBuffer extends ICustomPersist
 {
 
   /** m_indexBuffer (std::vector<uint32_t>), persisted as the custom binary block "indexBuffer" [PERSISTONLY] */
-  @blue.persistOnly
+  @be.mapAttribute(be.PERSISTONLY)
   @type.binary
   @type.uint32Array
   indexBuffer = new Uint32Array(0);

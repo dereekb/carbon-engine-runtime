@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2BoundingLineSet.h
+import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IsMatch } from "#blue";
 import { Tr2LineSet } from "./Tr2LineSet.js";
 import { vec3 } from "#math/vec3";

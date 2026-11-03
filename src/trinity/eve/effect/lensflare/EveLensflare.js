@@ -1,8 +1,8 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EveLensflare.h
 // Source: trinity/trinity/Eve/EveLensflare.cpp
+import { exposure as be } from "#be";
 // Hand-maintained after promotion from generated schema intake.
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BlueList, IInitialize, IListNotify } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2Controller } from "../../../controllers/ITr2Controller/ITr2Controller.js";

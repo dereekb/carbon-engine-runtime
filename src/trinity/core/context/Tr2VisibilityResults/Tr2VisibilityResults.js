@@ -4,7 +4,6 @@ import { exposure as be } from "#be";
 //   trinity/trinity/Tr2VisibilityResults.cpp
 //   trinity/trinity/Tr2VisibilityResults_Blue.cpp
 
-import { blue } from "#schema";
 
 /**
  * Collects the visibility events a visibility executor emits, for the interior

@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CjsSchema, blue } from "../../src/blue/schema/index.js";
+import { CjsSchema } from "../../src/blue/schema/index.js";
 import { BlueList } from "../../src/blue/blueexposure/BlueList.js";
 import { IList } from "../../src/blue/blueexposure/IList.js";
 import { IListNotify } from "../../src/blue/blueexposure/IListNotify.js";
 import { DictReader, CreateAnchorTable } from "../../src/blue/blue/DictReader.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 import { ReadValues } from "../../src/blue/blue/values.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
 const itemName = "BlueListReaderItem";

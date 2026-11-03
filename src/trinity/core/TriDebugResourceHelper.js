@@ -1,6 +1,6 @@
 // Source: trinity/trinity/TriDebugResourceHelper.h
 // Source: trinity/trinity/TriDebugResourceHelper.cpp
-import { meta, blue } from "#schema";
+import { meta } from "#schema";
 import { Tr2Effect } from "../shader/Tr2Effect.js";
 import { Tr2EffectStateManager } from "../shader/Tr2EffectStateManager.js";
 import { Tr2VertexDefinition } from "./vertex/Tr2VertexDefinition/Tr2VertexDefinition.js";

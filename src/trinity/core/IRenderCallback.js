@@ -1,6 +1,5 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/IRenderCallback.h
-import { blue } from "#schema";
 
 
 /**

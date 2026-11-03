@@ -1,9 +1,9 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTransform.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTransform.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dTransform_Blue.cpp
+import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; portable point transforms are maintained here.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { Tr2Sprite2dContainerBase } from "./Tr2Sprite2dContainerBase.js";
 import { vec2 } from "#math/vec2";
 import { mat4 } from "#math/mat4";

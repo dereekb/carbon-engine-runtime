@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildAudio.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildAudio.cpp
+import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { INotify } from "../../../blue/blueexposure/INotify.js";
 import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";

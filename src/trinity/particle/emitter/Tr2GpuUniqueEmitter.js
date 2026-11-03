@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Particle/Tr2GpuUniqueEmitter.h
 // Source: trinity/trinity/Particle/Tr2GpuUniqueEmitter.cpp
 // Source: trinity/trinity/Particle/Tr2GpuUniqueEmitter_Blue.cpp
+import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { type } from "#schema";

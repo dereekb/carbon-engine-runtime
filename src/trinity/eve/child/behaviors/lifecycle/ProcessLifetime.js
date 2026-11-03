@@ -7,7 +7,7 @@ import { IInitialize } from "../../../../../blue/blueexposure/IInitialize.js";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/ProcessLifetime.cpp
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IBehavior } from "../IBehavior.js";
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { SplineTunnelGroup } from "../tunnels/SplineTunnelGroup.js";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";

@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/IEveFiringEffectElement.h
+import { exposure as be } from "#be";
 import { EveEntity } from "./EveEntity.js";
 
 

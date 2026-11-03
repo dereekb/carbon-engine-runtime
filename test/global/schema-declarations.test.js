@@ -2,7 +2,10 @@ import * as schemaExports from "../../src/blue/schema/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { exposure as be } from "#be";
-import { CjsSchema, meta, type, blue } from "../../src/blue/schema/index.js";
+import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
+
+/** Carbon-stamped legacy decorators; #schema no longer exports them. */
+const blue = CjsSchema.blue;
 
 function withoutOwners(entries)
 {

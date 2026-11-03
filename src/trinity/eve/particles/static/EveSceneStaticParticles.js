@@ -6,7 +6,7 @@ import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#int
 // Source: trinity/trinity/Eve/Renderable/EveSceneStaticParticles.h
 import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
 //   trinity/trinity/Eve/Renderable/EveSceneStaticParticles.cpp
-import { CjsSchema, type, blue } from "#schema";
+import { CjsSchema, type } from "#schema";
 import * as CcpLog from "../../../../global/logging/ccpLog.js";
 import { Tr2RuntimeInstanceData } from "../../../core/mesh/Tr2RuntimeInstanceData.js";
 import { mat4 } from "#math/mat4";

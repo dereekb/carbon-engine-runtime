@@ -2,7 +2,7 @@ import { meta } from "#schema";
 // Source: trinity/trinity/Eve/SpaceObject/Children/IEveSpaceObjectChild.h
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 
 /**

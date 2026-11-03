@@ -1,11 +1,11 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/TriSequencer.h
 // Source: trinity/trinity/TriSequencer.cpp
+import { exposure as be } from "#be";
 import { vec4 } from "#math/vec4";
 import { ITriFunction, ITriColorFunction, BlueList, ITriCurveLength } from "#blue";
 import { ITriDuration } from "../ITriDuration.js";
 import { mappedInterfaces } from "../../../blue/compose/interface.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { TRIOPERATOR } from "#consts/graphics";
 import "#consts/graphics/trinityEnums";
 

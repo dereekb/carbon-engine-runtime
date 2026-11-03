@@ -1,7 +1,7 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2TextureAtlas.h
 // Source: trinity/trinity/Tr2TextureAtlas.cpp
 // Source: trinity/trinity/Tr2TextureAtlas_Blue.cpp
+import { exposure as be } from "#be";
 // Hand-maintained port. Two forced divergences run through the whole file, and
 // each is marked again at its sites:
 //

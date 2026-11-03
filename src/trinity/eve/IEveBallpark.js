@@ -1,5 +1,5 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Include/IEveBallpark.h
+import { exposure as be } from "#be";
 import { IEveReferencePoint } from "./IEveReferencePoint.js";
 
 

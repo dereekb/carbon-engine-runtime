@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/UI/EveLineContainer.cpp
 // Source: trinity/trinity/Eve/UI/EveLineContainer_Blue.cpp
 // Promoted to hand-maintained source 2026-08-22; this is portable CPU graph policy.
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 
 
@@ -92,7 +92,7 @@ export class EveLineContainer extends IRoot
    * @implemented
    */
 
-  @blue.contextual(["camera"])
+  @be.contextual(["camera"])
   UpdateVisibility(updateContext, parentTransform)
   {
     if (this.display && this.lineSet)

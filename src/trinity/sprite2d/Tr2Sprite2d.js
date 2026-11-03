@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2d.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2d.cpp
+import { exposure as be } from "#be";
 import { type } from "#schema";
 import { Tr2Sprite2dD3DVertex } from "./Tr2Sprite2dD3DVertex.js";
 import { Tr2SpriteObjectPickState, Tr2SpriteObjectEffect } from "../generated/sprite2d/enums.js";

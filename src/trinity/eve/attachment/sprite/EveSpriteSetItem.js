@@ -6,7 +6,7 @@ import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
 import { vec3 } from "#math/vec3";
 import { box3 } from "#math/box3";
 import { vec4 } from "#math/vec4";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * One authored sprite: its bone attachment, position, blink timing, scale range,

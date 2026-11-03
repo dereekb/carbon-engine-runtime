@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 // Source: trinity/trinity/Sprite2d/ITr2Sprite2dRenderer.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema sprite2d/Tr2Sprite2dClipRect.json.).
-import { type, blue } from "#schema";
+import { type } from "#schema";
 
 /**
  * Carries the bounds of a Sprite2D clipping rectangle as a plain native struct.

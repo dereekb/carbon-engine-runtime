@@ -1,6 +1,6 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.h
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.cpp
+import { exposure as be } from "#be";
 import { ITriQuaternionFunction, ITriCurveLength, ITriFunction } from "#blue";
 import { quat } from "#math/quat";
 import { type } from "#schema";

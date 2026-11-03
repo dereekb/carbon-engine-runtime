@@ -1,10 +1,10 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.h
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.cpp
+import { exposure as be } from "#be";
 import { IInitialize } from "#blue";
 import { INotify } from "#blue";
 import { ITriEffectParameter } from "./ITriEffectParameter.js";
-import { type, blue } from "#schema";
+import { type } from "#schema";
 import { FNV1_INITIAL, hashFnv1Floats, hashFnv1String } from "#utils/hash";
 
 
