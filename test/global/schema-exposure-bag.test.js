@@ -145,3 +145,34 @@ test("a row naming a method the class lacks, or an unknown kind, fails at class 
     await assert.rejects(load(`@be.define({ name: "BagProbeNoMethod", members: [ [ be.METHOD, "Missing", be.WRAP ] ] }) export class A {}`), /no method "Missing"/);
     await assert.rejects(load(`@be.define({ name: "BagProbeBadKind", members: [ [ "nonsense", "x" ] ] }) export class B { x = 0; }`), /unknown row kind/);
 });
+
+test("a float-array row (MAPFLOATARRAYSIZE) and an index row name parts of one vector member", async () =>
+{
+    const { BagProbeSphere, BagProbeSphereRows } = await load(`
+      @be.define({ name: "BagProbeSphere", members: [
+        [ be.ATTR_FLOAT_ARRAY, "center", be.READ, 3, "sphere" ],
+        [ be.ATTR_INDEX, "radius", be.READ, 3, "sphere" ]
+      ] })
+      export class BagProbeSphere { @type.vec4 sphere = new Float32Array([ 1, 2, 3, 4 ]); }
+      @be.define("BagProbeSphereRows")
+      export class BagProbeSphereRows
+      {
+        @be.mapAttribute__Index(be.READ, "radius", 3)
+        @be.mapFloatArraySize(be.READ, 3, "center")
+        @type.vec4 sphere = new Float32Array([ 1, 2, 3, 4 ]);
+      }`);
+    const members = Class => Object.fromEntries(CjsSchema.getSchema(Class).members.map(member => [ member.name, member ]));
+    const bag = members(BagProbeSphere), rows = members(BagProbeSphereRows);
+    assert.deepEqual(Object.keys(bag).sort(), [ "center", "radius" ]);
+    assert.deepEqual(byName(Object.values(bag)), byName(Object.values(rows)), "the bag and the per-member decorators agree");
+    assert.deepEqual([ bag.center.key, bag.center.index, bag.center.size, bag.center.type.kind ], [ "sphere", 0, 3, "vec3" ]);
+    assert.deepEqual([ bag.radius.key, bag.radius.index, bag.radius.type.kind ], [ "sphere", 3, "float32" ]);
+    assert.equal(bag.center.exposure.macro, "MAPFLOATARRAYSIZE");
+
+    const { readDictionaryValue, writeDictionaryValue } = await import("../../src/blue/blue/dictionaryDeclarations.js");
+    const sphere = new BagProbeSphere();
+    assert.deepEqual(Array.from(readDictionaryValue(sphere, bag.center)), [ 1, 2, 3 ]);
+    assert.equal(readDictionaryValue(sphere, bag.radius), 4);
+    writeDictionaryValue(sphere, bag.center, [ 7, 8, 9 ]);
+    assert.deepEqual(Array.from(sphere.sphere), [ 7, 8, 9, 4 ], "the floats are the member's own");
+});
