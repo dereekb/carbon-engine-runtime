@@ -6,7 +6,7 @@ import { YamlWriter } from "../../npm/dist/blue/blue/YamlWriter.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { ICustomPersist } from "../../npm/dist/blue/blueexposure/ICustomPersist.js";
-import { IBlueObjectProxy } from "../../npm/dist/blue/blue/IBlueObjectProxy.js";
+import { IBlueObjectProxy } from "../../npm/dist/blue/blue/interfaces/IBlueObjectProxy.js";
 import { IRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
 import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";

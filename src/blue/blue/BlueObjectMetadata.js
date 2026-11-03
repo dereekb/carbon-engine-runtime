@@ -12,7 +12,7 @@
 // `BeObjectMetadata` is the process-wide instance (BlueObjectMetadata.cpp:8-9).
 import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
-import { IBlueObjectMetadata } from "./IBlueObjectMetadata.js";
+import { IBlueObjectMetadata } from "./interfaces/IBlueObjectMetadata.js";
 
 /** `BlueStdResult` codes the store answers with (`BLUE_STD_RESULT_OK`, `BLUE_STD_RESULT_KEY_ERROR`). */
 const OK = { ok: true, message: "" };

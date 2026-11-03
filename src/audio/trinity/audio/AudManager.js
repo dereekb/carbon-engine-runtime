@@ -8,7 +8,7 @@ import { exposure as be } from "#be";
 // (AudGameObjResource.backend); state, bank tracking, deferred-event flush,
 // monitored-parameter refcounts, and prioritization wiring are pure logic.
 import { IRoot } from "#blueexposure/IRoot";
-import { IBlueEvents } from "#blue/IBlueEvents";
+import { IBlueEvents } from "#blue/interfaces/IBlueEvents";
 import { meta, type } from "#schema";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 import { AudGeometry } from "./AudGeometry.js";

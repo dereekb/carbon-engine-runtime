@@ -10,7 +10,7 @@
 import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
 import { BlueFileUtil } from "./BlueFileUtil.js";
-import { BlueResFileSystemForm, IBlueResFileSystem } from "./IBlueResFileSystem.js";
+import { BlueResFileSystemForm, IBlueResFileSystem } from "./interfaces/IBlueResFileSystem.js";
 
 const { substituteBlackForRedInFilename, substituteRedForBlackInFilename } = BlueFileUtil;
 
@@ -90,8 +90,8 @@ export class BlueResFileSystemRemote extends IBlueResFileSystem
    *   "not here", so the next file system is asked.
    * @renamed GetStreamFromPathW
    * @param {string} resPath Res path.
-   * @param {import("./IBlueResFileSystem.js").BlueResFileSystemRequest} _request Always the bytes form.
-   * @returns {Promise<import("./IBlueResFileSystem.js").BlueResFileSystemResult|null>} The bytes, or `null`.
+   * @param {import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemRequest} _request Always the bytes form.
+   * @returns {Promise<import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The bytes, or `null`.
    */
   async GetStreamFromPath(resPath, _request)
   {

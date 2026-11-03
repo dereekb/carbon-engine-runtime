@@ -19,8 +19,8 @@
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { blue } from "./blue.js";
-import { IBlueObjectProxy } from "./IBlueObjectProxy.js";
-import { IUnloadable } from "./IUnloadable.js";
+import { IBlueObjectProxy } from "./interfaces/IBlueObjectProxy.js";
+import { IUnloadable } from "./interfaces/IUnloadable.js";
 
 
 /** `BlueObjectProxy` - Carbon's lazily built, unloadable holder for one object. */
@@ -28,7 +28,7 @@ export class BlueObjectProxy extends IBlueObjectProxy
 {
   /**
    * `m_builder` - builds the object on demand; let go by SetObject and Freeze.
-   * @type {import("./IBlueObjectBuilder.js").IBlueObjectBuilder|null}
+   * @type {import("./interfaces/IBlueObjectBuilder.js").IBlueObjectBuilder|null}
    */
   builder = null;
 
@@ -128,7 +128,7 @@ export class BlueObjectProxy extends IBlueObjectProxy
    * previous builder is told first.
    *
    * @implemented
-   * @param {import("./IBlueObjectBuilder.js").IBlueObjectBuilder|null} builder The builder.
+   * @param {import("./interfaces/IBlueObjectBuilder.js").IBlueObjectBuilder|null} builder The builder.
    * @param {number} objectMarker Marker passed back to the builder.
    * @returns {void}
    */

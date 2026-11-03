@@ -8,12 +8,12 @@ import { MotherLode, getMotherLodeKey } from "./MotherLode.js";
 import { BlueOS } from "./BlueOS.js";
 import { blue as blueService } from "./blue.js";
 import { CjsLoadingObject } from "./CjsLoadingObject.js";
-import { IBlueCallbackMan } from "./IBlueCallbackMan.js";
+import { IBlueCallbackMan } from "./interfaces/IBlueCallbackMan.js";
 import { CjsSchema, meta } from "#schema";
-import { BlueResManQueue, IBlueResMan } from "./IBlueResMan.js";
-import { IBlueEvents } from "./IBlueEvents.js";
+import { BlueResManQueue, IBlueResMan } from "./interfaces/IBlueResMan.js";
+import { IBlueEvents } from "./interfaces/IBlueEvents.js";
 import { IRoot } from "../blueexposure/IRoot.js";
-import { IBlueResource } from "./IBlueResource.js";
+import { IBlueResource } from "./interfaces/IBlueResource.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { hasOwnThen } from "#utils/object";
 import {
@@ -4345,7 +4345,7 @@ export class BlueResMan
    * The `?query` is the resource's own parameters: the file is opened without
    * it, as `DoOpenStream` opens `m_path.substr(0, query)` (BlueAsyncRes.cpp:380-384).
    *
-   * @param {import("./IBluePaths.js").IBluePaths} paths The paths service.
+   * @param {import("./interfaces/IBluePaths.js").IBluePaths} paths The paths service.
    * @param {string} path Resource path.
    * @param {object} options Read options; `signal` aborts the read.
    * @returns {Promise<Uint8Array>} The bytes.

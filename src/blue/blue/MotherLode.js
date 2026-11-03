@@ -8,8 +8,8 @@ import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/valida
 // Source: blue/src/MotherLode.cpp
 import { normalizeResourcePath } from "#utils/path";
 import { BlueOS } from "./BlueOS.js";
-import { ICacheable } from "./ICacheable.js";
-import { IBlueResource } from "./IBlueResource.js";
+import { ICacheable } from "./interfaces/ICacheable.js";
+import { IBlueResource } from "./interfaces/IBlueResource.js";
 import { IRoot } from "../blueexposure/IRoot.js";
 
 /** Bytes in one megabyte, for the cache sizes below. */

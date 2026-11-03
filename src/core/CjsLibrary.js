@@ -5,8 +5,8 @@ import { BlueCallbackManTicker } from "../blue/blue/BlueCallbackManTicker.js";
 import { CjsSchema, meta } from "#schema";
 import { CjsOverlay2D } from "./overlay/CjsOverlay2D.js";
 
-import { IBlueResFileSystem } from "../blue/blue/IBlueResFileSystem.js";
-import { IBlueDynamicResourceConstructor } from "../blue/blue/IBlueDynamicResourceConstructor.js";
+import { IBlueResFileSystem } from "../blue/blue/interfaces/IBlueResFileSystem.js";
+import { IBlueDynamicResourceConstructor } from "../blue/blue/interfaces/IBlueDynamicResourceConstructor.js";
 import { DefaultConfiguration } from "./configuration.js";
 import { ImageIO } from "../resource/imageio/ImageIO.js";
 import { TriSettingsRegistrar } from "../trinity/core/TriSettingsRegistrar.js";

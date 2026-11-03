@@ -7,7 +7,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Resources/Tr2EffectRes_Blue.cpp
 import { CjsSchema } from "#schema";
 import { BlueAsyncRes } from "#blue/BlueAsyncRes";
-import { ICacheable } from "#blue/ICacheable";
+import { ICacheable } from "#blue/interfaces/ICacheable";
 import { validateResourcePayload } from "../resources/resourceBoundary.js";
 import { CjsCarbonEffectFormat } from "../../resource/formats/carbonEffect/index.js";
 import { Tr2Shader } from "./Tr2Shader.js";

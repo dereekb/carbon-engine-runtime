@@ -8,12 +8,12 @@ import {
   ITriColorFunction, ITriCurveLength, blue
 } from "@carbonenginejs/runtime/blue";
 import { CjsSchema } from "@carbonenginejs/runtime/schema";
-import { ITriFunction as DirectFunction } from "../../src/blue/blue/ITriFunction.js";
-import { ITriScalarFunction as DirectScalar } from "../../src/blue/blue/ITriScalarFunction.js";
-import { ITriVectorFunction as DirectVector } from "../../src/blue/blue/ITriVectorFunction.js";
-import { ITriQuaternionFunction as DirectQuaternion } from "../../src/blue/blue/ITriQuaternionFunction.js";
-import { ITriColorFunction as DirectColor } from "../../src/blue/blue/ITriColorFunction.js";
-import { ITriCurveLength as DirectLength } from "../../src/blue/blue/ITriCurveLength.js";
+import { ITriFunction as DirectFunction } from "../../src/blue/blue/interfaces/ITriFunction.js";
+import { ITriScalarFunction as DirectScalar } from "../../src/blue/blue/interfaces/ITriScalarFunction.js";
+import { ITriVectorFunction as DirectVector } from "../../src/blue/blue/interfaces/ITriVectorFunction.js";
+import { ITriQuaternionFunction as DirectQuaternion } from "../../src/blue/blue/interfaces/ITriQuaternionFunction.js";
+import { ITriColorFunction as DirectColor } from "../../src/blue/blue/interfaces/ITriColorFunction.js";
+import { ITriCurveLength as DirectLength } from "../../src/blue/blue/interfaces/ITriCurveLength.js";
 import { ITriDuration } from "../../src/trinity/curves/ITriDuration.js";
 import { ITr2ValueBinding } from "../../src/trinity/curves/ITr2ValueBinding.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";

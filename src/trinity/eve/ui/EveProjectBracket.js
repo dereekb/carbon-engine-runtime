@@ -1,6 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/blueexposure/IRoot.js";
-import { ITriFunction } from "../../../blue/blue/ITriFunction.js";
+import { ITriFunction } from "../../../blue/blue/interfaces/ITriFunction.js";
 // Source: trinity/trinity/Eve/UI/EveProjectBracket.h
 // Source: trinity/trinity/Eve/UI/EveProjectBracket.cpp
 // Source: trinity/trinity/Eve/UI/EveProjectBracket_Blue.cpp

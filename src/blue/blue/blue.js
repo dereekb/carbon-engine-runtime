@@ -10,10 +10,10 @@ import "../../global/consts/renderContext/formats.js";
 import "../../global/consts/renderContext/upscaling.js";
 import "../../global/consts/renderContext/resources.js";
 import { CjsSchema } from "#schema";
-import { IBlueEvents } from "./IBlueEvents.js";
-import { IBlueResMan } from "./IBlueResMan.js";
-import { IBluePaths } from "./IBluePaths.js";
-import { IBlueOS } from "./IBlueOS.js";
+import { IBlueEvents } from "./interfaces/IBlueEvents.js";
+import { IBlueResMan } from "./interfaces/IBlueResMan.js";
+import { IBluePaths } from "./interfaces/IBluePaths.js";
+import { IBlueOS } from "./interfaces/IBlueOS.js";
 import { ICjsWwiseSoundEngine } from "../../global/audio/ICjsWwiseSoundEngine.js";
 import { CjsBlue } from "./CjsBlue.js";
 

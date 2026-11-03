@@ -8,10 +8,10 @@ import {
 } from "@carbonenginejs/runtime/blue";
 import { CjsSchema } from "@carbonenginejs/runtime/schema";
 import { vec3 } from "@carbonenginejs/runtime/math/vec3";
-import { IBlueEventListener as DirectListener } from "../../src/blue/blue/IBlueEventListener.js";
-import { IBluePlacementObserver as DirectObserver } from "../../src/blue/blue/IBluePlacementObserver.js";
-import { IBlueMultiPlacementObserver as DirectMultiObserver } from "../../src/blue/blue/IBlueMultiPlacementObserver.js";
-import { PositionDescription as DirectPosition } from "../../src/blue/blue/PositionDescription.js";
+import { IBlueEventListener as DirectListener } from "../../src/blue/blue/interfaces/IBlueEventListener.js";
+import { IBluePlacementObserver as DirectObserver } from "../../src/blue/blue/interfaces/IBluePlacementObserver.js";
+import { IBlueMultiPlacementObserver as DirectMultiObserver } from "../../src/blue/blue/interfaces/IBlueMultiPlacementObserver.js";
+import { PositionDescription as DirectPosition } from "../../src/blue/blue/interfaces/PositionDescription.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */

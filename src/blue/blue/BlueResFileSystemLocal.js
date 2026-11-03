@@ -15,7 +15,7 @@ import { exposure as be } from "#be";
 // Carbon's paths service creates its local file system itself (BluePaths.cpp:
 // 52-64); here the orchestrator registers one, or none.
 import { CjsSchema } from "#schema";
-import { BlueResFileSystemForm, IBlueResFileSystem } from "./IBlueResFileSystem.js";
+import { BlueResFileSystemForm, IBlueResFileSystem } from "./interfaces/IBlueResFileSystem.js";
 
 /**
  * `BlueResFileSystemLocal` - the local disk as a res file system. Every member

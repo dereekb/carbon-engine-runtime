@@ -5,8 +5,8 @@ import { exposure as be } from "#be";
 // Verify against audio/AudEventCurve.json.
 import { type } from "#schema";
 import { IInitialize } from "#blueexposure/IInitialize";
-import { ITriFunction } from "#blue/ITriFunction";
-import { ITriCurveLength } from "#blue/ITriCurveLength";
+import { ITriFunction } from "#blue/interfaces/ITriFunction";
+import { ITriCurveLength } from "#blue/interfaces/ITriCurveLength";
 import { TRIEXTRAPOLATION } from "#consts/graphics";
 import { AudEmitter } from "./AudEmitter.js";
 import { IsWwiseInitPosition } from "./AudGameObjResource.js";

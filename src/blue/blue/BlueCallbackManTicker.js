@@ -1,6 +1,6 @@
 import { CjsSchema } from "#schema";
 import { BlueOS } from "./BlueOS.js";
-import { IBlueEvents } from "./IBlueEvents.js";
+import { IBlueEvents } from "./interfaces/IBlueEvents.js";
 
 // Ours: drives a `BlueCallbackMan` started with `Start` from Blue's pump while
 // it runs its entries through `Update`, because the host has no workers or

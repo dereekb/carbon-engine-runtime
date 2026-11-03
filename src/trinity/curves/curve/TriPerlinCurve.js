@@ -5,8 +5,8 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/TriSequencer.cpp
 // Source: trinity/trinity/TriMath.cpp
 import { meta, type } from "#schema";
-import { ITriScalarFunction } from "#blue/ITriScalarFunction";
-import { ITriFunction } from "#blue/ITriFunction";
+import { ITriScalarFunction } from "#blue/interfaces/ITriScalarFunction";
+import { ITriFunction } from "#blue/interfaces/ITriFunction";
 import { CcpTime } from "#blue/CcpTime";
 import { perlin1DCarbon } from "#math/noise";
 

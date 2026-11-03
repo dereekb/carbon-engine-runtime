@@ -2,9 +2,9 @@
 // Host-driven clock and tick pump; scheduler, IO and process services remain on the interface.
 import { CjsSchema } from "#schema";
 import { BeInfo } from "./BeInfo.js";
-import { IBlueEvents } from "./IBlueEvents.js";
-import { IBlueOS } from "./IBlueOS.js";
-import { ISimTimeRebaseNotify } from "./ISimTimeRebaseNotify.js";
+import { IBlueEvents } from "./interfaces/IBlueEvents.js";
+import { IBlueOS } from "./interfaces/IBlueOS.js";
+import { ISimTimeRebaseNotify } from "./interfaces/ISimTimeRebaseNotify.js";
 import { CcpTime } from "./CcpTime.js";
 
 /** 100ns ticks in a millisecond. */

@@ -10,7 +10,7 @@
 // under `MAIN_THREAD`. One realm needs no mutex.
 import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
-import { IBlueThreadMonitor } from "./IBlueThreadMonitor.js";
+import { IBlueThreadMonitor } from "./interfaces/IBlueThreadMonitor.js";
 
 /** `BlueThreadMonitor` - remembers each thread's last reported status. */
 export class BlueThreadMonitor extends IBlueThreadMonitor

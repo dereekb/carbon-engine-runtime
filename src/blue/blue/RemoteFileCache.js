@@ -34,7 +34,7 @@ import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { IRoot } from "../blueexposure/IRoot.js";
 import { normalizeResPath } from "#utils/path";
-import { BlueResFileSystemForm } from "./IBlueResFileSystem.js";
+import { BlueResFileSystemForm } from "./interfaces/IBlueResFileSystem.js";
 
 /**
  * `RemoteFileCache` - a build's file index, and the downloads and local cache

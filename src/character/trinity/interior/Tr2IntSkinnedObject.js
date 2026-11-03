@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IBluePlacementObserver } from "#blue/IBluePlacementObserver";
+import { IBluePlacementObserver } from "#blue/interfaces/IBluePlacementObserver";
 import { ITr2Interior } from "./ITr2Interior.js";
 import { ITr2InteriorDynamic } from "./ITr2InteriorDynamic.js";
 import { ITr2Pickable } from "../../../trinity/core/ITr2Pickable.js";

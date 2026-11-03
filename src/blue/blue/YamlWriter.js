@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { Alias, Document, Pair, Scalar, YAMLMap, YAMLSeq, isSeq } from "yaml";
 import { CjsSchema } from "#schema";
 import { IRootWriter } from "./IRootWriter.js";
-import { BLUE_OBJECT_METADATA_KEY } from "./IBlueObjectMetadata.js";
+import { BLUE_OBJECT_METADATA_KEY } from "./interfaces/IBlueObjectMetadata.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 /**

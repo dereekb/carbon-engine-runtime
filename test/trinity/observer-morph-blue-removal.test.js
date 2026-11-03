@@ -10,7 +10,7 @@ import { DictWriter } from "../../npm/dist/blue/blue/DictWriter.js";
 import { Tr2SerializedMorphAnimation } from "../../npm/dist/trinity/core/mesh/Tr2SerializedMorphAnimation.js";
 import { Tr2Mesh } from "../../npm/dist/trinity/core/mesh/Tr2Mesh.js";
 import { TriGeometryRes } from "../../npm/dist/resource/index.js";
-import { ITriObserverLocal } from "../../npm/dist/blue/blue/ITriObserverLocal.js";
+import { ITriObserverLocal } from "../../npm/dist/blue/blue/interfaces/ITriObserverLocal.js";
 import { TriObserverLocal, SendEventToAudEmitter } from "../../npm/dist/trinity/core/variable/TriObserverLocal.js";
 import { EveChildContainer } from "../../npm/dist/trinity/eve/child/EveChildContainer.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";

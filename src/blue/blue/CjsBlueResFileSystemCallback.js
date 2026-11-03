@@ -9,7 +9,7 @@
 // have the file; it may be asynchronous, and it may reject for any other
 // failure.
 import { CjsSchema } from "#schema";
-import { BlueResFileSystemForm, IBlueResFileSystem } from "./IBlueResFileSystem.js";
+import { BlueResFileSystemForm, IBlueResFileSystem } from "./interfaces/IBlueResFileSystem.js";
 import { normalizeResPath } from "#utils/path";
 
 /** `CjsBlueResFileSystemCallback` - `res:` paths read through a page's function.
@@ -85,8 +85,8 @@ export class CjsBlueResFileSystemCallback extends IBlueResFileSystem
    * @adapted
    * @renamed GetStreamFromPathW
    * @param {string} path Res path.
-   * @param {import("./IBlueResFileSystem.js").BlueResFileSystemRequest} request Always the bytes form, and a signal.
-   * @returns {Promise<import("./IBlueResFileSystem.js").BlueResFileSystemResult|null>} The bytes, or `null`.
+   * @param {import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemRequest} request Always the bytes form, and a signal.
+   * @returns {Promise<import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The bytes, or `null`.
    */
   async GetStreamFromPath(path, request)
   {

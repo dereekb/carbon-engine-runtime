@@ -22,10 +22,10 @@
 //   and on resume.
 import { exposure as be } from "#be";
 import { CjsSchema, meta } from "#schema";
-import { IBlueCallbackMan } from "./IBlueCallbackMan.js";
+import { IBlueCallbackMan } from "./interfaces/IBlueCallbackMan.js";
 import { BlueCallbackManThreadData } from "./BlueCallbackManThreadData.js";
 import { BlueOS } from "./BlueOS.js";
-import { IBlueThreadMonitor } from "./IBlueThreadMonitor.js";
+import { IBlueThreadMonitor } from "./interfaces/IBlueThreadMonitor.js";
 import { BeThreadMonitor, BlueThreadMonitor } from "./BlueThreadMonitor.js";
 import { ScopedThreadStatus } from "./ScopedThreadStatus.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";

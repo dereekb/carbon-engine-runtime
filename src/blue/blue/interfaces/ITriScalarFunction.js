@@ -1,7 +1,7 @@
 // Source: blue/include/ITriFunction.h:36-63
 import { CjsSchema, meta } from "#schema";
 import { ITriFunction } from "./ITriFunction.js";
-import { CcpTime } from "./CcpTime.js";
+import { CcpTime } from "../CcpTime.js";
 
 
 /**
