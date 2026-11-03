@@ -8,30 +8,34 @@ import { type, blue } from "#schema";
 import { EveChildRef } from "../../../../eve/child/EveChildRef.js";
 
 /** EveProceduralMethodThresholdParameter (eve/child/procedural/selection) - generated from schema shapeHash e31926d9.... */
-@be.define("EveProceduralMethodThresholdParameter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveProceduralMethodThresholdParameter",
+  inherit: [ INotify, IInitialize ],
+  // EveProceduralMethodThresholdParameter_Blue.cpp:10-17, in Carbon's order.
+  interfaces: [ INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "threshold", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "child", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveProceduralMethodThresholdParameter extends IRoot
 {
 
   _modified = false;
 
   /** m_child (EveChildRefPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("EveChildRef")
   child = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_threshold (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32

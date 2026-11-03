@@ -14,51 +14,56 @@ import { vec4 } from "#math/vec4";
  * A stretched link between a shield hull and an arc target: it orients itself
  * along the arc, keeps its own final world placement, and inherits the hull per-object values.
  */
-@be.define("EveChildLink")
-@be.mapInterface(EveChildMesh)
-@be.exposureChainTo(EveChildMesh)
+@be.define({
+  name: "EveChildLink",
+  // EveChildLink_Blue.cpp:10-23, in Carbon's order.
+  interfaces: [ EveChildMesh ],
+  members: [
+    [ be.ATTR, "currentDirection", be.READ ],
+    [ be.ATTR, "currentDistance", be.READ ],
+    [ be.ATTR, "target", be.READWRITE ],
+    [ be.ATTR, "linkStrength", be.READ ],
+    [ be.ATTR, "linkBarrier", be.READWRITE ],
+    [ be.ATTR, "targetRadius", be.READWRITE ],
+    [ be.ATTR, "linkStrengthCurves", be.READ | be.PERSIST ],
+    [ be.ATTR, "linkStrengthBindings", be.READ | be.PERSIST ]
+  ],
+  chainTo: EveChildMesh
+})
 export class EveChildLink extends EveChildMesh
 {
 
   /** m_linkStrengthCurves (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   linkStrengthCurves = [];
 
   /** m_linkStrengthBindings (PITr2ValueBindingVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ValueBinding")
   linkStrengthBindings = [];
 
   /** m_linkBarrier (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   linkBarrier = 1;
 
   /** m_currentDistance (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentDistance = 0;
 
   /** m_currentDirection (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   currentDirection = vec3.fromValues(0, 0, 1);
 
   /** m_target (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   target = null;
 
   /** m_linkStrength (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   linkStrength = 0;
 
   /** m_targetRadius (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   targetRadius = 0.5;
 

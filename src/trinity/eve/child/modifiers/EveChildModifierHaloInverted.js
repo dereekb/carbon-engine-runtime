@@ -12,8 +12,12 @@ import { EveChildModifierTransformCommon } from "./EveChildModifierTransformComm
  * face the camera - the inverse of a halo, and despite the name not a subclass
  * of one.
  */
-@be.define("EveChildModifierHaloInverted")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierHaloInverted",
+  // EveChildModifierHaloInverted_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: []
+})
 export class EveChildModifierHaloInverted extends IEveChildTransformModifier
 {
   static scratch = {

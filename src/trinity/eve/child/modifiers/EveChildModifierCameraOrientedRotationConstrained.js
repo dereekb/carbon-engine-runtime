@@ -14,8 +14,12 @@ const UP = vec3.fromValues(0, 1, 0);
  * Transform modifier that yaws a child about world up until it faces the camera
  * in the horizontal plane, leaving its authored pitch and roll intact.
  */
-@be.define("EveChildModifierCameraOrientedRotationConstrained")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierCameraOrientedRotationConstrained",
+  // EveChildModifierCameraOrientedRotationConstrained_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: []
+})
 export class EveChildModifierCameraOrientedRotationConstrained extends IEveChildTransformModifier
 {
   static scratch = {

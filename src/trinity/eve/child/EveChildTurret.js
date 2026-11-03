@@ -39,30 +39,70 @@ const INVERSE_WORLD_SCRATCH = mat4.create();
  * barrels aim inside the sampled pose. Carbon instantiates it only from
  * serialized scene data - SOF never constructs one.
  */
-@be.define("EveChildTurret")
-@be.inherit(IInitialize, INotify)
-@be.exposureChainTo(EveChildMesh)
+@be.define({
+  name: "EveChildTurret",
+  inherit: [ IInitialize, INotify ],
+  // EveChildTurret_Blue.cpp:13-108, in Carbon's order.
+  members: [
+    [ be.ATTR, "isOnline", be.READWRITE ],
+    [ be.ATTR, "trackingInfluence", be.READ ],
+    [ be.ATTR, "maxTrackingTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "state", be.READ | be.PERSIST ],
+    [ be.PROP, "targetObject" ],
+    [ be.ATTR, "target", be.READ, "_target" ],
+    [ be.ATTR, "sysBoneHeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitchMax", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch01Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch01Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch02Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch02Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch03Factor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sysBonePitch03Offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxCyclingFirePos", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cyclingFireGroupCount", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentCyclingFiresPos", be.READ ],
+    [ be.ATTR, "firingEffect", be.HIDDEN, "_firingEffect" ],
+    [ be.PROP, "firingEffect" ],
+    [ be.ATTR, "firingEffectResPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "impactSize", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "impactBehaviour", be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.ImpactBehaviour" ],
+    [ be.ATTR, "turretMovementObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "playMovementSound", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "idleToTargetingMovementAudioEvent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "targetingToIdleMovementAudioEvent", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "EnterStateDeactive", be.WRAP ],
+    [ be.METHOD, "EnterStateIdle", be.WRAP ],
+    [ be.METHOD, "EnterStateTargeting", be.WRAP ],
+    [ be.METHOD, "EnterStateFiring", be.WRAP ],
+    [ be.METHOD, "EnterStateReloading", be.WRAP ],
+    [ be.METHOD, "ForceStateDeactive", be.WRAP ],
+    [ be.METHOD, "ForceStateTargeting", be.WRAP ],
+    [ be.METHOD, "GetFiringBoneWorldTransform", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ]
+  ],
+  chainTo: EveChildMesh
+})
 export class EveChildTurret extends EveChildMesh
 {
 
   /** Indicates if the turret is active; runtime toggle, not persisted. */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   isOnline = true;
 
   /** How much tracking is currently applied; runtime-derived. */
-  @be.mapAttribute(be.READ)
   @type.float32
   trackingInfluence = 0;
 
   /** How long tracking takes to fade in - and its influence ceiling. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxTrackingTime = 1;
 
   /** State of the turret (persisted but not editable). */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.int32
   state = EveTurretSet.State.STATE_IDLE;
@@ -70,82 +110,57 @@ export class EveChildTurret extends EveChildMesh
   // The eleven flat sysbone tunables Carbon re-exposes from the embedded
   // EveTurretAiming (EveChildTurret_Blue.cpp:25-35); same names and defaults
   // as EveTurretSet. Offsets are authored in degrees.
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBoneHeight = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sysBonePitchFactor = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchOffset = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sysBonePitchMin = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitchMax = 90;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sysBonePitch01Factor = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch01Offset = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sysBonePitch02Factor = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch02Offset = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sysBonePitch03Factor = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sysBonePitch03Offset = 0;
 
   /** If greater than one, firing cycles through this many muzzle groups. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   maxCyclingFirePos = 1;
 
   /** The number of muzzles in one cycle group, usually one. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   cyclingFireGroupCount = 1;
 
   /** Current muzzle id due to cycling; runtime-derived. */
-  @be.mapAttribute(be.READ)
   @type.uint32
   currentCyclingFiresPos = 0;
 
   /** Hidden native backing member m_firingEffect (protected, h:135); not persisted (EveChildTurret_Blue.cpp:42).
    * Carbon: EveChildTurret::m_firingEffect (trinity/trinity/Eve/SpaceObject/Children/EveChildTurret.h:135); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/Children/EveChildTurret_Blue.cpp:42).
    */
-  @be.mapAttribute(be.HIDDEN, "firingEffect")
 
   /** Carbon: m_firingEffect (trinity/trinity/Eve/SpaceObject/Children/EveChildTurret.h:135).
    */
@@ -159,7 +174,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveTurretFiringFX")
   get firingEffect()
   {
@@ -182,7 +196,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("ITriTargetable")
   get targetObject()
   {
@@ -200,14 +213,12 @@ export class EveChildTurret extends EveChildMesh
   }
 
   /** A res path to the redfile containing the primary firing effect. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.path("object")
   firingEffectResPath = "";
 
   /** Size of impacts; no impact when 0 or less. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
@@ -217,38 +228,32 @@ export class EveChildTurret extends EveChildMesh
    * What the impacts should hit (an ImpactBehaviour value).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildTurret_Blue.cpp:47); chooser ImpactBehaviourChooser (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:34).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.ImpactBehaviour")
   @type.int32
   @type.enum("trinity.ImpactBehaviour")
   impactBehaviour = EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR;
 
   /** The observer for turret movement sounds; positioned automatically. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriObserverLocal")
   turretMovementObserver = null;
 
   /** Whether mechanical movement sounds play when events are authored. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   playMovementSound = true;
 
   /** Audio event for mechanical noise when moving from idle to targeting. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   idleToTargetingMovementAudioEvent = "";
 
   /** Audio event for mechanical noise when moving from targeting to idle. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   targetingToIdleMovementAudioEvent = "";
 
   // Carbon m_target: created in the constructor with fade-on-locator-change
   // enabled (EveChildTurret.cpp:26-27); Blue exposes it READ-only.
-  @be.mapAttribute(be.READ, "target")
 
   @type.object.ref("EveTurretTarget")
   _target = new EveTurretTarget();
@@ -702,7 +707,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted defer this state transition while JS loads the firing effect.
    */
-  @be.mapMethodAndWrap()
   EnterStateDeactive()
   {
     if (this._pendingFiringEffectCalls)
@@ -741,7 +745,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted defer this state transition while JS loads the firing effect.
    */
-  @be.mapMethodAndWrap()
   EnterStateIdle()
   {
     if (this._pendingFiringEffectCalls)
@@ -785,7 +788,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted defer this state transition while JS loads the firing effect.
    */
-  @be.mapMethodAndWrap()
   EnterStateTargeting()
   {
     if (this._pendingFiringEffectCalls)
@@ -830,7 +832,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted defer this state transition while JS loads the firing effect.
    */
-  @be.mapMethodAndWrap()
   EnterStateFiring()
   {
     if (this._pendingFiringEffectCalls)
@@ -932,7 +933,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   EnterStateReloading()
   {
     const State = EveChildTurret.State;
@@ -963,7 +963,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ForceStateDeactive()
   {
     this.trackingInfluence = 0;
@@ -1009,7 +1008,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ForceStateTargeting()
   {
     this.trackingInfluence = this.maxTrackingTime;
@@ -1024,7 +1022,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetFiringBoneWorldTransform(muzzle, out)
   {
     if (!this.mesh || !this._firingEffect)
@@ -1275,7 +1272,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     if (this._pendingFiringEffectCalls)
@@ -1318,7 +1314,6 @@ export class EveChildTurret extends EveChildMesh
    *
    * @adapted defer forwarding until an asynchronous JS resource load finishes.
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     if (this._pendingFiringEffectCalls)

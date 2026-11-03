@@ -8,10 +8,19 @@ import { type, blue } from "#schema";
 import { EveChildRef } from "../../../../eve/child/EveChildRef.js";
 
 /** EveProceduralMethodCyclingParameter (eve/child/procedural/selection) - generated from schema shapeHash 90bcbbe1.... */
-@be.define("EveProceduralMethodCyclingParameter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveProceduralMethodCyclingParameter",
+  inherit: [ INotify, IInitialize ],
+  // EveProceduralMethodCyclingParameter_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "child", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "playDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "restartRequired", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reloadRequired", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveProceduralMethodCyclingParameter extends IRoot
 {
 
@@ -21,32 +30,27 @@ export class EveProceduralMethodCyclingParameter extends IRoot
   _hasLoaded = false;
 
   /** m_child (EveChildRefPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("EveChildRef")
   child = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_playDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   playDuration = 1;
 
   /** m_reloadRequired (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reloadRequired = false;
 
   /** m_restartRequired (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   restartRequired = true;

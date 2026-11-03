@@ -22,8 +22,12 @@ const DEBUG_TO = vec3.create();
 const DEBUG_COLOR = color.create();
 
 /** A spatial index that builds and incrementally rebalances a k-d tree over a group's drone agents and answers nearest-neighbour and multi-radius range queries against it. */
-@be.define("EveKDdroneManagementTree")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveKDdroneManagementTree",
+  inherit: [ IRoot ],
+  // EveKDdroneManagementTree_Blue.cpp:10-11, in Carbon's order.
+  members: []
+})
 export class EveKDdroneManagementTree extends IRoot
 {
 

@@ -27,115 +27,102 @@ const DEBUG_POSITION = vec3.create();
  * endpoints through one control point and emits the resulting chain as line
  * segments.
  */
-@be.define("EveBezierCurve")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(IEveLineSetPath)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveBezierCurve",
+  inherit: [ INotify, IInitialize ],
+  // EveBezierCurve_Blue.cpp:12-62, in Carbon's order.
+  interfaces: [ IEveLineSetPath, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "point1", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "point2", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "bezierPoint", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "completeness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "segments", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "segmentOffset", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lineWidth", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaleSegmentsByCompleteness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaleEndpoints", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "billboardObjects", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "objectScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "movementSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animValue", be.READ ]
+  ]
+})
 export class EveBezierCurve extends IEveLineSetPath
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   display = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   translation = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   point1 = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   point2 = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   bezierPoint = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.float32
   completeness = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   segments = 24;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.float32
   segmentOffset = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   lineWidth = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.boolean
   scaleSegmentsByCompleteness = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   scaleEndpoints = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.boolean
   billboardObjects = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   objectScale = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   movementSpeed = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   animValue = 0;
 

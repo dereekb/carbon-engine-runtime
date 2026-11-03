@@ -14,12 +14,16 @@ import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
  * position to a destination point, scaling it to the stretch length and centring
  * it on the midpoint.
  */
-@be.define("EveChildModifierStretch")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierStretch",
+  // EveChildModifierStretch_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: [
+    [ be.ATTR, "dest", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveChildModifierStretch extends IEveChildTransformModifier
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("ITriVectorFunction")
   dest = null;
 

@@ -17,66 +17,71 @@ const MAX_FRAMES = 4;
 const Status = Object.freeze({ Working: 0, StopRequested: 1, DataReady: 2, Aborted: 3 });
 
 /** Holds the editable voxel dimensions, bitmap and texture backing, control balls, and curve sets used to author a cloud volume. */
-@be.define("EveCloudEditableVolume")
-@be.inherit(IInitialize, INotify, IListNotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveCloudEditableVolume",
+  inherit: [ IInitialize, INotify, IListNotify ],
+  // EveCloudEditableVolume_Blue.cpp:25-41, in Carbon's order.
+  interfaces: [ IListNotify, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "texture", be.READ ],
+    [ be.ATTR, "bitmap", be.READ ],
+    [ be.ATTR, "balls", be.READ | be.PERSIST ],
+    [ be.ATTR, "width", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "height", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "depth", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "renderDebugInfo", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animated", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.METHOD, "OnVolumeModified", be.WRAP ],
+    [ be.METHOD, "Rasterize", be.WRAP ]
+  ]
+})
 export class EveCloudEditableVolume
 {
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** m_animated (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   animated = false;
 
   /** m_balls (PEveCloudVolumeBallVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveCloudVolumeBall")
   balls = new BlueList(EveCloudVolumeBall);
 
   /** m_bitmap (Tr2HostBitmapPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2HostBitmap")
   bitmap = new Tr2HostBitmap();
 
   /** m_texture (TriTextureResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriTextureRes")
   texture = new TriTextureRes();
 
   /** m_depth (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   depth = 64;
 
   /** m_height (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   height = 64;
 
   /** m_width (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   width = 64;
 
   /** m_renderDebugInfo (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   renderDebugInfo = false;
@@ -144,7 +149,6 @@ export class EveCloudEditableVolume
    *   pending iterator is drained here. Like native cpp:76-97 this explicit call
    *   can block, and returns the current snapshot without waiting for a successor.
    */
-  @be.mapMethodAndWrap()
   Rasterize()
   {
     this.OnVolumeModified();
@@ -222,7 +226,6 @@ export class EveCloudEditableVolume
    *   short event-loop slices. This is cooperative CPU work, not parallel work.
    *   Curve sampling and snapshot allocation remain synchronous, as in Carbon.
    */
-  @be.mapMethodAndWrap()
   OnVolumeModified()
   {
     if (this._updating) return;

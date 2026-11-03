@@ -9,8 +9,12 @@ import { EveChildModifierTransformCommon } from "./EveChildModifierTransformComm
  * Transform modifier that aligns a child to the screen plane, leaving it facing
  * the viewer whatever the camera does.
  */
-@be.define("EveChildModifierBillboard2D")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierBillboard2D",
+  // EveChildModifierBillboard2D_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: []
+})
 export class EveChildModifierBillboard2D extends IEveChildTransformModifier
 {
   /**

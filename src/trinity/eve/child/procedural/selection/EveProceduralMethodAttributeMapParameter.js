@@ -8,24 +8,28 @@ import { type, blue } from "#schema";
 import { EveChildRef } from "../../../../eve/child/EveChildRef.js";
 
 /** EveProceduralMethodAttributeMapParameter (eve/child/procedural/selection) - generated from schema shapeHash 5880f54c.... */
-@be.define("EveProceduralMethodAttributeMapParameter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveProceduralMethodAttributeMapParameter",
+  inherit: [ INotify, IInitialize ],
+  // EveProceduralMethodAttributeMapParameter_Blue.cpp:10-16, in Carbon's order.
+  interfaces: [ INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "child", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveProceduralMethodAttributeMapParameter extends IRoot
 {
 
   _modified = false;
 
   /** m_child (EveChildRefPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("EveChildRef")
   child = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

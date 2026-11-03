@@ -11,12 +11,16 @@ import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
  * Transform modifier that moves a child with the camera, either pinning its
  * translation to the view position or offsetting it by the view position.
  */
-@be.define("EveChildModifierTranslateWithCamera")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierTranslateWithCamera",
+  // EveChildModifierTranslateWithCamera_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: [
+    [ be.ATTR, "attachedToCamera", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveChildModifierTranslateWithCamera extends IEveChildTransformModifier
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   attachedToCamera = false;
 

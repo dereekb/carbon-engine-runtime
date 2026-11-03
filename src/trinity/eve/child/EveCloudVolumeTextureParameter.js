@@ -14,25 +14,30 @@ import { ITriEffectResourceParameter } from "../../shader/parameter/ITriEffectRe
 import { FNV1_INITIAL, hashFnv1Identity } from "#utils/hash";
 
 /** Binds an editable cloud volume to a named effect texture parameter and records whether the effect consumes it. */
-@be.define("EveCloudVolumeTextureParameter")
-@be.inherit(ITriEffectResourceParameter)
-@be.mapInterface(ITriEffectResourceParameter)
+@be.define({
+  name: "EveCloudVolumeTextureParameter",
+  inherit: [ ITriEffectResourceParameter ],
+  // EveCloudEditableVolume_Blue.cpp:49-55, in Carbon's order.
+  interfaces: [ ITriEffectResourceParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "volume", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isUsedByEffect", be.READ ]
+  ]
+})
 export class EveCloudVolumeTextureParameter extends IRoot
 {
 
   /** m_volume (EveCloudEditableVolumePtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveCloudEditableVolume")
   volume = null;
 
   /** m_isUsedByEffect (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isUsedByEffect = false;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

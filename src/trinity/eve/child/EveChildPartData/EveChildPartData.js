@@ -17,10 +17,13 @@ import { EveChildPartDataPartData } from "./EveChildPartDataPartData.js";
  * below is the JavaScript adaptation required for the documented state to
  * survive a model values round trip.
  */
-@be.define("EveChildPartData")
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.exposureChainTo(EveSpaceObjectChild)
+@be.define({
+  name: "EveChildPartData",
+  // EveChildPartData_Blue.cpp:11-14, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild ],
+  members: [],
+  chainTo: EveSpaceObjectChild
+})
 export class EveChildPartData extends EveSpaceObjectChild
 {
   @meta.mapAttribute(meta.PERSIST)

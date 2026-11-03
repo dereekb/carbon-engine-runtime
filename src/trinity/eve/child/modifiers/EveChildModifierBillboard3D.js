@@ -14,12 +14,16 @@ import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
  * billboard that preserves the child's authored scale or as a free one that
  * screen-aligns and then re-aligns along the camera direction.
  */
-@be.define("EveChildModifierBillboard3D")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierBillboard3D",
+  // EveChildModifierBillboard3D_Blue.cpp:10-13, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: [
+    [ be.ATTR, "fixed", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveChildModifierBillboard3D extends IEveChildTransformModifier
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   fixed = false;
 

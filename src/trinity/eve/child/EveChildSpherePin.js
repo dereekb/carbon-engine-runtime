@@ -11,53 +11,58 @@ import { vec4 } from "#math/vec4";
  * centre normal, radius, rotation, alpha threshold and colour to its own
  * per-object shader data.
  */
-@be.define("EveChildSpherePin")
-@be.exposureChainTo(EveChildMesh)
+@be.define({
+  name: "EveChildSpherePin",
+  // EveChildSpherePin_Blue.cpp:10-22, in Carbon's order.
+  members: [
+    [ be.ATTR, "centerNormal", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pinRadius", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pinMaxRadius", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pinRotation", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pinColor", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.NOTIFY | be.PERSIST, "pinColor" ],
+    [ be.ATTR, "pinAlphaThreshold", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ]
+  ],
+  chainTo: EveChildMesh
+})
 export class EveChildSpherePin extends EveChildMesh
 {
 
   /** m_pinColor (Color) [READWRITE, NOTIFY, PERSIST]; "color" is its second name (EveChildSpherePin_Blue.cpp:17-18). */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST, "color")
   @type.color
   pinColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** m_centerNormal (Vector3) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.vec3
   centerNormal = vec3.create();
 
   /** m_pinMaxRadius (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   pinMaxRadius = 0.2;
 
   /** m_pinRadius (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   pinRadius = 0;
 
   /** m_pinRotation (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   pinRotation = 0;
 
   /** m_pinAlphaThreshold (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32

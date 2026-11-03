@@ -11,8 +11,12 @@ import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
  * Transform modifier that screen-aligns a child and shrinks it by the squared
  * facing of its local Z axis toward the camera, so a halo fades out edge-on.
  */
-@be.define("EveChildModifierHalo")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierHalo",
+  // EveChildModifierHalo_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: []
+})
 export class EveChildModifierHalo extends IEveChildTransformModifier
 {
   static scratch = {

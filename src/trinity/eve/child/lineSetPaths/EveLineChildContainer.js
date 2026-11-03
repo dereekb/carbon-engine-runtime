@@ -18,11 +18,21 @@ const DEBUG_SPHERE = vec4.create();
 
 
 /** Groups line-path children beneath a shared transform with naming and visibility state. */
-@be.define("EveLineChildContainer")
-@be.inherit(INotify, IListNotify)
-@be.mapInterface(IEveLineSetPath)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
+@be.define({
+  name: "EveLineChildContainer",
+  inherit: [ INotify, IListNotify ],
+  // EveLineChildContainer_Blue.cpp:10-22, in Carbon's order.
+  interfaces: [ IEveLineSetPath, INotify, IListNotify ],
+  members: [
+    [ be.ATTR, "lines", be.READ | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveLineChildContainer extends IEveLineSetPath
 {
 
@@ -35,18 +45,15 @@ export class EveLineChildContainer extends IEveLineSetPath
   _regenerate = false;
 
   /** m_isVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = true;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
@@ -57,28 +64,24 @@ export class EveLineChildContainer extends IEveLineSetPath
    * (EveLineChildContainer_Blue.cpp:20), so moving the container regenerates
    * its points.
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST, NOTIFY] (EveLineChildContainer_Blue.cpp:21). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST, NOTIFY] (EveLineChildContainer_Blue.cpp:22). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_lines (PIEveLineSetPathVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveLineSetPath")
   lines = [];

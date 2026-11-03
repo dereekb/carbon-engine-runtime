@@ -12,21 +12,23 @@ import { type, blue } from "#schema";
  * Transform modifier that applies a fixed scale, rotation and translation ahead
  * of the child's own transform.
  */
-@be.define("EveChildModifierSRT")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierSRT",
+  // EveChildModifierSRT_Blue.cpp:11-17, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: [
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveChildModifierSRT extends IEveChildTransformModifier
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();

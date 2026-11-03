@@ -40,10 +40,42 @@ const DEBUG_CAP1 = vec3.fromValues(0, 0, -1);
 const DEBUG_COLOR = color.create();
 
 /** A drone-group component that builds and drives the group's shared booster and ambient or halo flare effects and contributes their point light to the scene. */
-@be.define("BehaviorGroupBooster")
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "BehaviorGroupBooster",
+  inherit: [ IInitialize, INotify ],
+  // BehaviorGroupBooster_Blue.cpp:10-48, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "flareCount", be.READ ],
+    [ be.ATTR, "boosterOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "atlasIndex0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "atlasIndex1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boosterEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloFlareEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "haloFlareOffset", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "haloFlareScale", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "haloFlareBrightness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "haloFlareColor", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "haloFlareNoiseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloFlareNoiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloFlareNoiseOctaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ambientFlareEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ambientFlareOffset", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ambientFlareScale", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ambientFlareBrightness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ambientFlareColor", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ambientFlareNoiseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ambientFlareNoiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ambientFlareNoiseOctaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayBoosters", be.READWRITE ],
+    [ be.ATTR, "displayHazeFlare", be.READWRITE ],
+    [ be.ATTR, "displayAmbientFlare", be.READWRITE ],
+    [ be.METHOD, "InitializeEffects", be.WRAP ]
+  ]
+})
 export class BehaviorGroupBooster extends IRoot
 {
 
@@ -92,168 +124,141 @@ export class BehaviorGroupBooster extends IRoot
   _ambientFlareHash = 0;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_boosterOffset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   boosterOffset = vec3.create();
 
   /** m_atlasIndex0 (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   atlasIndex0 = 0;
 
   /** m_atlasIndex1 (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   atlasIndex1 = 0;
 
   /** m_boosterEffect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   boosterEffect = null;
 
   /** m_flareCount (unsigned int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   flareCount = 0;
 
   /** m_displayAmbientFlare (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   displayAmbientFlare = true;
 
   /** m_displayBoosters (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   displayBoosters = true;
 
   /** m_displayHazeFlare (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   displayHazeFlare = true;
 
   /** m_ambientFlareBrightness (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   ambientFlareBrightness = 0;
 
   /** m_haloFlareBrightness (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   haloFlareBrightness = 0;
 
   /** m_ambientFlareColor (Color) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
   ambientFlareColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_haloFlareColor (Color) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
   haloFlareColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_lightColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   lightColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_ambientFlareEffect (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   ambientFlareEffect = null;
 
   /** m_haloFlareEffect (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   haloFlareEffect = null;
 
   /** m_ambientFlareNoiseAmplitude (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   ambientFlareNoiseAmplitude = 0.2;
 
   /** m_haloFlareNoiseAmplitude (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   haloFlareNoiseAmplitude = 0.2;
 
   /** m_ambientFlareNoiseOctaves (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   ambientFlareNoiseOctaves = 1;
 
   /** m_haloFlareNoiseOctaves (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   haloFlareNoiseOctaves = 1;
 
   /** m_ambientFlareNoiseSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   ambientFlareNoiseSpeed = 1;
 
   /** m_haloFlareNoiseSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   haloFlareNoiseSpeed = 1;
 
   /** m_ambientFlareOffset (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   ambientFlareOffset = vec3.create();
 
   /** m_haloFlareOffset (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   haloFlareOffset = vec3.create();
 
   /** m_lightRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightRadius = 3.5;
 
   /** m_ambientFlareScale (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   ambientFlareScale = vec3.fromValues(1, 1, 1);
 
   /** m_haloFlareScale (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
@@ -266,7 +271,6 @@ export class BehaviorGroupBooster extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   InitializeEffects()
   {
     if (this.boosterEffect === null)

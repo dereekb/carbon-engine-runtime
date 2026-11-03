@@ -10,12 +10,16 @@ import { IEveChildTransformModifier } from "./IEveChildTransformModifier.js";
  * Transform modifier that rigidly attaches a child to one bone of the parent's
  * animation bone palette.
  */
-@be.define("EveChildModifierAttachToBone")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierAttachToBone",
+  // EveChildModifierAttachToBone_Blue.cpp:12-16, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: [
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveChildModifierAttachToBone extends IEveChildTransformModifier
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   boneIndex = -1;
 

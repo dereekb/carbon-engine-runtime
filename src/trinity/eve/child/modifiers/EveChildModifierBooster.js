@@ -12,8 +12,12 @@ import { EveChildModifierTransformCommon } from "./EveChildModifierTransformComm
  * constant apparent size as camera distance changes, then re-centres it so its
  * near edge stays put.
  */
-@be.define("EveChildModifierBooster")
-@be.mapInterface(IEveChildTransformModifier)
+@be.define({
+  name: "EveChildModifierBooster",
+  // EveChildModifierBooster_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IEveChildTransformModifier ],
+  members: []
+})
 export class EveChildModifierBooster extends IEveChildTransformModifier
 {
   static scratch = {

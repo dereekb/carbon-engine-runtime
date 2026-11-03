@@ -44,17 +44,23 @@ export function EveCollectAreas(type, mesh, areaPool)
  *
  * @abstract
  */
-@be.define("EveSpaceObjectChild")
+@be.define({
+  name: "EveSpaceObjectChild",
+  // EveSpaceObjectChild_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 @be.abstract
 export class EveSpaceObjectChild extends IEveSpaceObjectChild
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
   /** Carbon: MAP_PROPERTY_READONLY (trinity/trinity/Eve/SpaceObject/Children/EveSpaceObjectChild_Blue.cpp:14); getter GetPartTag only reads m_partTag. */
-  @be.mapPropertyReadOnly__Field()
   @type.uint32
   partTag = 0;
 
@@ -211,7 +217,6 @@ export class EveSpaceObjectChild extends IEveSpaceObjectChild
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetOwner()
   {
     return this._owner;
@@ -229,7 +234,6 @@ export class EveSpaceObjectChild extends IEveSpaceObjectChild
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetParent()
   {
     return this._parent;

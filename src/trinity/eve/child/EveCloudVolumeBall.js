@@ -10,42 +10,47 @@ import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 
 /** Runtime model for one editable cloud-volume ball. */
-@be.define("EveCloudVolumeBall")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveCloudVolumeBall",
+  inherit: [ INotify ],
+  // EveCloudEditableVolume_Blue.cpp:10-18, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "selfIllumination", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "opacity", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "falloff", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveCloudVolumeBall extends IRoot
 {
 
   /** m_ballData.m_position (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   position = vec3.create();
 
   /** m_ballData.m_radius (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   radius = 0;
 
   /** m_ballData.m_opacity (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   opacity = 0;
 
   /** m_ballData.m_falloff (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   falloff = 1;
 
   /** m_ballData.m_selfIllumination (Color) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
