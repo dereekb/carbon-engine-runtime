@@ -485,7 +485,7 @@ test("EvePlaneSet preserves authored quad and SOF-light intent without GPU state
   const item = new EvePlaneSetItem();
   assertEquals(set.display, true);
   assertEquals(set.hideOnLowQuality, false);
-  assertEquals(set.skinned, false);
+  assertEquals(set._isSkinned, false);
   assertEquals(set.pickBufferID, 0);
   assertVec4(item.color, [1, 1, 1, 1]);
   assertVec4(item.layer1Transform, [1, 1, 0, 0]);
@@ -502,7 +502,7 @@ test("EvePlaneSet preserves authored quad and SOF-light intent without GPU state
   set.SetPickBufferID(258);
   assertEquals(set.pickBufferID, 2);
   set.SetIsSkinned(true);
-  assertEquals(set.skinned, true);
+  assertEquals(set._isSkinned, true);
 
   const options = [];
   set.SetEffect({ SetOption: (...args) => options.push(args), GetHashValue: () => 0x9a });

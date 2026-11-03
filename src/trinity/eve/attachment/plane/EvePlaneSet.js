@@ -127,10 +127,10 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
   @type.object.ref("Tr2Effect")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
+  @be.mapAttribute(be.READWRITE | be.PERSIST, "skinned")
 
   @type.boolean
-  skinned = false;
+  _isSkinned = false;
 
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 
@@ -234,7 +234,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
     CreateItemSetBoundingBoxes(
       this._staticBounds,
       this._boneBounds,
-      this.skinned,
+      this._isSkinned,
       this.planes.filter(item => !EvePlaneSet._IsFullyTransparent(item))
     );
   }
@@ -290,7 +290,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
       const boneIndex = this._items[base + 105];
 
       // Carbon's row-vector data.transform * bone * parent.
-      if (this.skinned && boneIndex < boneCount)
+      if (this._isSkinned && boneIndex < boneCount)
       {
         MatrixCopyFrom3x4(bone, bones, boneIndex);
         mat4.multiply(m, bone, data.transform);
@@ -356,7 +356,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
       this._staticBounds,
       this._boneBounds,
       bones,
-      this.skinned ? boneCount : 0
+      this._isSkinned ? boneCount : 0
     );
   }
 
@@ -389,7 +389,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
 
   SetIsSkinned(skinned)
   {
-    this.skinned = !!skinned;
+    this._isSkinned = !!skinned;
   }
 
   /**
