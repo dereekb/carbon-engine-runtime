@@ -48,8 +48,12 @@ export class CjsCharacterBackdrops
         return list.sort((a, b) => number(a.name) - number(b.name) || a.name.localeCompare(b.name));
     }
 
+    /** The effect `apply` last set on each scene, which it destructs when it replaces or clears it. */
+    static _applied = new WeakMap();
+
     /**
-     * Draws a backdrop behind the scene, or clears it.
+     * Draws a backdrop behind the scene, or clears it. The backdrop effect this set before is destructed; a
+     * background effect the scene had from elsewhere is replaced but left alone.
      * @param {object} scene The `Tr2InteriorScene`.
      * @param {string} path A backdrop's resource path from `list`, or "" for none.
      * @param {object} [options] The placement.
@@ -59,12 +63,19 @@ export class CjsCharacterBackdrops
      */
     static apply(scene, path, { fit = "cover", color = [ 0, 0, 0, 1 ] } = {})
     {
+        if (path && !Object.hasOwn(CjsCharacterBackdrops.fits, fit)) throw new TypeError(`Backdrop fit must be cover, contain or stretch, not ${fit}.`);
+        const previous = CjsCharacterBackdrops._applied.get(scene);
+        if (previous)
+        {
+            CjsCharacterBackdrops._applied.delete(scene);
+            if (scene.backgroundEffect === previous) scene.backgroundEffect = null;
+            previous.Destruct();
+        }
         if (!path)
         {
             scene.backgroundEffect = null;
             return null;
         }
-        if (!Object.hasOwn(CjsCharacterBackdrops.fits, fit)) throw new TypeError(`Backdrop fit must be cover, contain or stretch, not ${fit}.`);
         const effect = new Tr2Effect();
         effect.SetEffectPathName(CjsCharacterBackdrops.effectPath);
         effect.SetParameter__Vector4("BackgroundPlacement", [ 0, 0, 1, 1 ]);
@@ -73,6 +84,7 @@ export class CjsCharacterBackdrops
         effect.SetParameter__Vector4("BackgroundTint", [ 1, 1, 1, 1 ]);
         effect.SetResourceTexture2D("BackgroundMap", path);
         scene.backgroundEffect = effect;
+        CjsCharacterBackdrops._applied.set(scene, effect);
         return effect;
     }
 

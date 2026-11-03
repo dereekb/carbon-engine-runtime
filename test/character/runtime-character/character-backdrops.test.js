@@ -35,3 +35,24 @@ test("a backdrop sets the interior scene's background effect, and none clears it
     assert.equal(scene.backgroundEffect, null);
     assert.throws(() => CjsCharacterBackdrops.apply(scene, path, { fit: "tile" }), /cover, contain or stretch/);
 });
+
+test("changing the backdrop destructs the effect it replaces, but not an effect from elsewhere", t =>
+{
+    const scene = new Tr2InteriorScene();
+    const path = CjsCharacterBackdrops.directory + "background_0.dds";
+    const first = CjsCharacterBackdrops.apply(scene, path);
+    const destructFirst = t.mock.method(first, "Destruct");
+    const second = CjsCharacterBackdrops.apply(scene, CjsCharacterBackdrops.directory + "background_1.dds");
+    assert.equal(destructFirst.mock.callCount(), 1);
+    assert.equal(scene.backgroundEffect, second);
+
+    const destructSecond = t.mock.method(second, "Destruct");
+    assert.equal(CjsCharacterBackdrops.apply(scene, ""), null);
+    assert.equal(destructSecond.mock.callCount(), 1, "None destructs the backdrop too");
+
+    const authored = CjsCharacterBackdrops.apply(new Tr2InteriorScene(), path);
+    scene.backgroundEffect = authored;
+    const destructAuthored = t.mock.method(authored, "Destruct");
+    CjsCharacterBackdrops.apply(scene, path);
+    assert.equal(destructAuthored.mock.callCount(), 0, "an effect this scene did not get from apply is left alone");
+});
