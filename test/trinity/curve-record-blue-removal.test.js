@@ -4,7 +4,7 @@ import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { blue, IInitialize, INotify } from "../../npm/dist/blue/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
 import { Tr2MatrixKey } from "../../npm/dist/trinity/curves/key/Tr2MatrixKey.js";

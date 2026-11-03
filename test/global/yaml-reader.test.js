@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
-import { YamlWriter } from "../../npm/dist/blue/blue/YamlWriter.js";
+import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
+import { YamlWriter } from "../../npm/dist/blue/blue/formats/yaml/YamlWriter.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { ICustomPersist } from "../../npm/dist/blue/blueexposure/ICustomPersist.js";

@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { blue } from "../../npm/dist/blue/blue/blue.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
 import { CjsBlue, BlueClasses } from "../../npm/dist/blue/blue/index.js";

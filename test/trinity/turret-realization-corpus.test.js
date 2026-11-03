@@ -11,7 +11,7 @@ import { createHash } from "node:crypto";
 import { clientResources } from "../support/clientResources.js";
 import "../../npm/dist/sof/index.js"; // data.black hydrates EveSOFData classes.
 import test from "node:test";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { blue } from "../../npm/dist/blue/blue/index.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { TriGeometryRes } from "../../npm/dist/trinity/resources/geometry/TriGeometryRes.js";

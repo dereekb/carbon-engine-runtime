@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
-import { DictReader } from "../../src/blue/blue/DictReader.js";
-import { DictWriter } from "../../src/blue/blue/DictWriter.js";
+import { DictReader } from "../../src/blue/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../src/blue/blue/formats/graph/DictWriter.js";
 
 let sequence = 0;
 const identity = () => `DictionaryDeclarations${++sequence}`;

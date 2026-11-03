@@ -8,8 +8,8 @@ import { CjsWwiseSoundEngineStub } from "../../npm/dist/global/audio/CjsWwiseSou
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
-import { DictWriter } from "../../npm/dist/blue/blue/DictWriter.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";

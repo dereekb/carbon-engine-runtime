@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";

@@ -4,7 +4,7 @@ import { CjsSchema } from "../../src/blue/schema/index.js";
 import { BlueList } from "../../src/blue/blueexposure/BlueList.js";
 import { IList } from "../../src/blue/blueexposure/IList.js";
 import { IListNotify } from "../../src/blue/blueexposure/IListNotify.js";
-import { DictReader, CreateAnchorTable } from "../../src/blue/blue/DictReader.js";
+import { DictReader, CreateAnchorTable } from "../../src/blue/blue/formats/graph/DictReader.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 import { ReadValues } from "../../src/blue/blue/values.js";
 

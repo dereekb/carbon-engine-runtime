@@ -1,6 +1,6 @@
 import { CjsSchema, meta } from "#schema";
 import { applyReaderMember, finalizeReaderObject, getReaderMemberValue, isReaderIList } from "#schema/hydration";
-import { CjsBlueReader } from "../../../CjsBlueReader.js";
+import { CjsBlueReader } from "../CjsBlueReader.js";
 import { IBlueObjectBuilder } from "../../../interfaces/IBlueObjectBuilder.js";
 import {
     CJS_BLACK_FORMAT_ID,

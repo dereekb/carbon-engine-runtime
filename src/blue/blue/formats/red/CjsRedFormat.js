@@ -1,6 +1,6 @@
 import { parseDocument, isMap, isScalar } from "yaml";
 import { CjsSchema } from "#schema/CjsSchema";
-import { YamlReader } from "../../YamlReader.js";
+import { YamlReader } from "../yaml/YamlReader.js";
 import { CjsFormat } from "../../../../resource/format/CjsFormat.js";
 
 /**

@@ -19,7 +19,7 @@ import { CjsBlackReader } from "./core/CjsBlackReader.js";
 
 const FORMAT_NAME = "CjsBlackFormat";
 
-import { YamlReader } from "../../YamlReader.js";
+import { YamlReader } from "../yaml/YamlReader.js";
 
 /**
  * CarbonEngineJS-facing Black format profile.

@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { BlueResMan } from "../../npm/dist/blue/blue/BlueResMan.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { EveSOFData, EveSOFDataGeneric, EveSOFDataHullDecalSetItem } from "../../npm/dist/sof/index.js";
 import { Tr2DynamicEmitter, ITr2GenericEmitter, EveThrottleable, Tr2Effect, Tr2Controller, Tr2TimelineController } from "../../npm/dist/trinity/index.js";

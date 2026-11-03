@@ -125,11 +125,11 @@ export * from "./format/IRootReader.js";
 export * from "./format/IRootReaderException.js";
 export * from "./format/InvalidAttributeException.js";
 export * from "./format/IRootReaderBase.js";
-export * from "./DictReader.js";
+export * from "./formats/graph/DictReader.js";
 export * from "./format/IRootWriter.js";
-export * from "./DictWriter.js";
-export * from "./YamlWriter.js";
-export * from "./YamlReader.js";
+export * from "./formats/graph/DictWriter.js";
+export * from "./formats/yaml/YamlWriter.js";
+export * from "./formats/yaml/YamlReader.js";
 
 export { GetResources } from "./getResources.js";
 

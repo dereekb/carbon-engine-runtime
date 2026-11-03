@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { YamlWriter } from "../../npm/dist/blue/blue/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
+import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
 import { EveChildQuad, EveComponentRegistry, EveStretch2, EveTurretFiringFX } from "../../npm/dist/trinity/index.js";
 
 test("EveTurretFiringFX registers only elements whose exposure table maps EveEntity", () =>

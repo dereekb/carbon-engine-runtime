@@ -1,5 +1,5 @@
 import { ITr2CurveSetOwner } from "../../npm/dist/trinity/curves/ITr2CurveSetOwner.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blue } from "../../npm/dist/blue/blue/index.js";

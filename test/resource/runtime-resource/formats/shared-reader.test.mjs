@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { CjsBlueReader } from "../../../../src/blue/blue/CjsBlueReader.js";
+import { CjsBlueReader } from "../../../../src/blue/blue/formats/black/CjsBlueReader.js";
 import { CjsByteReader } from "../../../../src/resource/format/CjsByteReader.js";
 import { CjsReader } from "../../../../src/resource/format/CjsReader.js";
 import { CjsCarbonEffectReader } from "../../../../src/resource/format/carbonEffect/CjsCarbonEffectReader.js";
@@ -13,7 +13,7 @@ import {
     CJS_BLACK_FOURCC,
     CJS_BLACK_VERSION
 } from "../../../../src/blue/blue/formats/black/core/blackConstants.js";
-import { YamlReader } from "../../../../src/blue/blue/YamlReader.js";
+import { YamlReader } from "../../../../src/blue/blue/formats/yaml/YamlReader.js";
 import { IRootReaderBase } from "../../../../src/blue/blue/format/IRootReaderBase.js";
 import { CjsYamlReader } from "../../../../src/resource/formats/yaml/core/CjsYamlReader.js";
 

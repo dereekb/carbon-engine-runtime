@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";
-import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
+import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
 import "../../npm/dist/blue/blue/values.js";
 import { CjsGraphFormat } from "../../npm/dist/blue/blue/formats/graph/CjsGraphFormat.js";
 import { EveVirtualCameraBehaviourVector3Damping } from "../../npm/dist/trinity/index.js";

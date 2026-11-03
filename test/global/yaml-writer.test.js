@@ -3,7 +3,7 @@ import test from "node:test";
 import { parse } from "yaml";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { YamlWriter, DictWriter, BeObjectMetadata } from "../../npm/dist/blue/blue/index.js";
-import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
+import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
 
 let serial = 0;
 function register(Constructor, fields, extra = {})

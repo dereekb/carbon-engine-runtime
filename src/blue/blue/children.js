@@ -2,7 +2,7 @@ import { IList } from "../blueexposure/IList.js";
 import { blue } from "./blue.js";
 import { BlueClasses } from "../blueexposure/BlueClasses.js";
 import { CjsSchema } from "../schema/index.js";
-import { DictReader, CreateAnchorTable } from "./DictReader.js";
+import { DictReader, CreateAnchorTable } from "./formats/graph/DictReader.js";
 import { ensureRuntimeState } from "../compose/runtimeState.js";
 import { NotifyModified } from "../compose/values.js";
 import { BLUELISTEVENT } from "../../global/consts/blue.js";

@@ -3,8 +3,8 @@ import test from "node:test";
 import "../../npm/dist/blue/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import "../../npm/dist/trinity/index.js";
-import { YamlWriter } from "../../npm/dist/blue/blue/YamlWriter.js";
-import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
+import { YamlWriter } from "../../npm/dist/blue/blue/formats/yaml/YamlWriter.js";
+import { YamlReader } from "../../npm/dist/blue/blue/formats/yaml/YamlReader.js";
 import { IRootReaderBase } from "../../npm/dist/blue/blue/format/IRootReaderBase.js";
 
 // decorator-upgrade.md § 000a: a class declared with an exposure bag writes, copies and lists its members in Carbon's order.

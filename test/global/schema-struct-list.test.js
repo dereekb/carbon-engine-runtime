@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { type } from "../../npm/dist/blue/schema/index.js";
 import { Copier } from "../../npm/dist/blue/blue/index.js";
-import { DictReader, CreateAnchorTable } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader, CreateAnchorTable } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { CjsBlackSchemaRegistry } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackSchemaRegistry.js";

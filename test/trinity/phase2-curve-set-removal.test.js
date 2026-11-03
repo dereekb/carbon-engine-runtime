@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { ISimTimeRebaseNotify } from "../../npm/dist/blue/blue/interfaces/ISimTimeRebaseNotify.js";

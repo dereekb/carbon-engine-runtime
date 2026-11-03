@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { ICustomPersist } from "../../npm/dist/blue/blueexposure/ICustomPersist.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";

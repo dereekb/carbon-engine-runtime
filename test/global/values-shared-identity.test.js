@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { blue } from "../../npm/dist/blue/blue/index.js";
-import { DictWriter } from "../../npm/dist/blue/blue/DictWriter.js";
+import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import "../../npm/dist/trinity/index.js";
 import "../../npm/dist/audio/index.js";

@@ -1,6 +1,6 @@
 import { CjsSchema } from "../schema/CjsSchema.js";
-import { DictWriter } from "./DictWriter.js";
-import { DictReader } from "./DictReader.js";
+import { DictWriter } from "./formats/graph/DictWriter.js";
+import { DictReader } from "./formats/graph/DictReader.js";
 import { applyValues } from "../compose/values.js";
 
 // Values are a service over registered declarations. Importing Blue installs

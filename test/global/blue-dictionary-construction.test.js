@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { meta, type } from "../../npm/dist/blue/schema/index.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
 import { BeObjectMetadata } from "../../npm/dist/blue/blue/BlueObjectMetadata.js";

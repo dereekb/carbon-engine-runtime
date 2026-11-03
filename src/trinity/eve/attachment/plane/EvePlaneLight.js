@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/Sets/EvePlaneSet.h
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/Sets/EvePlaneSet.cpp
-import { DictReader } from "#blue/DictReader";
+import { DictReader } from "#blue/formats/graph/DictReader";
 import { mat4 } from "#math/mat4";
 import { meta, type } from "#schema";
 import { LightData } from "../../lights/LightData.js";

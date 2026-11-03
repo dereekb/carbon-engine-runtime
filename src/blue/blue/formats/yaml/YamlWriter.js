@@ -3,9 +3,9 @@
 import { exposure as be } from "#be";
 import { Alias, Document, Pair, Scalar, YAMLMap, YAMLSeq, isSeq } from "yaml";
 import { CjsSchema } from "#schema";
-import { IRootWriter } from "./format/IRootWriter.js";
-import { BLUE_OBJECT_METADATA_KEY } from "./interfaces/IBlueObjectMetadata.js";
-import * as CcpLog from "../../global/logging/ccpLog.js";
+import { IRootWriter } from "../../format/IRootWriter.js";
+import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
+import * as CcpLog from "../../../../global/logging/ccpLog.js";
 
 /**
  * Authoring metadata safe to publish. Adapted from YamlWriter.cpp:333:

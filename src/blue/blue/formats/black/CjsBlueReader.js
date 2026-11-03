@@ -1,14 +1,14 @@
-import { IRootReaderBase } from "./format/IRootReaderBase.js";
+import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { CjsSchema } from "#schema/CjsSchema";
-import { DictReader } from "./DictReader.js";
-import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
+import { DictReader } from "../graph/DictReader.js";
+import { ICustomPersist } from "../../../blueexposure/ICustomPersist.js";
 import { resolveHydrationAdapter } from "#schema/hydration";
 import {
     CARBON_TYPE,
     normalizeCarbonTypeDescriptor,
     normalizeCarbonValue
 } from "#schema/types";
-import { CjsReader } from "../../resource/format/CjsReader.js";
+import { CjsReader } from "../../../../resource/format/CjsReader.js";
 
 /**
  * Shared output and hydration backend for Blue persistence readers.

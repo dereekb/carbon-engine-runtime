@@ -6,7 +6,7 @@ import { quat } from "../../npm/dist/global/math/quat.js";
 import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
 import { CjsBlackPropertyReaders } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackPropertyReaders.js";
 import * as trinity from "../../npm/dist/trinity/index.js";
-import { CjsBlueReader } from "../../npm/dist/blue/blue/CjsBlueReader.js";
+import { CjsBlueReader } from "../../npm/dist/blue/blue/formats/black/CjsBlueReader.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";

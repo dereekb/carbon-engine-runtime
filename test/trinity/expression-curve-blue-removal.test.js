@@ -4,14 +4,14 @@ import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { blue, ITriFunction, ITriScalarFunction, ITriColorFunction, ITriVectorFunction, IInitialize } from "../../npm/dist/blue/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
 import { Tr2CurveScalarExpression as Scalar } from "../../npm/dist/trinity/curves/curve/Tr2CurveScalarExpression.js";
 import { Tr2CurveVector3Expression as Vector } from "../../npm/dist/trinity/curves/curve/Tr2CurveVector3Expression.js";
 import { CjsControllerExpressionProgram as Program } from "../../npm/dist/trinity/controllers/expression/CjsControllerExpressionProgram.js";
 import { TriCurveSet } from "../../npm/dist/trinity/curves/TriCurveSet.js";
-import { DictWriter } from "../../npm/dist/blue/blue/DictWriter.js";
+import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
 
 test("expression curves construct without inherited model APIs", () =>
 {

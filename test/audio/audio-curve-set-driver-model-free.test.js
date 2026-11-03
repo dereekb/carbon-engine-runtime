@@ -7,7 +7,7 @@ import { AudManager } from "../../npm/dist/audio/trinity/audio/AudManager.js";
 import { TriCurveSet } from "../../npm/dist/trinity/curves/TriCurveSet.js";
 import { ICurveSetDriver } from "../../npm/dist/blue/blue/interfaces/ICurveSetDriver.js";
 import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
-import { DictReader } from "../../npm/dist/blue/blue/DictReader.js";
+import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";

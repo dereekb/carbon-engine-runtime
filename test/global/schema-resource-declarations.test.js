@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import { DictReader } from "../../src/blue/blue/DictReader.js";
-import { DictWriter } from "../../src/blue/blue/DictWriter.js";
+import { DictReader } from "../../src/blue/blue/formats/graph/DictReader.js";
+import { DictWriter } from "../../src/blue/blue/formats/graph/DictWriter.js";
 import { BlueAsyncRes } from "../../src/blue/blue/BlueAsyncRes.js";
 import { exportCarbonValue } from "../../src/blue/schema/types/carbonTypes.js";
 import { GetResources } from "../../src/blue/blue/getResources.js";
