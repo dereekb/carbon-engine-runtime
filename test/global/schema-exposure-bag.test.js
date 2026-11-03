@@ -184,6 +184,42 @@ test("a bag row on an inherited member registers as the class-level row does, wi
     const useSRT = CjsSchema.getSchema(InheritedBag).members.find(member => member.name === "useSRT" && member.declaringClass === InheritedBag);
     assert.equal(useSRT.type.kind, "boolean", "the base member's type");
     assert.equal(useSRT.edit.persist, true, "the subclass's own flags");
+    assert.deepEqual(own(InheritedBag, "methods"), own(InheritedRows, "methods"), "an inherited method's row names it");
     const methods = Class => Object.keys(BlueClasses._typeInfo(Class, 0)[3]).sort();
     assert.deepEqual(methods(InheritedBag), methods(InheritedRows));
+});
+
+test("several index rows on one member register in the bag's order, as the stacked rows do", async () =>
+{
+    const { IndexRows, IndexBag } = await load(`
+      @be.define("BagProbeIndexRows")
+      export class IndexRows
+      {
+        @be.mapAttribute__Index(be.READ, "first", 0)
+        @be.mapAttribute__Index(be.READ, "second", 1)
+        @be.mapAttribute__Index(be.READ, "third", 2)
+        @type.vec3 v = new Float32Array(3);
+      }
+      @be.define({ name: "BagProbeIndexBag", members: [
+        [ be.ATTR_INDEX, "first", be.READ, 0, "v" ],
+        [ be.ATTR_INDEX, "second", be.READ, 1, "v" ],
+        [ be.ATTR_INDEX, "third", be.READ, 2, "v" ]
+      ] })
+      export class IndexBag { @type.vec3 v = new Float32Array(3); }`);
+    const names = Class => CjsSchema.getSchema(Class).members.map(member => member.name);
+    assert.deepEqual(names(IndexRows), [ "first", "second", "third" ]);
+    assert.deepEqual(names(IndexBag), [ "first", "second", "third" ]);
+});
+
+test("our meta.mapAttribute flags on a bag member keep Carbon's row flags, as on a stacked member", async () =>
+{
+    const { OursRows, OursOnBag } = await load(`
+      @be.define("BagProbeOursRows")
+      export class OursRows { @be.mapAttribute(be.READ) @meta.mapAttribute(meta.PERSIST) @type.int32 origin = 0; }
+      @be.define({ name: "BagProbeOursOnBag", members: [ [ be.ATTR, "origin", be.READ ] ] })
+      export class OursOnBag { @meta.mapAttribute(meta.PERSIST) @type.int32 origin = 0; }`);
+    const origin = Class => comparable(CjsSchema.getSchema(Class).members.find(member => member.name === "origin"));
+    assert.deepEqual(origin(OursOnBag), origin(OursRows));
+    assert.equal(origin(OursOnBag).exposure.flags, be.READ, "Carbon's flags");
+    assert.equal(origin(OursOnBag).edit.persist, true, "our persist");
 });

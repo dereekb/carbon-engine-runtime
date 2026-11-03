@@ -2085,6 +2085,11 @@ function applyDeclarationNamespace(entry, namespace, value)
             if (Object.hasOwn(value, key)) entry[key] = value[key];
         }
     }
+    else if (namespace === "exposure" && value?.origin === "ours" && typeof entry.exposure?.macro === "string")
+    {
+        // Our flags merge into Carbon's row without replacing Carbon's own, whichever was applied first.
+        entry.exposure = { ...mergeNamespace(entry.exposure, value), flags: entry.exposure.flags };
+    }
     else
     {
         entry[namespace] = mergeNamespace(entry[namespace], value);
@@ -2174,12 +2179,23 @@ function applyRowPart(schema, Constructor, fieldName, namespace, value)
         const map = declarationMap(schema, entry.role);
         if (map.has(identity)) throw new TypeError(`CjsSchema has duplicate ${entry.role} declaration "${entry.name}" for ${entry.key}.`);
         const record = { entry, legacy: false, aliasOf, isAlias: true };
-        // Decorators run nearest-first, so a row written above the member lands before it, and before the rows between: source order,
-        // which is the order of Carbon's rows.
-        const first = schema.declarations.find(candidate => candidate.isAlias && candidate.entry.key === entry.key) ?? aliasOf;
-        const at = first ? schema.declarations.indexOf(first) : -1;
-        if (at < 0) schema.declarations.push(record);
-        else schema.declarations.splice(at, 0, record);
+        // Stacked decorators run nearest-first, so a row written above the member lands before it, and before the rows between. A bag
+        // applies its rows in its own order, so a later row lands after the member's earlier ones. Both are source order, which is the
+        // order of Carbon's rows.
+        const sameKey = candidate => candidate === aliasOf || (candidate.isAlias && candidate.entry.key === entry.key);
+        if (schema.rowsInSourceOrder)
+        {
+            const last = schema.declarations.findLastIndex(sameKey);
+            if (last < 0) schema.declarations.push(record);
+            else schema.declarations.splice(last + 1, 0, record);
+        }
+        else
+        {
+            const first = schema.declarations.find(candidate => candidate.isAlias && candidate.entry.key === entry.key) ?? aliasOf;
+            const at = first ? schema.declarations.indexOf(first) : -1;
+            if (at < 0) schema.declarations.push(record);
+            else schema.declarations.splice(at, 0, record);
+        }
         map.set(identity, record);
         schema.rowState = null;
         refreshLegacyFields(schema);
@@ -3984,8 +4000,10 @@ function applyExposureRow(Constructor, row, blue, context)
             if (!macro) throw new TypeError(`Exposure row ${name}: unknown method mode ${String(mode)}.`);
             const key = method ?? name;
             if (!(key in Constructor.prototype)) throw new TypeError(`Exposure row ${name}: the class has no method "${key}".`);
-            const decorator = exposureMethodDecorator(macro, optionalName(key), blue);
-            if (Object.hasOwn(Constructor.prototype, key)) decorator(Constructor.prototype, key);
+            // An inherited method's row names it, as the class-level be.mapMethod* does (inheritedAware).
+            const own = Object.hasOwn(Constructor.prototype, key);
+            const decorator = exposureMethodDecorator(macro, own ? optionalName(key) : name, blue);
+            if (own) decorator(Constructor.prototype, key);
             else for (const part of [ { namespace: "mapsInherited", value: { inherited: true } }, ...getDecoratorMetadata(decorator).parts ])
                 defineMethodMetadata(Constructor, key, part.namespace, part.value);
             return { kind, role: "method", key, name, macro };
@@ -4021,12 +4039,18 @@ function exposureBagDecorator(bag, blue)
         if (interfaces?.length) carbonInterfaceDecorator(interfaces, true)(Constructor, context);
         if (inherit?.length) CjsSchema.blue.inherit(...inherit)(Constructor, context);
         const rows = [];
-        for (const row of members)
+        const schema = getOrCreateClassSchema(Constructor);
+        schema.rowsInSourceOrder = true;
+        try
         {
-            const recorded = applyExposureRow(Constructor, row, blue, context);
-            if (Array.isArray(recorded)) rows.push(recorded[0], recorded[1]);
-            else rows.push(recorded);
+            for (const row of members)
+            {
+                const recorded = applyExposureRow(Constructor, row, blue, context);
+                if (Array.isArray(recorded)) rows.push(recorded[0], recorded[1]);
+                else rows.push(recorded);
+            }
         }
+        finally { delete schema.rowsInSourceOrder; }
         RejectAfterRegistration(Constructor, "exposure rows");
         getOrCreateClassSchema(Constructor).exposureRows = rows;
         if (blue) carbonInterfaceDecorator([])(Constructor, context);
