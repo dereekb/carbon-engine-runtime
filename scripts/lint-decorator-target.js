@@ -5,255 +5,134 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { inventoryRuntime } from "./lib/decorator-target-inventory.js";
 import { checkAccessorBodies } from "./lib/carbon-accessor-bodies.js";
 
-// THE ORACLE. `--oracle <dir>` must hold two files, and nothing in runtime, tools-core or docs writes them: the generator was
-// never committed, so the lint cannot be run or its baseline reproduced until one exists. Their shape, as read below:
+// Two checks against Carbon's headers and exposure blocks that no other lint makes:
 //
-//   carbon-exposure.json  [{ name, attributes: [row], properties: [row], methods: [row], interfaces: [{ name, source, line }] }]
-//                         row = { name, macro, source, line, condition?: string[] } plus, by category,
-//                         attributes { flagsAsWritten: "Be::READWRITE | Be::PERSIST", chooser },
-//                         properties { getter, setter }, methods { function }   (the C++ method a MAP_METHOD* names)
-//   carbon-headers.json   [{ name, methods: [{ name }], bases: [string] }]   (one entry per header declaration)
+// - carbon-origin-name: a method on a class with a Carbon identity that matches no method Carbon declares on that class or its
+//   bases, and carries no @cjs. lint-native-method-parity checks the other direction (Carbon methods we lack).
+// - property-field-body: a MAP_PROPERTY realised on a plain field (`be.mapProperty*__Field`, on the member or above the class)
+//   is faithful only where Carbon's getter and setter just read and write one member (lib/carbon-accessor-bodies.js). Needs
+//   CARBON_ROOT, since it reads the accessor bodies.
 //
-// tools-core's carbon-blue report (scripts/carbon-blue/reports/latest.json) carries the same facts under other keys: per class,
-// blue.attributes (flags as a name array, not flagsAsWritten), blue.properties, blue.methods (target, not function),
-// blue.interfaces, the per-row #if condition on blue.rows, and the header's methods and bases. An adapter from that report is
-// the cheapest way to make this runnable again. The exposure rules here check per-member be.map* decorators; a class declared
-// with a be.define bag is checked by lint-exposure-bags instead.
+// Carbon's side comes from tools-core's carbon-blue reports (scripts/carbon-blue/reports, gitignored scan output), read from the
+// sibling checkout or CARBON_BLUE_REPORTS; with none the audit skips. Its other rules, which checked the per-member exposure
+// decorators and the marker states, were retired on 2026-11-03: lint-exposure-bags checks exposure, and lint-marker-tags the
+// markers. The audit reports; it never fails a build.
 
-// Build conditions the plan has ruled (decorator-upgrade.md § 00, "Build conditionals in exposure files"): each guard below is
-// on for us, so its rows are exposed like any other (with a notSupported/notUsed state where the platform cannot). Any other
-// condition still needs a ruling and keeps reporting.
-const ruledOn = new Set(["GSTATE_ENABLED","WITH_GRANNY","BLUE_WITH_PYTHON","!defined(GAMEWORLD_64)","_WIN32","defined(_WIN32)","CCP_STACKLESS","BLUE_LIVELIST_ENABLED","!((_WIN32)) && (__APPLE__)"]);
-// meta.abstract is the state of a pure virtual: an abstract method is declared, not implemented.
-const states = new Set(["meta.implemented","meta.adapted","meta.notImplemented","meta.notSupported","meta.notUsed","meta.abstract"]);
-const bits = { NONE:0, READ:1, WRITE:2, READWRITE:3, NOTIFY:4, HIDDEN:8, PERSIST:16, RPERSIST:32,
-    FLAGS:256, ENUM:512, PERSISTONLY:24, MODMASK:15, SERMASK:240, EDMASK:3840, EDIT_FORCELONG:0xFFFFFFFF };
-const oldBits = {read:1,write:2,readwrite:3,notify:4,hidden:8,persist:16,rpersist:32,persistOnly:24};
-const maps = {mapAttribute:"MAP_ATTRIBUTE",mapAttributeWithChooser:"MAP_ATTRIBUTE_WITH_CHOOSER",
-    mapProperty:"MAP_PROPERTY",mapPropertyReadOnly:"MAP_PROPERTY_READONLY",mapPropertyPersisted:"MAP_PROPERTY_PERSISTED",
-    mapProperty__Field:"MAP_PROPERTY",mapPropertyReadOnly__Field:"MAP_PROPERTY_READONLY",mapPropertyPersisted__Field:"MAP_PROPERTY_PERSISTED",
-    mapMethod:"MAP_METHOD",mapMethodAndWrap:"MAP_METHOD_AND_WRAP",mapMethodAndWrapOptionalArgs:"MAP_METHOD_AND_WRAP_OPTIONAL_ARGS",mapMethodAsMethod:"MAP_METHOD_AS_METHOD"};
+const defaultReports = fileURLToPath(new URL("../../tools-core/scripts/carbon-blue/reports", import.meta.url));
+const REPORT_FILES = [ "latest.json", "trinity-root-latest.json" ];
+const PROPERTY_FIELD = /^exposure\.mapProperty(?:ReadOnly|Persisted)?__Field$/;
 
-/** Evaluates only literal EDITFLAGS unions; unknown expressions stay review findings. */
-export function flagMask(value)
+/**
+ * Carbon's facts from carbon-blue reports: every header declaration's methods and bases, and each exposed class's MAP_PROPERTY
+ * rows. A nested class is reported as `Outer.Inner`; it is also found as `Outer::Inner`.
+ *
+ * @param {object[]} reports carbon-blue reports, the full scan first.
+ * @returns {{headers: Map<string, Array<{methods: string[], bases: string[]}>>, properties: Map<string, object[]>}} The facts.
+ */
+export function readCarbonReports(reports)
 {
-    if (typeof value === "number") return value;
-    const expression = typeof value === "string" ? value : value?.$expr;
-    if (!expression) return null;
-    let mask = 0;
-    for (const part of expression.replace(/[()]/g,"").split("|"))
+    const headers = new Map(), properties = new Map();
+    for (const report of reports)
     {
-        const name = part.trim().replace(/^.*(?:::|\.)/,"");
-        if (/^(?:0x[\da-f]+|\d+)$/i.test(name)) mask |= Number(name);
-        else if (Object.hasOwn(bits,name)) mask |= bits[name];
-        else return null;
+        for (const record of report.classes)
+        {
+            for (const name of new Set([ record.name, record.name.replaceAll(".", "::") ]))
+            {
+                if (!headers.has(name)) headers.set(name, []);
+                headers.get(name).push({ methods: (record.methods ?? []).map(method => method.name), bases: record.bases ?? [] });
+                if (record.blue?.exposures?.length && !properties.has(name)) properties.set(name, record.blue.properties ?? []);
+            }
+        }
     }
-    return mask >>> 0;
+    return { headers, properties };
 }
 
 /** Uses declared native identity, keeping own modelled-on donors distinct. */
 function identity(c)
 {
-    const native = [], donors = [];
+    const native = [];
     const carbonComments = (c.donorComments ?? []).filter(d => !d.error && d.kind === "Carbon").map(d => d.name);
     native.push(...carbonComments);
-    donors.push(...(c.donorComments ?? []).filter(d => !d.error).map(d => d.name));
     const annotations = c.definitions.filter(d => d.kind === "meta.carbon");
-    const exposed = c.definitions.some(d => d.namespace === "blue" || d.namespace === "exposure");
-    let own = false, declared = false;
     for (const d of c.definitions)
     {
-        declared = true;
         const v = d.value;
-        if (d.kind === "meta.carbon")
-        {
-            const names = Array.isArray(v) ? v : [v];
-            native.push(...names);
-            if (exposed) donors.push(...names);
-        }
+        if (d.kind === "meta.carbon") native.push(...(Array.isArray(v) ? v : [v]));
         else if (d.namespace === "blue" || d.namespace === "exposure")
-            native.push(...(annotations.length || carbonComments.length ? [] : typeof v === "string" ? [v] : v?.carbon ? [].concat(v.carbon) : [v?.className]));
+            native.push(...(annotations.length || carbonComments.length ? [] : typeof v === "string" ? [v] : v?.carbon ? [].concat(v.carbon) : [v?.className ?? v?.name]));
         else if (v?.carbon) native.push(...[].concat(v.carbon));
-        else own = true;
     }
-    return {native:[...new Set(native.filter(x=>typeof x==="string"))],donors:[...new Set(donors)],own,declared};
+    return [ ...new Set(native.filter(x => typeof x === "string")) ];
 }
 
-/** Compares a current source inventory with native header and exposure oracles. Findings never fail a build. */
-export function auditDecorators(inventory, oracle, headers, chooserBindings = {})
+/**
+ * Compares a source inventory with Carbon's facts. Findings never fail a build.
+ *
+ * @param {{classes: object[], diagnostics: object[]}} inventory From inventoryRuntime.
+ * @param {{headers: Map, properties: Map}} carbon From readCarbonReports.
+ * @param {{accessorBodies?: boolean}} [options] Whether Carbon's source is there to read accessor bodies.
+ * @returns {object[]} The findings.
+ */
+export function auditDecorators(inventory, carbon, { accessorBodies = false } = {})
 {
-    const findings = [], byExposure = new Map(oracle.map(c=>[c.name,c])), byHeader = new Map();
-    for (const h of headers)
-    {
-        if (!byHeader.has(h.name)) byHeader.set(h.name,[]);
-        byHeader.get(h.name).push(h);
-    }
-    const add = (rule,c,m,detail,evidence) => findings.push({rule,source:c.source,class:c.name,
-        member:m?.name??"<class>",line:m?.line??c.line,detail,...(evidence?{evidence}: {})});
+    const findings = [];
+    const add = (rule, c, m, detail, evidence) => findings.push({ rule, source: c.source, class: c.name,
+        member: m?.name ?? "<class>", line: m?.line ?? c.line, detail, ...(evidence ? { evidence } : {}) });
     for (const c of inventory.classes)
     {
         if (c.dropped) continue;
-        const id=identity(c), nativeRows=id.native.map(n=>byExposure.get(n)).filter(Boolean);
-        const searched=new Set(), nativeMethods=new Set();
-        const queue=[...id.native];
-        while(queue.length)
+        const native = identity(c);
+        const searched = new Set(), nativeMethods = new Set();
+        const queue = [ ...native ];
+        while (queue.length)
         {
-            const name=queue.shift();if(searched.has(name))continue;searched.add(name);
-            for(const h of byHeader.get(name)??[])
+            const name = queue.shift(); if (searched.has(name)) continue; searched.add(name);
+            for (const h of carbon.headers.get(name) ?? [])
             {
-                for(const m of h.methods)nativeMethods.add(m.name);
-                for(const base of h.bases)queue.push(base);
+                for (const m of h.methods) nativeMethods.add(m);
+                for (const base of h.bases) queue.push(base);
             }
         }
-        for(const m of [{name:"<class>",kind:"class",decorators:c.decorators,line:c.line},...c.members])
+        const nativeProperties = native.flatMap(n => carbon.properties.get(n) ?? []);
+
+        /** A __Field property row: Carbon's accessors for the exposed name must just read and write one member. */
+        const checkField = (at, key, exposed, owners) =>
         {
-            const ds=m.decorators??[], present=new Set(ds.filter(d=>states.has(d.name)).map(d=>d.name));
-            // A constructor cannot carry a decorator; its state is the class's.
-            if(!present.size&&m.kind!=="constructor")add("required-state",c,m,"Missing explicit target state; never inferred as implemented.");
-            if(present.size>1)add("conflicting-state",c,m,[...present].join(", "));
-            if(ds.some(d=>d.name==="meta.noop"))add("retired-noop",c,m,"Convert to adapted with rationale.");
-            // A be.map* decorator above a class names a member the class inherits (decorator-upgrade.md § 00): the row is checked against the class's own block.
-            if(m.kind==="class")
+            if (!accessorBodies) return;
+            const row = nativeProperties.find(r => r.name === exposed && r.getter);
+            if (!row) return;
+            const readOnly = key.includes("mapPropertyReadOnly");
+            let check = null;
+            for (const owner of owners)
             {
-                for(const d of ds.filter(d=>d.name.startsWith("exposure.")&&maps[d.name.split(".")[1]]))
-                {
-                    const key=d.name.split(".")[1], category=key.startsWith("mapMethod")?"methods":key.startsWith("mapProperty")?"properties":"attributes";
-                    const names=[key==="mapAttribute"?d.args[1]:key==="mapAttributeWithChooser"?d.args[2]:d.args[0]].flat();
-                    for(const name of names)
-                    {
-                        const rows=nativeRows.flatMap(n=>n[category]).filter(row=>row.name===name);
-                        const at={name:String(name),line:d.line};
-                        if(!rows.length){add("exposure-absent",c,at,"No own Carbon macro row for this inherited member.");continue;}
-                        if(!rows.some(r=>r.macro===maps[key]))add("exposure-macro",c,at,"Macro kind differs.",rows.map(r=>r.macro));
-                        if(rows.some(r=>r.condition?.length&&!r.condition.every(x=>ruledOn.has(x))))add("conditional-exposure",c,at,"Select target preprocessor conditions before migration.");
-                        if(category==="attributes"&&!rows.some(r=>flagMask(r.flagsAsWritten)===flagMask(d.args[0])))add("exposure-flags",c,at,"Flag bits differ or cannot be statically resolved.",rows.map(r=>r.flagsAsWritten));
-                        // A property on a plain field is faithful wherever the row sits: Carbon's getter (declared on a base when the member is inherited) must only read the member.
-                        if(key.endsWith("__Field")&&fs.existsSync(process.env.CARBON_ROOT??"E:/carbonengine"))
-                        {
-                            const row=rows.find(r=>r.getter);
-                            if(row)
-                            {
-                                const readOnly=key.includes("mapPropertyReadOnly");
-                                let check=null;
-                                for(const owner of [...searched])
-                                {
-                                    check=checkAccessorBodies(owner,row.getter,readOnly?null:row.setter);
-                                    if(!check.reasons.some(x=>/has no definition beside the class/.test(x)))break;
-                                }
-                                if(check&&!check.ok)add("property-field-body",c,at,"Carbon's accessors do more than read and write one member, so the property cannot sit on a plain field.",check.reasons);
-                            }
-                        }
-                    }
-                }
-                continue;
+                check = checkAccessorBodies(owner, row.getter, readOnly ? null : row.setter);
+                if (!check.reasons.some(x => /has no definition beside the class/.test(x))) break;
             }
-            if(id.native.length && m.kind==="method" && !ds.some(d=>d.name==="meta.cjs"))
-            {
-                const name=m.name.replace(/^[_#]/,"").split("__")[0];
-                const candidates=[m.name,name,...ds.filter(d=>d.name==="meta.renamed").map(d=>d.args[0])];
-                if(m.static)candidates.push(name[0]?.toUpperCase()+name.slice(1));
-                if(name==="Destruct")for(const n of id.native)candidates.push("~"+n.split("::").at(-1));
-                // A constructor overload is create__Discriminator and an assignment operator is Assign__Discriminator (decorator-upgrade.md § 00); the header
-                // oracle records a constructor under the class name and every operator as "operator".
-                if(name==="create")for(const n of id.native)candidates.push(n.split("::").at(-1));
-                if(name==="Assign")candidates.push("operator");
-                if(!candidates.some(n=>nativeMethods.has(n)))add("carbon-origin-name",c,m,
-                    "No header method match; review free functions, extracted helpers and explicit own origin.",{identities:id.native,searched:[...searched]});
-            }
-            const mapped=ds.filter(d=>d.name.startsWith("exposure.")&&maps[d.name.split(".")[1]]);
-            const legacy=ds.some(d=>d.name.startsWith("blue.")&&(["property","chooser","method"].includes(d.name.slice(5))||Object.hasOwn(oldBits,d.name.slice(5))));
-            if(!mapped.length && !legacy)continue;
-            const isMethod=m.kind==="method", property=mapped.some(d=>d.name.includes("mapProperty"))||ds.some(d=>d.name==="blue.property");
-            const category=isMethod?"methods":property?"properties":"attributes";
-            let exposed=m.name, expectedMacro=null, actualFlags=null, chooser;
-            if(mapped.length)
-            {
-                const d=mapped[0], key=d.name.split(".")[1];expectedMacro=maps[key];
-                const pos=key==="mapAttributeWithChooser"?2:key==="mapAttribute"?1:0;
-                if(d.args[pos]!==undefined)exposed=d.args[pos];
-                if(category==="attributes")actualFlags=flagMask(d.args[0]);
-                if(key==="mapAttributeWithChooser")chooser=d.args[1];
-                // Carbon exposes one function under several names (several MAP_METHOD* lines): distinct names are aliases, not duplicates.
-                const aliasLines=mapped.every(x=>x.name.split(".")[1].startsWith("mapMethod"))&&new Set(mapped.map(x=>x.args[0]??"")).size===mapped.length;
-                // One member under two Carbon names (decorator-upgrade.md § 00): attribute or property rows, each with its own exposed name.
-                const rowName=x=>{const k=x.name.split(".")[1];const at=k==="mapAttributeWithChooser"?2:k==="mapAttribute"?1:0;return x.args[at]??m.name;};
-                const nameRows=mapped.every(x=>/^map(Attribute|Property)/.test(x.name.split(".")[1]))&&new Set(mapped.map(rowName)).size===mapped.length;
-                if(mapped.length>1&&!aliasLines&&!nameRows)add("duplicate-exposure",c,m,"Multiple complete exposure declarations on one member.");
-            }
-            else
-            {
-                const alias=ds.find(d=>["blue.property"].includes(d.name)&&typeof d.args[0]==="string");
-                if(alias)exposed=alias.args[0];
-                actualFlags=0;
-                for(const d of ds)if(Object.hasOwn(oldBits,d.name.slice(5))&&d.name.startsWith("blue."))actualFlags|=oldBits[d.name.slice(5)];
-                if(ds.some(d=>d.name==="type.enum"))actualFlags|=512;
-                if(ds.some(d=>d.name==="type.flags"))actualFlags|=256;
-                chooser=ds.find(d=>["blue.chooser","type.enum","type.flags"].includes(d.name))?.args[0];
-            }
-            const rows=nativeRows.flatMap(n=>n[category]).filter(row=>row.name===exposed||isMethod&&row.function===m.name);
-            if(!rows.length)
-            {
-                add("exposure-absent",c,m,"No own Carbon macro row for this declaration.");continue;
-            }
-            // A property on a plain field is faithful only where Carbon's getter and setter just read and write one member.
-            if(mapped.some(d=>d.name.endsWith("__Field"))&&fs.existsSync(process.env.CARBON_ROOT??"E:/carbonengine"))
-            {
-                const row=rows.find(r=>r.name===exposed&&r.getter);
-                if(row)
-                {
-                    const readOnly=mapped.some(d=>d.name.includes("mapPropertyReadOnly"));
-                    const check=checkAccessorBodies(c.name,row.getter,readOnly?null:row.setter);
-                    if(!check.ok)add("property-field-body",c,m,"Carbon's accessors do more than read and write one member, so the property cannot sit on a plain field.",check.reasons);
-                }
-            }
-            if(rows.some(r=>r.condition?.length&&!r.condition.every(c=>ruledOn.has(c))))add("conditional-exposure",c,m,"Select target preprocessor conditions before migration.",rows.map(r=>({source:r.source,line:r.line,condition:r.condition})));
-            if(mapped.length&&!rows.some(r=>r.name===exposed))add("exposure-name",c,m,"Exposed name differs from the native macro.",rows.map(r=>r.name));
-            if(expectedMacro&&!rows.some(r=>r.macro===expectedMacro))add("exposure-macro",c,m,"Macro kind differs.",rows.map(r=>r.macro));
-            if(category==="attributes")
-            {
-                if(actualFlags===null||!rows.some(r=>flagMask(r.flagsAsWritten)===actualFlags))add("exposure-flags",c,m,"Flag bits differ or cannot be statically resolved.",rows.map(r=>r.flagsAsWritten));
-                const chooserEqual=r=>{
-                    const expected=[null,"NULL","nullptr","0"].includes(r.chooser)?null:r.chooser;
-                    const actual=chooser?.$expr??chooser??null;
-                    return actual===expected||[chooserBindings[expected]].flat().includes(actual);
-                };
-                if(!rows.some(chooserEqual))add("exposure-chooser",c,m,"Chooser identity needs equality or an explicit native-to-registry binding.",rows.map(r=>r.chooser));
-            }
-        }
-        for(const native of nativeRows)
+            if (check && !check.ok) add("property-field-body", c, at, "Carbon's accessors do more than read and write one member, so the property cannot sit on a plain field.", check.reasons);
+        };
+
+        // A be.map* above a class names a member the class inherits; its getter may be declared on a base (decorator-upgrade.md § 00).
+        for (const d of (c.decorators ?? []).filter(d => PROPERTY_FIELD.test(d.name)))
+            for (const name of [ d.args[0] ].flat()) checkField({ name: String(name), line: d.line }, d.name, name, [ ...searched ]);
+
+        for (const m of c.members)
         {
-            for(const row of [...native.attributes,...native.properties,...native.methods])
-            {
-                const names=[row.name,row.function].filter(Boolean);
-                // `MAP_ICACHEABLE_METHODS()` is one Carbon line and one class-level decorator.
-                if(["IsMemoryUsageKnown","GetMemoryUsage"].includes(row.name)&&c.decorators.some(d=>d.name==="exposure.mapICacheableMethods"))continue;
-                // The C++ function name resolves first (MAP_METHOD_AND_WRAP( "Render", RenderFromScript )), so member order never decides which
-                // declaration a macro lands on; the exposed name is only a fallback.
-                const byFunction=row.function?c.members.find(m=>m.name===row.function):null;
-                const found=byFunction??c.members.find(m=>names.includes(m.name)||m.decorators.some(d=>
-                    (["blue.property"].includes(d.name)||d.name.startsWith("exposure.map"))&&d.args.some(a=>names.includes(a))));
-                const classLevel=c.decorators.some(d=>d.name.startsWith("exposure.map")&&[d.args[0],d.args[1],d.args[2]].flat().some(a=>names.includes(a)));
-                if(!found&&classLevel)continue;
-                if(!found)add("exposure-member-unresolved",c,{name:row.name},"No own declaration resolved; inherited exposure needs review.",{source:row.source,line:row.line});
-                else if(!found.decorators.some(d=>d.name.startsWith("exposure.map") || d.name.startsWith("blue.") && (["method","property","chooser"].includes(d.name.slice(5)) || Object.hasOwn(oldBits,d.name.slice(5)))))
-                    add("exposure-declaration-missing",c,found,"Native macro has no exposure decorator on the resolved member.",{source:row.source,line:row.line});
-            }
-            const mapsInSource=c.decorators.filter(d=>["blue.interface","exposure.mapInterface"].includes(d.name)).flatMap(d=>d.args.map(x=>x?.$expr??x));
-            for(const row of native.interfaces)
-                if(row.name!==native.name&&row.name!=="IRoot"&&!mapsInSource.includes(row.name))
-                    add("interface-map",c,null,`Missing explicit non-self map: ${row.name}`,{source:row.source,line:row.line});
-            // Native explicit self-map rows are satisfied by define, never emitted.
-            if(c.decorators.some(d=>d.name==="exposure.mapInterface"&&d.args.some(a=>a?.$expr===c.name)))
-                add("explicit-self-map",c,null,"Remove explicit self mapping; define supplies it.");
-        }
-        if(c.name.startsWith("Cjs"))
-        {
-            const backend=/^src\/trinityal\/(webgpu|webgl2)\//.test(c.source);
-            if(backend&&!id.native.length&&!id.donors.length)add("backend-donor",c,null,"Backend name is allowed; declare a donor or review own platform glue.");
-            if(!backend&&(id.native.length||id.donors.length))add("cjs-donor",c,null,"Review native rename or justified merged/adapted Cjs identity.",{native:id.native,donors:id.donors});
+            const ds = m.decorators ?? [];
+            for (const d of ds.filter(d => PROPERTY_FIELD.test(d.name))) checkField(m, d.name, d.args[0] ?? m.name, [ ...searched ]);
+            if (!native.length || m.kind !== "method" || ds.some(d => d.name === "meta.cjs")) continue;
+            const name = m.name.replace(/^[_#]/, "").split("__")[0];
+            const candidates = [ m.name, name, ...ds.filter(d => d.name === "meta.renamed").map(d => d.args[0]) ];
+            if (m.static) candidates.push(name[0]?.toUpperCase() + name.slice(1));
+            if (name === "Destruct") for (const n of native) candidates.push("~" + n.split("::").at(-1));
+            // A constructor overload is create__Discriminator and an assignment operator is Assign__Discriminator (decorator-upgrade.md § 00);
+            // the scan records a constructor under the class name and an operator with its symbol.
+            if (name === "create") for (const n of native) candidates.push(n.split("::").at(-1));
+            if (name === "Assign") candidates.push("operator=");
+            if (!candidates.some(n => nativeMethods.has(n))) add("carbon-origin-name", c, m,
+                "No header method match; review free functions, extracted helpers and explicit own origin.", { identities: native, searched: [ ...searched ] });
         }
     }
-    for(const diagnostic of inventory.diagnostics)add("inventory-unresolved",{source:diagnostic.source,name:diagnostic.class??"<inventory>"},null,diagnostic.kind,diagnostic);
+    for (const diagnostic of inventory.diagnostics) add("inventory-unresolved", { source: diagnostic.source, name: diagnostic.class ?? "<inventory>" }, null, diagnostic.kind, diagnostic);
     return findings;
 }
 
@@ -280,7 +159,7 @@ export function shrinkBaseline(findings, baseline, renames=[])
     return {version:1,fingerprints:[...known].filter(value=>current.has(value)).sort()};
 }
 
-/** Runtime-only report. Baseline updates shrink; missing states remain findings, never inferred states. */
+/** Runtime-only report. Baseline updates shrink. */
 export function run(argv)
 {
     const args=new Map();for(let i=0;i<argv.length;i++)if(argv[i].startsWith("--"))args.set(argv[i],argv[i+1]?.startsWith("--")?true:argv[++i]??true);
@@ -290,14 +169,21 @@ export function run(argv)
     if(packageName!=="@carbonenginejs/runtime")
     {
         const report={mode:"report-only",scope:"excluded",packageName,counts:{},total:0,newFindings:0,findings:[],
-            reason:"Decorator state/origin migration currently applies only to runtime; application packages are excluded."};
+            reason:"The audit applies only to runtime; application packages are excluded."};
         if(args.has("--output"))fs.writeFileSync(args.get("--output"),JSON.stringify(report,null,2)+"\n");
         console.log(JSON.stringify(report));return report;
     }
-    const oracleDir=args.get("--oracle");
-    if(!oracleDir)throw new Error("Pass --oracle <preparation data directory> containing carbon-exposure.json and carbon-headers.json.");
-    const read=name=>JSON.parse(fs.readFileSync(path.join(oracleDir,name),"utf8"));
-    const findings=auditDecorators(inventoryRuntime(root,{markers:args.get("--markers")??"both"}),read("carbon-exposure.json"),read("carbon-headers.json"),args.has("--choosers")?JSON.parse(fs.readFileSync(args.get("--choosers"),"utf8")):{});
+    const reportRoot=path.resolve(args.get("--reports")??process.env.CARBON_BLUE_REPORTS??defaultReports);
+    const reports=REPORT_FILES.map(file=>path.join(reportRoot,file)).filter(file=>fs.existsSync(file));
+    if(!reports.length)
+    {
+        const report={mode:"report-only",scope:"skipped",counts:{},total:0,newFindings:0,findings:[],
+            reason:`No carbon-blue report in ${reportRoot}: run \`npm run scan\` and \`npm run scan:trinity\` in tools-core, or set CARBON_BLUE_REPORTS.`};
+        console.log(JSON.stringify(report));return report;
+    }
+    const carbon=readCarbonReports(reports.map(file=>JSON.parse(fs.readFileSync(file,"utf8"))));
+    const accessorBodies=fs.existsSync(process.env.CARBON_ROOT??"E:/carbonengine");
+    const findings=auditDecorators(inventoryRuntime(root,{markers:args.get("--markers")??"both"}),carbon,{accessorBodies});
     const baselinePath=path.join(root,"scripts/baselines/decorator-target.json");
     let previous=fs.existsSync(baselinePath)?JSON.parse(fs.readFileSync(baselinePath,"utf8")):null;
     if(args.has("--write-baseline"))
