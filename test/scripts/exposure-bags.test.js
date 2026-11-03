@@ -95,6 +95,18 @@ test("an exposed name that starts with m_ is keyed without it, the row keeping C
     assert.deepEqual(keys(source(null), rows), [ "attribute m_dampingRatio key" ]);
 });
 
+test("a member's second exposed name lands on the key of its first", () =>
+{
+    order = 0;
+    const rows = [
+        row("ATTR", { name: "pinColor", member: "m_pinColor", flags: [ "READWRITE", "PERSIST" ], macro: "MAP_ATTRIBUTE" }),
+        row("ATTR", { name: "color", member: "m_pinColor", flags: [ "READWRITE" ], macro: "MAP_ATTRIBUTE" })
+    ];
+    const source = key => bagSource({ rows: [ "[ be.ATTR, \"pinColor\", be.READWRITE | be.PERSIST ]", `[ be.ATTR, "color", be.READWRITE, "${key}" ]` ], interfaces: "[]", chainTo: null });
+    assert.deepEqual(keys(source("pinColor"), rows), []);
+    assert.deepEqual(keys(source("tint"), rows), [ "attribute color key" ]);
+});
+
 test("a method lands on Carbon's C++ method name", () =>
 {
     const rows = [ ...members.slice(0, 4), "[ be.METHOD, \"IsReady\", be.WRAP ]", members[5] ];

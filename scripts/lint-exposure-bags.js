@@ -245,6 +245,13 @@ export function compareBag(bag, rows)
     // Member rows, paired by family and exposed name, in order of occurrence.
     const carbonMembers = rows.filter(row => [ "ATTR", "PROP", "METHOD", "ICACHEABLE" ].includes(row.kind)).map(row => ({ ...carbonRow(row), row }));
     for (const carbon of carbonMembers) if (carbon.family === "ATTR") carbon.keys = attributeKeys(carbon);
+    // One member under a second exposed name (EveChildSpherePin m_pinColor as "pinColor", then "color": _Blue.cpp:17-18) lands on the
+    // key of the member's first row.
+    for (const [ index, carbon ] of carbonMembers.entries())
+    {
+        const first = carbonMembers.slice(0, index).find(other => other.family === "ATTR" && !other.indexed && other.member && other.member === carbon.member);
+        if (carbon.family === "ATTR" && !carbon.indexed && first && carbon.keys) carbon.keys = [ ...new Set([ ...carbon.keys, ...(first.keys ?? []) ]) ];
+    }
     const unpaired = carbonMembers.slice();
     const pairs = [];
     for (const member of bag.members)
