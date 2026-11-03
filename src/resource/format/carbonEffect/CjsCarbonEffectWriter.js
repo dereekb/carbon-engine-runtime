@@ -265,19 +265,19 @@ export class CjsCarbonEffectWriter
     /** Stable name independent of minification; no registry is required. */
     static className = "CjsCarbonEffectWriter";
 
-    _table;
+    _table = null;
 
     _permutations = [];
 
     _bodies = [];
 
-    _compilerVersion;
+    _compilerVersion = null;
 
-    _sourceHash;
+    _sourceHash = "";
 
-    _backend;
+    _backend = false;
 
-    _version;
+    _version = 0;
 
     /**
      * Creates an empty container builder.

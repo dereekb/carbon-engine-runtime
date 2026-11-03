@@ -10,7 +10,7 @@ import { CjsMusicEngineFade, LINEAR_FADE_CURVE } from "./CjsMusicEngineFade.js";
  */
 export class CjsMusicEngineScheduledSegment
 {
-    _context;
+    _context = null;
 
     /** Initializes one scheduled segment around its connected gain lane. */
     constructor({

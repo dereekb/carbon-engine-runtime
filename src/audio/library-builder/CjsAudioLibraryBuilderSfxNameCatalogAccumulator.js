@@ -17,7 +17,7 @@ export class CjsAudioLibraryBuilderSfxNameCatalogAccumulator
 
     _parameterTransitions = new Map();
 
-    _stateFilterBehavior;
+    _stateFilterBehavior = null;
 
     _stateTransitionSettings = new Map();
 
@@ -194,7 +194,7 @@ export class CjsAudioLibraryBuilderSfxNameCatalogAccumulator
             );
         }
         if (filterBehavior !== undefined
-            && this._stateFilterBehavior !== undefined
+            && this._stateFilterBehavior !== null
             && this._stateFilterBehavior !== filterBehavior)
         {
             throw new TypeError(

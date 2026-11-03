@@ -13,10 +13,10 @@ export class CcpLogChannel_t
     oktocall = 1;
 
     /** @type {string} Native module name, such as "trinity". */
-    facility;
+    facility = "";
 
     /** @type {string} Channel description, usually "Main". */
-    object;
+    object = "";
 
     /** @type {number} Host-assigned channel buffer index. */
     channel = 0;

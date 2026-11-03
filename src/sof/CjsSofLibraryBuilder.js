@@ -80,9 +80,9 @@ const CATALOGS = {
 export class CjsSofLibraryBuilder
 {
 
-  _dataMgr;
+  _dataMgr = null;
 
-  _readObject;
+  _readObject = null;
 
   _pending = new Map();
 
@@ -146,7 +146,7 @@ export class CjsSofLibraryBuilder
   basePath = DEFAULT_BASE_PATH;
 
   /** Mutable partial source catalog suitable for GetValues persistence. */
-  data;
+  data = null;
 
   /** Returns the exact manager receiving normalized catalog updates. */
   GetDataManager()

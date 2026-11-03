@@ -24,7 +24,14 @@
 //    deterministic unregister point. Eight sibling stubs do it correctly, so
 //    the convention was established and simply missed.
 //
-// Both are structural, so this parses rather than greps: a regex cannot tell a
+// 3. A CLASS FIELD WITH NO INITIALIZER. `_schema;` declares a member whose value is
+//    undefined until a constructor happens to assign it, and "properties can never be
+//    undefined - we treat this as a bug" (operator, 2026-11-03; class-ownership.md
+//    § Class-shape rules). Every field states its default by meaning: null for an
+//    object or a function, "" for a string, a number for a number. Constructors
+//    still assign the real value.
+//
+// All three are structural, so this parses rather than greps: a regex cannot tell a
 // method from a string containing one, and getters, setters, statics and
 // computed keys all have to be distinguished to avoid false positives.
 //
@@ -192,6 +199,13 @@ function checkClass(node, relativeFile)
             seen.set(slot, member.loc.start.line);
         }
 
+        if ((member.type === "ClassProperty" || member.type === "ClassPrivateProperty") && member.value === null && !member.declare)
+        {
+            problems.push(
+                `${relativeFile}:${member.loc.start.line} ${className}.${name} has no initializer. `
+                + `Give it a default by meaning (null, "", a number); a field is never undefined.`);
+        }
+
         if (name === "Destroy" && member.type === "ClassMethod" && !member.static
             && superName && UNREGISTERING_BASES.has(superName) && !callsSuperDestroy(member))
         {
@@ -232,13 +246,16 @@ function checkFile(ast, relativeFile)
 }
 
 
-const files = await sourceFiles(sourceRoot);
-
-for (const file of files)
+/**
+ * The class-shape problems in one module's source.
+ *
+ * @param {string} code The module source.
+ * @param {string} relativeFile Its path, for messages.
+ * @returns {string[]} The problems.
+ */
+export function checkSource(code, relativeFile)
 {
-    const relativeFile = path.relative(packageRoot, file).replaceAll("\\", "/");
-    const code = await readFile(file, "utf8");
-
+    const before = problems.length;
     let ast;
     try
     {
@@ -250,19 +267,32 @@ for (const file of files)
     catch (error)
     {
         problems.push(`${relativeFile} could not be parsed: ${error.message}`);
-        continue;
+        return problems.splice(before);
+    }
+    checkFile(ast, relativeFile);
+    return problems.splice(before);
+}
+
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+{
+    const files = await sourceFiles(sourceRoot);
+    const found = [];
+
+    for (const file of files)
+    {
+        const relativeFile = path.relative(packageRoot, file).replaceAll("\\", "/");
+        found.push(...checkSource(await readFile(file, "utf8"), relativeFile));
     }
 
-    checkFile(ast, relativeFile);
-}
-
-if (problems.length)
-{
-    for (const problem of problems) console.error(`  ${problem}`);
-    console.error(`\n${problems.length} class-shape problem(s).`);
-    process.exitCode = 1;
-}
-else
-{
-    console.log(`Class shape OK: ${files.length} files, no duplicate members or unregistering Destroy.`);
+    if (found.length)
+    {
+        for (const problem of found) console.error(`  ${problem}`);
+        console.error(`\n${found.length} class-shape problem(s).`);
+        process.exitCode = 1;
+    }
+    else
+    {
+        console.log(`Class shape OK: ${files.length} files, no duplicate members, unregistering Destroy or field without an initializer.`);
+    }
 }

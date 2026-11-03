@@ -22,7 +22,7 @@ import { SofValuesBuilder } from "./SofValuesBuilder.js";
 export class CjsSOFUpdater
 {
   /** The caller's factory, including its catalog, resource resolvers and options. */
-  _sof;
+  _sof = null;
 
   /** Latest request per live root; pending work must not keep retired roots indexed. */
   _updates = new WeakMap();

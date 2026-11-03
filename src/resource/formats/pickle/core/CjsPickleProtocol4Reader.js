@@ -64,9 +64,9 @@ export class CjsPickleProtocol4Reader
 {
   static className = "CjsPickleProtocol4Reader";
 
-  _bytes;
+  _bytes = null;
 
-  _limits;
+  _limits = null;
 
   /**
    * Bind one byte source and its resource limits.

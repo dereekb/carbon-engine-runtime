@@ -8,15 +8,15 @@ const FILTER_REMAINING_AT_AUTHORED_TIME = 0.005;
 /** Owns one voice-local approximation of a filtered Wwise control timeline. */
 export class CjsWwiseFilteredControl
 {
-    _from;
+    _from = 0;
 
-    _to;
+    _to = 0;
 
-    _startTime;
+    _startTime = 0;
 
     _timeConstant = 0;
 
-    _settleTime;
+    _settleTime = 0;
 
     /** Creates a settled control at one initial value and context time. */
     constructor(value, at)

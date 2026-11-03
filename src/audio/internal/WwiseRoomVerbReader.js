@@ -755,7 +755,7 @@ function NormalizeImpulse(data, quality)
 /** Sequential little-endian reader for one exact v150 RoomVerb payload. */
 class WwiseRoomVerbReader
 {
-    _view;
+    _view = null;
     _offset = 0;
 
     /** Wraps one already length-qualified RoomVerb byte block. */

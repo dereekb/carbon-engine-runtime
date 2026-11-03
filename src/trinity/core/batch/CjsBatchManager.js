@@ -41,11 +41,11 @@ export class CjsBatchManager
 
   #collectors = new Map();
 
-  #batchTypes;
+  #batchTypes = null;
 
-  #requiredTypes;
+  #requiredTypes = null;
 
-  #createAccumulator;
+  #createAccumulator = null;
 
   #batchMap = null;
 

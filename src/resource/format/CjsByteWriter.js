@@ -20,9 +20,9 @@ export class CjsByteWriter
     /** Stable name independent of minification; no registry is required. */
     static className = "CjsByteWriter";
 
-    _bytes;
+    _bytes = null;
 
-    _view;
+    _view = null;
 
     _length = 0;
 

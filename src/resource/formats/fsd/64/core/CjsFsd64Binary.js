@@ -38,9 +38,9 @@ export class CjsFsd64Binary
         UINT_64_IDENTIFIER: "UINT_64_IDENTIFIER",
     };
 
-    _bytes;
+    _bytes = null;
 
-    _view;
+    _view = null;
 
     /**
      * Creates a validated view over caller-supplied container bytes.

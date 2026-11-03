@@ -41,11 +41,11 @@ const MAX_TREMOLO_DEPTH_PERCENT = 100;
  */
 export class CjsWwiseSourceEffectRtpcLane
 {
-    _bindings;
+    _bindings = null;
 
-    _context;
+    _context = null;
 
-    _readCurve;
+    _readCurve = null;
 
     _filteredControls = new Map();
 

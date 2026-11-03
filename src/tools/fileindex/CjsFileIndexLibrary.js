@@ -36,9 +36,9 @@ export class CjsFileIndexLibrary
     /** The overlay names; set by the constructor. @type {string[]} */
     overlayNames = [];
 
-    #overlaysByName;
-    #resFileIndexesByName;
-    #sourcesByID;
+    #overlaysByName = null;
+    #resFileIndexesByName = null;
+    #sourcesByID = null;
 
     /**
      * Composes one build's appfileindex, its loaded resfileindexes and any manual

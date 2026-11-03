@@ -27,7 +27,7 @@ function NowSeconds()
 @meta.carbon("AudObstructionOcclusion")
 export class AudObstructionOcclusion
 {
-  _audioManager;
+  _audioManager = null;
 
   _emitters = new Map();
 
@@ -39,7 +39,7 @@ export class AudObstructionOcclusion
 
   _enabled = true;
 
-  _now;
+  _now = null;
 
   /** Creates Carbon's obstruction/occlusion collaborator for one manager. */
   constructor(audioManager, now = NowSeconds)

@@ -36,7 +36,7 @@ fn fs(in: Varyings) -> @location(0) vec4<f32>
 /** Renders a texture's mip chain on a command encoder, one level from the one above. */
 export class CjsWebgpuMipGenerator
 {
-  _device;
+  _device = null;
 
   _module = null;
 

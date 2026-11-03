@@ -17,11 +17,11 @@ import { RealizeTexture } from "../../core/Tr2ImageIOHelpers.js";
 /** Binds one merged register from its member texture parameters, named in layer order. */
 export class CjsTextureArrayBridge
 {
-  _effect;
+  _effect = null;
 
-  _members;
+  _members = null;
 
-  _prefix;
+  _prefix = "";
 
   _path = null;
 

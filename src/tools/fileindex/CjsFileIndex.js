@@ -26,7 +26,7 @@ export class CjsFileIndex
     /** The number of entries; set by the constructor. */
     count = 0;
 
-    #entriesByPath;
+    #entriesByPath = null;
 
     /**
      * Normalizes the entries and indexes them by logical path, rejecting a duplicate

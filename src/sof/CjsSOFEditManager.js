@@ -10,9 +10,9 @@ import { CjsSchema, meta } from "#schema";
 export class CjsSOFEditManager
 {
   /** The schema from the edited objects' realm. */
-  _schema;
+  _schema = null;
   /** One direct receiver, or null when only mutation results are needed. */
-  _receive;
+  _receive = null;
 
   /** Creates an edit manager using the supplied schema and optional receipt callback. */
   constructor({ schema = CjsSchema, receive = null } = {})

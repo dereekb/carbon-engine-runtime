@@ -5,19 +5,19 @@ import { CjsSchema } from "#schema";
 /** One retained music clip whose disposable Web Audio source may be resumed. */
 export class CjsMusicEngineScheduledClip
 {
-    _acquireBuffer;
+    _acquireBuffer = null;
 
     _buffer = null;
 
-    _context;
+    _context = null;
 
-    _destination;
+    _destination = null;
 
-    _isLive;
+    _isLive = null;
 
-    _getStopAt;
+    _getStopAt = null;
 
-    _offsetSeconds;
+    _offsetSeconds = 0;
 
     _pausedAt = null;
 
@@ -27,7 +27,7 @@ export class CjsMusicEngineScheduledClip
 
     _scheduledPauseAt = null;
 
-    _scheduleDuck;
+    _scheduleDuck = null;
 
     /** Retains one already-windowed clip and begins asynchronous realization. */
     constructor({

@@ -81,7 +81,7 @@ class BaselineJpegDecoder
 {
     static className = "BaselineJpegDecoder";
 
-    _bytes;
+    _bytes = null;
 
     _offset = 0;
 
@@ -469,9 +469,9 @@ class EntropyReader
 {
     static className = "EntropyReader";
 
-    _bytes;
+    _bytes = null;
 
-    _offset;
+    _offset = 0;
 
     _buffer = 0;
 

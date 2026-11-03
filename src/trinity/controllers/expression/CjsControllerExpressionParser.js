@@ -11,9 +11,9 @@ import { BLOCKED_IDENTIFIERS, CONSTANTS, GetFunction, Tokenize } from "./express
  */
 export class CjsControllerExpressionParser
 {
-  source;
-  options;
-  tokens;
+  source = "";
+  options = null;
+  tokens = null;
   index = 0;
 
   variableNames = new Set();

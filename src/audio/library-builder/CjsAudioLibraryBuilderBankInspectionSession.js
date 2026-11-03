@@ -7,13 +7,13 @@ import { CjsAudioLibraryBuilderUtils } from "./CjsAudioLibraryBuilderUtils.js";
 /** Owns ordered bank inspection and its coupled projections. */
 export class CjsAudioLibraryBuilderBankInspectionSession
 {
-    _builder;
+    _builder = null;
 
-    _loadBank;
+    _loadBank = null;
 
-    _inspectBank;
+    _inspectBank = null;
 
-    _signal;
+    _signal = null;
 
     _inspections = [];
 
