@@ -39,43 +39,41 @@ const INNER_TO_OUTER_BOX = mat4.create();
  * Oriented box of influence with a hollow inner box, weighting points by falloff
  * and seeding random points across its shell.
  */
-@be.define("EveBoxVolume")
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(IEveVolume)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveBoxVolume",
+  inherit: [ IInitialize, INotify ],
+  // EveBoxVolume_Blue.cpp:11-23, in Carbon's order.
+  interfaces: [ IEveVolume, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "innerScaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "debugShowIntersection", be.READWRITE ]
+  ]
+})
 export class EveBoxVolume extends IEveVolume
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   scaling = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   innerScaling = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugShowIntersection = false;
 

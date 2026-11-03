@@ -22,59 +22,61 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { packQuadInstanceData, QUAD_INSTANCE_SIZE } from "../child/packQuadInstanceData.js";
 
 /** A smart-light group member that places faction-colour-aware flare quads at each distribution placement and submits them to the quad renderer. */
-@be.define("EveSmartLightQuad")
-@be.inherit(EveSmartLightBaseGroup, IInitialize, INotify)
-@be.mapInterface(EveSmartLightBaseGroup)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.exposureChainTo(EveSmartLightBaseGroup)
+@be.define({
+  name: "EveSmartLightQuad",
+  inherit: [ EveSmartLightBaseGroup, IInitialize, INotify ],
+  // EveSmartLightQuad_Blue.cpp:10-28, in Carbon's order.
+  interfaces: [ EveSmartLightBaseGroup, IInitialize, INotify, IListNotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "editMode", be.READWRITE ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "softQuad", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "staticOffsetTranslation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticQuadScale", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveSmartLightBaseGroup
+})
 export class EveSmartLightQuad extends EveChildTransform
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_effect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_brightness (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   brightness = 1;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_staticQuadScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   staticQuadScale = vec3.fromValues(1, 1, 1);
 
   /** m_staticOffsetTranslation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   staticOffsetTranslation = vec3.create();
 
   /** m_editMode (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   editMode = false;
 
   /** m_softQuad (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean

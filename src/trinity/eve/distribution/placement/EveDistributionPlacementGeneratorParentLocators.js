@@ -9,10 +9,15 @@ import { InitialPlacement } from "../attributeModifiers/InitialPlacement.js";
 import { PlacementDataWithIdentifier } from "../../PlacementDataWithIdentifier.js";
 
 /** Builds distribution placements from a named locator set resolved on the parent space object. */
-@be.define("EveDistributionPlacementGeneratorParentLocators")
-@be.inherit(INotify)
-@be.mapInterface(IEveDistributionPlacementGenerators)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveDistributionPlacementGeneratorParentLocators",
+  inherit: [ INotify ],
+  // EveDistributionPlacementGeneratorParentLocators_Blue.cpp:9-14, in Carbon's order.
+  interfaces: [ IEveDistributionPlacementGenerators, INotify ],
+  members: [
+    [ be.ATTR, "locatorSetName", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveDistributionPlacementGeneratorParentLocators extends IEveDistributionPlacementGenerators
 {
 
@@ -28,7 +33,6 @@ export class EveDistributionPlacementGeneratorParentLocators extends IEveDistrib
   _locatorSetName = null;
 
   /** m_locatorSetName (BlueSharedString) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string

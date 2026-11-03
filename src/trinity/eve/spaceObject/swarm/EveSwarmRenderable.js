@@ -20,11 +20,13 @@ import { EveSpaceObjectDecal } from "../../attachment/decal/EveSpaceObjectDecal.
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 
 /** Carbon's EveSwarmRenderable (EveSwarm.h:20-95): one fighter of an EveSwarm, drawing the squad's shared mesh at its own world transform. */
-@be.define("EveSwarmRenderable")
-@be.inherit(ITr2Renderable, ITr2Pickable, IShaderConfigurer, IEveShadowCaster)
-@be.mapInterface(ITr2Pickable)
-@be.mapInterface(EveEntity)
-@be.mapInterface(IEveShadowCaster)
+@be.define({
+  name: "EveSwarmRenderable",
+  inherit: [ ITr2Renderable, ITr2Pickable, IShaderConfigurer, IEveShadowCaster ],
+  // EveSwarm_Blue.cpp:9-12, in Carbon's order.
+  interfaces: [ ITr2Pickable, EveEntity, IEveShadowCaster ],
+  members: []
+})
 export class EveSwarmRenderable extends EveEntity
 {
 

@@ -10,13 +10,17 @@ import { EveVirtualCameraBehaviourFloatBase } from "./EveVirtualCameraBehaviourF
  * Float behaviour that overrides whatever the earlier behaviours accumulated
  * with an authored constant.
  */
-@be.define("EveVirtualCameraBehaviourFloatSet")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourFloatBase)
+@be.define({
+  name: "EveVirtualCameraBehaviourFloatSet",
+  // EveVirtualCameraBehaviour_Blue.cpp:27-30, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourFloatBase
+})
 export class EveVirtualCameraBehaviourFloatSet extends EveVirtualCameraBehaviourFloatBase
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   value = 0;
 

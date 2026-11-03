@@ -6,19 +6,26 @@ import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js
 import { IEveSocketParameter } from "./IEveSocketParameter.js";
 
 /** Binds a named string socket value to external parameters while capturing defaults for restoration. */
-@be.define("EveSocketParameterString")
-@be.mapInterface(IEveSocketParameter)
+@be.define({
+  name: "EveSocketParameterString",
+  // EveSocketParameter_Blue.cpp:40-40, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterString extends IEveSocketParameter
 {
 
   /** m_name (std::string) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_value (std::string) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   value = "";
@@ -126,7 +133,6 @@ export class EveSocketParameterString extends IEveSocketParameter
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetValueToDefault()
   {
     if (this.defaults.length) this.value = this.defaults[0];
@@ -137,7 +143,6 @@ export class EveSocketParameterString extends IEveSocketParameter
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Used()
   {
     return this.externalParameters.length !== 0;

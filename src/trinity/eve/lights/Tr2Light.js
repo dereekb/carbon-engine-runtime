@@ -21,8 +21,12 @@ import { LightFeatures } from "./LightFeatures.js";
  *
  * @abstract
  */
-@be.define("Tr2Light")
-@be.inherit(IInitialize, INotify)
+@be.define({
+  name: "Tr2Light",
+  inherit: [ IInitialize, INotify ],
+  // Tr2Light_Blue.cpp:25-26, in Carbon's order.
+  members: []
+})
 @be.abstract
 export class Tr2Light
 {

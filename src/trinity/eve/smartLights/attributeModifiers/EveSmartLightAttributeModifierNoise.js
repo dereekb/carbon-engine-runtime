@@ -8,26 +8,31 @@ import { IEveSmartLightGroupAttributeModifier } from "./IEveSmartLightGroupAttri
 import { perlin1DCarbon } from "#math/noise";
 
 /** EveSmartLightAttributeModifierNoise (eve/smartLights/attributeModifiers) - generated from schema shapeHash 60b52eeb.... */
-@be.define("EveSmartLightAttributeModifierNoise")
-@be.mapInterface(IEveSmartLightGroupAttributeModifier)
-@be.exposureChainTo(EveSmartLightBaseAttributeModifier)
+@be.define({
+  name: "EveSmartLightAttributeModifierNoise",
+  // EveSmartLightAttributeModifierNoise_Blue.cpp:10-18, in Carbon's order.
+  interfaces: [ IEveSmartLightGroupAttributeModifier ],
+  members: [
+    [ be.ATTR, "noiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseOctaves", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveSmartLightBaseAttributeModifier
+})
 export class EveSmartLightAttributeModifierNoise extends IEveSmartLightGroupAttributeModifier
 {
 
   /** m_noiseAmplitude (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseAmplitude = 0;
 
   /** m_noiseFrequency (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseFrequency = 1;
 
   /** m_noiseOctaves (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   noiseOctaves = 1;

@@ -9,7 +9,11 @@ import { IEveSocketParameter } from "./IEveSocketParameter.js";
  *
  * @abstract
  */
-@be.define("EveSocketParameterBindingBase")
+@be.define({
+  name: "EveSocketParameterBindingBase",
+  // EveSocketParameter_Blue.cpp:12-12, in Carbon's order.
+  members: []
+})
 @be.abstract
 export class EveSocketParameterBindingBase extends IEveSocketParameter
 {

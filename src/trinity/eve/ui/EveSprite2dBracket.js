@@ -11,24 +11,29 @@ import { type, blue } from "#schema";
  * Screen-space bracket drawn from an atlas icon, carrying its own colour, 2D
  * translation and display flag.
  */
-@be.define("EveSprite2dBracket")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSprite2dBracket",
+  inherit: [ IRoot ],
+  // EveSprite2dBracket_Blue.cpp:10-31, in Carbon's order.
+  members: [
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "translation", be.READWRITE ],
+    [ be.ATTR, "icon", be.READWRITE ],
+    [ be.ATTR, "color", be.READWRITE ]
+  ]
+})
 
 export class EveSprite2dBracket extends IRoot
 {
-  @be.mapAttribute(be.READWRITE)
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2AtlasTexture")
   icon = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE)
   @type.vec2
   translation = vec2.create();
 

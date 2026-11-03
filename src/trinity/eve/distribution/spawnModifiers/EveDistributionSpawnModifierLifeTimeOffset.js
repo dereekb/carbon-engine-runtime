@@ -8,10 +8,19 @@ import { IEveDistributionSpawnModifier } from "./IEveDistributionSpawnModifier.j
 import { CjsDistributionRandom } from "../../CjsDistributionRandom.js";
 
 /** Offsets each spawned placement's initial lifetime with random, normalized, or cascading timing. */
-@be.define("EveDistributionSpawnModifierLifeTimeOffset")
-@be.inherit(IInitialize)
-@be.mapInterface(IEveDistributionSpawnModifier)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveDistributionSpawnModifierLifeTimeOffset",
+  inherit: [ IInitialize ],
+  // EveDistributionSpawnModifierLifeTimeOffset_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ IEveDistributionSpawnModifier, IInitialize ],
+  members: [
+    [ be.ATTR, "consistentRandom", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "normalizeOffsets", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cascadingLifetimeOffset", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnModifierLifeTimeOffset extends IEveDistributionSpawnModifier
 {
 
@@ -21,31 +30,26 @@ export class EveDistributionSpawnModifierLifeTimeOffset extends IEveDistribution
   _currentCascadingOffset = 0;
 
   /** m_minOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minOffset = 0;
 
   /** m_maxOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxOffset = 0;
 
   /** m_consistentRandom (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   consistentRandom = false;
 
   /** m_cascadingLifetimeOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   cascadingLifetimeOffset = 0;
 
   /** m_normalizeOffsets (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   normalizeOffsets = false;

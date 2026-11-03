@@ -9,8 +9,12 @@ import { EveVirtualCameraTransitionBase } from "./EveVirtualCameraTransitionBase
  * Transition that hands control to the target camera on the frame it starts,
  * with no blend.
  */
-@be.define("EveVirtualCameraTransitionCut")
-@be.exposureChainTo(EveVirtualCameraTransitionBase)
+@be.define({
+  name: "EveVirtualCameraTransitionCut",
+  // EveVirtualCameraTransition_Blue.cpp:16-17, in Carbon's order.
+  members: [],
+  chainTo: EveVirtualCameraTransitionBase
+})
 export class EveVirtualCameraTransitionCut extends EveVirtualCameraTransitionBase
 {
   /**

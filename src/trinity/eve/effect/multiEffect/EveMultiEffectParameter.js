@@ -14,23 +14,27 @@ import { IsMatch, blue } from "#blue";
  * One named slot in an EveMultiEffect, holding the object bound to that name
  * together with the object type the effect expects there.
  */
-@be.define("EveMultiEffectParameter")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveMultiEffectParameter",
+  inherit: [ INotify ],
+  // EveMultiEffectParameter_Blue.cpp:20-26, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "object", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "type", be.READWRITE | be.ENUM, "trinity.EveMultiEffectParameter.ParameterType" ],
+    [ be.PROP_RO, "isValid" ]
+  ]
+})
 export class EveMultiEffectParameter extends IRoot
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveMultiEffectParameter_Blue.cpp:25); chooser EveMultiEffectParameterTypeChooser (trinity/trinity/Eve/EveMultiEffectParameter_Blue.cpp:8). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.EveMultiEffectParameter.ParameterType")
   @type.int32
   @type.enum("trinity.EveMultiEffectParameter.ParameterType")
   type = 3;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("IRoot")
   object = null;
@@ -44,7 +48,6 @@ export class EveMultiEffectParameter extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isValid()
   {

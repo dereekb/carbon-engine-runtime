@@ -24,14 +24,25 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 
 /** A smart-light group member that places faction-colour-aware point or spot lights at each distribution placement and submits them to the light manager. */
-@be.define("EveSmartLightPointLight")
-@be.inherit(EveSmartLightBaseGroup, IInitialize, INotify, ITr2LightOwner)
-@be.mapInterface(EveSmartLightBaseGroup)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(EveEntity)
-@be.exposureChainTo(EveSmartLightBaseGroup)
+@be.define({
+  name: "EveSmartLightPointLight",
+  inherit: [ EveSmartLightBaseGroup, IInitialize, INotify, ITr2LightOwner ],
+  // EveSmartLightPointLight_Blue.cpp:12-37, in Carbon's order.
+  interfaces: [ EveSmartLightBaseGroup, IInitialize, INotify, IListNotify, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "flags", be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags" ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightProfilePath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lightProfile", be.READ ],
+    [ be.ATTR, "staticOffsetTranslation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticOffsetRotation", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveSmartLightBaseGroup
+})
 export class EveSmartLightPointLight extends EveEntity
 {
   /**
@@ -49,7 +60,6 @@ export class EveSmartLightPointLight extends EveEntity
    * m_lightGroupData.flags (uint16_t) [READWRITE, PERSIST], with Tr2LightFlagChooser and no ENUM bit (EveSmartLightPointLight_Blue.cpp:24).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightPointLight_Blue.cpp:24); chooser Tr2LightFlagChooser (trinity/trinity/Lights/Tr2Light_Blue.cpp:16).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags")
   @type.uint16
   get flags()
   {
@@ -63,7 +73,6 @@ export class EveSmartLightPointLight extends EveEntity
   }
 
   /** m_lightGroupData.radius (float) [READWRITE, PERSIST] (EveSmartLightPointLight_Blue.cpp:26). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get radius()
@@ -78,7 +87,6 @@ export class EveSmartLightPointLight extends EveEntity
   }
 
   /** m_lightGroupData.innerRadius (float) [READWRITE, PERSIST] (EveSmartLightPointLight_Blue.cpp:27). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get innerRadius()
@@ -93,7 +101,6 @@ export class EveSmartLightPointLight extends EveEntity
   }
 
   /** m_lightGroupData.brightness (float) [READWRITE, PERSIST] (EveSmartLightPointLight_Blue.cpp:29). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get brightness()
@@ -108,37 +115,31 @@ export class EveSmartLightPointLight extends EveEntity
   }
 
   /** m_lightProfile (Tr2LightProfileResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2LightProfileRes")
   lightProfile = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_lightProfilePath (std::wstring) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.wpath("Tr2LightProfileRes")
   lightProfilePath = "";
 
   /** m_staticOffsetTranslation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   staticOffsetTranslation = vec3.create();
 
   /** m_staticOffsetRotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   staticOffsetRotation = quat.create();

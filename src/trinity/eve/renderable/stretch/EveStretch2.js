@@ -56,68 +56,67 @@ const STRETCH_VERTEX_DECL = [ { usage: Tr2VertexUsageCode.POSITION, usageIndex: 
  * quads with its own effect, end emitters, observers and point lights, instead
  * of hosting child objects.
  */
-@be.define("EveStretch2")
-@be.inherit(ITr2Renderable, Tr2DeviceResource, IInitialize, INotify, ITr2DebugRenderable, ITr2LightOwner, EveEntity)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IEveFiringEffectElement)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2LightOwner)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "EveStretch2",
+  inherit: [ ITr2Renderable, Tr2DeviceResource, IInitialize, INotify, ITr2DebugRenderable, ITr2LightOwner, EveEntity ],
+  // EveStretch2_Blue.cpp:11-83, in Carbon's order.
+  interfaces: [ ITr2Renderable, IEveFiringEffectElement, IInitialize, INotify, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "quadCount", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "loop", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "end", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceLight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationLight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingRadius", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveStretch2 extends IEveFiringEffectElement
 {
   static MAX_QUAD_COUNT = 128;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
  @type.string
   name = "";
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriCurveSet")
   loop = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriCurveSet")
   start = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriCurveSet")
   end = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("Tr2Effect")
   effect = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("Tr2GpuSharedEmitter")
   destinationEmitter = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("Tr2GpuSharedEmitter")
   sourceEmitter = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
  @type.uint32
   quadCount = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriObserverLocal")
   destinationObserver = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriObserverLocal")
   sourceObserver = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("Tr2PointLight")
   destinationLight = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("Tr2PointLight")
   sourceLight = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.float32
   boundingRadius = 100;

@@ -19,9 +19,16 @@ import { trinity } from "../../CjsTrinity.js";
  * Sprite2D scene: Carbon EveSprite2dBracketRenderer
  * (EveSprite2dBracketRenderer.h:15), a Tr2SpriteObject and a Tr2DeviceResource.
  */
-@be.define("EveSprite2dBracketRenderer")
-@be.exposureChainTo(Tr2SpriteObject)
-@be.inherit(Tr2DeviceResource)
+@be.define({
+  name: "EveSprite2dBracketRenderer",
+  inherit: [ Tr2DeviceResource ],
+  // EveSprite2dBracketRenderer_Blue.cpp:11-26, in Carbon's order.
+  members: [
+    [ be.ATTR, "brackets", be.READ ],
+    [ be.ATTR, "iconAtlas", be.READWRITE ]
+  ],
+  chainTo: Tr2SpriteObject
+})
 export class EveSprite2dBracketRenderer extends Tr2SpriteObject
 {
 
@@ -58,12 +65,10 @@ export class EveSprite2dBracketRenderer extends Tr2SpriteObject
   }
 
   /** m_iconAtlas (Tr2AtlasTexturePtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2AtlasTexture")
   iconAtlas = null;
 
   /** m_brackets (PEveSprite2dBracketVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("EveSprite2dBracket")
   brackets = [];
 

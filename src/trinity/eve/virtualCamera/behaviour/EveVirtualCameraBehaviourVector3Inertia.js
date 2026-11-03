@@ -11,13 +11,17 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that gives the camera value momentum, so it accelerates
  * towards its target and coasts rather than tracking it exactly.
  */
-@be.define("EveVirtualCameraBehaviourVector3Inertia")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Inertia",
+  // EveVirtualCameraBehaviour_Blue.cpp:218-228, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "inertiaFactor", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3Inertia extends EveVirtualCameraBehaviourVector3Base
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   inertiaFactor = 1;
 

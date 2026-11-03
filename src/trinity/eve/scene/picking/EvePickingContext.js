@@ -9,8 +9,12 @@ import { type, blue } from "#schema";
  * Holds the outstanding picking readbacks and the most recent pick result -
  * screen coordinates, hit object and both extra-data words - for a scene.
  */
-@be.define("EvePickingContext")
-@be.inherit(IRoot)
+@be.define({
+  name: "EvePickingContext",
+  inherit: [ IRoot ],
+  // EvePicking_Blue.cpp:10-11, in Carbon's order.
+  members: []
+})
 export class EvePickingContext extends IRoot
 {
   @type.list("EvePendingPickingReadback")

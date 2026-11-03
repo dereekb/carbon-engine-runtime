@@ -18,14 +18,21 @@ import { Tr2Renderer } from "../../core/Tr2Renderer.js";
  * scaled by its camera distance so it keeps a constant on-screen size. Its
  * mesh areas can be shown, hidden, and identified from picking ids.
  */
-@be.define("EveUiObject")
-@be.mapInterface(IEveSpaceObject2)
-@be.exposureChainTo(EveSpaceObject2)
+@be.define({
+  name: "EveUiObject",
+  // EveUiObject_Blue.cpp:10-22, in Carbon's order.
+  interfaces: [ IEveSpaceObject2 ],
+  members: [
+    [ be.ATTR, "usePerspectiveScale", be.READWRITE ],
+    [ be.METHOD, "GetNameForPickingAreaID", be.WRAP ],
+    [ be.METHOD, "SetVisibilityForArea", be.WRAP ]
+  ],
+  chainTo: EveSpaceObject2
+})
 export class EveUiObject extends EveSpaceObject2
 {
 
   /** m_usePerspectiveScale (bool) [READWRITE] - EveUiObject_Blue.cpp:14; true from the constructor (cpp:10-14). */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   usePerspectiveScale = true;
 
@@ -102,7 +109,6 @@ export class EveUiObject extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetVisibilityForArea(areaName, enable)
   {
     const mesh = this.GetMesh();
@@ -129,7 +135,6 @@ export class EveUiObject extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetNameForPickingAreaID(areaID)
   {
     const mesh = this.GetMesh();

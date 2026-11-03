@@ -19,59 +19,53 @@ import { CarbonVertexElements } from "../../core/vertex/vertexUsage.js";
  * Named overlay pass attached to a mesh, holding one effect list per batch type
  * together with the curve set and controllers that animate them.
  */
-@be.define("EveMeshOverlayEffect")
-@be.inherit(IInitialize, IListNotify, ITr2ControllerOwner, ITr2CurveSetOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IListNotify)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(ITr2CurveSetOwner)
+@be.define({
+  name: "EveMeshOverlayEffect",
+  inherit: [ IInitialize, IListNotify, ITr2ControllerOwner, ITr2CurveSetOwner ],
+  // EveMeshOverlayEffect_Blue.cpp:13-29, in Carbon's order.
+  interfaces: [ IInitialize, IListNotify, ITr2ControllerOwner, ITr2CurveSetOwner ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "update", be.READWRITE ],
+    [ be.ATTR, "curveSet", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "opaqueEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "decalEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "transparentEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "additiveEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "distortionEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "controllers", be.READ | be.PERSIST ]
+  ]
+})
 export class EveMeshOverlayEffect extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
   controllers = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("TriCurveSet")
   curveSet = null;
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Effect")
   additiveEffects = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2Effect")
   decalEffects = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Effect")
   distortionEffects = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2Effect")
   opaqueEffects = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Effect")
   transparentEffects = [];
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   update = true;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 

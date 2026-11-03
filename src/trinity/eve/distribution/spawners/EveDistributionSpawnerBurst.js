@@ -5,27 +5,32 @@ import { type } from "#schema";
 import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 
 /** Spawns a configured fraction of the free distribution placements in one delayed burst. */
-@be.define("EveDistributionSpawnerBurst")
-@be.mapInterface(IEveDistributionSpawner)
+@be.define({
+  name: "EveDistributionSpawnerBurst",
+  // EveDistributionSpawnerBurst_Blue.cpp:12-18, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner ],
+  members: [
+    [ be.ATTR, "delayBeforeInitialBurst", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "completeness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "additionalTriggersPerBurst", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnerBurst extends IEveDistributionSpawner
 {
 
   _localTimer = 0;
 
   /** m_completeness (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   completeness = 1;
 
   /** m_additionalTriggersPerBurst (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   additionalTriggersPerBurst = 0;
 
   /** m_delayBeforeInitialBurst (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayBeforeInitialBurst = 0;

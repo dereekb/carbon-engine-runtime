@@ -15,31 +15,33 @@ import { vec4 } from "#math/vec4";
 import { BLUELISTEVENT } from "#consts/blue";
 
 /** A smart-light group that computes one shared faction-aware colour, applies it to its child light groups, and fans out their per-frame updates. */
-@be.define("EveSmartLightColorShareGroup")
-@be.inherit(EveSmartLightBaseGroup, INotify)
-@be.mapInterface(EveSmartLightBaseGroup)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(EveEntity)
-@be.exposureChainTo(EveSmartLightBaseGroup)
+@be.define({
+  name: "EveSmartLightColorShareGroup",
+  inherit: [ EveSmartLightBaseGroup, INotify ],
+  // EveSmartLightColorShareGroup_Blue.cpp:11-23, in Carbon's order.
+  interfaces: [ EveSmartLightBaseGroup, INotify, IListNotify, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lightGroups", be.READ | be.PERSIST | be.NOTIFY ]
+  ],
+  chainTo: EveSmartLightBaseGroup
+})
 export class EveSmartLightColorShareGroup extends EveEntity
 {
 
   /** m_display (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   display = true;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_lightGroups (PIEveSmartLightGroupVector) [READ, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
 
 
   @type.list("IEveSmartLightGroup")

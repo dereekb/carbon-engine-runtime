@@ -61,16 +61,19 @@ export function EveGetLocatorPose(outPosition, outDirection, animationUpdater, l
  * Named group of locators that a space object publishes for turrets, effects and
  * distributions to attach to.
  */
-@be.define("EveLocatorSets")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveLocatorSets",
+  inherit: [ IRoot ],
+  // EveLocatorSets_Blue.cpp:10-14, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locators", be.READ | be.PERSIST ]
+  ]
+})
 export class EveLocatorSets extends IRoot
 {
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.structList("Locator")
   locators = [];
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

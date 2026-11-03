@@ -27,15 +27,37 @@ import { sph3 } from "#math/sph3";
  * transform children pinned at each end, stretched along the span, and
  * travelling from one end to the other.
  */
-@be.define("EveStretch")
-@be.inherit(INotify, IEveTransform, IEveSpaceObject2, ITr2DebugRenderable, ITr2LightOwner, EveEntity)
-@be.mapInterface(INotify)
-@be.mapInterface(IEveTransform)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(IEveFiringEffectElement)
-@be.mapInterface(ITr2DebugRenderable)
-@be.mapInterface(ITr2LightOwner)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "EveStretch",
+  inherit: [ INotify, IEveTransform, IEveSpaceObject2, ITr2DebugRenderable, ITr2LightOwner, EveEntity ],
+  // EveStretch_Blue.cpp:13-146, in Carbon's order.
+  interfaces: [ INotify, IEveTransform, IEveSpaceObject2, IEveFiringEffectElement, ITr2DebugRenderable, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "Start", be.WRAP ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "source", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "dest", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "moveObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceLights", be.READ | be.PERSIST ],
+    [ be.ATTR, "destLights", be.READ | be.PERSIST ],
+    [ be.ATTR, "progressCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startTime", be.READ ],
+    [ be.ATTR, "moveCompletion", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "moveCompleted", be.READWRITE ],
+    [ be.ATTR, "moving", be.READWRITE ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "length", be.READ | be.PERSIST ],
+    [ be.ATTR, "lodLevel", be.READ ],
+    [ be.ATTR, "useCurveLod", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "audio", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchAudio", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveStretch extends IEveFiringEffectElement
 {
 
@@ -51,89 +73,66 @@ export class EveStretch extends IEveFiringEffectElement
     return true;
   }
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
  @type.string
   name = "";
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITriVectorFunction")
   source = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITriVectorFunction")
   dest = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("IStretchAudio")
   stretchAudio = null;
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.Tr2Lod")
   lodLevel = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITriScalarFunction")
   progressCurve = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriCurveSet")
   moveCompletion = null;
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("TriCurveSet")
   curveSets = [];
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.object.ref("TriFloat")
   length = new TriFloat();
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   moving = false;
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   moveCompleted = false;
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
  @type.boolean
   display = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   update = true;
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("Tr2Light")
   destLights = [];
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("Tr2Light")
   sourceLights = [];
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("EveTransform")
   destObject = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("EveTransform")
   sourceObject = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("EveTransform")
   stretchObject = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   useCurveLod = true;
-  @be.mapAttribute(be.READ)
   @type.float64
   startTime = -1;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITr2Audio")
   audio = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("EveTransform")
   moveObject = null;
@@ -409,7 +408,6 @@ export class EveStretch extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Start()
   {
     this.StartMoving();

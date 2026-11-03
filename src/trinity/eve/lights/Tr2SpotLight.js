@@ -32,24 +32,40 @@ const TRI_2PI = Math.fround(6.283185307);
  * accessors over the embedded record Tr2Light holds
  * (Tr2SpotLight_Blue.cpp:18-37).
  */
-@be.define("Tr2SpotLight")
-@be.mapInterface(Tr2Light)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2SpotLight",
+  // Tr2SpotLight_Blue.cpp:11-46, in Carbon's order.
+  interfaces: [ Tr2Light, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "flags", be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags" ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outerAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "noiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseOctaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "castsShadows", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.PerLightShadowSetting" ],
+    [ be.ATTR, "isVolumetric", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "lightProfilePath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lightProfile", be.READ ]
+  ]
+})
 export class Tr2SpotLight extends Tr2Light
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.wpath("Tr2LightProfileRes")
   lightProfilePath = "";
 
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2LightProfileRes")
   lightProfile = null;
 
@@ -62,7 +78,6 @@ export class Tr2SpotLight extends Tr2Light
    * m_lightData.flags (uint16_t) [READWRITE, PERSIST], with Tr2LightFlagChooser and no ENUM bit (Tr2SpotLight_Blue.cpp:18).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Lights/Tr2SpotLight_Blue.cpp:18); chooser Tr2LightFlagChooser (trinity/trinity/Lights/Tr2Light_Blue.cpp:16).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags")
   @type.uint16
   get flags()
   {
@@ -76,7 +91,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.position (Vector3) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:19). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   get position()
@@ -91,7 +105,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.rotation (Quaternion) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:20). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   get rotation()
@@ -106,7 +119,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.boneIndex (int32_t) [READWRITE, PERSIST, NOTIFY] (Tr2SpotLight_Blue.cpp:21). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.int32
@@ -122,7 +134,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.radius (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:23). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get radius()
@@ -137,7 +148,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.innerRadius (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:24). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get innerRadius()
@@ -152,7 +162,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.innerAngle (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:26). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get innerAngle()
@@ -167,7 +176,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.outerAngle (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:27). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get outerAngle()
@@ -182,7 +190,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.color (Color) [READWRITE, PERSIST, NOTIFY] (Tr2SpotLight_Blue.cpp:29). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.color
@@ -198,7 +205,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.brightness (float) [READWRITE, PERSIST, NOTIFY] (Tr2SpotLight_Blue.cpp:30). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
@@ -214,7 +220,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.noiseAmplitude (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:32). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get noiseAmplitude()
@@ -229,7 +234,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.noiseFrequency (float) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:33). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get noiseFrequency()
@@ -244,7 +248,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.noiseOctaves (uint32_t) [READWRITE, PERSIST] (Tr2SpotLight_Blue.cpp:34). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   get noiseOctaves()
@@ -262,7 +265,6 @@ export class Tr2SpotLight extends Tr2Light
    * m_lightData.castsShadows (PerLightShadowSetting) [READWRITE, PERSIST, NOTIFY, ENUM], with PerLightShadowSettingChooser (Tr2SpotLight_Blue.cpp:36).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Lights/Tr2SpotLight_Blue.cpp:36); chooser PerLightShadowSettingChooser (trinity/trinity/Lights/Tr2Light_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.PerLightShadowSetting")
   @type.int32
   @type.enum("trinity.PerLightShadowSetting")
   get castsShadows()
@@ -277,7 +279,6 @@ export class Tr2SpotLight extends Tr2Light
   }
 
   /** m_lightData.isVolumetric (bool) [READWRITE, PERSIST, NOTIFY] (Tr2SpotLight_Blue.cpp:37). */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.boolean

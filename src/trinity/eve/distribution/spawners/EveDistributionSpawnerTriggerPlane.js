@@ -8,8 +8,19 @@ import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 import { quat } from "#math/quat";
 
 /** Triggers pooled placements in the order reached by a timed plane sweep. */
-@be.define("EveDistributionSpawnerTriggerPlane")
-@be.mapInterface(IEveDistributionSpawner)
+@be.define({
+  name: "EveDistributionSpawnerTriggerPlane",
+  // EveDistributionSpawnerTriggerPlane_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner ],
+  members: [
+    [ be.ATTR, "planeRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "playDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "triggerChance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayBeforeActivation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startSequenceAtFirstTrigger", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reversePlaneAnimation", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnerTriggerPlane extends IEveDistributionSpawner
 {
 
@@ -20,37 +31,31 @@ export class EveDistributionSpawnerTriggerPlane extends IEveDistributionSpawner
   _currentTrigger = 0;
 
   /** m_triggerChance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   triggerChance = 1;
 
   /** m_planeRotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   planeRotation = quat.create();
 
   /** m_startSequenceAtFirstTrigger (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   startSequenceAtFirstTrigger = true;
 
   /** m_playDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   playDuration = 1;
 
   /** m_delayBeforeActivation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayBeforeActivation = 0;
 
   /** m_reversePlaneAnimation (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reversePlaneAnimation = false;

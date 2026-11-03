@@ -12,8 +12,12 @@ import { EveVirtualCamera } from "../EveVirtualCamera.js";
  *
  * @abstract
  */
-@be.define("EveVirtualCameraTransitionBase")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveVirtualCameraTransitionBase",
+  inherit: [ IRoot ],
+  // EveVirtualCameraTransition_Blue.cpp:9-9, in Carbon's order.
+  members: []
+})
 @be.abstract
 export class EveVirtualCameraTransitionBase extends IRoot
 {

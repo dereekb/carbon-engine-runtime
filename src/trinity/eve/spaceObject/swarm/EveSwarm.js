@@ -36,13 +36,47 @@ const FLT_MAX = 3.4028234663852886e38;
  * GetDebugOptions and RenderDebugInfo (our space objects have no debug renderer; the per-vehicle force record they
  * draw is still kept).
  */
-@be.define("EveSwarm")
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(EveEntity)
-@be.mapInterface(IEveShadowCaster)
-@be.exposureChainTo(EveShip2)
+@be.define({
+  name: "EveSwarm",
+  // EveSwarm_Blue.cpp:20-75, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, IInitialize, INotify, EveEntity, IEveShadowCaster ],
+  members: [
+    [ be.ATTR, "count", be.READ | be.PERSIST ],
+    [ be.ATTR, "swarmingEnabled", be.READ | be.PERSIST ],
+    [ be.ATTR, "mass", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "speedMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "speedMinimum", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxDistance0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxDistance1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "timeMultiplier", be.READWRITE ],
+    [ be.ATTR, "agility", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "speed0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "speed1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightFormation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightCohesion", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightSeparation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightAlign", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightWander", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightAnchor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "anchorRadius0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "anchorRadius1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightDeceleration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxDeceleration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "separationDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "formationDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "wanderFluctuation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "wanderDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "wanderRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "debugShowForces", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "AddSwarmer", be.WRAP ],
+    [ be.METHOD, "RemoveSwarmer", be.WRAP ],
+    [ be.METHOD, "SetCount", be.WRAP ],
+    [ be.METHOD, "EnableSwarming", be.WRAP ],
+    [ be.METHOD, "PickFiringOrigin", be.WRAP ]
+  ],
+  chainTo: EveShip2
+})
 export class EveSwarm extends EveShip2
 {
 
@@ -66,169 +100,141 @@ export class EveSwarm extends EveShip2
   squadBoundsMax = vec3.create();
 
   /** m_behavior.m_weightFormation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightFormation = 1;
 
   /** m_behavior.m_weightCohesion (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightCohesion = 0.1;
 
   /** m_behavior.m_weightSeparation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightSeparation = 0.1;
 
   /** m_behavior.m_weightWander (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightWander = 0.33;
 
   /** m_behavior.m_weightAnchor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightAnchor = 0.5;
 
   /** m_behavior.m_anchorRadius0 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   anchorRadius0 = 75;
 
   /** m_behavior.m_anchorRadius1 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   anchorRadius1 = 250;
 
   /** m_behavior.m_weightDecelerate (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightDeceleration = 0.1;
 
   /** m_behavior.m_maxDeceleration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxDeceleration = 200;
 
   /** m_behavior.m_separationDistance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   separationDistance = 250;
 
   /** m_behavior.m_formationDistance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   formationDistance = 50;
 
   /** m_behavior.m_wanderFluctuation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   wanderFluctuation = 0.05;
 
   /** m_behavior.m_wanderDistance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   wanderDistance = 100;
 
   /** m_behavior.m_wanderRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   wanderRadius = 80;
 
   /** m_debugShowForces (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   debugShowForces = false;
 
   /** m_count (int32_t) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.int32
   count = 1;
 
   /** m_swarmingEnabled (bool) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.boolean
   swarmingEnabled = false;
 
   /** m_behavior.m_mass (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   mass = 1;
 
   /** m_behavior.m_speedMultiplier (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   speedMultiplier = 1.1;
 
   /** m_behavior.m_speedMinimum (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   speedMinimum = 10;
 
   /** m_behavior.m_maxDistance0 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxDistance0 = 500;
 
   /** m_behavior.m_maxDistance1 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxDistance1 = 125;
 
   /** m_behavior.m_maxTime (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxTime = 0.2;
 
   /** m_behavior.m_agility (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   agility = 2;
 
   /** m_behavior.m_speed0 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   speed0 = 700;
 
   /** m_behavior.m_speed1 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   speed1 = 1000;
 
   /** m_behavior.m_timeMultiplier (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   timeMultiplier = 1;
 
   /** m_behavior.m_weightAlign (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightAlign = 50;
@@ -949,7 +955,6 @@ export class EveSwarm extends EveShip2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddSwarmer()
   {
     const componentRegistry = this.GetComponentRegistry();
@@ -992,7 +997,6 @@ export class EveSwarm extends EveShip2
    * @adapted
    * @returns {vec3} the removed vehicle's position
    */
-  @be.mapMethodAndWrap()
   RemoveSwarmer()
   {
     if (this.vehicles.length === 0)
@@ -1038,7 +1042,6 @@ export class EveSwarm extends EveShip2
    * @adapted
    * @param {number} count
    */
-  @be.mapMethodAndWrap()
   SetCount(count)
   {
     while (this.count !== count)
@@ -1062,7 +1065,6 @@ export class EveSwarm extends EveShip2
    * @implemented
    * @param {boolean} enable
    */
-  @be.mapMethodAndWrap()
   EnableSwarming(enable)
   {
     if (this.swarmingEnabled === enable)
@@ -1087,7 +1089,6 @@ export class EveSwarm extends EveShip2
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   PickFiringOrigin()
   {
     this.firingIndex = carbonRandom.triRandInt(this.count);

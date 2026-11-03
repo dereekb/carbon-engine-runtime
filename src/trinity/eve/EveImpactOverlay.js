@@ -32,20 +32,50 @@ const IMPACT_ARMOR_PARTICLE_LOD_FACTOR = 400;
  * resources, the faders driving hardening and repair effects, and the
  * data-texture bookkeeping that feeds them.
  */
-@be.define("EveImpactOverlay")
-@be.inherit(IInitialize)
+@be.define({
+  name: "EveImpactOverlay",
+  inherit: [ IInitialize ],
+  // EveImpactOverlay_Blue.cpp:14-55, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "shieldImpactColorFade", be.READWRITE ],
+    [ be.ATTR, "shieldImpactParentSize", be.READ ],
+    [ be.ATTR, "shieldIsEllipsoid", be.READWRITE ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxShieldImpacts", be.READ ],
+    [ be.ATTR, "overallShieldImpact", be.READWRITE ],
+    [ be.ATTR, "shieldHardening", be.READWRITE ],
+    [ be.ATTR, "shieldBoosting", be.READWRITE ],
+    [ be.ATTR, "armorImpactEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullImpactEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "damageOverlay", be.READ ],
+    [ be.PROP_RO, "seed" ],
+    [ be.PROP_RO, "configuration" ],
+    [ be.PROP_RO, "impactDataNextIdx" ],
+    [ be.PROP_RO, "armorImpactGoalCount" ],
+    [ be.PROP_RO, "armorImpactParentSize" ],
+    [ be.PROP, "debugForceSpawnDebris" ],
+    [ be.PROP_RO, "renderPriority" ],
+    [ be.PROP_RO, "dataTextureBlockID" ],
+    [ be.PROP_PERSISTED, "armorDamageShader" ],
+    [ be.PROP, "armorRepairing" ],
+    [ be.PROP, "armorHardening" ],
+    [ be.PROP, "hullRepairing" ],
+    [ be.PROP_PERSISTED, "hullDamageFlickerCurve" ],
+    [ be.PROP, "hullDamageFactor" ],
+    [ be.METHOD, "GetArmorImpactLifeTime", be.WRAP ],
+    [ be.METHOD, "GetLastDamageState", be.WRAP ]
+  ]
+})
 export class EveImpactOverlay extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READ)
   @type.object.ref("EveDamageOverlay")
   damageOverlay = new EveDamageOverlay();
 
@@ -56,7 +86,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get seed()
   {
@@ -68,7 +97,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   @type.enum("trinity.ITriTargetable.ImpactConfiguration")
   get configuration()
@@ -81,7 +109,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get impactDataNextIdx()
   {
@@ -93,7 +120,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.uint64
   get armorImpactGoalCount()
   {
@@ -105,7 +131,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.float32
   get armorImpactParentSize()
   {
@@ -117,7 +142,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.boolean
   get debugForceSpawnDebris()
   {
@@ -135,7 +159,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.float32
   get renderPriority()
   {
@@ -147,7 +170,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get dataTextureBlockID()
   {
@@ -159,7 +181,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyPersisted()
   @type.rootRef("Tr2Effect")
   get armorDamageShader()
   {
@@ -177,7 +198,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("Tr2ScalarFader")
   get armorRepairing()
   {
@@ -195,7 +215,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("Tr2ScalarFader")
   get armorHardening()
   {
@@ -213,7 +232,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("Tr2ScalarFader")
   get hullRepairing()
   {
@@ -231,7 +249,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyPersisted()
   @type.rootRef("TriPerlinCurve")
   get hullDamageFlickerCurve()
   {
@@ -249,7 +266,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.float32
   get hullDamageFactor()
   {
@@ -262,45 +278,32 @@ export class EveImpactOverlay extends IRoot
     this.SetHullDamageFactor(value);
   }
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   shieldImpactColorFade = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   shieldImpactParentSize = 0;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   shieldIsEllipsoid = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2MeshBase")
   mesh = null;
 
-  @be.mapAttribute(be.READ)
   @type.uint32
   maxShieldImpacts = 8;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   overallShieldImpact = -1;
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2ScalarFader")
   shieldHardening = new Tr2ScalarFader();
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2ScalarFader")
   shieldBoosting = new Tr2ScalarFader();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2GpuUniqueEmitter")
   armorImpactEmitter = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2GpuUniqueEmitter")
   hullImpactEmitter = null;
@@ -377,7 +380,6 @@ export class EveImpactOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetArmorImpactLifeTime()
   {
     return this.damageOverlay.GetArmorImpactLifeTime();
@@ -390,7 +392,6 @@ export class EveImpactOverlay extends IRoot
    * @param {Array} out - caller-owned vec3
    * @returns {Array} out
    */
-  @be.mapMethodAndWrap()
   GetLastDamageState(out)
   {
     return this.damageOverlay.GetLastDamageState(out);

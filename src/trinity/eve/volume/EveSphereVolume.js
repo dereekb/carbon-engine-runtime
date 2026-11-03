@@ -31,31 +31,31 @@ const DEBUG_TRANSLATION = mat4.create();
  * Sphere of influence with a solid inner radius and a falloff out to the outer
  * radius, weighting points and seeding random ones inside it.
  */
-@be.define("EveSphereVolume")
-@be.inherit(INotify)
-@be.mapInterface(IEveVolume)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveSphereVolume",
+  inherit: [ INotify ],
+  // EveSphereVolume_Blue.cpp:9-18, in Carbon's order.
+  interfaces: [ IEveVolume, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "innerRadius", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveSphereVolume extends IEveVolume
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   radius = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.float32
   innerRadius = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

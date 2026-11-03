@@ -14,26 +14,34 @@ import { EveVirtualCameraTransitionLerp } from "./transition/EveVirtualCameraTra
  * Owns the registered virtual cameras plus the externally driven camera, and
  * runs the transition that hands control from one to another.
  */
-@be.define("EveVirtualCameraSystem")
-@be.inherit(IInitialize, ITr2DebugRenderable)
+@be.define({
+  name: "EveVirtualCameraSystem",
+  inherit: [ IInitialize, ITr2DebugRenderable ],
+  // EveVirtualCameraSystem_Blue.cpp:11-37, in Carbon's order.
+  members: [
+    [ be.ATTR, "cameras", be.READ | be.PERSIST ],
+    [ be.ATTR, "transition", be.READ ],
+    [ be.ATTR, "mainCamera", be.READ | be.PERSIST ],
+    [ be.ATTR, "externalCamera", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "GetCurrentCamera", be.WRAP ],
+    [ be.METHOD, "GetMainCamera", be.WRAP ],
+    [ be.METHOD, "CutToCamera", be.WRAP ],
+    [ be.METHOD, "LerpToCamera", be.WRAP ],
+    [ be.METHOD, "IsExternallyControlled", be.WRAP ],
+    [ be.METHOD, "GetCameraByName", be.WRAP ]
+  ]
+})
 export class EveVirtualCameraSystem
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("EveVirtualCamera")
   externalCamera = null;
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveVirtualCamera")
   cameras = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.object.ref("EveVirtualCamera")
   mainCamera = null;
 
-  @be.mapAttribute(be.READ)
   @type.object.ref("EveVirtualCameraTransitionBase")
   transition = null;
 
@@ -69,7 +77,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetCurrentCamera()
   {
     return this.transition ? this.transition.GetCamera() : this.GetMainCamera();
@@ -98,7 +105,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetMainCamera()
   {
     return this.mainCamera;
@@ -111,7 +117,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetCameraByName(name)
   {
     if (name === this.externalCamera.GetName())
@@ -127,7 +132,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   CutToCamera(camera)
   {
     if (camera && camera !== this.GetMainCamera())
@@ -142,7 +146,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   LerpToCamera(camera, transitionTime = 1)
   {
     if (camera && camera !== this.GetMainCamera())
@@ -159,7 +162,6 @@ export class EveVirtualCameraSystem
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   IsExternallyControlled()
   {
     return this.GetCurrentCamera() === this.externalCamera;

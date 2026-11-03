@@ -7,8 +7,19 @@ import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 import { vec3 } from "#math/vec3";
 
 /** Triggers pooled placements in the order reached by a timed sphere expansion. */
-@be.define("EveDistributionSpawnerTriggerSphere")
-@be.mapInterface(IEveDistributionSpawner)
+@be.define({
+  name: "EveDistributionSpawnerTriggerSphere",
+  // EveDistributionSpawnerTriggerSphere_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner ],
+  members: [
+    [ be.ATTR, "playDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "triggerChance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayBeforeActivation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startSequenceAtFirstTrigger", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reverseSphereAnimation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sphereOffset", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnerTriggerSphere extends IEveDistributionSpawner
 {
 
@@ -19,37 +30,31 @@ export class EveDistributionSpawnerTriggerSphere extends IEveDistributionSpawner
   _currentTrigger = 0;
 
   /** m_triggerChance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   triggerChance = 1;
 
   /** m_startSequenceAtFirstTrigger (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   startSequenceAtFirstTrigger = true;
 
   /** m_sphereOffset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   sphereOffset = vec3.create();
 
   /** m_playDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   playDuration = 1;
 
   /** m_delayBeforeActivation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayBeforeActivation = 0;
 
   /** m_reverseSphereAnimation (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reverseSphereAnimation = false;

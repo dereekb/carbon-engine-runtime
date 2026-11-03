@@ -10,8 +10,12 @@ import { Tr2ParticleSpring } from "../../../particle/force/Tr2ParticleSpring.js"
  * ...SpringAttractor source files) with zero attributes of its own and chains
  * the whole exposure to the Tr2 class.
  */
-@be.define("EveParticleSpring")
-@be.exposureChainTo(Tr2ParticleSpring)
+@be.define({
+  name: "EveParticleSpring",
+  // EveParticleSpringAttractor_Blue.cpp:10-12, in Carbon's order.
+  members: [],
+  chainTo: Tr2ParticleSpring
+})
 export class EveParticleSpring extends Tr2ParticleSpring
 {
 }

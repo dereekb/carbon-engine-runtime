@@ -25,79 +25,87 @@ export const IMPACT_ARMOR_SIZE_MAX = 10;
  * Self-contained armour and hull damage state shared by a ship impact overlay
  * and by independently rendered child meshes.
  */
-@be.define("EveDamageOverlay")
-@be.inherit(IInitialize)
+@be.define({
+  name: "EveDamageOverlay",
+  inherit: [ IInitialize ],
+  // EveDamageOverlay_Blue.cpp:14-59, in Carbon's order.
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "seed", be.READWRITE ],
+    [ be.ATTR, "damageLocatorCount", be.READWRITE ],
+    [ be.ATTR, "configuration", be.READ ],
+    [ be.ATTR, "impactDataNextIdx", be.READ ],
+    [ be.ATTR, "armorImpactGoalCount", be.READ ],
+    [ be.ATTR, "armorImpactParentSize", be.READ ],
+    [ be.ATTR, "armorImpactLifeTime", be.READWRITE ],
+    [ be.ATTR, "debugForceSpawnDebris", be.READWRITE ],
+    [ be.ATTR, "renderPriority", be.READ ],
+    [ be.ATTR, "dataTextureBlockID", be.READ ],
+    [ be.ATTR, "armorDamageShader", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "armorRepairing", be.READWRITE ],
+    [ be.ATTR, "armorHardening", be.READWRITE ],
+    [ be.ATTR, "hullRepairing", be.READWRITE ],
+    [ be.ATTR, "hullDamageFlickerCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullDamageFactor", be.READWRITE ],
+    [ be.METHOD, "SetDamageState", be.WRAP ],
+    [ be.METHOD, "Clear", be.WRAP ],
+    [ be.METHOD, "ToggleEffect", be.WRAP ],
+    [ be.METHOD, "CreateImpact", be.WRAP ],
+    [ be.METHOD, "GetArmorImpactLifeTime", be.WRAP ],
+    [ be.METHOD, "GetLastDamageState", be.WRAP ]
+  ]
+})
 
 export class EveDamageOverlay extends IRoot
 {
-  @be.mapAttribute(be.READ)
   @type.int32
   impactDataNextIdx = 1;
 
-  @be.mapAttribute(be.READ)
   @type.uint64
   armorImpactGoalCount = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   armorImpactParentSize = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   renderPriority = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2Effect")
   armorDamageShader = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   seed = 0;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   armorImpactLifeTime = 10;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugForceSpawnDebris = false;
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2ScalarFader")
   armorRepairing = new Tr2ScalarFader();
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2ScalarFader")
   armorHardening = new Tr2ScalarFader();
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2ScalarFader")
   hullRepairing = new Tr2ScalarFader();
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   hullDamageFactor = 0;
 
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.ITriTargetable.ImpactConfiguration")
   configuration = ImpactConfiguration.IMPACT_INVALID;
 
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   damageLocatorCount = 0;
 
-  @be.mapAttribute(be.READ)
   @type.int32
   dataTextureBlockID = -1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriPerlinCurve")
   hullDamageFlickerCurve = null;
@@ -340,7 +348,6 @@ export class EveDamageOverlay extends IRoot
   }
 
   /** Returns the lifetime of one armour impact. */
-  @be.mapMethodAndWrap()
   GetArmorImpactLifeTime()
   {
     return this.armorImpactLifeTime;
@@ -351,7 +358,6 @@ export class EveDamageOverlay extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetLastDamageState(out)
   {
     return vec3.copy(out, this._lastDamageState);
@@ -525,7 +531,6 @@ export class EveDamageOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ToggleEffect(name, on, duration)
   {
     let fader = null;
@@ -542,7 +547,6 @@ export class EveDamageOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetDamageState(shield, armor, hull, createArmorImpacts = false)
   {
     if (shield > 0.05) this.configuration = ImpactConfiguration.IMPACT_SHIELD;
@@ -593,7 +597,6 @@ export class EveDamageOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Clear()
   {
     this._armorImpacts.clear();
@@ -604,7 +607,6 @@ export class EveDamageOverlay extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   CreateImpact(damageLocatorIndex, size, spawnEffects = false)
   {
     for (const [ index, impact ] of this._armorImpacts)

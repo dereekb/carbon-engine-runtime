@@ -18,8 +18,15 @@ import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#int
 const TRI_2PI = Math.fround(6.283185307);
 
 /** A spot-light specialization with persisted cone angles. */
-@be.define("EveSmartLightSpotLight")
-@be.exposureChainTo(EveSmartLightPointLight)
+@be.define({
+  name: "EveSmartLightSpotLight",
+  // EveSmartLightSpotLight_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "innerAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outerAngle", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveSmartLightPointLight
+})
 export class EveSmartLightSpotLight extends EveSmartLightPointLight
 {
 
@@ -29,7 +36,6 @@ export class EveSmartLightSpotLight extends EveSmartLightPointLight
   // record.
 
   /** m_lightGroupData.innerAngle (float) [READWRITE, PERSIST] (EveSmartLightSpotLight_Blue.cpp:33). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get innerAngle()
@@ -44,7 +50,6 @@ export class EveSmartLightSpotLight extends EveSmartLightPointLight
   }
 
   /** m_lightGroupData.outerAngle (float) [READWRITE, PERSIST] (EveSmartLightSpotLight_Blue.cpp:34). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   get outerAngle()

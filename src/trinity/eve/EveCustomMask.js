@@ -14,49 +14,46 @@ import { type, blue } from "#schema";
  * One oriented box projected onto a hull that replaces a source material with a
  * chosen blend of target materials inside it.
  */
-@be.define("EveCustomMask")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveCustomMask",
+  inherit: [ IRoot ],
+  // EveCustomMask_Blue.cpp:9-19, in Carbon's order.
+  members: [
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "materialIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "targetMaterials", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isMirrored", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "clampU", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "clampV", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveCustomMask extends IRoot
 {
   static CUSTOM_MASK_COUNT = 2;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   clampU = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   clampV = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   position = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint8
   materialIndex = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   isMirrored = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   targetMaterials = vec4.fromValues(1, 1, 1, 1);

@@ -9,10 +9,19 @@ import { vec3 } from "#math/vec3";
 import { CjsDistributionRandom } from "../../CjsDistributionRandom.js";
 
 /** Applies or replaces each spawned placement's scale with seeded random per-axis or uniform values. */
-@be.define("EveDistributionSpawnModifierRandomScale")
-@be.inherit(IInitialize)
-@be.mapInterface(IEveDistributionSpawnModifier)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveDistributionSpawnModifierRandomScale",
+  inherit: [ IInitialize ],
+  // EveDistributionSpawnModifierRandomScale_Blue.cpp:12-21, in Carbon's order.
+  interfaces: [ IEveDistributionSpawnModifier, IInitialize ],
+  members: [
+    [ be.ATTR, "overrideScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "consistentRandom", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "uniformScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxScale", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnModifierRandomScale extends IEveDistributionSpawnModifier
 {
 
@@ -20,31 +29,26 @@ export class EveDistributionSpawnModifierRandomScale extends IEveDistributionSpa
   _timeSeed = blue.os.GetCurrentFrameTime() >>> 0;
 
   /** m_minScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   minScale = vec3.fromValues(1, 1, 1);
 
   /** m_maxScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   maxScale = vec3.fromValues(1, 1, 1);
 
   /** m_consistentRandom (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   consistentRandom = false;
 
   /** m_uniformScale (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   uniformScale = false;
 
   /** m_overrideScale (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   overrideScale = false;

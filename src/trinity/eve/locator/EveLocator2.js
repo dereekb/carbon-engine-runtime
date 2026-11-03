@@ -10,16 +10,19 @@ import { type, blue } from "#schema";
  * Named attachment point on a space object, carrying a full transform matrix
  * rather than decomposed components.
  */
-@be.define("EveLocator2")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveLocator2",
+  inherit: [ IRoot ],
+  // EveLocator2_Blue.cpp:11-15, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveLocator2 extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();

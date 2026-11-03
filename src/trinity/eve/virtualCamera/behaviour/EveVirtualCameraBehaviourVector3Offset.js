@@ -11,22 +11,24 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that applies a fixed, time-independent displacement, either
  * in world space or in the anchor's yaw frame.
  */
-@be.define("EveVirtualCameraBehaviourVector3Offset")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Offset",
+  // EveVirtualCameraBehaviour_Blue.cpp:114-119, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "proportional", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "world", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3Offset extends EveVirtualCameraBehaviourVector3Base
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   proportional = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   world = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   offset = vec3.create();

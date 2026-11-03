@@ -18,18 +18,21 @@ import { Tr2CurveExtrapolation } from "../../../curves/enums.js";
  *
  * @abstract
  */
-@be.define("EveVirtualCameraBehaviourVector3Base")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Base",
+  inherit: [ INotify ],
+  // EveVirtualCameraBehaviour_Blue.cpp:83-86, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "active", be.READWRITE | be.PERSIST ]
+  ]
+})
 @be.abstract
 export class EveVirtualCameraBehaviourVector3Base extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   active = true;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string

@@ -31,9 +31,25 @@ const OFFSET_SCRATCH = vec3.create();
  * around a double-precision aggregate origin and drawn through a single
  * instanced mesh.
  */
-@be.define("EveSceneStaticParticles")
-@be.inherit(IInitialize, ITr2DebugRenderable, ITr2Renderable)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveSceneStaticParticles",
+  inherit: [ IInitialize, ITr2DebugRenderable, ITr2Renderable ],
+  // EveSceneStaticParticles_Blue.cpp:10-36, in Carbon's order.
+  interfaces: [ IInitialize ],
+  members: [
+    [ be.ATTR, "maxParticleCount", be.READWRITE ],
+    [ be.ATTR, "minSize", be.READWRITE ],
+    [ be.ATTR, "maxSize", be.READWRITE ],
+    [ be.ATTR, "clusterParticleDensity", be.READWRITE ],
+    [ be.ATTR, "clusterParticleDensityAdjust", be.READ ],
+    [ be.ATTR, "mesh", be.READWRITE ],
+    [ be.ATTR, "estimatedSize", be.READ ],
+    [ be.ATTR, "visible", be.READ ],
+    [ be.METHOD, "AddCluster", be.WRAP ],
+    [ be.METHOD, "ClearClusters", be.WRAP ],
+    [ be.METHOD, "Rebuild", be.WRAP ]
+  ]
+})
 export class EveSceneStaticParticles extends IRoot
 {
 
@@ -50,42 +66,34 @@ export class EveSceneStaticParticles extends IRoot
   boundingSphere = new Float32Array(4);
 
   /** m_clusterParticleDensityAdjust (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   clusterParticleDensityAdjust = 1;
 
   /** m_estimatedSize (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   estimatedSize = 0;
 
   /** m_clusterParticleDensity (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   clusterParticleDensity = 100;
 
   /** m_maxSize (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   maxSize = 200;
 
   /** m_minSize (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   minSize = 5;
 
   /** m_mesh (Tr2InstancedMeshPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2InstancedMesh")
   mesh = null;
 
   /** m_maxParticleCount (size_t) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.uint64
   maxParticleCount = 100000;
 
   /** m_visible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   visible = false;
 
@@ -319,7 +327,6 @@ export class EveSceneStaticParticles extends IRoot
    * @adapted Carbon's native ClusterData/Vector3d value is represented by a plain record
    *   with a Float64Array position.
    */
-  @be.mapMethodAndWrap()
   AddCluster(position, radius, color1, color2, randomSeed)
   {
     this.clusters.push({
@@ -339,7 +346,6 @@ export class EveSceneStaticParticles extends IRoot
    *   writes. Random draws use Carbon's shared CRT stream; a nonzero cluster seed reseeds it.
    *   Boolean return and empty-cluster cleanup still differ from native.
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     const instanceData = this._GetInstanceDataObject();
@@ -445,7 +451,6 @@ export class EveSceneStaticParticles extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearClusters()
   {
     this.clusters.length = 0;

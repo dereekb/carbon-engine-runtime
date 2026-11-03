@@ -11,32 +11,32 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that sweeps the camera value from one authored endpoint to
  * another across the animation timeline.
  */
-@be.define("EveVirtualCameraBehaviourVector3MoveBetween")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3MoveBetween",
+  // EveVirtualCameraBehaviour_Blue.cpp:97-104, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "end", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "interpolationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "proportional", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "world", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3MoveBetween extends EveVirtualCameraBehaviourVector3Base
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   end = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   proportional = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   world = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2CurveScalar")
   interpolationCurve = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   start = vec3.create();

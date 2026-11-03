@@ -7,15 +7,20 @@ import { InitialPlacement } from "../attributeModifiers/InitialPlacement.js";
 import { PlacementDataWithIdentifier } from "../../PlacementDataWithIdentifier.js";
 
 /** Builds distribution placements from an authored locator list and requests regeneration when that list changes. */
-@be.define("EveDistributionPlacementGeneratorLocators")
-@be.mapInterface(IEveDistributionPlacementGenerators)
+@be.define({
+  name: "EveDistributionPlacementGeneratorLocators",
+  // EveDistributionPlacementGeneratorLocators_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ IEveDistributionPlacementGenerators ],
+  members: [
+    [ be.ATTR, "locators", be.READ | be.PERSIST ]
+  ]
+})
 export class EveDistributionPlacementGeneratorLocators extends IEveDistributionPlacementGenerators
 {
 
   _requestRegeneration = false;
 
   /** m_locators (PLocatorStructureList) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.structList("Locator")
   locators = [];

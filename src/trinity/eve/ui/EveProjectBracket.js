@@ -51,9 +51,39 @@ function bicylindricProjection(out, source, projection, viewport, scratch)
 
 
 /** Projects an authored world position into a Sprite2D bracket. */
-@be.define("EveProjectBracket")
-@be.inherit(ITriFunction)
-@be.mapInterface(ITriFunction)
+@be.define({
+  name: "EveProjectBracket",
+  inherit: [ ITriFunction ],
+  // EveProjectBracket_Blue.cpp:11-152, in Carbon's order.
+  interfaces: [ ITriFunction ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE ],
+    [ be.ATTR, "trackBall", be.READWRITE ],
+    [ be.ATTR, "ballTrackingScaling", be.READWRITE ],
+    [ be.ATTR, "trackTransform", be.READWRITE ],
+    [ be.ATTR, "trackPosition", be.READWRITE ],
+    [ be.ATTR, "bracket", be.READWRITE ],
+    [ be.ATTR, "bracketIcon", be.READWRITE ],
+    [ be.ATTR, "parent", be.READWRITE ],
+    [ be.ATTR, "dock", be.READWRITE ],
+    [ be.ATTR, "marginLeft", be.READWRITE ],
+    [ be.ATTR, "marginRight", be.READWRITE ],
+    [ be.ATTR, "marginTop", be.READWRITE ],
+    [ be.ATTR, "marginBottom", be.READWRITE ],
+    [ be.ATTR, "minDispRange", be.READWRITE ],
+    [ be.ATTR, "maxDispRange", be.READWRITE ],
+    [ be.ATTR, "cameraDistance", be.READ ],
+    [ be.ATTR, "offsetX", be.READWRITE ],
+    [ be.ATTR, "offsetY", be.READWRITE ],
+    [ be.ATTR, "integerCoordinates", be.READWRITE ],
+    [ be.ATTR, "projectedPosition", be.READ ],
+    [ be.ATTR, "rawProjectedPosition", be.READ ],
+    [ be.ATTR, "displayChangeCallback", be.READWRITE ],
+    [ be.ATTR, "bracketUpdateCallback", be.READWRITE ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "isInFront", be.READ ]
+  ]
+})
 export class EveProjectBracket extends IRoot
 {
   /**
@@ -231,127 +261,102 @@ export class EveProjectBracket extends IRoot
   }
 
   /** m_marginLeft (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   marginLeft = 0;
 
   /** m_marginRight (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   marginRight = 0;
 
   /** m_marginTop (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   marginTop = 0;
 
   /** m_marginBottom (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   marginBottom = 0;
 
   /** m_ballTrackingScaling (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   ballTrackingScaling = 1;
 
   /** m_bracketUpdateCallback (BlueScriptCallback) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("BlueScriptCallback")
   bracketUpdateCallback = null;
 
   /** m_displayChangeCallback (BlueScriptCallback) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("BlueScriptCallback")
   displayChangeCallback = null;
 
   /** m_minDispRange (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   minDispRange = 0;
 
   /** m_maxDispRange (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   maxDispRange = FLOAT32_MAX;
 
   /** m_trackBall (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   trackBall = null;
 
   /** m_cameraDistance (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   cameraDistance = 0;
 
   /** m_trackPosition (Vector3) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   trackPosition = vec3.create();
 
   /** m_isInFront (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isInFront = true;
 
   /** m_offsetX (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   offsetX = 0;
 
   /** m_integerCoordinates (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   integerCoordinates = true;
 
   /** m_name (std::wstring) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.wstring
   name = "";
 
   /** m_parent (Tr2Sprite2dContainerPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Sprite2dContainer")
   parent = null;
 
   /** m_dock (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   dock = false;
 
   /** m_projectedPosition (Vector2) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec2
   projectedPosition = vec2.create();
 
   /** m_rawProjectedPosition (Vector2) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec2
   rawProjectedPosition = vec2.create();
 
   /** m_trackTransform (IWorldPositionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IWorldPosition")
   trackTransform = null;
 
   /** m_bracket (Tr2Sprite2dContainerPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2Sprite2dContainer")
   bracket = null;
 
   /** m_bracketIcon (EveSprite2dBracketPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("EveSprite2dBracket")
   bracketIcon = null;
 
   /** m_offsetY (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   offsetY = 0;
 
   /** m_isVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = true;
 

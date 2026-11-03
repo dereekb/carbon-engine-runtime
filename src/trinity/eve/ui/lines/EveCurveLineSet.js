@@ -18,11 +18,14 @@ const WORLD_SPHERE = vec4.create();
 
 
 /** An Eve-owned, transformed and visibility-culled Carbon curve-line set. */
-@be.define("EveCurveLineSet")
-@be.inherit(IEveTransform, IEveSpaceObject2)
-@be.mapInterface(IEveTransform)
-@be.mapInterface(IEveSpaceObject2)
-@be.exposureChainTo(Tr2CurveLineSet)
+@be.define({
+  name: "EveCurveLineSet",
+  inherit: [ IEveTransform, IEveSpaceObject2 ],
+  // EveCurveLineSet_Blue.cpp:10-14, in Carbon's order.
+  interfaces: [ IEveTransform, IEveSpaceObject2 ],
+  members: [],
+  chainTo: Tr2CurveLineSet
+})
 export class EveCurveLineSet extends Tr2CurveLineSet
 {
 

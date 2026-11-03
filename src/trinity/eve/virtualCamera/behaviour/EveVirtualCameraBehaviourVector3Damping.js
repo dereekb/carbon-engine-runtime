@@ -11,13 +11,18 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that lags the camera position or point of interest behind
  * its target, giving a smooth follow with no overshoot.
  */
-@be.define("EveVirtualCameraBehaviourVector3Damping")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Damping",
+  // EveVirtualCameraBehaviour_Blue.cpp:204-207, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "m_dampingRatio", be.READWRITE | be.PERSIST, "dampingRatio" ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3Damping extends EveVirtualCameraBehaviourVector3Base
 {
   /** m_dampingRatio; Carbon exposes the member name itself (EveVirtualCameraBehaviour_Blue.cpp:206). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST, "m_dampingRatio")
 
 
   @type.float32

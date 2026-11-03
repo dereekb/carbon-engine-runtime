@@ -25,11 +25,34 @@ const prepareScratch = vec3.create();
 const bitsAsFloat = value => new Float32Array(new Uint32Array([ value >>> 0 ]).buffer)[0];
 
 /** Represents a lens-flare graph with CPU-side visibility and controller state. */
-@be.define("EveLensflare")
-@be.inherit(ITr2Renderable, ITr2CurveSetOwner, ITr2ControllerOwner, IInitialize, IListNotify)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveLensflare",
+  inherit: [ ITr2Renderable, ITr2CurveSetOwner, ITr2ControllerOwner, IInitialize, IListNotify ],
+  // EveLensflare_Blue.cpp:10-73, in Carbon's order.
+  interfaces: [ ITr2ControllerOwner, ITr2CurveSetOwner, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cameraFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translationCurve", be.READWRITE ],
+    [ be.ATTR, "flares", be.READ | be.PERSIST ],
+    [ be.ATTR, "occluders", be.READ | be.PERSIST ],
+    [ be.ATTR, "backgroundOccluders", be.READ | be.PERSIST ],
+    [ be.ATTR, "distanceToEdgeCurves", be.READ | be.PERSIST ],
+    [ be.ATTR, "distanceToCenterCurves", be.READ | be.PERSIST ],
+    [ be.ATTR, "radialAngleCurves", be.READ | be.PERSIST ],
+    [ be.ATTR, "xDistanceToCenter", be.READ | be.PERSIST ],
+    [ be.ATTR, "yDistanceToCenter", be.READ | be.PERSIST ],
+    [ be.ATTR, "bindings", be.READ | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "controllers", be.READ | be.PERSIST ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ]
+  ]
+})
 export class EveLensflare
 {
 
@@ -166,108 +189,90 @@ export class EveLensflare
   }
 
   /** m_translationCurve (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
 
   /** m_mesh (Tr2MeshPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Mesh")
   mesh = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_backgroundOccluders (PEveOccluderVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveOccluder")
   backgroundOccluders = [];
 
   /** m_occluders (PEveOccluderVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveOccluder")
   occluders = [];
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** m_distanceToEdgeCurves (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   distanceToEdgeCurves = [];
 
   /** m_distanceToCenterCurves (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   distanceToCenterCurves = [];
 
   /** m_radialAngleCurves (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   radialAngleCurves = [];
 
   /** m_xDistanceToCenter (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   xDistanceToCenter = [];
 
   /** m_yDistanceToCenter (PITriFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriFunction")
   yDistanceToCenter = [];
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
 
   /** m_bindings (PITr2ValueBindingVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ValueBinding")
   bindings = [];
 
   /** m_cameraFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   cameraFactor = 20;
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_flares (PEveTransformVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveTransform")
   flares = [];
 
   /** m_update (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   update = true;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
@@ -440,7 +445,6 @@ export class EveLensflare
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     const key = String(name);
@@ -471,7 +475,6 @@ export class EveLensflare
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     for (const controller of this.controllers) controller.Start();

@@ -11,9 +11,13 @@ import { EveVirtualCameraBehaviourVector3MoveForward } from "./EveVirtualCameraB
  * Vector3 behaviour that displaces the camera along its own up axis by a
  * curve-shaped distance.
  */
-@be.define("EveVirtualCameraBehaviourVector3MoveUp")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3MoveForward)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3MoveUp",
+  // EveVirtualCameraBehaviour_Blue.cpp:175-177, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [],
+  chainTo: EveVirtualCameraBehaviourVector3MoveForward
+})
 export class EveVirtualCameraBehaviourVector3MoveUp extends EveVirtualCameraBehaviourVector3MoveForward
 {
   /**

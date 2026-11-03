@@ -6,8 +6,15 @@ import { IEveDistributionModifier } from "./IEveDistributionModifier.js";
 import { DistributionEntityLifeTimeEvent } from "./enums.js";
 
 /** Ends or respawns a distributed placement with the authored lifetime event after its lifetime duration expires. */
-@be.define("EveDistributionModifierProcessLifetime")
-@be.mapInterface(IEveDistributionModifier)
+@be.define({
+  name: "EveDistributionModifierProcessLifetime",
+  // EveDistributionModifierProcessLifetime_Blue.cpp:23-28, in Carbon's order.
+  interfaces: [ IEveDistributionModifier ],
+  members: [
+    [ be.ATTR, "lifetimeDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "killEvent", be.READWRITE | be.PERSIST | be.ENUM, "trinity.lifetimeEvent" ]
+  ]
+})
 export class EveDistributionModifierProcessLifetime extends IEveDistributionModifier
 {
 
@@ -15,13 +22,11 @@ export class EveDistributionModifierProcessLifetime extends IEveDistributionModi
    * m_killEvent (DistributionEntityLifeTimeEvent - enum DistributionEntityLifeTimeEvent) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime_Blue.cpp:28); chooser LifetimeEventChooser (trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.lifetimeEvent")
   @type.int32
   @type.enum("trinity.lifetimeEvent")
   killEvent = 1;
 
   /** m_lifetimeDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lifetimeDuration = -1;

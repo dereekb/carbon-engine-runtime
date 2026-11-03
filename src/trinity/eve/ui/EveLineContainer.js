@@ -9,32 +9,37 @@ import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 
 
 /** Owns and updates a connector-built EveCurveLineSet. */
-@be.define("EveLineContainer")
-@be.inherit(IEveSpaceObject2)
-@be.mapInterface(IEveSpaceObject2)
+@be.define({
+  name: "EveLineContainer",
+  inherit: [ IEveSpaceObject2 ],
+  // EveLineContainer_Blue.cpp:10-17, in Carbon's order.
+  interfaces: [ IEveSpaceObject2 ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "connectors", be.READ | be.PERSIST ],
+    [ be.ATTR, "lineSet", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveLineContainer extends IRoot
 {
 
   /** m_connectors (PEveConnectorVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveConnector")
   connectors = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_lineSet (EveCurveLineSetPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveCurveLineSet")
   lineSet = null;
 
   /** m_display (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 

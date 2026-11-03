@@ -12,10 +12,13 @@ import { EveSpaceObject2 } from "./EveSpaceObject2.js";
  * activation scales the prepared shader data; the native GetBatches override
  * only forwards to the inherited implementation.
  */
-@be.define("EveStation2")
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Renderable)
-@be.exposureChainTo(EveSpaceObject2)
+@be.define({
+  name: "EveStation2",
+  // EveStation2_Blue.cpp:10-15, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2Renderable ],
+  members: [],
+  chainTo: EveSpaceObject2
+})
 export class EveStation2 extends EveSpaceObject2
 {
   /**

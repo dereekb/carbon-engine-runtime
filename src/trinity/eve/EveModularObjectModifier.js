@@ -16,8 +16,21 @@ import { Tr2QuadRenderer } from "../core/Tr2QuadRenderer/Tr2QuadRenderer.js";
 
 
 /** Transient edit session for one modular EveSpaceObject2. */
-@be.define("EveModularObjectModifier")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveModularObjectModifier",
+  inherit: [ IRoot ],
+  // EveModularObjectModifier_Blue.cpp:11-19, in Carbon's order.
+  members: [
+    [ be.METHOD, "AddHull", be.WRAP ],
+    [ be.METHOD, "AddChild", be.WRAP ],
+    [ be.METHOD, "Remove", be.WRAP ],
+    [ be.METHOD, "ApplyBounds", be.WRAP ],
+    [ be.METHOD, "SetTransform", be.WRAP ],
+    [ be.METHOD, "GetPosition", be.WRAP ],
+    [ be.METHOD, "GetRotation", be.WRAP ],
+    [ be.METHOD, "GetScale", be.WRAP ]
+  ]
+})
 export class EveModularObjectModifier extends IRoot
 {
   _object = null;
@@ -65,7 +78,6 @@ export class EveModularObjectModifier extends IRoot
    * @adapted async SOF acquisition requires serialization per owner so IDs
    *   and composed graphs cannot be overwritten by concurrent edit sessions.
    */
-  @be.mapMethodAndWrap()
   async AddHull(hullName, factionName, raceName, position, rotation, scale)
   {
     // Preserve the call's transform while preceding edits or resources await.
@@ -127,7 +139,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @adapted promise-capable browser acquisition shares the owner's edit order.
    */
-  @be.mapMethodAndWrap()
   async AddChild(resourcePath, position, rotation, scale)
   {
     // Preserve the call's transform while preceding edits or resources await.
@@ -197,7 +208,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Remove(partId)
   {
     const part = this._GetPart(partId);
@@ -224,7 +234,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetTransform(partId, position, rotation, scale)
   {
     const part = this._GetPart(partId);
@@ -280,7 +289,6 @@ export class EveModularObjectModifier extends IRoot
    *   applies them as it completes; the bounds after the last edit are the ones
    *   Carbon's destructor would set.
    */
-  @be.mapMethodAndWrap()
   ApplyBounds()
   {
     this._AssertReady();
@@ -326,7 +334,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetPosition(partId, out)
   {
     return vec3.copy(out, this._GetPart(partId).position);
@@ -337,7 +344,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetRotation(partId, out)
   {
     return quat.copy(out, this._GetPart(partId).rotation);
@@ -348,7 +354,6 @@ export class EveModularObjectModifier extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetScale(partId, out)
   {
     return vec3.copy(out, this._GetPart(partId).scale);

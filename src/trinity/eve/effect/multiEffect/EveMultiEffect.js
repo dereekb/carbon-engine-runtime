@@ -19,48 +19,54 @@ import { BLUELISTEVENT } from "#consts/blue";
  * other space objects through typed parameter slots, without owning any geometry
  * itself.
  */
-@be.define("EveMultiEffect")
-@be.inherit(IListNotify, IInitialize, IEveSpaceObject2, ITr2DynamicBindingOwner, ITr2ControllerOwner, ITr2CurveSetOwner)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2DynamicBindingOwner)
-@be.mapInterface(ITr2CurveSetOwner)
+@be.define({
+  name: "EveMultiEffect",
+  inherit: [ IListNotify, IInitialize, IEveSpaceObject2, ITr2DynamicBindingOwner, ITr2ControllerOwner, ITr2CurveSetOwner ],
+  // EveMultiEffect_Blue.cpp:12-81, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2ControllerOwner, IInitialize, ITr2DynamicBindingOwner, ITr2CurveSetOwner ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "controllers", be.READ | be.PERSIST ],
+    [ be.ATTR, "externalParameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "bindings", be.READ | be.PERSIST ],
+    [ be.METHOD, "SetParameter", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "HandleControllerEvent", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ],
+    [ be.METHOD, "Rebind", be.WRAP_OPTIONAL_ARGS ]
+  ]
+})
 export class EveMultiEffect extends IRoot
 {
 
   /** m_bindings (PTr2DynamicBindingVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2DynamicBinding")
   bindings = [];
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
   controllers = [];
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** m_externalParameters (PTr2ExternalParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
   externalParameters = [];
 
   /** m_parameters (PEveMultiEffectParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveMultiEffectParameter")
   parameters = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -94,7 +100,6 @@ export class EveMultiEffect extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
   Rebind(onlyUpdateBindings = false)
   {
     for (const binding of this.bindings)
@@ -164,7 +169,6 @@ export class EveMultiEffect extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HandleControllerEvent(name)
   {
     for (const controller of this.controllers) controller.HandleEvent(name);
@@ -175,7 +179,6 @@ export class EveMultiEffect extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     for (const controller of this.controllers) controller.SetVariable(name, value);
@@ -186,7 +189,6 @@ export class EveMultiEffect extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetParameter(parameterName, object)
   {
     for (const parameter of this.parameters)
@@ -206,7 +208,6 @@ export class EveMultiEffect extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     for (const controller of this.controllers) controller.Start();

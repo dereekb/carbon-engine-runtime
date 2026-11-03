@@ -21,16 +21,20 @@ import { vec4 } from "#math/vec4";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 
 /** A celestial effect root with scaled surface rendering and an ordinary-world depth proxy. */
-@be.define("EvePlanet")
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2SecondaryLightSource)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(IEveEffectChildrenOwner)
-@be.mapInterface(IShaderConfigurer)
-@be.mapInterface(ITr2SoundEmitterOwner)
-@be.mapInterface(IWorldPosition)
-@be.mapInterface(ITr2BoundingBox)
-@be.exposureChainTo(EveEffectRoot2)
+@be.define({
+  name: "EvePlanet",
+  // EvePlanet_Blue.cpp:11-51, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2SecondaryLightSource, ITr2CurveSetOwner, IEveEffectChildrenOwner, IShaderConfigurer, ITr2SoundEmitterOwner, IWorldPosition, ITr2BoundingBox ],
+  members: [
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "albedoColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "zOnlyModel", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "emissiveColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "estimatedPixelDiameter", be.READ | be.PERSIST ]
+  ],
+  chainTo: EveEffectRoot2
+})
 export class EvePlanet extends EveEffectRoot2
 {
   /**
@@ -58,37 +62,31 @@ export class EvePlanet extends EveEffectRoot2
   _estimatedMaxPixelDiameter = 0;
 
   /** m_zOnlyModel (EveChildMeshPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveChildMesh")
   zOnlyModel = null;
 
   /** m_emissiveColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   emissiveColor = vec4.create();
 
   /** m_minScreenSize (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minScreenSize = 2;
 
   /** m_albedoColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   albedoColor = vec4.create();
 
   /** m_estimatedPixelDiameter (float) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.float32
   estimatedPixelDiameter = 0;
 
   /** m_radius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   radius = 1;

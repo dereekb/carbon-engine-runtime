@@ -41,15 +41,26 @@ const INVERSE_PATCH_SCRATCH = mat4.create();
  * particle systems and emitters, curve sets, observers and child transforms,
  * with its own frustum and LOD visibility pass.
  */
-@be.define("EveTransform")
-@be.mapInterface(IEveTransform)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Pickable)
-@be.mapInterface(IWorldPosition)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2BoundingBox)
-@be.exposureChainTo(Tr2Transform)
-@be.inherit(IEveTransform, IEveSpaceObject2, ITr2Pickable, IWorldPosition, IInitialize, ITr2CurveSetOwner, ITr2BoundingBox, ITr2DebugRenderable)
+@be.define({
+  name: "EveTransform",
+  inherit: [ IEveTransform, IEveSpaceObject2, ITr2Pickable, IWorldPosition, IInitialize, ITr2CurveSetOwner, ITr2BoundingBox, ITr2DebugRenderable ],
+  // EveTransform_Blue.cpp:12-88, in Carbon's order.
+  interfaces: [ IEveTransform, IEveSpaceObject2, ITr2Pickable, IWorldPosition, IInitialize, ITr2BoundingBox ],
+  members: [
+    [ be.ATTR, "hideOnLowQuality", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "visibilityThreshold", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "children", be.READ | be.PERSIST ],
+    [ be.ATTR, "particleEmitters", be.READ | be.PERSIST ],
+    [ be.ATTR, "particleSystems", be.READ | be.PERSIST ],
+    [ be.ATTR, "observers", be.READ | be.PERSIST ],
+    [ be.ATTR, "useLodLevel", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lodLevel", be.READ ],
+    [ be.ATTR, "meshLod", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "overrideBoundsMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "overrideBoundsMax", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2Transform
+})
 export class EveTransform extends Tr2Transform
 {
 
@@ -59,7 +70,6 @@ export class EveTransform extends Tr2Transform
    * Fallback mesh adopted during initialization when the primary mesh is unset.
    * @type {Tr2MeshBase|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2MeshBase")
   meshLod = null;
@@ -70,7 +80,6 @@ export class EveTransform extends Tr2Transform
    * Child transforms visited for updates, visibility, bounds and render submission.
    * @type {IEveTransform[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveTransform")
   children = [];
@@ -81,7 +90,6 @@ export class EveTransform extends Tr2Transform
    * Local minimum of the override bounds, enabled when it differs from overrideBoundsMax.
    * @type {vec3}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   overrideBoundsMin = vec3.create();
@@ -92,7 +100,6 @@ export class EveTransform extends Tr2Transform
    * Local maximum of the override bounds, enabled when it differs from overrideBoundsMin.
    * @type {vec3}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   overrideBoundsMax = vec3.create();
@@ -103,7 +110,6 @@ export class EveTransform extends Tr2Transform
    * Emitters advanced with the node's world transform and current update context.
    * @type {ITr2GenericEmitter[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2GenericEmitter")
   particleEmitters = [];
@@ -114,7 +120,6 @@ export class EveTransform extends Tr2Transform
    * Particle systems updated, sorted and transformed with this node.
    * @type {Tr2ParticleSystem[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ParticleSystem")
   particleSystems = [];
@@ -125,7 +130,6 @@ export class EveTransform extends Tr2Transform
    * Current LOD selected by visibility testing and merged with the children's LOD levels.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.Tr2Lod")
   lodLevel = Tr2Lod.TR2_LOD_LOW;
@@ -136,7 +140,6 @@ export class EveTransform extends Tr2Transform
    * Whether low-quality rendering suppresses this node's visibility.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   hideOnLowQuality = false;
@@ -147,7 +150,6 @@ export class EveTransform extends Tr2Transform
    * Projected mesh-size threshold for visibility; a negative value bypasses sphere rejection.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   visibilityThreshold = 2;
@@ -158,7 +160,6 @@ export class EveTransform extends Tr2Transform
    * Observers updated from the node's world transform during view-dependent updates.
    * @type {TriObserverLocal[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriObserverLocal")
   observers = [];
@@ -169,7 +170,6 @@ export class EveTransform extends Tr2Transform
    * Whether curve-set updates are throttled according to the current LOD.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useLodLevel = true;

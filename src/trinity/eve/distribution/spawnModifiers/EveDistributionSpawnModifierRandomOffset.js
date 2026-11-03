@@ -9,10 +9,18 @@ import { vec3 } from "#math/vec3";
 import { CjsDistributionRandom } from "../../CjsDistributionRandom.js";
 
 /** Adds a seeded random local translation offset to each spawned placement. */
-@be.define("EveDistributionSpawnModifierRandomOffset")
-@be.inherit(IInitialize)
-@be.mapInterface(IEveDistributionSpawnModifier)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveDistributionSpawnModifierRandomOffset",
+  inherit: [ IInitialize ],
+  // EveDistributionSpawnModifierRandomOffset_Blue.cpp:10-18, in Carbon's order.
+  interfaces: [ IEveDistributionSpawnModifier, IInitialize ],
+  members: [
+    [ be.ATTR, "consistentRandom", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "uniformOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxOffset", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnModifierRandomOffset extends IEveDistributionSpawnModifier
 {
 
@@ -20,25 +28,21 @@ export class EveDistributionSpawnModifierRandomOffset extends IEveDistributionSp
   _timeSeed = blue.os.GetCurrentFrameTime() >>> 0;
 
   /** m_minOffset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   minOffset = vec3.create();
 
   /** m_maxOffset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   maxOffset = vec3.create();
 
   /** m_consistentRandom (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   consistentRandom = false;
 
   /** m_uniformOffset (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   uniformOffset = false;

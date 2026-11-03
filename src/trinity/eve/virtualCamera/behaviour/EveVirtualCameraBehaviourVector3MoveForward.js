@@ -11,22 +11,24 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that displaces the camera along its own forward axis by a
  * curve-shaped distance, and the base for the sideways and vertical variants.
  */
-@be.define("EveVirtualCameraBehaviourVector3MoveForward")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3MoveForward",
+  // EveVirtualCameraBehaviour_Blue.cpp:148-153, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "proportional", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3MoveForward extends EveVirtualCameraBehaviourVector3Base
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2CurveScalar")
   scaleCurve = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   proportional = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   value = 0;

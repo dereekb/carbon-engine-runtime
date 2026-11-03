@@ -12,43 +12,41 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that places the camera on a horizontal circle about the
  * anchor, sweeping from a start to an end angle over the timeline.
  */
-@be.define("EveVirtualCameraBehaviourVector3Orbit")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Orbit",
+  // EveVirtualCameraBehaviour_Blue.cpp:129-138, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "start", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "end", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distanceScalarCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "orbitCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "proportional", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "world", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3Orbit extends EveVirtualCameraBehaviourVector3Base
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2CurveScalar")
   orbitCurve = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2CurveScalar")
   distanceScalarCurve = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   end = 180;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   proportional = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   world = false;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   start = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   distance = 1;

@@ -12,17 +12,20 @@ import { EveVirtualCameraBehaviourFloatBase } from "./EveVirtualCameraBehaviourF
  * Float behaviour that adds an authored constant, optionally shaped across the
  * timeline by a scale curve.
  */
-@be.define("EveVirtualCameraBehaviourFloatAdd")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourFloatBase)
+@be.define({
+  name: "EveVirtualCameraBehaviourFloatAdd",
+  // EveVirtualCameraBehaviour_Blue.cpp:40-44, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleCurve", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourFloatBase
+})
 export class EveVirtualCameraBehaviourFloatAdd extends EveVirtualCameraBehaviourFloatBase
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("Tr2CurveScalar")
   scaleCurve = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   value = 0;

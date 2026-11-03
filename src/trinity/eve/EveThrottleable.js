@@ -10,26 +10,28 @@ import { blue, CcpTime } from "#blue";
  * Update-rate state for objects that run at less than frame rate, mapping a
  * normalized detail level onto an update frequency between authored bounds.
  */
-@be.define("EveThrottleable")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveThrottleable",
+  inherit: [ IRoot ],
+  // EveThrottleable_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "updateThrottle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minUpdateFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxUpdateFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentUpdateFrequency", be.READ ]
+  ]
+})
 
 export class EveThrottleable extends IRoot
 {
-  @be.mapAttribute(be.READ)
   @type.float32
   currentUpdateFrequency = 10;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   updateThrottle = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.uint32
   maxUpdateFrequency = 20;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   minUpdateFrequency = 2;

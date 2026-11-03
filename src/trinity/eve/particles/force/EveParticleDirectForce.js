@@ -9,8 +9,12 @@ import { Tr2ParticleDirectForce } from "../../../particle/force/Tr2ParticleDirec
  * Blue alias of Tr2ParticleDirectForce - Carbon registers the Eve name with
  * zero attributes of its own and chains the whole exposure to the Tr2 class.
  */
-@be.define("EveParticleDirectForce")
-@be.exposureChainTo(Tr2ParticleDirectForce)
+@be.define({
+  name: "EveParticleDirectForce",
+  // EveParticleDirectForce_Blue.cpp:10-12, in Carbon's order.
+  members: [],
+  chainTo: Tr2ParticleDirectForce
+})
 export class EveParticleDirectForce extends Tr2ParticleDirectForce
 {
 }

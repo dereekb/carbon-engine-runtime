@@ -7,25 +7,30 @@ import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 
 /** Multiplies a distributed placement's additional scale from its parent space object's bounding radius or an authored scale curve. */
-@be.define("EveDistributionModifierScaleBySpaceObjectParent")
-@be.mapInterface(IEveDistributionModifier)
+@be.define({
+  name: "EveDistributionModifierScaleBySpaceObjectParent",
+  // EveDistributionModifierScaleBySpaceObjectParent_Blue.cpp:11-17, in Carbon's order.
+  interfaces: [ IEveDistributionModifier ],
+  members: [
+    [ be.ATTR, "authoredForBoundingRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleCurve", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionModifierScaleBySpaceObjectParent extends IEveDistributionModifier
 {
 
   /** m_scaleFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scaleFactor = 1;
 
   /** m_authoredForBoundingRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   authoredForBoundingRadius = 1000;
 
   /** m_scaleCurve (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   scaleCurve = null;

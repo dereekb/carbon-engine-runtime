@@ -12,8 +12,14 @@ import { ITr2VolumetricRenderable } from "../../../core/ITr2VolumetricRenderable
 import { ITr2PostProcessOwner } from "../../../postProcess/ITr2PostProcessOwner.js";
 
 /** Indexes Eve entities and their component collections for scene processing. */
-@be.define("EveComponentRegistry")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveComponentRegistry",
+  inherit: [ IRoot ],
+  // EveComponentRegistry_Blue.cpp:10-12, in Carbon's order.
+  members: [
+    [ be.METHOD, "GetComponentInfo", be.WRAP ]
+  ]
+})
 
 export class EveComponentRegistry extends IRoot
 {
@@ -396,7 +402,6 @@ export class EveComponentRegistry extends IRoot
    *
    * @adapted Returns Carbon's vector of name/count pairs as JavaScript tuple arrays.
    */
-  @be.mapMethodAndWrap()
   GetComponentInfo()
   {
     return this.#componentCollections.map(collection => [collection.name, collection.Size()]);

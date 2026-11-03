@@ -11,40 +11,39 @@ import { ITriVectorFunction, CcpTime } from "#blue";
  * A vector function that offsets a start-point curve by a vector sweeping from
  * one authored direction to another over a fixed time, once or repeatedly.
  */
-@be.define("EveRemotePositionCurve")
-@be.mapInterface(ITriVectorFunction)
+@be.define({
+  name: "EveRemotePositionCurve",
+  // EveRemotePositionCurve_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ ITriVectorFunction ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE ],
+    [ be.ATTR, "startPositionCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "offsetDir1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "offsetDir2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sweepTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cycle", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveRemotePositionCurve extends ITriVectorFunction
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   delayTime = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   cycle = false;
 
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   value = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   offsetDir2 = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("ITriVectorFunction")
   startPositionCurve = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   offsetDir1 = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sweepTime = 1;

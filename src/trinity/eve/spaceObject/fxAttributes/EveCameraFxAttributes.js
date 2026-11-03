@@ -18,39 +18,44 @@ const IDENTITY_TRANSFORM = mat4.create();
  * object, and object, child and camera forward directions - refreshed each child
  * update for effect bindings to read.
  */
-@be.define("EveCameraFxAttributes")
-@be.mapInterface(IEveFxAttribute)
+@be.define({
+  name: "EveCameraFxAttributes",
+  // EveCameraFxAttributes_Blue.cpp:12-23, in Carbon's order.
+  interfaces: [ IEveFxAttribute ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distanceToCamera", be.READ ],
+    [ be.ATTR, "lookAngleToObject", be.READ ],
+    [ be.ATTR, "objectRotation", be.READ ],
+    [ be.ATTR, "rotationWithChildTransform", be.READ ],
+    [ be.ATTR, "cameraRotation", be.READ ]
+  ]
+})
 export class EveCameraFxAttributes extends IEveFxAttribute
 {
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_lookAngleToObject (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   lookAngleToObject = 0;
 
   /** m_objectRotation (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   objectRotation = vec3.create();
 
   /** m_rotationWithChildTransform (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rotationWithChildTransform = vec3.create();
 
   /** m_cameraRotation (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   cameraRotation = vec3.create();
 
   /** m_distanceToCamera (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   distanceToCamera = 0;
 

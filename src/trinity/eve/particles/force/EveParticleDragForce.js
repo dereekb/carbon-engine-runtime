@@ -9,8 +9,12 @@ import { Tr2ParticleDragForce } from "../../../particle/force/Tr2ParticleDragFor
  * Blue alias of Tr2ParticleDragForce - Carbon registers the Eve name with
  * zero attributes of its own and chains the whole exposure to the Tr2 class.
  */
-@be.define("EveParticleDragForce")
-@be.exposureChainTo(Tr2ParticleDragForce)
+@be.define({
+  name: "EveParticleDragForce",
+  // EveParticleDragForce_Blue.cpp:10-12, in Carbon's order.
+  members: [],
+  chainTo: Tr2ParticleDragForce
+})
 export class EveParticleDragForce extends Tr2ParticleDragForce
 {
 }

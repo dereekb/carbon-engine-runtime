@@ -9,9 +9,13 @@ import { blue } from "#schema";
  * tracking which registry they belong to and the slot index the registry
  * assigned for each component type.
  */
-@be.define("EveEntity")
+@be.define({
+  name: "EveEntity",
+  inherit: [ IRoot ],
+  // EveEntity_Blue.cpp:25-26, in Carbon's order.
+  members: []
+})
 
-@be.inherit(IRoot)
 export class EveEntity extends IRoot
 {
 

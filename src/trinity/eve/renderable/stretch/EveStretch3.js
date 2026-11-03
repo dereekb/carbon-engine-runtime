@@ -37,78 +37,87 @@ import { CjsStretchRuntime } from "./CjsStretchRuntime.js";
  * the span, at the destination and at a travelling point between them, driven by
  * its own controllers, dynamic bindings and curve sets.
  */
-@be.define("EveStretch3")
-@be.inherit(ITr2DebugRenderable, ITr2DynamicBindingOwner, IEveSpaceObject2, ITr2ControllerOwner,
-  INotify, IListNotify, IInitialize, ITr2CurveSetOwner, ITr2SoundEmitterOwner, EveEntity)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(IEveFiringEffectElement)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(ITr2DynamicBindingOwner)
-@be.mapInterface(ITr2SoundEmitterOwner)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "EveStretch3",
+  inherit: [ ITr2DebugRenderable, ITr2DynamicBindingOwner, IEveSpaceObject2, ITr2ControllerOwner, INotify, IListNotify, IInitialize, ITr2CurveSetOwner, ITr2SoundEmitterOwner, EveEntity ],
+  // EveStretch3_Blue.cpp:11-189, in Carbon's order.
+  interfaces: [ INotify, IListNotify, IInitialize, IEveSpaceObject2, IEveFiringEffectElement, ITr2ControllerOwner, ITr2CurveSetOwner, ITr2DynamicBindingOwner, ITr2SoundEmitterOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "source", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "dest", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sourcePosition", be.READ ],
+    [ be.ATTR, "destinationPosition", be.READ ],
+    [ be.ATTR, "length", be.READ | be.PERSIST ],
+    [ be.PROP, "sourceSpaceObject" ],
+    [ be.PROP, "destSpaceObject" ],
+    [ be.ATTR, "sourceObject", be.PERSISTONLY, "_sourceObject" ],
+    [ be.PROP, "sourceObject" ],
+    [ be.ATTR, "destObject", be.PERSISTONLY, "_destObject" ],
+    [ be.PROP, "destObject" ],
+    [ be.ATTR, "stretchObject", be.PERSISTONLY, "_stretchObject" ],
+    [ be.PROP, "stretchObject" ],
+    [ be.ATTR, "moveObject", be.PERSISTONLY, "_moveObject" ],
+    [ be.PROP, "moveObject" ],
+    [ be.ATTR, "moveProgression", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startTime", be.READ ],
+    [ be.ATTR, "controllers", be.READ | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "dynamicBindings", be.READ | be.PERSIST ],
+    [ be.ATTR, "audio", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchAudio", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "StartFiring", be.WRAP ],
+    [ be.METHOD, "StopFiring", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ]
+  ]
+})
 export class EveStretch3 extends IEveFiringEffectElement
 {
-  @be.mapAttribute(be.READ)
   @type.vec3
   sourcePosition = vec3.create();
-  @be.mapAttribute(be.READ)
   @type.vec3
   destinationPosition = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
  @type.object.ref("ITriVectorFunction")
   source = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
  @type.object.ref("ITriVectorFunction")
   dest = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.string
   name = "";
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("TriFloat")
   moveProgression = new TriFloat();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("IStretchAudio")
   stretchAudio = null;
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("ITr2Controller")
   controllers = [];
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("TriCurveSet")
   curveSets = [];
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.object.ref("TriFloat")
   length = new TriFloat();
-  @be.mapAttribute(be.READ | be.PERSIST)
 
  @type.list("Tr2DynamicBinding")
   dynamicBindings = [];
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
  @type.boolean
   display = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   update = true;
   /** Hidden persisted destObject storage, distinct from the live setter.
    * Carbon: EveStretch3::m_destObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:173); MAP_ATTRIBUTE (trinity/trinity/Eve/Renderable/Stretch/EveStretch3_Blue.cpp:98).
    */
-  @be.mapAttribute(be.PERSISTONLY, "destObject")
 
   /** Carbon: m_destObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:173).
    */
@@ -120,7 +129,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceObjectChild")
   get destObject()
   {
@@ -139,7 +147,6 @@ export class EveStretch3 extends IEveFiringEffectElement
   /** Hidden persisted sourceObject storage, distinct from the live setter.
    * Carbon: EveStretch3::m_sourceObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:172); MAP_ATTRIBUTE (trinity/trinity/Eve/Renderable/Stretch/EveStretch3_Blue.cpp:86).
    */
-  @be.mapAttribute(be.PERSISTONLY, "sourceObject")
 
   /** Carbon: m_sourceObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:172).
    */
@@ -151,7 +158,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceObjectChild")
   get sourceObject()
   {
@@ -170,7 +176,6 @@ export class EveStretch3 extends IEveFiringEffectElement
   /** Hidden persisted stretchObject storage, distinct from the live setter.
    * Carbon: EveStretch3::m_stretchObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:174); MAP_ATTRIBUTE (trinity/trinity/Eve/Renderable/Stretch/EveStretch3_Blue.cpp:110).
    */
-  @be.mapAttribute(be.PERSISTONLY, "stretchObject")
 
   /** Carbon: m_stretchObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:174).
    */
@@ -182,7 +187,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceObjectChild")
   get stretchObject()
   {
@@ -199,17 +203,14 @@ export class EveStretch3 extends IEveFiringEffectElement
     this.SetStretchObject(value);
   }
   /** m_startTime (Be::Time, Blue 100ns ticks): the update time latched on the first asynchronous update (cpp:469-472). */
-  @be.mapAttribute(be.READ)
   @type.float64
   startTime = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITr2Audio")
   audio = null;
   /** Hidden persisted moveObject storage, distinct from the live setter.
    * Carbon: EveStretch3::m_moveObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:175); MAP_ATTRIBUTE (trinity/trinity/Eve/Renderable/Stretch/EveStretch3_Blue.cpp:122).
    */
-  @be.mapAttribute(be.PERSISTONLY, "moveObject")
 
   /** Carbon: m_moveObject (trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h:175).
    */
@@ -221,7 +222,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceObjectChild")
   get moveObject()
   {
@@ -243,7 +243,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("IEveSpaceObject2")
   get sourceSpaceObject()
   {
@@ -265,7 +264,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("IEveSpaceObject2")
   get destSpaceObject()
   {
@@ -914,7 +912,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    * @implemented
    * @param {Number} [delay] - seconds handed to the controllers as the FiringDelay variable
    */
-  @be.mapMethodAndWrap()
   StartFiring(delay = 0)
   {
     this._delay = Number(delay);
@@ -931,7 +928,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StopFiring()
   {
     this._stretchState = EveStretch3.StretchState.STRETCH_STATE_STOPPING;
@@ -1047,7 +1043,6 @@ export class EveStretch3 extends IEveFiringEffectElement
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     this._RunOnComponents((component) => component.SetControllerVariable(name, value));

@@ -20,25 +20,30 @@ const bitsAsFloat = value => new Float32Array(new Uint32Array([ value >>> 0 ]).b
  * their pixels pass. Tr2OcclusionBuffer's CopyCounters turns the counts into
  * the visibility the flare and the god rays read.
  */
-@be.define("EveOccluder")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveOccluder",
+  inherit: [ IRoot ],
+  // EveOccluder_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sprites", be.READ | be.PERSIST ]
+  ]
+})
 export class EveOccluder extends IRoot
 {
 
   /** m_sprites (PEveTransformVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveTransform")
   sprites = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;

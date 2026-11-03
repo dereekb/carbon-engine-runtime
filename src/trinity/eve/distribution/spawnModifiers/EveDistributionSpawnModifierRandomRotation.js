@@ -10,10 +10,18 @@ import { vec3 } from "#math/vec3";
 import { CjsDistributionRandom } from "../../CjsDistributionRandom.js";
 
 /** Applies or replaces each spawned placement's orientation with a seeded random yaw, pitch, and roll. */
-@be.define("EveDistributionSpawnModifierRandomRotation")
-@be.inherit(IInitialize)
-@be.mapInterface(IEveDistributionSpawnModifier)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveDistributionSpawnModifierRandomRotation",
+  inherit: [ IInitialize ],
+  // EveDistributionSpawnModifierRandomRotation_Blue.cpp:10-18, in Carbon's order.
+  interfaces: [ IEveDistributionSpawnModifier, IInitialize ],
+  members: [
+    [ be.ATTR, "overrideRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "consistentRandom", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxRotation", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnModifierRandomRotation extends IEveDistributionSpawnModifier
 {
 
@@ -21,25 +29,21 @@ export class EveDistributionSpawnModifierRandomRotation extends IEveDistribution
   _timeSeed = blue.os.GetCurrentFrameTime() >>> 0;
 
   /** m_minRotation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   minRotation = vec3.create();
 
   /** m_maxRotation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   maxRotation = vec3.create();
 
   /** m_consistentRandom (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   consistentRandom = false;
 
   /** m_overrideRotation (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   overrideRotation = false;

@@ -11,11 +11,19 @@ import { InitialPlacement } from "../attributeModifiers/InitialPlacement.js";
 import { PlacementDataWithIdentifier } from "../../PlacementDataWithIdentifier.js";
 
 /** Samples a volume into oriented distribution placements and requests regeneration when the volume or sampling settings change. */
-@be.define("EveDistributionPlacementGeneratorVolume")
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(IEveDistributionPlacementGenerators)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveDistributionPlacementGeneratorVolume",
+  inherit: [ IInitialize, INotify ],
+  // EveDistributionPlacementGeneratorVolume_Blue.cpp:12-23, in Carbon's order.
+  interfaces: [ IEveDistributionPlacementGenerators, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "volume", be.PERSISTONLY, "_volume" ],
+    [ be.PROP, "volume" ],
+    [ be.ATTR, "numGenerated", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "hollowVolume", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "falloffFactor", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class EveDistributionPlacementGeneratorVolume extends IEveDistributionPlacementGenerators
 {
 
@@ -26,21 +34,18 @@ export class EveDistributionPlacementGeneratorVolume extends IEveDistributionPla
   _subscribedVolume = null;
 
   /** m_numGenerated (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   numGenerated = 10;
 
   /** m_hollowVolume (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   hollowVolume = false;
 
   /** m_falloffFactor (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
@@ -53,7 +58,6 @@ export class EveDistributionPlacementGeneratorVolume extends IEveDistributionPla
    * directly, bypassing the setter; Initialize then subscribes to it.
    * Carbon: EveDistributionPlacementGeneratorVolume::m_volume (trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume.h:39); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume_Blue.cpp:18).
    */
-  @be.mapAttribute(be.PERSISTONLY, "volume")
 
   /** Carbon: m_volume (trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume.h:39).
    */
@@ -67,7 +71,6 @@ export class EveDistributionPlacementGeneratorVolume extends IEveDistributionPla
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("IEveVolume")
   get volume()
   {
