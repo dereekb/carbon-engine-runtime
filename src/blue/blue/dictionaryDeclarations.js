@@ -36,7 +36,8 @@ export function getDictionaryDeclarations(Constructor)
     }
   }
 
-  const view = { schema, fields, byName };
+  // A class whose exposure is a bag walks in Carbon's member order (CjsSchema.orderByExposureRows); others keep this order.
+  const view = { schema, fields: CjsSchema.orderByExposureRows(Constructor, fields), byName };
   VIEWS.set(Constructor, view);
   return view;
 }

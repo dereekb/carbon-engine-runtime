@@ -207,7 +207,8 @@ export class Copier extends ICopier
     // 0, so Copier.cpp:163-177 compares no bytes and never copies it.
     const runtimeNames = new Set();
     const info = CjsSchema.getSchema(dest.constructor);
-    for (const field of [ ...info.members, ...info.properties.filter(property => !property.property) ])
+    // Carbon copies in member-table order (Copier.cpp:140-209), which a bag carries (CjsSchema.orderByExposureRows).
+    for (const field of CjsSchema.orderByExposureRows(dest.constructor, [ ...info.members, ...info.properties.filter(property => !property.property) ]))
     {
       if (runtimeNames.has(field.name)) continue;
       if (field.type?.runtimeOnly === true)

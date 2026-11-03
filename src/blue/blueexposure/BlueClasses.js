@@ -504,7 +504,7 @@ export class BlueClasses extends IBlueClasses
     {
       // BlueMemberIterator walks every PERSIST entry, a persisted property included.
       const info = CjsSchema.getSchema(registration.type);
-      const members = [ ...info.members, ...info.properties ]
+      const members = CjsSchema.orderByExposureRows(registration.type, [ ...info.members, ...info.properties ])
         .filter(member => member.edit !== undefined && (member.edit.persist === true || member.edit.rpersist === true));
       if (members.length) classes.push({ name: registration.name, members });
     }
@@ -604,7 +604,7 @@ export class BlueClasses extends IBlueClasses
     // An accessor row is a property (blue.property/meta.property, flags derived)
     // or an attribute over the accessor path (its own flags); one carrying only
     // status markers is not exposed.
-    for (const member of [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ])
+    for (const member of CjsSchema.orderByExposureRows(Constructor, [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ]))
     {
       if (completeExposureNames.has(member.name)) continue;
       // PyGetTypeInfo lists what Carbon's EXPOSURE table holds (TypeInfo.cpp:118-148, the mMemberTable walk); our own rows are not in it.

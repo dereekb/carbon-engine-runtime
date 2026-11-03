@@ -189,6 +189,40 @@ export class CjsSchema
         return Constructor;
     }
 
+    /**
+     * Puts a class's declarations in Carbon's member order where its exposure is a bag (decorator-upgrade.md § 000a): derived
+     * class first, then each parent, as `BlueMemberIterator` walks (blue/src/BlueMemberIterator.cpp:59-118), and within a class
+     * that declares rows, its rows' order; declarations a bag does not list follow its rows in their given order. When no class
+     * in the chain declares rows the list comes back unchanged, so a class on per-member decorators keeps today's order.
+     *
+     * @param {Function} Constructor The class whose declarations these are.
+     * @param {object[]} fields Its declarations, as a walker would visit them today.
+     * @returns {object[]} The same declarations, in walk order.
+     */
+    static orderByExposureRows(Constructor, fields)
+    {
+        let any = false;
+        for (let owner = Constructor; typeof owner === "function" && !any; owner = Object.getPrototypeOf(owner))
+            any = CLASS_SCHEMA.get(owner)?.exposureRows !== undefined;
+        if (!any) return fields;
+        const result = [];
+        const placed = new Set();
+        for (let owner = Constructor; typeof owner === "function"; owner = Object.getPrototypeOf(owner))
+        {
+            const own = fields.filter(field => field.declaringClass === owner);
+            const rows = CLASS_SCHEMA.get(owner)?.exposureRows;
+            if (rows)
+            {
+                const rank = new Map(rows.map((row, index) => [ row.name, index ]));
+                own.sort((a, b) => (rank.get(a.name) ?? rows.length) - (rank.get(b.name) ?? rows.length));
+            }
+            for (const field of own) { result.push(field); placed.add(field); }
+        }
+        // Declarations owned outside the prototype chain (none today) keep their place at the end.
+        for (const field of fields) if (!placed.has(field)) result.push(field);
+        return result;
+    }
+
     /** Registers one field definition on a constructor's schema. */
     static defineField(Constructor, fieldName, namespace, value)
     {
@@ -517,7 +551,7 @@ export class CjsSchema
     static _statelessTransport = createValuesTransport({
         GetFields: Constructor => {
             const info = CjsSchema.getSchema(Constructor);
-            return [ ...info.members, ...info.properties ].filter(field =>
+            return CjsSchema.orderByExposureRows(Constructor, [ ...info.members, ...info.properties ]).filter(field =>
                 field === findValuesDeclaration(Constructor, field.name) && field.type?.runtimeOnly !== true);
         },
         Export: (value, field) => exportCarbonValue(value, getRuntimeValueField, field.type),
@@ -988,6 +1022,7 @@ export class CjsSchema
      */
     static meta = {
         ...exposureConstants(),
+        ...exposureRowConstants(),
         // Ruling 2026-10-15: flags are global - they describe behaviour for any
         // member, ours included. `blue` (below) is the same flags stamped as
         // Carbon's; `type` is the shared type vocabulary.
@@ -1670,6 +1705,8 @@ function fieldDecorator(namespace, value)
  */
 function defineEntry(definitionOrConstructor, definition, carbon)
 {
+    // An exposure bag (decorator-upgrade.md § 000a): `meta.define(bag)` is ours, the Carbon form is `be.define(bag)`.
+    if (isExposureBag(definitionOrConstructor)) return exposureBagDecorator(definitionOrConstructor, carbon);
     if (typeof definitionOrConstructor === "function")
     {
         const Constructor = definitionOrConstructor;
@@ -2860,6 +2897,8 @@ function buildClassInfo(Constructor, namespaces)
     };
 
     if (schema?.structureDefinition) result.structureDefinition = schema.structureDefinition;
+    // The exposure bag's rows of this class's own level, in Carbon's order (decorator-upgrade.md § 000a).
+    if (schema?.exposureRows) result.exposureRows = schema.exposureRows;
 
 
     if (schema?.carbon)
@@ -3809,12 +3848,170 @@ function abstractParts(blue)
     return parts;
 }
 
+/**
+ * Row kinds of an exposure bag's `members` (decorator-upgrade.md § 000a), one per Carbon macro family, and the
+ * method modes a `METHOD` row takes. Strings, so a row reads in a debugger and never collides with a flag mask.
+ *
+ * - `[ATTR, name, flags, field?]` - `MAP_ATTRIBUTE`; `field` is the JS member when it differs from the name.
+ * - `[ATTR_CHOOSER, name, flags, chooser, field?]` - `MAP_ATTRIBUTE_WITH_CHOOSER`.
+ * - `[ATTR_INDEX, name, flags, index, field]` - `MAP_ATTRIBUTE` on one element of an array member.
+ * - `[PROP | PROP_RO | PROP_PERSISTED, name, field?]` - `MAP_PROPERTY`, `_READONLY`, `_PERSISTED`; on an accessor when the
+ *   class has one under that key, else on the plain field that stores the value.
+ * - `[METHOD, name, mode?, method?]` - `MAP_METHOD`, or with `WRAP`, `WRAP_OPTIONAL_ARGS` or `AS_METHOD` the matching macro;
+ *   `method` is the JS method when it differs from the name.
+ * - `[ICACHEABLE_METHODS]` - `MAP_ICACHEABLE_METHODS()`.
+ *
+ * @returns {object} The constants.
+ */
+function exposureRowConstants()
+{
+    return {
+        ATTR: "attribute", ATTR_CHOOSER: "attributeWithChooser", ATTR_INDEX: "attributeIndex",
+        PROP: "property", PROP_RO: "propertyReadOnly", PROP_PERSISTED: "propertyPersisted",
+        METHOD: "method", WRAP: "wrap", WRAP_OPTIONAL_ARGS: "wrapOptionalArgs", AS_METHOD: "asMethod",
+        ICACHEABLE_METHODS: "icacheableMethods"
+    };
+}
+
+const ROW = exposureRowConstants();
+const METHOD_MACROS = { [ROW.WRAP]: "MAP_METHOD_AND_WRAP", [ROW.WRAP_OPTIONAL_ARGS]: "MAP_METHOD_AND_WRAP_OPTIONAL_ARGS", [ROW.AS_METHOD]: "MAP_METHOD_AS_METHOD" };
+const PROPERTY_MACROS = { [ROW.PROP]: "MAP_PROPERTY", [ROW.PROP_RO]: "MAP_PROPERTY_READONLY", [ROW.PROP_PERSISTED]: "MAP_PROPERTY_PERSISTED" };
+
+/**
+ * Whether a define argument is an exposure bag (`{ name, members: [ [kind, ...], ... ], ... }`) rather than a class name or the
+ * older `{ className, ... }` definition.
+ *
+ * @param {*} definition The define argument.
+ * @returns {boolean} Whether it is a bag.
+ */
+function isExposureBag(definition)
+{
+    return definition !== null && typeof definition === "object" && !Array.isArray(definition)
+        && Object.hasOwn(definition, "name") && !Object.hasOwn(definition, "className");
+}
+
+/**
+ * One exposure row of a bag, applied to the class by its JS key with the same metadata the per-member `map*` decorator
+ * records, so the registered class info is identical either way.
+ *
+ * @param {Function} Constructor The class.
+ * @param {Array} row The row.
+ * @param {boolean} blue Whether the rows are Carbon's exposure (`be`) or ours (`meta`).
+ * @returns {object|object[]}
+ *   The row as the class records it (`exposureRows` on the class info): its kind, JS key, exposed name, Carbon macro, and the
+ *   flags, chooser or index it was written with; for `ICACHEABLE_METHODS`, its two method rows.
+ */
+function applyExposureRow(Constructor, row, blue)
+{
+    if (!Array.isArray(row) || typeof row[0] !== "string") throw new TypeError("An exposure row is [ kind, name, ... ].");
+    const [ kind, rawName ] = row;
+    if (kind === ROW.ICACHEABLE_METHODS)
+    {
+        icacheableMethodsDecorator(blue)(Constructor);
+        return [ "IsMemoryUsageKnown", "GetMemoryUsage" ].map(key => ({ kind: ROW.METHOD, role: "method", key, name: key, macro: "MAP_METHOD_AND_WRAP" }));
+    }
+    const name = exposureName(rawName);
+    const optionalName = key => key === name ? undefined : name;
+    const fieldKind = key =>
+    {
+        const descriptor = Object.getOwnPropertyDescriptor(Constructor.prototype, key);
+        return descriptor && (descriptor.get || descriptor.set) ? "getter" : "field";
+    };
+    // The functional form a decorator takes outside decorator syntax (CjsSchema.decorateField): the decorator applies as one unit.
+    const defineField = (key, decorator) => decorator(Constructor.prototype, key);
+    switch (kind)
+    {
+        case ROW.ATTR:
+        {
+            const [ , , flags, field ] = row;
+            const key = field ?? name;
+            defineField(key, exposureAttributeDecorator("MAP_ATTRIBUTE", flags, undefined, optionalName(key), blue));
+            return { kind, role: "member", key, name, macro: "MAP_ATTRIBUTE", flags };
+        }
+        case ROW.ATTR_CHOOSER:
+        {
+            const [ , , flags, chooser, field ] = row;
+            const key = field ?? name;
+            defineField(key, exposureAttributeDecorator("MAP_ATTRIBUTE_WITH_CHOOSER", flags, chooser, optionalName(key), blue));
+            return { kind, role: "member", key, name, macro: "MAP_ATTRIBUTE_WITH_CHOOSER", flags, chooser };
+        }
+        case ROW.ATTR_INDEX:
+        {
+            const [ , , flags, index, field ] = row;
+            if (typeof field !== "string" || !field) throw new TypeError(`Exposure row ${name}: ATTR_INDEX needs the array field.`);
+            defineField(field, exposureIndexDecorator(flags, name, index, blue));
+            return { kind, role: "member", key: field, name, macro: "MAP_ATTRIBUTE", flags, index };
+        }
+        case ROW.PROP:
+        case ROW.PROP_RO:
+        case ROW.PROP_PERSISTED:
+        {
+            const key = row[2] ?? name;
+            const accessor = fieldKind(key) === "getter";
+            defineField(key, exposurePropertyDecorator(PROPERTY_MACROS[kind], optionalName(key), !accessor, blue));
+            return { kind, role: accessor ? "property" : "member", key, name, macro: PROPERTY_MACROS[kind] };
+        }
+        case ROW.METHOD:
+        {
+            const [ , , mode, method ] = row;
+            const macro = mode === undefined ? "MAP_METHOD" : METHOD_MACROS[mode];
+            if (!macro) throw new TypeError(`Exposure row ${name}: unknown method mode ${String(mode)}.`);
+            const key = method ?? name;
+            if (!(key in Constructor.prototype)) throw new TypeError(`Exposure row ${name}: the class has no method "${key}".`);
+            exposureMethodDecorator(macro, optionalName(key), blue)(Constructor.prototype, key);
+            return { kind, role: "method", key, name, macro };
+        }
+        default:
+            throw new TypeError(`Exposure row ${name}: unknown row kind ${String(kind)}.`);
+    }
+}
+
+/**
+ * `be.define(bag)` and `meta.define(bag)`: a class's whole exposure block in one place, in Carbon's order
+ * (decorator-upgrade.md § 000a). `be.define(bag)` is `meta.define({ blue: true, ...bag })`. The bag declares its own level only;
+ * parents are reached through `inherit` and `chainTo`. Its rows are applied with the per-member decorators' metadata, in the
+ * order a stacked declaration applies them, and the row order is kept on the class (`exposureRows`) for the walkers.
+ *
+ * @param {{name: string, inherit?: Function[], interfaces?: Function[], members?: Array[], chainTo?: Function}} bag The bag.
+ * @param {boolean} blue Whether the class is Carbon's exposure.
+ * @returns {Function} The class decorator.
+ */
+function exposureBagDecorator(bag, blue)
+{
+    const { name, inherit, interfaces, members = [], chainTo, ...rest } = bag;
+    const className = exposureName(name);
+    if (!Array.isArray(members)) throw new TypeError(`${className}: exposure members are an array of rows.`);
+    for (const list of [ inherit, interfaces ])
+        if (list !== undefined && !Array.isArray(list)) throw new TypeError(`${className}: inherit and interfaces are arrays of classes.`);
+    const define = classDefinitionDecorator({ className, ...(blue ? { blue: true } : {}), ...rest });
+    return function exposureBagClassDecorator(Constructor, context)
+    {
+        if (context && context.kind !== "class") throw new TypeError("An exposure bag decorates a class.");
+        // As a stacked declaration applies them: the chain, the interfaces, the C++ bases, then the identity.
+        if (chainTo !== undefined) carbonChainToDecorator(chainTo)(Constructor, context);
+        if (interfaces?.length) carbonInterfaceDecorator(interfaces, true)(Constructor, context);
+        if (inherit?.length) CjsSchema.blue.inherit(...inherit)(Constructor, context);
+        const rows = [];
+        for (const row of members)
+        {
+            const recorded = applyExposureRow(Constructor, row, blue);
+            if (Array.isArray(recorded)) rows.push(recorded[0], recorded[1]);
+            else rows.push(recorded);
+        }
+        RejectAfterRegistration(Constructor, "exposure rows");
+        getOrCreateClassSchema(Constructor).exposureRows = rows;
+        if (blue) carbonInterfaceDecorator([])(Constructor, context);
+        define(Constructor, context);
+    };
+}
+
 /** The target API is isolated until the namespace swap; old declarations keep working. */
 function createExposureNamespace(legacy)
 {
     return {
         ...exposureConstants(),
-        define: name => exposureClassDecorator(name, false, true),
+        ...exposureRowConstants(),
+        define: nameOrBag => isExposureBag(nameOrBag) ? exposureBagDecorator(nameOrBag, true) : exposureClassDecorator(nameOrBag, false, true),
         interface: name => exposureClassDecorator(name, true, true),
         inherit: (...Bases) => CjsSchema.blue.inherit(...Bases),
         abstract: legacy.abstract,

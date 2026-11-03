@@ -23,7 +23,7 @@ function declarations(Constructor)
 {
     const members = new Map();
     const info = CjsSchema.getSchema(Constructor);
-    for (const member of [ ...info.members, ...info.properties.filter(property => property.edit?.persist === true) ])
+    for (const member of CjsSchema.orderByExposureRows(Constructor, [ ...info.members, ...info.properties.filter(property => property.edit?.persist === true) ]))
     {
         if (RESERVED.has(member.name)) throw new TypeError(`Reserved member '${member.name}'`);
         if (!members.has(member.name)) members.set(member.name, member);

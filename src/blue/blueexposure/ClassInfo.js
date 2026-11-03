@@ -151,7 +151,8 @@ export class ClassInfo
     const own = new Set();
     for (let type = Constructor; type && type !== Parent; type = Object.getPrototypeOf(type)) own.add(type);
     const seen = new Set();
-    const rows = [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ];
+    // Carbon's member-table order where the class declares an exposure bag (CjsSchema.orderByExposureRows).
+    const rows = CjsSchema.orderByExposureRows(Constructor, [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ]);
     for (let i = 0; i < rows.length; i++)
     {
       const member = rows[i];
