@@ -63,7 +63,7 @@ test("EveChildBoosterSet.Add derives light state, bounds and max size", () =>
   // radius, then the parent scales both by 3.
   assert.deepEqual(Array.from(sphere), [ 0, 0, 3.75, 15 ]);
   assert.deepEqual(Array.from(set.boosterBoundingSphereCenter), [ 0, 0, 2.5 ]);
-  assert.equal(set.boosterBoundingSphereRadius, 2.5);
+  assert.equal(set._boosterBoundingSphere[3], 2.5, "the radius is the sphere's w (EveChildBoosterSet_Blue.cpp:36)");
   assertNear(set.thrust, 0);
 });
 

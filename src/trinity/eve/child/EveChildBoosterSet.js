@@ -18,7 +18,7 @@ import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { sph3 } from "#math/sph3";
-import { meta, type, blue } from "#schema";
+import { meta, type } from "#schema";
 import { IsMatch } from "#blue";
 import { TriBatchType } from "#consts/graphics";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
@@ -235,32 +235,30 @@ export class EveChildBoosterSet extends EveSpaceObjectChild
   @type.list("EveChildBoosterSet::SingleBoosterData")
   _singleBoosters = [];
 
-  // m_boosterBoundingSphere (h:187): the exact exhaust-point bounding sphere
-  // (positions only; padded in GetBoundingSphere). BoundingSphereInitialize
-  // zeroes it, so the origin is always inside (cpp:57,155).
+  /**
+   * m_boosterBoundingSphere (Vector4, private, h:187): the exact exhaust-point bounding sphere (positions only; padded in
+   * GetBoundingSphere), centre in xyz and radius in w. BoundingSphereInitialize zeroes it, so the origin is always inside
+   * (cpp:57,155). The radius is exposed as its w (EveChildBoosterSet_Blue.cpp:36); the centre through boosterBoundingSphereCenter.
+   */
+  @be.mapAttribute__Index(be.READ, "boosterBoundingSphereRadius", 3)
+  @type.vec4
   _boosterBoundingSphere = vec4.create();
 
+  /** A view onto _boosterBoundingSphere's xyz, made once; the sphere is written in place and never replaced. */
+  _boosterBoundingSphereCenter = this._boosterBoundingSphere.subarray(0, 3);
+
   /**
-   * The centre of the minimum bounding sphere of the boosters
-   * (EveChildBoosterSet_Blue.cpp:33, MAPFLOATARRAYSIZE over the first three
-   * floats of m_boosterBoundingSphere).
+   * The centre of the boosters' minimum bounding sphere: the first three floats of _boosterBoundingSphere.
+   *
+   * @adapted Stands in for Carbon's MAPFLOATARRAYSIZE( "boosterBoundingSphereCenter", m_boosterBoundingSphere, ..., 3 )
+   *   (EveChildBoosterSet_Blue.cpp:33) as a read-only property over the same floats.
+   * @returns {Float32Array} The live view.
    */
-  @blue.read
+  @be.mapPropertyReadOnly()
   @type.vec3
   get boosterBoundingSphereCenter()
   {
-    return this._boosterBoundingSphere.subarray(0, 3);
-  }
-
-  /**
-   * The radius of the minimum bounding sphere of the boosters
-   * (EveChildBoosterSet_Blue.cpp:36, m_boosterBoundingSphere.w).
-   */
-  @be.mapAttribute(be.READ)
-  @type.float32
-  get boosterBoundingSphereRadius()
-  {
-    return this._boosterBoundingSphere[3];
+    return this._boosterBoundingSphereCenter;
   }
 
   // The packed Tr2ChildBoosterInstanceData rows (CPU half of cpp:107-117).
