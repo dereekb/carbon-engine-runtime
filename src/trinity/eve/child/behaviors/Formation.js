@@ -37,9 +37,21 @@ function ClampLength(value, maxLength)
 }
 
 /** A steering behaviour that detects when a drone group's motion has converged, organises the agents into a rotating slot grid, and pulls each agent toward its assigned slot. */
-@be.define("Formation")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "Formation",
+  inherit: [ IBehavior ],
+  // Formation_Blue.cpp:12-24, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "framesBetweenUpdates", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxFormationVelocityScaler", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stubbornness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "inFormation", be.READ ]
+  ]
+})
 export class Formation extends IRoot
 {
 
@@ -47,42 +59,35 @@ export class Formation extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Formation_Blue.cpp:16); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 300;
 
   /** m_inFormation (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   inFormation = false;
 
   /** m_maxFormationVelocityScaler (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxFormationVelocityScaler = 0.85;
 
   /** m_stubbornness (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   stubbornness = 3;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
 
   /** m_framesBetweenUpdates (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   framesBetweenUpdates = 15;

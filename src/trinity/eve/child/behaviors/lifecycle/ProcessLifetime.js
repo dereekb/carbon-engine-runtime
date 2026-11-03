@@ -29,12 +29,23 @@ const FORCE_OFFSET = vec3.create();
 const SPAWN_POSITION = vec3.create();
 
 /** ProcessLifetime (eve/child/behaviors) - generated from schema shapeHash 1fd3ebfa.... */
-@be.define("ProcessLifetime")
-@be.inherit(IInitialize)
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "ProcessLifetime",
+  inherit: [ IInitialize, IBehavior ],
+  // ProcessLifetime_Blue.cpp:21-36, in Carbon's order.
+  interfaces: [ IBehavior, INotify, IInitialize ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "exit", be.READWRITE ],
+    [ be.ATTR, "firstAgentLifetime", be.READ ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "returningAge", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "wanderAmount", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "respawnAgentsOnDeath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "splineTunnels", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "firstSpawnAtRandomPlaces", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class ProcessLifetime extends IRoot
 {
   static ProcessPriority = ProcessPriority;
@@ -43,57 +54,48 @@ export class ProcessLifetime extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/ProcessLifetime_Blue.cpp:27); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_splineTunnels (PSplineTunnelGroupVector) [READ, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
 
 
   @type.list("SplineTunnelGroup")
   splineTunnels = [];
 
   /** m_respawnAgentsOnDeath (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   respawnAgentsOnDeath = true;
 
   /** m_firstAgentLifetime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   firstAgentLifetime = 0;
 
   /** m_returningAge (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   returningAge = -1;
 
   /** m_wanderAmount (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   wanderAmount = 0.3;
 
   /** m_firstSpawnAtRandomPlaces (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   firstSpawnAtRandomPlaces = true;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 900;
 
   /** m_exit (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   exit = false;
 

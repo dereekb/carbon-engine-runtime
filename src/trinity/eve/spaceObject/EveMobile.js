@@ -23,21 +23,26 @@ import { EveSpaceObject2 } from "./EveSpaceObject2.js";
  * locators or animated bones it fires from and tracking how many of its turrets
  * are active.
  */
-@be.define("EveMobile")
-@be.inherit(IListNotify, IInitialize)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IListNotify)
-@be.exposureChainTo(EveSpaceObject2)
+@be.define({
+  name: "EveMobile",
+  inherit: [ IListNotify, IInitialize ],
+  // EveMobile_Blue.cpp:10-30, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2Renderable, IListNotify ],
+  members: [
+    [ be.ATTR, "turretSets", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ActiveTurretCount", be.READ ],
+    [ be.METHOD, "GetTurretLocatorIndex", be.WRAP ],
+    [ be.METHOD, "GetTurretLocatorCount", be.WRAP ],
+    [ be.METHOD, "RebuildTurretPositions", be.WRAP ]
+  ],
+  chainTo: EveSpaceObject2
+})
 export class EveMobile extends EveSpaceObject2
 {
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
-
 
   @type.list("EveTurretSet")
   turretSets = [];
 
-  @be.mapAttribute(be.READ)
   @type.uint32
   ActiveTurretCount = 0;
 
@@ -154,7 +159,6 @@ export class EveMobile extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetTurretLocatorIndex(turretSetIndex, slotIndex)
   {
     const info = this._turretSetsLocatorInfo[turretSetIndex];
@@ -168,7 +172,6 @@ export class EveMobile extends EveSpaceObject2
    * @adapted an index holder and caller-owned matrix replace native out pointers;
    *   the existing JS return reports completion.
    */
-  @be.mapMethodAndWrap()
   RebuildTurretPositions()
   {
     this._turretSetsLocatorInfo.length = 0;
@@ -240,7 +243,6 @@ export class EveMobile extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetTurretLocatorCount()
   {
     let foundA = 0;

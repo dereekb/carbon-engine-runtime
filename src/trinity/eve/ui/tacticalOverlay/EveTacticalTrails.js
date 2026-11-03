@@ -45,10 +45,20 @@ const LINE_VERTEX_BYTES = TRAIL_VERTEX_DEFINITION.nextOffset[0];
  * Carbon's EveTacticalTrails: fading trails behind registered objects (destiny balls), sampled each frame as control
  * points relative to the ego ball and drawn as a strip of quads with connectors, transparent under RM_ALPHA.
  */
-@be.define("EveTacticalTrails")
-@be.inherit(IEveSpaceObject2, ITr2Renderable, Tr2DeviceResource)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Renderable)
+@be.define({
+  name: "EveTacticalTrails",
+  inherit: [ IEveSpaceObject2, ITr2Renderable, Tr2DeviceResource ],
+  // EveTacticalTrails_Blue.cpp:11-28, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "fadeOutTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "trailEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "egoBall", be.READWRITE ],
+    [ be.ATTR, "segments", be.READ ],
+    [ be.METHOD, "RegisterObject", be.WRAP ],
+    [ be.METHOD, "UnregisterObject", be.WRAP ]
+  ]
+})
 export class EveTacticalTrails
 {
   /** m_vertexDeclHandle, interned on first need. */
@@ -68,23 +78,19 @@ export class EveTacticalTrails
   trackedObjects = [];
 
   /** m_segmentCount (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   segments = 0;
 
   /** m_egoBall (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   egoBall = null;
 
   /** m_trailEffect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   trailEffect = null;
 
   /** m_fadeOutTime (float) [READWRITE, PERSIST]: seconds for a trail to fade out. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   fadeOutTime = 5;
@@ -134,7 +140,6 @@ export class EveTacticalTrails
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RegisterObject(object)
   {
     if (!object)
@@ -156,7 +161,6 @@ export class EveTacticalTrails
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UnregisterObject(object)
   {
     const found = this.trackedObjects.find(entry => entry.ball !== null && entry.ball.deref() === object);

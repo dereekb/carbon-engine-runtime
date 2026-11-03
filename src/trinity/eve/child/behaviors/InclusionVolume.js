@@ -17,9 +17,19 @@ const NO_FORCES = [];
  * Drone behavior that pulls agents back toward the inclusion volumes once they
  * drift into the falloff shell; agents fully inside feel no force.
  */
-@be.define("InclusionVolume")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "InclusionVolume",
+  inherit: [ IBehavior ],
+  // InclusionVolume_Blue.cpp:12-21, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "inclusionVolumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "framesBetweenUpdates", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class InclusionVolume extends IRoot
 {
 
@@ -29,31 +39,26 @@ export class InclusionVolume extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/InclusionVolume_Blue.cpp:16); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_inclusionVolumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   inclusionVolumes = [];
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 60;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
 
   /** m_framesBetweenUpdates (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   framesBetweenUpdates = 11;

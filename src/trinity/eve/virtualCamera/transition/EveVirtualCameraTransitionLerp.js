@@ -11,12 +11,16 @@ import { EveVirtualCameraTransitionBase } from "./EveVirtualCameraTransitionBase
  * Transition that blends position, point of interest, field of view and roll
  * from the source camera to the target camera over a fixed duration.
  */
-@be.define("EveVirtualCameraTransitionLerp")
-@be.exposureChainTo(EveVirtualCameraTransitionBase)
+@be.define({
+  name: "EveVirtualCameraTransitionLerp",
+  // EveVirtualCameraTransition_Blue.cpp:24-26, in Carbon's order.
+  members: [
+    [ be.ATTR, "tansitionTime", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraTransitionBase
+})
 export class EveVirtualCameraTransitionLerp extends EveVirtualCameraTransitionBase
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   tansitionTime = 1;
 

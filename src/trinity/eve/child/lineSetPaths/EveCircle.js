@@ -25,109 +25,97 @@ const DEBUG_SPHERE = vec4.create();
  * Line-set path shaped as a ring: samples a circle of circleRadius, optionally
  * distorted per quadrant, and emits the resulting chain as line segments.
  */
-@be.define("EveCircle")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(IEveLineSetPath)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveCircle",
+  inherit: [ INotify, IInitialize ],
+  // EveCircle_Blue.cpp:10-55, in Carbon's order.
+  interfaces: [ IEveLineSetPath, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "circleRadius", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "circleDistort", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "numSegments", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "completeness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "startPoint", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lineWidth", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaleSegmentsByCompleteness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaleEndpoints", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "billboardObjects", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "objectScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "movementSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animValue", be.READ ]
+  ]
+})
 export class EveCircle extends IEveLineSetPath
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   display = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   translation = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   circleRadius = 100;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec4
   circleDistort = vec4.fromValues(1, 0, 1, 0);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   numSegments = 64;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.float32
   completeness = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   startPoint = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.float32
   lineWidth = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   scaleSegmentsByCompleteness = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.boolean
   scaleEndpoints = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   billboardObjects = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   objectScale = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   movementSpeed = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   animValue = 0;
 

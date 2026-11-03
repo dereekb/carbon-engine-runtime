@@ -56,7 +56,27 @@ const INSTANCE_SPHERE = vec4.create();
  * current/previous transform record per instance. Trinity owns the placement,
  * culling and CPU-byte policy; an engine realizes Tr2RuntimeInstanceData.
  */
-@be.define("EveChildInstanceMeshRenderer")
+@be.define({
+  name: "EveChildInstanceMeshRenderer",
+  inherit: [ IInitialize, INotify ],
+  // EveChildInstanceMeshRenderer_Blue.cpp:20-48, in Carbon's order.
+  interfaces: [ EveEntity, EveChildMesh, EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, IInitialize, INotify, IEveShadowCaster ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distribution", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "rotationConstraint", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveChildInstanceMeshRenderer.RotationalConstraints" ],
+    [ be.ATTR, "staticOffsetTranslation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticOffsetRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticOffsetScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "RefreshStaticGeometry", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 // Carbon's renderer Blue surface omits currentScreenSize, but its
 // EveSmartLightMesh descendant exposes that inherited field. CjsSchema hidden
 // fields cannot be reintroduced by descendants, so this one shared field stays
@@ -90,45 +110,21 @@ const INSTANCE_SPHERE = vec4.create();
   "sofLocatorSetName",
   "sofLocatorIndex"
 ])
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveChildMesh)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IEveShadowCaster)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "display")
-@be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY, "mesh")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "minScreenSize")
 export class EveChildInstanceMeshRenderer extends EveChildMesh
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceMeshRenderer_Blue.cpp:37); chooser RotationalConstraintsChooser (trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceMeshRenderer_Blue.cpp:7). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveChildInstanceMeshRenderer.RotationalConstraints")
   @type.int32
   @type.enum("trinity.EveChildInstanceMeshRenderer.RotationalConstraints")
   rotationConstraint = RotationalConstraints.NONE;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   staticOffsetRotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   staticOffsetTranslation = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("IEveDistributionMethod")
   distribution = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   staticOffsetScale = vec3.fromValues(1, 1, 1);
@@ -375,7 +371,6 @@ export class EveChildInstanceMeshRenderer extends EveChildMesh
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RefreshStaticGeometry()
   {
     this._refreshStaticGeometry = true;

@@ -7,8 +7,19 @@ import { type } from "#schema";
 import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 
 /** Triggers a timed chain of nearby free placements, walking forward from each previously reached destination. */
-@be.define("EveDistributionSpawnerTriggerSnake")
-@be.mapInterface(IEveDistributionSpawner)
+@be.define({
+  name: "EveDistributionSpawnerTriggerSnake",
+  // EveDistributionSpawnerTriggerSnake_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner ],
+  members: [
+    [ be.ATTR, "totalDestinations", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationsReached", be.READ ],
+    [ be.ATTR, "minBaseTimeBetweenTriggers", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxBaseTimeBetweenTriggers", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distanceToTravelTimeMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "travelProgress", be.READ ]
+  ]
+})
 export class EveDistributionSpawnerTriggerSnake extends IEveDistributionSpawner
 {
 
@@ -23,35 +34,29 @@ export class EveDistributionSpawnerTriggerSnake extends IEveDistributionSpawner
   _travelDurationToNextPoint = 1;
 
   /** m_minTimeBetweenTriggers (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minBaseTimeBetweenTriggers = 1;
 
   /** m_maxTimeBetweenTriggers (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxBaseTimeBetweenTriggers = 1;
 
   /** m_travelProgress (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   travelProgress = 1;
 
   /** m_numDestinationsReached (int32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   destinationsReached = 0;
 
   /** m_totalDestinations (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   totalDestinations = 5;
 
   /** m_distanceToTravelTimeMultiplier (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   distanceToTravelTimeMultiplier = 0;

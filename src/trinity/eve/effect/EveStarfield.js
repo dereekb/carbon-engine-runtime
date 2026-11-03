@@ -19,69 +19,73 @@ import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 
 /** Defines a procedurally seeded starfield with distance, flashing, effect, and star-count controls. */
-@be.define("EveStarfield")
-@be.inherit(IInitialize, INotify, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveStarfield",
+  inherit: [ IInitialize, INotify, Tr2DeviceResource ],
+  // EveStarfield_Blue.cpp:10-63, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "numStars", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "seed", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "maxDist", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "minDist", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "minFlashRate", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "maxFlashRate", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "minFlashIntensity", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveStarfield
 {
 
   /** m_seed (int32_t) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.int32
   seed = 0;
 
   /** m_minFlashIntensity (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   minFlashIntensity = 0;
 
   /** m_maxDistance (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   maxDist = 300;
 
   /** m_minDistance (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   minDist = 100;
 
   /** m_minFlashRate (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   minFlashRate = 0.5;
 
   /** m_maxFlashRate (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   maxFlashRate = 1;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_effect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_starCount (int32_t) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.int32

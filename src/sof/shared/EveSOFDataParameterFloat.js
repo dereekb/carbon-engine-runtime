@@ -9,9 +9,15 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Float shader parameter: broadcasts the value to all four components. */
-@be.define("EveSOFDataParameterFloat")
-@be.mapInterface(EveSOFDataParameter)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSOFDataParameterFloat",
+  // EveSOFData_Blue2.cpp:35-35, in Carbon's order.
+  interfaces: [ EveSOFDataParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataParameterFloat extends EveSOFDataParameter
 {
   /**
@@ -19,7 +25,6 @@ export class EveSOFDataParameterFloat extends EveSOFDataParameter
    * Native m_value (float) replaces the base vector in authored values.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   value = 0;

@@ -13,14 +13,21 @@ import { vec3 } from "#math/vec3";
 import { EveSmartLightAttributeModifierExpressionBucketArguments } from "./EveSmartLightAttributeModifierExpressionBucketArguments.js";
 
 /** EveSmartLightAttributeModifierExpressionBucket (eve/smartLights/attributeModifiers) - generated from schema shapeHash 02cc58c3.... */
-@be.define("EveSmartLightAttributeModifierExpressionBucket")
-@be.inherit(IInitialize)
-@be.mapInterface(EveSmartLightAttributeModifierBucket)
-@be.mapInterface(IEveSmartLightGroupAttributeModifier)
-@be.mapInterface(EveSmartLightBaseAttributeModifier)
-@be.mapInterface(IInitialize)
-@be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY, "attributeModifiers")
-@be.mapAttribute(be.READ, "finalAttributeMultiplier")
+@be.define({
+  name: "EveSmartLightAttributeModifierExpressionBucket",
+  inherit: [ IInitialize ],
+  // EveSmartLightAttributeModifierExpressionBucket_Blue.cpp:11-28, in Carbon's order.
+  interfaces: [ EveSmartLightAttributeModifierBucket, IEveSmartLightGroupAttributeModifier, EveSmartLightBaseAttributeModifier, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "expression", be.PERSISTONLY, "_expression" ],
+    [ be.PROP, "expression" ],
+    [ be.ATTR, "currentValue", be.READ ],
+    [ be.ATTR, "expressionInputs", be.READ | be.PERSIST ],
+    [ be.ATTR, "attributeModifiers", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "finalAttributeMultiplier", be.READ ]
+  ]
+})
 export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLightAttributeModifierBucket
 {
 
@@ -31,7 +38,6 @@ export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLigh
    * write it directly, bypassing the setter; Initialize compiles it.
    * Carbon: EveSmartLightAttributeModifierExpressionBucket::m_expression (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierExpressionBucket.h:41); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierExpressionBucket_Blue.cpp:20).
    */
-  @be.mapAttribute(be.PERSISTONLY, "expression")
 
   @type.expression
   _expression = "";
@@ -43,7 +49,6 @@ export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLigh
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.expression
   get expression()
   {
@@ -61,13 +66,11 @@ export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLigh
   }
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "bucket";
 
   /** m_inputs (PITriScalarFunctionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriScalarFunction")
   expressionInputs = [];
@@ -78,7 +81,6 @@ export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLigh
    * (EveSmartLightAttributeModifierExpressionBucket_Blue.cpp:23), which this
    * port stores as attributeMultiplier.
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   get currentValue()
   {

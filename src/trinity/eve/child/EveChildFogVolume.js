@@ -59,16 +59,47 @@ function createFroxelFogSettings()
  * override, its strength driven by how deeply the camera sits inside the volumes
  * it owns.
  */
-@be.define("EveChildFogVolume")
-@be.inherit(IInitialize)
-@be.mapInterface(ITr2FroxelFogSettings)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(IInitialize)
-@be.inherit(ITr2DebugRenderable)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildFogVolume",
+  inherit: [ IInitialize, ITr2DebugRenderable ],
+  // EveChildFogVolume_Blue.cpp:11-62, in Carbon's order.
+  interfaces: [ ITr2FroxelFogSettings, EveEntity, EveSpaceObjectChild, IEveSpaceObjectChild, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "priority", be.READWRITE | be.PERSIST | be.ENUM, "trinity.PostProcessEnums.Priority" ],
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "thicknessEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "thickness", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightDirectionalityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightDirectionality", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "environmentIntensityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "environmentIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "environmentDirectionalityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "environmentDirectionality", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogColorEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backgroundVisibilityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backgroundVisibility", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseIntensityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseFrequencyEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseAnimationSpeedEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "godRayNoiseAnimationSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogNoiseIntensityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogNoiseIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogNoiseFrequencyEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fogNoiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reflectionIntensityEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reflectionIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingSphereCenter", be.READ ],
+    [ be.ATTR, "boundingSphereRadius", be.READ ],
+    [ be.ATTR, "volumes", be.READ | be.PERSIST ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildFogVolume extends ITr2FroxelFogSettings
 {
   _fogIntensity = 0;
@@ -76,151 +107,95 @@ export class EveChildFogVolume extends ITr2FroxelFogSettings
   _froxelFogSettings = createFroxelFogSettings();
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildFogVolume_Blue.cpp:19); chooser Tr2PostProcessPriorityChooser (trinity/trinity/PostProcess/Tr2PostProcessAttributes_Blue.cpp:9). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.PostProcessEnums.Priority")
   @type.int32
   @type.enum("trinity.PostProcessEnums.Priority")
   priority = 2;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveVolume")
   volumes = [];
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   boundingSphereCenter = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.float32
   boundingSphereRadius = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   intensity = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   thickness = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   thicknessEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightDirectionality = 0.5;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   lightDirectionalityEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   environmentIntensity = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   environmentIntensityEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   environmentDirectionality = 0.75;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   environmentDirectionalityEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   fogColor = vec4.fromValues(1, 1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   fogColorEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   backgroundVisibility = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   backgroundVisibilityEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   godRayNoiseIntensity = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   godRayNoiseIntensityEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   godRayNoiseFrequency = 15;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   godRayNoiseFrequencyEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   godRayNoiseAnimationSpeed = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   godRayNoiseAnimationSpeedEnabled = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   fogNoiseIntensity = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   fogNoiseIntensityEnabled = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   fogNoiseFrequency = 15;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   fogNoiseFrequencyEnabled = false;
 
   /** A colour multiplier for the fog's reflections; 1 is the realistic default (EveChildFogVolume.cpp:30). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   reflectionIntensity = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   reflectionIntensityEnabled = false;

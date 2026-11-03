@@ -25,9 +25,37 @@ const DEBUG_CENTER = vec3.create();
 const DEBUG_DIRECTION = vec3.create();
 
 /** A steering behaviour that assigns drones to repair locators on a target ship, splitting the target's bounding box into buckets so damage-seeking agents distribute evenly across it. */
-@be.define("SeekTarget")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "SeekTarget",
+  inherit: [ IBehavior ],
+  // SeekTarget_Blue.cpp:12-76, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locatorSet", be.READ | be.PERSIST ],
+    [ be.ATTR, "locatorSetName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distFromOrigin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "arrivedRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "slowDownRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "target", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "onFirstDroneArrivedCallback", be.READWRITE ],
+    [ be.ATTR, "totalRepairTime", be.READWRITE ],
+    [ be.ATTR, "secondsToTurn", be.READWRITE ],
+    [ be.ATTR, "firstSpawnAtRandomPlaces", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "exit", be.READWRITE ],
+    [ be.ATTR, "repair", be.READWRITE ],
+    [ be.METHOD, "SetTarget", be.WRAP ],
+    [ be.METHOD, "SetExit", be.WRAP ],
+    [ be.METHOD, "SetBehaviorWeight", be.WRAP ],
+    [ be.METHOD, "SetupShipRepair", be.WRAP ],
+    [ be.METHOD, "ResetBehavior", be.WRAP ],
+    [ be.METHOD, "SplitBoundingBox", be.WRAP ],
+    [ be.METHOD, "AddLocatorSet", be.WRAP ],
+    [ be.METHOD, "SetTotalRepairTime", be.WRAP ]
+  ]
+})
 export class SeekTarget extends IRoot
 {
 
@@ -64,84 +92,69 @@ export class SeekTarget extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/SeekTarget_Blue.cpp:16); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 1200;
 
   /** m_distFromOrigin (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   distFromOrigin = 10;
 
   /** m_arrivedRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   arrivedRadius = 10;
 
   /** m_slowDownRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   slowDownRadius = 33;
 
   /** m_target (EveSpaceObject2*) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.object.weak("EveSpaceObject2")
   target = null;
 
   /** m_firstSpawnAtRandomPlaces (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   firstSpawnAtRandomPlaces = false;
 
   /** m_onFirstDroneArrivedCallback (BlueScriptCallback) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("BlueScriptCallback")
   onFirstDroneArrivedCallback = null;
 
   /** m_totalRepairTime (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   totalRepairTime = -1;
 
   /** m_seconds (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   secondsToTurn = 0.35;
 
   /** m_locatorSetName (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   locatorSetName = "damage";
 
   /** m_locatorSet (EveLocatorSetsPtr) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
   @type.object.ref("EveLocatorSets")
   locatorSet = null;
 
   /** m_exit (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   exit = false;
 
   /** m_repair (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   repair = false;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
@@ -151,7 +164,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddLocatorSet()
   {
     const locatorSet = new EveLocatorSets();
@@ -164,7 +176,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetTarget(target)
   {
     this.target = target;
@@ -175,7 +186,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ResetBehavior()
   {
     this._counter = 0;
@@ -190,7 +200,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetBehaviorWeight(value)
   {
     this.behaviorWeight = value;
@@ -201,7 +210,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetExit(value)
   {
     this.exit = value;
@@ -212,7 +220,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetTotalRepairTime(seconds)
   {
     this.totalRepairTime = seconds;
@@ -223,7 +230,6 @@ export class SeekTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetupShipRepair()
   {
     this.exit = false;
@@ -244,7 +250,6 @@ export class SeekTarget extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SplitBoundingBox()
   {
     this._boundingBoxes.length = 0;

@@ -11,15 +11,21 @@ import { EveSocketParameterBindingBase } from "./EveSocketParameterBindingBase.j
  * preserving defaults by copy for restoration. Carbon's Color is four floats;
  * the JavaScript runtime carries it as a vec4 like its other color values.
  */
-@be.define("EveSocketParameterColor")
-@be.mapInterface(IEveSocketParameter)
-@be.mapMethodAndWrap("Used")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSocketParameterColor",
+  // EveSocketParameter_Blue.cpp:39-39, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterColor extends EveSocketParameterBindingBase
 {
 
   /** m_value (Color) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   value = vec4.create();
@@ -87,7 +93,6 @@ export class EveSocketParameterColor extends EveSocketParameterBindingBase
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetValueToDefault()
   {
     if (this._defaults.length)

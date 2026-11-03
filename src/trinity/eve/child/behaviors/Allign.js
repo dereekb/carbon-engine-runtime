@@ -22,9 +22,19 @@ const DEBUG_FAR_COLOR = color.fromARGB(color.create(), 0xff1111ff);
 const DEBUG_COLOR = color.create();
 
 /** A steering behaviour that pulls each drone's acceleration toward the average acceleration direction of its nearby neighbours, recomputing the pull force on a throttled schedule and reusing it between refreshes. */
-@be.define("Allign")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "Allign",
+  inherit: [ IBehavior ],
+  // Allign_Blue.cpp:21-30, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "visionRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "framesBetweenUpdates", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Allign extends IRoot
 {
 
@@ -32,31 +42,26 @@ export class Allign extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:25); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 1;
 
   /** m_visionRange (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   visionRange = 75;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
 
   /** m_framesBetweenUpdates (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   framesBetweenUpdates = 61;

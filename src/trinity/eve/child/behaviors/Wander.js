@@ -17,9 +17,21 @@ const NO_FORCES = [];
  * Drone behavior that adds a per-agent Perlin-noise wander force seeded from the
  * agent's lifetime and id, so each drone drifts on its own path.
  */
-@be.define("Wander")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "Wander",
+  inherit: [ IBehavior ],
+  // Wander_Blue.cpp:12-23, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "weightWander", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rand1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rand2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rand3", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "freq", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Wander extends IRoot
 {
 
@@ -29,43 +41,36 @@ export class Wander extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Wander_Blue.cpp:16); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** rand1 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rand1 = 0.2;
 
   /** rand2 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rand2 = 0.8;
 
   /** rand3 (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rand3 = 1.2;
 
   /** m_freq (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   freq = 2;
 
   /** m_weightWander (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   weightWander = 240;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;

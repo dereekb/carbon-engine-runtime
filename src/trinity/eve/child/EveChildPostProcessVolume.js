@@ -18,48 +18,50 @@ import { ITr2PostProcessOwner } from "../../postProcess/ITr2PostProcessOwner.js"
 import { EveComponentType } from "../EntityComponents.js";
 
 /** A child that unions a set of inclusion and exclusion volumes into a bounding sphere and drives a post-process effect's intensity from the camera's position relative to them. */
-@be.define("EveChildPostProcessVolume")
-@be.inherit(IInitialize, ITr2DebugRenderable, ITr2PostProcessOwner)
-@be.mapInterface(ITr2PostProcessOwner)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(IInitialize)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildPostProcessVolume",
+  inherit: [ IInitialize, ITr2DebugRenderable, ITr2PostProcessOwner ],
+  // EveChildPostProcessVolume_Blue.cpp:14-30, in Carbon's order.
+  interfaces: [ ITr2PostProcessOwner, EveEntity, EveSpaceObjectChild, IEveSpaceObjectChild, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingSphereCenter", be.READ ],
+    [ be.ATTR, "boundingSphereRadius", be.READ ],
+    [ be.ATTR, "volumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "exclusionVolumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "postProcessAttributes", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildPostProcessVolume extends EveChildTransform
 {
 
   /** m_volumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   volumes = [];
 
   /** m_exclusionVolumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   exclusionVolumes = [];
 
   /** m_boundingSphere.center (CcpMath::Sphere) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   boundingSphereCenter = null;
 
   /** m_boundingSphere.radius (CcpMath::Sphere) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   boundingSphereRadius = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_postProcessAttributes (Tr2PostProcessAttributesPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2PostProcessAttributes")
   postProcessAttributes = null;

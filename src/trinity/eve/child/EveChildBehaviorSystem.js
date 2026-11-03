@@ -38,67 +38,68 @@ import { Tr2DeviceResourceState } from "../../core/device/deviceResourceState.js
  * A child that drives behaviour groups - swarms, drones and the like - from its
  * own placement under the hull.
  */
-@be.define("EveChildBehaviorSystem")
-@be.inherit(Tr2DeviceResource)
-@be.inherit(ITr2Renderable)
-@be.inherit(INotify, IInitialize, IListNotify, ITr2DebugRenderable)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(INotify)
-@be.mapInterface(EveEntity)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READ, "worldTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
+@be.define({
+  name: "EveChildBehaviorSystem",
+  inherit: [ Tr2DeviceResource, ITr2Renderable, INotify, IInitialize, IListNotify, ITr2DebugRenderable ],
+  // EveChildBehaviorSystem_Blue.cpp:9-36, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, INotify, EveEntity ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "instanceCount", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorGroups", be.READ | be.PERSIST ],
+    [ be.ATTR, "splineTunnels", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "GetVertexElementAddedThroughCode", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildBehaviorSystem extends EveChildTransform
 {
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] - EveChildBehaviorSystem_Blue.cpp:18 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildBehaviorSystem_Blue.cpp:19 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] - EveChildBehaviorSystem_Blue.cpp:20 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_localTransform (Matrix) [READWRITE, PERSIST] (EveChildBehaviorSystem_Blue.cpp:21) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   localTransform = mat4.create();
 
   /** m_splineTunnels (PSplineTunnelGroupVector) [READ, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
 
 
   @type.list("SplineTunnelGroup")
   splineTunnels = [];
 
   /** m_behaviorGroups (PBehaviorGroupVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("BehaviorGroup")
   behaviorGroups = [];
 
   /** m_instanceCount (unsigned) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   instanceCount = 1;
 
   /** m_display (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -916,7 +917,6 @@ export class EveChildBehaviorSystem extends EveChildTransform
    *
    * @adapted returns Carbon's numeric Tr2VertexDefinition usage/index pairs rather than a renderer declaration.
    */
-  @be.mapMethodAndWrap()
   GetVertexElementAddedThroughCode()
   {
     return [[5, 8], [5, 9], [5, 10], [5, 11], [5, 12], [5, 13]];

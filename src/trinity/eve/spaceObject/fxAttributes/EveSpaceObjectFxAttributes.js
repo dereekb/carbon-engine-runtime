@@ -71,66 +71,71 @@ function RotationQuaternion(out, matrix)
  * active turret and kill counts - refreshed each child update for effect
  * bindings to read.
  */
-@be.define("EveSpaceObjectFxAttributes")
-@be.mapInterface(IEveFxAttribute)
+@be.define({
+  name: "EveSpaceObjectFxAttributes",
+  // EveSpaceObjectFxAttributes_Blue.cpp:10-27, in Carbon's order.
+  interfaces: [ IEveFxAttribute ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "activationStrength", be.READ ],
+    [ be.ATTR, "boundingSphereRadius", be.READ ],
+    [ be.ATTR, "generatedShapeEllipsoidCenter", be.READ ],
+    [ be.ATTR, "generatedShapeEllipsoidRadius", be.READ ],
+    [ be.ATTR, "activeTurretCount", be.READ ],
+    [ be.ATTR, "parentWorldTranslation", be.READ ],
+    [ be.ATTR, "parentWorldRotation", be.READ ],
+    [ be.ATTR, "ship", be.READ ],
+    [ be.ATTR, "childParent", be.READ ],
+    [ be.ATTR, "killCount", be.READ ]
+  ]
+})
 export class EveSpaceObjectFxAttributes extends IEveFxAttribute
 {
 
   _initialized = false;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_activationStrength (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   activationStrength = 1;
 
   /** m_activeTurretCount (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   activeTurretCount = 0;
 
   /** m_distanceToChildParent (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   childParent = 0;
 
   /** m_generatedShapeEllipsoidCenter (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   generatedShapeEllipsoidCenter = vec3.create();
 
   /** m_generatedShapeEllipsoidRadius (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   generatedShapeEllipsoidRadius = vec3.create();
 
   /** m_killCount (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   killCount = 0;
 
   /** m_distanceToShip (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   ship = 0;
 
   /** m_boundingSphereRadius (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   boundingSphereRadius = 0;
 
   /** m_parentWorldRotation (Quaternion) [READ] */
-  @be.mapAttribute(be.READ)
   @type.quat
   parentWorldRotation = quat.fromValues(0, 0, 0, 0);
 
   /** m_parentWorldTranslation (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   parentWorldTranslation = vec3.create();
 

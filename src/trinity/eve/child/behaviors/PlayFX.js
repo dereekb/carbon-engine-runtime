@@ -18,12 +18,20 @@ const AGENT_TARGET_WS = vec3.create();
 const NO_FORCES = [];
 
 /** A steering-group behaviour that clones, aims, and starts or stops a firing effect on each drone as it arrives at and departs from its target. */
-@be.define("PlayFX")
-@be.inherit(IBehavior)
-@be.inherit(IListNotify)
-@be.mapInterface(IBehavior)
-@be.mapInterface(IListNotify)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "PlayFX",
+  inherit: [ IBehavior, IListNotify ],
+  // PlayFX_Blue.cpp:12-24, in Carbon's order.
+  interfaces: [ IBehavior, IListNotify, EveEntity ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sec", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "firingEffect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "generatedFiringEffects", be.READ ]
+  ]
+})
 export class PlayFX extends EveEntity
 {
 
@@ -63,36 +71,30 @@ export class PlayFX extends EveEntity
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/PlayFX_Blue.cpp:18); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 20;
 
   /** m_firingEffect (IEveFiringEffectElementPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveFiringEffectElement")
   firingEffect = null;
 
   /** m_firingEffects (PIEveFiringEffectElementVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("IEveFiringEffectElement")
   generatedFiringEffects = new BlueList(IEveFiringEffectElement);
 
   /** m_sec (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   sec = 1;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;

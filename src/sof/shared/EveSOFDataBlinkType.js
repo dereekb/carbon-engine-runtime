@@ -23,8 +23,17 @@ const BlinkType = {
  * by chooser name. TYPE_STATIC has no exposed slot. Nothing in Carbon reads
  * the slots. Native IRoot-only data with no lifecycle.
  */
-@be.define("EveSOFDataBlinkType")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataBlinkType",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:1140-1146, in Carbon's order.
+  members: [
+    [ be.ATTR_INDEX, "Blink", be.READWRITE | be.PERSIST, BlinkType.TYPE_BLINK, "blinkType" ],
+    [ be.ATTR_INDEX, "FadeIn", be.READWRITE | be.PERSIST, BlinkType.TYPE_FADE_IN, "blinkType" ],
+    [ be.ATTR_INDEX, "FadeOut", be.READWRITE | be.PERSIST, BlinkType.TYPE_FADE_OUT, "blinkType" ],
+    [ be.ATTR_INDEX, "Cycle", be.READWRITE | be.PERSIST, BlinkType.TYPE_CYCLE, "blinkType" ]
+  ]
+})
 export class EveSOFDataBlinkType extends IRoot
 {
   static BlinkType = BlinkType;
@@ -51,11 +60,7 @@ export class EveSOFDataBlinkType extends IRoot
    * Cycle data round-trips; Carbon's behaviour there is undefined.
    * @type {Array<EveSOFDataBlink|null>}
    */
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Blink", BlinkType.TYPE_BLINK)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "FadeIn", BlinkType.TYPE_FADE_IN)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "FadeOut", BlinkType.TYPE_FADE_OUT)
   // Adapted: Carbon's slot is one past the end of its array (CE-115); see the field.
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Cycle", BlinkType.TYPE_CYCLE)
   @type.array({ kind: "rootRef", className: "EveSOFDataBlink" })
   blinkType = new Array(BlinkType.TYPE_CYCLE + 1).fill(null);
 }

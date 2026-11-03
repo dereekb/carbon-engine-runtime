@@ -16,41 +16,40 @@ import { mat4 } from "#math/mat4";
 import { BLUELISTEVENT } from "#consts/blue";
 
 /** A child that drives a placement distribution and fans its per-frame update, visibility, rendering and registration across a set of smart-light groups. */
-@be.define("EveChildSmartLightSet")
-@be.inherit(IEveInheritPropertiesOwner)
-@be.inherit(ITr2DebugRenderable, INotify, IListNotify)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2DebugRenderable)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(IEveInheritPropertiesOwner)
-@be.mapInterface(EveEntity)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildSmartLightSet",
+  inherit: [ IEveInheritPropertiesOwner, ITr2DebugRenderable, INotify, IListNotify ],
+  // EveChildSmartLightSet_Blue.cpp:10-28, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2DebugRenderable, INotify, IListNotify, IEveInheritPropertiesOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distribution", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightGroups", be.READ | be.PERSIST ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildSmartLightSet extends EveChildTransform
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_distribution (IEveDistributionMethodPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveDistributionMethod")
   distribution = null;
 
   /** m_lightGroups (PIEveSmartLightGroupVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSmartLightGroup")
   lightGroups = [];

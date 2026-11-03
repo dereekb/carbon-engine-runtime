@@ -11,32 +11,32 @@ import { type, blue } from "#schema";
  * its position and velocity and carrying the radius and flags the overlay
  * presents it with.
  */
-@be.define("EveTacticalOverlayTrackObject")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveTacticalOverlayTrackObject",
+  inherit: [ IRoot ],
+  // EveTacticalOverlay_Blue.cpp:8-15, in Carbon's order.
+  members: [
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isAggressive", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "showVelocity", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveTacticalOverlayTrackObject extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   radius = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   isAggressive = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   showVelocity = true;

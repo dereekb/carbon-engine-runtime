@@ -7,44 +7,48 @@ import { type, blue } from "#schema";
 import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 
 /** Gates a nested set of distribution spawners from a named controller variable. */
-@be.define("EveDistributionSpawnerControllerTrigger")
-@be.inherit(INotify)
-@be.mapInterface(IEveDistributionSpawner)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveDistributionSpawnerControllerTrigger",
+  inherit: [ INotify ],
+  // EveDistributionSpawnerControllerTrigger_Blue.cpp:10-21, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner, INotify ],
+  members: [
+    [ be.ATTR, "variableName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "invertTrigger", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "restartOnReceivingValue", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isActive", be.READ ],
+    [ be.ATTR, "spawners", be.READ | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnerControllerTrigger extends IEveDistributionSpawner
 {
 
   /** m_variableName (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   variableName = "";
 
   /** m_value (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   value = 0;
 
   /** m_invertReceivedValue (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   invertTrigger = false;
 
   /** m_isActive (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isActive = false;
 
   /** m_distributionSpawners (PIEveDistributionSpawnerVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveDistributionSpawner")
   spawners = [];
 
   /** m_restartOnReceivingValue (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   restartOnReceivingValue = false;

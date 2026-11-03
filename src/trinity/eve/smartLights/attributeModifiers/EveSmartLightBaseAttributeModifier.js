@@ -9,10 +9,27 @@ import { INotify } from "#blue";
 import { LifeTimeFormulas } from "./enums.js";
 
 /** Owns common smart-light activation state and a nominal modifier contract whose optional colour and controller hooks default to no-ops while required update and attribute-processing methods throw until a concrete modifier implements them. */
-@be.define("EveSmartLightBaseAttributeModifier")
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveSmartLightBaseAttributeModifier",
+  inherit: [ IInitialize, INotify ],
+  // EveSmartLightBaseAttributeModifier_Blue.cpp:21-42, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "attributeMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "active", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "activationOverLifetime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "lifeTimeFormula", be.READWRITE | be.PERSIST | be.ENUM, "trinity.LifetimeFormula" ],
+    [ be.ATTR, "perInstanceOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "restartPlayTimeWhenInactive", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "playTime", be.READ ],
+    [ be.ATTR, "startsActive", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayedActivation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "crossFadeDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "crossFadeIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "activationValue", be.READ ],
+    [ be.ATTR, "finalAttributeMultiplier", be.READ ]
+  ]
+})
 export class EveSmartLightBaseAttributeModifier extends IRoot
 {
 
@@ -20,77 +37,64 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
    * m_lifeTimeFormula (LifeTimeFormulas - enum LifeTimeFormulas) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier_Blue.cpp:30); chooser LifetimeFormulaChooser (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.LifetimeFormula")
   @type.int32
   @type.enum("trinity.LifetimeFormula")
   lifeTimeFormula = 0;
 
   /** m_activationOverLifetime (Tr2CurveScalarPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2CurveScalar")
   activationOverLifetime = null;
 
   /** m_activationValue (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   activationValue = 1;
 
   /** m_playTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   playTime = 0;
 
   /** m_crossFadeDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   crossFadeDuration = 1;
 
   /** m_crossFadeIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   crossFadeIntensity = 1;
 
   /** m_perInstanceOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   perInstanceOffset = 0;
 
   /** m_activationStrength (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   attributeMultiplier = 1;
 
   /** m_startsActive (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   startsActive = true;
 
   /** m_restartPlayTimeWhenInactive (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   restartPlayTimeWhenInactive = true;
 
   /** m_finalActivationStrength (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   finalAttributeMultiplier = 1;
 
   /** m_active (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   active = true;
 
   /** m_delayedActivation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayedActivation = 0;

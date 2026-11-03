@@ -38,12 +38,28 @@ const EVE_LINE_DATA_SIZE = EVE_LINE_DATA_FLOATS * 4;
  * uploads. Each line is two vertices of a position and a colour, drawn as a line list, additive unless
  * renderTransparent.
  */
-@be.define("EveLineSet")
-@be.inherit(IInitialize, ITr2Renderable, IEveTransform, IEveSpaceObject2, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IEveTransform)
-@be.mapInterface(IEveSpaceObject2)
+@be.define({
+  name: "EveLineSet",
+  inherit: [ IInitialize, ITr2Renderable, IEveTransform, IEveSpaceObject2, Tr2DeviceResource ],
+  // EveLineSet_Blue.cpp:10-78, in Carbon's order.
+  interfaces: [ IInitialize, ITr2Renderable, IEveTransform, IEveSpaceObject2 ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "renderTransparent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "AddLine", be.WRAP ],
+    [ be.METHOD, "RemoveLine", be.WRAP ],
+    [ be.METHOD, "ChangeLine", be.WRAP ],
+    [ be.METHOD, "ChangeLineColor", be.WRAP ],
+    [ be.METHOD, "ChangeLinePosition", be.WRAP ],
+    [ be.METHOD, "ClearLines", be.WRAP ],
+    [ be.METHOD, "SubmitChanges", be.WRAP ]
+  ]
+})
 export class EveLineSet
 {
 
@@ -58,44 +74,37 @@ export class EveLineSet
   currentSubmittedLineCount = 0;
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_ballRotation (ITriQuaternionFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   rotationCurve = null;
 
   /** m_effect (Tr2EffectPtr) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_isRenderedAsTransparent (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   renderTransparent = false;
 
   /** m_ballPosition (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
@@ -299,7 +308,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddLine(position1, color1, position2, color2)
   {
     this.lines.push({
@@ -316,7 +324,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ChangeLineColor(id, color1, color2)
   {
     if (id < this.lines.length)
@@ -332,7 +339,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ChangeLine(id, position1, color1, position2, color2)
   {
     if (id < this.lines.length)
@@ -350,7 +356,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ChangeLinePosition(id, position1, position2)
   {
     if (id < this.lines.length)
@@ -366,7 +371,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearLines()
   {
     this.lines.length = 0;
@@ -377,7 +381,6 @@ export class EveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RemoveLine(id)
   {
     if (id < this.lines.length) this.lines.splice(id, 1);
@@ -398,7 +401,6 @@ export class EveLineSet
    * @adapted Carbon grows to the line vector's capacity, which its allocator chooses; a JavaScript array has none, so
    *   the buffer grows to the line count.
    */
-  @be.mapMethodAndWrap()
   SubmitChanges()
   {
     const renderContext = Tr2RenderContext_GetMainThreadRenderContext();

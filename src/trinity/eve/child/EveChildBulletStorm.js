@@ -33,16 +33,33 @@ const CORNER_STRIDE = 4;
 const INSTANCE_STRIDE = 40;
 
 /** Locator-driven bullet-storm child: instances, target blobs, and the clip-sphere state machine. */
-@be.define("EveChildBulletStorm")
-@be.inherit(ITr2Renderable)
-@be.inherit(Tr2DeviceResource)
-@be.inherit(IInitialize)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(INotify)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildBulletStorm",
+  inherit: [ ITr2Renderable, Tr2DeviceResource, IInitialize ],
+  // EveChildBulletStorm_Blue.cpp:10-41, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "objectCount", be.READ ],
+    [ be.ATTR, "clipSphere", be.READ ],
+    [ be.ATTR, "multiplier", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "speed", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sourceLocatorSet", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "range", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObject", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "sourceRadius", be.READ ],
+    [ be.ATTR, "targetObjects", be.READ | be.NOTIFY ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Rebuild", be.WRAP ],
+    [ be.METHOD, "StartEffect", be.WRAP ],
+    [ be.METHOD, "StopEffect", be.WRAP ],
+    [ be.METHOD, "CanChangeState", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildBulletStorm extends EveSpaceObjectChild
 {
 
@@ -100,72 +117,60 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
   worldTransform = mat4.create();
 
   /** m_targetObjects (PIEveSpaceObject2Vector) [READ, NOTIFY] */
-  @be.mapAttribute(be.READ | be.NOTIFY)
 
   @type.list("IEveSpaceObject2")
   targetObjects = [];
 
   /** m_objectCount (unsigned int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   objectCount = 0;
 
   /** m_clipSphere (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   clipSphere = 1;
 
   /** m_sourceRadius (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   sourceRadius = 0;
 
   /** m_sourceObject (EveSpaceObject2Ptr) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("EveSpaceObject2")
   sourceObject = null;
 
   /** m_multiplier (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   multiplier = 1;
 
   /** m_speed (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   speed = 1000;
 
   /** m_sourceLocatorSet (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   sourceLocatorSet = "";
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_range (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   range = 1000;
 
   /** m_display (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
   /** m_effect (Tr2EffectPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Effect")
   effect = null;
@@ -175,7 +180,6 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   CanChangeState()
   {
     return !this._changingClipSphere;
@@ -255,7 +259,6 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
    *   prepared storm, and otherwise by _OnPrepareResources, so a build allocates
    *   nothing (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
-  @be.mapMethodAndWrap()
   Rebuild()
   {
     this.instances.length = 0;
@@ -353,7 +356,6 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartEffect()
   {
     this._clipSphereMultiplier = 1;
@@ -366,7 +368,6 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StopEffect()
   {
     this._clipSphereMultiplier = -1;

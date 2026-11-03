@@ -89,10 +89,36 @@ function getSubdivisionCount(pixelSize, low, medium, high, updateContext)
 
 
 /** Produces tactical anchor, range, and velocity quad-instance records. */
-@be.define("EveTacticalOverlay")
-@be.inherit(IEveSpaceObject2, IInitialize, INotify)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveTacticalOverlay",
+  inherit: [ IEveSpaceObject2, IInitialize, INotify ],
+  // EveTacticalOverlay_Blue.cpp:22-53, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, IInitialize ],
+  members: [
+    [ be.ATTR, "trackObjects", be.READ ],
+    [ be.ATTR, "interestObject", be.READWRITE ],
+    [ be.ATTR, "anchorEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "connectorEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "velocityEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "activeRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rangeFadeLength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rangeMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "interestRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outsideInterestIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minRadiusForRange", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "segmentsLow", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "segmentsMedium", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "segmentsHigh", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "totalSegmentsLast", be.READ ],
+    [ be.ATTR, "requestedSegmentsLast", be.READ ],
+    [ be.ATTR, "targetMaxSegments", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "arcSegmentMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "segmentCountMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldPosition", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveTacticalOverlay
 {
   /** Initializes the effect-local variable-store records. */
@@ -472,133 +498,111 @@ export class EveTacticalOverlay
   }
 
   /** m_trackObjects (PEveTacticalOverlayTrackObjectVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("EveTacticalOverlayTrackObject")
   trackObjects = [];
 
   /** m_totalSegmentsLast (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   totalSegmentsLast = 0;
 
   /** m_requestedSegmentsLast (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   requestedSegmentsLast = 0;
 
   /** m_anchorEffect (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   anchorEffect = null;
 
   /** m_connectorEffect (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   connectorEffect = null;
 
   /** m_velocityEffect (Tr2EffectPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Effect")
   velocityEffect = null;
 
   /** m_ranges.x (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   activeRange = 200000;
 
   /** m_ranges.y (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rangeFadeLength = 50000;
 
   /** m_ranges.z (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   rangeMultiplier = 1;
 
   /** m_ranges.w (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sourceRadius = 50;
 
   /** m_interestRange (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   interestRange = 0;
 
   /** m_outsideInterestIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   outsideInterestIntensity = 0.35;
 
   /** m_minRadiusForRange (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minRadiusForRange = 150;
 
   /** m_connectorSegmentsLow (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   segmentsLow = 2;
 
   /** m_connectorSegmentsMedium (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   segmentsMedium = 5;
 
   /** m_connectorSegmentsHigh (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   segmentsHigh = 9;
 
   /** m_targetSegmentCount (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   targetMaxSegments = 25000;
 
   /** m_arcSegmentMultiplier (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   arcSegmentMultiplier = 1;
 
   /** m_segmentCountMultiplier (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   segmentCountMultiplier = 2;
 
   /** m_positionCurve (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
 
   /** m_rootPosition (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   worldPosition = vec3.create();
 
   /** m_interestObject (EveTacticalOverlayTrackObjectPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("EveTacticalOverlayTrackObject")
   interestObject = null;
 

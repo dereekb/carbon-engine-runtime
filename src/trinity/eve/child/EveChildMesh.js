@@ -70,24 +70,50 @@ const NO_BONE_TRANSFORMS = { bones: null, boneCount: 0 };
  * decals, lights, attachments, morph weights, world bounds and screen-size LOD
  * state.
  */
-@be.define("EveChildMesh")
-@be.inherit(ITr2Renderable, IEveShadowCaster)
-@be.inherit(IListNotify)
-@be.inherit(IInitialize, INotify, IListNotify, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner)
-@be.mapInterface(EveEntity)
-@be.mapInterface(IEveSpaceObjectDecalOwner)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2GrannyAnimationOwner)
-@be.mapInterface(IEveSpaceObjectAttachmentOwner)
-@be.mapInterface(ITr2LightOwner)
-@be.mapInterface(ITr2Pickable)
-@be.mapInterface(IEveShadowCaster)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildMesh",
+  inherit: [ ITr2Renderable, IEveShadowCaster, IListNotify, IInitialize, INotify, IListNotify, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner ],
+  // EveChildMesh_Blue.cpp:11-98, in Carbon's order.
+  interfaces: [ EveEntity, IEveSpaceObjectDecalOwner, EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, IInitialize, INotify, ITr2GrannyAnimationOwner, IEveSpaceObjectAttachmentOwner, ITr2LightOwner, ITr2Pickable, IEveShadowCaster ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "inheritOverlayEffects", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "overlayEffects", be.READ | be.PERSIST ],
+    [ be.ATTR, "damageOverlay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "castShadow", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "updateAnimation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "animationUpdater", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lowestLodVisible", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentScreenSize", be.READ ],
+    [ be.ATTR, "currentInstanceScreenSize", be.READ ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sortValueScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sortValueOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transformModifiers", be.READ | be.PERSIST ],
+    [ be.ATTR, "origin", be.READ ],
+    [ be.ATTR, "decals", be.READ | be.PERSIST ],
+    [ be.ATTR, "attachments", be.READ | be.PERSIST ],
+    [ be.ATTR, "lights", be.READ | be.PERSIST ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.ATTR_CHOOSER, "reflectionMode", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.EntityComponents.ReflectionMode" ],
+    [ be.METHOD, "GetSofSourceLocator", be.WRAP ],
+    [ be.METHOD, "GetMorphTargetNames", be.WRAP ],
+    [ be.METHOD, "SetMorphTargetWeight", be.WRAP ],
+    [ be.METHOD, "GetMorphTargetWeight", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildMesh extends EveChildTransform
 {
   _isMorphsBaked = false;
@@ -178,37 +204,25 @@ export class EveChildMesh extends EveChildTransform
   }
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildMesh_Blue.cpp:67); chooser ReflectionModeChooser (trinity/trinity/Eve/EveEntity_Blue.cpp:10). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.EntityComponents.ReflectionMode")
   @type.int32
   @type.enum("trinity.EntityComponents.ReflectionMode")
   reflectionMode = 3;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveChildTransformModifier")
   transformModifiers = [];
 
-  @be.mapAttribute(be.READ)
   @type.mat4
   worldTransform = mat4.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   inheritOverlayEffects = true;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("EveMeshOverlayEffect")
   overlayEffects = [];
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveDamageOverlay")
   damageOverlay = null;
@@ -219,108 +233,70 @@ export class EveChildMesh extends EveChildTransform
   /** Bind pose, not animated: the overlay seeds decals at the stable authored position (Carbon cpp:1132-1134). */
   _getDamageLocatorPositionOS = (index, out) => this.GetDamageLocatorBindPositionLocal(index, out);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.boolean
   castShadow = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2MeshBase")
   mesh = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.quat
   rotation = quat.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.vec3
   translation = vec3.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.mat4
   localTransform = mat4.create();
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("EveSpaceObjectDecal")
   decals = [];
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   staticTransform = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2GrannyAnimation")
   animationUpdater = null;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveSpaceObjectAttachment")
   attachments = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2Light")
   lights = [];
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   @type.enum("trinity.Tr2Lod")
   lowestLodVisible = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   minScreenSize = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   sortValueOffset = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sortValueScale = 1;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   currentScreenSize = -1;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   currentInstanceScreenSize = -1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   useSRT = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   updateAnimation = true;
@@ -334,7 +310,6 @@ export class EveChildMesh extends EveChildTransform
    * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @meta.mapAttribute(meta.PERSIST)
   @type.int32
   @type.enum("trinity.EveSpaceObjectChild.Origin")
@@ -768,7 +743,6 @@ export class EveChildMesh extends EveChildTransform
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetMorphTargetNames()
   {
     return this.mesh?.GetMorphTargetNames() ?? [];
@@ -780,7 +754,6 @@ export class EveChildMesh extends EveChildTransform
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetMorphTargetWeight(name, weight)
   {
     this.mesh?.SetMorphTargetWeight(name, weight);
@@ -793,7 +766,6 @@ export class EveChildMesh extends EveChildTransform
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetMorphTargetWeight(name)
   {
     return this.mesh?.GetMorphTargetWeight(name) ?? 0;
@@ -931,7 +903,6 @@ export class EveChildMesh extends EveChildTransform
    * @param {number} areaId The picked area.
    * @returns {Array|null} [hullName, locatorSetName, locatorIndex], or null.
    */
-  @be.mapMethodAndWrap()
   GetSofSourceLocator(areaId)
   {
     const metadata = BeObjectMetadata.GetMetadata(this);

@@ -8,40 +8,44 @@ import { EveProceduralMethodAttributeMapParameter } from "./EveProceduralMethodA
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
 
 /** EveProceduralMethodAttributeMap (eve/child/procedural/selection) - generated from schema shapeHash 691cb5f9.... */
-@be.define("EveProceduralMethodAttributeMap")
-@be.inherit(INotify)
-@be.mapInterface(IEveProceduralSelectionMethod)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveProceduralMethodAttributeMap",
+  inherit: [ INotify ],
+  // EveProceduralMethodAttributeMap_Blue.cpp:9-19, in Carbon's order.
+  interfaces: [ IEveProceduralSelectionMethod, INotify ],
+  members: [
+    [ be.ATTR, "thresholdAttribute", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "seed_temp", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "selectedChild", be.READ ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "debugVolumes", be.READ | be.PERSIST ]
+  ]
+})
 export class EveProceduralMethodAttributeMap extends IEveProceduralSelectionMethod
 {
 
   _selectedChildModified = false;
 
   /** m_parameters (PEveProceduralMethodAttributeMapParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveProceduralMethodAttributeMapParameter")
   parameters = [];
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   debugVolumes = [];
 
   /** m_mappedAttribute (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   thresholdAttribute = "";
 
   /** m_selectedChildIndex (int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   selectedChild = -1;
 
   /** m_seed (BlueSharedString) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.string
   seed_temp = "";

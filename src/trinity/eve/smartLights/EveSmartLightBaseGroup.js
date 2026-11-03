@@ -30,10 +30,19 @@ export function resolveGroupColor(customColor, useFactionColor, factionColor, pa
 }
 
 /** The shared faction-colour resolution and attribute-modifier surface flattened into every smart-light group implementation. */
-@be.define("EveSmartLightBaseGroup")
-@be.inherit(IEveSmartLightGroup, IListNotify)
-@be.mapInterface(IEveSmartLightGroup)
-@be.mapInterface(IListNotify)
+@be.define({
+  name: "EveSmartLightBaseGroup",
+  inherit: [ IEveSmartLightGroup, IListNotify ],
+  // EveSmartLightBaseGroup_Blue.cpp:10-20, in Carbon's order.
+  interfaces: [ IEveSmartLightGroup, IListNotify ],
+  members: [
+    [ be.ATTR, "useFactionColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "factionColor", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType" ],
+    [ be.ATTR, "customColor", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "activeColor" ],
+    [ be.ATTR, "attributeModifiers", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSmartLightBaseGroup extends IRoot
 {
 
@@ -41,24 +50,20 @@ export class EveSmartLightBaseGroup extends IRoot
    * m_selectedColor (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightBaseGroup_Blue.cpp:16); chooser EveSOFDataFactionColorSetTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType")
   @type.int32
   factionColor = -1;
 
   /** m_useFactionColor (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useFactionColor = false;
 
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSmartLightGroupAttributeModifier")
   attributeModifiers = [];
 
   /** m_color (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   customColor = color.createLinear();
@@ -129,7 +134,6 @@ export class EveSmartLightBaseGroup extends IRoot
    * GetGroupColor (EveSmartLightBaseGroup_Blue.cpp:18), so each group
    * subclass's own GetGroupColor answers it.
    */
-  @be.mapPropertyReadOnly()
   @type.color
   get activeColor()
   {

@@ -12,10 +12,25 @@ import { EveEntity } from "../../EveEntity.js";
  * A top-level wrapper that hosts one firing-effect element for editing, owning
  * the endpoint state that is pushed into that element every update.
  */
-@be.define("EveFiringEffectElementContainer")
-@be.inherit(IEveSpaceObject2)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(EveEntity)
+@be.define({
+  name: "EveFiringEffectElementContainer",
+  inherit: [ IEveSpaceObject2 ],
+  // EveFiringEffectElementContainer_Blue.cpp:10-73, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, EveEntity ],
+  members: [
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "element", be.PERSISTONLY, "_element" ],
+    [ be.PROP, "element" ],
+    [ be.PROP, "active" ],
+    [ be.ATTR, "sourceTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "source", be.READWRITE ],
+    [ be.ATTR, "destination", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useSourceTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displaySource", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayDestination", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveFiringEffectElementContainer extends EveEntity
 {
   /**
@@ -25,7 +40,6 @@ export class EveFiringEffectElementContainer extends EveEntity
    * directly, bypassing the setter.
    * Carbon: EveFiringEffectElementContainer::m_element (trinity/trinity/Eve/Renderable/Stretch/EveFiringEffectElementContainer.h:58); MAP_ATTRIBUTE (trinity/trinity/Eve/Renderable/Stretch/EveFiringEffectElementContainer_Blue.cpp:21).
    */
-  @be.mapAttribute(be.PERSISTONLY, "element")
 
   /** Carbon: m_element (trinity/trinity/Eve/Renderable/Stretch/EveFiringEffectElementContainer.h:58).
    */
@@ -39,7 +53,6 @@ export class EveFiringEffectElementContainer extends EveEntity
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("IEveFiringEffectElement")
   get element()
   {
@@ -63,7 +76,6 @@ export class EveFiringEffectElementContainer extends EveEntity
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.boolean
   get active()
   {
@@ -80,34 +92,26 @@ export class EveFiringEffectElementContainer extends EveEntity
     this.SetActive(value);
   }
 
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   source = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.mat4
   sourceTransform = mat4.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.vec3
   destination = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   useSourceTransform = false;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   displayDestination = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   displaySource = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.boolean
   display = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.float32
   destinationScale = 1;

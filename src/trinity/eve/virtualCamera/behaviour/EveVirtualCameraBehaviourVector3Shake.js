@@ -14,34 +14,34 @@ import { EveVirtualCameraBehaviourVector3Base } from "./EveVirtualCameraBehaviou
  * Vector3 behaviour that shakes the camera with independent per-axis Perlin
  * noise applied along the camera's own right, up and forward axes.
  */
-@be.define("EveVirtualCameraBehaviourVector3Shake")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourVector3Base)
+@be.define({
+  name: "EveVirtualCameraBehaviourVector3Shake",
+  // EveVirtualCameraBehaviour_Blue.cpp:187-194, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "perlineScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "octaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "magnitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "magnitudeCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleByView", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourVector3Base
+})
 export class EveVirtualCameraBehaviourVector3Shake extends EveVirtualCameraBehaviourVector3Base
 {
   static _nextPhase = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   octaves = 8;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2CurveScalar")
   magnitudeCurve = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   magnitude = vec3.fromValues(1, 0.6, 0.2);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   perlineScale = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   scaleByView = true;

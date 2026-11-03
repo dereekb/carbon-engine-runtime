@@ -14,29 +14,30 @@ import { EveVirtualCameraBehaviourFloatBase } from "./EveVirtualCameraBehaviourF
  * Float behaviour that adds a Perlin-noise wobble to a scalar camera value such
  * as field of view or roll.
  */
-@be.define("EveVirtualCameraBehaviourFloatNoise")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourFloatBase)
+@be.define({
+  name: "EveVirtualCameraBehaviourFloatNoise",
+  // EveVirtualCameraBehaviour_Blue.cpp:54-60, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "perlineScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "octaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "magnitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "magnitudeCurve", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourFloatBase
+})
 export class EveVirtualCameraBehaviourFloatNoise extends EveVirtualCameraBehaviourFloatBase
 {
   static _nextPhase = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.int32
   octaves = 8;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2CurveScalar")
   magnitudeCurve = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   magnitude = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   perlineScale = 1;

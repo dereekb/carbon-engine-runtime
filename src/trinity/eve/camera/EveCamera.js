@@ -113,9 +113,61 @@ const CAMERA_INVERSE_ROTATION = quat.create();
 const CAMERA_YAW_PITCH_ROLL = new Float64Array(3);
 
 /** Carbon's orbit camera and its CPU-side view/projection state. */
-@be.define("EveCamera")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveCamera",
+  inherit: [ INotify ],
+  // EveCamera_Blue.cpp:10-341, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "parent", be.READWRITE ],
+    [ be.ATTR, "audio2Listener", be.READWRITE ],
+    [ be.ATTR, "translationFromParent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationAroundParent", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "interest", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "rotationOfInterest", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "minPitch", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxPitch", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minYaw", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxYaw", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "alignment", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fieldOfView", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "frontClip", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backClip", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "friction", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "idleMove", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "idleScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "idleSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noise", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseDamp", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseScaleCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseDampCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "pos", be.READ | be.PERSIST ],
+    [ be.ATTR, "intr", be.READ | be.PERSIST ],
+    [ be.ATTR, "viewVec", be.READ ],
+    [ be.ATTR, "rightVec", be.READ ],
+    [ be.ATTR, "upVec", be.READ ],
+    [ be.ATTR, "zoomCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "centerOffset", be.READWRITE ],
+    [ be.ATTR, "extraTranslation", be.READWRITE ],
+    [ be.ATTR, "useExtraTranslation", be.READWRITE ],
+    [ be.ATTR, "pitch", be.READ | be.PERSIST ],
+    [ be.ATTR, "yaw", be.READ | be.PERSIST ],
+    [ be.ATTR, "errorHandler", be.READWRITE ],
+    [ be.METHOD, "SetRotationOnOrbit", be.WRAP ],
+    [ be.METHOD, "SetOrbit", be.WRAP ],
+    [ be.ATTR, "projectionMatrix", be.READWRITE ],
+    [ be.ATTR, "viewMatrix", be.READ ],
+    [ be.METHOD, "OrbitParent", be.WRAP ],
+    [ be.METHOD, "RotateOnOrbit", be.WRAP ],
+    [ be.METHOD, "Dolly", be.WRAP ],
+    [ be.METHOD, "Zoom", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "ResetStartTime", be.WRAP ]
+  ]
+})
 export class EveCamera extends IRoot
 {
 
@@ -161,170 +213,141 @@ export class EveCamera extends IRoot
   stableView = false;
 
   /** m_errorListener (IBlueEventListenerPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBlueEventListener")
   errorHandler = null;
 
   /** m_noiseScale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseScale = 1;
 
   /** m_audio2Listener (IBluePlacementObserverPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBluePlacementObserver")
   audio2Listener = null;
 
   /** m_noise (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   noise = false;
 
   /** m_projectionCenterOffset (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   centerOffset = 0;
 
   /** m_pitch (float) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.float32
   pitch = 0;
 
   /** m_yaw (float) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.float32
   yaw = 0;
 
   /** m_extraParentTranslation (Vector3) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   extraTranslation = vec3.create();
 
   /** m_idleSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   idleSpeed = 0.8;
 
   /** m_noiseDamp (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseDamp = 1.1;
 
   /** m_pos (Vector3) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.vec3
   pos = vec3.create();
 
   /** m_intr (Vector3) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.vec3
   intr = vec3.create();
 
   /** m_viewVec (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   viewVec = vec3.create();
 
   /** m_rightVec (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   rightVec = vec3.create();
 
   /** m_upVec (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   upVec = vec3.create();
 
   /** m_rotationAroundParent (Quaternion) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.quat
   rotationAroundParent = quat.create();
 
   /** m_interestTranslationCurve (ITriVectorFunctionPtr) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("ITriVectorFunction")
   interest = null;
 
   /** m_rotationOfInterest (Quaternion) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.quat
   rotationOfInterest = quat.create();
 
   /** m_fieldOfView (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   fieldOfView = Math.PI / 2;
 
   /** m_frontClip (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   frontClip = 10;
 
   /** m_backClip (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   backClip = 10000000;
 
   /** m_friction (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   friction = 7;
 
   /** m_noiseCurve (ITriScalarFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   noiseCurve = null;
 
   /** m_noiseScaleCurve (ITriScalarFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   noiseScaleCurve = null;
 
   /** m_noiseDampCurve (ITriScalarFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   noiseDampCurve = null;
 
   /** m_maxSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxSpeed = 0.05;
 
   /** m_update (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   update = true;
 
   /** m_zoomCurve (ITriScalarFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   zoomCurve = createDefaultZoomCurve();
 
   /** Blue exposes m_translationFromParent.z, not the native Vector3. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   translationFromParent = 20;
@@ -338,63 +361,52 @@ export class EveCamera extends IRoot
   minimumDistance = null;
 
   /** m_minPitch (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minPitch = -1.4;
 
   /** m_maxPitch (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxPitch = 1.4;
 
   /** m_minYaw (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minYaw = 0;
 
   /** m_maxYaw (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxYaw = 0;
 
   /** m_parentTranslationCurve (ITriVectorFunctionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   parent = null;
 
   /** m_idleScale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   idleScale = 2;
 
   /** m_alignment (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   alignment = vec3.fromValues(0, 1, 0);
 
   /** m_useExtraParentTranslation (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   useExtraTranslation = false;
 
   /** m_projectionMatrix (TriProjectionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriProjection")
   projectionMatrix = new TriProjection();
 
   /** m_viewMatrix (TriViewPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriView")
   viewMatrix = new TriView();
 
   /** m_idleMove (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   idleMove = false;
@@ -539,7 +551,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Dolly(factor)
   {
     this.translationFromParent += factor;
@@ -550,7 +561,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   OrbitParent(horizontal, vertical)
   {
     const oldYaw = this._yawSpeed;
@@ -585,7 +595,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RotateOnOrbit(horizontal, vertical)
   {
     const oldYaw = this._yawIntSpeed;
@@ -629,7 +638,6 @@ export class EveCamera extends IRoot
    * @returns {void}
    * @throws {RangeError} When the selected key is negative.
    */
-  @be.mapMethodAndWrapOptionalArgs()
   Zoom(key = -1)
   {
     const curve = CjsSchema.cast(this.zoomCurve, Tr2CurveScalar);
@@ -998,7 +1006,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ResetStartTime()
   {
     this._startTime = 0;
@@ -1009,7 +1016,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetOrbit(yaw, pitch)
   {
     this.yaw = yaw;
@@ -1025,7 +1031,6 @@ export class EveCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetRotationOnOrbit(yaw, pitch)
   {
     this._yawInt = yaw;

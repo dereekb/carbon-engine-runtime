@@ -10,11 +10,17 @@ import { EveSocketParameterString } from "./EveSocketParameterString.js";
  * EveSocketParameterString without adding members; only the editor widget
  * differs.
  */
-@be.define("EveSocketParameterFilePath")
-@be.mapInterface(IEveSocketParameter)
-@be.mapMethodAndWrap([ "Used", "SetValueToDefault" ])
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "value")
+@be.define({
+  name: "EveSocketParameterFilePath",
+  // EveSocketParameter_Blue.cpp:41-41, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterFilePath extends EveSocketParameterString
 {
 }

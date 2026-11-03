@@ -10,13 +10,17 @@ import { EveVirtualCameraBehaviourFloatBase } from "./EveVirtualCameraBehaviourF
  * Float behaviour that lags a scalar camera value behind the value the other
  * behaviours produced, smoothing sudden changes.
  */
-@be.define("EveVirtualCameraBehaviourFloatDamping")
-@be.mapInterface(INotify)
-@be.exposureChainTo(EveVirtualCameraBehaviourFloatBase)
+@be.define({
+  name: "EveVirtualCameraBehaviourFloatDamping",
+  // EveVirtualCameraBehaviour_Blue.cpp:70-73, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "dampingFactor", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: EveVirtualCameraBehaviourFloatBase
+})
 export class EveVirtualCameraBehaviourFloatDamping extends EveVirtualCameraBehaviourFloatBase
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   dampingFactor = 1;
 

@@ -28,78 +28,80 @@ import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
  * synchronously; the JS resource manager resolves it asynchronously, so the
  * child joins (registered and forwarded to) once the file has loaded.
  */
-@be.define("EveChildRef")
-@be.inherit(ITr2CurveSetOwner, IInitialize, INotify)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IEveEffectChildrenOwner)
-@be.mapInterface(IShaderConfigurer)
-@be.mapInterface(ITr2SoundEmitterOwner)
-@be.mapInterface(EveEntity)
-@be.inherit(IEveEffectChildrenOwner, ITr2SoundEmitterOwner)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READ, "worldTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
+@be.define({
+  name: "EveChildRef",
+  inherit: [ ITr2CurveSetOwner, IInitialize, INotify, IEveEffectChildrenOwner, ITr2SoundEmitterOwner ],
+  // EveChildRef_Blue.cpp:11-68, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2CurveSetOwner, IInitialize, INotify, IEveEffectChildrenOwner, IShaderConfigurer, ITr2SoundEmitterOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "resPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "child", be.READ ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "loadChildAutomatically", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "HandleControllerEvent", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ],
+    [ be.METHOD, "Reload", be.WRAP_OPTIONAL_ARGS ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildRef extends EveChildTransform
 {
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildRef_Blue.cpp:28 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] - EveChildRef_Blue.cpp:29 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] - EveChildRef_Blue.cpp:30 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_localTransform (Matrix) [READWRITE, PERSIST] (EveChildRef_Blue.cpp:31) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   localTransform = mat4.create();
 
   /** m_display (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   display = true;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_loadChildAutomatically (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   loadChildAutomatically = true;
 
   /** m_resPath (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.path("object")
   resPath = "";
 
   /** m_child (IEveSpaceObjectChildPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("IEveSpaceObjectChild")
   child = null;
 
@@ -134,7 +136,6 @@ export class EveChildRef extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
   Reload(bypassAutoLoadBlocker = false)
   {
     if (this.loadChildAutomatically || bypassAutoLoadBlocker) this.LoadChild();
@@ -493,7 +494,6 @@ export class EveChildRef extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     this.child?.SetControllerVariable(name, value);
@@ -504,7 +504,6 @@ export class EveChildRef extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HandleControllerEvent(name)
   {
     this.child?.HandleControllerEvent(name);
@@ -527,7 +526,6 @@ export class EveChildRef extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     this.child?.StartControllers();

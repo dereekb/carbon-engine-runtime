@@ -9,9 +9,15 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Integer shader parameter: broadcasts the value to all four components. */
-@be.define("EveSOFDataParameterInt")
-@be.mapInterface(EveSOFDataParameter)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSOFDataParameterInt",
+  // EveSOFData_Blue2.cpp:34-34, in Carbon's order.
+  interfaces: [ EveSOFDataParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataParameterInt extends EveSOFDataParameter
 {
   /**
@@ -19,7 +25,6 @@ export class EveSOFDataParameterInt extends EveSOFDataParameter
    * Native m_value (int32_t) replaces the base vector in authored values.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   value = 0;

@@ -17,21 +17,50 @@ import { vec3 } from "#math/vec3";
 import { Tr2SphereShapeAttributeGenerator } from "../../particle/attribute/Tr2SphereShapeAttributeGenerator.js";
 
 /** A container child that sequences and spawns local and global explosion instances over time from authored transforms and delays. */
-@be.define("EveChildExplosion")
-@be.mapInterface(EveChildContainer)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "translation")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "rotation")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "scaling")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "localTransform")
-@be.mapAttribute(be.READ, "worldTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
+@be.define({
+  name: "EveChildExplosion",
+  // EveChildExplosion_Blue.cpp:11-147, in Carbon's order.
+  interfaces: [ EveChildContainer, EveEntity, EveSpaceObjectChild, IEveSpaceObjectChild ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localExplosion", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localExplosions", be.READ | be.PERSIST ],
+    [ be.ATTR, "localExplosionShared", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "globalExplosion", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "globalExplosions", be.READ | be.PERSIST ],
+    [ be.ATTR, "localExplosionDelay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localExplosionInterval", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localExplosionIntervalFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "globalExplosionDelay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "wreckSwitchTime", be.READ ],
+    [ be.ATTR, "wreckSwitchOffsetFromGlobalStart", be.READWRITE ],
+    [ be.ATTR, "localDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "globalDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "totalDuration", be.READ ],
+    [ be.ATTR, "globalExplosionTime", be.READ ],
+    [ be.ATTR, "isPlaying", be.READ ],
+    [ be.ATTR, "playTime", be.READ ],
+    [ be.ATTR, "generatedLocalExplosions", be.READ ],
+    [ be.ATTR, "generatedGlobalExplosions", be.READ ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localScaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "globalScaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.METHOD, "Play", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.METHOD, "SetLocalExplosionTransforms", be.WRAP ],
+    [ be.METHOD, "SetGlobalExplosionOffset", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildExplosion extends EveChildContainer
 {
 
@@ -60,120 +89,99 @@ export class EveChildExplosion extends EveChildContainer
   _globalExplosionInstances = [];
 
   /** m_globalExplosionContainer (EveChildContainerPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("EveChildContainer")
   generatedGlobalExplosions = null;
 
   /** m_localExplosionScaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   localScaling = vec3.fromValues(1, 1, 1);
 
   /** m_globalExplosionScaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   globalScaling = vec3.fromValues(1, 1, 1);
 
   /** m_globalExplosion (IEveSpaceObjectChildPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveSpaceObjectChild")
   globalExplosion = null;
 
   /** m_localExplosion (IEveSpaceObjectChildPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveSpaceObjectChild")
   localExplosion = null;
 
   /** m_localExplosionShared (IEveSpaceObjectChildPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveSpaceObjectChild")
   localExplosionShared = null;
 
   /** m_globalExplosions (PIEveSpaceObjectChildVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectChild")
   globalExplosions = [];
 
   /** m_localExplosionIntervalFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   localExplosionIntervalFactor = 1;
 
   /** m_localExplosionDelay (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   localExplosionDelay = 0;
 
   /** m_globalExplosionDelay (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   globalExplosionDelay = 0;
 
   /** m_totalDuration (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   totalDuration = 0;
 
   /** m_globalDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   globalDuration = 0;
 
   /** m_isPlaying (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isPlaying = false;
 
   /** m_localExplosions (PIEveSpaceObjectChildVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectChild")
   localExplosions = [];
 
   /** m_localExplosionInterval (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   localExplosionInterval = 1;
 
   /** m_globalExplosionTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   globalExplosionTime = 0;
 
   /** m_wreckSwitchTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   wreckSwitchTime = 0;
 
   /** m_wreckSwitchOffsetFromGlobalStart (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   wreckSwitchOffsetFromGlobalStart = 0;
 
   /** m_playTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   playTime = 0;
 
   /** m_localDuration (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   localDuration = 0;
 
   /** Blue read-only alias for m_objects (EveChildExplosion_Blue.cpp:108): the spawned explosions. */
-  @be.mapAttribute(be.READ)
   @type.list("IEveSpaceObjectChild")
   get generatedLocalExplosions()
   {
@@ -186,7 +194,6 @@ export class EveChildExplosion extends EveChildContainer
    * @implemented
    * @param {Iterable<mat4>} transforms Local explosion transforms.
    */
-  @be.mapMethodAndWrap()
   SetLocalExplosionTransforms(transforms)
   {
     this._localExplosionTransforms = Array.from(transforms, transform => mat4.clone(transform));
@@ -198,7 +205,6 @@ export class EveChildExplosion extends EveChildContainer
    * @implemented
    * @param {vec3} offset Offset in local coordinates.
    */
-  @be.mapMethodAndWrap()
   SetGlobalExplosionOffset(offset)
   {
     vec3.copy(this._globalExplosionOffset, offset);
@@ -241,7 +247,6 @@ export class EveChildExplosion extends EveChildContainer
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Play()
   {
     this.Stop();
@@ -269,7 +274,6 @@ export class EveChildExplosion extends EveChildContainer
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     if (this.IsInRegistry())

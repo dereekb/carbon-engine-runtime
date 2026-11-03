@@ -18,93 +18,102 @@ const SCRUB_MAX_ITERATIONS = 20;
  * and a roll, each rebuilt every update from its own list of behaviours over a
  * local timeline.
  */
-@be.define("EveVirtualCamera")
-@be.inherit(ITr2DebugRenderable)
+@be.define({
+  name: "EveVirtualCamera",
+  inherit: [ ITr2DebugRenderable ],
+  // EveVirtualCamera_Blue.cpp:10-66, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animationTimelineLength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "running", be.READ ],
+    [ be.ATTR, "fov", be.READ ],
+    [ be.ATTR, "roll", be.READ ],
+    [ be.ATTR, "position", be.READ ],
+    [ be.ATTR, "pointOfInterest", be.READ ],
+    [ be.ATTR, "localElapsedTime", be.READ ],
+    [ be.ATTR, "positionAnchorCenter", be.READ ],
+    [ be.ATTR, "positionAnchorRadius", be.READ ],
+    [ be.ATTR, "positionAnchorForwardDirection", be.READ ],
+    [ be.ATTR, "pointOfInterestAnchorCenter", be.READ ],
+    [ be.ATTR, "pointOfInterestAnchorRadius", be.READ ],
+    [ be.ATTR, "pointOfInterestAnchorForwardDirection", be.READ ],
+    [ be.PROP_RO, "forward" ],
+    [ be.PROP_RO, "right" ],
+    [ be.PROP_RO, "up" ],
+    [ be.METHOD, "GetViewMatrix", be.WRAP ],
+    [ be.METHOD, "GetProjectionMatrix", be.WRAP ],
+    [ be.METHOD, "UpdateExternal", be.WRAP ],
+    [ be.METHOD, "Play", be.WRAP ],
+    [ be.METHOD, "Pause", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.METHOD, "UpdateToLocalTime", be.WRAP ],
+    [ be.ATTR, "positionBehaviours", be.READ | be.PERSIST ],
+    [ be.ATTR, "pointOfInterestBehaviours", be.READ | be.PERSIST ],
+    [ be.ATTR, "fovBehaviours", be.READ | be.PERSIST ],
+    [ be.ATTR, "rollBehaviours", be.READ | be.PERSIST ],
+    [ be.ATTR, "positionAnchors", be.READ ],
+    [ be.ATTR, "pointOfInterestAnchors", be.READ ]
+  ]
+})
 export class EveVirtualCamera extends IRoot
 {
-  @be.mapAttribute(be.READ)
   @type.vec3
   position = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   pointOfInterestAnchorCenter = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   positionAnchorCenter = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.list("IEveSpaceObject2")
   pointOfInterestAnchors = [];
 
-  @be.mapAttribute(be.READ)
   @type.list("IEveSpaceObject2")
   positionAnchors = [];
 
-  @be.mapAttribute(be.READ)
   @type.float32
   localElapsedTime = 0;
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   pointOfInterest = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.float32
   pointOfInterestAnchorRadius = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   positionAnchorRadius = 0;
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   positionAnchorForwardDirection = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   pointOfInterestAnchorForwardDirection = vec3.create();
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveVirtualCameraBehaviourFloatBase")
   fovBehaviours = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("EveVirtualCameraBehaviourVector3Base")
   pointOfInterestBehaviours = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveVirtualCameraBehaviourVector3Base")
   positionBehaviours = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("EveVirtualCameraBehaviourFloatBase")
   rollBehaviours = [];
 
-  @be.mapAttribute(be.READ)
   @type.float32
   roll = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   fov = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   animationTimelineLength = 10;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "Virtual Camera";
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   running = false;
 
@@ -115,7 +124,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.vec3
   get forward()
   {
@@ -128,7 +136,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.vec3
   get right()
   {
@@ -141,7 +148,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.vec3
   get up()
   {
@@ -154,7 +160,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetViewMatrix(out)
   {
     return mat4.lookAtD3D(out, this.position, this.pointOfInterest, this.GetUpDirection(vec3.create()));
@@ -170,7 +175,6 @@ export class EveVirtualCamera extends IRoot
    * @param {mat4} out
    * @returns {mat4}
    */
-  @be.mapMethodAndWrap()
   GetProjectionMatrix(aspectRatio, frontClip, backClip, out)
   {
     return mat4.perspectiveZO(out, this.fov, aspectRatio, frontClip, backClip);
@@ -275,7 +279,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Play()
   {
     this.running = true;
@@ -287,7 +290,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Pause()
   {
     this.running = false;
@@ -298,7 +300,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     this.Reset();
@@ -322,7 +323,6 @@ export class EveVirtualCamera extends IRoot
    * @adapted
    * @param {Number} time Target local elapsed time in seconds; may be negative
    */
-  @be.mapMethodAndWrap()
   UpdateToLocalTime(time)
   {
     const diff = time - this.localElapsedTime;
@@ -368,7 +368,6 @@ export class EveVirtualCamera extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   UpdateExternal(position, pointOfInterest, fov, roll)
   {
     vec3.copy(this.position, position);

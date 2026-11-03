@@ -23,8 +23,18 @@ const LogoType = {
  * Logo slots: `EveSOFDataLogoPtr m_logos[TYPE_MAX]`, exposed by chooser name.
  * Native IRoot-only data with no lifecycle.
  */
-@be.define("EveSOFDataLogoSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataLogoSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:1125-1132, in Carbon's order.
+  members: [
+    [ be.ATTR_INDEX, "Primary", be.READWRITE | be.PERSIST, LogoType.TYPE_PRIMARY, "logos" ],
+    [ be.ATTR_INDEX, "Secondary", be.READWRITE | be.PERSIST, LogoType.TYPE_SECONDARY, "logos" ],
+    [ be.ATTR_INDEX, "Tertiary", be.READWRITE | be.PERSIST, LogoType.TYPE_TERTIARY, "logos" ],
+    [ be.ATTR_INDEX, "Marking_01", be.READWRITE | be.PERSIST, LogoType.TYPE_MARKING_01, "logos" ],
+    [ be.ATTR_INDEX, "Marking_02", be.READWRITE | be.PERSIST, LogoType.TYPE_MARKING_02, "logos" ]
+  ]
+})
 export class EveSOFDataLogoSet extends IRoot
 {
   static LogoType = LogoType;
@@ -33,11 +43,6 @@ export class EveSOFDataLogoSet extends IRoot
    * m_logos: one logo per LogoType, or null.
    * @type {Array<EveSOFDataLogo|null>}
    */
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Primary", LogoType.TYPE_PRIMARY)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Secondary", LogoType.TYPE_SECONDARY)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Tertiary", LogoType.TYPE_TERTIARY)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Marking_01", LogoType.TYPE_MARKING_01)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Marking_02", LogoType.TYPE_MARKING_02)
   @type.array({ kind: "rootRef", className: "EveSOFDataLogo" })
   logos = new Array(LogoType.TYPE_MAX).fill(null);
 

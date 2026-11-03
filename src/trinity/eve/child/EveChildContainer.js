@@ -57,146 +57,123 @@ const ZERO_VEC3 = vec3.create();
  * their curve sets, controllers, observers, lights, attachments and transform
  * modifiers, and gating them on a display-quality filter.
  */
-@be.define("EveChildContainer")
-@be.inherit(ITr2Renderable, ITr2CurveSetOwner, IInitialize, ITr2SoundEmitterOwner, ITr2ControllerOwner, IEveInheritPropertiesOwner)
-@be.inherit(IInitialize, IListNotify, INotify)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IListNotify)
-@be.mapInterface(INotify)
-@be.mapInterface(IEveEffectChildrenOwner)
-@be.mapInterface(ITr2SoundEmitterOwner)
-@be.mapInterface(ITr2ControllerOwner)
-@be.mapInterface(IEveInheritPropertiesOwner)
-@be.mapInterface(IEveSpaceObjectAttachmentOwner)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(ITr2LightOwner)
-@be.mapInterface(IShaderConfigurer)
-@be.inherit(IEveEffectChildrenOwner, IEveSpaceObjectAttachmentOwner)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildContainer",
+  inherit: [ ITr2Renderable, ITr2CurveSetOwner, IInitialize, ITr2SoundEmitterOwner, ITr2ControllerOwner, IEveInheritPropertiesOwner, IInitialize, IListNotify, INotify, IEveEffectChildrenOwner, IEveSpaceObjectAttachmentOwner ],
+  // EveChildContainer_Blue.cpp:32-112, in Carbon's order.
+  interfaces: [ EveEntity, ITr2LightOwner, EveSpaceObjectChild, IEveSpaceObjectChild, ITr2CurveSetOwner, IInitialize, IListNotify, INotify, IEveEffectChildrenOwner, IShaderConfigurer, ITr2SoundEmitterOwner, ITr2ControllerOwner, IEveInheritPropertiesOwner, IEveSpaceObjectAttachmentOwner, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "updateOnDisplay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mute", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "objects", be.READ | be.PERSIST ],
+    [ be.ATTR, "transformModifiers", be.READ | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "alwaysOn", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "displayFilter", be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildContainer.DisplayQualityModifier" ],
+    [ be.PROP_RO, "isRendering" ],
+    [ be.PROP_RO, "isUpdating" ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useStaticRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useStaticScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "observers", be.READ | be.PERSIST ],
+    [ be.ATTR, "lights", be.READ | be.PERSIST ],
+    [ be.ATTR, "fxAttributes", be.READ | be.PERSIST ],
+    [ be.ATTR, "controllers", be.READ | be.PERSIST ],
+    [ be.ATTR, "inheritProperties", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "origin", be.READ ],
+    [ be.ATTR, "attachments", be.READ | be.PERSIST ],
+    [ be.ATTR, "animationOwner", be.READ ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.METHOD, "SetProceduralContainerVariable", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "HandleControllerEvent", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildContainer extends EveChildTransform
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildContainer_Blue.cpp:59); chooser EveChildContainerDataSetShaderChooser (trinity/trinity/Eve/SpaceObject/Children/EveChildContainer_Blue.cpp:14). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildContainer.DisplayQualityModifier")
   @type.int32
   @type.enum("trinity.EveChildContainer.DisplayQualityModifier")
   displayFilter = 5;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveSpaceObjectChild")
   objects = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveChildTransformModifier")
   transformModifiers = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("TriCurveSet")
   curveSets = [];
 
-  @be.mapAttribute(be.READ)
   @type.mat4
   worldTransform = mat4.create();
 
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
-
   @type.boolean
   mute = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.mat4
   localTransform = mat4.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   staticTransform = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   alwaysOn = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   updateOnDisplay = true;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveSpaceObjectAttachment")
   attachments = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriObserverLocal")
   observers = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("IEveFxAttribute")
   fxAttributes = [];
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Light")
   lights = [];
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("ITr2Controller")
   controllers = [];
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveChildInheritProperties")
   inheritProperties = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   useSRT = true;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   useStaticRotation = false;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useStaticScale = false;
@@ -210,7 +187,6 @@ export class EveChildContainer extends EveChildTransform
    * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
    * @type {ITr2GrannyAnimationOwner|null}
    */
-  @be.mapAttribute(be.READ)
   @meta.persist
   @type.object.ref("ITr2GrannyAnimationOwner")
   animationOwner = null;
@@ -222,7 +198,6 @@ export class EveChildContainer extends EveChildTransform
    * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @meta.persist
   @type.int32
   @type.enum("trinity.EveSpaceObjectChild.Origin")
@@ -261,7 +236,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isRendering()
   {
@@ -275,7 +249,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isUpdating()
   {
@@ -484,7 +457,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     const key = String(name ?? "");
@@ -506,7 +478,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HandleControllerEvent(name)
   {
     const eventName = String(name ?? "");
@@ -525,7 +496,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     for (const controller of this.controllers)
@@ -544,7 +514,6 @@ export class EveChildContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetProceduralContainerVariable(name, value)
   {
     for (const child of this.objects)

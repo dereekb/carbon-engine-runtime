@@ -6,8 +6,18 @@ import { type } from "#schema";
 import { IEveDistributionSpawner } from "./IEveDistributionSpawner.js";
 
 /** Spawns distribution entities at configurable, optionally randomized intervals for a bounded or unlimited repeat count. */
-@be.define("EveDistributionSpawnerInterval")
-@be.mapInterface(IEveDistributionSpawner)
+@be.define({
+  name: "EveDistributionSpawnerInterval",
+  // EveDistributionSpawnerInterval_Blue.cpp:9-17, in Carbon's order.
+  interfaces: [ IEveDistributionSpawner ],
+  members: [
+    [ be.ATTR, "delayBeforeInitialSpawn", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "numberOfRepeats", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useRandomStartOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayBetweenRepeats", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxRandomizedIntervalDelta", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionSpawnerInterval extends IEveDistributionSpawner
 {
 
@@ -16,31 +26,26 @@ export class EveDistributionSpawnerInterval extends IEveDistributionSpawner
   _numTriggered = 0;
 
   /** m_delayBetweenRepeats (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayBetweenRepeats = 1;
 
   /** m_numberOfTriggers (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   numberOfRepeats = 0;
 
   /** m_useRandomStartOffset (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useRandomStartOffset = true;
 
   /** m_maxRandomizedIntervalDelta (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxRandomizedIntervalDelta = 0;
 
   /** m_delayBeforeInitialSpawn (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delayBeforeInitialSpawn = 0;

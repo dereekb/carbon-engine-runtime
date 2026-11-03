@@ -31,8 +31,23 @@ const AreaType = {
  * exposed by chooser name. TYPE_WRECK has no exposed slot, so it is never
  * read or written and stays null. Native IRoot-only data with no lifecycle.
  */
-@be.define("EveSOFDataArea")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataArea",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:132-144, in Carbon's order.
+  members: [
+    [ be.ATTR_INDEX, "Primary", be.READWRITE | be.PERSIST, AreaType.TYPE_PRIMARY, "materials" ],
+    [ be.ATTR_INDEX, "Glass", be.READWRITE | be.PERSIST, AreaType.TYPE_GLASS, "materials" ],
+    [ be.ATTR_INDEX, "Sails", be.READWRITE | be.PERSIST, AreaType.TYPE_SAILS, "materials" ],
+    [ be.ATTR_INDEX, "Reactor", be.READWRITE | be.PERSIST, AreaType.TYPE_REACTOR, "materials" ],
+    [ be.ATTR_INDEX, "Darkhull", be.READWRITE | be.PERSIST, AreaType.TYPE_DARKHULL, "materials" ],
+    [ be.ATTR_INDEX, "Rock", be.READWRITE | be.PERSIST, AreaType.TYPE_ROCK, "materials" ],
+    [ be.ATTR_INDEX, "Monument", be.READWRITE | be.PERSIST, AreaType.TYPE_MONUMENT, "materials" ],
+    [ be.ATTR_INDEX, "Ornament", be.READWRITE | be.PERSIST, AreaType.TYPE_ORNAMENT, "materials" ],
+    [ be.ATTR_INDEX, "SimplePrimary", be.READWRITE | be.PERSIST, AreaType.TYPE_SIMPLEPRIMARY, "materials" ],
+    [ be.ATTR_INDEX, "Turret", be.READWRITE | be.PERSIST, AreaType.TYPE_TURRET, "materials" ]
+  ]
+})
 export class EveSOFDataArea extends IRoot
 {
   static AreaType = AreaType;
@@ -41,16 +56,6 @@ export class EveSOFDataArea extends IRoot
    * m_materials: one area material per AreaType, or null.
    * @type {Array<EveSOFDataAreaMaterial|null>}
    */
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Primary", AreaType.TYPE_PRIMARY)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Glass", AreaType.TYPE_GLASS)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Sails", AreaType.TYPE_SAILS)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Reactor", AreaType.TYPE_REACTOR)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Darkhull", AreaType.TYPE_DARKHULL)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Rock", AreaType.TYPE_ROCK)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Monument", AreaType.TYPE_MONUMENT)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Ornament", AreaType.TYPE_ORNAMENT)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "SimplePrimary", AreaType.TYPE_SIMPLEPRIMARY)
-  @be.mapAttribute__Index(be.READWRITE | be.PERSIST, "Turret", AreaType.TYPE_TURRET)
   @type.array({ kind: "rootRef", className: "EveSOFDataAreaMaterial" })
   materials = new Array(AreaType.TYPE_MAX).fill(null);
 }

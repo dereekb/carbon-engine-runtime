@@ -37,53 +37,59 @@ const SPHERE_RADIUS_EPSILON = 1e-4;
  * callback on threshold crossings. No renderables, no async work - the whole
  * evaluation runs in UpdateSyncronous.
  */
-@be.define("EveTriggerVolume")
-@be.inherit(IWorldPosition, IEveSpaceObject2, IInitialize, ITr2DebugRenderable)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IWorldPosition)
-@be.mapInterface(ITr2DebugRenderable)
+@be.define({
+  name: "EveTriggerVolume",
+  inherit: [ IWorldPosition, IEveSpaceObject2, IInitialize, ITr2DebugRenderable ],
+  // EveTriggerVolume_Blue.cpp:10-77, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, IInitialize, IWorldPosition, ITr2DebugRenderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "volumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "exclusionVolumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "enterThreshold", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "externalParameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "trackedPositionCurve", be.READWRITE ],
+    [ be.ATTR, "isInside", be.READ ],
+    [ be.ATTR, "intensity", be.READ ],
+    [ be.METHOD, "SetCallback", be.WRAP ]
+  ]
+})
 export class EveTriggerVolume extends IRoot
 {
 
   /** Name identifier, passed to the callback so one handler can serve many trigger volumes. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** The volumes defining the trigger region. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   volumes = [];
 
   /** Volumes subtracted from the trigger region. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   exclusionVolumes = [];
 
   /** Volume intensity (0..1) at which the tracked position counts as inside. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   enterThreshold = 0.5;
 
   /** External parameters exposing per-placement values, e.g. for dungeon asset manipulations. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
   externalParameters = [];
 
   /** m_ballPosition: vector function slot placing the trigger volume. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
 
   /** m_ballRotation: quaternion function slot rotating the trigger volume. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   rotationCurve = null;
@@ -93,17 +99,14 @@ export class EveTriggerVolume extends IRoot
    * exposes it READWRITE but NOT PERSIST (EveTriggerVolume_Blue.cpp:58-62) -
    * destiny wires it at runtime, so it never serializes.
    */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriVectorFunction")
   trackedPositionCurve = null;
 
   /** Whether the tracked position is currently inside the trigger region. */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isInside = false;
 
   /** m_currentIntensity: most recent evaluated volume intensity of the tracked position. */
-  @be.mapAttribute(be.READ)
   @type.float32
   intensity = 0;
 
@@ -126,7 +129,6 @@ export class EveTriggerVolume extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetCallback(callback)
   {
     this._callback = typeof callback === "function" ? callback : null;

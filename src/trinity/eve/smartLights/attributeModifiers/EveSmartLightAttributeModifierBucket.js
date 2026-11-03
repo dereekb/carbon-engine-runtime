@@ -7,30 +7,32 @@ import { EveSmartLightBaseAttributeModifier } from "./EveSmartLightBaseAttribute
 import { IEveSmartLightGroupAttributeModifier } from "./IEveSmartLightGroupAttributeModifier.js";
 
 /** EveSmartLightAttributeModifierBucket (eve/smartLights/attributeModifiers) - generated from schema shapeHash cade668b.... */
-@be.define("EveSmartLightAttributeModifierBucket")
-@be.mapInterface(IEveSmartLightGroupAttributeModifier)
-@be.mapInterface(EveSmartLightBaseAttributeModifier)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "attributeMultiplier")
-@be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY, "active")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "startsActive")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "crossFadeDuration")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "crossFadeIntensity")
-@be.mapAttribute(be.READ, "activationValue")
-@be.mapAttribute(be.READ, "finalAttributeMultiplier")
+@be.define({
+  name: "EveSmartLightAttributeModifierBucket",
+  // EveSmartLightAttributeModifierBucket_Blue.cpp:11-29, in Carbon's order.
+  interfaces: [ IEveSmartLightGroupAttributeModifier, EveSmartLightBaseAttributeModifier, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "attributeModifiers", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "attributeMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "active", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "startsActive", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "crossFadeDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "crossFadeIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "activationValue", be.READ ],
+    [ be.ATTR, "finalAttributeMultiplier", be.READ ]
+  ]
+})
 export class EveSmartLightAttributeModifierBucket extends IEveSmartLightGroupAttributeModifier
 {
 
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
 
 
   @type.list("IEveSmartLightGroupAttributeModifier")
   attributeModifiers = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "bucket";

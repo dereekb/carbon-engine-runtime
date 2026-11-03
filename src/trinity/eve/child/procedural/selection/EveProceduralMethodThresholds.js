@@ -12,48 +12,50 @@ import { EveProceduralMethodThresholdParameter } from "./EveProceduralMethodThre
 const BELIST_LOADING = 0x10;
 
 /** EveProceduralMethodThresholds (eve/child/procedural/selection) - generated from schema shapeHash 794abb42.... */
-@be.define("EveProceduralMethodThresholds")
-@be.inherit(INotify, IListNotify, IInitialize)
-@be.mapInterface(IEveProceduralSelectionMethod)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "EveProceduralMethodThresholds",
+  inherit: [ INotify, IListNotify, IInitialize ],
+  // EveProceduralMethodThresholds_Blue.cpp:9-23, in Carbon's order.
+  interfaces: [ IEveProceduralSelectionMethod, INotify, IListNotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "thresholdAttribute", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "seed_temp", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "selectedChild", be.READ ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "debugVolumes", be.READ | be.PERSIST ]
+  ]
+})
 export class EveProceduralMethodThresholds extends IEveProceduralSelectionMethod
 {
 
   _selectedChildModified = false;
 
   /** m_parameters (PEveProceduralMethodThresholdParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveProceduralMethodThresholdParameter")
   parameters = [];
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   debugVolumes = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_thresholdAttribute (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   thresholdAttribute = "";
 
   /** m_selectedChildIndex (int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   selectedChild = -1;
 
   /** m_seed (float) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   seed_temp = -1;

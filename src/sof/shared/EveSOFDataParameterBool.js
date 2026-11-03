@@ -9,9 +9,15 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Boolean shader parameter: broadcasts 1/0 to all four components. */
-@be.define("EveSOFDataParameterBool")
-@be.mapInterface(EveSOFDataParameter)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSOFDataParameterBool",
+  // EveSOFData_Blue2.cpp:33-33, in Carbon's order.
+  interfaces: [ EveSOFDataParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataParameterBool extends EveSOFDataParameter
 {
   /**
@@ -19,7 +25,6 @@ export class EveSOFDataParameterBool extends EveSOFDataParameter
    * Native m_value (bool) replaces the base vector in authored values.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   value = false;

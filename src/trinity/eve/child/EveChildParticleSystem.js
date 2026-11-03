@@ -25,21 +25,39 @@ import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmi
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 
 /** A child that hosts particle systems and emitters, driving their transforms, LOD-based particle budgets, and per-frame visibility and render submission. */
-@be.define("EveChildParticleSystem")
-@be.inherit(ITr2Renderable)
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.inherit(ITr2DebugRenderable)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READ, "worldTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
+@be.define({
+  name: "EveChildParticleSystem",
+  inherit: [ ITr2Renderable, IInitialize, INotify, ITr2DebugRenderable ],
+  // EveChildParticleSystem_Blue.cpp:10-76, in Carbon's order.
+  interfaces: [ EveEntity, EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "particleEmitters", be.READ | be.PERSIST ],
+    [ be.ATTR, "particleSystems", be.READ | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transformModifiers", be.READ | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "reflectionMode", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.EntityComponents.ReflectionMode" ],
+    [ be.ATTR, "useDynamicLod", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lodClampLow", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lodFactorLow", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lodFactorMedium", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lodSphereRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentScreenSize", be.READ ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildParticleSystem extends EveChildTransform
 {
 
@@ -49,7 +67,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Local rotation used when rebuilding the child transform from SRT.
    * @type {quat}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
@@ -60,7 +77,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Local position used when rebuilding the child transform from SRT.
    * @type {vec3}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
@@ -71,13 +87,11 @@ export class EveChildParticleSystem extends EveChildTransform
    * Local scale used when rebuilding the child transform from SRT.
    * @type {vec3}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_localTransform (Matrix) [READWRITE, PERSIST] (EveChildParticleSystem_Blue.cpp:28) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   localTransform = mat4.create();
@@ -89,7 +103,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildParticleSystem_Blue.cpp:35); chooser ReflectionModeChooser (trinity/trinity/Eve/EveEntity_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.EntityComponents.ReflectionMode")
   @type.int32
   @type.enum("trinity.EntityComponents.ReflectionMode")
   reflectionMode = 3;
@@ -100,7 +113,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Emitters updated with this child's world transform and emission factor.
    * @type {ITr2GenericEmitter[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2GenericEmitter")
   particleEmitters = [];
@@ -111,7 +123,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Particle systems whose transforms, budgets, visibility and simulation this child updates.
    * @type {Tr2ParticleSystem[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ParticleSystem")
   particleSystems = [];
@@ -122,7 +133,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Modifiers applied to the child transform during asynchronous updates.
    * @type {IEveChildTransformModifier[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveChildTransformModifier")
   transformModifiers = [];
@@ -133,7 +143,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Whether the child participates in visibility and render submission.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -145,7 +154,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Authored name returned by GetName.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -156,7 +164,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Instanced mesh supplying particle geometry and local bounds.
    * @type {Tr2InstancedMesh|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2InstancedMesh")
   mesh = null;
@@ -167,7 +174,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Maximum particle count allowed per system at low LOD.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   lodClampLow = 5;
@@ -178,7 +184,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Local radius of the sphere used to estimate screen size for LOD visibility.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lodSphereRadius = 0;
@@ -189,7 +194,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Whether LOD changes adjust each system's maximum particle count.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useDynamicLod = false;
@@ -200,7 +204,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Fraction of each system's original particle budget used at low LOD before clamping.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lodFactorLow = 0.125;
@@ -211,7 +214,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Fraction of each system's original particle budget used at medium LOD.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lodFactorMedium = 0.25;
@@ -222,7 +224,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Minimum projected size for visibility, scaled by the update context's LOD factor.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minScreenSize = 0;
@@ -233,7 +234,6 @@ export class EveChildParticleSystem extends EveChildTransform
    * Most recent projected LOD-sphere size, or -1 when the initial visibility gate rejects the child.
    * @type {number}
    */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentScreenSize = -1;
 

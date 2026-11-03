@@ -25,60 +25,52 @@ const DEBUG_TRANSFORM = mat4.create();
  * lighting, its blend strength driven by how deeply the camera sits inside the
  * volumes it owns.
  */
-@be.define("EveChildLightingOverride")
-@be.inherit(IEveLightingOverride)
-@be.inherit(IInitialize)
-@be.mapInterface(EveEntity)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(IEveLightingOverride)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2DebugRenderable)
-@be.inherit(ITr2DebugRenderable)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildLightingOverride",
+  inherit: [ IEveLightingOverride, IInitialize, ITr2DebugRenderable ],
+  // EveChildLightingOverride_Blue.cpp:14-62, in Carbon's order.
+  interfaces: [ EveEntity, EveSpaceObjectChild, IEveSpaceObjectChild, IEveLightingOverride, IInitialize, ITr2DebugRenderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "priority", be.READWRITE | be.PERSIST | be.ENUM, "trinity.PostProcessEnums.Priority" ],
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sunColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sunIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backgroundIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "reflectionIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "volumes", be.READ | be.PERSIST ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildLightingOverride extends EveChildTransform
 {
   _overrideIntensity = 0;
   _boundingSphere = { center: vec3.create(), radius: 0, initialized: false };
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildLightingOverride_Blue.cpp:23); chooser Tr2PostProcessPriorityChooser (trinity/trinity/PostProcess/Tr2PostProcessAttributes_Blue.cpp:9). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.PostProcessEnums.Priority")
   @type.int32
   @type.enum("trinity.PostProcessEnums.Priority")
   priority = 2;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   backgroundIntensity = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   intensity = 1;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   reflectionIntensity = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sunIntensity = 1;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.color
   sunColor = vec4.fromValues(1, 1, 1, 1);
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   volumes = [];

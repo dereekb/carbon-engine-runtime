@@ -31,11 +31,22 @@ const NO_FORCES = [];
 const DEBUG_TRANSFORM = mat4.create();
 
 /** A steering behaviour that pulls unassigned drones into spline tunnel entrances and steers locked drones along their assigned tunnel's points toward the exit. */
-@be.define("FollowASpline")
-@be.inherit(INotify)
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
-@be.mapInterface(INotify)
+@be.define({
+  name: "FollowASpline",
+  inherit: [ INotify, IBehavior ],
+  // FollowASpline_Blue.cpp:22-37, in Carbon's order.
+  interfaces: [ IBehavior, INotify ],
+  members: [
+    [ be.ATTR_CHOOSER, "tunnelGroupType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.SplineTunnelGroup.TunnelGroupType" ],
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviorWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "smoothPullFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cornerSmoothener", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "splineTunnels", be.READ | be.PERSIST ],
+    [ be.METHOD, "remapTunnels", be.WRAP, "UpdateTunnelRegistry" ]
+  ]
+})
 export class FollowASpline extends IRoot
 {
 
@@ -50,7 +61,6 @@ export class FollowASpline extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/FollowASpline_Blue.cpp:29); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
@@ -59,37 +69,31 @@ export class FollowASpline extends IRoot
    * m_tunnelGroupType (TunnelGroupType - enum TunnelGroupType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/FollowASpline_Blue.cpp:27); chooser FollowASplineTunnelGroupTypeChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/FollowASpline_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.SplineTunnelGroup.TunnelGroupType")
   @type.int32
   @type.enum("trinity.SplineTunnelGroup.TunnelGroupType")
   tunnelGroupType = 2;
 
   /** m_splineTunnels (PSplineTunnelGroupVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("SplineTunnelGroup")
   splineTunnels = [];
 
   /** m_smoothPullFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   smoothPullFactor = 0.8;
 
   /** m_behaviorWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   behaviorWeight = 600;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
 
   /** m_cornerSmoothener (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   cornerSmoothener = 0.8;
@@ -327,7 +331,6 @@ export class FollowASpline extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("remapTunnels")
   UpdateTunnelRegistry()
   {
     this.privateTunnels.length = 0;

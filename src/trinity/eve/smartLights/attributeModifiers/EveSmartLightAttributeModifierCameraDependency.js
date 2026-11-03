@@ -8,114 +8,118 @@ import { vec3 } from "#math/vec3";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 
 /** EveSmartLightAttributeModifierCameraDependency (eve/smartLights/attributeModifiers) - generated from schema shapeHash 5e9c1bd9.... */
-@be.define("EveSmartLightAttributeModifierCameraDependency")
-@be.mapInterface(EveSmartLightAttributeModifierBucket)
-@be.mapInterface(IEveSmartLightGroupAttributeModifier)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY, "attributeModifiers")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "attributeMultiplier")
-@be.mapAttribute(be.READ, "finalAttributeMultiplier")
+@be.define({
+  name: "EveSmartLightAttributeModifierCameraDependency",
+  // EveSmartLightAttributeModifierCameraDependency_Blue.cpp:10-41, in Carbon's order.
+  interfaces: [ EveSmartLightAttributeModifierBucket, IEveSmartLightGroupAttributeModifier ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "attributeModifiers", be.READ | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "minimumActivation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maximumActivation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useCameraDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "inverseDistanceFormula", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minimumDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maximumDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useCameraLookAt", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "inverselookAtFormula", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lookAtIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lookAtVisionCone", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useCameraPlacement", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "inversePlacementFormula", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "placementIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "attributeMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "finalAttributeMultiplier", be.READ ],
+    [ be.ATTR, "overwritePosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "overwriteObjectDirection", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "positionOverwrite", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "angleOverwrite", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSmartLightAttributeModifierCameraDependency extends EveSmartLightAttributeModifierBucket
 {
 
   /** m_minimumDistance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minimumDistance = 1000;
 
   /** m_maximumDistance (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maximumDistance = 10000;
 
   /** m_lookAtVisionCone (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lookAtVisionCone = 30;
 
   /** m_useCameraDistance (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useCameraDistance = false;
 
   /** m_inverselookAtFormula (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   inverselookAtFormula = false;
 
   /** m_useCameraLookAt (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useCameraLookAt = false;
 
   /** m_inverseDistanceFormula (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   inverseDistanceFormula = false;
 
   /** m_useCameraPlacement (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useCameraPlacement = false;
 
   /** m_inversePlacementFormula (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   inversePlacementFormula = false;
 
   /** m_angleOverwrite (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   angleOverwrite = vec3.create();
 
   /** m_positionOverwrite (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   positionOverwrite = vec3.create();
 
   /** m_lookAtIntencity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lookAtIntensity = 1;
 
   /** m_placementIntencity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   placementIntensity = 1;
 
   /** m_overwriteDirection (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   overwriteObjectDirection = false;
 
   /** m_overwritePosition (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   overwritePosition = false;
 
   /** m_maximumActivation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maximumActivation = 1;
 
   /** m_minimumActivation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minimumActivation = 0;

@@ -21,23 +21,28 @@ import { EveMissileWarhead } from "./EveMissileWarhead.js";
  * A missile in flight: the curve-driven ball path plus the warheads that ride
  * it, own the targeting state and supply the missile bounds.
  */
-@be.define("EveMissile")
-@be.inherit(IInitialize)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITr2Renderable)
-@be.exposureChainTo(EveSpaceObject2)
+@be.define({
+  name: "EveMissile",
+  inherit: [ IInitialize ],
+  // EveMissile_Blue.cpp:10-38, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "warheads", be.READ | be.PERSIST ],
+    [ be.ATTR, "updateWarheads", be.READWRITE ],
+    [ be.ATTR, "target", be.READWRITE ],
+    [ be.ATTR, "targetRadius", be.READWRITE ],
+    [ be.ATTR, "explosionCallback", be.READWRITE ],
+    [ be.METHOD, "Start", be.WRAP ],
+    [ be.METHOD, "RebuildMissileBoundingSphere", be.WRAP ]
+  ],
+  chainTo: EveSpaceObject2
+})
 export class EveMissile extends EveSpaceObject2
 {
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("EveMissileWarhead") warheads = [];
-  @be.mapAttribute(be.READWRITE)
   @type.boolean updateWarheads = true;
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriTargetable") target = null;
-  @be.mapAttribute(be.READWRITE)
   @type.float32 targetRadius = 0;
-  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("BlueScriptCallback") explosionCallback = null;
 
   _inheritedStartVelocity = vec3.create();
@@ -89,7 +94,6 @@ export class EveMissile extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Start(shipVelocity, estimatedFlyingTime)
   {
     vec3.copy(this._inheritedVelocity, shipVelocity);
@@ -228,7 +232,6 @@ export class EveMissile extends EveSpaceObject2
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RebuildMissileBoundingSphere()
   {
     vec4.set(EveMissile._mergedSphere, 0, 0, 0, 0);

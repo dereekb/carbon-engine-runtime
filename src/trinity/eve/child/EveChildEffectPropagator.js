@@ -62,17 +62,47 @@ function SortByCircleDist(lhs, rhs)
 
 
 /** EveChildEffectPropagator (eve/child) - generated from schema shapeHash 0f2a96e8.... */
-@be.define("EveChildEffectPropagator")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(EveChildContainer)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(INotify)
-@be.mapInterface(EveEntity)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READ | be.PERSIST, "curveSets")
+@be.define({
+  name: "EveChildEffectPropagator",
+  inherit: [ INotify, IInitialize ],
+  // EveChildEffectPropagator_Blue.cpp:27-78, in Carbon's order.
+  interfaces: [ EveChildContainer, EveSpaceObjectChild, IEveSpaceObjectChild, INotify, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.PERSISTONLY | be.NOTIFY, "_effect" ],
+    [ be.PROP, "effect" ],
+    [ be.ATTR, "triggerSphereRadiusCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localLocators", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "propagationType", be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildEffectPropagator.PropagationType" ],
+    [ be.ATTR_CHOOSER, "triggerMethood", be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildEffectPropagator.TriggerType" ],
+    [ be.ATTR, "trigger", be.READWRITE ],
+    [ be.ATTR, "isPlaying", be.READ ],
+    [ be.ATTR, "playTime", be.READ ],
+    [ be.ATTR, "triggerSphereScalarMulti", be.READ ],
+    [ be.ATTR, "completeness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "triggerSphereOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effectScaling", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "randScaleMin", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "randScaleMax", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "stopToClearDelay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skipCleanup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "replayAfterDelay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "numTriggers", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "range", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "minRangeThreshold", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "ClosenessPreference", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "locatorSetName", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "frequency", be.READWRITE | be.PERSIST | be.NOTIFY | be.NOTIFY ],
+    [ be.ATTR, "durationPerEffect", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "stopAfterNumTriggers", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildEffectPropagator extends EveChildContainer
 {
 
@@ -80,7 +110,6 @@ export class EveChildEffectPropagator extends EveChildContainer
    * m_type (PropagationType - enum PropagationType) [READWRITE, PERSIST, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp:44); chooser PropagationChooser (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp:7).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildEffectPropagator.PropagationType")
   @type.int32
   @type.enum("trinity.EveChildEffectPropagator.PropagationType")
   propagationType = 0;
@@ -89,34 +118,29 @@ export class EveChildEffectPropagator extends EveChildContainer
    * m_triggerMethod (TriggerType - enum TriggerType) [READWRITE, PERSIST, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp:45); chooser PropagationTriggerChooser (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp:15).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildEffectPropagator.TriggerType")
   @type.int32
   @type.enum("trinity.EveChildEffectPropagator.TriggerType")
   triggerMethood = 0;
 
   /** m_stopAfterNumTriggers (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   stopAfterNumTriggers = -1;
 
   /** m_randScaleMin (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   randScaleMin = 1;
 
   /** m_randScaleMax (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   randScaleMax = 1;
 
   /** m_triggerSphereOffset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   triggerSphereOffset = vec3.create();
@@ -128,7 +152,6 @@ export class EveChildEffectPropagator extends EveChildContainer
    * bypassing the setter, and OnModified then locks its edit mode.
    * Carbon: EveChildEffectPropagator::m_effect (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator.h:100); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp:37).
    */
-  @be.mapAttribute(be.PERSISTONLY | be.NOTIFY, "effect")
 
 
   /** Carbon: m_effect (trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator.h:100).
@@ -143,7 +166,6 @@ export class EveChildEffectPropagator extends EveChildContainer
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveChildInstanceContainer")
   get effect()
   {
@@ -161,114 +183,96 @@ export class EveChildEffectPropagator extends EveChildContainer
   }
 
   /** m_stopToClearDelay (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   stopToClearDelay = 0;
 
   /** m_rndClosenessPreference (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   ClosenessPreference = 0.25;
 
   /** m_effectScaling (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   effectScaling = vec3.fromValues(1, 1, 1);
 
   /** m_effectDuration (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   durationPerEffect = 3;
 
   /** m_isPlaying (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isPlaying = false;
 
   /** m_localLocators (EveLocatorSetsPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveLocatorSets")
   localLocators = null;
 
   /** m_triggerSphereRadiusCurve (Tr2CurveScalarPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2CurveScalar")
   triggerSphereRadiusCurve = null;
 
   /** m_triggerSphereScalarMulti (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   triggerSphereScalarMulti = 1;
 
   /** m_locatorSetName (BlueSharedString) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   locatorSetName = "";
 
   /** m_completeness (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   completeness = 1;
 
   /** m_replayAfterDelay (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   replayAfterDelay = false;
 
   /** m_trigger (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   trigger = false;
 
   /** m_rndMinRangeThreshold (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   minRangeThreshold = 0;
 
   /** m_playTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   playTime = 0;
 
   /** m_rndRange (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   range = 500;
 
   /** m_numTriggers (int64_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.int64
   numTriggers = 10;
 
   /** m_frequency (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY | be.NOTIFY)
 
 
   @type.float32
   frequency = 1;
 
   /** m_skipCleanup (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   skipCleanup = false;
@@ -311,7 +315,6 @@ export class EveChildEffectPropagator extends EveChildContainer
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     this.isPlaying = false;

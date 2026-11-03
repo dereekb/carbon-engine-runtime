@@ -15,9 +15,18 @@ const NO_FORCES = [];
  * Drone behavior that pushes agents away from the centre of every exclusion
  * volume they intersect, weighted by the volume's intensity at the agent.
  */
-@be.define("CollisionAvoidance")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "CollisionAvoidance",
+  inherit: [ IBehavior ],
+  // CollisionAvoidance_Blue.cpp:12-19, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "exclusionVolumes", be.READ | be.PERSIST ],
+    [ be.ATTR, "avoidanceScalar", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class CollisionAvoidance extends IRoot
 {
 
@@ -27,25 +36,21 @@ export class CollisionAvoidance extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/CollisionAvoidance_Blue.cpp:16); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
 
   /** m_exclusionVolumes (PIEveVolumeVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
   exclusionVolumes = [];
 
   /** m_collisionAvoidanceScalar (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   avoidanceScalar = 12;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;

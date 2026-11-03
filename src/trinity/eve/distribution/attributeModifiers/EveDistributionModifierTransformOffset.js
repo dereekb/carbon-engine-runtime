@@ -7,43 +7,48 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 
 /** Accumulates authored or lifetime-sampled translation, rotation, and scale onto a distributed placement. */
-@be.define("EveDistributionModifierTransformOffset")
-@be.mapInterface(IEveDistributionModifier)
+@be.define({
+  name: "EveDistributionModifierTransformOffset",
+  // EveDistributionModifierTransformOffset_Blue.cpp:10-20, in Carbon's order.
+  interfaces: [ IEveDistributionModifier ],
+  members: [
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleCurve", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveDistributionModifierTransformOffset extends IEveDistributionModifier
 {
 
   /** m_rotationCurve (ITriQuaternionFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   rotationCurve = null;
 
   /** m_translation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_scaleCurve (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   scaleCurve = null;
 
   /** m_translationCurve (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;

@@ -69,9 +69,48 @@ import { trinity } from "../../CjsTrinity.js";
 const CARBON_DEFAULT_SETTINGS = new EveSpaceSceneRenderDriverSettings();
 
 /** Collects camera, quality, pass-toggle, overlay, background, and post-process state for driving an EVE space-scene frame. */
-@be.define("EveSpaceSceneRenderDriver")
-@be.inherit(ITr2RenderNode, Tr2DeviceResource)
-@be.mapInterface(ITr2RenderNode)
+@be.define({
+  name: "EveSpaceSceneRenderDriver",
+  inherit: [ ITr2RenderNode, Tr2DeviceResource ],
+  // EveSpaceSceneRenderDriver_Blue.cpp:62-269, in Carbon's order.
+  interfaces: [ ITr2RenderNode ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE ],
+    [ be.ATTR, "enableRendering", be.READWRITE ],
+    [ be.PROP, "scene" ],
+    [ be.ATTR, "scene", be.PERSISTONLY, "_scene" ],
+    [ be.ATTR, "SSAO", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "projection", be.READWRITE ],
+    [ be.ATTR, "view", be.READWRITE ],
+    [ be.ATTR, "camera", be.READWRITE ],
+    [ be.ATTR, "distortionEffect", be.READ ],
+    [ be.ATTR, "toolsScenes", be.READ ],
+    [ be.ATTR, "postProcess", be.READ ],
+    [ be.ATTR, "mainPassRenderingEnabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fpsRenderer", be.READ ],
+    [ be.ATTR_CHOOSER, "internalPixelFormat", be.READWRITE | be.ENUM, "trinity.ImageIO.PixelFormat" ],
+    [ be.ATTR_CHOOSER, "shadowQuality", be.READWRITE | be.ENUM, "trinity.ShadowQuality" ],
+    [ be.ATTR_CHOOSER, "antiAliasingQuality", be.READWRITE | be.ENUM, "trinity.EveSpaceSceneRenderDriver.AntiAliasingQuality" ],
+    [ be.ATTR_CHOOSER, "aoQuality", be.READWRITE | be.ENUM, "trinity.EveSpaceSceneRenderDriver.AmbientOcclusionQuality" ],
+    [ be.ATTR, "clearColor", be.READWRITE ],
+    [ be.ATTR, "forceOpaqueBuffer", be.READWRITE ],
+    [ be.ATTR, "forceNormalMap", be.READWRITE ],
+    [ be.ATTR, "forceVelocityMap", be.READWRITE ],
+    [ be.ATTR, "enableUpscaling", be.READWRITE ],
+    [ be.ATTR, "enableDistortion", be.READWRITE ],
+    [ be.ATTR, "showFPS", be.READWRITE ],
+    [ be.ATTR_CHOOSER, "visualizeMethod", be.READWRITE | be.ENUM, "trinity.EveSpaceScene.EveVisualizeMethod" ],
+    [ be.ATTR_CHOOSER, "volumetricQuality", be.READWRITE | be.ENUM, "trinity.Tr2VolumerticQuality" ],
+    [ be.ATTR_CHOOSER, "postProcessingQuality", be.READWRITE | be.ENUM, "trinity.PostProcess.Quality" ],
+    [ be.ATTR, "background", be.READWRITE ],
+    [ be.ATTR, "sceneOverlay", be.READWRITE ],
+    [ be.ATTR_CHOOSER, "customStencilFormat", be.READWRITE | be.ENUM, "trinity.ImageIO.PixelFormat" ],
+    [ be.ATTR, "depthPassTechnique", be.READWRITE ],
+    [ be.METHOD, "GetAllTempTextures", be.WRAP ],
+    [ be.PROP, "debugMode" ],
+    [ be.ATTR, "reflectionCorrectionEnabled", be.READWRITE ]
+  ]
+})
 export class EveSpaceSceneRenderDriver
 {
 
@@ -91,7 +130,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.aoQuality (AmbientOcclusionQuality - enum AmbientOcclusionQuality) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:162); chooser AmbientOcclusionQualityChooser (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:18).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.EveSpaceSceneRenderDriver.AmbientOcclusionQuality")
   @type.int32
   @type.enum("trinity.EveSpaceSceneRenderDriver.AmbientOcclusionQuality")
   aoQuality = CARBON_DEFAULT_SETTINGS.aoQuality;
@@ -100,7 +138,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.antiAliasingQuality (AntiAliasingQuality - enum AntiAliasingQuality) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:155); chooser AntiAliasingQualityChooser (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:11).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.EveSpaceSceneRenderDriver.AntiAliasingQuality")
   @type.int32
   @type.enum("trinity.EveSpaceSceneRenderDriver.AntiAliasingQuality")
   antiAliasingQuality = CARBON_DEFAULT_SETTINGS.antiAliasingQuality;
@@ -109,7 +146,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.visualizeMethod (EveSpaceScene::EveVisualizeMethod - enum EveVisualizeMethod) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:211); chooser EveVisualizerChooser (trinity/trinity/Eve/EveSpaceScene_Blue.cpp:20).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.EveSpaceScene.EveVisualizeMethod")
   @type.int32
   @type.enum("trinity.EveSpaceScene.EveVisualizeMethod")
   visualizeMethod = 0;
@@ -118,7 +154,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.postProcessingQuality (PostProcess::Quality - enum Quality) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:226); chooser PostProcessQualityChooser (trinity/trinity/PostProcess/Effects/Tr2PPEffect_Blue.cpp:7).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.PostProcess.Quality")
   @type.int32
   @type.enum("trinity.PostProcess.Quality")
   postProcessingQuality = CARBON_DEFAULT_SETTINGS.postProcessingQuality;
@@ -127,7 +162,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.shadowQuality (ShadowQuality - enum ShadowQuality) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:148); chooser ShadowQualityChooser (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:25).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.ShadowQuality")
   @type.int32
   @type.enum("trinity.ShadowQuality")
   shadowQuality = CARBON_DEFAULT_SETTINGS.shadowQuality;
@@ -136,7 +170,6 @@ export class EveSpaceSceneRenderDriver
    * m_customStencilFormat (ImageIO::PixelFormat - enum PixelFormat) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:245); chooser Tr2RenderContextEnum_PixelFormat_Chooser (trinity/trinity/Tr2RenderContext_Blue.cpp:141).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.ImageIO.PixelFormat")
   @type.int32
   @type.enum("trinity.ImageIO.PixelFormat")
   customStencilFormat = 0;
@@ -145,7 +178,6 @@ export class EveSpaceSceneRenderDriver
    * m_internalPixelFormat (ImageIO::PixelFormat - enum PixelFormat) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:140); chooser Tr2RenderContextEnum_PixelFormat_Chooser (trinity/trinity/Tr2RenderContext_Blue.cpp:141).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.ImageIO.PixelFormat")
   @type.int32
   @type.enum("trinity.ImageIO.PixelFormat")
   internalPixelFormat = 10;
@@ -154,7 +186,6 @@ export class EveSpaceSceneRenderDriver
    * m_settings.volumetricQuality (Tr2VolumerticQuality - enum Tr2VolumerticQuality) [READWRITE, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:219); chooser Tr2VolumetricQuality_Chooser (trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2VolumerticQuality")
   @type.int32
   @type.enum("trinity.Tr2VolumerticQuality")
   volumetricQuality = CARBON_DEFAULT_SETTINGS.volumetricQuality;
@@ -167,7 +198,6 @@ export class EveSpaceSceneRenderDriver
    * same-name property below.
    * Carbon: EveSpaceSceneRenderDriver::m_scene (trinity/trinity/Eve/EveSpaceSceneRenderDriver.h:115); MAP_ATTRIBUTE (trinity/trinity/Eve/EveSpaceSceneRenderDriver_Blue.cpp:84).
    */
-  @be.mapAttribute(be.PERSISTONLY, "scene")
 
   /** Carbon: m_scene (trinity/trinity/Eve/EveSpaceSceneRenderDriver.h:115).
    */
@@ -180,7 +210,6 @@ export class EveSpaceSceneRenderDriver
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.rootRef("EveSpaceScene")
   get scene()
   {
@@ -204,7 +233,6 @@ export class EveSpaceSceneRenderDriver
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.boolean
   get debugMode()
   {
@@ -222,114 +250,92 @@ export class EveSpaceSceneRenderDriver
   }
 
   /** m_name (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   name = "";
 
   /** m_settings.enableUpscaling (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableUpscaling = CARBON_DEFAULT_SETTINGS.enableUpscaling;
 
   /** m_projection (TriProjectionPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriProjection")
   projection = null;
 
   /** m_camera (EveCameraPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("EveCamera")
   camera = null;
 
   /** m_view (TriViewPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriView")
   view = null;
 
   /** m_settings.clearColor (Color) [READWRITE]; Carbon's default is opaque black (EveSpaceSceneRenderDriver.h:59). */
-  @be.mapAttribute(be.READWRITE)
   @type.color
   clearColor = vec4.fromValues(0, 0, 0, 1);
 
   /** m_distortionEffect (Tr2EffectPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2Effect")
   distortionEffect = null;
 
   /** m_settings.enableDistortion (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableDistortion = CARBON_DEFAULT_SETTINGS.enableDistortion;
 
   /** m_reflectionCorrectionEnabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   reflectionCorrectionEnabled = true;
 
   /** m_settings.forceOpaqueBuffer (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   forceOpaqueBuffer = false;
 
   /** m_settings.forceNormalMap (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   forceNormalMap = false;
 
   /** m_settings.forceVelocityMap (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   forceVelocityMap = false;
 
   /** m_fpsRenderer (TriStepRenderFpsPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriStepRenderFps")
   fpsRenderer = null;
 
   /** m_mainPassRenderingEnabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   mainPassRenderingEnabled = true;
 
   /** m_toolsScenes (PITr2SceneVector) [READ] */
-  @be.mapAttribute(be.READ)
   @type.list("ITr2Scene")
   toolsScenes = [];
 
   /** m_depthPassTechnique (unknown) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   depthPassTechnique = "Depth";
 
   /** m_postProcess (Tr2PostProcessRendererPtr) [READ], created in the constructor (cpp:151). */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2PostProcessRenderer")
   postProcess = new Tr2PostProcessRenderer();
 
   /** m_settings.showFPS (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   showFPS = false;
 
   /** m_sceneOverlay (ITr2RenderNodePtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITr2RenderNode")
   sceneOverlay = null;
 
   /** m_background (ITr2RenderNodePtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITr2RenderNode")
   background = null;
 
   /** m_ssao (Tr2SSAOPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2SSAO")
   SSAO = null;
 
   /** m_enableRendering (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enableRendering = true;
 
@@ -346,7 +352,6 @@ export class EveSpaceSceneRenderDriver
    *   value.
    * @returns {Tr2TextureReference[]} One reference per pooled temp texture.
    */
-  @be.mapMethodAndWrap()
   GetAllTempTextures()
   {
     const textures = this._gpuResourcePool.DebugGetAllTempTextures();

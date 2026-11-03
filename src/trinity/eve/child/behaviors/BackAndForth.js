@@ -32,9 +32,28 @@ const DEBUG_DIRECTION = vec3.create();
 const DEBUG_POSITION = vec3.create();
 
 /** A steering behaviour that shuttles each drone between seek and deliver locators, slowing on approach, snapping its facing, and triggering effects on arrival. */
-@be.define("BackAndForth")
-@be.inherit(IBehavior)
-@be.mapInterface(IBehavior)
+@be.define({
+  name: "BackAndForth",
+  inherit: [ IBehavior ],
+  // BackAndForth_Blue.cpp:20-38, in Carbon's order.
+  interfaces: [ IBehavior ],
+  members: [
+    [ be.ATTR_CHOOSER, "enabled", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR_CHOOSER, "behaviorPriority", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority" ],
+    [ be.ATTR_CHOOSER, "locatorType", be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.BackAndForth.LocatorType" ],
+    [ be.ATTR, "locatorSetName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "arrivedRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distFromOrigin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "slowDownRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backAndForthWeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "fxBehavior", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locatorSet", be.READ | be.PERSIST ],
+    [ be.ATTR, "target", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "secondsToTurn", be.READWRITE ],
+    [ be.METHOD, "AddLocatorSet", be.WRAP ]
+  ]
+})
 export class BackAndForth extends IRoot
 {
 
@@ -42,7 +61,6 @@ export class BackAndForth extends IRoot
    * m_priority (int32_t) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/BackAndForth_Blue.cpp:25); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.int32
   @type.enum("trinity.IBehavior.ProcessPriority")
   behaviorPriority = 0;
@@ -51,7 +69,6 @@ export class BackAndForth extends IRoot
    * m_enabled (bool) [READWRITE, PERSIST, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/BackAndForth_Blue.cpp:24); chooser BehaviorPriorityChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/Allign_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.IBehavior.ProcessPriority")
   @type.boolean
   @type.enum("trinity.IBehavior.ProcessPriority")
   enabled = true;
@@ -60,63 +77,52 @@ export class BackAndForth extends IRoot
    * m_locatorType (LocatorType - enum LocatorType) [READWRITE, PERSIST, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/Behaviors/BackAndForth_Blue.cpp:26); chooser LocatorChooser (trinity/trinity/Eve/SpaceObject/Children/Behaviors/BackAndForth_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.BackAndForth.LocatorType")
   @type.int32
   @type.enum("trinity.BackAndForth.LocatorType")
   locatorType = 0;
 
   /** m_locatorSets (PEveLocatorSetsVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveLocatorSets")
   locatorSet = [];
 
   /** m_arrivedRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   arrivedRadius = 50;
 
   /** m_distFromOrigin (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   distFromOrigin = 20;
 
   /** m_slowDownRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   slowDownRadius = 200;
 
   /** m_backAndForthWeight (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   backAndForthWeight = 100;
 
   /** m_fxBehavior (IBehavior*) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.object.weak("IBehavior")
   fxBehavior = null;
 
   /** m_target (EveSpaceObject2*) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.object.weak("EveSpaceObject2")
   target = null;
 
   /** m_parent (EveSpaceObject2*) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.object.weak("EveSpaceObject2")
   parent = null;
 
   /** m_seconds (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   secondsToTurn = 0.25;
 
   /** m_locatorSetName (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   locatorSetName = "damage";
@@ -511,7 +517,6 @@ export class BackAndForth extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddLocatorSet()
   {
     const seek = new EveLocatorSets();

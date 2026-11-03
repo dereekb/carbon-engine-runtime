@@ -19,46 +19,48 @@ import { ITriTargetable } from "../../core/ITriTargetable.js";
  * A detached transform root whose own ball and model curves drive its matrix and
  * which stands in as a single targetable point for missiles and impacts.
  */
-@be.define("EveRootTransform")
-@be.inherit(ITriTargetable)
-@be.mapInterface(IEveSpaceObject2)
-@be.mapInterface(ITriTargetable)
-@be.mapInterface(IWorldPosition)
-@be.mapInterface(ITr2BoundingBox)
-@be.mapInterface(ITr2Pickable)
-@be.exposureChainTo(Tr2Transform)
-@be.mapAttribute(be.READ | be.PERSIST, "children")
-@be.mapAttribute(be.READ | be.PERSIST, "observers")
-@be.mapAttribute(be.READ, "lodLevel")
+@be.define({
+  name: "EveRootTransform",
+  inherit: [ ITriTargetable ],
+  // EveRootTransform_Blue.cpp:10-60, in Carbon's order.
+  interfaces: [ IEveSpaceObject2, ITriTargetable, ITr2Pickable, IWorldPosition, ITr2BoundingBox ],
+  members: [
+    [ be.ATTR, "translationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "modelRotationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "modelTranslationCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "children", be.READ | be.PERSIST ],
+    [ be.ATTR, "boundingSphereRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "observers", be.READ | be.PERSIST ],
+    [ be.ATTR, "lodLevel", be.READ ],
+    [ be.METHOD, "GetBoundingSphereRadius", be.WRAP ]
+  ],
+  chainTo: Tr2Transform
+})
 export class EveRootTransform extends EveTransform
 {
 
   /** m_boundingSphereRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   boundingSphereRadius = -1;
 
   /** m_ballRotation (ITriQuaternionFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   rotationCurve = null;
 
   /** m_modelTranslation (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   modelTranslationCurve = null;
 
   /** m_modelRotation (ITriQuaternionFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriQuaternionFunction")
   modelRotationCurve = null;
 
   /** m_ballPosition (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   translationCurve = null;
@@ -278,7 +280,6 @@ export class EveRootTransform extends EveTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetBoundingSphereRadius()
   {
     return this.boundingSphereRadius;

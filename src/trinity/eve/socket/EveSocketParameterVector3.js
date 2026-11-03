@@ -7,15 +7,21 @@ import { type } from "#schema";
 import { EveSocketParameterBindingBase } from "./EveSocketParameterBindingBase.js";
 
 /** Binds a named three-component vector socket value to external parameters, preserving defaults by copy for restoration. */
-@be.define("EveSocketParameterVector3")
-@be.mapInterface(IEveSocketParameter)
-@be.mapMethodAndWrap("Used")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSocketParameterVector3",
+  // EveSocketParameter_Blue.cpp:37-37, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterVector3 extends EveSocketParameterBindingBase
 {
 
   /** m_value (Vector3) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   value = vec3.create();
@@ -83,7 +89,6 @@ export class EveSocketParameterVector3 extends EveSocketParameterBindingBase
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetValueToDefault()
   {
     if (this._defaults.length)

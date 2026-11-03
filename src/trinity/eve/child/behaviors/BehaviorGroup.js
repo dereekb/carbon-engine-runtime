@@ -62,13 +62,37 @@ function ClampLength(value, maxLength)
 }
 
 /** Owns a group of drone agents, running its priority-ordered behaviours each frame to integrate their acceleration, velocity, orientation and position, and managing their count, visibility, lighting and rendering. */
-@be.define("BehaviorGroup")
-@be.inherit(IInitialize, INotify, IListNotify, ITr2LightOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(EveEntity)
-@be.mapInterface(ITr2LightOwner)
+@be.define({
+  name: "BehaviorGroup",
+  inherit: [ IInitialize, INotify, IListNotify, ITr2LightOwner ],
+  // BehaviorGroup_Blue.cpp:10-42, in Carbon's order.
+  interfaces: [ IInitialize, INotify, IListNotify, ITr2LightOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "update", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "count", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "actualCount", be.READ ],
+    [ be.ATTR, "spawnPosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxVelocity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "behaviors", be.READ | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "boosters", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentScreenSize", be.READ ],
+    [ be.ATTR, "renderThreshold", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blendScreenSizeMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blendScreenSizeMax", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingSphereRadius", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "AddAgent", be.WRAP ],
+    [ be.METHOD, "RemoveAgent", be.WRAP ],
+    [ be.METHOD, "SetCount", be.WRAP ],
+    [ be.METHOD, "CreateAgentTree", be.WRAP ],
+    [ be.ATTR, "debugMode", be.READWRITE ],
+    [ be.ATTR, "debugLodLevel", be.READWRITE ],
+    [ be.ATTR, "debugIntensity", be.READWRITE ]
+  ]
+})
 export class BehaviorGroup extends EveEntity
 {
 
@@ -120,112 +144,93 @@ export class BehaviorGroup extends EveEntity
   _groupIndex = 0;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_maxVelocity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxVelocity = 100;
 
   /** m_scale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scale = 1;
 
   /** m_blendScreenSizeMax (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   blendScreenSizeMax = 15;
 
   /** m_blendScreenSizeMin (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   blendScreenSizeMin = 5;
 
   /** m_currentScreenSize (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentScreenSize = 0;
 
   /** m_renderThreshold (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   renderThreshold = 1;
 
   /** m_debugIntensity (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   debugIntensity = 0;
 
   /** m_debugLodLevel (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   debugLodLevel = 0;
 
   /** m_actualCount (int32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   actualCount = 0;
 
   /** m_count (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   count = 0;
 
   /** m_booster (BehaviorGroupBoosterPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("BehaviorGroupBooster")
   boosters = null;
 
   /** m_mesh (Tr2MeshPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Mesh")
   mesh = null;
 
   /** m_behaviorGroupName (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_boundingSphereRadius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   boundingSphereRadius = 5;
 
   /** m_debugMode (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugMode = false;
 
   /** m_update (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   update = true;
 
   /** m_behaviors (PIBehaviorVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IBehavior")
   behaviors = new BlueList(IBehavior, { className: null, listOps: 0 });
 
   /** m_spawnPosition (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   spawnPosition = vec3.create();
@@ -388,7 +393,6 @@ export class BehaviorGroup extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   CreateAgentTree()
   {
     this._tree = new EveKDdroneManagementTree();
@@ -485,7 +489,6 @@ export class BehaviorGroup extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddAgent()
   {
     this._AddAgentPrivate();
@@ -532,7 +535,6 @@ export class BehaviorGroup extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   RemoveAgent()
   {
     if (this._agents.length === 0)
@@ -583,7 +585,6 @@ export class BehaviorGroup extends EveEntity
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetCount(count)
   {
     const value = Number(count);

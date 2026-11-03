@@ -61,8 +61,27 @@ function rotateToPlane(out, point, planePoint, normal)
 
 
 /** Builds authored tactical connector curves into an EveCurveLineSet. */
-@be.define("EveConnector")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveConnector",
+  inherit: [ IRoot ],
+  // EveConnector_Blue.cpp:44-64, in Carbon's order.
+  members: [
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lineWidth", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animationColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animationScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animationSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isAnimated", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "autoScaleAnimation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destPosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourcePosition", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceObject", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "planeNormal", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "length", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "type", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveConnector.ConnectorType" ]
+  ]
+})
 
 export class EveConnector extends IRoot
 {
@@ -71,85 +90,71 @@ export class EveConnector extends IRoot
    * m_type (ConnectorType - enum ConnectorType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/UI/EveConnector_Blue.cpp:64); chooser EveConnectorTypeChooser (trinity/trinity/Eve/UI/EveConnector_Blue.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveConnector.ConnectorType")
   @type.int32
   @type.enum("trinity.EveConnector.ConnectorType")
   type = ConnectorType.PointToPoint;
 
   /** m_color (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.fromValues(0.5, 0.5, 0.5, 1);
 
   /** m_width (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lineWidth = 1;
 
   /** m_animationColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   animationColor = vec4.fromValues(1, 0, 0, 1);
 
   /** m_animationScale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   animationScale = 1;
 
   /** m_animationSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   animationSpeed = 0;
 
   /** m_isAnimated (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isAnimated = false;
 
   /** m_autoScaleAnimation (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   autoScaleAnimation = false;
 
   /** m_destPosition (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   destPosition = vec3.create();
 
   /** m_sourcePosition (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   sourcePosition = vec3.create();
 
   /** m_destObject (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   destObject = null;
 
   /** m_sourceObject (ITriVectorFunctionPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriVectorFunction")
   sourceObject = null;
 
   /** m_normal (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   planeNormal = vec3.fromValues(0, 1, 0);
 
   /** m_length (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   length = 0;

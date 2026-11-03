@@ -55,74 +55,66 @@ function updateBoundingSphere(cloud)
  * state, SRT composition, visibility, tessellated screen grid and draw data.
  * Source: trinity/trinity/Eve/SpaceObject/Children/EveChildCloud.cpp.
  */
-@be.define("EveChildCloud")
-@be.inherit(ITr2Renderable, ITr2DebugRenderable)
-@be.inherit(IInitialize, INotify, Tr2DeviceResource)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveChildCloud",
+  inherit: [ ITr2Renderable, ITr2DebugRenderable, IInitialize, INotify, Tr2DeviceResource ],
+  // EveChildCloud_Blue.cpp:11-42, in Carbon's order.
+  interfaces: [ ITr2Renderable, IInitialize, INotify, EveSpaceObjectChild, IEveSpaceObjectChild ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "sortingModifier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "effect", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingSphere", be.READ ],
+    [ be.ATTR, "preTesselationLevel", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "volume", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cellScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentLod", be.READ ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildCloud extends EveSpaceObjectChild
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   sortingModifier = 1;
 
-  @be.mapAttribute(be.READ)
   @type.uint64
   currentLod = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   minScreenSize = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   preTesselationLevel = 32;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.quat
   rotation = quat.create();
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Material")
   effect = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.object.ref("EveCloudEditableVolume")
   volume = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   cellScreenSize = 0.3;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
 
-  @be.mapAttribute(be.READ)
   @type.vec4
   boundingSphere = vec4.create();
 

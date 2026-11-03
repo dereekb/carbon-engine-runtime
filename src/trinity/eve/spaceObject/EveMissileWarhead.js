@@ -24,54 +24,60 @@ import { State, StateChangeEvent } from "../../generated/eve/spaceObject/enums.j
  * noise-perturbed offset path it flies relative to the missile, and the impact
  * test against the target.
  */
-@be.define("EveMissileWarhead")
-@be.mapInterface(EveTransform)
-@be.exposureChainTo(EveTransform)
+@be.define({
+  name: "EveMissileWarhead",
+  // EveMissileWarhead_Blue.cpp:10-46, in Carbon's order.
+  interfaces: [ EveTransform ],
+  members: [
+    [ be.ATTR, "startDataValid", be.READWRITE ],
+    [ be.ATTR, "warheadLength", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "warheadRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "pathOffset", be.READWRITE ],
+    [ be.ATTR, "durationEjectPhase", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startEjectVelocity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "acceleration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxExplosionDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "impactSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "impactDuration", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "id", be.READWRITE ],
+    [ be.ATTR, "explosionPosition", be.READ ],
+    [ be.ATTR, "doSpread", be.READWRITE ],
+    [ be.ATTR, "targetLocatorID", be.READ ],
+    [ be.ATTR, "spriteSet", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "pathOffsetNoiseScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "pathOffsetNoiseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "PrepareLaunch", be.WRAP ],
+    [ be.METHOD, "Launch", be.WRAP ]
+  ],
+  chainTo: EveTransform
+})
 export class EveMissileWarhead extends EveTransform
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32 pathOffsetNoiseScale = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 pathOffsetNoiseSpeed = 1;
-  @be.mapAttribute(be.READWRITE)
   @type.boolean startDataValid = false;
-  @be.mapAttribute(be.READWRITE)
   @type.vec3 pathOffset = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 maxExplosionDistance = 40;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 impactDuration = 0.6;
-  @be.mapAttribute(be.READ)
   @type.vec3 explosionPosition = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 impactSize = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSpriteSet") spriteSet = null;
-  @be.mapAttribute(be.READ)
   @type.int32 targetLocatorID = -1;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 durationEjectPhase = 0;
-  @be.mapAttribute(be.READWRITE)
   @type.boolean doSpread = true;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 acceleration = 1;
-  @be.mapAttribute(be.READWRITE)
   @type.int32 id = -1;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 startEjectVelocity = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 warheadLength = 1;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32 warheadRadius = 1;
 
@@ -128,7 +134,6 @@ export class EveMissileWarhead extends EveTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   PrepareLaunch()
   {
     this._currentEjectVelocity = this.startEjectVelocity;
@@ -162,7 +167,6 @@ export class EveMissileWarhead extends EveTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Launch(startTransform)
   {
     mat4.getRotation(this._startOrientation, startTransform);

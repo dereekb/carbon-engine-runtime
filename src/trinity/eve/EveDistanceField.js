@@ -21,63 +21,66 @@ import { TriCurveSet } from "../curves/TriCurveSet.js";
  * Tracks a set of moving points, estimates the volume covering them, and drives
  * a curve set from the eased camera distance to that volume.
  */
-@be.define("EveDistanceField")
-@be.inherit(IListNotify, INotify, ITr2DebugRenderable)
-@be.mapInterface(IListNotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "EveDistanceField",
+  inherit: [ IListNotify, INotify, ITr2DebugRenderable ],
+  // EveDistanceField_Blue.cpp:10-45, in Carbon's order.
+  interfaces: [ IListNotify, INotify ],
+  members: [
+    [ be.ATTR, "cameraView", be.READWRITE ],
+    [ be.ATTR, "objects", be.READ | be.NOTIFY ],
+    [ be.ATTR, "curveSet", be.READWRITE ],
+    [ be.ATTR, "distance", be.READWRITE ],
+    [ be.ATTR, "timeAdjustmentSecondsOut", be.READWRITE ],
+    [ be.ATTR, "timeAdjustmentSecondsIn", be.READWRITE ],
+    [ be.ATTR, "dimensions", be.READ ],
+    [ be.ATTR, "midpoint", be.READ ],
+    [ be.ATTR, "distanceThreshold", be.READWRITE ],
+    [ be.ATTR, "maxXZRatio", be.READWRITE ],
+    [ be.ATTR, "minYRatio", be.READWRITE ],
+    [ be.ATTR, "minDistance", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "maxDistance", be.READWRITE | be.NOTIFY ],
+    [ be.METHOD, "SetupDynamicDistanceField", be.WRAP ],
+    [ be.METHOD, "SetupStaticDistanceField", be.WRAP ]
+  ]
+})
 export class EveDistanceField extends IRoot
 {
-  @be.mapAttribute(be.READ)
   @type.vec3
   dimensions = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   midpoint = vec3.create();
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   distanceThreshold = 3;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   maxXZRatio = 1.5;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   minYRatio = 0.2;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   timeAdjustmentSecondsIn = 0.25;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   timeAdjustmentSecondsOut = 2;
-
-  @be.mapAttribute(be.READ | be.NOTIFY)
 
   @type.list("ITriVectorFunction")
   objects = [];
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriView")
   cameraView = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("TriCurveSet")
   curveSet = null;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   distance = -1;
 
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
-
   @type.float32
   minDistance = 0;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   maxDistance = 75000;
@@ -107,7 +110,6 @@ export class EveDistanceField extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetupStaticDistanceField(dimensions, position, distanceThreshold, timeAdjustmentSecondsOut, timeAdjustmentSecondsIn)
   {
     this._isDynamic = false;
@@ -127,7 +129,6 @@ export class EveDistanceField extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   @meta.invalidates("#dirty")
   SetupDynamicDistanceField(distanceThreshold, timeAdjustmentSecondsOut, timeAdjustmentSecondsIn)
   {

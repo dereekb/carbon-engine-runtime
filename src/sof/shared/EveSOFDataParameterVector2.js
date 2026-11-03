@@ -10,9 +10,15 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Two-component shader parameter: zero-pads z and w. */
-@be.define("EveSOFDataParameterVector2")
-@be.mapInterface(EveSOFDataParameter)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSOFDataParameterVector2",
+  // EveSOFData_Blue2.cpp:36-36, in Carbon's order.
+  interfaces: [ EveSOFDataParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataParameterVector2 extends EveSOFDataParameter
 {
   /**
@@ -20,7 +26,6 @@ export class EveSOFDataParameterVector2 extends EveSOFDataParameter
    * Native m_value (Vector2) replaces the base vector in authored values.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec2
   value = vec2.create();

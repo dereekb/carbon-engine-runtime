@@ -6,15 +6,21 @@ import { type } from "#schema";
 import { EveSocketParameterBindingBase } from "./EveSocketParameterBindingBase.js";
 
 /** Binds a named boolean socket value to external parameters, capturing and restoring each binding's previous value. */
-@be.define("EveSocketParameterBool")
-@be.mapInterface(IEveSocketParameter)
-@be.mapMethodAndWrap("Used")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSocketParameterBool",
+  // EveSocketParameter_Blue.cpp:33-33, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterBool extends EveSocketParameterBindingBase
 {
 
   /** m_value (bool) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   value = false;
@@ -78,7 +84,6 @@ export class EveSocketParameterBool extends EveSocketParameterBindingBase
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetValueToDefault()
   {
     this.value = this._defaults.length ? this._defaults[0] : false;

@@ -9,9 +9,15 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Color shader parameter: passes the four components through unchanged. */
-@be.define("EveSOFDataParameterColor")
-@be.mapInterface(EveSOFDataParameter)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSOFDataParameterColor",
+  // EveSOFData_Blue2.cpp:38-38, in Carbon's order.
+  interfaces: [ EveSOFDataParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataParameterColor extends EveSOFDataParameter
 {
   /**
@@ -19,7 +25,6 @@ export class EveSOFDataParameterColor extends EveSOFDataParameter
    * Native m_value (Color) replaces the base vector in authored values.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   value = vec4.create();

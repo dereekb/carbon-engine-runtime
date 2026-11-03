@@ -26,13 +26,34 @@ const BIND_VALID = 1;
 const BIND_INVALID = 2;
 
 /** A model that binds a particle system's position, velocity and lifetime elements and its attribute generators for a sphere-distributed ambient effect. */
-@be.define("EveChildParticleSphere")
-@be.inherit(ITr2Renderable)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2Renderable)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildParticleSphere",
+  inherit: [ ITr2Renderable ],
+  // EveChildParticleSphere_Blue.cpp:10-41, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isValid" ],
+    [ be.ATTR, "generators", be.READ | be.PERSIST ],
+    [ be.ATTR, "particleSystem", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "egoSpeed", be.READ ],
+    [ be.ATTR, "movementScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "positionShift", be.READ ],
+    [ be.ATTR, "positionShiftMax", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "positionShiftMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "positionShiftIncreaseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "positionShiftDecreaseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useSpaceObjectData", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Refresh", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildParticleSphere extends EveSpaceObjectChild
 {
 
@@ -59,89 +80,74 @@ export class EveChildParticleSphere extends EveSpaceObjectChild
   _velocityElement = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_particleSystem (Tr2ParticleSystemPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2ParticleSystem")
   particleSystem = null;
 
   /** m_mesh (Tr2InstancedMeshPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2InstancedMesh")
   mesh = null;
 
   /** m_useSpaceObjectData (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useSpaceObjectData = true;
 
   /** m_maxSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   maxSpeed = 0;
 
   /** m_radius (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   radius = 500;
 
   /** m_egoSpeed (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   egoSpeed = 0;
 
   /** m_positionShiftDecreaseSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   positionShiftDecreaseSpeed = 1000;
 
   /** m_positionShiftIncreaseSpeed (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   positionShiftIncreaseSpeed = 1000;
 
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2AttributeGenerator")
   generators = [];
 
   /** m_movementScale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   movementScale = 1;
 
   /** m_positionShiftNormalized (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   positionShift = 0;
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_positionShiftMin (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   positionShiftMin = 100;
 
   /** m_positionShiftMax (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   positionShiftMax = 0;
@@ -152,7 +158,6 @@ export class EveChildParticleSphere extends EveSpaceObjectChild
    * @adapted Browser attribute generators bind to the CPU particle-system declaration while
    *   retaining Carbon's shared element-claim validation.
    */
-  @be.mapMethodAndWrap()
   Refresh()
   {
     if (!this.particleSystem)
@@ -203,7 +208,6 @@ export class EveChildParticleSphere extends EveSpaceObjectChild
    * MAP_PROPERTY_READONLY "isValid" over CheckBinding
    * (EveChildParticleSphere_Blue.cpp:18), so reading it binds on first use.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isValid()
   {

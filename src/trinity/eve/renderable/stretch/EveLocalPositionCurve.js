@@ -16,61 +16,67 @@ import { blue, ITriVectorFunction } from "#blue";
  * bounding hull, a damage or firing locator, a turret muzzle, or an authored
  * offset - selected by an authored behaviour.
  */
-@be.define("EveLocalPositionCurve")
-@be.mapInterface(ITriVectorFunction)
+@be.define({
+  name: "EveLocalPositionCurve",
+  // EveLocalPositionCurve_Blue.cpp:48-137, in Carbon's order.
+  interfaces: [ ITriVectorFunction ],
+  members: [
+    [ be.ATTR_CHOOSER, "behavior", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveLocalPositionCurve.LocalPositionBehavior" ],
+    [ be.ATTR, "parentPositionCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parentRotationCurve", be.READWRITE ],
+    [ be.ATTR, "alignPositionCurve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parent", be.READWRITE ],
+    [ be.ATTR, "turretSetObject", be.READWRITE ],
+    [ be.ATTR, "muzzleIndex", be.READWRITE ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boundingSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locatorSetName", be.READWRITE ],
+    [ be.ATTR, "locatorIndex", be.READWRITE ],
+    [ be.ATTR, "positionOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "damageLocatorIndex", be.READ ],
+    [ be.ATTR, "impactSize", be.READWRITE ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetBehavior" ]
+  ]
+})
 export class EveLocalPositionCurve extends ITriVectorFunction
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/Renderable/Stretch/EveLocalPositionCurve_Blue.cpp:51); chooser EveLocalPositionChooser (trinity/trinity/Eve/Renderable/Stretch/EveLocalPositionCurve_Blue.cpp:8). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveLocalPositionCurve.LocalPositionBehavior")
  @type.int32
   @type.enum("trinity.EveLocalPositionCurve.LocalPositionBehavior")
   behavior = 0;
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   impactSize = 1;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.float32
   offset = 0;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.vec3
   positionOffset = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITriVectorFunction")
   parentPositionCurve = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.object.ref("ITriVectorFunction")
   alignPositionCurve = null;
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.vec3
   value = vec3.create();
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
  @type.vec3
   boundingSize = vec3.create();
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("ITriQuaternionFunction")
   parentRotationCurve = null;
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IEveSpaceObject2")
   parent = null;
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("EveTurretSet")
   turretSetObject = null;
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   muzzleIndex = 0;
-  @be.mapAttribute(be.READ)
   @type.int32
   damageLocatorIndex = -1;
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   locatorIndex = -1;
-  @be.mapAttribute(be.READWRITE)
   @type.string
   locatorSetName = "";
 
@@ -92,7 +98,6 @@ export class EveLocalPositionCurve extends ITriVectorFunction
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   SetBehavior(behavior)
   {
     this.behavior = Number(behavior) | 0;

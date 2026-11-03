@@ -22,47 +22,55 @@ import { EveChildUpdateParams } from "../../EveChildUpdateParams.js";
 import { Tr2Lod } from "../../EveLODHelper.js";
 
 /** EveChildProceduralContainer (eve/child/procedural) - generated from schema shapeHash 91d6cbc5.... */
-@be.define("EveChildProceduralContainer")
-@be.inherit(ITr2CurveSetOwner, IEveInheritPropertiesOwner, ITr2SoundEmitterOwner)
-@be.inherit(IInitialize, IListNotify, INotify)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(ITr2CurveSetOwner)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IListNotify)
-@be.mapInterface(ITr2SoundEmitterOwner)
-@be.mapInterface(IEveInheritPropertiesOwner)
-@be.mapInterface(EveEntity)
-@be.mapInterface(IShaderConfigurer)
-@be.mapMethodAndWrap([ "RebuildLocalTransform", "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
-@be.mapAttribute(be.READ, "worldTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "useStaticRotation")
+@be.define({
+  name: "EveChildProceduralContainer",
+  inherit: [ ITr2CurveSetOwner, IEveInheritPropertiesOwner, ITr2SoundEmitterOwner, IInitialize, IListNotify, INotify ],
+  // EveChildProceduralContainer_Blue.cpp:9-48, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, ITr2CurveSetOwner, IInitialize, IListNotify, IShaderConfigurer, ITr2SoundEmitterOwner, IEveInheritPropertiesOwner, EveEntity ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "staticTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useStaticRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "selectionMethod", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "selectedObject", be.READ ],
+    [ be.ATTR, "transformModifiers", be.READ | be.PERSIST ],
+    [ be.METHOD, "RebuildLocalTransform", be.WRAP ],
+    [ be.METHOD, "SetControllerVariable", be.WRAP ],
+    [ be.METHOD, "HandleControllerEvent", be.WRAP ],
+    [ be.METHOD, "StartControllers", be.WRAP ],
+    [ be.METHOD, "GetMethodVariableName", be.WRAP ],
+    [ be.METHOD, "SetProceduralContainerVariable", be.WRAP ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildProceduralContainer extends EveChildTransform
 {
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildProceduralContainer_Blue.cpp:24 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] - EveChildProceduralContainer_Blue.cpp:25 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] - EveChildProceduralContainer_Blue.cpp:26 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_localTransform (Matrix) [READWRITE, PERSIST] (EveChildProceduralContainer_Blue.cpp:27) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   localTransform = mat4.create();
@@ -70,30 +78,25 @@ export class EveChildProceduralContainer extends EveChildTransform
   _proceduralContainerVariables = new Map();
 
   /** m_transformModifiers (PIEveChildTransformModifierVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveChildTransformModifier")
   transformModifiers = [];
 
   /** m_selectedObject (IEveSpaceObjectChildPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("IEveSpaceObjectChild")
   selectedObject = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_selectionMethod (IEveProceduralSelectionMethodPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IEveProceduralSelectionMethod")
   selectionMethod = null;
@@ -281,7 +284,6 @@ export class EveChildProceduralContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetMethodVariableName()
   {
     return this.selectionMethod ? this.selectionMethod.GetProceduralMethodVariable() : "methodUnassigned";
@@ -292,7 +294,6 @@ export class EveChildProceduralContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HandleControllerEvent(name)
   {
     this.selectedObject?.HandleControllerEvent(name);
@@ -303,7 +304,6 @@ export class EveChildProceduralContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetControllerVariable(name, value)
   {
     this.selectedObject?.SetControllerVariable(name, value);
@@ -314,7 +314,6 @@ export class EveChildProceduralContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetProceduralContainerVariable(name, value)
   {
     const key = String(name);
@@ -328,7 +327,6 @@ export class EveChildProceduralContainer extends EveChildTransform
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StartControllers()
   {
     this.selectedObject?.StartControllers();

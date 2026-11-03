@@ -6,15 +6,21 @@ import { type } from "#schema";
 import { EveSocketParameterBindingBase } from "./EveSocketParameterBindingBase.js";
 
 /** Binds a named 32-bit integer socket value to external parameters, capturing and restoring each binding's previous value. */
-@be.define("EveSocketParameterInt")
-@be.mapInterface(IEveSocketParameter)
-@be.mapMethodAndWrap("Used")
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.define({
+  name: "EveSocketParameterInt",
+  // EveSocketParameter_Blue.cpp:34-34, in Carbon's order.
+  interfaces: [ IEveSocketParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "Used", be.WRAP ],
+    [ be.METHOD, "SetValueToDefault", be.WRAP ]
+  ]
+})
 export class EveSocketParameterInt extends EveSocketParameterBindingBase
 {
 
   /** m_value (int32_t) */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   value = 0;
@@ -78,7 +84,6 @@ export class EveSocketParameterInt extends EveSocketParameterBindingBase
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetValueToDefault()
   {
     this.value = this._defaults.length ? this._defaults[0] : 0;

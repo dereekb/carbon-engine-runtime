@@ -33,27 +33,44 @@ import { trinity } from "../../CjsTrinity.js";
 const DEBUG_TRANSFORM = mat4.create();
 
 /** A child that renders a set of curved and sphere-projected line paths, as object geometry, as dedicated line rendering, or both. */
-@be.define("EveChildLineSet")
-@be.inherit(ITr2Renderable, IInitialize, INotify)
-@be.mapInterface(EveSpaceObjectChild)
-@be.mapInterface(IEveSpaceObjectChild)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2Renderable)
-@be.inherit(ITr2DebugRenderable, Tr2DeviceResource)
-@be.mapMethodAndWrap([ "GetParent", "GetOwner" ])
-@be.mapPropertyReadOnly__Field("partTag")
+@be.define({
+  name: "EveChildLineSet",
+  inherit: [ ITr2Renderable, IInitialize, INotify, ITr2DebugRenderable, Tr2DeviceResource ],
+  // EveChildLineSet_Blue.cpp:19-54, in Carbon's order.
+  interfaces: [ EveSpaceObjectChild, IEveSpaceObjectChild, IInitialize, INotify, ITr2Renderable ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "alwaysOn", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isUpdating" ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "renderType", be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildLineSet.lineSetType" ],
+    [ be.ATTR, "minScreenSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "currentScreenSize", be.READ ],
+    [ be.ATTR, "additiveBatches", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scrollSpeed", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "baseColor", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "animColor", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "GetVertexElementAddedThroughCode", be.WRAP ],
+    [ be.ATTR, "lines", be.READ | be.PERSIST ],
+    [ be.ATTR, "lineSet", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mesh", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "partTag" ],
+    [ be.METHOD, "GetParent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class EveChildLineSet extends EveChildTransform
 {
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildLineSet_Blue.cpp:31 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] - EveChildLineSet_Blue.cpp:32 */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
@@ -62,89 +79,75 @@ export class EveChildLineSet extends EveChildTransform
    * m_type (lineSetType - enum lineSetType) [READWRITE, PERSIST, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObject/Children/EveChildLineSet_Blue.cpp:34); chooser LineSetTypeChooser (trinity/trinity/Eve/SpaceObject/Children/EveChildLineSet_Blue.cpp:7).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM | be.NOTIFY, "trinity.EveChildLineSet.lineSetType")
   @type.int32
   @type.enum("trinity.EveChildLineSet.lineSetType")
   renderType = 1;
 
   /** m_lineSet (EveCurveLineSetPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveCurveLineSet")
   lineSet = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_minScreenSize (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   minScreenSize = -1;
 
   /** m_brightness (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   brightness = 1;
 
   /** m_baseColor (Vector4) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec4
   baseColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_animColor (Vector4) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec4
   animColor = color.createLinear();
 
   /** m_additiveBatch (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   additiveBatches = false;
 
   /** m_scrollSpeed (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   scrollSpeed = 0;
 
   /** m_lines (PIEveLineSetPathVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveLineSetPath")
   lines = [];
 
   /** m_isAlwaysOn (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   alwaysOn = false;
 
   /** m_currentScreenSize (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   currentScreenSize = 1;
 
   /** m_mesh (Tr2MeshPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2Mesh")
@@ -602,7 +605,6 @@ export class EveChildLineSet extends EveChildTransform
   }
 
   /** Native Blue readonly property (EveChildLineSet_Blue.cpp:29). */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isUpdating()
   {
@@ -737,7 +739,6 @@ export class EveChildLineSet extends EveChildTransform
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetVertexElementAddedThroughCode()
   {
     return [[5, 8], [5, 9], [5, 10]];
