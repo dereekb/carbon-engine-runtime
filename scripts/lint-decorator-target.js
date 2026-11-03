@@ -5,6 +5,21 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { inventoryRuntime } from "./lib/decorator-target-inventory.js";
 import { checkAccessorBodies } from "./lib/carbon-accessor-bodies.js";
 
+// THE ORACLE. `--oracle <dir>` must hold two files, and nothing in runtime, tools-core or docs writes them: the generator was
+// never committed, so the lint cannot be run or its baseline reproduced until one exists. Their shape, as read below:
+//
+//   carbon-exposure.json  [{ name, attributes: [row], properties: [row], methods: [row], interfaces: [{ name, source, line }] }]
+//                         row = { name, macro, source, line, condition?: string[] } plus, by category,
+//                         attributes { flagsAsWritten: "Be::READWRITE | Be::PERSIST", chooser },
+//                         properties { getter, setter }, methods { function }   (the C++ method a MAP_METHOD* names)
+//   carbon-headers.json   [{ name, methods: [{ name }], bases: [string] }]   (one entry per header declaration)
+//
+// tools-core's carbon-blue report (scripts/carbon-blue/reports/latest.json) carries the same facts under other keys: per class,
+// blue.attributes (flags as a name array, not flagsAsWritten), blue.properties, blue.methods (target, not function),
+// blue.interfaces, the per-row #if condition on blue.rows, and the header's methods and bases. An adapter from that report is
+// the cheapest way to make this runnable again. The exposure rules here check per-member be.map* decorators; a class declared
+// with a be.define bag is checked by lint-exposure-bags instead.
+
 // Build conditions the plan has ruled (decorator-upgrade.md § 00, "Build conditionals in exposure files"): each guard below is
 // on for us, so its rows are exposed like any other (with a notSupported/notUsed state where the platform cannot). Any other
 // condition still needs a ruling and keeps reporting.
