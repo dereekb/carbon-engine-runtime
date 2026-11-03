@@ -78,7 +78,7 @@ export class BluePaths extends IBluePaths
   /** @type {import("./interfaces/IBlueResFileSystem.js").IBlueResFileSystem[]} */
   _resFileSystems = [];
 
-  /** @type {import("./RemoteFileCache.js").RemoteFileCache|null} */
+  /** @type {import("./io/RemoteFileCache.js").RemoteFileCache|null} */
   _remoteFileCache = null;
 
   /** Paths known to exist locally; Carbon never removes one (cpp:152-166). */
@@ -124,7 +124,7 @@ export class BluePaths extends IBluePaths
    * Registering the cache as a file system is separate, as in Carbon:
    * `RegisterFileSystem(new BlueResFileSystemRemote(cache), AFTER)`.
    *
-   * @param {import("./RemoteFileCache.js").RemoteFileCache|null} remoteFileCache Remote file cache.
+   * @param {import("./io/RemoteFileCache.js").RemoteFileCache|null} remoteFileCache Remote file cache.
    * @returns {BluePaths} This service.
    */
   SetRemoteFileCache(remoteFileCache)

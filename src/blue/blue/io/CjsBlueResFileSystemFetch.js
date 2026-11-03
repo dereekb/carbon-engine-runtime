@@ -22,8 +22,8 @@
 // twin: the client ships red files compiled.
 import { CjsSchema } from "#schema";
 import { normalizePath, normalizeResourcePath } from "#utils/path";
-import { BlueFileUtil } from "./BlueFileUtil.js";
-import { BlueResFileSystemForm, IBlueResFileSystem } from "./interfaces/IBlueResFileSystem.js";
+import { BlueFileUtil } from "../BlueFileUtil.js";
+import { BlueResFileSystemForm, IBlueResFileSystem } from "../interfaces/IBlueResFileSystem.js";
 
 /** HTTP statuses that mean the file is not there: the paths service asks the next file system. */
 const ABSENT_STATUSES = new Set([ 404, 410 ]);
@@ -255,8 +255,8 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
    * @adapted see the top of this file and of IBlueResFileSystem.js.
    * @renamed GetStreamFromPathW
    * @param {string} path Resource path.
-   * @param {import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemRequest} request Form and signal.
-   * @returns {Promise<import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null`.
+   * @param {import("../interfaces/IBlueResFileSystem.js").BlueResFileSystemRequest} request Form and signal.
+   * @returns {Promise<import("../interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null`.
    * @throws {Error} `CJS_RESOURCE_FETCH_FAILED` for any other failure, or the caller's abort reason.
    */
   async GetStreamFromPath(path, request)
@@ -288,7 +288,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
   /**
    * One fetch of the file, under the timeout and stall limits.
    *
-   * @returns {Promise<import("./interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null` when absent.
+   * @returns {Promise<import("../interfaces/IBlueResFileSystem.js").BlueResFileSystemResult|null>} The file, or `null` when absent.
    * @throws {Error} `CJS_RESOURCE_FETCH_FAILED`, with `retryable` set when another attempt may succeed.
    */
   async _Attempt(path, url, form, signal)
