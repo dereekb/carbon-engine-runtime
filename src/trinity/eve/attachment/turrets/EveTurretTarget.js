@@ -32,16 +32,16 @@ export class EveTurretTarget extends IRoot
   @be.mapAttribute(be.READ)
   @type.vec3
   targetPosition = vec3.create();
-  @be.mapAttribute(be.READ, "behaviour")
+  @be.mapAttribute(be.READ)
   @type.int32
   @type.enum("trinity.ImpactBehaviour")
-  _impactBehaviour = 0;
+  behaviour = 0;
   @be.mapAttribute(be.READ)
   @type.float32
   positionOldInfluence = -1;
-  @be.mapAttribute(be.READ, "position")
+  @be.mapAttribute(be.READ)
   @type.vec3
-  _trackingPosition = vec3.create();
+  position = vec3.create();
   @be.mapAttribute(be.READ)
   @type.vec3
   positionOld = vec3.create();
@@ -105,7 +105,7 @@ export class EveTurretTarget extends IRoot
     {
       this._targetable = object;
       this._worldPositionObject = object;
-      vec3.copy(this.positionOld, this._trackingPosition);
+      vec3.copy(this.positionOld, this.position);
       this.positionOldInfluence = 1;
     }
     return true;
@@ -154,7 +154,7 @@ export class EveTurretTarget extends IRoot
     // CURRENT tracking position when the locator changes.
     if (this._fadeOnLocatorChange)
     {
-      vec3.copy(this.positionOld, this._trackingPosition);
+      vec3.copy(this.positionOld, this.position);
       this.positionOldInfluence = 1;
     }
     this._randomMissDistanceOffset = carbonRandom.triFloatRandom01();
@@ -173,7 +173,7 @@ export class EveTurretTarget extends IRoot
       if (this._impactDelay === 0)
       {
         this.GetImpactPosition(source, this.targetPosition);
-        if (this._impactBehaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
+        if (this.behaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
         {
           vec3.subtract(EveTurretTarget._direction, source, this.targetPosition);
           this._impactID = this._targetable.CreateImpact(this.locator, EveTurretTarget._direction, this._impactLength, this._impactSize);
@@ -197,7 +197,7 @@ export class EveTurretTarget extends IRoot
     // last tracking position; others snap by disabling the blend.
     if (this._fadeOnLocatorChange)
     {
-      vec3.copy(this.positionOld, this._trackingPosition);
+      vec3.copy(this.positionOld, this.position);
       this.positionOldInfluence = 1;
     }
     else
@@ -220,17 +220,17 @@ export class EveTurretTarget extends IRoot
   GetImpactPosition(source, out)
   {
     if (!this._targetable) return out;
-    if (this._impactBehaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
+    if (this.behaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
     {
       this._targetable.GetDamageLocatorPosition(this.locator, true, out);
       // AU squared (EveTurretTarget.cpp:199).
       if (vec3.squaredLength(out) > 2.2379561604e22) this._worldPositionObject.GetWorldPosition(out);
     }
-    else if (this._impactBehaviour === EveTurretTarget.ImpactBehaviour.CENTER)
+    else if (this.behaviour === EveTurretTarget.ImpactBehaviour.CENTER)
     {
       this._worldPositionObject.GetWorldPosition(out);
     }
-    else if (this._impactBehaviour === EveTurretTarget.ImpactBehaviour.SHIELD_ELLIPSOID)
+    else if (this.behaviour === EveTurretTarget.ImpactBehaviour.SHIELD_ELLIPSOID)
     {
       this._worldPositionObject.GetWorldPosition(EveTurretTarget._worldPosition);
       // Inside the shield ellipsoid there is no intercept (cpp:210-214).
@@ -274,7 +274,7 @@ export class EveTurretTarget extends IRoot
         vec3.scaleAndAdd(this._positionMiss, this._positionMiss, EveTurretTarget._missDirection, (distance + 5000) * (1 + 0.5 * this._randomMissDistanceOffset));
       }
 
-      if (this._impactBehaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
+      if (this.behaviour === EveTurretTarget.ImpactBehaviour.DAMAGE_LOCATOR)
       {
         if (this._impactID !== -1) this._targetable.UpdateImpact(this.targetPosition, EveTurretTarget._direction, this._impactID);
         if (this._impactDelay > 0 && this._impactSize > 0)
@@ -289,13 +289,13 @@ export class EveTurretTarget extends IRoot
       }
     }
 
-    vec3.copy(this._trackingPosition, this.targetPosition);
+    vec3.copy(this.position, this.targetPosition);
     if (this.positionOldInfluence > 0)
     {
-      vec3.lerp(this._trackingPosition, this.targetPosition, this.positionOld, this.positionOldInfluence);
+      vec3.lerp(this.position, this.targetPosition, this.positionOld, this.positionOldInfluence);
       this.positionOldInfluence -= dt;
     }
-    return this._trackingPosition;
+    return this.position;
   }
 
   /**
@@ -308,7 +308,7 @@ export class EveTurretTarget extends IRoot
 
   GetTrackingPosition(out)
   {
-    return copyOrReturn(this.GetShotMissed() ? this._positionMiss : this._trackingPosition, out);
+    return copyOrReturn(this.GetShotMissed() ? this._positionMiss : this.position, out);
   }
 
   /**
@@ -384,7 +384,7 @@ export class EveTurretTarget extends IRoot
   SetImpactBehaviour(impactSize, impactBehaviour)
   {
     this._impactSize = Number(impactSize);
-    this._impactBehaviour = Number(impactBehaviour) | 0;
+    this.behaviour = Number(impactBehaviour) | 0;
   }
 
   /**

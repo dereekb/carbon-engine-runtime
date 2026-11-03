@@ -292,7 +292,7 @@ test("real turret aiming samples before yaw/pitch/height through a rotated scale
 {
   const {set,ship,resource}=await assets(t);ship.RebuildTurretPositions();set.Initialize();
   const parent=mat4.create();mat4.translate(parent,parent,[50,40,-30]);mat4.rotateZ(parent,parent,.6);mat4.rotateY(parent,parent,-.4);mat4.scale(parent,parent,[1.3,.8,2]);parent[4]+=.2;
-  set.target._trackingPosition.set([700,1100,-300]);set.trackingInfluence=0;set.UpdateAsyncronous(updateContext({deltaTime:.1}),hull(parent));
+  set.target.position.set([700,1100,-300]);set.trackingInfluence=0;set.UpdateAsyncronous(updateContext({deltaTime:.1}),hull(parent));
   const base=set.GetTurrets().map(copyPose), influence=.65;
   set.sysBonePitchMin=-80;set.sysBonePitchMax=80;set.sysBonePitchFactor=.6;set.sysBonePitchOffset=7;set.sysBoneHeight=4;
   for(const updatePitchPose of [false,true])
@@ -303,7 +303,7 @@ test("real turret aiming samples before yaw/pitch/height through a rotated scale
     {
       const turret=set.GetTurrets()[index], expected=structuredClone(base[index]);
       const world=carbonProduct(turret.localMatrix,parent);assertScalars(turret.worldMatrix,world,"native local * parent");
-      const target=inversePoint(world,Array.from(set.target._trackingPosition));targets.push(target);
+      const target=inversePoint(world,Array.from(set.target.position));targets.push(target);
       const yaw=Math.atan2(target[0],target[2])*influence;
       expected[2].rotation=scalarQuaternionProduct([0,Math.sin(yaw/2),0,Math.cos(yaw/2)],expected[2].rotation);
       const pitchPosition=updatePitchPose?Array.from(scalarPoseWorld(expected,resource.GetSkeletonData(0).joints.map(joint=>joint.parentJoint))[4].slice(12,15)):[0,0,0];
@@ -341,7 +341,7 @@ for(const geometryFirst of [false,true])test(`real muzzle binding handles ${geom
   assert.ok(duration>0);
   assert.equal(effect.GetPerMuzzleEffectCount(),1);assert.equal(effect.GetPerMuzzleBoneID(0),10,"cpp:320 prefix + 01 resolves full skeleton joint, not mesh binding");
   const parent=mat4.create();mat4.translate(parent,parent,[35,-18,22]);mat4.rotateY(parent,parent,.45);mat4.rotateX(parent,parent,-.3);mat4.scale(parent,parent,[1.2,.9,1.5]);
-  set._activeTurret=1;set.trackingInfluence=.8;set.target._trackingPosition.set([700,500,300]);set.PlayAnimation(1,"Deploy","Active");
+  set._activeTurret=1;set.trackingInfluence=.8;set.target.position.set([700,500,300]);set.PlayAnimation(1,"Deploy","Active");
   set.UpdateAsyncronous(updateContext({deltaTime:.2}),hull(parent));const turret=set.GetTurrets()[1];
   assert.equal(turret.sequencer.GetMeshBoneCount(),9,"muzzle10 cannot index the9-bone skin palette");
   const expected=carbonProduct(turret.worldTransforms[10],turret.worldMatrix);
@@ -371,8 +371,8 @@ test("native missing-joint and unloaded-pose muzzle fallbacks preserve transform
   assertScalars(set.GetFiringBoneWorldTransform(0, mat4.create()),carbonProduct(low,turret.worldMatrix),"native lowLOD * turretWorld");
   effect.boneName="Pos_Fire";set.InitializeFiringEffect();purgeResourceFixture(resource);set.UpdateSyncronous(updateContext({GetVisibilityThreshold:()=>1}));assert.ok(turret.pose===null,"the update after a purge releases the pose");
   assertScalars(set.GetFiringBoneWorldTransform(0, mat4.create()),carbonProduct(low,turret.worldMatrix),"unloaded pose uses lowLOD even with retained valid joint ID");
-  set.useLowLodFiringTransform=false;set.sysBonePitchMin=0;set.target._trackingPosition.set([800,900,500]);
-  const direct=set.GetFiringBoneWorldTransform(0, mat4.create()),direction=Array.from(set.target._trackingPosition).map((v,i)=>v-turret.worldMatrix[12+i]);const length=Math.hypot(...direction);
+  set.useLowLodFiringTransform=false;set.sysBonePitchMin=0;set.target.position.set([800,900,500]);
+  const direct=set.GetFiringBoneWorldTransform(0, mat4.create()),direction=Array.from(set.target.position).map((v,i)=>v-turret.worldMatrix[12+i]);const length=Math.hypot(...direction);
   assertScalars(direct.slice(8,11),direction.map(v=>v/length),"native RotationArc normalizes the non-unit target direction");
   assertScalars(direct.slice(12,15),turret.worldMatrix.slice(12,15),"direct fallback preserves position");
   set.sysBonePitchMin=60;const launcher=mat4.fromXRotation(mat4.create(),-Math.PI/2);
