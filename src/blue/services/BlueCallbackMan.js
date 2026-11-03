@@ -420,7 +420,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
       return this;
     }
 
-    if (this._workerModule === null) this._workerModule = new URL("./worker/blueCallbackManWorkerEntry.js", import.meta.url);
+    if (this._workerModule === null) this._workerModule = new URL("../worker/blueCallbackManWorkerEntry.js", import.meta.url);
     try
     {
       this.Run();
