@@ -3916,7 +3916,7 @@ function isExposureBag(definition)
  *   The row as the class records it (`exposureRows` on the class info): its kind, JS key, exposed name, Carbon macro, and the
  *   flags, chooser or index it was written with; for `ICACHEABLE_METHODS`, its two method rows.
  */
-function applyExposureRow(Constructor, row, blue)
+function applyExposureRow(Constructor, row, blue, context)
 {
     if (!Array.isArray(row) || typeof row[0] !== "string") throw new TypeError("An exposure row is [ kind, name, ... ].");
     const [ kind, rawName ] = row;
@@ -3927,13 +3927,35 @@ function applyExposureRow(Constructor, row, blue)
     }
     const name = exposureName(rawName);
     const optionalName = key => key === name ? undefined : name;
+    // An accessor on the class or a base (a row may map an inherited accessor).
     const fieldKind = key =>
     {
-        const descriptor = Object.getOwnPropertyDescriptor(Constructor.prototype, key);
+        const descriptor = findPropertyDescriptor(Constructor.prototype, key);
         return descriptor && (descriptor.get || descriptor.set) ? "getter" : "field";
     };
-    // The functional form a decorator takes outside decorator syntax (CjsSchema.decorateField): the decorator applies as one unit.
-    const defineField = (key, decorator) => decorator(Constructor.prototype, key);
+    // A row on a member the class inherits lands in the class's own table, as the class-level be.map* row does (inheritedAware): marked
+    // inherited, so the declaration resolves the base's type and metadata. Own members: declared in this class body (its stage-3 field
+    // metadata, or already in its schema when decorated functionally), or an own accessor or method.
+    // Decorator metadata inherits the parent's through its prototype, so only the class's own list counts. A key counts as inherited
+    // only when a base declares it, since an undecorated field of the class body is not visible before construction.
+    const metadata = context?.metadata;
+    const stage3 = metadata && Object.prototype.hasOwnProperty.call(metadata, STAGE3_FIELD_METADATA) ? metadata[STAGE3_FIELD_METADATA] : null;
+    const ownSchema = CLASS_SCHEMA.get(Constructor);
+    const declaredByBase = key => getSchemaLineage(Object.getPrototypeOf(Constructor)).some(Base =>
+        CLASS_SCHEMA.get(Base).declarations.some(record => record.entry.key === key));
+    const isOwn = key => Object.getOwnPropertyDescriptor(Constructor.prototype, key) !== undefined
+        || (Array.isArray(stage3) && stage3.some(field => field.name === key))
+        || Boolean(ownSchema?.legacyDeclarationsByKey.has(key))
+        || Boolean(ownSchema?.declarations.some(record => record.entry.key === key))
+        || !declaredByBase(key);
+    // Own: the functional form a decorator takes outside decorator syntax (CjsSchema.decorateField), applied as one unit.
+    const defineField = (key, decorator) =>
+    {
+        if (isOwn(key)) return decorator(Constructor.prototype, key);
+        const kind = fieldKind(key);
+        for (const part of [ { namespace: "mapsInherited", value: { inherited: true } }, ...getDecoratorMetadata(decorator).parts ])
+            defineFieldMetadata(Constructor, key, part.namespace, part.value, { kind });
+    };
     switch (kind)
     {
         case ROW.ATTR:
@@ -3980,7 +4002,10 @@ function applyExposureRow(Constructor, row, blue)
             if (!macro) throw new TypeError(`Exposure row ${name}: unknown method mode ${String(mode)}.`);
             const key = method ?? name;
             if (!(key in Constructor.prototype)) throw new TypeError(`Exposure row ${name}: the class has no method "${key}".`);
-            exposureMethodDecorator(macro, optionalName(key), blue)(Constructor.prototype, key);
+            const decorator = exposureMethodDecorator(macro, optionalName(key), blue);
+            if (Object.hasOwn(Constructor.prototype, key)) decorator(Constructor.prototype, key);
+            else for (const part of [ { namespace: "mapsInherited", value: { inherited: true } }, ...getDecoratorMetadata(decorator).parts ])
+                defineMethodMetadata(Constructor, key, part.namespace, part.value);
             return { kind, role: "method", key, name, macro };
         }
         default:
@@ -4016,7 +4041,7 @@ function exposureBagDecorator(bag, blue)
         const rows = [];
         for (const row of members)
         {
-            const recorded = applyExposureRow(Constructor, row, blue);
+            const recorded = applyExposureRow(Constructor, row, blue, context);
             if (Array.isArray(recorded)) rows.push(recorded[0], recorded[1]);
             else rows.push(recorded);
         }

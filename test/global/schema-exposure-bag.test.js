@@ -176,3 +176,31 @@ test("a float-array row (MAPFLOATARRAYSIZE) and an index row name parts of one v
     writeDictionaryValue(sphere, bag.center, [ 7, 8, 9 ]);
     assert.deepEqual(Array.from(sphere.sphere), [ 7, 8, 9, 4 ], "the floats are the member's own");
 });
+
+test("a bag row on an inherited member registers as the class-level row does, with the base's type", async () =>
+{
+    const { InheritedRows, InheritedBag } = await load(`
+      @be.define("BagProbeInheritBase")
+      class Base
+      {
+        @be.mapAttribute(be.READ) @type.boolean useSRT = false;
+        get live() { return 1; }
+        Rebuild() {}
+      }
+      @be.define("BagProbeInheritedRows")
+      @be.mapAttribute(be.READWRITE | be.PERSIST, "useSRT")
+      @be.mapMethodAndWrap("Rebuild")
+      export class InheritedRows extends Base {}
+      @be.define({ name: "BagProbeInheritedBag", members: [
+        [ be.ATTR, "useSRT", be.READWRITE | be.PERSIST ],
+        [ be.METHOD, "Rebuild", be.WRAP ]
+      ] })
+      export class InheritedBag extends Base {}`);
+    const own = (Class, table) => byName(CjsSchema.getSchema(Class)[table].filter(entry => entry.declaringClass === Class));
+    assert.deepEqual(own(InheritedBag, "members"), own(InheritedRows, "members"));
+    const useSRT = CjsSchema.getSchema(InheritedBag).members.find(member => member.name === "useSRT" && member.declaringClass === InheritedBag);
+    assert.equal(useSRT.type.kind, "boolean", "the base member's type");
+    assert.equal(useSRT.edit.persist, true, "the subclass's own flags");
+    const methods = Class => Object.keys(BlueClasses._typeInfo(Class, 0)[3]).sort();
+    assert.deepEqual(methods(InheritedBag), methods(InheritedRows));
+});
