@@ -72,13 +72,13 @@ test("flags compare as Carbon's EDITFLAGS values", () =>
     assert.deepEqual(keys(bagSource({ rows })), [ "attribute speed flags" ]);
 });
 
-test("an attribute lands on its exposed name; underscore plus Carbon's member only beside a same-named property", () =>
+test("an attribute lands on its exposed name; underscore plus its name only for a member private in Blue", () =>
 {
-    // boosters is also a property in the fixture's block, so "_boosters" is accepted, and so is the exposed name.
+    // boosters is PERSISTONLY (HIDDEN), so "_boosters" is accepted, and so is the exposed name.
     const withKey = key => [ ...members.slice(0, 2), `[ be.ATTR, "boosters", be.PERSISTONLY${key ? `, "${key}"` : ""} ]`, ...members.slice(3) ];
     assert.deepEqual(keys(bagSource({ rows: withKey("_boosterSet") })), [ "attribute boosters key" ]);
     assert.deepEqual(keys(bagSource({ rows: withKey(null) })), []);
-    // speed has no property beside it: Carbon's member name, plain or underscored, is not the key.
+    // speed is not HIDDEN: only its exposed name is the key.
     for (const key of [ "_speed", "speedValue" ])
     {
         const rows = [ `[ be.ATTR, "speed", be.READ, "${key}" ]`, ...members.slice(1) ];
@@ -134,13 +134,13 @@ test("MAP_FUNCTION rows are module functions and never expected in a bag", () =>
     assert.ok(!keys(bagSource()).some(key => key.includes("MakeFixture")));
 });
 
-test("an indexed member is ATTR_INDEX, keyed by underscore plus the array member", () =>
+test("an indexed member is ATTR_INDEX, keyed by the array member's name", () =>
 {
     order = 0;
     const rows = [ row("ATTR", { name: "sizeSTANDARD", member: "m_sizes[Fixture::USAGE_STANDARD]", flags: [ "READWRITE", "PERSIST" ], macro: "MAP_ATTRIBUTE" }) ];
     const source = name => bagSource({ rows: [ `[ be.ATTR_INDEX, "sizeSTANDARD", be.READWRITE | be.PERSIST, 0, "${name}" ]` ], interfaces: "[]", chainTo: null });
-    assert.deepEqual(keys(source("_sizes"), rows), []);
-    assert.deepEqual(keys(source("sizes"), rows), [ "attribute sizeSTANDARD key" ]);
+    assert.deepEqual(keys(source("sizes"), rows), []);
+    assert.deepEqual(keys(source("_sizes"), rows), [ "attribute sizeSTANDARD key" ]);
     assert.deepEqual(keys(source("sizeList"), rows), [ "attribute sizeSTANDARD key" ]);
 });
 

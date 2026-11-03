@@ -15,10 +15,9 @@
 // - the bag's name names a Carbon exposure block;
 // - each member row's kind (macro, method mode included), exposed name and
 //   flags (as Carbon's EDITFLAGS values, so READ | WRITE is READWRITE);
-// - the JS key a row lands on: for an attribute, its exposed name; `_` plus
-//   Carbon's member without m_ only when the exposed name cannot be the key
-//   (the block also has a property under that name, or the member is exposed
-//   by element through index rows); for a method,
+// - the JS key a row lands on: for an attribute, its exposed name (no m_);
+//   `_` plus its name only for a member private in Blue (HIDDEN); an index
+//   row on its array member's name; for a method,
 //   Carbon's C++ method name, or an overload variant of it (`Name__Suffix`).
 //   A property is checked by exposed name only: it sits on an accessor or on
 //   the plain field that stores it under that name;
@@ -245,8 +244,7 @@ export function compareBag(bag, rows)
 
     // Member rows, paired by family and exposed name, in order of occurrence.
     const carbonMembers = rows.filter(row => [ "ATTR", "PROP", "METHOD", "ICACHEABLE" ].includes(row.kind)).map(row => ({ ...carbonRow(row), row }));
-    const propertyNames = new Set(carbonMembers.filter(carbon => carbon.family === "PROP").map(carbon => carbon.name));
-    for (const carbon of carbonMembers) if (carbon.family === "ATTR") carbon.keys = attributeKeys(carbon, propertyNames);
+    for (const carbon of carbonMembers) if (carbon.family === "ATTR") carbon.keys = attributeKeys(carbon);
     const unpaired = carbonMembers.slice();
     const pairs = [];
     for (const member of bag.members)
@@ -325,22 +323,22 @@ export function carbonRow(row)
 }
 
 /**
- * The JS keys an attribute row may land on (operator rule, 2026-11-03): its exposed name, with no fourth element. `_` plus Carbon's
- * member name (without `m_`) only where the exposed name cannot be the key: the block also has a property under that exposed name
- * (EveShip2 `boosters`), or the member is exposed by element (index rows on one array or vector member).
+ * The JS keys an attribute row may land on: its exposed name (without a leading m_), with no last element. The only rename is a member
+ * private in Blue (HIDDEN), which may be `_` plus its name. An index row lands on its array member's name.
  *
  * @param {object} carbon An attribute row from carbonRow.
- * @param {Set<string>} propertyNames The exposed names of the block's property rows.
  * @returns {string[]|undefined} The keys, or undefined when an index row's member is not a plain `m_` name.
  */
-export function attributeKeys(carbon, propertyNames)
+export function attributeKeys(carbon)
 {
-    const underscore = carbon.member ? `_${carbon.member}` : null;
-    if (carbon.indexed) return underscore ? [ underscore ] : undefined;
+    // The only rename is a member private in Blue (HIDDEN): `_` plus its name (decorator-upgrade.md § 000a, docs d8a5bbe).
+    const hidden = (carbon.flags & EDIT_FLAGS.HIDDEN) !== 0;
+    if (carbon.indexed) return carbon.member ? [ carbon.member, ...(hidden ? [ `_${carbon.member}` ] : []) ] : undefined;
     // We never put m_ into a JS name (operator, 2026-11-03): an exposed name that starts with it (EveVirtualCameraBehaviourVector3Damping
     // "m_dampingRatio", TriStepToggleCubemap "m_showCubemap") is keyed without it, and the row keeps the exposed name.
     const exposed = carbon.name.replace(/^m_/, "");
-    return underscore && propertyNames.has(carbon.name) ? [ exposed, underscore ] : [ exposed ];
+    if (!hidden) return [ exposed ];
+    return [ ...new Set([ exposed, `_${exposed}`, ...(carbon.member ? [ `_${carbon.member}` ] : []) ]) ];
 }
 
 function family(kind)

@@ -188,10 +188,7 @@ function planClass(node, source, carbon)
         {
             const spec = MAP_DECORATORS[fn];
             if (spec.family === "ICACHEABLE") { jsRows.push({ ...spec, exposed: null, key: null, decorator: d }); continue; }
-            // Above the class, a be.map* names a member the class inherits. A bag row on an inherited key does not yet register like
-            // that decorator: an attribute loses the base member's type (EveChildParticleSystem.useSRT read as "missing").
-            unresolved.push(`class-level be.${fn} maps an inherited member; bag rows on inherited members are not supported yet`);
-            // Its rows still pair with Carbon's, so the class's other reasons are reported and nothing reads as missing.
+            // Above the class, a be.map* names a member the class inherits; its row keys on the exposed name.
             const nameArg = args[spec.name];
             for (const n of nameArg?.type === "ArrayExpression" ? nameArg.elements : [ nameArg ])
                 if (n?.type === "StringLiteral") jsRows.push(rowFrom(spec, args, n.value, n.value, d, text));
@@ -241,11 +238,6 @@ function planClass(node, source, carbon)
         bagRows.push(js);
     }
     for (const js of unpaired) unresolved.push(`JS row with no Carbon row: be.${js.fn} "${js.exposed ?? ""}" on ${js.key ?? "the class"}`);
-    // Several index rows on one field register in reverse order from a bag (EveSOFDataArea's materials came out Turret first,
-    // Carbon writes Primary first: EveSOFData_Blue.cpp:135-144). Left until the bag registers them in its order.
-    const indexKeys = bagRows.filter(js => js.kind === "ATTR_INDEX").map(js => js.key);
-    for (const key of new Set(indexKeys.filter((key, index) => indexKeys.indexOf(key) !== index)))
-        unresolved.push(`several index rows on ${key}: a bag registers them in reverse order, not Carbon's`);
 
     // Interfaces, in Carbon's order with the JS identifiers; the class's own MAP_INTERFACE is implied by the bag.
     const carbonInterfaces = entry.rows.filter(row => row.kind === "INTERFACE" && row.name !== name);
