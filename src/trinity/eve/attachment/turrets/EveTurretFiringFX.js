@@ -76,113 +76,245 @@ export class EveTurretFiringFX extends EveEntity
   @type.float32
   firingPeakTime = 0;
 
-  /** m_perMuzzleData[0].constantDelay (float) [READWRITE, PERSIST]
+  /** MAP_ATTRIBUTE("firingDelay1", m_perMuzzleData[0].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 1 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay1 = 0;
+  get firingDelay1()
+  {
+    return this._perMuzzleData[0].constantDelay;
+  }
 
-  /** m_perMuzzleData[9].constantDelay (float) [READWRITE, PERSIST]
-   * Authored start delay added to muzzle 10 when preparing a burst.
-   * @type {number}
+  /**
+   * Writes muzzle 1's constant delay in place.
+   * @param {number} value The delay in seconds.
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
+  set firingDelay1(value)
+  {
+    this._perMuzzleData[0].constantDelay = value;
+  }
 
-  @type.float32
-  firingDelay10 = 0;
-
-  /** m_perMuzzleData[10].constantDelay (float) [READWRITE, PERSIST]
-   * Authored start delay added to muzzle 11 when preparing a burst.
-   * @type {number}
-   */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.float32
-  firingDelay11 = 0;
-
-  /** m_perMuzzleData[11].constantDelay (float) [READWRITE, PERSIST]
-   * Authored start delay added to muzzle 12 when preparing a burst.
-   * @type {number}
-   */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.float32
-  firingDelay12 = 0;
-
-  /** m_perMuzzleData[1].constantDelay (float) [READWRITE, PERSIST]
+  /** MAP_ATTRIBUTE("firingDelay2", m_perMuzzleData[1].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 2 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay2 = 0;
+  get firingDelay2()
+  {
+    return this._perMuzzleData[1].constantDelay;
+  }
 
-  /** m_perMuzzleData[2].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 2's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay2(value)
+  {
+    this._perMuzzleData[1].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay3", m_perMuzzleData[2].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 3 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay3 = 0;
+  get firingDelay3()
+  {
+    return this._perMuzzleData[2].constantDelay;
+  }
 
-  /** m_perMuzzleData[3].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 3's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay3(value)
+  {
+    this._perMuzzleData[2].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay4", m_perMuzzleData[3].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 4 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay4 = 0;
+  get firingDelay4()
+  {
+    return this._perMuzzleData[3].constantDelay;
+  }
 
-  /** m_perMuzzleData[4].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 4's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay4(value)
+  {
+    this._perMuzzleData[3].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay5", m_perMuzzleData[4].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 5 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay5 = 0;
+  get firingDelay5()
+  {
+    return this._perMuzzleData[4].constantDelay;
+  }
 
-  /** m_perMuzzleData[5].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 5's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay5(value)
+  {
+    this._perMuzzleData[4].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay6", m_perMuzzleData[5].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 6 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay6 = 0;
+  get firingDelay6()
+  {
+    return this._perMuzzleData[5].constantDelay;
+  }
 
-  /** m_perMuzzleData[6].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 6's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay6(value)
+  {
+    this._perMuzzleData[5].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay7", m_perMuzzleData[6].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 7 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay7 = 0;
+  get firingDelay7()
+  {
+    return this._perMuzzleData[6].constantDelay;
+  }
 
-  /** m_perMuzzleData[7].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 7's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay7(value)
+  {
+    this._perMuzzleData[6].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay8", m_perMuzzleData[7].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 8 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay8 = 0;
+  get firingDelay8()
+  {
+    return this._perMuzzleData[7].constantDelay;
+  }
 
-  /** m_perMuzzleData[8].constantDelay (float) [READWRITE, PERSIST]
+  /**
+   * Writes muzzle 8's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay8(value)
+  {
+    this._perMuzzleData[7].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay9", m_perMuzzleData[8].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 9 when preparing a burst.
-   * @type {number}
+   * @returns {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
+  @be.mapPropertyPersisted()
   @type.float32
-  firingDelay9 = 0;
+  get firingDelay9()
+  {
+    return this._perMuzzleData[8].constantDelay;
+  }
+
+  /**
+   * Writes muzzle 9's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay9(value)
+  {
+    this._perMuzzleData[8].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay10", m_perMuzzleData[9].constantDelay) [READWRITE, PERSIST]
+   * Authored start delay added to muzzle 10 when preparing a burst.
+   * @returns {number}
+   */
+  @be.mapPropertyPersisted()
+  @type.float32
+  get firingDelay10()
+  {
+    return this._perMuzzleData[9].constantDelay;
+  }
+
+  /**
+   * Writes muzzle 10's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay10(value)
+  {
+    this._perMuzzleData[9].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay11", m_perMuzzleData[10].constantDelay) [READWRITE, PERSIST]
+   * Authored start delay added to muzzle 11 when preparing a burst.
+   * @returns {number}
+   */
+  @be.mapPropertyPersisted()
+  @type.float32
+  get firingDelay11()
+  {
+    return this._perMuzzleData[10].constantDelay;
+  }
+
+  /**
+   * Writes muzzle 11's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay11(value)
+  {
+    this._perMuzzleData[10].constantDelay = value;
+  }
+
+  /** MAP_ATTRIBUTE("firingDelay12", m_perMuzzleData[11].constantDelay) [READWRITE, PERSIST]
+   * Authored start delay added to muzzle 12 when preparing a burst.
+   * @returns {number}
+   */
+  @be.mapPropertyPersisted()
+  @type.float32
+  get firingDelay12()
+  {
+    return this._perMuzzleData[11].constantDelay;
+  }
+
+  /**
+   * Writes muzzle 12's constant delay in place.
+   * @param {number} value The delay in seconds.
+   */
+  set firingDelay12(value)
+  {
+    this._perMuzzleData[11].constantDelay = value;
+  }
 
   /** m_endPosition (Vector3) [READWRITE]
    * World-space target point shared by the firing elements.
@@ -309,10 +441,18 @@ export class EveTurretFiringFX extends EveEntity
   minScale = 1;
 
   /**
-   * Per-muzzle transforms, start delays and firing progress retained between updates.
+   * m_perMuzzleData[MUZZLECOUNT_MAX] (EveTurretFiringFX.h:198): the fixed
+   * per-muzzle records, never resized. The constructor's writes (cpp:50-58) are
+   * the record defaults except the invalid bone ID; elapsedTime, which Carbon
+   * leaves unset there, keeps the record's 0.
    * @type {Array<EveTurretFiringFXPerMuzzleData>}
    */
-  _perMuzzleData = [];
+  _perMuzzleData = Array.from({ length: EveTurretFiringFX.MUZZLE_COUNT_MAX }, () =>
+  {
+    const data = new EveTurretFiringFXPerMuzzleData();
+    data.muzzlePositionBoneID = EveTurretFiringFX.INVALID_INDEX;
+    return data;
+  });
 
   /**
    * Whether firing elements display their source endpoint objects.
@@ -333,8 +473,7 @@ export class EveTurretFiringFX extends EveEntity
   _impactConfiguration = EveTurretFiringFX.ImpactConfiguration.IMPACT_INVALID;
 
   /**
-   * Allocates the twelve per-muzzle records and resolves the firing duration,
-   * preferring a non-negative firingDurationOverride and otherwise the longest
+   * Resolves the firing duration, preferring a non-negative firingDurationOverride and otherwise the longest
    * stretch-element curve.
    *
    * @implemented
@@ -342,7 +481,6 @@ export class EveTurretFiringFX extends EveEntity
 
   Initialize()
   {
-    this._ensureMuzzleData();
     if (this.firingDurationOverride >= 0) this.firingDuration = this.firingDurationOverride;
     else
     {
@@ -421,7 +559,6 @@ export class EveTurretFiringFX extends EveEntity
 
   SetMuzzleBoneID(muzzleID, boneID)
   {
-    this._ensureMuzzleData();
     if (muzzleID >= 0 && muzzleID < EveTurretFiringFX.MUZZLE_COUNT_MAX) this._perMuzzleData[muzzleID].muzzlePositionBoneID = Number(boneID) >>> 0;
   }
 
@@ -434,7 +571,6 @@ export class EveTurretFiringFX extends EveEntity
 
   SetMuzzleTransform(muzzleID, transform)
   {
-    this._ensureMuzzleData();
     if (muzzleID >= 0 && muzzleID < EveTurretFiringFX.MUZZLE_COUNT_MAX) mat4.copy(this._perMuzzleData[muzzleID].muzzleTransform, transform);
   }
 
@@ -446,7 +582,6 @@ export class EveTurretFiringFX extends EveEntity
    */
   GetMuzzleTransform(muzzleID, out)
   {
-    this._ensureMuzzleData();
     if (muzzleID >= 0 && muzzleID < EveTurretFiringFX.MUZZLE_COUNT_MAX) return mat4.copy(out, this._perMuzzleData[muzzleID].muzzleTransform);
     return mat4.copy(out, EveTurretFiringFX._identity);
   }
@@ -525,7 +660,6 @@ export class EveTurretFiringFX extends EveEntity
 
   PrepareFiring(delay, muzzleID = EveTurretFiringFX.INVALID_INDEX, muzzleCount = EveTurretFiringFX.INVALID_INDEX)
   {
-    this._ensureMuzzleData();
     for (let index = 0; index < this.stretch.length; index++)
     {
       const selected = muzzleID === EveTurretFiringFX.INVALID_INDEX || (index >= muzzleID && index < muzzleID + muzzleCount);
@@ -571,7 +705,6 @@ export class EveTurretFiringFX extends EveEntity
   GetStartPosition(out)
   {
     if (!this.isFiring) return false;
-    this._ensureMuzzleData();
     vec3.zero(EveTurretFiringFX._startPosition);
     let count = 0;
     for (const data of this._perMuzzleData.slice(0, this.stretch.length))
@@ -633,7 +766,6 @@ export class EveTurretFiringFX extends EveEntity
 
   StartMuzzleEffect(muzzleID)
   {
-    this._ensureMuzzleData();
     const data = this._perMuzzleData[muzzleID];
     if (!data || !this.stretch[muzzleID]) return false;
     this.stretch[muzzleID].StartFiring(data.currentStartDelay);
@@ -655,7 +787,6 @@ export class EveTurretFiringFX extends EveEntity
   StopFiring()
   {
     if (!this.isFiring) return;
-    this._ensureMuzzleData();
     for (let index = 0; index < this.stretch.length; index++)
     {
       const stretch = this.stretch[index];
@@ -677,7 +808,6 @@ export class EveTurretFiringFX extends EveEntity
 
   ReadyToFire()
   {
-    this._ensureMuzzleData();
     return this._perMuzzleData.slice(0, this.stretch.length).some(data =>
       (data.elapsedTime < this.firingDuration || this.isLoopFiring) && !data.started && data.readyToStart);
   }
@@ -693,7 +823,6 @@ export class EveTurretFiringFX extends EveEntity
 
   UpdateAsynchronous(context)
   {
-    this._ensureMuzzleData();
     const deltaTime = context.GetDeltaT();
     let justFired = false;
     for (let index = 0; index < this.stretch.length; index++)
@@ -745,7 +874,6 @@ export class EveTurretFiringFX extends EveEntity
 
   UpdateSynchronous(context)
   {
-    this._ensureMuzzleData();
     for (let index = 0; index < this.stretch.length; index++)
     {
       const data = this._perMuzzleData[index];
@@ -778,7 +906,6 @@ export class EveTurretFiringFX extends EveEntity
   UpdateVisibility(context)
   {
     if (!(this.display && this.isFiring)) return;
-    this._ensureMuzzleData();
     const active = [];
     for (let index = 0; index < this.stretch.length; index++)
     {
@@ -817,7 +944,6 @@ export class EveTurretFiringFX extends EveEntity
   GetRenderables(out)
   {
     if (!(this.display && this.isFiring)) return out;
-    this._ensureMuzzleData();
     for (let index = 0; index < this.stretch.length; index++)
     {
       const data = this._perMuzzleData[index];
@@ -880,7 +1006,6 @@ export class EveTurretFiringFX extends EveEntity
 
   GetPerMuzzleBoneID(muzzleID)
   {
-    this._ensureMuzzleData();
     if (muzzleID >= 0 && muzzleID < EveTurretFiringFX.MUZZLE_COUNT_MAX) return this._perMuzzleData[muzzleID].muzzlePositionBoneID;
     return EveTurretFiringFX.INVALID_INDEX;
   }
@@ -1116,34 +1241,6 @@ export class EveTurretFiringFX extends EveEntity
       if (emitter) emitter.SetSwitch("Impact_On", value);
     }
     this._impactConfiguration = configuration;
-  }
-
-  /**
-   * Grows the per-muzzle record list to the twelve-muzzle maximum on first use
-   * and refreshes every record's constant delay from the authored
-   * firingDelay1..firingDelay12 fields, so an edited delay takes effect without
-   * a rebuild.
-   */
-  _ensureMuzzleData()
-  {
-    while (this._perMuzzleData.length < EveTurretFiringFX.MUZZLE_COUNT_MAX)
-    {
-      // The constructor's per-muzzle writes (cpp:50-58); elapsedTime, which
-      // Carbon leaves unset there, keeps the record's 0.
-      const index = this._perMuzzleData.length;
-      const data = new EveTurretFiringFXPerMuzzleData();
-      data.started = false;
-      data.readyToStart = false;
-      data.muzzlePositionBoneID = EveTurretFiringFX.INVALID_INDEX;
-      data.constantDelay = this[`firingDelay${index + 1}`];
-      data.currentStartDelay = 0;
-      mat4.identity(data.muzzleTransform);
-      this._perMuzzleData.push(data);
-    }
-    for (let index = 0; index < EveTurretFiringFX.MUZZLE_COUNT_MAX; index++)
-    {
-      this._perMuzzleData[index].constantDelay = this[`firingDelay${index + 1}`];
-    }
   }
 
   /**
