@@ -257,9 +257,36 @@ function CopyToTexture(bitmap, texture, x, y, margin, renderContext)
  * do not fit become "outsiders" with their own AL texture and are pulled in when
  * space opens.
  */
-@be.define("Tr2TextureAtlas")
-@be.mapInterface(ITr2TextureProvider)
-@be.inherit(Tr2DeviceResource)
+@be.define({
+  name: "Tr2TextureAtlas",
+  inherit: [ Tr2DeviceResource ],
+  // Tr2TextureAtlas_Blue.cpp:12-127, in Carbon's order.
+  interfaces: [ ITr2TextureProvider ],
+  members: [
+    [ be.ATTR_CHOOSER, "format", be.READ | be.ENUM, "trinity.ImageIO.PixelFormat" ],
+    [ be.ATTR, "width", be.READ ],
+    [ be.ATTR, "height", be.READ ],
+    [ be.ATTR, "mipCount", be.READ ],
+    [ be.PROP_RO, "multiSampleType" ],
+    [ be.PROP_RO, "multiSampleQuality" ],
+    [ be.ATTR, "optimizeOnRemoval", be.READWRITE ],
+    [ be.ATTR, "paintEmptyAreas", be.READWRITE ],
+    [ be.ATTR, "margin", be.READWRITE ],
+    [ be.PROP_RO, "texturesInAtlasCount" ],
+    [ be.PROP_RO, "texturesOutsideAtlasCount" ],
+    [ be.METHOD, "GetFreeTexels", be.WRAP ],
+    [ be.METHOD, "GetFreeTexelPercentage", be.WRAP ],
+    [ be.METHOD, "CollapseFreeAreas", be.WRAP ],
+    [ be.METHOD, "ConsolidateFreeAreas", be.WRAP ],
+    [ be.METHOD, "PullInOutsiders", be.WRAP ],
+    [ be.METHOD, "GetFreeMaxWidth", be.WRAP ],
+    [ be.METHOD, "GetFreeMaxHeight", be.WRAP ],
+    [ be.METHOD, "EjectAllTextures", be.WRAP ],
+    [ be.METHOD, "CreateTexture", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "GetTexturesOutsideAtlas", be.WRAP ],
+    [ be.METHOD, "HasALObject", be.WRAP ]
+  ]
+})
 export class Tr2TextureAtlas extends ITr2TextureProvider
 {
 
@@ -267,38 +294,31 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * m_format (Tr2RenderContextEnum::PixelFormat) [READ, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2TextureAtlas_Blue.cpp:16); chooser Tr2RenderContextEnum_PixelFormat_Chooser (trinity/trinity/Tr2RenderContext_Blue.cpp:141).
    */
-  @be.mapAttributeWithChooser(be.READ | be.ENUM, "trinity.ImageIO.PixelFormat")
   @type.int32
   @type.enum("trinity.ImageIO.PixelFormat")
   format = PixelFormat.PIXEL_FORMAT_B8G8R8A8_UNORM;
 
   /** m_width (unsigned int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   width = 2048;
 
   /** m_height (unsigned int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   height = 2048;
 
   /** m_mipLevels (unsigned) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   mipCount = 0;
 
   /** m_optimizeOnRemoval (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   optimizeOnRemoval = true;
 
   /** m_paintEmptyAreas (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   paintEmptyAreas = false;
 
   /** m_margin (unsigned int) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   margin = 2;
 
@@ -384,7 +404,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
   }
 
   /** How many textures are in the atlas texture? Counts live textures only. */
-  @be.mapPropertyReadOnly()
   @type.int32
   get texturesInAtlasCount()
   {
@@ -392,7 +411,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
   }
 
   /** How many textures are registered with the atlas but didn't fit? Counts live textures only. */
-  @be.mapPropertyReadOnly()
   @type.int32
   get texturesOutsideAtlasCount()
   {
@@ -400,7 +418,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
   }
 
   /** multiSampleType: always 1 (`Tr2TextureAtlas.cpp:1582-1585`). */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get multiSampleType()
   {
@@ -408,7 +425,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
   }
 
   /** multiSampleQuality: always 0 (`Tr2TextureAtlas.cpp:1587-1590`). */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get multiSampleQuality()
   {
@@ -623,7 +639,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   ConsolidateFreeAreas()
   {
     this._ReleasePendingFreeAreas();
@@ -817,7 +832,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   CollapseFreeAreas()
   {
     this._ReleasePendingFreeAreas();
@@ -1306,7 +1320,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @param {boolean} [optimiseInsertion] Sort smallest area first.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   PullInOutsiders(optimiseInsertion = false)
   {
     this._ReclaimCollectedTextures();
@@ -1431,7 +1444,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @param {number} [type] A `Tr2TextureAtlas.AtlasTextureType` value.
    * @returns {Tr2AtlasTexture|null} The texture, or null.
    */
-  @be.mapMethodAndWrapOptionalArgs()
   CreateTexture(width, height, type = Tr2TextureAtlas.AtlasTextureType.ATT_DEFAULT)
   {
     const tex = new Tr2AtlasTexture();
@@ -1527,7 +1539,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @adapted
    * @returns {Tr2AtlasTexture[]} The textures.
    */
-  @be.mapMethodAndWrap()
   GetTexturesOutsideAtlas()
   {
     const textures = [];
@@ -1788,7 +1799,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   EjectAllTextures()
   {
     this._ReclaimCollectedTextures();
@@ -2058,7 +2068,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @param {Tr2TextureAL} object The AL object.
    * @returns {boolean} True when it is the atlas texture.
    */
-  @be.mapMethodAndWrap()
   HasALObject(type, object)
   {
     switch (type)
@@ -2097,7 +2106,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {number} Free texels.
    */
-  @be.mapMethodAndWrap()
   GetFreeTexels()
   {
     return this._freeTexels;
@@ -2109,7 +2117,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {number} Free texels over total texels, as a float.
    */
-  @be.mapMethodAndWrap()
   GetFreeTexelPercentage()
   {
     return Math.fround(this._freeTexels / Math.fround(this.width * this.height));
@@ -2121,7 +2128,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {number} Width.
    */
-  @be.mapMethodAndWrap()
   GetFreeMaxWidth()
   {
     return this._freeMaxWidth;
@@ -2133,7 +2139,6 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
    * @implemented
    * @returns {number} Height.
    */
-  @be.mapMethodAndWrap()
   GetFreeMaxHeight()
   {
     return this._freeMaxHeight;

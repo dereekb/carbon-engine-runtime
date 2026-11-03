@@ -22,13 +22,20 @@ import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 
 /** A set of coloured lines with an accompanying picking-triangle list, submitted as one buffer. */
-@be.define("Tr2LineSet")
-@be.inherit(IInitialize, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(Tr2PrimitiveSet)
-@be.mapInterface(ITr2Pickable)
-@be.exposureChainTo(Tr2PrimitiveSet)
+@be.define({
+  name: "Tr2LineSet",
+  inherit: [ IInitialize, Tr2DeviceResource ],
+  // Tr2LineSet_Blue.cpp:10-32, in Carbon's order.
+  interfaces: [ IInitialize, ITr2Renderable, Tr2PrimitiveSet, ITr2Pickable ],
+  members: [
+    [ be.METHOD, "AddPickingTriangle", be.WRAP ],
+    [ be.METHOD, "AddLine", be.WRAP ],
+    [ be.METHOD, "ClearLines", be.WRAP ],
+    [ be.METHOD, "ClearPickingTriangles", be.WRAP ],
+    [ be.METHOD, "SubmitChanges", be.WRAP ]
+  ],
+  chainTo: Tr2PrimitiveSet
+})
 export class Tr2LineSet extends Tr2PrimitiveSet
 {
 
@@ -73,7 +80,6 @@ export class Tr2LineSet extends Tr2PrimitiveSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddLine(position1, color1, position2, color2)
   {
     this.lines.push({
@@ -90,7 +96,6 @@ export class Tr2LineSet extends Tr2PrimitiveSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddPickingTriangle(position1, position2, position3)
   {
     this.triangles.push({
@@ -105,7 +110,6 @@ export class Tr2LineSet extends Tr2PrimitiveSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearLines()
   {
     this.lines.length = 0;
@@ -117,7 +121,6 @@ export class Tr2LineSet extends Tr2PrimitiveSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearPickingTriangles()
   {
     this.triangles.length = 0;
@@ -136,7 +139,6 @@ export class Tr2LineSet extends Tr2PrimitiveSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SubmitChanges()
   {
     if (this.lines.length > this.maxCurrentLineCount)

@@ -8,13 +8,19 @@ import { type, blue } from "#schema";
 
 
 /** The camera view matrix, together with the look-at helper that builds it. */
-@be.define("TriView")
-@be.inherit(IRoot)
+@be.define({
+  name: "TriView",
+  inherit: [ IRoot ],
+  // TriView_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "SetLookAtPosition", be.WRAP ]
+  ]
+})
 export class TriView extends IRoot
 {
 
   /** m_transform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();
@@ -48,7 +54,6 @@ export class TriView extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetLookAtPosition(eye, at, up)
   {
     mat4.lookAt(this.transform, eye, at, up);

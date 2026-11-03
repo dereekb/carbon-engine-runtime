@@ -33,7 +33,14 @@ function Lcm(a, b)
 }
 
 /** Collects quads from every registered effect into one merged instance buffer and emits them as batches. */
-@be.define("Tr2QuadRenderer")
+@be.define({
+  name: "Tr2QuadRenderer",
+  // Tr2QuadRenderer_Blue.cpp:11-19, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "instanceBufferSize" ],
+    [ be.PROP_RO, "instanceDataSize" ]
+  ]
+})
 export class Tr2QuadRenderer
 {
 
@@ -361,7 +368,6 @@ export class Tr2QuadRenderer
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get instanceBufferSize()
   {
     return this.GetInstanceBufferSize();
@@ -384,7 +390,6 @@ export class Tr2QuadRenderer
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get instanceDataSize()
   {
     return this.GetInstanceDataSize();

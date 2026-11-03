@@ -18,28 +18,34 @@ const TermType = {
  * Describes one term the expression language exposes - a variable, a function or
  * a string function - with its category, argument names and help text.
  */
-@be.define("Tr2ExpressionTermInfo")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2ExpressionTermInfo",
+  inherit: [ IRoot ],
+  // Tr2ExpressionTermInfo_Blue.cpp:12-18, in Carbon's order.
+  members: [
+    [ be.ATTR, "type", be.READWRITE ],
+    [ be.ATTR, "category", be.READWRITE ],
+    [ be.ATTR, "name", be.READWRITE ],
+    [ be.ATTR, "description", be.READWRITE ],
+    [ be.METHOD, "GetArguments", be.WRAP ]
+  ]
+})
 export class Tr2ExpressionTermInfo extends IRoot
 {
   /** Native term category; not persisted. */
-  @be.mapAttribute(be.READWRITE)
   @type.int32
   @type.enum("trinity.Tr2ExpressionTermInfo.TermType")
   type = TermType.VARIABLE;
 
   /** Help category name; not persisted. */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   category = "";
 
   /** Exposed term name; not persisted. */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   name = "";
 
   /** Help text for the term; not persisted. */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   description = "";
 
@@ -52,7 +58,6 @@ export class Tr2ExpressionTermInfo extends IRoot
    * @implemented
    * @returns {string[]} Argument names in factory order.
    */
-  @be.mapMethodAndWrap()
   GetArguments()
   {
     return this._arguments.slice();

@@ -39,59 +39,64 @@ function copyHash(out, value)
 }
 
 /** Carries an impostor atlas, tile dimensions, capture effect, and per-frame update budget. */
-@be.define("Tr2ImpostorManager")
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.inherit(IInitialize, INotify, Tr2DeviceResource)
+@be.define({
+  name: "Tr2ImpostorManager",
+  inherit: [ IInitialize, INotify, Tr2DeviceResource ],
+  // Tr2ImpostorManager_Blue.cpp:11-26, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "width", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "height", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "itemWidth", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "itemHeight", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "maxUpdates", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "atlas", be.READ ],
+    [ be.ATTR, "effect", be.READ ],
+    [ be.PROP_RO, "count" ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "Create" ]
+  ]
+})
 export class Tr2ImpostorManager
 {
 
   /** m_height (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   height = 1024;
 
   /** m_width (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   width = 1024;
 
   /** m_rt (Tr2RenderTargetPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2RenderTarget")
   atlas = null;
 
   /** m_itemHeight (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   itemHeight = 32;
 
   /** m_itemWidth (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   itemWidth = 32;
 
   /** m_effect (Tr2EffectPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_maxUpdates (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   maxUpdates = 16;
 
   /** Native READ projection of the live impostor table. */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get count()
   {
@@ -216,7 +221,6 @@ export class Tr2ImpostorManager
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   Create(width = 1024, height = 1024, itemWidth = 16, itemHeight = 16)
   {
     this.width = width >>> 0;

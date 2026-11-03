@@ -24,9 +24,22 @@ import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
  * A mesh drawn once per entry of a separate instance-data stream, with static
  * bounds or bounds expanded by the per-instance size.
  */
-@be.define("Tr2InstancedMesh")
-@be.exposureChainTo(Tr2Mesh)
-@be.inherit(Tr2DeviceResource)
+@be.define({
+  name: "Tr2InstancedMesh",
+  inherit: [ Tr2DeviceResource ],
+  // Tr2InstancedMesh_Blue.cpp:25-44, in Carbon's order.
+  members: [
+    [ be.ATTR, "instanceGeometryResource", be.PERSISTONLY, "_instanceGeometryResource" ],
+    [ be.PROP, "instanceGeometryResource" ],
+    [ be.ATTR_CHOOSER, "instanceGeometryResPath", be.READWRITE | be.NOTIFY | be.PERSIST, "blue.TriGR2Chooser" ],
+    [ be.ATTR, "instanceMeshIndex", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "boundsMethod", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2InstancedMesh.BoundsMethod" ],
+    [ be.ATTR, "minBounds", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxBounds", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maxInstanceSize", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2Mesh
+})
 export class Tr2InstancedMesh extends Tr2Mesh
 {
   /** Carbon m_vertexDeclaration: combined mesh and instance elements. */
@@ -39,27 +52,19 @@ export class Tr2InstancedMesh extends Tr2Mesh
   _loadedGeometryResource = null;
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2InstancedMesh_Blue.cpp:39); chooser BoundsMethodChooser (trinity/trinity/Tr2InstancedMesh_Blue.cpp:13). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2InstancedMesh.BoundsMethod")
   @type.int32
   @type.enum("trinity.Tr2InstancedMesh.BoundsMethod")
   boundsMethod = 0;
 
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2InstancedMesh_Blue.cpp:31); chooser TriGR2Chooser (trinity/trinity/TriConstants.cpp:87). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, "blue.TriGR2Chooser")
   @type.path("TriGeometryRes")
   instanceGeometryResPath = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   maxBounds = vec3.create();
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   maxInstanceSize = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   minBounds = vec3.create();
@@ -69,11 +74,8 @@ export class Tr2InstancedMesh extends Tr2Mesh
    *
    * @implemented
    */
-  @be.mapAttribute(be.PERSISTONLY, "instanceGeometryResource")
   @type.object.ref("ITr2InstanceData")
   _instanceGeometryResource = null;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.int32
@@ -179,7 +181,6 @@ export class Tr2InstancedMesh extends Tr2Mesh
    *
    * @implemented
    */
-  @be.mapProperty()
   get instanceGeometryResource()
   {
     return this.GetInstanceGeometryResource();

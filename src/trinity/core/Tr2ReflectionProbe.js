@@ -50,9 +50,27 @@ const FILTER_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/Refl
 const COPY_MIP_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/CopyCube.fx";
 
 /** Filters a cube into the prefiltered HDR reflection cube Eve's scene binds as its environment map. */
-@be.define("Tr2ReflectionProbe")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ReflectionProbe",
+  inherit: [ INotify ],
+  // Tr2ReflectionProbe_Blue.cpp:18-36, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "unfilteredTexture", be.READ ],
+    [ be.ATTR, "reflectionTexture", be.READ ],
+    [ be.ATTR, "position", be.READWRITE ],
+    [ be.ATTR, "lockPosition", be.READWRITE ],
+    [ be.ATTR, "reflectionSize", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "customSourceTexture", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "hdrOutput", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR_CHOOSER, "renderFrequency", be.READWRITE | be.NOTIFY | be.ENUM, "trinity.Tr2ReflectionProbe.ReflectionProbeRenderFrequency" ],
+    [ be.ATTR, "currentFrame", be.READ ],
+    [ be.ATTR, "hollywoodMode", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "backlightContrast", be.READ ],
+    [ be.ATTR, "backlightColor", be.READ ],
+    [ be.METHOD, "RunFilter", be.WRAP ]
+  ]
+})
 export class Tr2ReflectionProbe
 {
 
@@ -60,67 +78,55 @@ export class Tr2ReflectionProbe
    * m_renderFrequency (ReflectionProbeRenderFrequency - enum ReflectionProbeRenderFrequency) [READWRITE, NOTIFY, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2ReflectionProbe_Blue.cpp:29); chooser RenderFrequencyChooser (trinity/trinity/Tr2ReflectionProbe_Blue.cpp:8).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.ENUM, "trinity.Tr2ReflectionProbe.ReflectionProbeRenderFrequency")
   @type.int32
   @type.enum("trinity.Tr2ReflectionProbe.ReflectionProbeRenderFrequency")
   renderFrequency = 0;
 
   /** m_currentFrame (uint8_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint8
   currentFrame = 0;
 
   /** m_customSourceTexture (ITriTextureResPtr) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.object.ref("ITriTextureRes")
   customSourceTexture = null;
 
   /** m_backlightColor (Color) [READ] */
-  @be.mapAttribute(be.READ)
   @type.color
   backlightColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_backlightContrast (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   backlightContrast = 16;
 
   /** m_hollywoodMode (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   hollywoodMode = true;
 
   /** m_postFilterTarget (Tr2RenderTargetPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2RenderTarget")
   reflectionTexture = null;
 
   /** m_hdrOutput (bool) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.boolean
   hdrOutput = true;
 
   /** m_lockPosition (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   lockPosition = false;
 
   /** m_position (Vector3) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.vec3
   position = vec3.create();
 
   /** m_intermediateSize (int) [READWRITE, NOTIFY]; Carbon's default is FILTER_SIZE * 4 (`cpp:32`). */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.int32
   reflectionSize = FILTER_SIZE * 4;
 
   /** m_renderTargetCube (Tr2RenderTargetPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2RenderTarget")
   unfilteredTexture = null;
 
@@ -421,7 +427,6 @@ export class Tr2ReflectionProbe
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RunFilter(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
   {
     this.DestroyRenderTargets();

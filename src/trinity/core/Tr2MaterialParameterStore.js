@@ -7,17 +7,25 @@ import { IsMatch, blue, IInitialize, INotify, BlueClasses } from "#blue";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 /** Local shader parameter overrides with an optional resource-loaded parent store. */
-@be.define("Tr2MaterialParameterStore")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2MaterialParameterStore",
+  inherit: [ INotify ],
+  // Tr2MaterialParameterStore_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parentPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "parent", be.READ ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.METHOD, "FindParameter", be.WRAP ]
+  ]
+})
 export class Tr2MaterialParameterStore extends IInitialize
 {
   /**
    * Native m_name: authored material name.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -27,7 +35,6 @@ export class Tr2MaterialParameterStore extends IInitialize
    * Retains the existing JavaScript path declaration for resource addressing.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.path("object")
@@ -37,7 +44,6 @@ export class Tr2MaterialParameterStore extends IInitialize
    * Native m_parentStore: loaded parent searched after local overrides.
    * @type {Tr2MaterialParameterStore|null}
    */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2MaterialParameterStore")
   parent = null;
 
@@ -45,7 +51,6 @@ export class Tr2MaterialParameterStore extends IInitialize
    * Native m_parameters: named local effect parameters, including null shadows.
    * @type {Map<string, import("../shader/parameter/ITriEffectParameter.js").ITriEffectParameter|null>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.map("ITriEffectParameter")
   parameters = new Map();
@@ -130,7 +135,6 @@ export class Tr2MaterialParameterStore extends IInitialize
    * @param {string} name Parameter name.
    * @returns {object|null} First entry, including a local null shadow, or null.
    */
-  @be.mapMethodAndWrap()
   FindParameter(name)
   {
     let currentStore = this;

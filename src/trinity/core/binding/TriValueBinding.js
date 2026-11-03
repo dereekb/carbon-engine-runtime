@@ -13,14 +13,30 @@ import { vec4 } from "#math/vec4";
  * object, applying a scale and per-component offset through a type-checked copy
  * plan built when the endpoints resolve.
  */
-@be.define("TriValueBinding")
-@be.inherit(ITr2ValueBinding)
-@be.mapInterface(ITr2ValueBinding)
-@be.mapInterface(INotify)
+@be.define({
+  name: "TriValueBinding",
+  inherit: [ ITr2ValueBinding ],
+  // TriValueBinding_Blue.cpp:12-83, in Carbon's order.
+  interfaces: [ ITr2ValueBinding, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isValid" ],
+    [ be.ATTR, "isWeak", be.READ ],
+    [ be.ATTR, "isEnabled", be.READWRITE ],
+    [ be.ATTR, "sourceObject", be.PERSISTONLY, "_sourceObject" ],
+    [ be.PROP, "sourceObject" ],
+    [ be.ATTR, "sourceAttribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destinationObject", be.PERSISTONLY, "_destinationObject" ],
+    [ be.PROP, "destinationObject" ],
+    [ be.ATTR, "destinationAttribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "copyValueCallable", be.READWRITE | be.NOTIFY ]
+  ]
+})
 export class TriValueBinding extends INotify
 {
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -31,7 +47,6 @@ export class TriValueBinding extends INotify
    * @implemented
    * @returns {boolean} Whether a copy plan exists.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isValid()
   {
@@ -39,19 +54,16 @@ export class TriValueBinding extends INotify
   }
 
   /** m_isWeak (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isWeak = false;
 
   /** m_isEnabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   isEnabled = true;
 
   /** Native persisted endpoint storage; readers bypass the live setter.
    * Carbon: TriValueBinding::m_sourceObject (trinity/trinity/TriValueBinding.h:61); MAP_ATTRIBUTE (trinity/trinity/TriValueBinding_Blue.cpp:40).
    */
-  @be.mapAttribute(be.PERSISTONLY, "sourceObject")
 
   /** Carbon: m_sourceObject (trinity/trinity/TriValueBinding.h:61).
    */
@@ -66,7 +78,6 @@ export class TriValueBinding extends INotify
    * @implemented
    * @returns {object|null} Binding result.
    */
-  @be.mapProperty()
   @type.rootRef("IRoot")
   get sourceObject()
   {
@@ -86,7 +97,6 @@ export class TriValueBinding extends INotify
   }
 
   /** m_sourceAttribute (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -95,7 +105,6 @@ export class TriValueBinding extends INotify
   /** Native persisted endpoint storage; readers bypass the live setter.
    * Carbon: TriValueBinding::m_destinationObject (trinity/trinity/TriValueBinding.h:63); MAP_ATTRIBUTE (trinity/trinity/TriValueBinding_Blue.cpp:56).
    */
-  @be.mapAttribute(be.PERSISTONLY, "destinationObject")
 
   /** Carbon: m_destinationObject (trinity/trinity/TriValueBinding.h:63).
    */
@@ -111,7 +120,6 @@ export class TriValueBinding extends INotify
    * @implemented
    * @returns {object|null} Binding result.
    */
-  @be.mapProperty()
   @type.rootRef("IRoot")
   get destinationObject()
   {
@@ -131,26 +139,22 @@ export class TriValueBinding extends INotify
   }
 
   /** m_destinationAttribute (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   destinationAttribute = "";
 
   /** m_scale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scale = 1;
 
   /** m_offset (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   offset = vec4.create();
 
   /** m_copyValueCallable (BlueScriptCallback) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
   @type.rawStruct("BlueScriptCallback")
   copyValueCallable = null;
 

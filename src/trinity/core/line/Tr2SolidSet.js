@@ -20,11 +20,18 @@ import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 
 /** A set of coloured triangles with a running centre of mass, submitted as one buffer. */
-@be.define("Tr2SolidSet")
-@be.inherit(IInitialize, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.mapInterface(Tr2PrimitiveSet)
-@be.exposureChainTo(Tr2PrimitiveSet)
+@be.define({
+  name: "Tr2SolidSet",
+  inherit: [ IInitialize, Tr2DeviceResource ],
+  // Tr2SolidSet_Blue.cpp:10-25, in Carbon's order.
+  interfaces: [ IInitialize, Tr2PrimitiveSet ],
+  members: [
+    [ be.METHOD, "AddTriangle", be.WRAP ],
+    [ be.METHOD, "ClearTriangles", be.WRAP ],
+    [ be.METHOD, "SubmitChanges", be.WRAP ]
+  ],
+  chainTo: Tr2PrimitiveSet
+})
 export class Tr2SolidSet extends Tr2PrimitiveSet
 {
 
@@ -50,7 +57,6 @@ export class Tr2SolidSet extends Tr2PrimitiveSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddTriangle(position1, color1, position2, color2, position3, color3)
   {
     const dir13 = vec3.subtract(vec3.create(), position1, position3);
@@ -72,7 +78,6 @@ export class Tr2SolidSet extends Tr2PrimitiveSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearTriangles()
   {
     this.triangles.length = 0;
@@ -90,7 +95,6 @@ export class Tr2SolidSet extends Tr2PrimitiveSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SubmitChanges()
   {
     if (this.triangles.length > this.maxCurrentTriangleCount)

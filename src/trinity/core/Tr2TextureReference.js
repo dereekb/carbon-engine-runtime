@@ -15,8 +15,22 @@ import { Tr2TextureAL } from "../../trinityal/Tr2TextureAL/index.js";
  * Holds one engine texture so it can be published through a variable store
  * and observed for replacement.
  */
-@be.define("Tr2TextureReference")
-@be.mapInterface(ITr2TextureProvider)
+@be.define({
+  name: "Tr2TextureReference",
+  // Tr2TextureReference_Blue.cpp:10-23, in Carbon's order.
+  interfaces: [ ITr2TextureProvider ],
+  members: [
+    [ be.PROP_RO, "width" ],
+    [ be.PROP_RO, "height" ],
+    [ be.PROP_RO, "depth" ],
+    [ be.PROP_RO, "type" ],
+    [ be.PROP_RO, "mipCount" ],
+    [ be.PROP_RO, "format" ],
+    [ be.PROP_RO, "arraySize" ],
+    [ be.PROP_RO, "name" ],
+    [ be.METHOD, "Save", be.WRAP ]
+  ]
+})
 export class Tr2TextureReference extends ITr2TextureProvider
 {
 
@@ -40,7 +54,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get width()
   {
@@ -53,7 +66,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get height()
   {
@@ -66,7 +78,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get depth()
   {
@@ -79,7 +90,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get type()
   {
@@ -92,7 +102,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get mipCount()
   {
@@ -105,7 +114,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get format()
   {
@@ -118,7 +126,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {number} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.uint32
   get arraySize()
   {
@@ -131,7 +138,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    * @implemented
    * @returns {string} Current texture description value.
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {
@@ -266,7 +272,6 @@ export class Tr2TextureReference extends ITr2TextureProvider
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   Save(..._args)
   {
     throw new Error("Tr2TextureReference.Save is not implemented in CarbonEngineJS.");

@@ -18,26 +18,40 @@ import { TriValueBinding } from "./TriValueBinding.js";
  * Times are Be::Time, Blue 100ns ticks. Every instance takes part in sim-time
  * rebasing from construction, as Carbon's does.
  */
-@be.define("Tr2DynamicBinding")
-@be.inherit(ISimTimeRebaseNotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2DynamicBinding",
+  inherit: [ ISimTimeRebaseNotify ],
+  // Tr2DynamicBinding_Blue.cpp:10-27, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationObjectPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destinationObjectAttribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destination", be.READ ],
+    [ be.PROP_RO, "isDestinationValid" ],
+    [ be.ATTR, "sourceObjectPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "sourceObjectAttribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "source", be.READ ],
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "bindingDelay", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isSourceValid" ],
+    [ be.ATTR, "binding", be.READ ]
+  ]
+})
 export class Tr2DynamicBinding extends INotify
 {
   /** Native name member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** Native destination object path member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   destinationObjectPath = "";
 
   /** Native destination object attribute member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -51,7 +65,6 @@ export class Tr2DynamicBinding extends INotify
    *
    * @returns {object|null} The destination object.
    */
-  @be.mapAttribute(be.READ)
   @type.object.weak("IRoot")
   get destination()
   {
@@ -64,7 +77,6 @@ export class Tr2DynamicBinding extends INotify
    * @implemented
    * @returns {boolean} Whether the endpoint is alive.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isDestinationValid()
   {
@@ -72,14 +84,12 @@ export class Tr2DynamicBinding extends INotify
   }
 
   /** Native source object path member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   sourceObjectPath = "";
 
   /** Native source object attribute member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -93,7 +103,6 @@ export class Tr2DynamicBinding extends INotify
    *
    * @returns {object|null} The source object.
    */
-  @be.mapAttribute(be.READ)
   @type.object.weak("IRoot")
   get source()
   {
@@ -101,14 +110,12 @@ export class Tr2DynamicBinding extends INotify
   }
 
   /** Native scale member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   scale = 1;
 
   /** Native binding delay member. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   bindingDelay = 0;
@@ -119,7 +126,6 @@ export class Tr2DynamicBinding extends INotify
    * @implemented
    * @returns {boolean} Whether the endpoint is alive.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isSourceValid()
   {
@@ -127,7 +133,6 @@ export class Tr2DynamicBinding extends INotify
   }
 
   /** Native binding member. */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriValueBinding")
   binding = null;
 

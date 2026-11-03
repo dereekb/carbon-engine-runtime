@@ -20,20 +20,27 @@ import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
  * Owns a directly writable AL instance buffer, its declaration and bounds.
  * The selected AL supplies mapping storage; this provider keeps no CPU copy.
  */
-@be.define("Tr2DirectInstanceData")
-@be.inherit(ITr2InstanceData, Tr2DeviceResource)
+@be.define({
+  name: "Tr2DirectInstanceData",
+  inherit: [ ITr2InstanceData, Tr2DeviceResource ],
+  // Tr2DirectInstanceData_Blue.cpp:11-27, in Carbon's order.
+  interfaces: [ ITr2InstanceData ],
+  members: [
+    [ be.PROP_RO, "count" ],
+    [ be.METHOD, "SetBoundingBox", be.WRAP ],
+    [ be.ATTR, "aabbMin", be.READ ],
+    [ be.ATTR, "aabbMax", be.READ ]
+  ]
+})
 // Carbon: MAP_INTERFACE( ITr2InstanceData ) (Tr2DirectInstanceData_Blue.cpp:12).
-@be.mapInterface(ITr2InstanceData)
 export class Tr2DirectInstanceData
 {
 
   /** m_aabb.m_max (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   aabbMax = vec3.create();
 
   /** m_aabb.m_min (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   aabbMin = vec3.create();
 
@@ -41,7 +48,6 @@ export class Tr2DirectInstanceData
    * GetCount (MAP_PROPERTY_READONLY "count") - number of instances.
    * Carbon: MAP_PROPERTY_READONLY (trinity/trinity/Tr2DirectInstanceData_Blue.cpp:15); getter GetCount only reads m_count.
    */
-  @be.mapPropertyReadOnly__Field()
   @type.uint32
   count = 0;
 
@@ -196,7 +202,6 @@ export class Tr2DirectInstanceData
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetBoundingBox(bounds, maxBounds)
   {
     const min = maxBounds === undefined ? bounds?.min ?? bounds?.minBounds : bounds;

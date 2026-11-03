@@ -19,9 +19,15 @@ const AXIS_COLORS = Object.freeze({
 });
 
 /** Extends the manipulation tool with the current three-axis translation result. */
-@be.define("Tr2TranslationTool")
-@be.mapInterface(Tr2ManipulationTool)
-@be.exposureChainTo(Tr2ManipulationTool)
+@be.define({
+  name: "Tr2TranslationTool",
+  // Tr2TranslationTool_Blue.cpp:11-15, in Carbon's order.
+  interfaces: [ Tr2ManipulationTool ],
+  members: [
+    [ be.ATTR, "translation", be.READ ]
+  ],
+  chainTo: Tr2ManipulationTool
+})
 export class Tr2TranslationTool extends Tr2ManipulationTool
 {
   /** Native constructor builds arrows and selects the free-move ring. */
@@ -175,7 +181,6 @@ export class Tr2TranslationTool extends Tr2ManipulationTool
   }
 
   /** m_translation (Vector3) [READ] */
-  @be.mapAttribute(be.READ)
   @type.vec3
   translation = vec3.create();
 

@@ -66,8 +66,12 @@ const INVALID_OFFSET = 0xffffffff;
 /**
  * One upload arena per data type, fenced by frame.
  */
-@be.define("Tr2RingBuffer")
-@be.inherit(ITr2GpuBuffer, Tr2DeviceResource)
+@be.define({
+  name: "Tr2RingBuffer",
+  inherit: [ ITr2GpuBuffer, Tr2DeviceResource ],
+  // Tr2RingBuffer_Blue.cpp:11-12, in Carbon's order.
+  members: []
+})
 
 export class Tr2RingBuffer
 {

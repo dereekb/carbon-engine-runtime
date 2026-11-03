@@ -5,7 +5,14 @@ import { exposure as be } from "#be";
 import { type, blue } from "#schema";
 
 /** Persistent-only native morph target name and weight record owned by a mesh. */
-@be.define("Tr2SerializedMorphAnimation")
+@be.define({
+  name: "Tr2SerializedMorphAnimation",
+  // Tr2Mesh_Blue.cpp:14-17, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.PERSISTONLY ],
+    [ be.ATTR, "weight", be.PERSISTONLY ]
+  ]
+})
 
 export class Tr2SerializedMorphAnimation extends IRoot
 {
@@ -15,7 +22,6 @@ export class Tr2SerializedMorphAnimation extends IRoot
    * Native m_name (std::string) [PERSISTONLY].
    * @type {string}
    */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   name = "";
 
@@ -24,7 +30,6 @@ export class Tr2SerializedMorphAnimation extends IRoot
    * Native m_weight (float) [PERSISTONLY].
    * @type {number}
    */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.float32
   weight = 0;
 

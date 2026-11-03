@@ -19,21 +19,44 @@ import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#int
  * Base mesh: owns one mesh-area list per batch type and turns the displayed
  * areas into GPU-free render batches and shadow area blocks.
  */
-@be.define("Tr2MeshBase")
-@be.inherit(IListNotify)
+@be.define({
+  name: "Tr2MeshBase",
+  inherit: [ IListNotify ],
+  // Tr2MeshBase_Blue.cpp:11-37, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE ],
+    [ be.ATTR, "meshIndex", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "opaqueAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "decalAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "depthAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "transparentAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "additiveAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "pickableAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "mirrorAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "decalNormalAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "depthNormalAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "opaquePrepassAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "decalPrepassAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "geometryEraserAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "distortionAreas", be.READ | be.PERSIST ],
+    [ be.ATTR, "maxVertexScale", be.READ | be.PERSIST ],
+    [ be.ATTR, "maxVertexDisplacement", be.READ | be.PERSIST ],
+    [ be.ATTR, "rotatesVertices", be.READ | be.PERSIST ],
+    [ be.METHOD, "GetGeometryResPath", be.WRAP ],
+    [ be.METHOD, "GetAllAreas", be.WRAP ],
+    [ be.METHOD, "GetMaterialBoundsAdjustment", be.WRAP ],
+    [ be.METHOD, "SetMaterialBoundsAdjustment", be.WRAP ]
+  ]
+})
 
 export class Tr2MeshBase
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   display = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.int32
@@ -54,67 +77,41 @@ export class Tr2MeshBase
   /** m_forcedRebind */
   _forcedRebind = false;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   opaqueAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   decalAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   depthAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   transparentAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   additiveAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   pickableAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   mirrorAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   decalNormalAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   depthNormalAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   opaquePrepassAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   decalPrepassAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2MeshArea")
   geometryEraserAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2MeshArea")
   distortionAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
@@ -126,17 +123,11 @@ export class Tr2MeshBase
   @type.list("Tr2MeshArea")
   flareAreas = new BlueList(Tr2MeshArea, { className: "Tr2MeshArea" });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.float32
   maxVertexScale = 1;
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.float32
   maxVertexDisplacement = 0;
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.boolean
   rotatesVertices = false;
@@ -566,7 +557,6 @@ export class Tr2MeshBase
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetAllAreas()
   {
     return Tr2MeshBase._areaProperties.flatMap(property => this[property]);
@@ -639,7 +629,6 @@ export class Tr2MeshBase
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetMaterialBoundsAdjustment()
   {
     return {
@@ -655,7 +644,6 @@ export class Tr2MeshBase
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetMaterialBoundsAdjustment(value)
   {
     const source = value || {};
@@ -670,7 +658,6 @@ export class Tr2MeshBase
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetGeometryResPath()
   {
     return "";

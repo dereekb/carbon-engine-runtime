@@ -107,11 +107,41 @@ function sphericalToCartesian(value, center)
 }
 
 /** A line set that draws curved and sphere-projected lines by tessellating them into straight segments. */
-@be.define("Tr2CurveLineSet")
-@be.inherit(ITr2Renderable, Tr2DeviceResource, ITr2Pickable, INotify)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2Pickable)
+@be.define({
+  name: "Tr2CurveLineSet",
+  inherit: [ ITr2Renderable, Tr2DeviceResource, ITr2Pickable, INotify ],
+  // Tr2CurveLineSet_Blue.cpp:10-181, in Carbon's order.
+  interfaces: [ ITr2Renderable, INotify, ITr2Pickable ],
+  members: [
+    [ be.ATTR, "lineEffect", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pickEffect", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "lineWidthFactor", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "additive", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depthOffset", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "AddStraightLine", be.WRAP ],
+    [ be.METHOD, "AddCurvedLineCrt", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddCurvedLineSph", be.WRAP ],
+    [ be.METHOD, "AddSpheredLineCrt", be.WRAP ],
+    [ be.METHOD, "AddSpheredLineSph", be.WRAP ],
+    [ be.METHOD, "ChangeLineColor", be.WRAP ],
+    [ be.METHOD, "ChangeLineWidth", be.WRAP ],
+    [ be.METHOD, "ChangeLinePositionCrt", be.WRAP ],
+    [ be.METHOD, "ChangeLinePositionSph", be.WRAP ],
+    [ be.METHOD, "ChangeLineIntermediateCrt", be.WRAP ],
+    [ be.METHOD, "ChangeLineIntermediateSph", be.WRAP ],
+    [ be.METHOD, "ChangeLineMultiColor", be.WRAP ],
+    [ be.METHOD, "ChangeLineAnimation", be.WRAP ],
+    [ be.METHOD, "ChangeLineSegmentation", be.WRAP ],
+    [ be.METHOD, "RemoveLine", be.WRAP ],
+    [ be.METHOD, "ClearLines", be.WRAP ],
+    [ be.METHOD, "SubmitChanges", be.WRAP ]
+  ]
+})
 export class Tr2CurveLineSet
 {
 
@@ -264,63 +294,53 @@ export class Tr2CurveLineSet
   }
 
   /** m_additive (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   additive = false;
 
   /** m_translation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_lineWidthFactor (float) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.float32
   lineWidthFactor = 1;
 
   /** m_depthOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   depthOffset = 0;
 
   /** m_lineEffect (Tr2MaterialPtr) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.object.ref("Tr2Material")
   lineEffect = null;
 
   /** m_pickEffect (Tr2MaterialPtr) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.object.ref("Tr2Material")
@@ -331,7 +351,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
   AddCurvedLineCrt(position1, color1, position2, color2, middle, width, segments = 20)
   {
     return this.#addLineData(this.#createLine(
@@ -351,7 +370,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddCurvedLineSph(position1, color1, position2, color2, center, middle, width)
   {
     return this.AddCurvedLineCrt(
@@ -369,7 +387,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddSpheredLineCrt(position1, color1, position2, color2, center, width)
   {
     return this.#addLineData(this.#createLine(
@@ -389,7 +406,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddSpheredLineSph(position1, color1, position2, color2, center, width)
   {
     return this.AddSpheredLineCrt(
@@ -407,7 +423,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   AddStraightLine(position1, color1, position2, color2, width)
   {
     return this.#addLineData(this.#createLine(
@@ -427,7 +442,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineIntermediateSph(id, intermediatePosition, center)
   {
     this.ChangeLineIntermediateCrt(id, sphericalToCartesian(intermediatePosition, center));
@@ -438,7 +452,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineIntermediateCrt(id, intermediatePosition)
   {
     if (this.#isValidLineID(id))
@@ -452,7 +465,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLinePositionSph(id, position1, position2, center)
   {
     this.ChangeLinePositionCrt(id, sphericalToCartesian(position1, center), sphericalToCartesian(position2, center));
@@ -463,7 +475,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLinePositionCrt(id, position1, position2)
   {
     if (this.#isValidLineID(id))
@@ -478,7 +489,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineAnimation(id, color, speed, scale)
   {
     if (this.#isValidLineID(id))
@@ -494,7 +504,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineMultiColor(id, color, border)
   {
     if (this.#isValidLineID(id))
@@ -509,7 +518,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineSegmentation(id, numOfSegments)
   {
     if (this.#isValidLineID(id) && this.lines[id].type !== Tr2CurveLineSet.LineType.LINETYPE_STRAIGHT)
@@ -523,7 +531,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineColor(id, color1, color2)
   {
     if (this.#isValidLineID(id))
@@ -538,7 +545,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   ChangeLineWidth(id, width)
   {
     if (this.#isValidLineID(id))
@@ -552,7 +558,6 @@ export class Tr2CurveLineSet
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearLines()
   {
     this.lines.length = 0;
@@ -564,7 +569,6 @@ export class Tr2CurveLineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   RemoveLine(id)
   {
     if (this.#isValidLineID(id))
@@ -584,7 +588,6 @@ export class Tr2CurveLineSet
    *   set as in use, since submitted lines are about to be drawn; one submitted
    *   and never drawn is still released by the sweep (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
-  @be.mapMethodAndWrap()
   SubmitChanges()
   {
     this.FillVertexBuffer();

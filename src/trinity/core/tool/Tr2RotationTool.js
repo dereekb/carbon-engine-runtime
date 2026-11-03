@@ -20,9 +20,16 @@ const AXIS_COLORS = Object.freeze({
 });
 
 /** Extends the manipulation tool with quaternion rotation state and angular precision. */
-@be.define("Tr2RotationTool")
-@be.mapInterface(Tr2ManipulationTool)
-@be.exposureChainTo(Tr2ManipulationTool)
+@be.define({
+  name: "Tr2RotationTool",
+  // Tr2RotationTool_Blue.cpp:11-16, in Carbon's order.
+  interfaces: [ Tr2ManipulationTool ],
+  members: [
+    [ be.ATTR, "rotation", be.READ ],
+    [ be.ATTR, "precision", be.READWRITE ]
+  ],
+  chainTo: Tr2ManipulationTool
+})
 export class Tr2RotationTool extends Tr2ManipulationTool
 {
   _angle = 0;
@@ -212,12 +219,10 @@ export class Tr2RotationTool extends Tr2ManipulationTool
   }
 
   /** m_precision (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   precision = 1;
 
   /** m_rotation (Quaternion) [READ] */
-  @be.mapAttribute(be.READ)
   @type.quat
   rotation = quat.create();
 

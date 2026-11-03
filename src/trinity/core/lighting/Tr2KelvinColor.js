@@ -15,19 +15,25 @@ import { blue } from "#blue";
  * GetTemperature/GetTint/GetWhiteBalance accessors and RGBA AsRGB are not exposed
  * here. Initialization and the native self/IInitialize query are supported.
  */
-@be.define("Tr2KelvinColor")
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2KelvinColor",
+  // Tr2KelvinColor_Blue.cpp:202-208, in Carbon's order.
+  interfaces: [ IInitialize ],
+  members: [
+    [ be.ATTR, "temperature", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "tint", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "whiteBalance", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2StandardIlluminant" ]
+  ]
+})
 export class Tr2KelvinColor extends IInitialize
 {
 
   /** m_temperature (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   temperature = 5500;
 
   /** m_tint (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   tint = 0.5;
@@ -36,7 +42,6 @@ export class Tr2KelvinColor extends IInitialize
    * m_whiteBalance (Tr2StandardIlluminant - enum Tr2StandardIlluminant) [ENUM, READWRITE, PERSIST]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2KelvinColor_Blue.cpp:208); chooser Tr2StandardIlluminantChooser (trinity/trinity/Tr2KelvinColor_Blue.cpp:12).
    */
-  @be.mapAttributeWithChooser(be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2StandardIlluminant")
   @type.int32
   @type.enum("trinity.Tr2StandardIlluminant")
   whiteBalance = 2;

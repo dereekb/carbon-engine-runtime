@@ -6,14 +6,19 @@ import { type, blue } from "#schema";
 import { vec3 } from "#math/vec3";
 
 /** A shared vector value used by bindings, including space-object position deltas. */
-@be.define("Tr2BindingVector3")
+@be.define({
+  name: "Tr2BindingVector3",
+  inherit: [ IRoot ],
+  // Tr2BindingVector3_Blue.cpp:10-12, in Carbon's order.
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class Tr2BindingVector3 extends IRoot
 {
 
   /** m_value (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   value = vec3.create();

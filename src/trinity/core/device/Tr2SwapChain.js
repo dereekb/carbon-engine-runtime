@@ -12,19 +12,27 @@ import { Succeeded } from "../../../trinityal/ALResult.js";
 import { Tr2SwapChainAL } from "../../../trinityal/Tr2SwapChainAL/index.js";
 
 /** Tr2SwapChain (trinityCore) - generated from schema shapeHash 955529ab.... */
-@be.define("Tr2SwapChain")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2SwapChain",
+  inherit: [ IRoot ],
+  // Tr2SwapChain_Blue.cpp:12-21, in Carbon's order.
+  members: [
+    [ be.ATTR, "backBuffer", be.READ ],
+    [ be.ATTR, "depthStencilBuffer", be.READ ],
+    [ be.PROP_RO, "width" ],
+    [ be.PROP_RO, "height" ],
+    [ be.METHOD, "CreateForWindow", be.WRAP ]
+  ]
+})
 
 export class Tr2SwapChain extends IRoot
 {
 
   /** m_depthStencil (Tr2DepthStencilPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2DepthStencil")
   depthStencilBuffer = null;
 
   /** m_backBuffer (Tr2RenderTargetPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2RenderTarget")
   backBuffer = null;
 
@@ -52,7 +60,6 @@ export class Tr2SwapChain extends IRoot
    * @param {object} renderContext The context to create against.
    * @returns {boolean} Whether the chain came up.
    */
-  @be.mapMethodAndWrap()
   CreateForWindow(windowHandle, renderContext)
   {
     this.#windowHandle = windowHandle;
@@ -137,7 +144,6 @@ export class Tr2SwapChain extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get width()
   {
     return this.GetWidth();
@@ -149,7 +155,6 @@ export class Tr2SwapChain extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get height()
   {
     return this.GetHeight();

@@ -85,8 +85,17 @@ function readFloat(value)
  * lighting - a primary light reflected off nearby spheres - for any receiver
  * position in the scene.
  */
-@be.define("Tr2ShLightingManager")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2ShLightingManager",
+  inherit: [ IRoot ],
+  // Tr2ShLightingManager_Blue.cpp:20-39, in Carbon's order.
+  members: [
+    [ be.ATTR, "primaryIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "secondaryIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "quality", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ShLightingManager.Quality" ],
+    [ be.ATTR, "lights", be.READ | be.PERSIST ]
+  ]
+})
 
 export class Tr2ShLightingManager extends IRoot
 {
@@ -95,25 +104,21 @@ export class Tr2ShLightingManager extends IRoot
    * m_quality (Quality - enum Quality) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2ShLightingManager_Blue.cpp:33); chooser Tr2ShLightingManagerQualityChooser (trinity/trinity/Tr2ShLightingManager_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ShLightingManager.Quality")
   @type.int32
   @type.enum("trinity.Tr2ShLightingManager.Quality")
   quality = 1;
 
   /** m_lights (PTr2PointLightVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2PointLight")
   lights = [];
 
   /** m_primaryIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   primaryIntensity = 1;
 
   /** m_secondaryIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   secondaryIntensity = 1;

@@ -13,8 +13,16 @@ import { blue } from "#schema";
  * Per-bone rotation and translation offsets layered on top of an animated rig,
  * keyed by bone name until bound into the rig's joint order.
  */
-@be.define("GrannyBoneOffset")
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "GrannyBoneOffset",
+  // GrannyBoneOffset_Blue.cpp:12-35, in Carbon's order.
+  interfaces: [ IInitialize ],
+  members: [
+    [ be.METHOD, "SetOffset", be.WRAP ],
+    [ be.METHOD, "SetRotation", be.WRAP ],
+    [ be.METHOD, "ClearTransforms", be.WRAP ]
+  ]
+})
 export class GrannyBoneOffset extends IInitialize
 {
   /** Runtime name-to-offset storage; not exposed or persisted. */
@@ -69,7 +77,6 @@ export class GrannyBoneOffset extends IInitialize
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearTransforms()
   {
     this._transforms.clear();
@@ -84,7 +91,6 @@ export class GrannyBoneOffset extends IInitialize
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetRotation(bone, r, i, j, k)
   {
     if (!bone) return;
@@ -100,7 +106,6 @@ export class GrannyBoneOffset extends IInitialize
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetOffset(bone, x, y, z)
   {
     if (!bone) return;

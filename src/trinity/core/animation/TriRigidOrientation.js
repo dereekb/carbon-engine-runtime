@@ -19,9 +19,20 @@ import { vec3 } from "#math/vec3";
  * has no native query mapping for BlueList admission. Number arithmetic,
  * Float32Array intermediates and module scratch retain the JS numeric path.
  */
-@be.define("TriRigidOrientation")
-@be.mapInterface(ITriFunction)
-@be.mapInterface(ITriQuaternionFunction)
+@be.define({
+  name: "TriRigidOrientation",
+  // TriRigidOrientation_Blue.cpp:23-77, in Carbon's order.
+  interfaces: [ ITriFunction, ITriQuaternionFunction ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "I", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "drag", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "start", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "states", be.READ | be.PERSIST ],
+    [ be.METHOD, "Sort", be.WRAP ]
+  ]
+})
 export class TriRigidOrientation extends ITriQuaternionFunction
 {
 
@@ -30,7 +41,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * not alter key selection or the torque integration.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   name = "";
@@ -40,7 +50,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * drag it controls exponential decay of the integration rate through drag / I.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   I = 1;
@@ -50,7 +59,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * rate approaches torque / drag with exponential decay set by drag / I.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   drag = 1;
@@ -60,7 +68,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * and seeded from the first key by Sort. Returned before the first key or with no keys.
    * @type {Float32Array|Float64Array|number[]}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   value = quat.create();
@@ -70,7 +77,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * seconds methods take time already relative to it.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float64
   start = 0;
@@ -80,7 +86,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    * after edits to order the keys and propagate later keys' initial states.
    * @type {TriTorque[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriTorque")
   states = [];
@@ -90,7 +95,6 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   Sort()
   {
     this.states.sort((a, b) => a.time - b.time);

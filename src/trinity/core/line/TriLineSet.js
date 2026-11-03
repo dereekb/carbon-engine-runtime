@@ -20,8 +20,23 @@ const MAX_VERTICES = 100000;
 
 
 /** A debug line set that builds boxes, spheres, cylinders and cones out of coloured line segments. */
-@be.define("TriLineSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "TriLineSet",
+  inherit: [ IRoot ],
+  // TriLineSet_Blue.cpp:11-49, in Carbon's order.
+  members: [
+    [ be.METHOD, "Add", be.WRAP ],
+    [ be.METHOD, "AddLines", be.WRAP ],
+    [ be.METHOD, "AddSphere", be.WRAP ],
+    [ be.METHOD, "AddBox", be.WRAP ],
+    [ be.METHOD, "Clear", be.WRAP ],
+    [ be.METHOD, "Render", be.WRAP, "RenderFromScript" ],
+    [ be.METHOD, "SetDefaultColor", be.WRAP ],
+    [ be.METHOD, "SetCurrentColor", be.WRAP ],
+    [ be.ATTR, "transform", be.READWRITE ],
+    [ be.ATTR, "zEnable", be.READWRITE ]
+  ]
+})
 
 export class TriLineSet extends IRoot
 {
@@ -34,12 +49,10 @@ export class TriLineSet extends IRoot
   vertices = [];
 
   /** m_zEnable (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   zEnable = true;
 
   /** m_transform (Matrix) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.mat4
   transform = mat4.create();
 
@@ -61,7 +74,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Add(from, colorFrom, to, colorTo)
   {
     if (this.vertices.length + 2 > MAX_VERTICES) return;
@@ -87,7 +99,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddSphere(center, radius, segments, color = 0xffffffff)
   {
     if (segments < 4) segments = 4;
@@ -192,7 +203,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddBox(min, max, color = 0xffffffff)
   {
     // vec3_0 is minA, vec3_1 is minB, vec3_2 is minC, vec3_3 is maxA, vec3_4 is maxB, vec3_5 is maxC.
@@ -239,7 +249,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Clear()
   {
     this.vertices.length = 0;
@@ -250,7 +259,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetCurrentColor(color)
   {
     const value = TriLineSet._SwizzleColor(color);
@@ -262,7 +270,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetDefaultColor(color)
   {
     this.defaultColor = color >>> 0;
@@ -301,7 +308,6 @@ export class TriLineSet extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddLines(lines)
   {
     for (const [ from, to ] of lines) this.AddDefaultColor(from, to);
@@ -313,7 +319,6 @@ export class TriLineSet extends IRoot
    * @implemented
    * @renamed Render
    */
-  @be.mapMethodAndWrap("Render")
   RenderFromScript()
   {
     this.Render(Tr2RenderContext_GetMainThreadRenderContext());

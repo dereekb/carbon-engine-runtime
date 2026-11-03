@@ -10,7 +10,14 @@ import { blue } from "#schema";
  * Collects the visibility events a visibility executor emits, for the interior
  * and portal consumers to read back.
  */
-@be.define("Tr2VisibilityResults")
+@be.define({
+  name: "Tr2VisibilityResults",
+  // Tr2VisibilityResults_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.METHOD, "Clear", be.WRAP ],
+    [ be.METHOD, "GetNumVisibilityEvents", be.WRAP ]
+  ]
+})
 export class Tr2VisibilityResults extends IRoot
 {
 
@@ -44,7 +51,6 @@ export class Tr2VisibilityResults extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Clear()
   {
     this.#events.length = 0;
@@ -55,7 +61,6 @@ export class Tr2VisibilityResults extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetNumVisibilityEvents()
   {
     return this.#events.length;

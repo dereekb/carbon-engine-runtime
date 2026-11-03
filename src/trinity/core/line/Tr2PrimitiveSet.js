@@ -21,11 +21,25 @@ import { ITr2Pickable } from "../ITr2Pickable.js";
  *
  * @abstract
  */
-@be.define("Tr2PrimitiveSet")
-@be.inherit(ITr2Renderable, ITr2Pickable, INotify)
-@be.mapInterface(ITr2Renderable)
-@be.mapInterface(ITr2Pickable)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2PrimitiveSet",
+  inherit: [ ITr2Renderable, ITr2Pickable, INotify ],
+  // Tr2PrimitiveSet_Blue.cpp:10-30, in Carbon's order.
+  interfaces: [ ITr2Renderable, ITr2Pickable, INotify ],
+  members: [
+    [ be.ATTR, "effect", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "pickEffect", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "viewOriented", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaleByDistanceToView", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scale", be.READ ],
+    [ be.ATTR, "color", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "localTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READ ],
+    [ be.ATTR, "_userData", be.READWRITE ],
+    [ be.METHOD, "SetCurrentColor", be.WRAP ]
+  ]
+})
 @be.abstract
 export class Tr2PrimitiveSet extends IRoot
 {
@@ -43,61 +57,51 @@ export class Tr2PrimitiveSet extends IRoot
 
 
   /** m_localTransform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   localTransform = mat4.create();
 
   /** m_worldTransform (Matrix) [READ] */
-  @be.mapAttribute(be.READ)
   @type.mat4
   worldTransform = mat4.create();
 
   /** m_pythonUserData (PyObject*) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.unknown
   _userData = null;
 
   /** m_viewOriented (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   viewOriented = false;
 
   /** m_scaleByDistanceToView (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   scaleByDistanceToView = false;
 
   /** m_color (Color) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.color
   color = vec4.fromValues(0.5, 0.5, 0.5, 1);
 
   /** m_scale (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   scale = 1;
 
   /** m_effect (Tr2EffectPtr) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.object.ref("Tr2Effect")
   effect = null;
 
   /** m_pickEffect (Tr2EffectPtr) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.object.ref("Tr2Effect")
   pickEffect = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -107,7 +111,6 @@ export class Tr2PrimitiveSet extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   SetCurrentColor(_color)
   {
   }

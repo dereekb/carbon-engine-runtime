@@ -7,9 +7,18 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 
 /** Native IRoot torque key; TriRigidOrientation_Blue.cpp maps no query interfaces. */
-@be.define("TriTorque")
+@be.define({
+  name: "TriTorque",
+  inherit: [ IRoot ],
+  // TriRigidOrientation_Blue.cpp:11-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "time", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rot0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "omega0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "torque", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class TriTorque extends IRoot
 {
 
@@ -18,7 +27,6 @@ export class TriTorque extends IRoot
    * Sort orders the keys by this value before propagating their initial states.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   time = 0;
@@ -28,7 +36,6 @@ export class TriTorque extends IRoot
    * Sort propagates this buffer from the previous key for every key after the first.
    * @type {Float32Array|Float64Array|number[]}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rot0 = quat.create();
@@ -38,7 +45,6 @@ export class TriTorque extends IRoot
    * the torque-and-drag integrator. Sort propagates it for keys after the first.
    * @type {Float32Array|Float64Array|number[]}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   omega0 = vec3.create();
@@ -48,7 +54,6 @@ export class TriTorque extends IRoot
    * key's interval, integrated using the curve's inertia and drag coefficients.
    * @type {Float32Array|Float64Array|number[]}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   torque = vec3.create();

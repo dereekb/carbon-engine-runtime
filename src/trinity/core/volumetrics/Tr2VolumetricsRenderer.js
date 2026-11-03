@@ -50,98 +50,103 @@ const FOG_LIGHT_BITS = new Uint32Array(FOG_LIGHTS.buffer); // alloc: uint32 view
  * Renders cloud slices and shadows, blends scene fog settings and keeps the fog's Mie environment map. The froxel fog
  * passes themselves wait on WGSL translation of their compute effects (see _RenderFog_Resources).
  */
-@be.define("Tr2VolumetricsRenderer")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2VolumetricsRenderer",
+  inherit: [ IRoot ],
+  // Tr2VolumetricsRenderer_Blue.cpp:28-170, in Carbon's order.
+  members: [
+    [ be.ATTR_CHOOSER, "quality", be.READWRITE | be.ENUM, "trinity.Tr2VolumerticQuality" ],
+    [ be.ATTR, "scaleFactor", be.READWRITE ],
+    [ be.ATTR, "blur", be.READWRITE ],
+    [ be.ATTR, "castShadows", be.READWRITE ],
+    [ be.ATTR, "receiveShadows", be.READWRITE ],
+    [ be.ATTR, "thickness", be.READ ],
+    [ be.ATTR, "lightDirectionality", be.READ ],
+    [ be.ATTR, "environmentIntensity", be.READ ],
+    [ be.ATTR, "environmentDirectionality", be.READ ],
+    [ be.ATTR, "fogColor", be.READ ],
+    [ be.ATTR, "backgroundVisibility", be.READ ],
+    [ be.ATTR, "godRayNoiseIntensity", be.READ ],
+    [ be.ATTR, "godRayNoiseFrequency", be.READ ],
+    [ be.ATTR, "godRayNoiseAnimationSpeed", be.READ ],
+    [ be.ATTR, "fogNoiseIntensity", be.READ ],
+    [ be.ATTR, "fogNoiseFrequency", be.READ ],
+    [ be.ATTR, "fogNoiseMovementSpeed", be.READ ],
+    [ be.ATTR, "reflectionIntensity", be.READ ],
+    [ be.ATTR, "logBlending", be.READWRITE ],
+    [ be.ATTR, "logBlendingSmoothness", be.READWRITE ],
+    [ be.ATTR, "gameBackClip", be.READWRITE ],
+    [ be.ATTR, "mieEnvironmentMap", be.READ ]
+  ]
+})
 export class Tr2VolumetricsRenderer
 {
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp:29); chooser Tr2VolumetricQuality_Chooser (trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp:8). */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.Tr2VolumerticQuality")
   @type.int32
   @type.enum("trinity.Tr2VolumerticQuality")
   quality = Tr2VolumerticQuality.High;
 
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2TextureReference")
   mieEnvironmentMap = new Tr2TextureReference();
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   blur = true;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   logBlending = true;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   gameBackClip = 1e6;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   backgroundVisibility = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   thickness = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   environmentDirectionality = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   lightDirectionality = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   godRayNoiseAnimationSpeed = 0;
 
-  @be.mapAttribute(be.READ)
   @type.vec3
   fogNoiseMovementSpeed = vec3.create();
 
-  @be.mapAttribute(be.READ)
   @type.color
   fogColor = vec4.create();
 
-  @be.mapAttribute(be.READ)
   @type.float32
   godRayNoiseFrequency = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   fogNoiseFrequency = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   godRayNoiseIntensity = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   fogNoiseIntensity = 0;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float64
   logBlendingSmoothness = 4;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   environmentIntensity = 0;
 
   /** The blended reflection intensity (m_froxelFogSettings.reflectionIntensity, Blue read-only). */
-  @be.mapAttribute(be.READ)
   @type.float32
   reflectionIntensity = 1;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   castShadows = false;
 
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   receiveShadows = false;
 
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   scaleFactor = 0.7;
 

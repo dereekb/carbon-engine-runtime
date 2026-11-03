@@ -7,8 +7,16 @@ import { Tr2LineSet } from "./Tr2LineSet.js";
 import { vec3 } from "#math/vec3";
 
 /** A line set that draws an axis-aligned bounding box and its picking volume. */
-@be.define("Tr2BoundingLineSet")
-@be.exposureChainTo(Tr2LineSet)
+@be.define({
+  name: "Tr2BoundingLineSet",
+  // Tr2BoundingLineSet_Blue.cpp:10-18, in Carbon's order.
+  members: [
+    [ be.ATTR, "minBounds", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "maxBounds", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.METHOD, "UpdateBounds", be.WRAP ]
+  ],
+  chainTo: Tr2LineSet
+})
 export class Tr2BoundingLineSet extends Tr2LineSet
 {
 
@@ -26,14 +34,12 @@ export class Tr2BoundingLineSet extends Tr2LineSet
 
 
   /** m_maxBounds (Vector3) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.vec3
   maxBounds = vec3.create();
 
   /** m_minBounds (Vector3) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.vec3
@@ -44,7 +50,6 @@ export class Tr2BoundingLineSet extends Tr2LineSet
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   UpdateBounds(min, max)
   {
     vec3.copy(this.minBounds, min);

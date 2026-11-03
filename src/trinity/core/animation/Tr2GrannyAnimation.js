@@ -123,10 +123,49 @@ function sampleCmfChannel(out, curves, channel, time)
 
 
 /** Tr2GrannyAnimation (trinityCore) - promoted from generated; shapeHash 056bad2a. */
-@be.define("Tr2GrannyAnimation")
-@be.inherit(IInitialize, ITr2AnimationUpdater)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2AnimationUpdater)
+@be.define({
+  name: "Tr2GrannyAnimation",
+  inherit: [ IInitialize, ITr2AnimationUpdater ],
+  // Tr2GrannyAnimation_Blue.cpp:16-223, in Carbon's order.
+  interfaces: [ IInitialize, ITr2AnimationUpdater ],
+  members: [
+    [ be.PROP, "resPath" ],
+    [ be.ATTR, "resPath_", be.PERSISTONLY ],
+    [ be.ATTR, "grannyRes", be.READ ],
+    [ be.PROP, "model" ],
+    [ be.ATTR, "model_", be.PERSISTONLY ],
+    [ be.ATTR, "debugRenderSkeleton", be.READWRITE ],
+    [ be.ATTR, "debugRenderJointNames", be.READWRITE ],
+    [ be.ATTR, "animationEnabled", be.READWRITE ],
+    [ be.METHOD, "PlayAnimation", be.WRAP, "PlayAnimationOnce" ],
+    [ be.METHOD, "PlayAnimationEx", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "ChainAnimation", be.WRAP ],
+    [ be.METHOD, "ChainAnimationEx", be.WRAP ],
+    [ be.METHOD, "TogglePauseAnimations", be.WRAP ],
+    [ be.METHOD, "EndAnimation", be.WRAP ],
+    [ be.METHOD, "ClearAnimations", be.WRAP ],
+    [ be.METHOD, "StopAnimations", be.WRAP ],
+    [ be.METHOD, "PlayLayerAnimation", be.WRAP, "PlayLayerAnimationByName" ],
+    [ be.METHOD, "AddAnimationLayer", be.WRAP ],
+    [ be.METHOD, "AddAnimationLayerBone", be.WRAP ],
+    [ be.METHOD, "AddAnimationLayerAllBones", be.WRAP ],
+    [ be.METHOD, "GetLayerWeight", be.WRAP ],
+    [ be.METHOD, "SetLayerWeight", be.WRAP ],
+    [ be.METHOD, "SetLayerControlParam", be.WRAP ],
+    [ be.METHOD, "SetLayerControlParamSkewRate", be.WRAP ],
+    [ be.METHOD, "AimBone", be.WRAP ],
+    [ be.METHOD, "DisableAimBone", be.WRAP ],
+    [ be.METHOD, "SetAdditiveBlendMode", be.WRAP ],
+    [ be.METHOD, "GetAdditiveBlendMode", be.WRAP ],
+    [ be.METHOD, "RemoveAnimationLayerBone", be.WRAP ],
+    [ be.METHOD, "ClearAnimationLayers", be.WRAP ],
+    [ be.ATTR, "boneOffset", be.READ ],
+    [ be.ATTR, "eventListener", be.READWRITE ],
+    [ be.METHOD, "AddSecondaryResPath", be.WRAP ],
+    [ be.METHOD, "GetSecondaryAnimationName", be.WRAP ],
+    [ be.METHOD, "GetAnimationNames", be.WRAP ]
+  ]
+})
 export class Tr2GrannyAnimation extends IRoot
 {
 
@@ -202,12 +241,10 @@ export class Tr2GrannyAnimation extends IRoot
   _secondaryResources = new Map();
 
   /** m_resPath (std::string) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   resPath_ = "";
 
   /** m_model (std::string) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   model_ = "";
 
@@ -216,7 +253,6 @@ export class Tr2GrannyAnimation extends IRoot
    * separate schema field: exporting both names would create conflicting keys
    * when sparse model values author only the canonical persisted name.
    */
-  @be.mapProperty()
   @type.string
   get resPath()
   {
@@ -231,7 +267,6 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /** Blue property alias for the persisted model_ backing field. */
-  @be.mapProperty()
   @type.string
   get model()
   {
@@ -246,32 +281,26 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGrannyRes")
   grannyRes = null;
 
   /** m_eventListener (IBlueEventListenerPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBlueEventListener")
   eventListener = null;
 
   /** m_animationEnabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   animationEnabled = true;
 
   /** m_debugRenderJointNames (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugRenderJointNames = false;
 
   /** m_debugRenderSkeleton (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugRenderSkeleton = false;
 
   /** m_boneOffset (PGrannyBoneOffset) [READ] */
-  @be.mapAttribute(be.READ)
   /** Carbon: m_boneOffset (trinity/trinity/Tr2GrannyAnimation.h:194).
    * P-prefixed TYPEDEF_BLUECLASS storage is embedded (BlueClass.h:250-254), not a pointer.
    */
@@ -888,7 +917,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
   PlayAnimationEx(animName, loopCount, delay, speed, clearWhenDone = true)
   {
     return this.PlayAnimation(animName, true, loopCount, delay, speed, clearWhenDone);
@@ -903,7 +931,6 @@ export class Tr2GrannyAnimation extends IRoot
    * @param {number} [layerWeight=1] Layer weight.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   AddAnimationLayer(layerName, layerWeight = 1)
   {
     const name = String(layerName ?? "");
@@ -1015,7 +1042,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddAnimationLayerAllBones(layerName)
   {
     const layer = this._getLayer(layerName);
@@ -1028,7 +1054,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddAnimationLayerBone(layerName, boneName)
   {
     const layer = this._getLayer(layerName);
@@ -1042,7 +1067,6 @@ export class Tr2GrannyAnimation extends IRoot
    * @adapted Resource loading stays resource-layer-owned; registered decoded resources are attached synchronously
    *   when available.
    */
-  @be.mapMethodAndWrap()
   AddSecondaryResPath(resPath)
   {
     const path = String(resPath ?? "");
@@ -1077,7 +1101,6 @@ export class Tr2GrannyAnimation extends IRoot
    * @adapted Stores the native vectors in gl-matrix arrays. The correction is
    *   applied after sampling and before pose modifiers and bone offsets.
    */
-  @be.mapMethodAndWrap()
   AimBone(boneName, targetX, targetY, targetZ, axisX, axisY, axisZ)
   {
     this._aimingBone = true;
@@ -1138,7 +1161,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ChainAnimation(animName)
   {
     return this.PlayAnimation(animName, false, 1, 0, 1, true);
@@ -1149,7 +1171,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ChainAnimationEx(animName, loopCount, delay, speed)
   {
     return this.PlayAnimation(animName, false, loopCount, delay, speed, true);
@@ -1160,7 +1181,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearAnimations()
   {
     this._baseLayer.ClearAnimations();
@@ -1175,7 +1195,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StopAnimations(delay = 0)
   {
     this._baseLayer.StopAnimations(delay);
@@ -1205,7 +1224,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ClearAnimationLayers()
   {
     this._layers.clear();
@@ -1216,7 +1234,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   DisableAimBone()
   {
     this._aimingBone = false;
@@ -1227,7 +1244,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   EndAnimation()
   {
     this._baseLayer.EndAnimation();
@@ -1238,7 +1254,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetAdditiveBlendMode()
   {
     return this._additiveMode;
@@ -1249,7 +1264,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetLayerWeight(layerName)
   {
     return this._getLayer(layerName)?.weight ?? 0;
@@ -1260,7 +1274,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetSecondaryAnimationName(resPath, index)
   {
     const source = this._getSource(this._secondaryResources.get(String(resPath ?? "")));
@@ -1282,7 +1295,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap("PlayAnimation")
   PlayAnimationOnce(animName)
   {
     return this.PlayAnimation(animName, true, 1, 0, 1, true);
@@ -1303,7 +1315,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap("PlayLayerAnimation")
   PlayLayerAnimationByName(...args)
   {
     return this.PlayLayerAnimation(...args);
@@ -1314,7 +1325,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RemoveAnimationLayerBone(layerName, boneName)
   {
     const layer = this._getLayer(layerName);
@@ -1327,7 +1337,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrap()
   GetAnimationNames()
   {
     const names = [];
@@ -1352,7 +1361,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetAdditiveBlendMode(additive)
   {
     this._additiveMode = !!additive;
@@ -1363,7 +1371,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetLayerControlParam(layerName, controlParam)
   {
     const layer = this._getLayer(layerName);
@@ -1381,7 +1388,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetLayerControlParamSkewRate(layerName, skewRate)
   {
     const layer = this._getLayer(layerName);
@@ -1398,7 +1404,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetLayerWeight(layerName, layerWeight)
   {
     const layer = this._getLayer(layerName);
@@ -1415,7 +1420,6 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   TogglePauseAnimations(pause)
   {
     this._paused = !!pause;

@@ -68,49 +68,54 @@ function effectAt(path)
 }
 
 /** Carries depth, normal, and plane weights together with radius, step size, and bypass state for spatial denoising. */
-@be.define("Tr2Denoiser")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2Denoiser",
+  inherit: [ INotify ],
+  // Tr2Denoiser_Blue.cpp:10-19, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "stepSize", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "depthWeight", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "normalWeight", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "planeWeight", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "bypass", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class Tr2Denoiser extends IRoot
 {
 
   /** m_bypass (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   bypass = false;
 
   /** m_depthWeight (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   depthWeight = 100;
 
   /** m_normalWeight (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   normalWeight = 1.5;
 
   /** m_planeWeight (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   planeWeight = 0;
 
   /** m_radius (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32
   radius = 5;
 
   /** m_stepSize (uint32_t) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.uint32

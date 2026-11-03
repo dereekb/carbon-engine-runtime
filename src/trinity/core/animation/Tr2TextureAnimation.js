@@ -15,10 +15,23 @@ import { Tr2TextureSubresource } from "../../../trinityal/Tr2HalHelperStructures
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 
 /** Advances a multi-channel texture flipbook, tracking frame and restart state per channel. */
-@be.define("Tr2TextureAnimation")
-@be.inherit(IInitialize, INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2TextureAnimation",
+  inherit: [ IInitialize, INotify ],
+  // Tr2TextureAnimation_Blue.cpp:11-32, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "resPath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "fps", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "time", be.READ ],
+    [ be.ATTR, "frame", be.READ ],
+    [ be.ATTR, "looped", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "paused", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "updateOnlyWhenRendered", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "RestartAnimation", be.WRAP ],
+    [ be.METHOD, "GetChannelNames", be.WRAP ]
+  ]
+})
 export class Tr2TextureAnimation extends IRoot
 {
   _channels = new Map();
@@ -29,36 +42,24 @@ export class Tr2TextureAnimation extends IRoot
 
   _restartState = 0;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.float32
   fps = 1;
 
-  @be.mapAttribute(be.READ)
   @type.uint32
   frame = 0;
 
-  @be.mapAttribute(be.READ)
   @type.float32
   time = 0;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   paused = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.boolean
   updateOnlyWhenRendered = true;
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.wpath(".vta")
   resPath = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   looped = true;
@@ -246,7 +247,6 @@ export class Tr2TextureAnimation extends IRoot
    *   retain their synchronous Restart/Reset adapter behavior when no VTA is loaded.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   RestartAnimation()
   {
     if (!this._asyncState)
@@ -281,7 +281,6 @@ export class Tr2TextureAnimation extends IRoot
    * @adapted Returns a JavaScript array instead of a vector of shared strings.
    * @returns {string[]} Channel names.
    */
-  @be.mapMethodAndWrap()
   GetChannelNames()
   {
     return this._asyncState ? this._grids.map(grid => grid.name) : Array.from(this._channels.keys());

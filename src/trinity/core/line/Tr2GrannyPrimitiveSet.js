@@ -24,28 +24,33 @@ import { GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTy
 import { TriGeometryRes } from "#trinity/resources/geometry";
 
 /** Granny/CMF debug geometry rendered as colored triangle edges, solids, or picking triangles. */
-@be.define("Tr2GrannyPrimitiveSet")
-@be.inherit(IInitialize, Tr2DeviceResource)
-@be.mapInterface(IInitialize)
-@be.exposureChainTo(Tr2PrimitiveSet)
+@be.define({
+  name: "Tr2GrannyPrimitiveSet",
+  inherit: [ IInitialize, Tr2DeviceResource ],
+  // Tr2GrannyPrimitiveSet_Blue.cpp:11-18, in Carbon's order.
+  interfaces: [ IInitialize ],
+  members: [
+    [ be.ATTR_CHOOSER, "grannyResPath", be.READWRITE | be.PERSIST | be.NOTIFY, "blue.TriGR2Chooser" ],
+    [ be.ATTR, "grannyRes", be.READ ],
+    [ be.ATTR, "renderSolid", be.READWRITE | be.PERSIST ]
+  ],
+  chainTo: Tr2PrimitiveSet
+})
 export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
 {
   /**
    * Native resource path (Blue READWRITE | PERSIST | NOTIFY).
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2GrannyPrimitiveSet_Blue.cpp:15); chooser TriGR2Chooser (trinity/trinity/TriConstants.cpp:87).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.NOTIFY, "blue.TriGR2Chooser")
   @type.path("TriGeometryRes")
   grannyResPath = "";
 
   /** Native solid-versus-wire draw switch. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   renderSolid = false;
 
   /** The ordinary geometry factory supplies TriGeometryRes, replacing the raw SDK handle. */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
   grannyRes = null;
 

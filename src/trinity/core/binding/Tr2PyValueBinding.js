@@ -7,40 +7,44 @@ import { INotify } from "#blueexposure/INotify";
 import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";
 
 /** Copies named JavaScript attributes through the portable Python-value adapter. */
-@be.define("Tr2PyValueBinding")
-@be.inherit(ITr2ValueBinding)
-@be.mapInterface(ITr2ValueBinding)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2PyValueBinding",
+  inherit: [ ITr2ValueBinding ],
+  // Tr2PyValueBinding_Blue.cpp:13-45, in Carbon's order.
+  interfaces: [ ITr2ValueBinding, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isValid", be.READ ],
+    [ be.ATTR, "sourceObject", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "sourceAttribute", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "destinationObject", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "destinationAttribute", be.READWRITE | be.NOTIFY | be.PERSIST ]
+  ]
+})
 export class Tr2PyValueBinding extends INotify
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
   @type.string
   name = "";
 
   /** m_isValid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isValid = false;
 
   /** m_sourceObject (PyObject*) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
   @type.unknown
   sourceObject = null;
 
   /** m_sourceAttribute (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
   @type.string
   sourceAttribute = "";
 
   /** m_destinationObject (PyObject*) [READWRITE, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
   @type.unknown
   destinationObject = null;
 
   /** m_destinationAttribute (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
   @type.string
   destinationAttribute = "";
 

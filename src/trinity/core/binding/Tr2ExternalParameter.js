@@ -11,10 +11,20 @@ import { TriValueBinding } from "./TriValueBinding.js";
  * A named handle onto one attribute - optionally one vector component - of
  * another object, exposing it for type-checked reads and writes.
  */
-@be.define("Tr2ExternalParameter")
-@be.inherit(INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ExternalParameter",
+  inherit: [ INotify ],
+  // Tr2ExternalParameter_Blue.cpp:10-25, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationObject", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destinationAttribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "valid", be.READ ],
+    [ be.METHOD, "GetValue", be.WRAP ],
+    [ be.METHOD, "SetValue", be.WRAP ]
+  ]
+})
 export class Tr2ExternalParameter extends IInitialize
 {
 
@@ -31,27 +41,23 @@ export class Tr2ExternalParameter extends IInitialize
   _destinationType = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_destinationObject (IRootPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("IRoot")
   destinationObject = null;
 
   /** m_destinationAttribute (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   destinationAttribute = "";
 
   /** m_valid (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   valid = false;
 
@@ -61,7 +67,6 @@ export class Tr2ExternalParameter extends IInitialize
    * @adapted Returns a defensive JavaScript value copy in place of Carbon's BlueScriptValue conversion.
    * @returns {*} Defensive copy for arrays, otherwise the bound value.
    */
-  @be.mapMethodAndWrap()
   GetValue()
   {
     if (!this.valid) this.Initialize();
@@ -80,7 +85,6 @@ export class Tr2ExternalParameter extends IInitialize
    * @param {*} value Value to convert and assign.
    * @returns {boolean} True after assignment and notification.
    */
-  @be.mapMethodAndWrap()
   SetValue(value)
   {
     if (!this.valid) this.Initialize();

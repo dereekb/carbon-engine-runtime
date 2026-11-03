@@ -13,15 +13,24 @@ import { ITr2DebugRenderable } from "#interfaces";
  * inside an object, and republishes it in world space as the object moves.
  * Native interface queries expose only ITriObserverLocal, not self or INotify.
  */
-@be.define("TriObserverLocal")
-@be.mapInterface(ITriObserverLocal)
+@be.define({
+  name: "TriObserverLocal",
+  // TriObserverLocal_Blue.cpp:11-18, in Carbon's order.
+  interfaces: [ ITriObserverLocal ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "front", be.READWRITE | be.PERSIST ],
+    [ be.PROP, "mute" ],
+    [ be.ATTR, "observer", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class TriObserverLocal extends ITriObserverLocal
 {
   /**
    * Label identifying this local observer binding (native std::string m_name).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -30,7 +39,6 @@ export class TriObserverLocal extends ITriObserverLocal
    * Observer position in object-local coordinates (native Vector3 m_position).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
@@ -39,7 +47,6 @@ export class TriObserverLocal extends ITriObserverLocal
    * Object-local facing direction, initially +Z (native Vector3 m_front).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   front = vec3.fromValues(0, 0, 1);
@@ -55,7 +62,6 @@ export class TriObserverLocal extends ITriObserverLocal
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.boolean
   get mute()
   {
@@ -76,7 +82,6 @@ export class TriObserverLocal extends ITriObserverLocal
    * Placement observer receiving the transformed position and orientation (native IBluePlacementObserverPtr).
    * @type {IBluePlacementObserver|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("IBluePlacementObserver")
   observer = null;

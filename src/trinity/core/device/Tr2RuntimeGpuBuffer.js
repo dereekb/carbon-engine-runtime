@@ -11,9 +11,13 @@ import { ITr2GpuBuffer } from "../ITr2GpuBuffer.js";
  * An ITr2GpuBuffer over one runtime AL buffer: what `Tr2Effect::SetParameter`
  * wraps a `Tr2BufferAL` in so a buffer parameter can hold it.
  */
-@be.define("Tr2RuntimeGpuBuffer")
-@be.inherit(ITr2GpuBuffer)
-@be.mapInterface(ITr2GpuBuffer)
+@be.define({
+  name: "Tr2RuntimeGpuBuffer",
+  inherit: [ ITr2GpuBuffer ],
+  // Tr2RuntimeGpuBuffer_Blue.cpp:11-13, in Carbon's order.
+  interfaces: [ ITr2GpuBuffer ],
+  members: []
+})
 export class Tr2RuntimeGpuBuffer extends IRoot
 {
   /** m_buffer: the AL buffer, or null for Carbon's default-constructed one. */
