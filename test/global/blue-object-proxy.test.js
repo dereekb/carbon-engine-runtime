@@ -5,7 +5,7 @@ import { blue, BlueObjectProxy, CcpTime, IBlueObjectBuilder, IBlueObjectProxy, I
 import { CjsSchema } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 // The LOD holder is decorated character source, so it comes from npm/dist,
 // with that build's own Blue realm. Until npm/dist is rebuilt from a source

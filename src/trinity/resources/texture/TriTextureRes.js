@@ -1031,13 +1031,13 @@ function getPayloadMemoryUsage(payload)
 // in that order.
 
 CjsSchema.decorateField(TriTextureRes, "format", type.int32, type.enum("trinity.ImageIO.PixelFormat"), be.mapAttributeWithChooser(be.READ | be.ENUM, "trinity.ImageIO.PixelFormat"));
-CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), CjsSchema.blue.read, CjsSchema.blue.persist);
+CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), CjsSchema.be.read, CjsSchema.be.persist);
 CjsSchema.decorateField(TriTextureRes, "averageColor", type.color, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "depth", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutHeight", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "height", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "lodEnabled", type.boolean, be.mapAttribute(be.READ));
-CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, CjsSchema.blue.read);
+CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, CjsSchema.be.read);
 CjsSchema.decorateField(TriTextureRes, "cpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "gpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "wrappedRenderTarget", type.object.ref("Tr2RenderTarget"), be.mapAttribute(be.READ));
@@ -1071,7 +1071,7 @@ be.define("TriTextureRes")(TriTextureRes);
 be.inherit(ICacheable)(TriTextureRes, { kind: "class" });
 CjsSchema.exposure.mapInterface(ICacheable)(TriTextureRes);
 // Carbon: TriTextureRes::ExposeToBlue (trinity/trinity/Resources/TriTextureRes_Blue.cpp:318).
-CjsSchema.blue.chainTo(BlueAsyncRes)(TriTextureRes);
+CjsSchema.be.chainTo(BlueAsyncRes)(TriTextureRes);
 // Carbon maps these in TriTextureRes_Blue.cpp:227-229 although BlueAsyncRes (BlueAsyncRes) declares them.
 be.mapMethodAndWrap([ "IsPrepared", "IsLoading", "IsGood" ])(TriTextureRes);
 

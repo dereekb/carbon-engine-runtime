@@ -4,7 +4,7 @@ import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import "../../src/blue/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("member maps external names without changing storage and keyIndex is not a storage index", () =>
 {

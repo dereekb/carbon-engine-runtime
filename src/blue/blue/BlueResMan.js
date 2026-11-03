@@ -4462,20 +4462,20 @@ function createExtensionTargetError(resource, message, cause = null)
 CjsSchema.meta.inherit(IBlueResMan, IBlueEvents)(BlueResMan);
 CjsSchema.exposure.mapInterface(IBlueResMan)(BlueResMan);
 
-CjsSchema.decorateMethod(BlueResMan, "GetResource", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "GetResourceW", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "WaitUrgent", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "SaveObject", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "SaveObjectW", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "GetResource", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "GetResourceW", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "WaitUrgent", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "SaveObject", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "SaveObjectW", CjsSchema.be.method);
 for (const method of [ "ReserveBackgroundLoadMemory", "ReleaseBackgroundLoadMemory" ])
 {
-  CjsSchema.decorateMethod(BlueResMan, method, CjsSchema.blue.method, meta.noop);
+  CjsSchema.decorateMethod(BlueResMan, method, CjsSchema.be.method, meta.noop);
 }
-CjsSchema.decorateMethod(BlueResMan, "SetUrgentResourceLoads", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "Wait", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "RegisterResourceConstructor", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "UnregisterResourceConstructor", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueResMan, "LoadObject", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueResMan, "SetUrgentResourceLoads", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "Wait", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "RegisterResourceConstructor", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "UnregisterResourceConstructor", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueResMan, "LoadObject", CjsSchema.be.method);
 CjsSchema.exposure.define("BlueResMan")(BlueResMan);
 
 

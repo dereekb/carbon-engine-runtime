@@ -7,7 +7,7 @@ import { Tr2ParticleSystem, Tr2SphereConstraint, Tr2PlaneConstraint, ITr2Generic
 import { Tr2InteriorScene, ITr2InteriorDynamic } from '../../npm/dist/character/index.js';
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 class TestEmitter extends ITr2GenericEmitter {}
 blue.interface(ITr2GenericEmitter)(TestEmitter);

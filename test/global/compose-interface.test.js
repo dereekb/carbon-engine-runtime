@@ -148,17 +148,17 @@ test("installed methods are reported to the decoration hook, and only those", ()
 
 test("the decorator refuses a non-class", () =>
 {
-  assert.throws(() => CjsSchema.blue.inherit(null), TypeError);
-  assert.throws(() => CjsSchema.blue.inherit({}), TypeError);
+  assert.throws(() => CjsSchema.be.inherit(null), TypeError);
+  assert.throws(() => CjsSchema.be.inherit({}), TypeError);
 
-  const decorate = CjsSchema.blue.inherit(Contract);
+  const decorate = CjsSchema.be.inherit(Contract);
   assert.throws(() => decorate(() => {}, { kind: "method" }), TypeError);
 });
 
 test("through the namespace, installed members carry impl.abstract", () =>
 {
   class Thing extends Base {}
-  CjsSchema.blue.inherit(Contract)(Thing, { kind: "class" });
+  CjsSchema.be.inherit(Contract)(Thing, { kind: "class" });
 
   assert.equal(new Thing().Ping(), "contract-ping");
 
@@ -265,7 +265,7 @@ test("a declared base records its own bases, as dynamic_cast walks them", () =>
   class ILeaf extends IMid { Gamma() {} }
   class Impl {}
 
-  CjsSchema.blue.inherit(ILeaf)(Impl, { kind: "class" });
+  CjsSchema.be.inherit(ILeaf)(Impl, { kind: "class" });
 
   const impl = new Impl();
 
@@ -299,7 +299,7 @@ test("a CONCRETE ancestor is recorded too, because Carbon really derives that wa
   class IFace extends ConcreteBase { Verb() {} }
   class Impl {}
 
-  CjsSchema.blue.inherit(IFace)(Impl, { kind: "class" });
+  CjsSchema.be.inherit(IFace)(Impl, { kind: "class" });
 
   const impl = new Impl();
   assert.equal(typeof impl.Heavy, "function", "the concrete base's members arrive");
@@ -327,7 +327,7 @@ test("an installed member keeps what the interface declared about it", () =>
   CjsSchema.decorateMethod(IThing, "Pure", CjsSchema.meta.abstract);
 
   class Impl {}
-  CjsSchema.blue.inherit(IThing)(Impl, { kind: "class" });
+  CjsSchema.be.inherit(IThing)(Impl, { kind: "class" });
 
   assert.equal(CjsSchema.getMethod(Impl, "Noopy").impl.status, "noop");
   assert.equal(CjsSchema.getMethod(Impl, "Pure").impl.status, "abstract");
@@ -345,7 +345,7 @@ test("a declaration on an ANCESTOR of the named base is carried too", () =>
   class ILeaf extends IRoot { Own() {} }
 
   class Impl {}
-  CjsSchema.blue.inherit(ILeaf)(Impl, { kind: "class" });
+  CjsSchema.be.inherit(ILeaf)(Impl, { kind: "class" });
 
   assert.equal(CjsSchema.getMethod(Impl, "FromRoot").impl.status, "noop");
   assert.equal(CjsSchema.getMethod(Impl, "Own")?.impl?.status, undefined, "a real body is not abstract");

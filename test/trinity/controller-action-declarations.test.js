@@ -33,7 +33,7 @@ import { Tr2ActionSetValue } from "../../npm/dist/trinity/controllers/action/Tr2
 import { Tr2ActionSpawnParticles } from "../../npm/dist/trinity/controllers/action/Tr2ActionSpawnParticles.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const A = ITr2ControllerAction, U = ITr2Updateable, N = INotify, I = IInitialize, P = ICustomPersist;
 
@@ -340,7 +340,7 @@ test("all action null-chain tables isolate a temporary native parent query mappi
   execFileSync(process.execPath, [
     ...process.execArgv, "--input-type=module", "--eval", `
       import assert from "node:assert/strict";
-      import { meta, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))}; const blue = CjsSchema.blue;
+      import { meta, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))}; const blue = CjsSchema.be;
       import { mappedInterfaces } from ${JSON.stringify(moduleURL("blue/compose/interface.js"))};
       import { IRoot } from ${JSON.stringify(moduleURL("blue/blueexposure/IRoot.js"))};
             import { ICustomPersist } from ${JSON.stringify(moduleURL("blue/blueexposure/ICustomPersist.js"))};

@@ -10,7 +10,7 @@ import { IEveSmartLightGroupAttributeModifier } from "./IEveSmartLightGroupAttri
 import { EveSmartLightAttributeModifierBucket } from "./EveSmartLightAttributeModifierBucket.js";
 
 /** EveSmartLightAttributeModifierControllerVariableListener (eve/smartLights/attributeModifiers) - generated from schema shapeHash 8438774e.... */
-@CjsSchema.blue.define({
+@CjsSchema.be.define({
   className: "EveSmartLightAttributeModifierControllerVariableListener",
   fields: [{ name: "active", type: { kind: "boolean" }, edit: { read: true, write: false, persist: false, notify: false }, carbon: { member: true } }]
 })

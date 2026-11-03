@@ -12,7 +12,7 @@ import { INotify } from "../../src/blue/blueexposure/INotify.js";
 import { applyReaderMember, finalizeReaderObject } from "../../src/blue/schema/hydration.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("the own table holds IRoot, the class, then explicit interfaces in Carbon order", () =>
 {
@@ -104,7 +104,7 @@ test("chainTo resolves its named parent after the own entries, not the JS parent
 test("Stage-3 and imperative declarations share the public Blue exposure facade", async () =>
 {
   const source = `
-    import { CjsSchema } from ${JSON.stringify(new URL("../../src/blue/schema/index.js", import.meta.url).href)}; const blue = CjsSchema.blue;
+    import { CjsSchema } from ${JSON.stringify(new URL("../../src/blue/schema/index.js", import.meta.url).href)}; const blue = CjsSchema.be;
     import { INotify } from ${JSON.stringify(new URL("../../src/blue/blueexposure/INotify.js", import.meta.url).href)};
     @blue.interface()
     export class Parent {}
@@ -121,7 +121,7 @@ test("Stage-3 and imperative declarations share the public Blue exposure facade"
   class Explicit {}
   blue.interface(INotify)(Explicit);
   blue.chainTo(Parent)(Explicit);
-  assert.equal(blue, CjsSchema.blue);
+  assert.equal(blue, CjsSchema.be);
   assert.deepEqual([...mappedInterfaces(Decorated)], [ExposureRoot, Decorated, INotify, Parent]);
   assert.deepEqual([...mappedInterfaces(Explicit)], [ExposureRoot, Explicit, INotify, Parent]);
 });

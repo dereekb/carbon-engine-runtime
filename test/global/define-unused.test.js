@@ -5,7 +5,7 @@ import { CjsUnusedMethodError, CJS_UNUSED_METHOD, CjsError } from "../../src/glo
 import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("define({ unused }) installs throwers raising CjsUnusedMethodError", () =>
 {

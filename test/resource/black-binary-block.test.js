@@ -13,7 +13,7 @@ import { EveSOFDataDecalIndexBuffer } from "../../npm/dist/sof/index.js";
 import { clientResources } from "../support/clientResources.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const sofData = await clientResources();
 

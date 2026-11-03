@@ -27,7 +27,7 @@ function literal(object, name)
 
 /**
  * The namespace a `define` callee names: `meta` or `blue` for the decorator
- * (`@blue.define`), `CjsSchema`, `CjsSchema.meta` or `CjsSchema.blue` for the
+ * (`@blue.define`), `CjsSchema`, `CjsSchema.meta` or `CjsSchema.be` for the
  * explicit registration. Anything else (`meta.struct.define`) is not a class
  * define.
  *
@@ -64,7 +64,7 @@ function remember(result, name, metadata)
 /**
  * Reads explicit model identity from the Stage-3 decorators (`@meta.define`,
  * `@blue.define`) or the explicit registrations (`CjsSchema.define`,
- * `CjsSchema.meta.define`, `CjsSchema.blue.define`).
+ * `CjsSchema.meta.define`, `CjsSchema.be.define`).
  */
 function definitions(ast)
 {
@@ -82,7 +82,7 @@ function definitions(ast)
       }
     }
     const call = statement.expression;
-    if (call?.type === "CallExpression" && isDefine(call.callee, [ "CjsSchema", "CjsSchema.meta", "CjsSchema.blue" ]))
+    if (call?.type === "CallExpression" && isDefine(call.callee, [ "CjsSchema", "CjsSchema.meta", "CjsSchema.be", "CjsSchema.blue" ]))
     {
       if (call.arguments[0]?.type === "Identifier") remember(result, call.arguments[0].name, call.arguments[1]);
     }

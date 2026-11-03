@@ -12,7 +12,7 @@ let sequence = 0;
 const name = () => `DeclaredConstruction${++sequence}`;
 const reader = options => new DictReader({ declarations: true, ...options });
 const define = (Constructor, fields = {}, interfaces = []) => {
-  if (interfaces.length) CjsSchema.blue.interface(...interfaces)(Constructor, { kind: "class" });
+  if (interfaces.length) CjsSchema.be.interface(...interfaces)(Constructor, { kind: "class" });
   const className = name();
   CjsSchema.define(Constructor, { className, fields });
   return className;
@@ -225,11 +225,11 @@ test("declared embedded storage rejects known and missing aliases without replac
 
 test("only mapped lifecycle runs, and IInitialize suppresses mapped notify", () => {
   class Notify { value = 0; notices = []; Initialize() { assert.fail("unmapped Initialize"); } OnModified(key) { this.notices.push(key); } }
-  define(Notify, { value: [type.int32, CjsSchema.blue.notify] }, [INotify]);
+  define(Notify, { value: [type.int32, CjsSchema.be.notify] }, [INotify]);
   const value = reader().CreateObject({ value: 1 }, Notify);
   assert.deepEqual(value.notices, ["value"]);
   class Both { value = 0; calls = 0; Initialize() { this.calls++; } OnModified() { assert.fail("suppressed notify"); } }
-  define(Both, { value: [type.int32, CjsSchema.blue.notify] }, [IInitialize, INotify]);
+  define(Both, { value: [type.int32, CjsSchema.be.notify] }, [IInitialize, INotify]);
   assert.equal(reader().CreateObject({ value: 1 }, Both).calls, 1);
   assert.equal(reader({ initialize: false }).CreateObject({ value: 1 }, Both).calls, 0);
 });

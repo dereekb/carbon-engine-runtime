@@ -410,9 +410,9 @@ test("schema.hideInherited registers through Stage-3 metadata and rejects typos"
     };
 
     decorateField("visible", schema.type.string);
-    decorateField("visible", CjsSchema.blue.persist);
+    decorateField("visible", CjsSchema.be.persist);
     decorateField("hidden", schema.type.string);
-    decorateField("hidden", CjsSchema.blue.persist);
+    decorateField("hidden", CjsSchema.be.persist);
     CjsSchema.meta.define({ className: "Stage3HideBase" })(Stage3HideBase, {
         kind: "class",
         metadata: baseMetadata
@@ -477,12 +477,12 @@ test("registers Carbon method provenance and implementation metadata", () => {
     CjsSchema.decorateMethod(
         MethodNode,
         "Reset",
-        CjsSchema.blue.method
+        CjsSchema.be.method
     );
     CjsSchema.decorateMethod(
         MethodNode,
         "GpuOnly",
-        CjsSchema.blue.method,
+        CjsSchema.be.method,
         CjsSchema.meta.note("requires a native graphics boundary")
     );
 
@@ -580,7 +580,7 @@ test("stage-3 static method decorators register on the class constructor", () =>
     };
 
     // Recorded when applied, replayed when the class registers; nothing per instance.
-    CjsSchema.blue.method(StaticMethodNode.Rasterize, context);
+    CjsSchema.be.method(StaticMethodNode.Rasterize, context);
     assert.deepEqual(initializers, []);
 
     CjsSchema.meta.define({
@@ -1180,7 +1180,7 @@ test("records carbon.contextual tier provenance", () => {
     CjsSchema.decorateMethod(
         ContextualNode,
         "ApplyTransform",
-        CjsSchema.blue.contextual(["camera"])
+        CjsSchema.be.contextual(["camera"])
     );
 
     const method = CjsSchema.getMethod(ContextualNode, "ApplyTransform");
@@ -1189,8 +1189,8 @@ test("records carbon.contextual tier provenance", () => {
     assert.deepEqual(Array.from(method.carbon.contextTiers), ["camera"]);
 
     // Rejects an empty tier list.
-    assert.throws(() => CjsSchema.blue.contextual([]), TypeError);
-    assert.throws(() => CjsSchema.blue.contextual(["  "]), TypeError);
+    assert.throws(() => CjsSchema.be.contextual([]), TypeError);
+    assert.throws(() => CjsSchema.be.contextual(["  "]), TypeError);
 
     // Runtime validation must accept mangled parameters even when a default
     // expression retains a readable property name. Source lint owns spelling.
@@ -1200,7 +1200,7 @@ test("records carbon.contextual tier provenance", () => {
     }
     CjsSchema.define(MinifiedContextual, { className: "MinifiedContextual" });
     assert.doesNotThrow(() => CjsSchema.decorateMethod(MinifiedContextual,
-        "ApplyTransform", CjsSchema.blue.contextual(["camera"])));
+        "ApplyTransform", CjsSchema.be.contextual(["camera"])));
 
     class ZeroArgContextual
     {
@@ -1212,7 +1212,7 @@ test("records carbon.contextual tier provenance", () => {
     // context, and `fn.length` survives minification where parameter NAMES do
     // not. Source lint, rather than runtime reflection, checks parameter names.
     assert.throws(
-        () => CjsSchema.decorateMethod(ZeroArgContextual, "Tick", CjsSchema.blue.contextual(["camera"])),
+        () => CjsSchema.decorateMethod(ZeroArgContextual, "Tick", CjsSchema.be.contextual(["camera"])),
         /must take a context as its first parameter/
     );
 });

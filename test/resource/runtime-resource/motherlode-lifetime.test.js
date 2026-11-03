@@ -6,7 +6,7 @@ import {TriTextureRes} from "../../../npm/dist/resource/index.js";
 import {normalizeResourcePath} from "#utils/path";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const exposure = CjsSchema.blue;
+const exposure = CjsSchema.be;
 
 /** A device-resource fixture owning a small value and real device adapter slots. */
 class CacheFixture extends TriTextureRes

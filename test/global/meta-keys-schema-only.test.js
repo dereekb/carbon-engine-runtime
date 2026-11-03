@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("schema-only values use canonical member names without Blue services", () =>
 {

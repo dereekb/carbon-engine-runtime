@@ -15,7 +15,7 @@ import { PositionDescription as DirectPosition } from "../../src/blue/blue/Posit
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 test("Blue observer interfaces register one identity and only their native abstract methods", () =>
 {

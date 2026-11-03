@@ -14,7 +14,7 @@ import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 function WithInterfaces(Base, ...Interfaces)
 {
   const Composed = class extends Base {};
-  CjsSchema.blue.inherit(...Interfaces)(Composed);
+  CjsSchema.be.inherit(...Interfaces)(Composed);
   return Composed;
 }
 

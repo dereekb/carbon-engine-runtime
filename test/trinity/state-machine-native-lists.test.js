@@ -18,7 +18,7 @@ import { Tr2ActionPlayCurveSet } from "../../npm/dist/trinity/controllers/action
 import { MarkerTag } from "../support/markerTags.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 const {
   BELIST_INSERTED, BELIST_REMOVED, BELIST_UNLOADSTART, BELIST_LOADFINISHED,

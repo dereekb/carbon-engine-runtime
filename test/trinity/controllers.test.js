@@ -10,7 +10,7 @@ import { EveSpaceObject2 } from "../../npm/dist/trinity/eve/spaceObject/EveSpace
 import { MarkerTag } from "../support/markerTags.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 
 function assert(condition, message = "assertion failed")
@@ -196,7 +196,7 @@ CjsSchema.define(BindingTestTarget, { className: "BindingTestTarget", fields: {
   child: type.rootRef("BindingTestTarget"),
   children: type.list("BindingTestTarget")
 } });
-CjsSchema.blue.interface(INotify)(BindingTestTarget);
+CjsSchema.be.interface(INotify)(BindingTestTarget);
 
 test("Tr2BindingPoint writes Carbon's admitted members and notifies through INotify", () =>
 {

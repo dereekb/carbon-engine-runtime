@@ -12,13 +12,13 @@ class Effect
 CjsSchema.define(Effect, {
   className: "BlueClassesManagerEffect",
   fields: {
-    name: [ CjsSchema.blue.readwrite, CjsSchema.blue.persist, type.string ]
+    name: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.string ]
   }
 });
 
 class SpecialEffect extends Effect {}
 CjsSchema.define(SpecialEffect, { className: "BlueClassesManagerSpecialEffect" });
-CjsSchema.blue.chainTo(Effect)(SpecialEffect);
+CjsSchema.be.chainTo(Effect)(SpecialEffect);
 
 class Holder
 {
@@ -30,10 +30,10 @@ class Holder
 CjsSchema.define(Holder, {
   className: "BlueClassesManagerHolder",
   fields: {
-    name: [ CjsSchema.blue.readwrite, CjsSchema.blue.persist, type.string ],
-    persisted: [ CjsSchema.blue.readwrite, CjsSchema.blue.persist, type.rootRef("IRoot") ],
-    transient: [ CjsSchema.blue.readwrite, type.rootRef("IRoot") ],
-    items: [ CjsSchema.blue.read, CjsSchema.blue.persist, type.list("IRoot") ]
+    name: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.string ],
+    persisted: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.rootRef("IRoot") ],
+    transient: [ CjsSchema.be.readwrite, type.rootRef("IRoot") ],
+    items: [ CjsSchema.be.read, CjsSchema.be.persist, type.list("IRoot") ]
   }
 });
 

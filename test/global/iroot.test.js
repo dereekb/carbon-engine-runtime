@@ -4,7 +4,7 @@ import { IRoot, BlueClasses, ClassInfo } from "../../src/blue/blue/index.js";
 import { CjsSchema } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 class RootTestObject extends IRoot
 {

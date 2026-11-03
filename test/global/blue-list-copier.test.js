@@ -11,7 +11,7 @@ import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const { FALLBACK, FAILURE, SUCCESS } = ICopier.OverrideResult;
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;

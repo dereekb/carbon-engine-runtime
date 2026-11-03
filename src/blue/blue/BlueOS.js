@@ -324,8 +324,8 @@ export class BlueOS extends IBlueOS
 
 CjsSchema.exposure.mapInterface(IBlueOS)(BlueOS);
 CjsSchema.meta.inherit(BeInfo)(BlueOS);
-CjsSchema.decorateField(BlueOS, "frameClock", CjsSchema.blue.readwrite);
-CjsSchema.decorateMethod(BlueOS, "PumpOS", CjsSchema.blue.method);
-CjsSchema.blue.define(BlueOS, {
+CjsSchema.decorateField(BlueOS, "frameClock", CjsSchema.be.readwrite);
+CjsSchema.decorateMethod(BlueOS, "PumpOS", CjsSchema.be.method);
+CjsSchema.be.define(BlueOS, {
   className: "BlueOS"
 });

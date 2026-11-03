@@ -16,7 +16,7 @@ test("edit decorators record Blue flags without extra access permissions", () =>
   };
   CjsSchema.define(Flags, {
     className: "BlueEditFlagsProbe",
-    fields: Object.fromEntries(Object.keys(expected).map(name => [name, [type.int32, CjsSchema.blue[name]]]))
+    fields: Object.fromEntries(Object.keys(expected).map(name => [name, [type.int32, CjsSchema.be[name]]]))
   });
   for (const [name, metadata] of Object.entries(expected))
   {
@@ -29,7 +29,7 @@ test("enum chooser metadata exposes the Blue ENUM flag through inheritance", () 
   class Base {}
   class Derived extends Base {}
   CjsSchema.define(Base, { className: "EditEnumBase", fields: {
-    choice: [type.int32, type.enum({ First: 1, Second: 2 }), CjsSchema.blue.persist]
+    choice: [type.int32, type.enum({ First: 1, Second: 2 }), CjsSchema.be.persist]
   } });
   CjsSchema.define(Derived, { className: "EditEnumDerived" });
   // ENUM is the enum record itself, not an edit bit.
@@ -53,12 +53,12 @@ for (const route of ["composition", "schema"])
       writable = 0;
     }
     CjsSchema.define(Record, { className: `EditPersistenceProbe${serial++}`, fields: {
-      stored: [type.int32, CjsSchema.blue.persist],
-      legacy: [type.int32, CjsSchema.blue.read, CjsSchema.blue.rpersist],
-      combined: [type.int32, CjsSchema.blue.persist, CjsSchema.blue.rpersist],
-      hidden: [type.int32, CjsSchema.blue.persistOnly],
-      computed: [type.int32, CjsSchema.blue.read],
-      writable: [type.int32, CjsSchema.blue.write]
+      stored: [type.int32, CjsSchema.be.persist],
+      legacy: [type.int32, CjsSchema.be.read, CjsSchema.be.rpersist],
+      combined: [type.int32, CjsSchema.be.persist, CjsSchema.be.rpersist],
+      hidden: [type.int32, CjsSchema.be.persistOnly],
+      computed: [type.int32, CjsSchema.be.read],
+      writable: [type.int32, CjsSchema.be.write]
     } });
     if (route === "composition") CjsSchema.meta.values(Record, { kind: "class" });
     const object = new Record();

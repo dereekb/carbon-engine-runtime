@@ -155,7 +155,7 @@ export class CjsOverlay2D extends IBlueEvents
   }
 }
 
-CjsSchema.decorateMethod(CjsOverlay2D, "OnTick", CjsSchema.blue.method);
+CjsSchema.decorateMethod(CjsOverlay2D, "OnTick", CjsSchema.be.method);
 CjsSchema.meta.define(CjsOverlay2D, {
   className: "CjsOverlay2D",
   methods: Object.fromEntries([ "Sync", "AddDrawer", "RemoveDrawer", "Render", "OnTick", "Destruct" ].map(name => [ name, [] ]))

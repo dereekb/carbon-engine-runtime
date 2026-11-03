@@ -476,6 +476,6 @@ CjsSchema.exposure.define("Tr2LightProfileRes")(Tr2LightProfileRes);
 be.inherit(ICacheable)(Tr2LightProfileRes, { kind: "class" });
 CjsSchema.exposure.mapInterface(ICacheable)(Tr2LightProfileRes);
 // Carbon: Tr2LightProfileRes::ExposeToBlue (trinity/trinity/Resources/Tr2LightProfileRes_Blue.cpp:44).
-CjsSchema.blue.chainTo(BlueAsyncRes)(Tr2LightProfileRes);
+CjsSchema.be.chainTo(BlueAsyncRes)(Tr2LightProfileRes);
 
 

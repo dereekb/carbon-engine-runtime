@@ -374,11 +374,11 @@ test("QueryThisInterface walks the exposure table and chain, logging a miss unle
   CjsSchema.define(IThing, { className: "IThing" });
   class Parent {}
   CjsSchema.define(Parent, { className: "QtiParent" });
-  CjsSchema.blue.interface(IThing)(Parent);
+  CjsSchema.be.interface(IThing)(Parent);
   class Child extends Parent {}
   CjsSchema.define(Child, { className: "QtiChild" });
-  CjsSchema.blue.interface()(Child);
-  CjsSchema.blue.chainTo(Parent)(Child);
+  CjsSchema.be.interface()(Child);
+  CjsSchema.be.chainTo(Parent)(Child);
   class Unrelated {}
   CjsSchema.define(Unrelated, { className: "QtiUnrelated" });
 

@@ -440,12 +440,12 @@ export class BluePaths extends IBluePaths
 }
 
 CjsSchema.exposure.mapInterface(IBluePaths)(BluePaths);
-CjsSchema.decorateMethod(BluePaths, "UnregisterFileSystem", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BluePaths, "IsFileSystemRegistered", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BluePaths, "IsDirectory", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BluePaths, "FileExists", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BluePaths, "FileExistsLocally", CjsSchema.blue.method);
-CjsSchema.blue.define(BluePaths, {
+CjsSchema.decorateMethod(BluePaths, "UnregisterFileSystem", CjsSchema.be.method);
+CjsSchema.decorateMethod(BluePaths, "IsFileSystemRegistered", CjsSchema.be.method);
+CjsSchema.decorateMethod(BluePaths, "IsDirectory", CjsSchema.be.method);
+CjsSchema.decorateMethod(BluePaths, "FileExists", CjsSchema.be.method);
+CjsSchema.decorateMethod(BluePaths, "FileExistsLocally", CjsSchema.be.method);
+CjsSchema.be.define(BluePaths, {
   className: "BluePaths",
   members: [ { name: "cacheFileExistance", key: "_cacheFileExistance", type: { kind: "boolean" }, edit: { read: true, write: true }, carbon: { member: true } } ]
 });

@@ -125,11 +125,11 @@ export class IRoot
   }
 }
 
-const { blue } = CjsSchema;
+const blue = CjsSchema.be;
 
 for (const name of [ "ClassType", "QueryInterface", "Lock", "Unlock", "GetFlags", "GetRefCount", "GetRootObject", "_FinalDelete" ])
 {
   CjsSchema.decorateMethod(IRoot, name, blue.method);
 }
-CjsSchema.blue.define(IRoot, { className: "IRoot", fields: {} });
+CjsSchema.be.define(IRoot, { className: "IRoot", fields: {} });
 blue.interface()(IRoot);

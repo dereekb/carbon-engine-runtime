@@ -115,7 +115,7 @@ test("Initialize runs child before parent and suppresses mapped member notificat
   const calls = [];
   class Root { value = 0; child = null; Initialize() { calls.push(this.value); } OnModified() { calls.push("notify"); } }
   const name = register(Root, { value: "int32", child: "rootRef" });
-  CjsSchema.blue.interface(IInitialize, INotify)(Root, { kind: "class" });
+  CjsSchema.be.interface(IInitialize, INotify)(Root, { kind: "class" });
   const text = `type: ${name}\nvalue: 1\nchild: {type: ${name}, value: 2}`;
   read(text);
   assert.deepEqual(calls, [2, 1]);
@@ -159,7 +159,7 @@ test("custom binary persistence receives allocated storage and decoded used size
     AllocateReadBuffer(_name, size) { return new Uint8Array(size); }
     SetBufferAndSize(_name, bytes, size) { this.binary = bytes.subarray(0, size); }
   }
-  CjsSchema.blue.interface(ICustomPersist)(Root, { kind: "class" });
+  CjsSchema.be.interface(ICustomPersist)(Root, { kind: "class" });
   const name = register(Root, { binary: { kind: "typedArray", binary: true, scalar: "uint8" } });
   assert.deepEqual(read(`type: ${name}\nbinary: AQI=`).binary, new Uint8Array([1, 2]));
   assert.deepEqual(read(`type: ${name}\nbinary: "!!!!"`).binary, new Uint8Array(3));
@@ -211,7 +211,7 @@ test("typed pointers use exposed interfaces rather than inheritance alone", () =
   const root = register(Root, { child: { kind: "rootRef", className: leaf } });
   const text = `type: ${root}\nchild: {type: ${leaf}, value: 8}`;
   assert.throws(() => read(text), /Incorrect type for member/);
-  CjsSchema.blue.interface()(Leaf, { kind: "class" });
+  CjsSchema.be.interface()(Leaf, { kind: "class" });
   assert.equal(read(text).child.value, 8);
 });
 
@@ -223,7 +223,7 @@ test("cached proxies retain builders and inner markers without eager constructio
     builder = null; marker = -1;
     SetBuilder(builder, marker) { this.builder = builder; this.marker = marker; }
   }
-  CjsSchema.blue.interface(IBlueObjectProxy)(Proxy, { kind: "class" });
+  CjsSchema.be.interface(IBlueObjectProxy)(Proxy, { kind: "class" });
   const proxy = register(Proxy, {});
   const reader = new YamlReader();
   assert.equal(reader.ReadForCachingFromStream(stream(`type: ${proxy}\nobject: {type: ${leaf}, value: 7}`)), true);
@@ -236,11 +236,11 @@ test("cached proxies retain builders and inner markers without eager constructio
 
 test("native IList drops null entries and restores its observer after successful loading", () => {
   class Leaf {}
-  CjsSchema.blue.interface(IRoot)(Leaf, { kind: "class" });
+  CjsSchema.be.interface(IRoot)(Leaf, { kind: "class" });
   const leaf = register(Leaf, {});
   const events = [];
   class Observer extends IListNotify { OnListModified(event) { events.push(event); } }
-  CjsSchema.blue.interface(IListNotify)(Observer, { kind: "class" });
+  CjsSchema.be.interface(IListNotify)(Observer, { kind: "class" });
   const observer = new Observer();
   class Root {
     items = new BlueList(IRoot);
@@ -306,7 +306,7 @@ test("binary decoding writes bytes into a bounded wider typed allocation", () =>
       this.binary = buffer.subarray(0, size / 4);
     }
   }
-  CjsSchema.blue.interface(ICustomPersist)(Root, { kind: "class" });
+  CjsSchema.be.interface(ICustomPersist)(Root, { kind: "class" });
   const name = register(Root, { binary: { kind: "typedArray", binary: true, scalar: "uint32" } });
   const root = read(`type: ${name}\nbinary: !!binary AQAAAAIAAAA=\n`);
   assert.deepEqual(root.binary, new Uint32Array([1, 2]));

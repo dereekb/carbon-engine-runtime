@@ -31,7 +31,7 @@ function declare(Constructor, name, fields)
     })) });
 }
 declare(RedContractLeaf, "RedContractLeaf", { value: "float32" });
-CjsSchema.blue.interface(IInitialize)(RedContractLeaf);
+CjsSchema.be.interface(IInitialize)(RedContractLeaf);
 declare(RedContractRoot, "RedContractRoot", {
     name: "string", left: "rootRef", right: "rootRef",
     items: { kind: "array", itemType: { kind: "rootRef" } }, position: "vec3"

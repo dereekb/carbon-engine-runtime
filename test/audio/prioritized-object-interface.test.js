@@ -5,7 +5,7 @@ import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const methods = [
   "GetID", "GetPosition", "SetDistanceSqFromListener", "CalculateCullingWeight",

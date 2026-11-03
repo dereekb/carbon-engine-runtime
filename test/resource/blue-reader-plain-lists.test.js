@@ -13,7 +13,7 @@ import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import "../../npm/dist/blue/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
 const itemName = "BlueReaderPlainListItem";

@@ -23,14 +23,14 @@ export function isCarbonDecorator(expression, name)
       && owner.property?.type === "Identifier"
       && owner.property.name === "meta";
   }
-  // `blue.method` (ruling 2026-10-15), `CjsSchema.blue.method`, and the transitional `meta.blue.method`.
+  // `blue.method` (ruling 2026-10-15), `CjsSchema.be.method`, and the transitional `meta.blue.method`.
   if (owner?.type === "Identifier") return [ "blue", "carbon" ].includes(owner.name);
   return owner?.type === "MemberExpression"
     && owner.computed === false
     && owner.object?.type === "Identifier"
     && [ "meta", "CjsSchema" ].includes(owner.object.name)
     && owner.property?.type === "Identifier"
-    && ["blue", "carbon"].includes(owner.property.name);
+    && ["blue", "be", "carbon"].includes(owner.property.name);
 }
 
 /**

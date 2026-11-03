@@ -11,7 +11,7 @@ import { ITr2ShLightingReceiver } from "../../npm/dist/trinity/core/lighting/ITr
 import { ITr2SecondaryLightSource } from "../../npm/dist/trinity/core/lighting/ITr2SecondaryLightSource.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("native lifecycle mappings belong to space objects and boosters and reach derived ships", () =>
 {

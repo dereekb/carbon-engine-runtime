@@ -16,7 +16,7 @@ import { TriCurveSet } from "../../npm/dist/trinity/curves/TriCurveSet.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 for(const [name,Class,Base,table] of [
     ["TriEventCurve",TriEventCurve,ITriFunction,[TriEventCurve,ITriFunction,IInitialize,ITriCurveLength]],

@@ -9,7 +9,7 @@ import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 import { ReadValues } from "../../src/blue/blue/values.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
 const itemName = "BlueListReaderItem";

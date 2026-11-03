@@ -14,7 +14,7 @@ import { CjsGraphFormat } from "../../src/blue/blue/formats/graph/index.js";
 import { YamlReader } from "../../src/blue/blue/YamlReader.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 /** BlueTypes.h EDITFLAGS: READ 0x1, WRITE 0x2, PERSIST 0x10. */
 const READ = 0x1, WRITE = 0x2, PERSIST = 0x10;
@@ -209,7 +209,7 @@ class AttributeOwner
 CjsSchema.define(AttributeOwner, { className: "SchemaAttributeAccessorOwner", fields: {
   highDetailModel: [ legacyBlue.notify, legacyBlue.readwrite, legacyBlue.persist, type.rootRef("SchemaPropertyLeaf") ]
 } });
-CjsSchema.blue.interface(INotify)(AttributeOwner);
+CjsSchema.be.interface(INotify)(AttributeOwner);
 
 test("an attribute over an accessor path keeps its flags and is read and written through the accessor", () =>
 {

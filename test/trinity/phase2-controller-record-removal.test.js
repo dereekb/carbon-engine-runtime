@@ -15,7 +15,7 @@ import { ITr2Controller } from "../../npm/dist/trinity/controllers/index.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 class Action extends ITr2ControllerAction
 {

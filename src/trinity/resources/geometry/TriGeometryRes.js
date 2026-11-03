@@ -2700,7 +2700,7 @@ CjsSchema.exposure.mapInterface(IBlueResource)(TriGeometryRes);
 CjsSchema.exposure.mapInterface(ICacheable)(TriGeometryRes);
 CjsSchema.exposure.mapInterface(ITr2InstanceData)(TriGeometryRes);
 // Carbon: TriGeometryRes::ExposeToBlue (trinity/trinity/Resources/TriGeometryRes_Blue.cpp:175).
-CjsSchema.blue.chainTo(BlueAsyncRes)(TriGeometryRes);
+CjsSchema.be.chainTo(BlueAsyncRes)(TriGeometryRes);
 
 
 

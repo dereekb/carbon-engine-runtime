@@ -1041,7 +1041,7 @@ export class CjsSchema
         carbon: names => carbonClassDecorator(names),
         notUsed: unusedMethodDecorator(),
         interface: name => exposureClassDecorator(name, true, false),
-        inherit: (...Bases) => this.blue.inherit(...Bases),
+        inherit: (...Bases) => this.be.inherit(...Bases),
         keyIndex: index => {
             if (!Number.isSafeInteger(index) || index < 0) throw new TypeError("meta.keyIndex requires a nonnegative safe integer.");
             return fieldDecorator("keyIndex", index);
@@ -1083,7 +1083,7 @@ export class CjsSchema
      * `define` takes a class name, a definition object or, for a class without
      * decorators, the constructor and its definition. Extra donors live in class JSDoc.
      */
-    static blue = {
+    static be = {
         ...Object.fromEntries(FLAG_NAMES.map(name =>
         {
             const { namespace, value } = getDecoratorMetadata(this.#edit[name]);
@@ -1104,7 +1104,7 @@ export class CjsSchema
     };
 
     /** Isolated target vocabulary, exported by #be as exposure until the service swap. */
-    static exposure = createExposureNamespace(this.blue);
+    static exposure = createExposureNamespace(this.be);
 
 }
 
@@ -4037,7 +4037,7 @@ function exposureBagDecorator(bag, blue)
         // As a stacked declaration applies them: the chain, the interfaces, the C++ bases, then the identity.
         if (chainTo !== undefined) carbonChainToDecorator(chainTo)(Constructor, context);
         if (interfaces?.length) carbonInterfaceDecorator(interfaces, true)(Constructor, context);
-        if (inherit?.length) CjsSchema.blue.inherit(...inherit)(Constructor, context);
+        if (inherit?.length) CjsSchema.be.inherit(...inherit)(Constructor, context);
         const rows = [];
         const schema = getOrCreateClassSchema(Constructor);
         schema.rowsInSourceOrder = true;
@@ -4066,7 +4066,7 @@ function createExposureNamespace(legacy)
         ...exposureRowConstants(),
         define: nameOrBag => isExposureBag(nameOrBag) ? exposureBagDecorator(nameOrBag, true) : exposureClassDecorator(nameOrBag, false, true),
         interface: name => exposureClassDecorator(name, true, true),
-        inherit: (...Bases) => CjsSchema.blue.inherit(...Bases),
+        inherit: (...Bases) => CjsSchema.be.inherit(...Bases),
         abstract: legacy.abstract,
         // A Carbon method that takes its context tier first (CjsSchema.carbon.contextual).
         contextual: legacy.contextual,

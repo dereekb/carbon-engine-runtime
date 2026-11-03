@@ -71,7 +71,7 @@ test("every define spelling names the identity, and a class defined twice is one
   const options = await fixture(t, {
     "trinity/core/A.js": '@blue.define("NativeA") export class LocalA {}',
     "trinity/core/B.js": '@blue.define({className:"NativeB",family:"core"}) export class LocalB {}',
-    "trinity/core/C.js": 'export class LocalC {}\nCjsSchema.blue.define(LocalC, {className:"NativeC"});',
+    "trinity/core/C.js": 'export class LocalC {}\nCjsSchema.be.define(LocalC, {className:"NativeC"});',
     "trinity/core/D.js": 'export class LocalD {}\nCjsSchema.meta.define(LocalD, {className:"NativeD"});',
     "trinity/core/E.js": '@meta.define({className:"NativeE"}) export class LocalE {}\nCjsSchema.meta.define(LocalE, {className:"NativeE"});'
   }, Object.fromEntries(["A", "B", "C", "D", "E"].map(name => [`core/Native${name}`, {blueClass:`Native${name}`, family:"core"}])));

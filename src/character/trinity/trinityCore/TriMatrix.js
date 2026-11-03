@@ -22,7 +22,7 @@ const ELEMENTS = [
  * Matrix has gl-matrix's byte layout, so `_41.._43` is the translation at [12..14].
  * Compositions swap operands, since Carbon is row-vector and gl-matrix column-vector.
  */
-@CjsSchema.blue.define({
+@CjsSchema.be.define({
   className: "TriMatrix",
   members: ELEMENTS.map((name, index) => ({
     name, key: "_matrix", index, type: { kind: "float32" }, edit: { read: true, write: true, persist: true }

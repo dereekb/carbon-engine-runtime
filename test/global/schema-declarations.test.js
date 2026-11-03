@@ -5,7 +5,7 @@ import { exposure as be } from "#be";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 function withoutOwners(entries)
 {
@@ -33,15 +33,15 @@ test("the public decorator surface has one namespace per vocabulary and preserve
     // Ruling 2026-10-15: meta (generic), type (vocabulary), blue (Carbon-stamped).
     assert.equal(schemaExports.type, CjsSchema.type);
     for (const name of ["blue", "type"]) assert.equal(Object.hasOwn(meta, name), false, "alias dropped: meta." + name);
-    assert.equal(schemaExports.blue, CjsSchema.blue);
+    assert.equal(schemaExports.blue, CjsSchema.be);
     for (const name of ["read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly"])
     {
         assert.equal(typeof meta[name], "function", "generic flag: " + name);
-        assert.equal(typeof CjsSchema.blue[name], "function", "Carbon flag: " + name);
+        assert.equal(typeof CjsSchema.be[name], "function", "Carbon flag: " + name);
     }
     for (const name of ["interface", "inherit", "chainTo", "method", "define"])
-        assert.equal(typeof CjsSchema.blue[name], "function", "Carbon declaration: " + name);
-    assert.equal(Object.hasOwn(CjsSchema.blue, "attribute"), false, "removed: blue.attribute (be.mapAttribute names the member)");
+        assert.equal(typeof CjsSchema.be[name], "function", "Carbon declaration: " + name);
+    assert.equal(Object.hasOwn(CjsSchema.be, "attribute"), false, "removed: blue.attribute (be.mapAttribute names the member)");
     for (const name of ["edit", "impl", "lifecycle", "jessica", "compose", "custom"])
         assert.equal(Object.hasOwn(meta, name), false, "removed meta alias: " + name);
     for (const name of ["none", "enum", "setting"])

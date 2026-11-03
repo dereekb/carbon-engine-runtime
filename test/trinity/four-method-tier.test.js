@@ -23,7 +23,7 @@ import { Tr2ImageRes } from "../../npm/dist/trinity/resources/texture/index.js";
 import { EveSOFDataDecalIndexBuffer } from "../../npm/dist/sof/shared/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 /**
  * The four-method-tier ports.

@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { CjsSchema, meta } from "../../../npm/dist/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 function probeInterface()
 {
@@ -47,7 +47,7 @@ test("a contract copied in by blue.inherit still names the contract", () =>
   const IProbe = probeInterface();
   class InheritingProbe {}
   blue.inherit(IProbe)(InheritingProbe, { kind: "class" });
-  CjsSchema.blue.define(InheritingProbe, { className: "InheritingProbe" });
+  CjsSchema.be.define(InheritingProbe, { className: "InheritingProbe" });
 
   assert.throws(() => new InheritingProbe().Run(), /^Error: InheritingProbe does not implement IProbe\.Run\(count, out\)\.$/u);
 });
@@ -70,7 +70,7 @@ test("a define({ methods }) entry installs the body at registration", () =>
   {
     Endl() { return "not abstract"; }
   }
-  CjsSchema.blue.define(IListed, { className: "IListed", methods: { Endl: blue.abstract } });
+  CjsSchema.be.define(IListed, { className: "IListed", methods: { Endl: blue.abstract } });
   assert.throws(() => new IListed().Endl(), /^Error: IListed\.Endl\(\) must be implemented\.$/u);
 });
 

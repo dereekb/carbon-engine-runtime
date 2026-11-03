@@ -27,7 +27,7 @@ test("persisted fields and byteSize cannot substitute for a struct definition", 
 {
   class Item { static byteSize = 4; value = 0; }
   class Owner {}
-  CjsSchema.define(Item, { className: "BlackMissingStructItem", fields: { value: [type.uint32, CjsSchema.blue.persist] } });
+  CjsSchema.define(Item, { className: "BlackMissingStructItem", fields: { value: [type.uint32, CjsSchema.be.persist] } });
   CjsSchema.define(Owner, { className: "BlackMissingStructOwner", fields: { records: type.list("BlackMissingStructItem") } });
   assert.throws(() => classStructureLayout("BlackMissingStructOwner", "records"), /BlackMissingStructItem has no structureDefinition/);
 });

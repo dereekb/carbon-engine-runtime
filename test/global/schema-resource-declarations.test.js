@@ -102,7 +102,7 @@ test("stateless recursive output excludes child resources in objects and collect
 test("model, composed and resource-owned values routes omit caches", () => {
   for (const Base of [class {}, BlueAsyncRes]) {
     class Owner extends Base { cache = { loaded: true }; authored = 1; }
-    CjsSchema.define(Owner, { className: name(), fields: { cache: [type.resource("Resource"), CjsSchema.blue.persist], authored: type.int32 } });
+    CjsSchema.define(Owner, { className: name(), fields: { cache: [type.resource("Resource"), CjsSchema.be.persist], authored: type.int32 } });
     CjsSchema.meta.values(Owner, { kind: "class" });
     const target = new Owner();
     const cache = target.cache;

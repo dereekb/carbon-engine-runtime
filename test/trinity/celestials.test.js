@@ -12,7 +12,7 @@ import { CjsSchema } from '../../npm/dist/blue/schema/index.js';
 import { TriBatchType } from '../../npm/dist/global/consts/graphics/index.js';
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 function close(actual, expected, epsilon = 1e-5)
 {

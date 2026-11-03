@@ -393,11 +393,11 @@ function SameListType(source, dest)
 
 // Array methods create ordinary arrays, never pass a result length as ItemType.
 Object.defineProperty(BlueList, Symbol.species, { value: Array });
-CjsSchema.blue.inherit(IList, ICopierCustomAssignment)(BlueList, { kind: "class" });
+CjsSchema.be.inherit(IList, ICopierCustomAssignment)(BlueList, { kind: "class" });
 CjsSchema.exposure.mapInterface(IList)(BlueList);
 CjsSchema.exposure.mapInterface(ICopierCustomAssignment)(BlueList);
-for (const name of [ "GetSize", "Clear", "Replace" ]) CjsSchema.decorateMethod(BlueList, name, CjsSchema.blue.method);
+for (const name of [ "GetSize", "Clear", "Replace" ]) CjsSchema.decorateMethod(BlueList, name, CjsSchema.be.method);
 for (const name of [ "GetInfo", "Insert", "Append", "Remove", "GetAt", "FindKey", "Swap", "Move", "Sort", "SetNotify", "GetAllItems", "AssignFrom", "AssignTo" ])
 {
-  CjsSchema.decorateMethod(BlueList, name, CjsSchema.blue.method);
+  CjsSchema.decorateMethod(BlueList, name, CjsSchema.be.method);
 }

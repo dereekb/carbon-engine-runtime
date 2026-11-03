@@ -23,7 +23,7 @@ import { Tr2StateMachineTransition } from "../../npm/dist/trinity/controllers/st
 import { MarkerTag } from "../support/markerTags.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const {
   BELIST_INSERTED, BELIST_REMOVED, BELIST_UNLOADSTART, BELIST_LOADFINISHED,

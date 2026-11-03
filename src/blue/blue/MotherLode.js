@@ -1566,15 +1566,15 @@ function defaultNow()
 }
 
 
-CjsSchema.decorateMethod(MotherLode, "Insert", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "Lookup", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "Delete", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "Clear", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "ClearCached", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetKeys", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetValues", CjsSchema.blue.method);
-CjsSchema.decorateMethod(MotherLode, "GetSize", CjsSchema.blue.method);
-CjsSchema.blue.define(MotherLode, {
+CjsSchema.decorateMethod(MotherLode, "Insert", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "Lookup", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "Delete", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "Clear", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "ClearCached", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "GetKeys", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "GetValues", CjsSchema.be.method);
+CjsSchema.decorateMethod(MotherLode, "GetSize", CjsSchema.be.method);
+CjsSchema.be.define(MotherLode, {
   className: "MotherLode"
 });
 

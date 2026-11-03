@@ -291,7 +291,7 @@ CjsSchema.exposure.define("Tr2GrannyStateRes")(Tr2GrannyStateRes);
 be.inherit(ICacheable)(Tr2GrannyStateRes, { kind: "class" });
 CjsSchema.exposure.mapInterface(ICacheable)(Tr2GrannyStateRes);
 // Carbon: Tr2GrannyStateRes::ExposeToBlue (trinity/trinity/Resources/Tr2GrannyStateRes_Blue.cpp:30).
-CjsSchema.blue.chainTo(BlueAsyncRes)(Tr2GrannyStateRes);
+CjsSchema.be.chainTo(BlueAsyncRes)(Tr2GrannyStateRes);
 
 
 

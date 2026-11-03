@@ -18,7 +18,7 @@ import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { MarkerTag } from "../support/markerTags.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 
 function assert(condition, message = "assertion failed")

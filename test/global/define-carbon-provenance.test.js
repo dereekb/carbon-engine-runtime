@@ -90,7 +90,7 @@ test("meta.define with carbon records provenance and nothing else", () =>
 
 test("retired donor definition options fail before registering a class", () =>
 {
-  for (const namespace of [CjsSchema.meta, CjsSchema.blue, CjsSchema])
+  for (const namespace of [CjsSchema.meta, CjsSchema.be, CjsSchema])
     for (const option of ["donors", "modelledOn"])
     {
       const Constructor = Shape();

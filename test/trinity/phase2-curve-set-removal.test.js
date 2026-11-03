@@ -28,7 +28,7 @@ import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js"
 import { StubResMan } from "../support/stubResMan.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 class SampleFunction extends ITriFunction
 {

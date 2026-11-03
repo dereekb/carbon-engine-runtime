@@ -20,7 +20,7 @@ import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { vec4 } from "../../npm/dist/global/math/vec4.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.blue;
+const legacyBlue = CjsSchema.be;
 
 for(const [Class,Base,table] of [
  [TriVectorSequencer,ITriVectorFunction,[TriVectorSequencer,ITriFunction,ITriVectorFunction]],

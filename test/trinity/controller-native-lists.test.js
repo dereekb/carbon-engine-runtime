@@ -12,7 +12,7 @@ import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/e
 import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2StateMachine.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 const fields = [
   ["stateMachines", Tr2StateMachine, "Tr2StateMachine"],

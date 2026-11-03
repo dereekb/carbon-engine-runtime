@@ -19,7 +19,7 @@ class SetValueTarget
   }
 }
 CjsSchema.define(SetValueTarget, { className: "SetValueFidelityTarget", fields: { value: type.float32 } });
-CjsSchema.blue.interface(INotify)(SetValueTarget);
+CjsSchema.be.interface(INotify)(SetValueTarget);
 
 function fixture(source = "0", variable = 1)
 {

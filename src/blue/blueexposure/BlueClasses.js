@@ -1128,18 +1128,18 @@ export class BlueClasses extends IBlueClasses
 
 
 CjsSchema.exposure.mapInterface(IBlueClasses)(BlueClasses);
-CjsSchema.decorateMethod(BlueClasses, "CreateInstance", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetClassTypes", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "LiveCount", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "LockCount", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetWrapperList", CjsSchema.blue.method);
+CjsSchema.decorateMethod(BlueClasses, "CreateInstance", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "GetClassTypes", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "LiveCount", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "LockCount", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "GetWrapperList", CjsSchema.be.method);
 CjsSchema.decorateMethod(BlueClasses, "LiveList", be.mapMethod(), meta.notUsed);
-CjsSchema.decorateMethod(BlueClasses, "ProcessAllPendingDeletes", CjsSchema.blue.method, meta.noop);
-CjsSchema.decorateMethod(BlueClasses, "Copy", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "Find", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetTypeInfo", CjsSchema.blue.method);
-CjsSchema.decorateMethod(BlueClasses, "GetPersistedClassesReport", CjsSchema.blue.method);
-CjsSchema.blue.define(BlueClasses, {
+CjsSchema.decorateMethod(BlueClasses, "ProcessAllPendingDeletes", CjsSchema.be.method, meta.noop);
+CjsSchema.decorateMethod(BlueClasses, "Copy", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "Find", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "GetTypeInfo", CjsSchema.be.method);
+CjsSchema.decorateMethod(BlueClasses, "GetPersistedClassesReport", CjsSchema.be.method);
+CjsSchema.be.define(BlueClasses, {
   className: "BlueClasses",
   unused: [
     "FindVariable", "UpdateObjectCount",

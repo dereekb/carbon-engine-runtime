@@ -98,7 +98,7 @@ test("Blue and schema share registration and resolve qualified fields after regi
     }
     class Host { mode = 1; }
     CjsSchema.define(Host, { className: "RegistryEnumHost", fields: {
-        mode: [type.int32, type.enum("test.LateEnum"), CjsSchema.blue.persist]
+        mode: [type.int32, type.enum("test.LateEnum"), CjsSchema.be.persist]
     } });
     assert.throws(() => CjsSchema.getSchema(Host), ReferenceError);
     const values = blue.enums.RegisterEnum("test.LateEnum", { FIRST: 1, SECOND: 2 });

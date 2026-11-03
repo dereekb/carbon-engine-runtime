@@ -63,7 +63,7 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
  * Complete canonical members retain native order and indexed aliases. Legacy
  * getField/getDefaults expose no Scene fields; use Blue declaration consumers.
  */
-@CjsSchema.blue.define({
+@CjsSchema.be.define({
   className: "Tr2Sprite2dScene",
   members: [
     {"carbon":{"member":true},"name":"name","type":{"kind":"wstring"},"edit":{"read":true,"write":true,"persist":true}},

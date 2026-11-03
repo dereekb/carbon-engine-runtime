@@ -64,7 +64,7 @@ test("Carbon class comments declare a ported donor; Modelled on comments do not"
     await writeFile(join(packageRoot, "src", "Ported.js"), `
         /** Carbon: Replicated (donor/Owner.h:1) */
         export class CjsPorted {}
-        CjsSchema.blue.define(CjsPorted, {className: "CjsPorted", fields: {}});
+        CjsSchema.be.define(CjsPorted, {className: "CjsPorted", fields: {}});
         /** Carbon: Decorated (donor/Owner.h:1) */
         @blue.define("CjsDecorated") export class CjsDecorated {}`);
     await writeFile(join(packageRoot, "src", "Modelled.js"), `

@@ -84,7 +84,7 @@ export class ImageIOResult
 
 
 // A call, not a decorator: see BitmapDimensions.js.
-CjsSchema.blue.define(ImageIOResult, {
+CjsSchema.be.define(ImageIOResult, {
   className: "ImageIOResult"
 });
 

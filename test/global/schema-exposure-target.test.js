@@ -11,7 +11,7 @@ import { hasOwnInterfaceTable, mappedInterfaces, ownMappedInterfaces } from "../
 import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 // All explicit member/decorator rows of the five preparation samples. Bodies
 // are inert: this test proves declaration parity, not engine behaviour.

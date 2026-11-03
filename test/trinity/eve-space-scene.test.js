@@ -23,7 +23,7 @@ import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 function WithInterfaces(Base, ...Interfaces)
 {
   const Composed = class extends Base {};
-  CjsSchema.blue.inherit(...Interfaces)(Composed);
+  CjsSchema.be.inherit(...Interfaces)(Composed);
   return Composed;
 }
 

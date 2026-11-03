@@ -7,7 +7,7 @@ import test from "node:test";
 import { CjsSchema, meta, type } from "../../../src/blue/schema/index.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.blue;
+const blue = CjsSchema.be;
 
 test("lookups on a registered class return the one table registration built", () =>
 {
