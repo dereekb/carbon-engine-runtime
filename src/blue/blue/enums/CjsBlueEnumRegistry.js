@@ -159,7 +159,7 @@ export class CjsBlueEnumRegistry
             {
                 throw new TypeError("Enum members must have nonnumeric names and data values.");
             }
-            uint32(property.value);
+            CjsBlueEnumRegistry._uint32(property.value);
             records.set(key, { name: key, value: property.value });
         }
         const ordered = [];
@@ -189,9 +189,9 @@ export class CjsBlueEnumRegistry
         if (definition.chooser !== undefined)
         {
             if (!Array.isArray(definition.chooser)) throw new TypeError("Enum chooser must be an array.");
-            const allowed = new Set(ordered.map(member => uint32(member.value)));
+            const allowed = new Set(ordered.map(member => CjsBlueEnumRegistry._uint32(member.value)));
             info.chooser = definition.chooser.map(member => {
-                if (typeof member.name !== "string" || !member.name || !allowed.has(uint32(member.value)))
+                if (typeof member.name !== "string" || !member.name || !allowed.has(CjsBlueEnumRegistry._uint32(member.value)))
                 {
                     throw new TypeError("Enum chooser entries must name declared enum values.");
                 }
@@ -309,8 +309,8 @@ export class CjsBlueEnumRegistry
     {
         const info = this.GetEnumInfo(name);
         const members = info.chooser ?? info.members;
-        const bits = uint32(value);
-        const matches = members.filter(member => uint32(member.value) === bits);
+        const bits = CjsBlueEnumRegistry._uint32(value);
+        const matches = members.filter(member => CjsBlueEnumRegistry._uint32(member.value) === bits);
         if (!matches.length) throw new RangeError(`Enum value not found in ${name}: ${value}`);
         return matches.map(member => member.name).join(" | ");
     }
@@ -337,27 +337,27 @@ export class CjsBlueEnumRegistry
     {
         const info = this.GetEnumInfo(name);
         const members = info.chooser ?? info.members;
-        const bits = uint32(mask);
-        const exact = members.find(member => uint32(member.value) === bits);
+        const bits = CjsBlueEnumRegistry._uint32(mask);
+        const exact = members.find(member => CjsBlueEnumRegistry._uint32(member.value) === bits);
         if (exact) return exact.name;
         // Carbon permits unknown remaining bits and includes contained composites.
         const matches = members.filter(member => {
-            const value = uint32(member.value);
+            const value = CjsBlueEnumRegistry._uint32(member.value);
             return value !== 0 && ((value & bits) >>> 0) === value;
         });
         if (!matches.length) throw new RangeError(`Enum value not found in ${name}: ${mask}`);
         return matches.map(member => member.name).join(" | ");
     }
-}
 
-function uint32(value)
-{
-    // Python accepts signed int; JS additionally accepts its unsigned spelling.
-    if (!Number.isInteger(value) || value < -2147483648 || value > 4294967295)
+    static _uint32(value)
     {
-        throw new TypeError("Enum values must be signed or unsigned 32-bit integers.");
+        // Python accepts signed int; JS additionally accepts its unsigned spelling.
+        if (!Number.isInteger(value) || value < -2147483648 || value > 4294967295)
+        {
+            throw new TypeError("Enum values must be signed or unsigned 32-bit integers.");
+        }
+        return value >>> 0;
     }
-    return value >>> 0;
 }
 
 /** Shared enum storage used by Blue and schema without importing either facade. */

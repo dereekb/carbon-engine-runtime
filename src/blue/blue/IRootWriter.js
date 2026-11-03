@@ -30,7 +30,6 @@ const OBJECT_KINDS = new Set([ "rootRef" ]);
 /** Kinds written as a list (BlueList). */
 const LIST_KINDS = new Set([ "list", "array" ]);
 
-
 /**
  * `IRootWriter` - writes an object's members through a writer's primitives.
  *
@@ -74,7 +73,7 @@ export class IRootWriter extends IRoot
 
       const kind = field.type?.kind;
       const value = readDictionaryValue(instance, field);
-      if (defaults && EqualDefault(value, readDictionaryValue(defaults, field), field.type)) continue;
+      if (defaults && IRootWriter._EqualDefault(value, readDictionaryValue(defaults, field), field.type)) continue;
       // An empty slot of a type-indexed array (an area's m_materials[type]) is
       // not written; reading leaves it null. The slot names stay the only keys.
       if (field.index !== undefined && value === null) continue;
@@ -94,11 +93,11 @@ export class IRootWriter extends IRoot
         {
           this.WriteIRoot__Reference(value, defaults ? readDictionaryValue(defaults, field) : null, DeclaredClassName(field.type));
         }
-        else if (OBJECT_KINDS.has(kind) || kind === "rootWeak" || IsObject(value))
+        else if (OBJECT_KINDS.has(kind) || kind === "rootWeak" || IRootWriter._IsObject(value))
         {
           this.WriteIRoot(value, DeclaredClassName(field.type));
         }
-        else if (Array.isArray(value) && (LIST_KINDS.has(kind) || value.some(IsObject)))
+        else if (Array.isArray(value) && (LIST_KINDS.has(kind) || value.some(IRootWriter._IsObject)))
         {
           this.WriteList(value, DeclaredClassName(field.type), field.type?.itemType);
         }
@@ -178,7 +177,7 @@ export class IRootWriter extends IRoot
   WriteStructureList(value, type)
   {
     if (value === null || value === undefined) return this.WriteNestedValue(value, type);
-    if (value.some(IsObject)) this.WriteList(value, DeclaredClassName(type), type?.itemType);
+    if (value.some(IRootWriter._IsObject)) this.WriteList(value, DeclaredClassName(type), type?.itemType);
     else this.WriteNestedValue(value, type);
   }
 
@@ -196,7 +195,7 @@ export class IRootWriter extends IRoot
     this.WriteVectorBegin(list.length);
     for (const item of list)
     {
-      if (IsObject(item)) this.WriteIRoot(item, declaredClassName);
+      if (IRootWriter._IsObject(item)) this.WriteIRoot(item, declaredClassName);
       else this.WriteNestedValue(item, itemType);
     }
     this.WriteVectorEnd(list.length);
@@ -221,7 +220,7 @@ export class IRootWriter extends IRoot
       for (const [key, item] of value)
       {
         this.WriteMemberName(String(key));
-        if (IsObject(item)) this.WriteIRoot(item, DeclaredClassName(type?.valueType));
+        if (IRootWriter._IsObject(item)) this.WriteIRoot(item, DeclaredClassName(type?.valueType));
         else this.WriteNestedValue(item, type?.valueType);
       }
       this.WriteRecordEnd();
@@ -232,7 +231,7 @@ export class IRootWriter extends IRoot
       this.WriteList(Array.from(value), DeclaredClassName(type?.itemType), type?.itemType);
       return;
     }
-    if (!HasNestedObject(value))
+    if (!IRootWriter._HasNestedObject(value))
     {
       this.WriteValue(exportCarbonValue(value));
       return;
@@ -242,7 +241,7 @@ export class IRootWriter extends IRoot
       this.WriteVectorBegin(value.length);
       for (const item of value)
       {
-        if (IsObject(item)) this.WriteIRoot(item, null);
+        if (IRootWriter._IsObject(item)) this.WriteIRoot(item, null);
         else this.WriteNestedValue(item);
       }
       this.WriteVectorEnd(value.length);
@@ -255,7 +254,7 @@ export class IRootWriter extends IRoot
       if (key.startsWith("_")) continue;
       this.WriteMemberName(key);
       const item = value[key];
-      if (IsObject(item)) this.WriteIRoot(item, null);
+      if (IRootWriter._IsObject(item)) this.WriteIRoot(item, null);
       else this.WriteNestedValue(item);
     }
     this.WriteRecordEnd();
@@ -328,8 +327,57 @@ export class IRootWriter extends IRoot
    * @abstract
    */
   WriteVectorEnd(_size) {}
-}
 
+  /** Whether a list item is an object rather than a value. */
+  /** Whether a plain record or array holds an object at any depth. */
+  static _HasNestedObject(value)
+  {
+    if (value instanceof Map || value instanceof Set) return Array.from(value.values()).some(item => IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item));
+    if (Array.isArray(value)) return value.some(item => IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item));
+    if (!value || typeof value !== "object" || ArrayBuffer.isView(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return false;
+    for (const key in value)
+    {
+      const item = value[key];
+      if (item && typeof item === "object" && (IRootWriter._IsObject(item) || IRootWriter._HasNestedObject(item))) return true;
+    }
+    return false;
+  }
+
+  static _IsObject(value)
+  {
+    return value !== null && typeof value === "object" && !Array.isArray(value) && !ArrayBuffer.isView(value)
+      && CjsSchema.getClassName(value.constructor) !== null;
+  }
+
+  /** Compares scalar/storage defaults without following object pointers or cycles. */
+  static _EqualDefault(value, other, type)
+  {
+    const kind = type?.kind;
+    // BlueVariable.cpp:199-203,225: scalar float subtraction is float32.
+    if (kind === "float32") return Math.abs(Math.fround(Math.fround(value) - Math.fround(other))) < Math.fround(1e-6);
+    if (kind === "float64") return Math.abs(value - other) < 1e-12;
+    if (kind === "root") return false;
+    if (value === other) return true;
+    if (ArrayBuffer.isView(value) && ArrayBuffer.isView(other) &&
+      /^(?:vec|vector|mat|matrix|color|quat)/.test(kind))
+    {
+      // Runtime float64 math descriptors retain their declared precision.
+      if (type.scalar === "float64")
+      {
+        return value.length === other.length && value.every((item, index) => Math.abs(item - other[index]) < 1e-12);
+      }
+      // CE-202, BlueVariable.cpp:39-49 quirk: NaN differences do not fail this >= test.
+      return value.length === other.length && value.every((item, index) =>
+        !(Math.abs(Math.fround(item - other[index])) >= Math.fround(1e-6)));
+    }
+    // BlueVariable.cpp:274-320 only empty embedded collections compare equal.
+    if (Array.isArray(value) && Array.isArray(other)) return value.length === 0 && other.length === 0;
+    if (value instanceof Map && other instanceof Map) return value.size === 0 && other.size === 0;
+    return false;
+  }
+}
 
 /** The class a field declares for the objects it holds, or null. */
 export function DeclaredClassName(fieldType)
@@ -342,56 +390,6 @@ export function DeclaredClassName(fieldType)
     return typeof item === "string" ? item : item?.className ?? null;
   }
   return fieldType.className ?? null;
-}
-
-/** Whether a list item is an object rather than a value. */
-/** Whether a plain record or array holds an object at any depth. */
-function HasNestedObject(value)
-{
-  if (value instanceof Map || value instanceof Set) return Array.from(value.values()).some(item => IsObject(item) || HasNestedObject(item));
-  if (Array.isArray(value)) return value.some(item => IsObject(item) || HasNestedObject(item));
-  if (!value || typeof value !== "object" || ArrayBuffer.isView(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) return false;
-  for (const key in value)
-  {
-    const item = value[key];
-    if (item && typeof item === "object" && (IsObject(item) || HasNestedObject(item))) return true;
-  }
-  return false;
-}
-
-function IsObject(value)
-{
-  return value !== null && typeof value === "object" && !Array.isArray(value) && !ArrayBuffer.isView(value)
-    && CjsSchema.getClassName(value.constructor) !== null;
-}
-
-/** Compares scalar/storage defaults without following object pointers or cycles. */
-function EqualDefault(value, other, type)
-{
-  const kind = type?.kind;
-  // BlueVariable.cpp:199-203,225: scalar float subtraction is float32.
-  if (kind === "float32") return Math.abs(Math.fround(Math.fround(value) - Math.fround(other))) < Math.fround(1e-6);
-  if (kind === "float64") return Math.abs(value - other) < 1e-12;
-  if (kind === "root") return false;
-  if (value === other) return true;
-  if (ArrayBuffer.isView(value) && ArrayBuffer.isView(other) &&
-    /^(?:vec|vector|mat|matrix|color|quat)/.test(kind))
-  {
-    // Runtime float64 math descriptors retain their declared precision.
-    if (type.scalar === "float64")
-    {
-      return value.length === other.length && value.every((item, index) => Math.abs(item - other[index]) < 1e-12);
-    }
-    // CE-202, BlueVariable.cpp:39-49 quirk: NaN differences do not fail this >= test.
-    return value.length === other.length && value.every((item, index) =>
-      !(Math.abs(Math.fround(item - other[index])) >= Math.fround(1e-6)));
-  }
-  // BlueVariable.cpp:274-320 only empty embedded collections compare equal.
-  if (Array.isArray(value) && Array.isArray(other)) return value.length === 0 && other.length === 0;
-  if (value instanceof Map && other instanceof Map) return value.size === 0 && other.size === 0;
-  return false;
 }
 
 CjsSchema.exposure.inherit(IRoot)(IRootWriter);

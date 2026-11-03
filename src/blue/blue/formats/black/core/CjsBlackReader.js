@@ -355,7 +355,7 @@ export class CjsBlackReader extends CjsBlueReader
             const value = this.ReadFieldValueWithContext(objectReader, kind, blackName, fieldTarget, destination);
             // BlackReader::ReadBinaryBlock: the instance decodes the bytes. One
             // that does not map ICustomPersist keeps the raw block.
-            if (IsBinaryBlock(fieldTarget) && !fieldTarget.discard && this.ReadBinaryBlock(target, blackName, value.bytes))
+            if (CjsBlackReader._IsBinaryBlock(fieldTarget) && !fieldTarget.discard && this.ReadBinaryBlock(target, blackName, value.bytes))
             {
                 previousBlackName = blackName;
                 continue;
@@ -434,7 +434,7 @@ export class CjsBlackReader extends CjsBlueReader
                 }
 
                 let value = this.ReadFieldValueWithContext(objectReader, kind, blackName, fieldTarget);
-                if (IsBinaryBlock(fieldTarget))
+                if (CjsBlackReader._IsBinaryBlock(fieldTarget))
                 {
                     const decoded = this.ReadBinaryBlockValue(kind, blackName, value.bytes);
                     if (decoded !== undefined) value = decoded;
@@ -657,7 +657,7 @@ export class CjsBlackReader extends CjsBlueReader
         {
             return target.unknown
                 ? this.ReadUnknownFieldValue(reader, kind, blackName)
-                : CjsBlackPropertyReaders.readValue(reader, WithClassStructure(target.field, kind, blackName), destination);
+                : CjsBlackPropertyReaders.readValue(reader, CjsBlackReader._WithClassStructure(target.field, kind, blackName), destination);
         }
         catch (error)
         {
@@ -1069,37 +1069,36 @@ export class CjsBlackReader extends CjsBlueReader
         return String(value || "").replace(/^m_/, "");
     }
 
-}
+    /**
+     * Whether a resolved field is a Carbon BINARYBLOCK on the wire.
+     *
+     * @param {import("./helpers.js").BlackFieldTarget} target Resolved field.
+     * @returns {boolean} True for a declared binary block.
+     */
+    static _IsBinaryBlock(target)
+    {
+        return !target.unknown && target.field?.black?.beType === "BINARYBLOCK";
+    }
 
-/**
- * Whether a resolved field is a Carbon BINARYBLOCK on the wire.
- *
- * @param {import("./helpers.js").BlackFieldTarget} target Resolved field.
- * @returns {boolean} True for a declared binary block.
- */
-function IsBinaryBlock(target)
-{
-    return !target.unknown && target.field?.black?.beType === "BINARYBLOCK";
-}
-
-/**
- * A structure-list field's descriptor with its layout taken from the
- * registered item class (blackClassStructures.js), which wins over the
- * snapshot's; unchanged for any other field.
- *
- * @param {import("./helpers.js").BlackSourceField} field Resolved schema field.
- * @param {string} className Owner class name.
- * @param {string} fieldName Black field name.
- * @returns {import("./helpers.js").BlackSourceField} The field, or a copy with the class structure layout.
- */
-function WithClassStructure(field, className, fieldName)
-{
-    // Canonical fields already resolve the registered item class.
-    if (field.declaration) return field;
-    const black = field?.black;
-    if (!black || black.container !== "list" || !/StructureList/u.test(String(black.cppType ?? ""))) return field;
-    const layout = classStructureLayout(className, fieldName);
-    return { ...field, black: { ...black, structure: layout } };
+    /**
+     * A structure-list field's descriptor with its layout taken from the
+     * registered item class (blackClassStructures.js), which wins over the
+     * snapshot's; unchanged for any other field.
+     *
+     * @param {import("./helpers.js").BlackSourceField} field Resolved schema field.
+     * @param {string} className Owner class name.
+     * @param {string} fieldName Black field name.
+     * @returns {import("./helpers.js").BlackSourceField} The field, or a copy with the class structure layout.
+     */
+    static _WithClassStructure(field, className, fieldName)
+    {
+        // Canonical fields already resolve the registered item class.
+        if (field.declaration) return field;
+        const black = field?.black;
+        if (!black || black.container !== "list" || !/StructureList/u.test(String(black.cppType ?? ""))) return field;
+        const layout = classStructureLayout(className, fieldName);
+        return { ...field, black: { ...black, structure: layout } };
+    }
 }
 
 // BlackReader is Carbon's IBlueObjectBuilder (blue/src/BlackReader.h:16-19).

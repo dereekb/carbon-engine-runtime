@@ -291,7 +291,7 @@ export class CjsBlackFormat extends CjsFormat
      */
     static probeSupport(input)
     {
-        const view = getBlackProbeView(input);
+        const view = CjsBlackFormat._getBlackProbeView(input);
         return Boolean(
             view
             && view.byteLength >= 4
@@ -332,19 +332,17 @@ export class CjsBlackFormat extends CjsFormat
         return readerOptions;
     }
 
+    /**
+     * Returns a DataView over probe input, or null when the input is not binary.
+     *
+     * @param {unknown} input Candidate source.
+     * @returns {DataView|null} A view over the bytes, or null.
+     */
+    static _getBlackProbeView(input)
+    {
+        if (input instanceof ArrayBuffer) return new DataView(input);
+        if (!ArrayBuffer.isView(input)) return null;
+        return new DataView(input.buffer, input.byteOffset, input.byteLength);
+    }
 }
-
-/**
- * Returns a DataView over probe input, or null when the input is not binary.
- *
- * @param {unknown} input Candidate source.
- * @returns {DataView|null} A view over the bytes, or null.
- */
-function getBlackProbeView(input)
-{
-    if (input instanceof ArrayBuffer) return new DataView(input);
-    if (!ArrayBuffer.isView(input)) return null;
-    return new DataView(input.buffer, input.byteOffset, input.byteLength);
-}
-
 

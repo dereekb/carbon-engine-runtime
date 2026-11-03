@@ -16,8 +16,6 @@ import { IBlueObjectMetadata } from "./IBlueObjectMetadata.js";
 
 /** `BlueStdResult` codes the store answers with (`BLUE_STD_RESULT_OK`, `BLUE_STD_RESULT_KEY_ERROR`). */
 const OK = { ok: true, message: "" };
-const KeyError = message => ({ ok: false, message });
-
 
 /** `BlueObjectMetadata` - the object-metadata store. */
 export class BlueObjectMetadata extends IBlueObjectMetadata
@@ -90,8 +88,8 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
   Delete(owner, key)
   {
     const table = this.GetMetadata(owner);
-    if (!table) return KeyError("object not found in the database");
-    if (!Object.hasOwn(table, key)) return KeyError("key not found in the database");
+    if (!table) return BlueObjectMetadata._KeyError("object not found in the database");
+    if (!Object.hasOwn(table, key)) return BlueObjectMetadata._KeyError("key not found in the database");
 
     delete table[key];
     if (!Object.keys(table).length) this._metadata.delete(owner);
@@ -106,7 +104,7 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
    */
   DeleteObject(owner)
   {
-    if (!this.GetMetadata(owner)) return KeyError("object not found in the database");
+    if (!this.GetMetadata(owner)) return BlueObjectMetadata._KeyError("object not found in the database");
     this._metadata.delete(owner);
     return OK;
   }
@@ -120,8 +118,8 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
   Index(owner, key)
   {
     const table = this.GetMetadata(owner);
-    if (!table) return { result: KeyError("object not found in the database"), value: null };
-    if (!Object.hasOwn(table, key)) return { result: KeyError("key not found in the database"), value: null };
+    if (!table) return { result: BlueObjectMetadata._KeyError("object not found in the database"), value: null };
+    if (!Object.hasOwn(table, key)) return { result: BlueObjectMetadata._KeyError("key not found in the database"), value: null };
     return { result: OK, value: table[key] };
   }
 
@@ -134,7 +132,7 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
   GetKeys(owner)
   {
     const table = this.GetMetadata(owner);
-    return table ? { result: OK, keys: Object.keys(table) } : { result: KeyError("object not found in the database"), keys: [] };
+    return table ? { result: OK, keys: Object.keys(table) } : { result: BlueObjectMetadata._KeyError("object not found in the database"), keys: [] };
   }
 
   /**
@@ -147,7 +145,7 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
   {
     const table = this.GetMetadata(owner);
     const items = Object.create(null);
-    if (!table) return { result: KeyError("object not found in the database"), items };
+    if (!table) return { result: BlueObjectMetadata._KeyError("object not found in the database"), items };
 
     Object.assign(items, table);
     return { result: OK, items };
@@ -175,6 +173,11 @@ export class BlueObjectMetadata extends IBlueObjectMetadata
   CopyDeep(_source, _target)
   {
     throw new Error("BlueObjectMetadata.CopyDeep is not implemented in CarbonEngineJS.");
+  }
+
+  static _KeyError(message)
+  {
+  return { ok: false, message };
   }
 }
 

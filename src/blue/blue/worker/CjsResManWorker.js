@@ -31,10 +31,10 @@ export class CjsResManWorker
     switch (operation)
     {
       case Operation.FETCH:
-        return fetchResource(payload, context);
+        return CjsResManWorker._fetchResource(payload, context);
 
       case Operation.FORMAT_READ:
-        return readFormat(payload);
+        return CjsResManWorker._readFormat(payload);
 
       default:
       {
@@ -177,83 +177,85 @@ export class CjsResManWorker
       statusText: value?.statusText
     };
   }
-}
 
-async function fetchResource(payload, context) {
-  if (!payload || typeof payload.url !== "string") {
-    throw new TypeError("Worker fetch requires a URL.");
-  }
-  const fetchImplementation = context.fetch || globalThis.fetch;
-  if (typeof fetchImplementation !== "function") {
-    throw new ReferenceError("Worker fetch is unavailable.");
-  }
-  const options = {
-    ...(payload.options || {}),
-    ...(context.signal ? { signal: context.signal } : {})
-  };
-  const response = await fetchImplementation(payload.url, options);
-  if (!response.ok) {
-    const error = new Error(
-      `Resource fetch failed: ${response.status} ${response.statusText}`
-    );
-    error.code = "CJS_RESOURCE_FETCH_FAILED";
-    error.path = payload.path;
-    error.status = response.status;
-    error.statusText = response.statusText;
-    throw error;
-  }
-
-  switch (payload.responseType || "arraybuffer") {
-    case "arraybuffer":
-      return response.arrayBuffer();
-    case "blob":
-      return response.blob();
-    case "json":
-      return response.json();
-    case "text":
-      return response.text();
-    default: {
-      const error = new Error(`Unsupported worker fetch response type: ${payload.responseType}`);
-      error.code = "CJS_RESOURCE_WORKER_RESPONSE_TYPE";
+  static async _fetchResource(payload, context)
+  {
+    if (!payload || typeof payload.url !== "string") {
+      throw new TypeError("Worker fetch requires a URL.");
+    }
+    const fetchImplementation = context.fetch || globalThis.fetch;
+    if (typeof fetchImplementation !== "function") {
+      throw new ReferenceError("Worker fetch is unavailable.");
+    }
+    const options = {
+      ...(payload.options || {}),
+      ...(context.signal ? { signal: context.signal } : {})
+    };
+    const response = await fetchImplementation(payload.url, options);
+    if (!response.ok) {
+      const error = new Error(
+        `Resource fetch failed: ${response.status} ${response.statusText}`
+      );
+      error.code = "CJS_RESOURCE_FETCH_FAILED";
+      error.path = payload.path;
+      error.status = response.status;
+      error.statusText = response.statusText;
       throw error;
     }
-  }
-}
 
-async function readFormat(payload) {
-  if (!payload || typeof payload.module !== "string" || payload.module === "") {
-    throw new TypeError("Worker format read requires a module URL.");
+    switch (payload.responseType || "arraybuffer") {
+      case "arraybuffer":
+        return response.arrayBuffer();
+      case "blob":
+        return response.blob();
+      case "json":
+        return response.json();
+      case "text":
+        return response.text();
+      default: {
+        const error = new Error(`Unsupported worker fetch response type: ${payload.responseType}`);
+        error.code = "CJS_RESOURCE_WORKER_RESPONSE_TYPE";
+        throw error;
+      }
+    }
   }
-  // Caller-selected format modules are the worker protocol's explicit extension point.
-  // This exact non-literal import site is recorded in the layering manifest.
-  const module = await import(payload.module);
-  const Format = module[payload.exportName || "default"];
-  if (typeof Format !== "function") {
-    throw new TypeError(
-      `Worker format export was not found: ${payload.exportName || "default"}`
-    );
-  }
-  const options = payload.options || {};
-  const context = payload.context || null;
-  if (payload.nativeData)
+
+  static async _readFormat(payload)
   {
-    return new Format(options).ReadDataAsync(payload.input, options, context);
-  }
-  if (typeof Format.readAsync === "function") {
-    return Format.readAsync(payload.input, options, context);
-  }
-  if (typeof Format.read === "function") {
-    return Format.read(payload.input, options, context);
-  }
+    if (!payload || typeof payload.module !== "string" || payload.module === "") {
+      throw new TypeError("Worker format read requires a module URL.");
+    }
+    // Caller-selected format modules are the worker protocol's explicit extension point.
+    // This exact non-literal import site is recorded in the layering manifest.
+    const module = await import(payload.module);
+    const Format = module[payload.exportName || "default"];
+    if (typeof Format !== "function") {
+      throw new TypeError(
+        `Worker format export was not found: ${payload.exportName || "default"}`
+      );
+    }
+    const options = payload.options || {};
+    const context = payload.context || null;
+    if (payload.nativeData)
+    {
+      return new Format(options).ReadDataAsync(payload.input, options, context);
+    }
+    if (typeof Format.readAsync === "function") {
+      return Format.readAsync(payload.input, options, context);
+    }
+    if (typeof Format.read === "function") {
+      return Format.read(payload.input, options, context);
+    }
 
-  const reader = new Format(options);
-  if (typeof reader.ReadAsync === "function") {
-    return reader.ReadAsync(payload.input, options, context);
+    const reader = new Format(options);
+    if (typeof reader.ReadAsync === "function") {
+      return reader.ReadAsync(payload.input, options, context);
+    }
+    if (typeof reader.Read === "function") {
+      return reader.Read(payload.input, options, context);
+    }
+    throw new TypeError(`${Format.name} does not expose a read operation.`);
   }
-  if (typeof reader.Read === "function") {
-    return reader.Read(payload.input, options, context);
-  }
-  throw new TypeError(`${Format.name} does not expose a read operation.`);
 }
 
 const isWorkerScope = typeof WorkerGlobalScope !== "undefined"

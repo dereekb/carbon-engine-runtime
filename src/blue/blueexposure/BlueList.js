@@ -7,7 +7,6 @@ import { IList } from "./IList.js";
 import { IListNotify } from "./IListNotify.js";
 import { ICopierCustomAssignment } from "./ICopierCustomAssignment.js";
 
-
 /**
  * A typed object list with Carbon's explicit single-observer mutation methods.
  * Adapted: constructor configuration replaces C++ template parameters; Array
@@ -89,8 +88,8 @@ export class BlueList extends Array
    */
   Insert(key, value)
   {
-    if (!AcceptsItem(this, value)) return false;
-    if (!RangeCheck(key, this.length, true)) return false;
+    if (!BlueList._AcceptsItem(this, value)) return false;
+    if (!BlueList._RangeCheck(key, this.length, true)) return false;
     const index = key === -1 ? this.length : key;
     Array.prototype.splice.call(this, index, 0, value);
     if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, index, 0, value, this);
@@ -107,7 +106,7 @@ export class BlueList extends Array
    */
   Append(value)
   {
-    if (!AcceptsItem(this, value)) return false;
+    if (!BlueList._AcceptsItem(this, value)) return false;
     Array.prototype.push.call(this, value);
     if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, this.length, 0, value, this);
     return true;
@@ -131,7 +130,7 @@ export class BlueList extends Array
       this.length = 0;
       return true;
     }
-    if (!RangeCheck(key, this.length, false)) return false;
+    if (!BlueList._RangeCheck(key, this.length, false)) return false;
     const value = this[key];
     Array.prototype.splice.call(this, key, 1);
     if (value && this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_REMOVED, key, 0, value, this);
@@ -150,8 +149,8 @@ export class BlueList extends Array
    */
   GetAt(key)
   {
-    if (!RangeCheck(key, this.length, false)) return null;
-    return At(this, key) ?? null;
+    if (!BlueList._RangeCheck(key, this.length, false)) return null;
+    return BlueList._At(this, key) ?? null;
   }
 
   /**
@@ -170,8 +169,8 @@ export class BlueList extends Array
   FindKey(value, keyFrom = 0)
   {
     if (value === null || value === undefined) return -1;
-    if (keyFrom !== 0 && !RangeCheck(keyFrom, this.length, false)) return -1;
-    if (!AcceptsItem(this, value)) return -1;
+    if (keyFrom !== 0 && !BlueList._RangeCheck(keyFrom, this.length, false)) return -1;
+    if (!BlueList._AcceptsItem(this, value)) return -1;
 
     if (keyFrom < 0) throw new RangeError(`BlueList.FindKey: keyFrom ${keyFrom} is before the first item.`);
     return Array.prototype.indexOf.call(this, value, keyFrom);
@@ -190,11 +189,11 @@ export class BlueList extends Array
    */
   Swap(key1, key2)
   {
-    if (!RangeCheck(key1, this.length, false)) return false;
-    if (!RangeCheck(key2, this.length, false)) return false;
+    if (!BlueList._RangeCheck(key1, this.length, false)) return false;
+    if (!BlueList._RangeCheck(key2, this.length, false)) return false;
 
-    const value = At(this, key1);
-    this[key1] = At(this, key2);
+    const value = BlueList._At(this, key1);
+    this[key1] = BlueList._At(this, key2);
     this[key2] = value;
     if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_SWAPPED, key1, key2, null, this);
     return true;
@@ -215,13 +214,13 @@ export class BlueList extends Array
    */
   Move(from, to)
   {
-    if (!RangeCheck(from, this.length, false)) return false;
-    if (!RangeCheck(to, this.length, false)) return false;
+    if (!BlueList._RangeCheck(from, this.length, false)) return false;
+    if (!BlueList._RangeCheck(to, this.length, false)) return false;
 
     let i = from;
-    const value = At(this, from);
-    for (; i < to; i++) this[i] = At(this, i + 1);
-    for (; i > to; i--) this[i] = At(this, i - 1);
+    const value = BlueList._At(this, from);
+    for (; i < to; i++) this[i] = BlueList._At(this, i + 1);
+    for (; i > to; i--) this[i] = BlueList._At(this, i - 1);
     this[to] = value;
     if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_MOVED, from, to, null, this);
     return true;
@@ -303,7 +302,7 @@ export class BlueList extends Array
    */
   AssignFrom(other)
   {
-    if (!SameListType(this, other)) throw new TypeError("BlueList.AssignFrom requires the same configured list type.");
+    if (!BlueList._SameListType(this, other)) throw new TypeError("BlueList.AssignFrom requires the same configured list type.");
     this.Remove(-1);
     for (let i = 0; i < other.length; i++) Array.prototype.push.call(this, other[i]);
   }
@@ -326,7 +325,7 @@ export class BlueList extends Array
    */
   AssignTo(other, copier)
   {
-    if (!SameListType(this, other)) return false;
+    if (!BlueList._SameListType(this, other)) return false;
     if (!other.Remove(-1)) return false;
     other.length = this.length;
     Array.prototype.fill.call(other, null);
@@ -334,7 +333,7 @@ export class BlueList extends Array
     for (; i < this.length; i++)
     {
       const copy = copier.CopyTo(this[i], null);
-      if (!AcceptsItem(this, copy))
+      if (!BlueList._AcceptsItem(this, copy))
       {
         other.length = i;
         return false;
@@ -344,51 +343,51 @@ export class BlueList extends Array
     if (i && other._notify) other._notify.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, other);
     return true;
   }
-}
 
-/** Native QI admission, represented by the exact constructor identity in the exposure table. */
-function AcceptsItem(list, value)
-{
-  return value !== null && typeof value === "object" && BeClasses.QueryThisInterface(value, list._itemType, value.constructor, BlueClasses.BLUEQIOPT.BEQI_SILENT) !== null;
-}
+  /** Native QI admission, represented by the exact constructor identity in the exposure table. */
+  static _AcceptsItem(list, value)
+  {
+    return value !== null && typeof value === "object" && BeClasses.QueryThisInterface(value, list._itemType, value.constructor, BlueClasses.BLUEQIOPT.BEQI_SILENT) !== null;
+  }
 
-/**
- * Ports BlueListBase::RangeCheck (BlueListUtil.h:90-125): -1 is admitted, and
- * insert also admits one past the end. Failure returns false; Carbon also sets a
- * Python IndexError, which has no JS counterpart.
- * Adapted: Carbon's key is ssize_t; a JS Number can be non-integer, so a
- * non-integer key fails the check rather than being coerced.
- * @param {number} key Item key.
- * @param {number} size List size.
- * @param {boolean} insert Whether one past the end is admitted.
- * @returns {boolean} Whether the key is admitted.
- */
-function RangeCheck(key, size, insert)
-{
-  if (!Number.isInteger(key)) return false;
-  return insert ? key >= -1 && key <= size : key >= -1 && key < size;
-}
+  /**
+   * Ports BlueListBase::RangeCheck (BlueListUtil.h:90-125): -1 is admitted, and
+   * insert also admits one past the end. Failure returns false; Carbon also sets a
+   * Python IndexError, which has no JS counterpart.
+   * Adapted: Carbon's key is ssize_t; a JS Number can be non-integer, so a
+   * non-integer key fails the check rather than being coerced.
+   * @param {number} key Item key.
+   * @param {number} size List size.
+   * @param {boolean} insert Whether one past the end is admitted.
+   * @returns {boolean} Whether the key is admitted.
+   */
+  static _RangeCheck(key, size, insert)
+  {
+    if (!Number.isInteger(key)) return false;
+    return insert ? key >= -1 && key <= size : key >= -1 && key < size;
+  }
 
-/**
- * Ports vector::at: an index outside the stored items throws, as
- * std::out_of_range does, instead of reading undefined.
- * @param {BlueList} list List storage.
- * @param {number} index Item index.
- * @returns {object|null|undefined} Stored item; a raw hole reads as undefined.
- * @throws {RangeError} When index is outside [0, length).
- */
-function At(list, index)
-{
-  if (index < 0 || index >= list.length) throw new RangeError(`BlueList: index ${index} out of range, size is ${list.length}.`);
-  return list[index];
-}
+  /**
+   * Ports vector::at: an index outside the stored items throws, as
+   * std::out_of_range does, instead of reading undefined.
+   * @param {BlueList} list List storage.
+   * @param {number} index Item index.
+   * @returns {object|null|undefined} Stored item; a raw hole reads as undefined.
+   * @throws {RangeError} When index is outside [0, length).
+   */
+  static _At(list, index)
+  {
+    if (index < 0 || index >= list.length) throw new RangeError(`BlueList: index ${index} out of range, size is ${list.length}.`);
+    return list[index];
+  }
 
-/** C++ fixes these facts in the list's template type; JavaScript stores them on each list. */
-function SameListType(source, dest)
-{
-  return Array.isArray(dest) && dest.constructor === source.constructor
-    && dest._itemType === source._itemType && dest._className === source._className
-    && dest._listOps === source._listOps;
+  /** C++ fixes these facts in the list's template type; JavaScript stores them on each list. */
+  static _SameListType(source, dest)
+  {
+    return Array.isArray(dest) && dest.constructor === source.constructor
+      && dest._itemType === source._itemType && dest._className === source._className
+      && dest._listOps === source._listOps;
+  }
 }
 
 // Array methods create ordinary arrays, never pass a result length as ItemType.

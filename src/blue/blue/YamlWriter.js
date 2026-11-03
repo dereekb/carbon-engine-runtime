@@ -71,7 +71,7 @@ export class YamlWriter extends IRootWriter
           identify: value => typeof value === "number", test: /^(?:[-+]?(?:\d+(?:\.\d*)?|\.\d+)|[-+]?(?:inf|nan))$/,
           stringify: node => node.source },
         { tag: "tag:yaml.org,2002:str", default: true, format: "CARBON_QUOTED",
-          identify: value => typeof value === "string", stringify: node => Quote(node.value) },
+          identify: value => typeof value === "string", stringify: node => YamlWriter._Quote(node.value) },
         { tag: "tag:yaml.org,2002:str", default: true, format: "CARBON_PLAIN",
           identify: value => typeof value === "string", stringify: node => node.value }
       ] });
@@ -155,7 +155,7 @@ export class YamlWriter extends IRootWriter
     {
       this._WriteVectorBegin(value.length);
       this._events.at(-1).node.flow = true;
-      for (const item of value) this.WriteNestedValue(item, { kind: type?.scalar ?? TypedScalar(value) });
+      for (const item of value) this.WriteNestedValue(item, { kind: type?.scalar ?? YamlWriter._TypedScalar(value) });
       return this._WriteVectorEnd(value.length);
     }
     if (Array.isArray(value) || value instanceof Set)
@@ -247,7 +247,7 @@ export class YamlWriter extends IRootWriter
    * @adapted
    */
 
-  _WriteFloat(value) { this._AddScalarEvent(Math.fround(value), "number", Fixed(Math.fround(value), 7)); }
+  _WriteFloat(value) { this._AddScalarEvent(Math.fround(value), "number", YamlWriter._Fixed(Math.fround(value), 7)); }
 
   /**
    * Emits %.12f, retaining one fraction digit; BigInt arithmetic replaces printf.
@@ -255,7 +255,7 @@ export class YamlWriter extends IRootWriter
    * @adapted
    */
 
-  _WriteDouble(value) { this._AddScalarEvent(value, "number", Fixed(value, 12)); }
+  _WriteDouble(value) { this._AddScalarEvent(value, "number", YamlWriter._Fixed(value, 12)); }
 
   /**
    * JS strings already hold Unicode; output is quoted and non-ASCII escaped.
@@ -377,7 +377,7 @@ export class YamlWriter extends IRootWriter
     for (let i = 0; i < count; ++i)
     {
       const value = Math.fround(values[i]);
-      this._AddScalarEvent(value, "number", General(value));
+      this._AddScalarEvent(value, "number", YamlWriter._General(value));
     }
     this._WriteVectorEnd(count);
   }
@@ -459,7 +459,7 @@ export class YamlWriter extends IRootWriter
       this._WriteVectorBegin(3);
       this._events.at(-1).node.flow = true;
       this._WriteChar(member.name);
-      this._WriteInt32(StructureDataType(member.dataType));
+      this._WriteInt32(YamlWriter._StructureDataType(member.dataType));
       this._WriteInt32(member.offset);
       this._WriteVectorEnd(3);
     }
@@ -585,6 +585,100 @@ export class YamlWriter extends IRootWriter
    */
 
   _ReportError(message) { CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("blue"), "%s", message); }
+
+  static _Fixed(value, digits)
+  {
+    if (!Number.isFinite(value)) return Number.isNaN(value) ? "nan" : value < 0 ? "-inf" : "inf";
+    const negative = value < 0 || Object.is(value, -0);
+    const rounded = YamlWriter._RoundScaled(value, digits);
+    const text = rounded.toString().padStart(digits + 1, "0");
+    const result = text.slice(0, -digits) + "." + text.slice(-digits).replace(/0+$/, "").padEnd(1, "0");
+    // YamlWriter.cpp:191 uses a 64-byte printf buffer. JS cannot reproduce a
+    // native invalid-parameter abort; do not quietly emit an oversized number.
+    if (result.length + Number(negative) >= 64) throw new RangeError("YamlWriter: native printf buffer exceeded.");
+    return (negative ? "-" : "") + result;
+  }
+
+  /** Rounds abs(value) * 10^digits exactly, including negative decimal scales. */
+  static _RoundScaled(value, digits)
+  {
+    FLOAT_BITS.setFloat64(0, Math.abs(value), false);
+    const bits = FLOAT_BITS.getBigUint64(0, false);
+    const exponent = Number((bits >> 52n) & 2047n);
+    const mantissa = (bits & ((1n << 52n) - 1n)) | (exponent ? 1n << 52n : 0n);
+    const power = (exponent ? exponent - 1023 : -1022) - 52;
+    let numerator = mantissa;
+    let denominator = 1n;
+    if (digits >= 0) numerator *= 10n ** BigInt(digits);
+    else denominator *= 10n ** BigInt(-digits);
+    if (power >= 0) numerator <<= BigInt(power);
+    else denominator <<= BigInt(-power);
+    let rounded = numerator / denominator;
+    const remainder = numerator % denominator;
+    if (remainder * 2n > denominator || (remainder * 2n === denominator && (rounded & 1n))) ++rounded;
+    return rounded;
+  }
+
+  /** %g is used only by Carbon's packed float4 structure members. */
+  static _General(value)
+  {
+    if (!Number.isFinite(value)) return Number.isNaN(value) ? "nan" : value < 0 ? "-inf" : "inf";
+    if (value === 0) return Object.is(value, -0) ? "-0" : "0";
+    let power = Math.floor(Math.log10(Math.abs(value)));
+    let rounded = YamlWriter._RoundScaled(value, 5 - power);
+    if (rounded >= 1000000n) { ++power; rounded /= 10n; }
+    const digits = rounded.toString().padStart(6, "0");
+    const sign = value < 0 ? "-" : "";
+    if (power < -4 || power >= 6)
+    {
+      const fraction = digits.slice(1).replace(/0+$/, "");
+      return sign + digits[0] + (fraction ? "." + fraction : "") +
+        "e" + (power < 0 ? "-" : "+") + String(Math.abs(power)).padStart(2, "0");
+    }
+    const point = power + 1;
+    let text = point <= 0 ? "0." + "0".repeat(-point) + digits
+      : point >= digits.length ? digits + "0".repeat(point - digits.length)
+      : digits.slice(0, point) + "." + digits.slice(point);
+    if (text.includes(".")) text = text.replace(/0+$/, "").replace(/\.$/, "");
+    return sign + text;
+  }
+
+  /** libyaml's default unicode=false escapes non-ASCII code points. */
+  static _Quote(value)
+  {
+    return JSON.stringify(value).replace(/[\u007f-\u{10ffff}]/gu, character => {
+      const code = character.codePointAt(0);
+      return code <= 0xff ? "\\x" + code.toString(16).toUpperCase().padStart(2, "0")
+        : code <= 0xffff ? "\\u" + code.toString(16).toUpperCase().padStart(4, "0")
+        : "\\U" + code.toString(16).toUpperCase().padStart(8, "0");
+    });
+  }
+
+  /** Uses platform typed-array tags, never names of runtime classes. */
+  static _TypedScalar(value)
+  {
+    switch (Object.prototype.toString.call(value))
+    {
+      case "[object Float32Array]": return "float32";
+      case "[object Float64Array]": return "float64";
+      case "[object BigInt64Array]": return "int64";
+      case "[object BigUint64Array]": return "uint64";
+      case "[object Uint32Array]": return "uint32";
+      default: return "int32";
+    }
+  }
+
+  /** Numeric Be::BlueStructureDataType codes for the schema's supported layouts. */
+  static _StructureDataType(name)
+  {
+    // blueexposure/include/IBlueStructureList.h:17-110.
+    const split = name.lastIndexOf("_");
+    const size = Number(name.slice(split + 1));
+    const base = { BYTE: 0, SHORT: 1, INT32: 2, FLOAT16: 3, FLOAT32: 4,
+      SHAREDSTRING: 5, BOOL8: 7, UBYTE: 8, USHORT: 9, UINT32: 10 }[name.slice(0, split)];
+    if (base === undefined || !Number.isInteger(size)) throw new Error("YamlWriter: unsupported structure data type.");
+    return base | ((size - 1) << 5);
+  }
 }
 
 // Explicit registration keeps the public Blue source importable without a decorator transform.
@@ -598,96 +692,4 @@ be.inherit(IRootWriter)(YamlWriter);
  * This typed scratch holds bit representation only; no numeric plain arrays.
  */
 const FLOAT_BITS = new DataView(new ArrayBuffer(8));
-function Fixed(value, digits)
-{
-  if (!Number.isFinite(value)) return Number.isNaN(value) ? "nan" : value < 0 ? "-inf" : "inf";
-  const negative = value < 0 || Object.is(value, -0);
-  const rounded = RoundScaled(value, digits);
-  const text = rounded.toString().padStart(digits + 1, "0");
-  const result = text.slice(0, -digits) + "." + text.slice(-digits).replace(/0+$/, "").padEnd(1, "0");
-  // YamlWriter.cpp:191 uses a 64-byte printf buffer. JS cannot reproduce a
-  // native invalid-parameter abort; do not quietly emit an oversized number.
-  if (result.length + Number(negative) >= 64) throw new RangeError("YamlWriter: native printf buffer exceeded.");
-  return (negative ? "-" : "") + result;
-}
 
-/** Rounds abs(value) * 10^digits exactly, including negative decimal scales. */
-function RoundScaled(value, digits)
-{
-  FLOAT_BITS.setFloat64(0, Math.abs(value), false);
-  const bits = FLOAT_BITS.getBigUint64(0, false);
-  const exponent = Number((bits >> 52n) & 2047n);
-  const mantissa = (bits & ((1n << 52n) - 1n)) | (exponent ? 1n << 52n : 0n);
-  const power = (exponent ? exponent - 1023 : -1022) - 52;
-  let numerator = mantissa;
-  let denominator = 1n;
-  if (digits >= 0) numerator *= 10n ** BigInt(digits);
-  else denominator *= 10n ** BigInt(-digits);
-  if (power >= 0) numerator <<= BigInt(power);
-  else denominator <<= BigInt(-power);
-  let rounded = numerator / denominator;
-  const remainder = numerator % denominator;
-  if (remainder * 2n > denominator || (remainder * 2n === denominator && (rounded & 1n))) ++rounded;
-  return rounded;
-}
-
-/** %g is used only by Carbon's packed float4 structure members. */
-function General(value)
-{
-  if (!Number.isFinite(value)) return Number.isNaN(value) ? "nan" : value < 0 ? "-inf" : "inf";
-  if (value === 0) return Object.is(value, -0) ? "-0" : "0";
-  let power = Math.floor(Math.log10(Math.abs(value)));
-  let rounded = RoundScaled(value, 5 - power);
-  if (rounded >= 1000000n) { ++power; rounded /= 10n; }
-  const digits = rounded.toString().padStart(6, "0");
-  const sign = value < 0 ? "-" : "";
-  if (power < -4 || power >= 6)
-  {
-    const fraction = digits.slice(1).replace(/0+$/, "");
-    return sign + digits[0] + (fraction ? "." + fraction : "") +
-      "e" + (power < 0 ? "-" : "+") + String(Math.abs(power)).padStart(2, "0");
-  }
-  const point = power + 1;
-  let text = point <= 0 ? "0." + "0".repeat(-point) + digits
-    : point >= digits.length ? digits + "0".repeat(point - digits.length)
-    : digits.slice(0, point) + "." + digits.slice(point);
-  if (text.includes(".")) text = text.replace(/0+$/, "").replace(/\.$/, "");
-  return sign + text;
-}
-
-/** libyaml's default unicode=false escapes non-ASCII code points. */
-function Quote(value)
-{
-  return JSON.stringify(value).replace(/[\u007f-\u{10ffff}]/gu, character => {
-    const code = character.codePointAt(0);
-    return code <= 0xff ? "\\x" + code.toString(16).toUpperCase().padStart(2, "0")
-      : code <= 0xffff ? "\\u" + code.toString(16).toUpperCase().padStart(4, "0")
-      : "\\U" + code.toString(16).toUpperCase().padStart(8, "0");
-  });
-}
-
-/** Uses platform typed-array tags, never names of runtime classes. */
-function TypedScalar(value)
-{
-  switch (Object.prototype.toString.call(value))
-  {
-    case "[object Float32Array]": return "float32";
-    case "[object Float64Array]": return "float64";
-    case "[object BigInt64Array]": return "int64";
-    case "[object BigUint64Array]": return "uint64";
-    case "[object Uint32Array]": return "uint32";
-    default: return "int32";
-  }
-}
-
-/** Numeric Be::BlueStructureDataType codes for the schema's supported layouts. */
-function StructureDataType(name)
-{
-  // blueexposure/include/IBlueStructureList.h:17-110.
-  const split = name.lastIndexOf("_");
-  const size = Number(name.slice(split + 1));
-  const base = { BYTE: 0, SHORT: 1, INT32: 2, FLOAT16: 3, FLOAT32: 4,
-    SHAREDSTRING: 5, BOOL8: 7, UBYTE: 8, USHORT: 9, UINT32: 10 }[name.slice(0, split)];
-  if (base === undefined || !Number.isInteger(size)) throw new Error("YamlWriter: unsupported structure data type.");
-  return base | ((size - 1) << 5);
-}

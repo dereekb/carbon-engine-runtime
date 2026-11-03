@@ -45,7 +45,7 @@ export class CjsRedFormat extends CjsFormat
             throw new TypeError("CjsRedFormat supports only runtime output; export values through CjsSchema.getValues.");
         }
 
-        const text = DecodeText(input);
+        const text = CjsRedFormat._DecodeText(input);
 
         const reader = new YamlReader();
         if (values.isStrict !== undefined) reader._isStrict = Boolean(values.isStrict);
@@ -62,7 +62,7 @@ export class CjsRedFormat extends CjsFormat
      */
     static inspect(input)
     {
-        const document = parseDocument(DecodeText(input), {
+        const document = parseDocument(CjsRedFormat._DecodeText(input), {
             schema: "failsafe", resolveKnownTags: false, uniqueKeys: false
         });
         if (document.errors.length) throw document.errors[0];
@@ -82,22 +82,22 @@ export class CjsRedFormat extends CjsFormat
     static outputs = CjsFormat.defineOutputs({
         runtime: { default: true, decoded: true }
     });
-}
 
+    /**
+     * Decode only the byte range supplied by the resource loader.
+     * @param {string|ArrayBuffer|ArrayBufferView} input UTF-8 Red document.
+     * @returns {string} Scalar source text.
+     */
+    static _DecodeText(input)
+    {
+        if (typeof input === "string") return input;
+        if (input instanceof ArrayBuffer || ArrayBuffer.isView(input))
+        {
+            return new TextDecoder().decode(input);
+        }
+        throw new TypeError("CjsRedFormat requires Red text or UTF-8 bytes.");
+    }
+}
 
 CjsSchema.meta.define("CjsRedFormat")(CjsRedFormat);
 
-/**
- * Decode only the byte range supplied by the resource loader.
- * @param {string|ArrayBuffer|ArrayBufferView} input UTF-8 Red document.
- * @returns {string} Scalar source text.
- */
-function DecodeText(input)
-{
-    if (typeof input === "string") return input;
-    if (input instanceof ArrayBuffer || ArrayBuffer.isView(input))
-    {
-        return new TextDecoder().decode(input);
-    }
-    throw new TypeError("CjsRedFormat requires Red text or UTF-8 bytes.");
-}

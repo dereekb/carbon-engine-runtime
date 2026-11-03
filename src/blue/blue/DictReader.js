@@ -66,7 +66,6 @@ const RESERVED_KEYS = new Set([ "_type", "_id", "_ref" ]);
 /** Pending list population by destination, so a later read can supersede it across readers. */
 const PENDING_LIST_READS = new WeakMap();
 
-
 /**
  * `DictReader` - reads plain dictionaries into Blue objects.
  */
@@ -191,8 +190,8 @@ export class DictReader extends IRootReaderBase
         throw new TypeError("Values lists must be 'replace' or 'patch'.");
       }
       if (this._options.lists === "patch") this._currentSource = source = this._PrepareListPatches(instance, source);
-      if (this._options.declarations === true && !IsPlainObject(source)) this._ThrowError("Expected a dictionary");
-      if (this._options.declarations === true && IsReference(source)) this._ThrowError("ReadInto requires member values, not a root _ref");
+      if (this._options.declarations === true && !DictReader._IsPlainObject(source)) this._ThrowError("Expected a dictionary");
+      if (this._options.declarations === true && DictReader._IsReference(source)) this._ThrowError("ReadInto requires member values, not a root _ref");
       if (typeof source._type === "string" && !CjsSchema.isInstanceOf(source._type, instance))
       {
         this._ThrowError(`Values with _type "${source._type}" cannot apply to a ${CjsSchema.getClassName(instance.constructor) ?? "value"}`);
@@ -228,8 +227,8 @@ export class DictReader extends IRootReaderBase
     if (this._options.declarations === true)
     {
       if (this.IsObjectSource()) return source;
-      if (!IsPlainObject(source)) this._ThrowError("Expected a dictionary");
-      if (IsReference(source)) this._ThrowError(`Unresolved root _ref ${JSON.stringify(source._ref)}`);
+      if (!DictReader._IsPlainObject(source)) this._ThrowError("Expected a dictionary");
+      if (DictReader._IsReference(source)) this._ThrowError(`Unresolved root _ref ${JSON.stringify(source._ref)}`);
       const registration = this._ResolveRegistration(source._type, Declared);
       this._contextStack[this._contextStack.length - 1] += `(${registration.name})`;
       const instance = registration.createFn();
@@ -250,8 +249,8 @@ export class DictReader extends IRootReaderBase
       }
       return instance;
     }
-    if (!IsPlainObject(source)) this._ThrowError("Expected a dictionary");
-    if (IsReference(source)) this._ThrowError(`Unresolved root _ref ${JSON.stringify(source._ref)}`);
+    if (!DictReader._IsPlainObject(source)) this._ThrowError("Expected a dictionary");
+    if (DictReader._IsReference(source)) this._ThrowError(`Unresolved root _ref ${JSON.stringify(source._ref)}`);
 
     const Constructor = this._ResolveClass(source._type, Declared);
     this._contextStack[this._contextStack.length - 1] += `(${CjsSchema.getClassName(Constructor)})`;
@@ -424,7 +423,7 @@ export class DictReader extends IRootReaderBase
       const item = reuse ? list[index] : new Item();
       if (!reuse) changed = true;
       next.push(item);
-      if (IsReference(record)) aliases.push({ id: record._ref, item });
+      if (DictReader._IsReference(record)) aliases.push({ id: record._ref, item });
       else
       {
         const liveType = CjsSchema.getClassName(record.constructor);
@@ -486,7 +485,7 @@ export class DictReader extends IRootReaderBase
    */
   ReadMetadata(owner, metadata)
   {
-    if (!IsPlainObject(metadata)) this._ThrowError("Expected a dictionary");
+    if (!DictReader._IsPlainObject(metadata)) this._ThrowError("Expected a dictionary");
 
     for (const [ key, value ] of Object.entries(metadata))
     {
@@ -499,20 +498,20 @@ export class DictReader extends IRootReaderBase
   IsObjectSource()
   {
     const source = this._currentSource;
-    return source !== null && typeof source === "object" && !IsPlainObject(source)
+    return source !== null && typeof source === "object" && !DictReader._IsPlainObject(source)
       && CjsSchema.getClassName(source.constructor) !== null;
   }
 
   /** Whether the current source is a bag naming its class. */
   IsTypedSource()
   {
-    return IsPlainObject(this._currentSource) && typeof this._currentSource._type === "string";
+    return DictReader._IsPlainObject(this._currentSource) && typeof this._currentSource._type === "string";
   }
 
   /** Whether the current source is a `{ _ref }` alias. */
   IsReferenceSource()
   {
-    return IsReference(this._currentSource);
+    return DictReader._IsReference(this._currentSource);
   }
 
   /**
@@ -533,12 +532,12 @@ export class DictReader extends IRootReaderBase
    */
   HasNestedObjects(value)
   {
-    if (Array.isArray(value)) return value.some(item => IsObjectItem(item) || this.HasNestedObjects(item));
-    if (!IsPlainObject(value)) return false;
+    if (Array.isArray(value)) return value.some(item => DictReader._IsObjectItem(item) || this.HasNestedObjects(item));
+    if (!DictReader._IsPlainObject(value)) return false;
     for (const key in value)
     {
       const item = value[key];
-      if (item && typeof item === "object" && (IsObjectItem(item) || this.HasNestedObjects(item))) return true;
+      if (item && typeof item === "object" && (DictReader._IsObjectItem(item) || this.HasNestedObjects(item))) return true;
     }
     return false;
   }
@@ -564,14 +563,14 @@ export class DictReader extends IRootReaderBase
   /** One slot of a nested value: an alias, a `_type` bag, a record to descend, or a value. */
   _ReadNestedItem(item, container, key)
   {
-    if (IsReference(item))
+    if (DictReader._IsReference(item))
     {
       const resolved = this._anchors.byId.get(item._ref);
       if (resolved !== undefined) return resolved;
       this._anchors.defer(item._ref, object => { container[key] = object; });
       return null;
     }
-    if (IsPlainObject(item) && typeof item._type === "string")
+    if (DictReader._IsPlainObject(item) && typeof item._type === "string")
     {
       const saved = this._currentSource;
       this._currentSource = item;
@@ -584,7 +583,7 @@ export class DictReader extends IRootReaderBase
         this._currentSource = saved;
       }
     }
-    if ((Array.isArray(item) || IsPlainObject(item)) && this.HasNestedObjects(item)) return this.ReadNestedObjects(item);
+    if ((Array.isArray(item) || DictReader._IsPlainObject(item)) && this.HasNestedObjects(item)) return this.ReadNestedObjects(item);
     return item;
   }
 
@@ -609,7 +608,7 @@ export class DictReader extends IRootReaderBase
       writeDictionaryValue(instance, field, null);
       return current !== null && current !== undefined;
     }
-    if (IsReference(source))
+    if (DictReader._IsReference(source))
     {
       const resolved = this._anchors.byId.get(source._ref);
       if (resolved === undefined)
@@ -629,14 +628,14 @@ export class DictReader extends IRootReaderBase
     }
     // A non-plain object in an object member is a reference to it (values
     // transport ruling 3, 2026-09-14): the declared type decides, not the value.
-    if (typeof source === "object" && !IsPlainObject(source) && !Array.isArray(source) && !ArrayBuffer.isView(source))
+    if (typeof source === "object" && !DictReader._IsPlainObject(source) && !Array.isArray(source) && !ArrayBuffer.isView(source))
     {
       writeDictionaryValue(instance, field, source);
       return source !== current;
     }
 
     // A scalar or list is not an object (IRootReader.cpp:229).
-    if (!IsPlainObject(source)) this._ThrowError("Incorrect type for member");
+    if (!DictReader._IsPlainObject(source)) this._ThrowError("Incorrect type for member");
 
     // Editor values patch: the enclosing matched object owns this single slot.
     // Its declared object can receive values without a second provenance ID.
@@ -666,12 +665,12 @@ export class DictReader extends IRootReaderBase
     if (source === null || source === undefined) return false;
     // An embedded slot retains its own identity. Declared reads do not support
     // alias-based copying into that storage, whether the alias is known or not.
-    if (this._options.declarations === true && IsReference(source))
+    if (this._options.declarations === true && DictReader._IsReference(source))
     {
       this._ThrowError(`Embedded member '${field.name}' does not support _ref aliases`);
     }
 
-    if (!IsPlainObject(source))
+    if (!DictReader._IsPlainObject(source))
     {
       if (typeof source !== "object" || Array.isArray(source) || ArrayBuffer.isView(source))
       {
@@ -755,7 +754,7 @@ export class DictReader extends IRootReaderBase
     if (patch) return this._ReadListPatch(instance, field, current, patch);
     // Equality is a no-op check, not positional identity for changed items.
     // Changed nested lists still use their ordinary values replacement contract.
-    if (this._options.reuseObjects === true && MatchesListValues(current, source)) return false;
+    if (this._options.reuseObjects === true && DictReader._MatchesListValues(current, source)) return false;
 
     if (current && typeof current === "object" && mappedInterfaces(current.constructor).has(IList))
     {
@@ -769,7 +768,7 @@ export class DictReader extends IRootReaderBase
       const itemType = field.type.itemType;
       const itemClassName = typeof itemType === "string" || typeof itemType === "function" ? itemType : itemType?.className ?? null;
       const holdsObjects = (itemClassName && CjsSchema.getConstructor(itemClassName))
-        || (Array.isArray(current) && current.some(IsObjectItem));
+        || (Array.isArray(current) && current.some(DictReader._IsObjectItem));
       if (holdsObjects && Array.isArray(current) && !created && mappedInterfaces(instance.constructor).has(IListNotify))
       {
         this._ReadLiveList(instance, field, current, [], null, next);
@@ -786,8 +785,8 @@ export class DictReader extends IRootReaderBase
     // holds objects when its items say so: an alias, a `_type` bag, or a live
     // object, which the value path would clone into a plain one.
     const holdsObjects = (this._options.declarations === true && typeof itemClassName === "function")
-      || (itemClassName && CjsSchema.getConstructor(itemClassName)) || source.some(IsObjectItem)
-      || (source.length === 0 && Array.isArray(current) && current.some(IsObjectItem));
+      || (itemClassName && CjsSchema.getConstructor(itemClassName)) || source.some(DictReader._IsObjectItem)
+      || (source.length === 0 && Array.isArray(current) && current.some(DictReader._IsObjectItem));
 
     if (!holdsObjects)
     {
@@ -835,7 +834,7 @@ export class DictReader extends IRootReaderBase
   {
     const keys = this._options.listPatchKeys;
     if (!keys || this._options.declarations === true) throw new TypeError("This values operation has no list patch scope.");
-    if (!IsPlainObject(source) || IsReference(source)) throw new TypeError("List patches require a values dictionary.");
+    if (!DictReader._IsPlainObject(source) || DictReader._IsReference(source)) throw new TypeError("List patches require a values dictionary.");
     const selected = {};
     if (Object.hasOwn(source, "_type")) selected._type = source._type;
     if (Object.hasOwn(source, "_id")) selected._id = source._id;
@@ -859,8 +858,8 @@ export class DictReader extends IRootReaderBase
       }
       for (const item of desired)
       {
-        if (!IsPlainObject(item) || IsReference(item)) throw new TypeError(`Patch '${name}' requires item values, not references.`);
-        const id = GetValuesMetadata(item, key);
+        if (!DictReader._IsPlainObject(item) || DictReader._IsReference(item)) throw new TypeError(`Patch '${name}' requires item values, not references.`);
+        const id = DictReader._GetValuesMetadata(item, key);
         if (typeof id !== "string" || !id.length || incoming.has(id)) throw new TypeError(`Patch '${name}' has a missing or duplicated incoming ${key}.`);
         incoming.add(id);
         if (item._type !== undefined && (!CjsSchema.getClassNames(CjsSchema.getConstructor(item._type)).includes(itemClass)
@@ -891,7 +890,7 @@ export class DictReader extends IRootReaderBase
     const additions = [];
     for (const values of patch.desired)
     {
-      const target = patch.existing.get(GetValuesMetadata(values, patch.key));
+      const target = patch.existing.get(DictReader._GetValuesMetadata(values, patch.key));
       if (!target) { additions.push(values); continue; }
       if (CjsSchema.setValues(target, values, {
         ...this._options, lists: "replace", listPatchKeys: undefined,
@@ -969,7 +968,7 @@ export class DictReader extends IRootReaderBase
     PENDING_LIST_READS.set(list, edit);
     this._listEdits.push(edit);
     if (this._options.declarations !== true) this._anchors.deferListEdit(edit);
-    return source.some(item => IsReference(item) && !this._anchors.byId.has(item._ref))
+    return source.some(item => DictReader._IsReference(item) && !this._anchors.byId.has(item._ref))
       || !IRootReaderBase.areEquivalent(list, staged);
   }
 
@@ -1051,7 +1050,7 @@ export class DictReader extends IRootReaderBase
         try
         {
           const item = input[i];
-          if (IsReference(item) && this._anchors.byId.get(item._ref) === undefined)
+          if (DictReader._IsReference(item) && this._anchors.byId.get(item._ref) === undefined)
           {
             pendingIds.add(item._ref);
             this._anchors.defer(item._ref, object =>
@@ -1161,7 +1160,7 @@ export class DictReader extends IRootReaderBase
     const kind = type?.kind;
     if (kind === "map")
     {
-      if (!(source instanceof Map) && !IsPlainObject(source)) this._ThrowError("Expected a map or dictionary");
+      if (!(source instanceof Map) && !DictReader._IsPlainObject(source)) this._ThrowError("Expected a map or dictionary");
       const result = new Map();
       const entries = source instanceof Map ? source.entries() : Object.entries(source);
       for (const [key, item] of entries)
@@ -1186,13 +1185,13 @@ export class DictReader extends IRootReaderBase
       return result;
     }
     if (!this._HasDeclaredReferences(type)) return normalizeCarbonValue(source, type);
-    if (IsReference(source))
+    if (DictReader._IsReference(source))
     {
       if (this._anchors.byId.has(source._ref)) return this._anchors.byId.get(source._ref);
       this._anchors.defer(source._ref, assign);
       return null;
     }
-    if (!IsPlainObject(source)) return source;
+    if (!DictReader._IsPlainObject(source)) return source;
     const declared = typeof type === "function" || typeof type === "string" ? type : type.className;
     const saved = this._currentSource;
     try
@@ -1207,14 +1206,14 @@ export class DictReader extends IRootReaderBase
   _ReadListItem(item, itemClassName, list, index)
   {
     if (item === null || item === undefined) return item;
-    if (IsReference(item))
+    if (DictReader._IsReference(item))
     {
       const resolved = this._anchors.byId.get(item._ref);
       if (resolved !== undefined) return resolved;
       this._anchors.defer(item._ref, object => { list[index] = object; });
       return null;
     }
-    if (!IsPlainObject(item)) return item;
+    if (!DictReader._IsPlainObject(item)) return item;
 
     this._currentSource = item;
     return this.ReadIRootClass(null, itemClassName);
@@ -1410,8 +1409,102 @@ export class DictReader extends IRootReaderBase
     const path = this._contextStack.map(entry => `\t${entry}\n`).join("");
     throw new IRootReaderException(`${path}${message}`);
   }
-}
 
+  /**
+   * Read-only equality for a supplied nested list. Positions only prove the
+   * whole list unchanged; they never identify changed objects. Anchors use the
+   * normal reader path so equality cannot discard their topology operations.
+   */
+  static _MatchesListValues(current, source)
+  {
+    return Array.isArray(current) && Array.isArray(source) && current.length === source.length
+      && source.every((value, index) => DictReader._MatchesObjectValues(current[index], value));
+  }
+
+  /** Compares declared incoming values without constructing or mutating live objects. */
+  static _MatchesObjectValues(current, source)
+  {
+    if (Object.is(current, source)) return true;
+    if (typeof current === "number" && typeof source === "number") return IRootReaderBase.areEquivalent(current, source);
+    if (Array.isArray(current) && Array.isArray(source)) return DictReader._MatchesListValues(current, source);
+    if (ArrayBuffer.isView(current) || ArrayBuffer.isView(source)) return IRootReaderBase.areEquivalent(current, source);
+    if (!current || !DictReader._IsPlainObject(source) || typeof current !== "object") return false;
+    if (Object.hasOwn(source, "_id") || Object.hasOwn(source, "_ref")) return false;
+    if (CjsSchema.getClassName(current.constructor))
+    {
+      if (source._type !== undefined && !CjsSchema.isInstanceOf(source._type, current)) return false;
+      const declarations = getDictionaryDeclarations(current.constructor);
+      for (const name of Object.keys(source))
+      {
+        if (name === "_type") continue;
+        if (name === BLUE_OBJECT_METADATA_KEY)
+        {
+          if (!DictReader._MatchesObjectValues(BeObjectMetadata.GetMetadata(current), source[name])) return false;
+          continue;
+        }
+        const field = declarations.byName.get(name);
+        if (!field) return false;
+        if (!CjsSchema.isFieldWritable(field) || field.type?.runtimeOnly === true) continue;
+        const value = readDictionaryValue(current, field);
+        const kind = field.type?.kind;
+        if (["rootRef", "root", "list", "array", "structList"].includes(kind))
+        {
+          if (!DictReader._MatchesObjectValues(value, source[name])) return false;
+        }
+        else if (!DictReader._MatchesObjectValues(value, normalizeCarbonValue(source[name], field.type))) return false;
+      }
+      return true;
+    }
+    if (!DictReader._IsPlainObject(current)) return false;
+    const keys = Object.keys(source);
+    return keys.length === Object.keys(current).length
+      && keys.every(key => Object.hasOwn(current, key) && DictReader._MatchesObjectValues(current[key], source[key]));
+  }
+
+  /** Whether a value is a `{ _ref }` alias. */
+  static _IsReference(value)
+  {
+    return DictReader._IsPlainObject(value) && value._ref !== undefined;
+  }
+
+  /** Whether a list item is an object: an alias, a `_type` bag, or a live object of a registered class. */
+  static _IsObjectItem(item)
+  {
+    if (DictReader._IsPlainObject(item)) return item._ref !== undefined || typeof item._type === "string";
+    return item !== null && typeof item === "object" && CjsSchema.getClassName(item.constructor) !== null;
+  }
+
+  /**
+   * One key of a values bag's `__bluemetadata__` dictionary, or null. A bag is
+   * data, not an owner: its metadata is the dictionary it carries, which only
+   * becomes an owner's table in `BeObjectMetadata` once it is read
+   * (`ReadMetadata`).
+   *
+   * @param {object} values A values bag.
+   * @param {string} key The metadata key.
+   * @returns {string|null} The value, or null when absent.
+   */
+  static _GetValuesMetadata(values, key)
+  {
+    const metadata = Object.hasOwn(values, BLUE_OBJECT_METADATA_KEY) ? values[BLUE_OBJECT_METADATA_KEY] : null;
+    return metadata && Object.hasOwn(metadata, key) ? metadata[key] : null;
+  }
+
+  /**
+   * Whether a value is a plain dictionary: null-prototype, or with any realm's
+   * `Object.prototype`. An editor window hands values to a runtime in another
+   * realm (Graphene's renderer iframe), and its literals are still dictionaries.
+   */
+  static _IsPlainObject(value)
+  {
+    if (!value || typeof value !== "object") return false;
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype === Object.prototype || prototype === null) return true;
+    // Another realm's Object.prototype is the root of its chain; a class
+    // instance's prototype never is.
+    return Object.getPrototypeOf(prototype) === null && Object.prototype.toString.call(value) === "[object Object]";
+  }
+}
 
 /**
  * Tracks allocations and references for one dictionary operation. Completion
@@ -1547,101 +1640,6 @@ export function CreateAnchorTable()
       }
     }
   };
-}
-
-/**
- * Read-only equality for a supplied nested list. Positions only prove the
- * whole list unchanged; they never identify changed objects. Anchors use the
- * normal reader path so equality cannot discard their topology operations.
- */
-function MatchesListValues(current, source)
-{
-  return Array.isArray(current) && Array.isArray(source) && current.length === source.length
-    && source.every((value, index) => MatchesObjectValues(current[index], value));
-}
-
-/** Compares declared incoming values without constructing or mutating live objects. */
-function MatchesObjectValues(current, source)
-{
-  if (Object.is(current, source)) return true;
-  if (typeof current === "number" && typeof source === "number") return IRootReaderBase.areEquivalent(current, source);
-  if (Array.isArray(current) && Array.isArray(source)) return MatchesListValues(current, source);
-  if (ArrayBuffer.isView(current) || ArrayBuffer.isView(source)) return IRootReaderBase.areEquivalent(current, source);
-  if (!current || !IsPlainObject(source) || typeof current !== "object") return false;
-  if (Object.hasOwn(source, "_id") || Object.hasOwn(source, "_ref")) return false;
-  if (CjsSchema.getClassName(current.constructor))
-  {
-    if (source._type !== undefined && !CjsSchema.isInstanceOf(source._type, current)) return false;
-    const declarations = getDictionaryDeclarations(current.constructor);
-    for (const name of Object.keys(source))
-    {
-      if (name === "_type") continue;
-      if (name === BLUE_OBJECT_METADATA_KEY)
-      {
-        if (!MatchesObjectValues(BeObjectMetadata.GetMetadata(current), source[name])) return false;
-        continue;
-      }
-      const field = declarations.byName.get(name);
-      if (!field) return false;
-      if (!CjsSchema.isFieldWritable(field) || field.type?.runtimeOnly === true) continue;
-      const value = readDictionaryValue(current, field);
-      const kind = field.type?.kind;
-      if (["rootRef", "root", "list", "array", "structList"].includes(kind))
-      {
-        if (!MatchesObjectValues(value, source[name])) return false;
-      }
-      else if (!MatchesObjectValues(value, normalizeCarbonValue(source[name], field.type))) return false;
-    }
-    return true;
-  }
-  if (!IsPlainObject(current)) return false;
-  const keys = Object.keys(source);
-  return keys.length === Object.keys(current).length
-    && keys.every(key => Object.hasOwn(current, key) && MatchesObjectValues(current[key], source[key]));
-}
-
-/** Whether a value is a `{ _ref }` alias. */
-function IsReference(value)
-{
-  return IsPlainObject(value) && value._ref !== undefined;
-}
-
-/** Whether a list item is an object: an alias, a `_type` bag, or a live object of a registered class. */
-function IsObjectItem(item)
-{
-  if (IsPlainObject(item)) return item._ref !== undefined || typeof item._type === "string";
-  return item !== null && typeof item === "object" && CjsSchema.getClassName(item.constructor) !== null;
-}
-
-/**
- * One key of a values bag's `__bluemetadata__` dictionary, or null. A bag is
- * data, not an owner: its metadata is the dictionary it carries, which only
- * becomes an owner's table in `BeObjectMetadata` once it is read
- * (`ReadMetadata`).
- *
- * @param {object} values A values bag.
- * @param {string} key The metadata key.
- * @returns {string|null} The value, or null when absent.
- */
-function GetValuesMetadata(values, key)
-{
-  const metadata = Object.hasOwn(values, BLUE_OBJECT_METADATA_KEY) ? values[BLUE_OBJECT_METADATA_KEY] : null;
-  return metadata && Object.hasOwn(metadata, key) ? metadata[key] : null;
-}
-
-/**
- * Whether a value is a plain dictionary: null-prototype, or with any realm's
- * `Object.prototype`. An editor window hands values to a runtime in another
- * realm (Graphene's renderer iframe), and its literals are still dictionaries.
- */
-function IsPlainObject(value)
-{
-  if (!value || typeof value !== "object") return false;
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype === Object.prototype || prototype === null) return true;
-  // Another realm's Object.prototype is the root of its chain; a class
-  // instance's prototype never is.
-  return Object.getPrototypeOf(prototype) === null && Object.prototype.toString.call(value) === "[object Object]";
 }
 
 CjsSchema.exposure.inherit(IRoot)(DictReader);

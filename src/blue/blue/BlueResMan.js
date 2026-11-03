@@ -23,7 +23,6 @@ import {
   normalizeResourcePath
 } from "#utils/path";
 
-
 import { GetResources } from "./getResources.js";
 import { ResourceHandlerMode } from "../../global/consts/resourceHandlerMode.js";
 import { BlueCallbackMan } from "./BlueCallbackMan.js";
@@ -173,48 +172,6 @@ const DYNAMIC_RESOURCE_PREFIXES = [ "dynamic:/", "dynamic:\\" ];
 const DYNAMIC_PREFIX_LENGTH = 9;
 
 /**
- * Whether a normalized path names a dynamic resource.
- *
- * @param {string} key Normalized resource path.
- * @returns {boolean}
- */
-function isDynamicResourcePath(key)
-{
-  return DYNAMIC_RESOURCE_PREFIXES.some(prefix => key.startsWith(prefix));
-}
-
-/**
- * Carbon logs and returns null for an unknown dynamic name or a constructor that
- * yields nothing (BlueResMan.cpp:225-235). There is no log channel here, and a
- * null handle breaks every caller that composes on GetResource, so the same
- * condition is raised, named.
- *
- * @param {string} path Normalized dynamic path.
- * @param {string} name Constructor name.
- * @param {string} code Error code.
- * @param {string} message Error message.
- * @returns {Error}
- */
-/** A watch rejection naming the resources still pending. */
-function watchError(code, message, pending)
-{
-  const error = new Error(`BlueResMan ${message}`);
-  error.code = code;
-  error.pending = pending.map(resource => resource.GetPath());
-  return error;
-}
-
-function dynamicResourceError(path, name, code, message)
-{
-  const error = new Error(`BlueResMan ${message} (${path})`);
-  error.code = code;
-  error.path = path;
-  error.name = "CjsResManDynamicResourceError";
-  error.constructorName = name;
-  return error;
-}
-
-/**
  * GPU-free resource manager that resolves paths through registered sources and
  * formats, caches handles in MotherLode, and drives native asynchronous loading
  * and preparation. Reload refills the same handle; attempt tokens prevent a
@@ -314,13 +271,11 @@ export class BlueResMan
   /** Default source for later requests, or null for blue.paths (SetSource). */
   source = null;
 
-
   /** Object loaders keyed by extension (RegisterObjectLoader). */
   objectLoaders = new Map();
 
   /** Format registrations keyed by extension (RegisterFormat). */
   formats = new Map();
-
 
   /** In-flight source reads, deduplicated per resource. Clear() replaces it. */
   sourceOperations = new WeakMap();
@@ -406,7 +361,6 @@ export class BlueResMan
   /** Urgent loads, reloads and reads while pending (WaitUrgent). */
   _urgentOperations = new Set();
 
-
   _extensionRoutes = new Map();
   _resourceExtensionRoutes = new WeakMap();
 
@@ -425,7 +379,7 @@ export class BlueResMan
    * The default source: the file through blue.paths, the bytes Carbon's
    * DoOpenStream gets from BePaths->GetStreamFromPathW.
    */
-  _bluePathsSource = { Read: (path, readOptions = {}) => readThroughBluePaths(blueService.paths, path, readOptions) };
+  _bluePathsSource = { Read: (path, readOptions = {}) => BlueResMan._readThroughBluePaths(blueService.paths, path, readOptions) };
 
   /**
    * Loaders registered through RegisterObjectBuilder: their result is a
@@ -472,7 +426,7 @@ export class BlueResMan
    * @throws {TypeError} If registration, queue, source, or format options are invalid.
    */
   constructor(options = {}) {
-    this.loadObjectCache = createLoadObjectCache(this.loadObjectCacheSize, () => this.motherLode.GetActivityTime());
+    this.loadObjectCache = BlueResMan._createLoadObjectCache(this.loadObjectCacheSize, () => this.motherLode.GetActivityTime());
     this.workerLoader = new CjsResManWorkerLoader({ fallback: this.mainThreadLoader });
     this.resourceLoader = this.workerLoader;
     this.Register(options);
@@ -518,14 +472,13 @@ export class BlueResMan
         {
           if (this._activeResourceOperations > 0)
           {
-            throw activeResourceOperationsError(this._activeResourceOperations);
+            throw BlueResMan._activeResourceOperationsError(this._activeResourceOperations);
           }
           const previousMotherLode = this.motherLode;
 
           previousMotherLode.Shutdown();
           this.motherLode = nextMotherLode;
           this.motherLode.Startup();
-
 
           this._lastAutoPurgeTime = null;
         }
@@ -563,7 +516,7 @@ export class BlueResMan
       urgentResourceLoads: this.SetUrgentResourceLoads
     }, this);
 
-    for (const entry of normalizeRegistrationEntries(options.formats))
+    for (const entry of BlueResMan._normalizeRegistrationEntries(options.formats))
     {
       if (typeof entry === "function") this.RegisterFormat(entry);
       else this.RegisterFormat(entry.Format || entry.format, entry.defaults || {});
@@ -572,7 +525,7 @@ export class BlueResMan
     {
       this.RegisterObjectLoader(ext, loader);
     }
-    for (const [ ext, registration ] of normalizeExtensionRegistrationEntries(options.extensions))
+    for (const [ ext, registration ] of BlueResMan._normalizeExtensionRegistrationEntries(options.extensions))
     {
       const { Handler, handler, ...routeOptions } = registration;
       this.RegisterExtension(ext, Handler || handler, routeOptions);
@@ -1057,7 +1010,7 @@ export class BlueResMan
       throw new TypeError("BlueResMan.Wait yield must be a function when supplied.");
     }
 
-    const yieldQueue = options.yield || defaultQueueYield;
+    const yieldQueue = options.yield || BlueResMan._defaultQueueYield;
     while (this.GetPendingLoads() + this.GetPendingPrepares() > 0)
     {
       if (options.pump !== false)
@@ -1114,7 +1067,6 @@ export class BlueResMan
     });
     return this;
   }
-
 
   /**
    * Register the direct byte-to-object reader for one input extension.
@@ -1179,7 +1131,7 @@ export class BlueResMan
       throw new TypeError(`${Format.name || "Format"} must declare non-empty extensions.`);
     }
 
-    const descriptor = createFormatDescriptor(Format, defaults);
+    const descriptor = BlueResMan._createFormatDescriptor(Format, defaults);
     for (const inputType of Format.extensions)
     {
       const key = normalizeResourceExtension(inputType);
@@ -1223,7 +1175,7 @@ export class BlueResMan
       );
     }
 
-    const options = normalizeExtensionRouteOptions(formatOrFormatsOrOptions);
+    const options = BlueResMan._normalizeExtensionRouteOptions(formatOrFormatsOrOptions);
     const instance = options.instance || null;
     if (instance && (typeof instance !== "object" || Array.isArray(instance)))
       throw new TypeError("Resource format registration requires a configured format instance.");
@@ -1259,7 +1211,7 @@ export class BlueResMan
     {
       throw new TypeError(`BlueResMan extension .${ext}: an object handler needs a Target or Identify; register a Res class for a resource.`);
     }
-    if (Target) assertExtensionTarget(Target, "Target");
+    if (Target) BlueResMan._assertExtensionTarget(Target, "Target");
     if (Identify && typeof Identify !== "function")
     {
       throw new TypeError("BlueResMan extension Identify must be a function.");
@@ -1278,7 +1230,7 @@ export class BlueResMan
     const loader = !instance && explicitFormats === null ? this.GetObjectLoader(ext) : null;
     const formats = instance ? [] : explicitFormats === null
       ? loader ? [] : this.GetFormatDescriptors(ext)
-      : explicitFormats.map((entry, index) => createExtensionFormatDescriptor(
+      : explicitFormats.map((entry, index) => BlueResMan._createExtensionFormatDescriptor(
         entry,
         options.defaults || {},
         `Formats[${index}]`
@@ -1287,7 +1239,7 @@ export class BlueResMan
     {
       throw new TypeError(`BlueResMan extension .${ext} requires a Format, Formats, or registered reader.`);
     }
-    validateOrderedExtensionFormats(formats, ext);
+    BlueResMan._validateOrderedExtensionFormats(formats, ext);
 
     const route = {
       extension: ext,
@@ -1448,13 +1400,13 @@ export class BlueResMan
       if (notifications) notifications.OnResourceFromCache(existing);
       if (options.reload === true)
       {
-        existing._request = mergeResourceLoaderOptions(existing._request, options);
+        existing._request = BlueResMan._mergeResourceLoaderOptions(existing._request, options);
 
         existing.Reload();
       }
       return existing;
     }
-    if (isDynamicResourcePath(key)) return this._CreateDynamicResource(key, cacheKey, notifications);
+    if (BlueResMan._isDynamicResourcePath(key)) return this._CreateDynamicResource(key, cacheKey, notifications);
 
     const ext = normalizeResourceExtension((options.ext || getResourceExtension(key)) + ex);
     const route = this.GetExtensionRoute(ext);
@@ -1476,7 +1428,6 @@ export class BlueResMan
     this.motherLode.KeepAlive(cacheKey);
     return resource;
   }
-
 
   /**
    * Resolve one object outcome for a canonical resource identity. For a
@@ -1573,13 +1524,13 @@ export class BlueResMan
       this.loadObjectCache.KeepAlive(cacheKey);
       if (options.reload === true)
       {
-        existing._request = mergeResourceLoaderOptions(existing._request, options);
+        existing._request = BlueResMan._mergeResourceLoaderOptions(existing._request, options);
         existing.Reload();
       }
       return existing;
     }
 
-    if (isDynamicResourcePath(key))
+    if (BlueResMan._isDynamicResourcePath(key))
     {
       throw new TypeError(`BlueResMan.LoadObject: ${path} is a resource, not an object; get it with GetResource(path).`);
     }
@@ -1726,7 +1677,6 @@ export class BlueResMan
     return this.FetchResource(path, { ...options, reload: true });
   }
 
-
   /**
    * Fetches what a path is: an object (a route or builder that yields one,
    * through FetchObject) or otherwise its resource (FetchResource), whose
@@ -1761,7 +1711,6 @@ export class BlueResMan
       : this._objectBuilderLoaders.has(this.GetObjectLoader(ext));
     return buildsObjects ? this.FetchObject(path, options) : this.FetchResource(path, options);
   }
-
 
   /**
    * Return the configured reader from our resource type table.
@@ -1836,7 +1785,7 @@ export class BlueResMan
     {
       if (options.emit !== undefined)
       {
-        throw createObjectLoaderOutputMissingError(extension, options.emit);
+        throw BlueResMan._createObjectLoaderOutputMissingError(extension, options.emit);
       }
       return { loader: explicitLoader, descriptor: null, route };
     }
@@ -1844,7 +1793,7 @@ export class BlueResMan
     return {
       loader: null,
       descriptor: route?.instance || (route
-        ? resolveOrderedExtensionFormatDescriptor(
+        ? BlueResMan._resolveOrderedExtensionFormatDescriptor(
           route.formats,
           extension,
           { ...options, bytes, filename: resource.GetPath() }
@@ -1868,7 +1817,7 @@ export class BlueResMan
     {
       return resolved.loader(
         bytes,
-        createPrepareContext(this, resource, bytes, options, "read")
+        BlueResMan._createPrepareContext(this, resource, bytes, options, "read")
       );
     }
     return this.ReadFormatOnce(resource, resolved.descriptor, bytes, options);
@@ -1896,7 +1845,7 @@ export class BlueResMan
       // the payload. Objects are built in LoadObject, one per caller, the
       // loading caller included - the load may have been started by the
       // resource's own object loader, whose result nobody receives.
-      this._objectBuilders.set(resource, { Create: createObjectFromBuilder, values });
+      this._objectBuilders.set(resource, { Create: BlueResMan._createObjectFromBuilder, values });
       return values;
     }
     const route = resolved.route;
@@ -1904,7 +1853,7 @@ export class BlueResMan
 
     const Format = resolved.descriptor?.Format || null;
     const context = {
-      ...createResourcePathContext(resource.GetPath(), READ_CONTEXTS.get(options), options.ext),
+      ...BlueResMan._createResourcePathContext(resource.GetPath(), READ_CONTEXTS.get(options), options.ext),
       Format,
       format: Format?.id || "",
       options,
@@ -1920,20 +1869,20 @@ export class BlueResMan
       }
       catch (error)
       {
-        throw createExtensionTargetError(resource, "Identify threw an error.", error);
+        throw BlueResMan._createExtensionTargetError(resource, "Identify threw an error.", error);
       }
       if (Target === true) return values;
       if (Target === false || Target === null || Target === undefined)
       {
-        throw createExtensionTargetError(resource, "Identify did not resolve a target constructor.");
+        throw BlueResMan._createExtensionTargetError(resource, "Identify did not resolve a target constructor.");
       }
       try
       {
-        assertExtensionTarget(Target, "Identify result");
+        BlueResMan._assertExtensionTarget(Target, "Identify result");
       }
       catch (error)
       {
-        throw createExtensionTargetError(resource, "Identify returned an invalid target constructor.", error);
+        throw BlueResMan._createExtensionTargetError(resource, "Identify returned an invalid target constructor.", error);
       }
     }
 
@@ -1964,7 +1913,7 @@ export class BlueResMan
     }
     catch (error)
     {
-      throw createExtensionTargetError(resource, "Decoded values could not be copied for a per-caller build.", error);
+      throw BlueResMan._createExtensionTargetError(resource, "Decoded values could not be copied for a per-caller build.", error);
     }
     try
     {
@@ -1980,7 +1929,7 @@ export class BlueResMan
     }
     catch (error)
     {
-      throw createExtensionTargetError(resource, "Target hydration failed.", error);
+      throw BlueResMan._createExtensionTargetError(resource, "Target hydration failed.", error);
     }
   }
 
@@ -2018,7 +1967,7 @@ export class BlueResMan
         {
           reject(error);
         }
-      }, resource, urgentFlags(resource));
+      }, resource, BlueResMan._urgentFlags(resource));
     });
   }
 
@@ -2061,13 +2010,13 @@ export class BlueResMan
     const constructor = this._dynamicConstructors.get(name);
     if (!constructor)
     {
-      throw dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_CONSTRUCTOR_MISSING",
+      throw BlueResMan._dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_CONSTRUCTOR_MISSING",
         `no dynamic constructor is registered for "${name}"`);
     }
     const resource = constructor.GetResource(query);
     if (!CjsSchema.cast(resource, IBlueResource))
     {
-      throw dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_RESOURCE_UNAVAILABLE",
+      throw BlueResMan._dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_RESOURCE_UNAVAILABLE",
         `dynamic constructor "${name}" returned no IBlueResource-compatible resource`);
     }
     if (notifications) notifications.OnResourceCreated(resource);
@@ -2085,7 +2034,6 @@ export class BlueResMan
     this.motherLode.KeepAlive(cacheKey);
     return canonical;
   }
-
 
   /**
    * Warms a resource and its discovered dependencies without returning payload
@@ -2131,12 +2079,12 @@ export class BlueResMan
   {
     const key = normalizeResourceExtension(inputType);
     const descriptors = this.GetFormatDescriptors(key);
-    const candidates = filterFormatDescriptors(descriptors, options);
+    const candidates = BlueResMan._filterFormatDescriptors(descriptors, options);
     if (descriptors.length > 0 && candidates.length === 0 && options.emit !== undefined)
     {
-      throw createFormatOutputMissingError(key, options.emit, descriptors);
+      throw BlueResMan._createFormatOutputMissingError(key, options.emit, descriptors);
     }
-    return resolveFormatDescriptorCandidates(candidates, key, options);
+    return BlueResMan._resolveFormatDescriptorCandidates(candidates, key, options);
   }
 
   /**
@@ -2158,12 +2106,12 @@ export class BlueResMan
   {
     const readContext = READ_CONTEXTS.get(options);
     const context = readContext
-      ? createResourcePathContext(readContext.path, readContext)
+      ? BlueResMan._createResourcePathContext(readContext.path, readContext)
       : null;
     return this.resourceLoader.ReadFormat(
       descriptor,
       bytes,
-      formatOptions || createFormatReadOptions(descriptor, options),
+      formatOptions || BlueResMan._createFormatReadOptions(descriptor, options),
       context
     );
   }
@@ -2280,7 +2228,7 @@ export class BlueResMan
    */
   PumpAutoPurge(options = {})
   {
-    const pump = normalizeAutoPurgePumpOptions(options);
+    const pump = BlueResMan._normalizeAutoPurgePumpOptions(options);
     const policy = this._autoPurgePolicy;
     if (!policy) return null;
 
@@ -2380,7 +2328,7 @@ export class BlueResMan
       if (watch.root !== root) continue;
       found = true;
       this._watches.splice(this._watches.indexOf(watch), 1);
-      watch.reject(watchError("CJS_RESOURCE_WATCH_CANCELLED", "watch cancelled", []));
+      watch.reject(BlueResMan._watchError("CJS_RESOURCE_WATCH_CANCELLED", "watch cancelled", []));
     }
     return found;
   }
@@ -2395,7 +2343,7 @@ export class BlueResMan
   UpdateWatched(options = {})
   {
     if (!this._watches.length) return 0;
-    const time = options.time === undefined ? defaultAutoPurgeNow() : options.time;
+    const time = options.time === undefined ? BlueResMan._defaultAutoPurgeNow() : options.time;
     assertNonNegativeNumber(time, "BlueResMan.UpdateWatched time");
 
     let settled = 0;
@@ -2414,7 +2362,7 @@ export class BlueResMan
       else if (time - watch.started >= watch.timeoutMilliseconds)
       {
         this._watches.splice(this._watches.indexOf(watch), 1);
-        watch.reject(watchError("CJS_RESOURCE_WATCH_TIMEOUT",
+        watch.reject(BlueResMan._watchError("CJS_RESOURCE_WATCH_TIMEOUT",
           `watch timed out after ${time - watch.started} ms`, pending));
         settled += 1;
       }
@@ -2507,7 +2455,7 @@ export class BlueResMan
     const normalizedPath = normalizeResourcePath(path);
     const hasRevision = Object.hasOwn(options, "sourceRevision");
     const revisionKey = hasRevision
-      ? normalizeSourceRevision(options.sourceRevision)
+      ? BlueResMan._normalizeSourceRevision(options.sourceRevision)
       : null;
     const source = options.source || this.source;
     if (!source)
@@ -2580,15 +2528,15 @@ export class BlueResMan
       throw new TypeError("BlueResMan requires a source with Read(path, options) to load objects.");
     }
     const sourceRevision = options.sourceRevision;
-    const revisionKey = normalizeSourceRevision(sourceRevision);
-    normalizeCachePolicy(options.cacheSource, "cacheSource");
-    normalizeCachePolicy(options.cacheFormat, "cacheFormat");
+    const revisionKey = BlueResMan._normalizeSourceRevision(sourceRevision);
+    BlueResMan._normalizeCachePolicy(options.cacheSource, "cacheSource");
+    BlueResMan._normalizeCachePolicy(options.cacheFormat, "cacheFormat");
 
     const operationOptions = { ...options };
     const ext = normalizeResourceExtension(
       options.ext || getResourceExtension(normalizedPath)
     );
-    const fileName = getResourceFileName(normalizedPath);
+    const fileName = BlueResMan._getResourceFileName(normalizedPath);
     const context = {
       resMan: this,
       source,
@@ -2619,9 +2567,9 @@ export class BlueResMan
    */
   _ReadResource(context, options)
   {
-    const cachePolicy = normalizeCachePolicy(options.cacheSource, "cacheSource");
-    const operations = getOwnerOperations(this.sourceOperations, context.source, true);
-    const key = getReadOperationKey(context);
+    const cachePolicy = BlueResMan._normalizeCachePolicy(options.cacheSource, "cacheSource");
+    const operations = BlueResMan._getOwnerOperations(this.sourceOperations, context.source, true);
+    const key = BlueResMan._getReadOperationKey(context);
     const bypassExisting = options.reload === true || cachePolicy === false;
     const existing = bypassExisting ? null : operations.get(key);
     if (existing)
@@ -2672,8 +2620,8 @@ export class BlueResMan
    */
   _InvalidateReadCache(source, path, revisionKey)
   {
-    const sourceCount = removeOperationRecords(
-      getOwnerOperations(this.sourceOperations, source, false),
+    const sourceCount = BlueResMan._removeOperationRecords(
+      BlueResMan._getOwnerOperations(this.sourceOperations, source, false),
       path,
       revisionKey
     );
@@ -2683,7 +2631,7 @@ export class BlueResMan
     {
       for (const [ descriptor, operations ] of descriptors)
       {
-        format += removeOperationRecords(operations, path, revisionKey);
+        format += BlueResMan._removeOperationRecords(operations, path, revisionKey);
         if (operations.size === 0) descriptors.delete(descriptor);
       }
       if (descriptors.size === 0) this.formatOperations.delete(source);
@@ -2714,14 +2662,13 @@ export class BlueResMan
     {
       this._resourceExtensionRoutes.set(resource, extensionRoute);
     }
-    resource._request = { ...options, ...getResourceLoaderOptions(options, options.source || this.source) };
+    resource._request = { ...options, ...BlueResMan._getResourceLoaderOptions(options, options.source || this.source) };
     if (options.values) CjsSchema.setValues(resource, options.values);
     // Carbon (BlueResMan.cpp:281-286): created, not yet Initialize()'d.
     if (notifications) notifications.OnResourceCreated(resource);
     resource.Initialize(path, ext);
     return resource;
   }
-
 
   /**
    * Carbon's cache suffix is ex; it does not encode a semantic output kind.
@@ -2757,7 +2704,6 @@ export class BlueResMan
     };
   }
 
-
   /**
    * Run or join one format read under source/path/revision, registered descriptor,
    * and effective output-option identity. Descriptor identity prevents a
@@ -2781,11 +2727,11 @@ export class BlueResMan
   ReadFormatOnce(resource, descriptor, bytes, options = {})
   {
     const read = this._BeginReadOperation(resource.GetPath(), options);
-    const cachePolicy = normalizeCachePolicy(read.options.cacheFormat, "cacheFormat");
-    const key = getFormatOperationKey(read.context, read.options);
+    const cachePolicy = BlueResMan._normalizeCachePolicy(read.options.cacheFormat, "cacheFormat");
+    const key = BlueResMan._getFormatOperationKey(read.context, read.options);
     const cacheableOptions = key !== null && cachePolicy !== false;
     const descriptorOperations = cacheableOptions
-      ? getFormatDescriptorOperations(
+      ? BlueResMan._getFormatDescriptorOperations(
         this.formatOperations,
         read.context.source,
         descriptor,
@@ -2804,7 +2750,7 @@ export class BlueResMan
     // Preserve caller option identities in the cache key, but snapshot construction
     // mappings before deferring dispatch so pending reads cannot observe later edits.
     const formatOptions = !descriptor.Format
-      ? createFormatReadOptions(descriptor, read.options) : null;
+      ? BlueResMan._createFormatReadOptions(descriptor, read.options) : null;
     /** @type {CjsResourceReadOperationRecord} */
     const record = {
       promise: Promise.resolve().then(() => this.ReadFormat(descriptor, bytes, read.options, formatOptions)),
@@ -2930,14 +2876,14 @@ export class BlueResMan
     this._GetResourceRecord(resource).payload = null;
     this._objectBuilders.delete(resource);
     const operation = { request: resource._request, promise: null, resolve: null, reject: null, locked: false, finish: this._BeginResourceOperation() };
-    resource._request = getResourceLoaderOptions(resource._request, resource._request.source);
+    resource._request = BlueResMan._getResourceLoaderOptions(resource._request, resource._request.source);
     operation.promise = new Promise((resolve, reject) =>
     {
       operation.resolve = resolve;
       operation.reject = reject;
     });
     // GetResource starts the attempt even when nobody awaits it.
-    operation.promise.catch(noop);
+    operation.promise.catch(BlueResMan._noop);
     resource._loadAttempt = operation;
     if (resource.GetPath() && this._LodeOf(resource).Lookup(getMotherLodeKey(resource.GetPath(), resource.GetExt())) === resource)
     {
@@ -3364,7 +3310,7 @@ export class BlueResMan
   _RunMainThreadQueue(options = {}) {
     const main = this._threadQueues[BlueResManQueue.BRMQ_MAIN];
     const background = this._threadQueues[BlueResManQueue.BRMQ_BACKGROUND];
-    const now = typeof options.now === "function" ? options.now : defaultQueueNow;
+    const now = typeof options.now === "function" ? options.now : BlueResMan._defaultQueueNow;
     const timeSlice = (options.maxTime ?? this.maxPrepareTime) * 1000;
     const startedAt = now();
     let processed = 0;
@@ -3385,696 +3331,1074 @@ export class BlueResMan
     return { processed, elapsed };
   }
 
-}
-
-
-/**
- * Deep-copy supported registered format defaults into a detached snapshot.
- * Plain objects and arrays may be cyclic. Functions and primitives are stable
- * leaves; values with hidden mutable state are rejected because copying their
- * wrapper would not detach the state it represents.
- *
- * @param {object} defaults Registered format defaults.
- * @param {WeakMap<object, object>} [seen=new WeakMap()] Source-to-snapshot cycle map.
- * @returns {object} Detached plain defaults snapshot.
- * @throws {TypeError} If defaults contain unsupported objects, accessors, symbols, or byte buffers.
- */
-function snapshotFormatDefaults(defaults, seen = new WeakMap())
-{
-  if (!defaults || typeof defaults !== "object" || Array.isArray(defaults))
+  /**
+   * Whether a normalized path names a dynamic resource.
+   *
+   * @param {string} key Normalized resource path.
+   * @returns {boolean}
+   */
+  static _isDynamicResourcePath(key)
   {
-    throw new TypeError("BlueResMan format defaults must be a plain object.");
-  }
-  return snapshotFormatDefaultValue(defaults, seen, "defaults");
-}
-
-/**
- * Snapshot one value in a registered format-default tree.
- *
- * @param {*} value Source value.
- * @param {WeakMap<object, object>} seen Source-to-snapshot cycle map.
- * @param {string} path Diagnostic property path.
- * @returns {*} Snapshot value or stable primitive/function leaf.
- * @throws {TypeError} If the value cannot be made structurally immutable.
- */
-function snapshotFormatDefaultValue(value, seen, path)
-{
-  if (value === null || value === undefined) return value;
-  const type = typeof value;
-  if ([ "string", "number", "boolean", "bigint" ].includes(type)) return value;
-  if (type === "function") return value;
-  if (type !== "object" || ArrayBuffer.isView(value) || value instanceof ArrayBuffer)
-  {
-    throw new TypeError(`BlueResMan format ${path} cannot be snapshotted immutably.`);
+    return DYNAMIC_RESOURCE_PREFIXES.some(prefix => key.startsWith(prefix));
   }
 
-  const prior = seen.get(value);
-  if (prior) return prior;
-  if (Array.isArray(value))
+  /**
+   * Carbon logs and returns null for an unknown dynamic name or a constructor that
+   * yields nothing (BlueResMan.cpp:225-235). There is no log channel here, and a
+   * null handle breaks every caller that composes on GetResource, so the same
+   * condition is raised, named.
+   *
+   * @param {string} path Normalized dynamic path.
+   * @param {string} name Constructor name.
+   * @param {string} code Error code.
+   * @param {string} message Error message.
+   * @returns {Error}
+   */
+  /** A watch rejection naming the resources still pending. */
+  static _watchError(code, message, pending)
   {
-    const snapshot = [];
-    seen.set(value, snapshot);
-    for (let index = 0; index < value.length; index += 1)
+    const error = new Error(`BlueResMan ${message}`);
+    error.code = code;
+    error.pending = pending.map(resource => resource.GetPath());
+    return error;
+  }
+
+  static _dynamicResourceError(path, name, code, message)
+  {
+    const error = new Error(`BlueResMan ${message} (${path})`);
+    error.code = code;
+    error.path = path;
+    error.name = "CjsResManDynamicResourceError";
+    error.constructorName = name;
+    return error;
+  }
+
+  /**
+   * Deep-copy supported registered format defaults into a detached snapshot.
+   * Plain objects and arrays may be cyclic. Functions and primitives are stable
+   * leaves; values with hidden mutable state are rejected because copying their
+   * wrapper would not detach the state it represents.
+   *
+   * @param {object} defaults Registered format defaults.
+   * @param {WeakMap<object, object>} [seen=new WeakMap()] Source-to-snapshot cycle map.
+   * @returns {object} Detached plain defaults snapshot.
+   * @throws {TypeError} If defaults contain unsupported objects, accessors, symbols, or byte buffers.
+   */
+  static _snapshotFormatDefaults(defaults, seen = new WeakMap())
+  {
+    if (!defaults || typeof defaults !== "object" || Array.isArray(defaults))
     {
-      if (!Object.hasOwn(value, index))
+      throw new TypeError("BlueResMan format defaults must be a plain object.");
+    }
+    return BlueResMan._snapshotFormatDefaultValue(defaults, seen, "defaults");
+  }
+
+  /**
+   * Snapshot one value in a registered format-default tree.
+   *
+   * @param {*} value Source value.
+   * @param {WeakMap<object, object>} seen Source-to-snapshot cycle map.
+   * @param {string} path Diagnostic property path.
+   * @returns {*} Snapshot value or stable primitive/function leaf.
+   * @throws {TypeError} If the value cannot be made structurally immutable.
+   */
+  static _snapshotFormatDefaultValue(value, seen, path)
+  {
+    if (value === null || value === undefined) return value;
+    const type = typeof value;
+    if ([ "string", "number", "boolean", "bigint" ].includes(type)) return value;
+    if (type === "function") return value;
+    if (type !== "object" || ArrayBuffer.isView(value) || value instanceof ArrayBuffer)
+    {
+      throw new TypeError(`BlueResMan format ${path} cannot be snapshotted immutably.`);
+    }
+
+    const prior = seen.get(value);
+    if (prior) return prior;
+    if (Array.isArray(value))
+    {
+      const snapshot = [];
+      seen.set(value, snapshot);
+      for (let index = 0; index < value.length; index += 1)
       {
-        throw new TypeError(`BlueResMan format ${path} must not contain sparse arrays.`);
+        if (!Object.hasOwn(value, index))
+        {
+          throw new TypeError(`BlueResMan format ${path} must not contain sparse arrays.`);
+        }
+        snapshot.push(BlueResMan._snapshotFormatDefaultValue(value[index], seen, `${path}[${index}]`));
       }
-      snapshot.push(snapshotFormatDefaultValue(value[index], seen, `${path}[${index}]`));
+      return snapshot;
+    }
+
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null)
+    {
+      throw new TypeError(`BlueResMan format ${path} must contain only plain objects and arrays.`);
+    }
+    if (Object.getOwnPropertySymbols(value).length > 0)
+    {
+      throw new TypeError(`BlueResMan format ${path} must not contain symbol keys.`);
+    }
+
+    const snapshot = prototype === null ? Object.create(null) : {};
+    seen.set(value, snapshot);
+    for (const key of Object.getOwnPropertyNames(value))
+    {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor.enumerable || !("value" in descriptor))
+      {
+        throw new TypeError(`BlueResMan format ${path}.${key} must be an enumerable data property.`);
+      }
+      snapshot[key] = BlueResMan._snapshotFormatDefaultValue(descriptor.value, seen, `${path}.${key}`);
     }
     return snapshot;
   }
 
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null)
+  /**
+   * Normalize an opaque caller/source revision without interpreting content.
+   * String and number tokens remain type-distinct; finite numeric `-0` and `0`
+   * intentionally identify the same revision.
+   *
+   * @param {string|number|undefined} value Caller-provided source content token.
+   * @returns {string} Type-stable internal revision key.
+   * @throws {TypeError} If the token is neither a string nor finite number.
+   */
+  static _normalizeSourceRevision(value)
   {
-    throw new TypeError(`BlueResMan format ${path} must contain only plain objects and arrays.`);
-  }
-  if (Object.getOwnPropertySymbols(value).length > 0)
-  {
-    throw new TypeError(`BlueResMan format ${path} must not contain symbol keys.`);
-  }
-
-  const snapshot = prototype === null ? Object.create(null) : {};
-  seen.set(value, snapshot);
-  for (const key of Object.getOwnPropertyNames(value))
-  {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (!descriptor.enumerable || !("value" in descriptor))
+    if (value === undefined) return "undefined";
+    if (typeof value === "string") return `string:${value}`;
+    if (typeof value === "number" && Number.isFinite(value))
     {
-      throw new TypeError(`BlueResMan format ${path}.${key} must be an enumerable data property.`);
+      return `number:${Object.is(value, -0) ? 0 : value}`;
     }
-    snapshot[key] = snapshotFormatDefaultValue(descriptor.value, seen, `${path}.${key}`);
+    throw new TypeError("BlueResMan sourceRevision must be a string or finite number.");
   }
-  return snapshot;
-}
 
-/**
- * Normalize an opaque caller/source revision without interpreting content.
- * String and number tokens remain type-distinct; finite numeric `-0` and `0`
- * intentionally identify the same revision.
- *
- * @param {string|number|undefined} value Caller-provided source content token.
- * @returns {string} Type-stable internal revision key.
- * @throws {TypeError} If the token is neither a string nor finite number.
- */
-function normalizeSourceRevision(value)
-{
-  if (value === undefined) return "undefined";
-  if (typeof value === "string") return `string:${value}`;
-  if (typeof value === "number" && Number.isFinite(value))
+  /**
+   * Validate tri-state source/format cache policy.
+   *
+   * @param {boolean|undefined} value Cache policy value.
+   * @param {string} name Option name used in failures.
+   * @returns {boolean|undefined} The validated policy.
+   * @throws {TypeError} If the value is not boolean or omitted.
+   */
+  static _normalizeCachePolicy(value, name)
   {
-    return `number:${Object.is(value, -0) ? 0 : value}`;
-  }
-  throw new TypeError("BlueResMan sourceRevision must be a string or finite number.");
-}
-
-/**
- * Validate tri-state source/format cache policy.
- *
- * @param {boolean|undefined} value Cache policy value.
- * @param {string} name Option name used in failures.
- * @returns {boolean|undefined} The validated policy.
- * @throws {TypeError} If the value is not boolean or omitted.
- */
-function normalizeCachePolicy(value, name)
-{
-  if (value !== undefined && typeof value !== "boolean")
-  {
-    throw new TypeError(`BlueResMan ${name} must be a boolean when supplied.`);
-  }
-  return value;
-}
-
-/**
- * Get the operation map owned by one source object.
- *
- * @param {WeakMap<object|Function, Map<string, CjsResourceReadOperationRecord>>} ledger Source-keyed ledger.
- * @param {object|Function} owner Source owner.
- * @param {boolean} create Whether a missing map should be allocated.
- * @returns {Map<string, CjsResourceReadOperationRecord>|null} Owner map or `null`.
- */
-function getOwnerOperations(ledger, owner, create)
-{
-  let operations = ledger.get(owner);
-  if (!operations && create)
-  {
-    operations = new Map();
-    ledger.set(owner, operations);
-  }
-  return operations || null;
-}
-
-/**
- * Get the source/path/revision operation key for one normalized read context.
- *
- * @param {Readonly<CjsResourceReadContext>} context Normalized provenance.
- * @returns {string} Internal read-operation key.
- */
-function getReadOperationKey(context)
-{
-  return `${context.path}\u0000${context.revisionKey}`;
-}
-
-/**
- * Get the descriptor-specific format operation map for a selected source.
- * Descriptor identity isolates changed registration defaults.
- *
- * @param {WeakMap<object|Function, Map<object, Map<string, CjsResourceReadOperationRecord>>>} ledger Format ledger.
- * @param {object|Function} source Selected source owner.
- * @param {object} descriptor Registered descriptor.
- * @param {boolean} create Whether missing maps should be allocated.
- * @returns {Map<string, CjsResourceReadOperationRecord>|null} Descriptor map or `null`.
- */
-function getFormatDescriptorOperations(ledger, source, descriptor, create)
-{
-  let descriptors = ledger.get(source);
-  if (!descriptors && create)
-  {
-    descriptors = new Map();
-    ledger.set(source, descriptors);
-  }
-  if (!descriptors) return null;
-
-  let operations = descriptors.get(descriptor);
-  if (!operations && create)
-  {
-    operations = new Map();
-    descriptors.set(descriptor, operations);
-  }
-  return operations || null;
-}
-
-/**
- * Build a descriptor-local format cache key from source provenance and the
- * output options that materially affect the format reader result.
- * Requests containing non-canonical mutable option objects bypass format-cache
- * sharing instead of risking a false key match.
- *
- * @param {Readonly<CjsResourceReadContext>} context Normalized provenance.
- * @param {object} options Format request options.
- * @returns {string|null} Internal format-operation key, or `null` to bypass caching.
- */
-function getFormatOperationKey(context, options)
-{
-  const material = [
-    options.emit,
-    options.outputStreams,
-    options.classes,
-    options.formatOptions
-  ];
-  if (!material.every(value => isCanonicalFormatCacheValue(value))) return null;
-  return `${getReadOperationKey(context)}\u0000${material
-    .map(value => serializeFormatCacheValue(value))
-    .join("\u0001")}`;
-}
-
-/**
- * Return true when a format cache option can be represented without guessing
- * hidden mutable state. Plain objects/arrays, functions by identity, and
- * byte-addressable buffers/views are supported. Other class instances bypass
- * format-cache sharing.
- *
- * @param {*} value Candidate material format option.
- * @param {WeakSet<object|Function>} [seen=new WeakSet()] Cycle guard.
- * @returns {boolean} Whether deterministic cache serialization is supported.
- */
-function isCanonicalFormatCacheValue(value, seen = new WeakSet())
-{
-  if (value === null || value === undefined) return true;
-  if ([ "string", "number", "boolean", "bigint" ].includes(typeof value)) return true;
-  if (typeof value === "function") return true;
-  if (typeof value !== "object") return false;
-  if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) return true;
-  if (seen.has(value)) return true;
-  seen.add(value);
-  if (Array.isArray(value))
-  {
-    return value.every(entry => isCanonicalFormatCacheValue(entry, seen));
-  }
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) return false;
-  if (Object.getOwnPropertySymbols(value).length > 0) return false;
-  return Object.getOwnPropertyNames(value).every(key =>
-  {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    return descriptor.enumerable
-      && "value" in descriptor
-      && isCanonicalFormatCacheValue(descriptor.value, seen);
-  });
-}
-
-/**
- * Serialize one supported material format option with process-local identity
- * for objects and functions. Identity prevents same-named constructors and
- * separate option graphs from colliding; visible plain-object/array/buffer
- * contents ensure mutation changes the next operation key.
- *
- * @param {*} value Canonically supported format option.
- * @param {WeakSet<object|Function>} [seen=new WeakSet()] Cycle guard.
- * @returns {string} Deterministic cache-local representation.
- */
-function serializeFormatCacheValue(value, seen = new WeakSet())
-{
-  if (value === undefined) return "undefined";
-  if (value === null) return "null";
-  if (typeof value === "string") return `string:${JSON.stringify(value)}`;
-  if (typeof value === "number")
-  {
-    if (Number.isNaN(value)) return "number:NaN";
-    if (Object.is(value, -0)) return "number:-0";
-    return `number:${String(value)}`;
-  }
-  if (typeof value === "boolean") return `boolean:${value}`;
-  if (typeof value === "bigint") return `bigint:${value}`;
-  if (typeof value === "function") return `function:${getLocalValueIdentity(value)}`;
-
-  const identity = getLocalValueIdentity(value);
-  if (seen.has(value)) return `reference:${identity}`;
-  seen.add(value);
-  if (ArrayBuffer.isView(value))
-  {
-    const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-    return `view:${identity}:${[ ...bytes ].join(",")}`;
-  }
-  if (value instanceof ArrayBuffer)
-  {
-    return `buffer:${identity}:${[ ...new Uint8Array(value) ].join(",")}`;
-  }
-  if (Array.isArray(value))
-  {
-    return `array:${identity}:[${value
-      .map(entry => serializeFormatCacheValue(entry, seen))
-      .join(",")}]`;
-  }
-  return `object:${identity}:{${Object.keys(value)
-    .sort()
-    .map(key => `${JSON.stringify(key)}:${serializeFormatCacheValue(value[key], seen)}`)
-    .join(",")}}`;
-}
-
-/**
- * Return a process-local identity for a parsed-format cache object or function.
- *
- * @param {object|Function} value Candidate option identity owner.
- * @returns {number} Stable identity for the life of the value.
- */
-function getLocalValueIdentity(value)
-{
-  let identity = LOCAL_VALUE_IDENTITIES.get(value);
-  if (!identity)
-  {
-    identity = nextLocalValueIdentity++;
-    LOCAL_VALUE_IDENTITIES.set(value, identity);
-  }
-  return identity;
-}
-
-/**
- * Remove operation records matching a normalized path and optional revision.
- * Detached promises continue for their existing consumers.
- *
- * @param {Map<string, CjsResourceReadOperationRecord>|null} operations Candidate operation map.
- * @param {string} path Normalized source path.
- * @param {string|null} revisionKey Exact revision or `null` for all revisions.
- * @returns {number} Number of detached records.
- */
-function removeOperationRecords(operations, path, revisionKey)
-{
-  if (!operations) return 0;
-  let removed = 0;
-  for (const [ key, record ] of operations)
-  {
-    if (record.path !== path) continue;
-    if (revisionKey !== null && record.revisionKey !== revisionKey) continue;
-    if (operations.delete(key)) removed += 1;
-  }
-  return removed;
-}
-
-/**
- * Copy the compact requested-output fields needed for explicit payload
- * reconstruction. This request is retained with the handle but never enters
- * MotherLode identity beyond Carbon's explicit `ex` suffix.
- *
- * @param {object} [options={}] Original resource request.
- * @returns {object} Shallow reconstruction request without cache/reload policy.
- */
-function getResourceRequestOptions(options = {})
-{
-  const request = {};
-  for (const key of RESOURCE_REQUEST_OPTION_KEYS)
-  {
-    if (options[key] !== undefined) request[key] = options[key];
-  }
-  // Capture the omitted suffix too: reconstruction cannot change a handle's identity.
-  if (options.ext === undefined &&
-    !RESOURCE_REQUEST_OPTION_KEYS.some(key => key !== "ex" && options[key] !== undefined))
-    request.ex = options.ex ?? "";
-  return request;
-}
-
-/**
- * Capture the compact output request plus effective source provenance needed
- * to reconstruct a released resource payload. Cache policy and one-shot reload
- * are intentionally not retained. Retaining the effective source prevents an
- * old revision token from being applied to a later manager default source.
- *
- * @param {object} [options={}] Requested output and source provenance options.
- * @param {object|Function|null} [effectiveSource=null] Source selected when the resource was created.
- * @returns {object} Detached loader options safe to retain with the resource.
- */
-function getResourceLoaderOptions(options = {}, effectiveSource = null)
-{
-  const loaderOptions = getResourceRequestOptions(options);
-  if (effectiveSource) loaderOptions.source = effectiveSource;
-  for (const key of [ "sourceRevision", "ext" ])
-  {
-    if (Object.hasOwn(options, key))
+    if (value !== undefined && typeof value !== "boolean")
     {
-      loaderOptions[key] = options[key];
+      throw new TypeError(`BlueResMan ${name} must be a boolean when supplied.`);
     }
+    return value;
   }
-  return loaderOptions;
-}
 
-/**
- * Merge per-operation controls with a resource's compact reconstruction
- * request. Once the handle has a promised-output field, all output selectors
- * remain pinned to the retained request so `Ready()` cannot publish a
- * different result under the existing MotherLode identity. Retained source
- * provenance is pinned as well; cache/reload controls remain explicit per-call
- * overrides.
- *
- * @param {object} base Retained reconstruction request.
- * @param {object} [overrides={}] Per-call operation controls.
- * @returns {object} Merged request with stable promised-output fields.
- */
-function mergeResourceLoaderOptions(base, overrides = {})
-{
-  const result = { ...base, ...overrides };
-  const pinsOutput = RESOURCE_OUTPUT_OPTION_KEYS.some(key =>
-    Object.hasOwn(base, key)
-      && base[key] !== undefined
-  );
-  if (pinsOutput)
+  /**
+   * Get the operation map owned by one source object.
+   *
+   * @param {WeakMap<object|Function, Map<string, CjsResourceReadOperationRecord>>} ledger Source-keyed ledger.
+   * @param {object|Function} owner Source owner.
+   * @param {boolean} create Whether a missing map should be allocated.
+   * @returns {Map<string, CjsResourceReadOperationRecord>|null} Owner map or `null`.
+   */
+  static _getOwnerOperations(ledger, owner, create)
   {
-    for (const key of RESOURCE_OUTPUT_OPTION_KEYS)
+    let operations = ledger.get(owner);
+    if (!operations && create)
     {
-      if (Object.hasOwn(base, key) && base[key] !== undefined)
-      {
-        result[key] = base[key];
-      }
-      else
-      {
-        delete result[key];
-      }
+      operations = new Map();
+      ledger.set(owner, operations);
     }
+    return operations || null;
   }
-  for (const key of RESOURCE_PROVENANCE_OPTION_KEYS)
-  {
-    if (Object.hasOwn(base, key)) result[key] = base[key];
-  }
-  return result;
-}
 
-/**
- * Filter current format descriptors using request material available before
- * source bytes are read. Byte-dependent support probes are deferred.
- *
- * @param {readonly object[]} descriptors Registered descriptors for one extension.
- * @param {object} options Format, output, and stream selection.
- * @returns {object[]} Matching descriptors in registration order.
- */
-function filterFormatDescriptors(descriptors, options)
-{
-  let candidates = [ ...descriptors ];
-  if (options.format)
+  /**
+   * Get the source/path/revision operation key for one normalized read context.
+   *
+   * @param {Readonly<CjsResourceReadContext>} context Normalized provenance.
+   * @returns {string} Internal read-operation key.
+   */
+  static _getReadOperationKey(context)
   {
-    candidates = candidates.filter(({ Format }) => Format === options.format || Format.id === options.format);
+    return `${context.path}\u0000${context.revisionKey}`;
   }
-  if (options.emit !== undefined)
+
+  /**
+   * Get the descriptor-specific format operation map for a selected source.
+   * Descriptor identity isolates changed registration defaults.
+   *
+   * @param {WeakMap<object|Function, Map<object, Map<string, CjsResourceReadOperationRecord>>>} ledger Format ledger.
+   * @param {object|Function} source Selected source owner.
+   * @param {object} descriptor Registered descriptor.
+   * @param {boolean} create Whether missing maps should be allocated.
+   * @returns {Map<string, CjsResourceReadOperationRecord>|null} Descriptor map or `null`.
+   */
+  static _getFormatDescriptorOperations(ledger, source, descriptor, create)
   {
-    candidates = candidates.filter(({ Format }) =>
-      findDeclaredOutput(getFormatOutputs(Format), options.emit) !== null);
-  }
-  const streams = getRequestedStreams(options);
-  if (streams)
-  {
-    candidates = candidates.filter(descriptor =>
+    let descriptors = ledger.get(source);
+    if (!descriptors && create)
     {
-      const { Format } = descriptor;
-      const emit = createFormatReadOptions(descriptor, options).emit;
-      const capability = emit === undefined
-        ? Object.values(Format.outputs || {}).find(entry => entry.default)
-        : Format.outputs?.[findDeclaredOutput(getFormatOutputs(Format), emit)];
-      return (capability?.outputStreams & streams) === streams;
+      descriptors = new Map();
+      ledger.set(source, descriptors);
+    }
+    if (!descriptors) return null;
+
+    let operations = descriptors.get(descriptor);
+    if (!operations && create)
+    {
+      operations = new Map();
+      descriptors.set(descriptor, operations);
+    }
+    return operations || null;
+  }
+
+  /**
+   * Build a descriptor-local format cache key from source provenance and the
+   * output options that materially affect the format reader result.
+   * Requests containing non-canonical mutable option objects bypass format-cache
+   * sharing instead of risking a false key match.
+   *
+   * @param {Readonly<CjsResourceReadContext>} context Normalized provenance.
+   * @param {object} options Format request options.
+   * @returns {string|null} Internal format-operation key, or `null` to bypass caching.
+   */
+  static _getFormatOperationKey(context, options)
+  {
+    const material = [
+      options.emit,
+      options.outputStreams,
+      options.classes,
+      options.formatOptions
+    ];
+    if (!material.every(value => BlueResMan._isCanonicalFormatCacheValue(value))) return null;
+    return `${BlueResMan._getReadOperationKey(context)}\u0000${material
+      .map(value => BlueResMan._serializeFormatCacheValue(value))
+      .join("\u0001")}`;
+  }
+
+  /**
+   * Return true when a format cache option can be represented without guessing
+   * hidden mutable state. Plain objects/arrays, functions by identity, and
+   * byte-addressable buffers/views are supported. Other class instances bypass
+   * format-cache sharing.
+   *
+   * @param {*} value Candidate material format option.
+   * @param {WeakSet<object|Function>} [seen=new WeakSet()] Cycle guard.
+   * @returns {boolean} Whether deterministic cache serialization is supported.
+   */
+  static _isCanonicalFormatCacheValue(value, seen = new WeakSet())
+  {
+    if (value === null || value === undefined) return true;
+    if ([ "string", "number", "boolean", "bigint" ].includes(typeof value)) return true;
+    if (typeof value === "function") return true;
+    if (typeof value !== "object") return false;
+    if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) return true;
+    if (seen.has(value)) return true;
+    seen.add(value);
+    if (Array.isArray(value))
+    {
+      return value.every(entry => BlueResMan._isCanonicalFormatCacheValue(entry, seen));
+    }
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return false;
+    if (Object.getOwnPropertySymbols(value).length > 0) return false;
+    return Object.getOwnPropertyNames(value).every(key =>
+    {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      return descriptor.enumerable
+        && "value" in descriptor
+        && BlueResMan._isCanonicalFormatCacheValue(descriptor.value, seen);
     });
   }
-  return candidates;
-}
 
-/**
- * Resolve an ordered explicit extension route. Probes are evaluated in route
- * order and the sole unprobed final descriptor is the fallback. Selection is
- * final: reader failures are never interpreted as a reason to try another
- * format.
- *
- * @param {readonly object[]} descriptors Captured ordered route descriptors.
- * @param {string} ext Normalized resource extension.
- * @param {object} options Output filters and source bytes.
- * @returns {object} Selected immutable format descriptor.
- */
-function resolveOrderedExtensionFormatDescriptor(descriptors, ext, options)
-{
-  const candidates = filterFormatDescriptors(descriptors, options);
-  if (descriptors.length > 0 && candidates.length === 0 && options.emit !== undefined)
+  /**
+   * Serialize one supported material format option with process-local identity
+   * for objects and functions. Identity prevents same-named constructors and
+   * separate option graphs from colliding; visible plain-object/array/buffer
+   * contents ensure mutation changes the next operation key.
+   *
+   * @param {*} value Canonically supported format option.
+   * @param {WeakSet<object|Function>} [seen=new WeakSet()] Cycle guard.
+   * @returns {string} Deterministic cache-local representation.
+   */
+  static _serializeFormatCacheValue(value, seen = new WeakSet())
   {
-    throw createFormatOutputMissingError(ext, options.emit, descriptors);
+    if (value === undefined) return "undefined";
+    if (value === null) return "null";
+    if (typeof value === "string") return `string:${JSON.stringify(value)}`;
+    if (typeof value === "number")
+    {
+      if (Number.isNaN(value)) return "number:NaN";
+      if (Object.is(value, -0)) return "number:-0";
+      return `number:${String(value)}`;
+    }
+    if (typeof value === "boolean") return `boolean:${value}`;
+    if (typeof value === "bigint") return `bigint:${value}`;
+    if (typeof value === "function") return `function:${BlueResMan._getLocalValueIdentity(value)}`;
+
+    const identity = BlueResMan._getLocalValueIdentity(value);
+    if (seen.has(value)) return `reference:${identity}`;
+    seen.add(value);
+    if (ArrayBuffer.isView(value))
+    {
+      const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+      return `view:${identity}:${[ ...bytes ].join(",")}`;
+    }
+    if (value instanceof ArrayBuffer)
+    {
+      return `buffer:${identity}:${[ ...new Uint8Array(value) ].join(",")}`;
+    }
+    if (Array.isArray(value))
+    {
+      return `array:${identity}:[${value
+        .map(entry => BlueResMan._serializeFormatCacheValue(entry, seen))
+        .join(",")}]`;
+    }
+    return `object:${identity}:{${Object.keys(value)
+      .sort()
+      .map(key => `${JSON.stringify(key)}:${BlueResMan._serializeFormatCacheValue(value[key], seen)}`)
+      .join(",")}}`;
   }
-  if (candidates.length === 0)
+
+  /**
+   * Return a process-local identity for a parsed-format cache object or function.
+   *
+   * @param {object|Function} value Candidate option identity owner.
+   * @returns {number} Stable identity for the life of the value.
+   */
+  static _getLocalValueIdentity(value)
   {
-    const error = new Error(`No format registered for .${ext}`);
-    error.code = "CJS_RESOURCE_FORMAT_MISSING";
-    error.ext = ext;
-    throw error;
+    let identity = LOCAL_VALUE_IDENTITIES.get(value);
+    if (!identity)
+    {
+      identity = nextLocalValueIdentity++;
+      LOCAL_VALUE_IDENTITIES.set(value, identity);
+    }
+    return identity;
   }
 
-  for (const descriptor of candidates)
+  /**
+   * Remove operation records matching a normalized path and optional revision.
+   * Detached promises continue for their existing consumers.
+   *
+   * @param {Map<string, CjsResourceReadOperationRecord>|null} operations Candidate operation map.
+   * @param {string} path Normalized source path.
+   * @param {string|null} revisionKey Exact revision or `null` for all revisions.
+   * @returns {number} Number of detached records.
+   */
+  static _removeOperationRecords(operations, path, revisionKey)
   {
-    const { Format, defaults } = descriptor;
-    if (typeof Format.is !== "function") return descriptor;
-    const probeOptions = { ...defaults, ...(options.formatOptions || {}) };
-    delete probeOptions.outputStreams;
-    const report = Format.is(options.filename ?? null, options.bytes, probeOptions);
-    if (isPositiveFormatProbe(report)) return descriptor;
+    if (!operations) return 0;
+    let removed = 0;
+    for (const [ key, record ] of operations)
+    {
+      if (record.path !== path) continue;
+      if (revisionKey !== null && record.revisionKey !== revisionKey) continue;
+      if (operations.delete(key)) removed += 1;
+    }
+    return removed;
   }
 
-  const error = new Error(`No registered format supports the content for .${ext}`);
-  error.code = "CJS_RESOURCE_FORMAT_UNSUPPORTED";
-  error.ext = ext;
-  error.formats = candidates.map(({ Format }) => requireRegisteredClassName(Format));
-  throw error;
-}
-
-/** Tests the supported forms returned by current format probes. */
-function isPositiveFormatProbe(report)
-{
-  if (report === true) return true;
-  if (!report || report === false || typeof report !== "object") return false;
-  return report.supported === true
-    || report.supported === "full"
-    || report.supported === "partial";
-}
-
-/**
- * Return one format facade's normal and diagnostic output declarations.
- *
- * @param {Function} Format Registered format facade.
- * @returns {Array<*>} Declared output values in selection order.
- */
-function getFormatOutputs(Format)
-{
-  return Object.keys(Format.outputs || {});
-}
-
-/**
- * Resolve a case-insensitive output selector to its canonical declared
- * spelling. MotherLode tags stay lowercase while readers receive declarations
- * such as `cmfJson` or `gr2Json` exactly as authored.
- *
- * @param {readonly *[]} outputs Declared output values.
- * @param {*} requested Requested output selector.
- * @returns {string|null} Canonical declaration, or `null` when unsupported.
- */
-function findDeclaredOutput(outputs, requested)
-{
-  const normalized = normalizeResourceVariant(requested);
-  for (const output of outputs)
+  /**
+   * Copy the compact requested-output fields needed for explicit payload
+   * reconstruction. This request is retained with the handle but never enters
+   * MotherLode identity beyond Carbon's explicit `ex` suffix.
+   *
+   * @param {object} [options={}] Original resource request.
+   * @returns {object} Shallow reconstruction request without cache/reload policy.
+   */
+  static _getResourceRequestOptions(options = {})
   {
-    if (typeof output !== "string") continue;
-    if (normalizeResourceVariant(output) === normalized) return output;
+    const request = {};
+    for (const key of RESOURCE_REQUEST_OPTION_KEYS)
+    {
+      if (options[key] !== undefined) request[key] = options[key];
+    }
+    // Capture the omitted suffix too: reconstruction cannot change a handle's identity.
+    if (options.ext === undefined &&
+      !RESOURCE_REQUEST_OPTION_KEYS.some(key => key !== "ex" && options[key] !== undefined))
+      request.ex = options.ex ?? "";
+    return request;
   }
-  return null;
-}
 
-/**
- * Create the stable failure used when a registered input format cannot emit a
- * requested output tag.
- *
- * @param {string} ext Normalized source extension.
- * @param {*} emit Requested output tag.
- * @param {readonly object[]} descriptors Registered input-format descriptors.
- * @returns {Error} Contextual unsupported-output error.
- */
-function createFormatOutputMissingError(ext, emit, descriptors)
-{
-  const error = new Error(`No format registered for .${ext} emits ${JSON.stringify(emit)}.`);
-  error.code = "CJS_RESOURCE_FORMAT_OUTPUT_MISSING";
-  error.ext = ext;
-  error.emit = emit;
-  error.formats = descriptors.map(({ Format }) => requireRegisteredClassName(Format));
-  return error;
-}
-
-/**
- * Create the stable failure used when a direct object loader cannot satisfy a
- * forced output request.
- *
- * @param {string} ext Normalized source extension.
- * @param {*} emit Requested output tag.
- * @returns {Error} Contextual unsupported-output error.
- */
-function createObjectLoaderOutputMissingError(ext, emit)
-{
-  const error = new Error(
-    `Direct loader for .${ext} exposes only its unforced default; it does not emit ${JSON.stringify(emit)}.`
-  );
-  error.code = "CJS_RESOURCE_FORMAT_OUTPUT_MISSING";
-  error.ext = ext;
-  error.emit = emit;
-  error.formats = [];
-  return error;
-}
-
-/**
- * Resolve one descriptor from the current candidate set. When bytes are
- * present, support probes may disambiguate candidates.
- *
- * @param {readonly object[]} descriptors Candidate descriptors from current registration.
- * @param {string} ext Normalized resource extension.
- * @param {object} options Effective format options and optional source bytes.
- * @returns {object} Selected descriptor.
- * @throws {Error} If the candidate set is missing or remains ambiguous.
- */
-function resolveFormatDescriptorCandidates(descriptors, ext, options)
-{
-  let candidates = [ ...descriptors ];
-  if (candidates.length > 1 && options.bytes !== undefined)
+  /**
+   * Capture the compact output request plus effective source provenance needed
+   * to reconstruct a released resource payload. Cache policy and one-shot reload
+   * are intentionally not retained. Retaining the effective source prevents an
+   * old revision token from being applied to a later manager default source.
+   *
+   * @param {object} [options={}] Requested output and source provenance options.
+   * @param {object|Function|null} [effectiveSource=null] Source selected when the resource was created.
+   * @returns {object} Detached loader options safe to retain with the resource.
+   */
+  static _getResourceLoaderOptions(options = {}, effectiveSource = null)
   {
-    const supported = candidates.filter(descriptor =>
+    const loaderOptions = BlueResMan._getResourceRequestOptions(options);
+    if (effectiveSource) loaderOptions.source = effectiveSource;
+    for (const key of [ "sourceRevision", "ext" ])
+    {
+      if (Object.hasOwn(options, key))
+      {
+        loaderOptions[key] = options[key];
+      }
+    }
+    return loaderOptions;
+  }
+
+  /**
+   * Merge per-operation controls with a resource's compact reconstruction
+   * request. Once the handle has a promised-output field, all output selectors
+   * remain pinned to the retained request so `Ready()` cannot publish a
+   * different result under the existing MotherLode identity. Retained source
+   * provenance is pinned as well; cache/reload controls remain explicit per-call
+   * overrides.
+   *
+   * @param {object} base Retained reconstruction request.
+   * @param {object} [overrides={}] Per-call operation controls.
+   * @returns {object} Merged request with stable promised-output fields.
+   */
+  static _mergeResourceLoaderOptions(base, overrides = {})
+  {
+    const result = { ...base, ...overrides };
+    const pinsOutput = RESOURCE_OUTPUT_OPTION_KEYS.some(key =>
+      Object.hasOwn(base, key)
+        && base[key] !== undefined
+    );
+    if (pinsOutput)
+    {
+      for (const key of RESOURCE_OUTPUT_OPTION_KEYS)
+      {
+        if (Object.hasOwn(base, key) && base[key] !== undefined)
+        {
+          result[key] = base[key];
+        }
+        else
+        {
+          delete result[key];
+        }
+      }
+    }
+    for (const key of RESOURCE_PROVENANCE_OPTION_KEYS)
+    {
+      if (Object.hasOwn(base, key)) result[key] = base[key];
+    }
+    return result;
+  }
+
+  /**
+   * Filter current format descriptors using request material available before
+   * source bytes are read. Byte-dependent support probes are deferred.
+   *
+   * @param {readonly object[]} descriptors Registered descriptors for one extension.
+   * @param {object} options Format, output, and stream selection.
+   * @returns {object[]} Matching descriptors in registration order.
+   */
+  static _filterFormatDescriptors(descriptors, options)
+  {
+    let candidates = [ ...descriptors ];
+    if (options.format)
+    {
+      candidates = candidates.filter(({ Format }) => Format === options.format || Format.id === options.format);
+    }
+    if (options.emit !== undefined)
+    {
+      candidates = candidates.filter(({ Format }) =>
+        BlueResMan._findDeclaredOutput(BlueResMan._getFormatOutputs(Format), options.emit) !== null);
+    }
+    const streams = BlueResMan._getRequestedStreams(options);
+    if (streams)
+    {
+      candidates = candidates.filter(descriptor =>
+      {
+        const { Format } = descriptor;
+        const emit = BlueResMan._createFormatReadOptions(descriptor, options).emit;
+        const capability = emit === undefined
+          ? Object.values(Format.outputs || {}).find(entry => entry.default)
+          : Format.outputs?.[BlueResMan._findDeclaredOutput(BlueResMan._getFormatOutputs(Format), emit)];
+        return (capability?.outputStreams & streams) === streams;
+      });
+    }
+    return candidates;
+  }
+
+  /**
+   * Resolve an ordered explicit extension route. Probes are evaluated in route
+   * order and the sole unprobed final descriptor is the fallback. Selection is
+   * final: reader failures are never interpreted as a reason to try another
+   * format.
+   *
+   * @param {readonly object[]} descriptors Captured ordered route descriptors.
+   * @param {string} ext Normalized resource extension.
+   * @param {object} options Output filters and source bytes.
+   * @returns {object} Selected immutable format descriptor.
+   */
+  static _resolveOrderedExtensionFormatDescriptor(descriptors, ext, options)
+  {
+    const candidates = BlueResMan._filterFormatDescriptors(descriptors, options);
+    if (descriptors.length > 0 && candidates.length === 0 && options.emit !== undefined)
+    {
+      throw BlueResMan._createFormatOutputMissingError(ext, options.emit, descriptors);
+    }
+    if (candidates.length === 0)
+    {
+      const error = new Error(`No format registered for .${ext}`);
+      error.code = "CJS_RESOURCE_FORMAT_MISSING";
+      error.ext = ext;
+      throw error;
+    }
+
+    for (const descriptor of candidates)
     {
       const { Format, defaults } = descriptor;
-      const isFormat = Format.is;
-      if (typeof isFormat !== "function") return false;
-      const report = isFormat.call(Format, options.filename ?? null, options.bytes, {
-        ...defaults,
-        ...(options.formatOptions || {})
-      });
-      return isPositiveFormatProbe(report);
-    });
-    if (supported.length === 1) candidates = supported;
-  }
+      if (typeof Format.is !== "function") return descriptor;
+      const probeOptions = { ...defaults, ...(options.formatOptions || {}) };
+      delete probeOptions.outputStreams;
+      const report = Format.is(options.filename ?? null, options.bytes, probeOptions);
+      if (BlueResMan._isPositiveFormatProbe(report)) return descriptor;
+    }
 
-  if (candidates.length === 0)
-  {
-    const error = new Error(`No format registered for .${ext}`);
-    error.code = "CJS_RESOURCE_FORMAT_MISSING";
-    error.ext = ext;
-    throw error;
-  }
-  if (candidates.length > 1)
-  {
-    const error = new Error(`Ambiguous formats registered for .${ext}`);
-    error.code = "CJS_RESOURCE_FORMAT_AMBIGUOUS";
+    const error = new Error(`No registered format supports the content for .${ext}`);
+    error.code = "CJS_RESOURCE_FORMAT_UNSUPPORTED";
     error.ext = ext;
     error.formats = candidates.map(({ Format }) => requireRegisteredClassName(Format));
     throw error;
   }
-  return candidates[0];
-}
 
-
-/**
- * Normalize one human-readable promised output tag.
- *
- * @param {*} value Candidate `variant`, `emit`, requirement, or payload tag.
- * @returns {string} Trimmed lowercase tag, or an empty string.
- * @throws {TypeError} If a non-empty tag is not a string or contains the internal key delimiter.
- */
-function normalizeResourceVariant(value)
-{
-  if (value === null || value === undefined || value === "") return "";
-  if (typeof value !== "string")
+  /** Tests the supported forms returned by current format probes. */
+  static _isPositiveFormatProbe(report)
   {
-    throw new TypeError("BlueResMan resource variant must be a string.");
+    if (report === true) return true;
+    if (!report || report === false || typeof report !== "object") return false;
+    return report.supported === true
+      || report.supported === "full"
+      || report.supported === "partial";
   }
-  const normalized = value.trim().toLowerCase();
-  if (normalized.includes("\u0000"))
+
+  /**
+   * Return one format facade's normal and diagnostic output declarations.
+   *
+   * @param {Function} Format Registered format facade.
+   * @returns {Array<*>} Declared output values in selection order.
+   */
+  static _getFormatOutputs(Format)
   {
-    throw new TypeError("BlueResMan resource variant may not contain a null character.");
+    return Object.keys(Format.outputs || {});
   }
-  return normalized;
-}
 
-function createPrepareContext(resMan, resource, bytes, options, stage)
-{
-  return {
-    ...options,
-    ...createResourcePathContext(resource.GetPath(), READ_CONTEXTS.get(options), options.ext),
-    stage,
-    bytes,
-    resource,
-    resMan
-  };
-}
+  /**
+   * Resolve a case-insensitive output selector to its canonical declared
+   * spelling. MotherLode tags stay lowercase while readers receive declarations
+   * such as `cmfJson` or `gr2Json` exactly as authored.
+   *
+   * @param {readonly *[]} outputs Declared output values.
+   * @param {*} requested Requested output selector.
+   * @returns {string|null} Canonical declaration, or `null` when unsupported.
+   */
+  static _findDeclaredOutput(outputs, requested)
+  {
+    const normalized = BlueResMan._normalizeResourceVariant(requested);
+    for (const output of outputs)
+    {
+      if (typeof output !== "string") continue;
+      if (BlueResMan._normalizeResourceVariant(output) === normalized) return output;
+    }
+    return null;
+  }
 
-/**
- * Create the immutable, source-neutral path context shared by format readers,
- * direct object loaders, target identification, and target hydration.
- *
- * @param {string} path Normalized or caller-supplied resource path.
- * @param {CjsResourceReadContext|null|undefined} [readContext] Active source read context.
- * @returns {Readonly<{path: string, resFilePath: string, ext: string, fileName: string, url: string|null}>}
- */
-function createResourcePathContext(path, readContext = null, extension = undefined)
-{
-  const resFilePath = normalizeResourcePath(path);
-  return {
-    path: resFilePath,
-    resFilePath,
-    ext: readContext?.ext ?? normalizeResourceExtension(extension || getResourceExtension(resFilePath)),
-    fileName: getResourceFileName(resFilePath),
-    url: readContext?.url ?? null
-  };
-}
+  /**
+   * Create the stable failure used when a registered input format cannot emit a
+   * requested output tag.
+   *
+   * @param {string} ext Normalized source extension.
+   * @param {*} emit Requested output tag.
+   * @param {readonly object[]} descriptors Registered input-format descriptors.
+   * @returns {Error} Contextual unsupported-output error.
+   */
+  static _createFormatOutputMissingError(ext, emit, descriptors)
+  {
+    const error = new Error(`No format registered for .${ext} emits ${JSON.stringify(emit)}.`);
+    error.code = "CJS_RESOURCE_FORMAT_OUTPUT_MISSING";
+    error.ext = ext;
+    error.emit = emit;
+    error.formats = descriptors.map(({ Format }) => requireRegisteredClassName(Format));
+    return error;
+  }
 
-/**
- * Return the normalized final component of a resource path without query or
- * fragment material.
- *
- * @param {string} path Resource path.
- * @returns {string} Lowercase normalized filename, or an empty string.
- */
-function getResourceFileName(path)
-{
-  const normalized = normalizeResourcePath(path);
-  const queryIndex = normalized.search(/[?#]/u);
-  const cleanPath = queryIndex === -1 ? normalized : normalized.slice(0, queryIndex);
-  const slashIndex = cleanPath.lastIndexOf("/");
-  return cleanPath.slice(slashIndex + 1);
-}
+  /**
+   * Create the stable failure used when a direct object loader cannot satisfy a
+   * forced output request.
+   *
+   * @param {string} ext Normalized source extension.
+   * @param {*} emit Requested output tag.
+   * @returns {Error} Contextual unsupported-output error.
+   */
+  static _createObjectLoaderOutputMissingError(ext, emit)
+  {
+    const error = new Error(
+      `Direct loader for .${ext} exposes only its unforced default; it does not emit ${JSON.stringify(emit)}.`
+    );
+    error.code = "CJS_RESOURCE_FORMAT_OUTPUT_MISSING";
+    error.ext = ext;
+    error.emit = emit;
+    error.formats = [];
+    return error;
+  }
 
+  /**
+   * Resolve one descriptor from the current candidate set. When bytes are
+   * present, support probes may disambiguate candidates.
+   *
+   * @param {readonly object[]} descriptors Candidate descriptors from current registration.
+   * @param {string} ext Normalized resource extension.
+   * @param {object} options Effective format options and optional source bytes.
+   * @returns {object} Selected descriptor.
+   * @throws {Error} If the candidate set is missing or remains ambiguous.
+   */
+  static _resolveFormatDescriptorCandidates(descriptors, ext, options)
+  {
+    let candidates = [ ...descriptors ];
+    if (candidates.length > 1 && options.bytes !== undefined)
+    {
+      const supported = candidates.filter(descriptor =>
+      {
+        const { Format, defaults } = descriptor;
+        const isFormat = Format.is;
+        if (typeof isFormat !== "function") return false;
+        const report = isFormat.call(Format, options.filename ?? null, options.bytes, {
+          ...defaults,
+          ...(options.formatOptions || {})
+        });
+        return BlueResMan._isPositiveFormatProbe(report);
+      });
+      if (supported.length === 1) candidates = supported;
+    }
+
+    if (candidates.length === 0)
+    {
+      const error = new Error(`No format registered for .${ext}`);
+      error.code = "CJS_RESOURCE_FORMAT_MISSING";
+      error.ext = ext;
+      throw error;
+    }
+    if (candidates.length > 1)
+    {
+      const error = new Error(`Ambiguous formats registered for .${ext}`);
+      error.code = "CJS_RESOURCE_FORMAT_AMBIGUOUS";
+      error.ext = ext;
+      error.formats = candidates.map(({ Format }) => requireRegisteredClassName(Format));
+      throw error;
+    }
+    return candidates[0];
+  }
+
+  /**
+   * Normalize one human-readable promised output tag.
+   *
+   * @param {*} value Candidate `variant`, `emit`, requirement, or payload tag.
+   * @returns {string} Trimmed lowercase tag, or an empty string.
+   * @throws {TypeError} If a non-empty tag is not a string or contains the internal key delimiter.
+   */
+  static _normalizeResourceVariant(value)
+  {
+    if (value === null || value === undefined || value === "") return "";
+    if (typeof value !== "string")
+    {
+      throw new TypeError("BlueResMan resource variant must be a string.");
+    }
+    const normalized = value.trim().toLowerCase();
+    if (normalized.includes("\u0000"))
+    {
+      throw new TypeError("BlueResMan resource variant may not contain a null character.");
+    }
+    return normalized;
+  }
+
+  static _createPrepareContext(resMan, resource, bytes, options, stage)
+  {
+    return {
+      ...options,
+      ...BlueResMan._createResourcePathContext(resource.GetPath(), READ_CONTEXTS.get(options), options.ext),
+      stage,
+      bytes,
+      resource,
+      resMan
+    };
+  }
+
+  /**
+   * Create the immutable, source-neutral path context shared by format readers,
+   * direct object loaders, target identification, and target hydration.
+   *
+   * @param {string} path Normalized or caller-supplied resource path.
+   * @param {CjsResourceReadContext|null|undefined} [readContext] Active source read context.
+   * @returns {Readonly<{path: string, resFilePath: string, ext: string, fileName: string, url: string|null}>}
+   */
+  static _createResourcePathContext(path, readContext = null, extension = undefined)
+  {
+    const resFilePath = normalizeResourcePath(path);
+    return {
+      path: resFilePath,
+      resFilePath,
+      ext: readContext?.ext ?? normalizeResourceExtension(extension || getResourceExtension(resFilePath)),
+      fileName: BlueResMan._getResourceFileName(resFilePath),
+      url: readContext?.url ?? null
+    };
+  }
+
+  /**
+   * Return the normalized final component of a resource path without query or
+   * fragment material.
+   *
+   * @param {string} path Resource path.
+   * @returns {string} Lowercase normalized filename, or an empty string.
+   */
+  static _getResourceFileName(path)
+  {
+    const normalized = normalizeResourcePath(path);
+    const queryIndex = normalized.search(/[?#]/u);
+    const cleanPath = queryIndex === -1 ? normalized : normalized.slice(0, queryIndex);
+    const slashIndex = cleanPath.lastIndexOf("/");
+    return cleanPath.slice(slashIndex + 1);
+  }
+
+  /**
+   * Validate one automatic-purge pump request without advancing cadence.
+   *
+   * @param {CjsResManAutoPurgePumpOptions} options Per-call pump options.
+   * @returns {CjsResManAutoPurgePumpOptions} Validated options.
+   * @throws {TypeError} If options or an explicit timestamp are invalid.
+   */
+  static _normalizeAutoPurgePumpOptions(options)
+  {
+    if (!options || typeof options !== "object" || Array.isArray(options))
+    {
+      throw new TypeError("BlueResMan automatic purge options must be an object.");
+    }
+    const unsupported = Object.keys(options).filter(key => key !== "time");
+    if (unsupported.length)
+    {
+      throw new TypeError(`BlueResMan automatic purge options do not support: ${unsupported.join(", ")}.`);
+    }
+    if (options.time !== undefined)
+    {
+      assertNonNegativeNumber(options.time, "BlueResMan automatic purge time");
+    }
+    return options;
+  }
+
+  /**
+   * Create the stable failure used when synchronous MotherLode replacement
+   * would detach ownership beneath active asynchronous resource mutation.
+   *
+   * @param {number} activeOperations Number of queued and direct mutations.
+   * @returns {Error} Contextual active-operation error.
+   */
+  static _activeResourceOperationsError(activeOperations)
+  {
+    const error = new Error(
+      `BlueResMan cannot replace MotherLode while ${activeOperations} resource operation(s) are active.`
+    );
+    error.code = "CJS_RESMAN_ACTIVE_RESOURCE_OPERATIONS";
+    error.activeOperations = activeOperations;
+    return error;
+  }
+
+  /**
+   * Read a resource path for diagnostics without allowing an unusual custom
+   * resource getter to hide the primary ownership error.
+   *
+   * @param {*} resource Candidate resource.
+   * @returns {string} Best-effort resource path label.
+   */
+  static _getResourceDiagnosticPath(resource)
+  {
+    try
+    {
+      return String(resource?.GetPath() || "<unknown>");
+    }
+    catch
+    {
+      return "<unknown>";
+    }
+  }
+
+  /**
+   * Perform no action for lifecycle-compatible optional operations.
+   *
+   * @returns {void}
+   */
+  static _noop()
+  {}
+
+  /**
+   * Merge snapshotted registration defaults with one request's format overrides.
+   *
+   * @param {object} descriptor Registered format descriptor.
+   * @param {object} options Resource read options.
+   * @returns {object} Effective format reader options.
+   */
+  static _createFormatReadOptions(descriptor, options)
+  {
+    const Format = !descriptor.Format ? descriptor.constructor : descriptor.Format;
+    const defaults = !descriptor.Format ? descriptor.GetValues() : descriptor.defaults;
+    const formatOptions = {
+      ...defaults,
+      ...(options.formatOptions || {})
+    };
+    if (options.emit !== undefined)
+    {
+      formatOptions.emit = BlueResMan._findDeclaredOutput(BlueResMan._getFormatOutputs(Format), options.emit)
+        ?? options.emit;
+    }
+    // Stream flags select a declared output; they are not decoder options.
+    delete formatOptions.outputStreams;
+    if (options.classes !== undefined) formatOptions.classes = options.classes;
+    return !descriptor.Format ? descriptor.GetValues(formatOptions) : formatOptions;
+  }
+
+  /**
+   * Tests whether an object owns one property.
+   *
+   * @param {*} object Candidate object.
+   * @param {string|number|symbol} property Property key.
+   * @returns {boolean}
+   */
+  
+  /**
+   * Return the timestamp used by default automatic purge cadence: blue's host
+   * clock, which does not follow wallclock adjustments.
+   *
+   * @returns {number} Host milliseconds.
+   */
+  static _defaultAutoPurgeNow()
+  {
+    return BlueOS.Monotonic();
+  }
+
+  static _defaultQueueYield()
+  {
+    return new Promise(resolve => setTimeout(resolve, 0));
+  }
+
+  /** BeTimer's role in `BlueResMan::Update` (BlueResMan.cpp:446): Blue's host milliseconds. */
+  static _defaultQueueNow()
+  {
+    return BlueOS.Monotonic();
+  }
+
+  /**
+   * LoadObject's cache: a second MotherLode, as Carbon's `m_loadObjectCache`
+   * (BlueResMan.h:123), sized as `m_loadObjectCache.SetCacheSize` (BlueResMan.cpp:91).
+   *
+   * @param {number} cacheSize Byte budget.
+   * @param {() => number} now The clock, in milliseconds.
+   * @returns {MotherLode} The cache.
+   */
+  static _createLoadObjectCache(cacheSize, now)
+  {
+    return new MotherLode({ now, cacheSize });
+  }
+
+  static _normalizeRegistrationEntries(value)
+  {
+    if (value === null || value === undefined) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === "function") return [ value ];
+    if (typeof value !== "object")
+    {
+      throw new TypeError("BlueResMan registration collections must be arrays or objects.");
+    }
+
+    if (value.Format || value.format)
+    {
+      return [ value ];
+    }
+
+    return Object.entries(value).map(([ key, entry ]) =>
+    {
+      return typeof entry === "function" ? entry : { ...entry, key };
+    });
+  }
+
+  /** Normalize `Register({ extensions })` into extension/registration pairs. */
+  static _normalizeExtensionRegistrationEntries(value)
+  {
+    if (value === null || value === undefined) return [];
+    if (value instanceof Map)
+    {
+      return [ ...value.entries() ].map(([ ext, registration ]) => [
+        ext,
+        BlueResMan._normalizeExtensionRegistration(registration)
+      ]);
+    }
+    if (Array.isArray(value))
+    {
+      return value.map((registration, index) =>
+      {
+        if (!registration || typeof registration !== "object" || Array.isArray(registration))
+        {
+          throw new TypeError(`BlueResMan extensions[${index}] must be an object.`);
+        }
+        const ext = registration.extension || registration.ext;
+        if (!ext)
+        {
+          throw new TypeError(`BlueResMan extensions[${index}] requires extension or ext.`);
+        }
+        return [ ext, BlueResMan._normalizeExtensionRegistration(registration) ];
+      });
+    }
+    if (!value || typeof value !== "object")
+    {
+      throw new TypeError("BlueResMan extensions must be an object, Map, or array.");
+    }
+    return Object.entries(value).map(([ ext, registration ]) => [
+      ext,
+      BlueResMan._normalizeExtensionRegistration(registration)
+    ]);
+  }
+
+  static _normalizeExtensionRegistration(registration)
+  {
+    if (typeof registration === "function") return { Handler: registration };
+    if (!registration || typeof registration !== "object" || Array.isArray(registration))
+    {
+      throw new TypeError("BlueResMan extension registration must be a handler or object.");
+    }
+    return registration;
+  }
+
+  static _normalizeExtensionRouteOptions(value)
+  {
+    if (typeof value === "function") return { Format: value };
+    if (Array.isArray(value)) return { Formats: value };
+    if (value === null || value === undefined) return {};
+    if (!value || typeof value !== "object")
+    {
+      throw new TypeError("BlueResMan extension route must be a format, format array, or object.");
+    }
+    return value;
+  }
+
+  static _createFormatDescriptor(Format, defaults = {})
+  {
+    if (typeof Format !== "function")
+    {
+      throw new TypeError("BlueResMan format descriptor requires a format class.");
+    }
+    return {
+      Format,
+      defaults: BlueResMan._snapshotFormatDefaults(defaults)
+    };
+  }
+
+  static _createExtensionFormatDescriptor(entry, defaults, label)
+  {
+    if (typeof entry === "function") return BlueResMan._createFormatDescriptor(entry, defaults);
+    if (!entry || typeof entry !== "object" || Array.isArray(entry))
+    {
+      throw new TypeError(`BlueResMan extension ${label} must be a format class or descriptor.`);
+    }
+    const Format = entry.Format || entry.format;
+    return BlueResMan._createFormatDescriptor(
+      Format,
+      entry.defaults === undefined ? defaults : entry.defaults
+    );
+  }
+
+  static _validateOrderedExtensionFormats(descriptors, ext)
+  {
+    for (let index = 0; index < descriptors.length - 1; index++)
+    {
+      const Format = descriptors[index].Format;
+      if (typeof Format.is !== "function")
+      {
+        throw new TypeError(
+          `BlueResMan extension .${ext} format ${Format.name || index} has no support probe and must be last.`
+        );
+      }
+    }
+  }
+
+  static _assertExtensionTarget(Target, label)
+  {
+    if (typeof Target !== "function"
+      || (typeof Target.from !== "function" && typeof Target.fromYAML !== "function"
+        && !CjsSchema.getClassName(Target)))
+    {
+      throw new TypeError(
+        `BlueResMan extension ${label} must provide static from(values) or fromYAML(values, context), or be a registered schema class.`
+      );
+    }
+  }
+
+  static _createExtensionTargetError(resource, message, cause = null)
+  {
+    const path = BlueResMan._getResourceDiagnosticPath(resource);
+    const error = new Error(`BlueResMan extension target failed for ${path}: ${message}`, cause ? { cause } : undefined);
+    error.code = "CJS_RESOURCE_EXTENSION_TARGET_FAILED";
+    error.path = path;
+    if (cause) error.cause = cause;
+    return error;
+  }
+
+  /**
+   * Reads a file's bytes through `blue.paths`; a file no file system has is an
+   * error naming the path (Carbon's DoOpenStream fails the load the same way).
+   * The `?query` is the resource's own parameters: the file is opened without
+   * it, as `DoOpenStream` opens `m_path.substr(0, query)` (BlueAsyncRes.cpp:380-384).
+   *
+   * @param {import("./IBluePaths.js").IBluePaths} paths The paths service.
+   * @param {string} path Resource path.
+   * @param {object} options Read options; `signal` aborts the read.
+   * @returns {Promise<Uint8Array>} The bytes.
+   */
+  static async _readThroughBluePaths(paths, path, options)
+  {
+    const query = path.indexOf("?");
+    const filePath = query === -1 ? path : path.slice(0, query);
+    const result = await paths.GetStreamFromPath(filePath, { accept: [ "bytes" ], signal: options.signal });
+    if (result === null)
+    {
+      const error = new Error(`BlueResMan: no file system has ${path}.`);
+      error.code = "CJS_RESMAN_FILE_NOT_FOUND";
+      error.path = path;
+      throw error;
+    }
+    return result.data;
+  }
+
+  /**
+   * The callback-manager flags for a resource's tasks: urgent when the resource was
+   * created in urgent mode (BlueAsyncRes.cpp:108-111, :217-226).
+   *
+   * @param {BlueAsyncRes} resource The resource.
+   * @returns {number} `BCBF_URGENT` or `BCBF_NONE`.
+   */
+  static _urgentFlags(resource)
+  {
+    return resource._isUrgent ? IBlueCallbackMan.BCBF_URGENT : IBlueCallbackMan.BCBF_NONE;
+  }
+
+  /** Resolve a request to Carbon StreamType flags. */
+  static _getRequestedStreams(options)
+  {
+    const streams = options.outputStreams ?? options.formatOptions?.outputStreams ?? 0;
+    if (!Number.isInteger(streams) || streams < 0 || streams > StreamType.STREAM_AUDIO_VIDEO)
+    {
+      throw new TypeError("Resource outputStreams requires a valid StreamType mask.");
+    }
+    return streams;
+  }
+
+  /**
+   * Invoke Carbon's IBlueObjectBuilder operation with the default object marker.
+   * Shared by all internal handler records; no per-resource callback is allocated.
+   * @param {IBlueObjectBuilder} builder Parsed object-file builder.
+   * @returns {object} A new graph for one caller.
+   */
+  static _createObjectFromBuilder(builder)
+  {
+    return builder.CreateObject(0);
+  }
+}
 
 /**
  * Normalize an opt-in time-based automatic purge policy into a fresh object.
@@ -4144,146 +4468,8 @@ function normalizeAutoPurgePolicy(policy)
     destroyAdapters: policy.destroyAdapters ?? true,
     releasePayload: policy.releasePayload ?? true,
     ...(policy.cleanup === undefined ? {} : { cleanup: policy.cleanup }),
-    now: policy.now || defaultAutoPurgeNow
+    now: policy.now || BlueResMan._defaultAutoPurgeNow
   };
-}
-
-/**
- * Validate one automatic-purge pump request without advancing cadence.
- *
- * @param {CjsResManAutoPurgePumpOptions} options Per-call pump options.
- * @returns {CjsResManAutoPurgePumpOptions} Validated options.
- * @throws {TypeError} If options or an explicit timestamp are invalid.
- */
-function normalizeAutoPurgePumpOptions(options)
-{
-  if (!options || typeof options !== "object" || Array.isArray(options))
-  {
-    throw new TypeError("BlueResMan automatic purge options must be an object.");
-  }
-  const unsupported = Object.keys(options).filter(key => key !== "time");
-  if (unsupported.length)
-  {
-    throw new TypeError(`BlueResMan automatic purge options do not support: ${unsupported.join(", ")}.`);
-  }
-  if (options.time !== undefined)
-  {
-    assertNonNegativeNumber(options.time, "BlueResMan automatic purge time");
-  }
-  return options;
-}
-
-/**
- * Create the stable failure used when synchronous MotherLode replacement
- * would detach ownership beneath active asynchronous resource mutation.
- *
- * @param {number} activeOperations Number of queued and direct mutations.
- * @returns {Error} Contextual active-operation error.
- */
-function activeResourceOperationsError(activeOperations)
-{
-  const error = new Error(
-    `BlueResMan cannot replace MotherLode while ${activeOperations} resource operation(s) are active.`
-  );
-  error.code = "CJS_RESMAN_ACTIVE_RESOURCE_OPERATIONS";
-  error.activeOperations = activeOperations;
-  return error;
-}
-
-
-/**
- * Read a resource path for diagnostics without allowing an unusual custom
- * resource getter to hide the primary ownership error.
- *
- * @param {*} resource Candidate resource.
- * @returns {string} Best-effort resource path label.
- */
-function getResourceDiagnosticPath(resource)
-{
-  try
-  {
-    return String(resource?.GetPath() || "<unknown>");
-  }
-  catch
-  {
-    return "<unknown>";
-  }
-}
-
-/**
- * Perform no action for lifecycle-compatible optional operations.
- *
- * @returns {void}
- */
-function noop() {}
-
-/**
- * Merge snapshotted registration defaults with one request's format overrides.
- *
- * @param {object} descriptor Registered format descriptor.
- * @param {object} options Resource read options.
- * @returns {object} Effective format reader options.
- */
-function createFormatReadOptions(descriptor, options)
-{
-  const Format = !descriptor.Format ? descriptor.constructor : descriptor.Format;
-  const defaults = !descriptor.Format ? descriptor.GetValues() : descriptor.defaults;
-  const formatOptions = {
-    ...defaults,
-    ...(options.formatOptions || {})
-  };
-  if (options.emit !== undefined)
-  {
-    formatOptions.emit = findDeclaredOutput(getFormatOutputs(Format), options.emit)
-      ?? options.emit;
-  }
-  // Stream flags select a declared output; they are not decoder options.
-  delete formatOptions.outputStreams;
-  if (options.classes !== undefined) formatOptions.classes = options.classes;
-  return !descriptor.Format ? descriptor.GetValues(formatOptions) : formatOptions;
-}
-
-/**
- * Tests whether an object owns one property.
- *
- * @param {*} object Candidate object.
- * @param {string|number|symbol} property Property key.
- * @returns {boolean}
- */
-
-/**
- * Return the timestamp used by default automatic purge cadence: blue's host
- * clock, which does not follow wallclock adjustments.
- *
- * @returns {number} Host milliseconds.
- */
-function defaultAutoPurgeNow()
-{
-  return BlueOS.Monotonic();
-}
-
-function defaultQueueYield()
-{
-  return new Promise(resolve => setTimeout(resolve, 0));
-}
-
-/** BeTimer's role in `BlueResMan::Update` (BlueResMan.cpp:446): Blue's host milliseconds. */
-function defaultQueueNow()
-{
-  return BlueOS.Monotonic();
-}
-
-/**
- * LoadObject's cache: a second MotherLode, as Carbon's `m_loadObjectCache`
- * (BlueResMan.h:123), sized as `m_loadObjectCache.SetCacheSize` (BlueResMan.cpp:91).
- *
- * @param {number} cacheSize Byte budget.
- * @param {() => number} now The clock, in milliseconds.
- * @returns {MotherLode} The cache.
- */
-function createLoadObjectCache(cacheSize, now)
-{
-  return new MotherLode({ now, cacheSize });
 }
 
 /**
@@ -4313,148 +4499,6 @@ function createThreadQueues(loadingThreadCount, onBackgroundSlotFree)
   return queues;
 }
 
-function normalizeRegistrationEntries(value)
-{
-  if (value === null || value === undefined) return [];
-  if (Array.isArray(value)) return value;
-  if (typeof value === "function") return [ value ];
-  if (typeof value !== "object")
-  {
-    throw new TypeError("BlueResMan registration collections must be arrays or objects.");
-  }
-
-  if (value.Format || value.format)
-  {
-    return [ value ];
-  }
-
-  return Object.entries(value).map(([ key, entry ]) =>
-  {
-    return typeof entry === "function" ? entry : { ...entry, key };
-  });
-}
-
-/** Normalize `Register({ extensions })` into extension/registration pairs. */
-function normalizeExtensionRegistrationEntries(value)
-{
-  if (value === null || value === undefined) return [];
-  if (value instanceof Map)
-  {
-    return [ ...value.entries() ].map(([ ext, registration ]) => [
-      ext,
-      normalizeExtensionRegistration(registration)
-    ]);
-  }
-  if (Array.isArray(value))
-  {
-    return value.map((registration, index) =>
-    {
-      if (!registration || typeof registration !== "object" || Array.isArray(registration))
-      {
-        throw new TypeError(`BlueResMan extensions[${index}] must be an object.`);
-      }
-      const ext = registration.extension || registration.ext;
-      if (!ext)
-      {
-        throw new TypeError(`BlueResMan extensions[${index}] requires extension or ext.`);
-      }
-      return [ ext, normalizeExtensionRegistration(registration) ];
-    });
-  }
-  if (!value || typeof value !== "object")
-  {
-    throw new TypeError("BlueResMan extensions must be an object, Map, or array.");
-  }
-  return Object.entries(value).map(([ ext, registration ]) => [
-    ext,
-    normalizeExtensionRegistration(registration)
-  ]);
-}
-
-function normalizeExtensionRegistration(registration)
-{
-  if (typeof registration === "function") return { Handler: registration };
-  if (!registration || typeof registration !== "object" || Array.isArray(registration))
-  {
-    throw new TypeError("BlueResMan extension registration must be a handler or object.");
-  }
-  return registration;
-}
-
-function normalizeExtensionRouteOptions(value)
-{
-  if (typeof value === "function") return { Format: value };
-  if (Array.isArray(value)) return { Formats: value };
-  if (value === null || value === undefined) return {};
-  if (!value || typeof value !== "object")
-  {
-    throw new TypeError("BlueResMan extension route must be a format, format array, or object.");
-  }
-  return value;
-}
-
-function createFormatDescriptor(Format, defaults = {})
-{
-  if (typeof Format !== "function")
-  {
-    throw new TypeError("BlueResMan format descriptor requires a format class.");
-  }
-  return {
-    Format,
-    defaults: snapshotFormatDefaults(defaults)
-  };
-}
-
-function createExtensionFormatDescriptor(entry, defaults, label)
-{
-  if (typeof entry === "function") return createFormatDescriptor(entry, defaults);
-  if (!entry || typeof entry !== "object" || Array.isArray(entry))
-  {
-    throw new TypeError(`BlueResMan extension ${label} must be a format class or descriptor.`);
-  }
-  const Format = entry.Format || entry.format;
-  return createFormatDescriptor(
-    Format,
-    entry.defaults === undefined ? defaults : entry.defaults
-  );
-}
-
-function validateOrderedExtensionFormats(descriptors, ext)
-{
-  for (let index = 0; index < descriptors.length - 1; index++)
-  {
-    const Format = descriptors[index].Format;
-    if (typeof Format.is !== "function")
-    {
-      throw new TypeError(
-        `BlueResMan extension .${ext} format ${Format.name || index} has no support probe and must be last.`
-      );
-    }
-  }
-}
-
-function assertExtensionTarget(Target, label)
-{
-  if (typeof Target !== "function"
-    || (typeof Target.from !== "function" && typeof Target.fromYAML !== "function"
-      && !CjsSchema.getClassName(Target)))
-  {
-    throw new TypeError(
-      `BlueResMan extension ${label} must provide static from(values) or fromYAML(values, context), or be a registered schema class.`
-    );
-  }
-}
-
-function createExtensionTargetError(resource, message, cause = null)
-{
-  const path = getResourceDiagnosticPath(resource);
-  const error = new Error(`BlueResMan extension target failed for ${path}: ${message}`, cause ? { cause } : undefined);
-  error.code = "CJS_RESOURCE_EXTENSION_TARGET_FAILED";
-  error.path = path;
-  if (cause) error.cause = cause;
-  return error;
-}
-
 // Carbon: `class BlueResMan : public IBlueResMan, public IBlueEvents`. Declared
 // as calls - this folder cannot use decorator syntax (blue/blue/index.js).
 // The Cjs prefix identifies browser adaptations (workers, fetch and routes);
@@ -4477,111 +4521,4 @@ CjsSchema.decorateMethod(BlueResMan, "RegisterResourceConstructor", CjsSchema.be
 CjsSchema.decorateMethod(BlueResMan, "UnregisterResourceConstructor", CjsSchema.be.method);
 CjsSchema.decorateMethod(BlueResMan, "LoadObject", CjsSchema.be.method);
 CjsSchema.exposure.define("BlueResMan")(BlueResMan);
-
-
-/**
- * Reads a file's bytes through `blue.paths`; a file no file system has is an
- * error naming the path (Carbon's DoOpenStream fails the load the same way).
- * The `?query` is the resource's own parameters: the file is opened without
- * it, as `DoOpenStream` opens `m_path.substr(0, query)` (BlueAsyncRes.cpp:380-384).
- *
- * @param {import("./IBluePaths.js").IBluePaths} paths The paths service.
- * @param {string} path Resource path.
- * @param {object} options Read options; `signal` aborts the read.
- * @returns {Promise<Uint8Array>} The bytes.
- */
-async function readThroughBluePaths(paths, path, options)
-{
-  const query = path.indexOf("?");
-  const filePath = query === -1 ? path : path.slice(0, query);
-  const result = await paths.GetStreamFromPath(filePath, { accept: [ "bytes" ], signal: options.signal });
-  if (result === null)
-  {
-    const error = new Error(`BlueResMan: no file system has ${path}.`);
-    error.code = "CJS_RESMAN_FILE_NOT_FOUND";
-    error.path = path;
-    throw error;
-  }
-  return result.data;
-}
-
-/**
- * The callback-manager flags for a resource's tasks: urgent when the resource was
- * created in urgent mode (BlueAsyncRes.cpp:108-111, :217-226).
- *
- * @param {BlueAsyncRes} resource The resource.
- * @returns {number} `BCBF_URGENT` or `BCBF_NONE`.
- */
-function urgentFlags(resource)
-{
-  return resource._isUrgent ? IBlueCallbackMan.BCBF_URGENT : IBlueCallbackMan.BCBF_NONE;
-}
-
-/** Resolve a request to Carbon StreamType flags. */
-function getRequestedStreams(options)
-{
-  const streams = options.outputStreams ?? options.formatOptions?.outputStreams ?? 0;
-  if (!Number.isInteger(streams) || streams < 0 || streams > StreamType.STREAM_AUDIO_VIDEO)
-  {
-    throw new TypeError("Resource outputStreams requires a valid StreamType mask.");
-  }
-  return streams;
-}
-
-/**
- * Invoke Carbon's IBlueObjectBuilder operation with the default object marker.
- * Shared by all internal handler records; no per-resource callback is allocated.
- * @param {IBlueObjectBuilder} builder Parsed object-file builder.
- * @returns {object} A new graph for one caller.
- */
-function createObjectFromBuilder(builder)
-{
-  return builder.CreateObject(0);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -42,7 +42,6 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
  */
 export const DEFAULT_SIZE_WARNING_BYTES = 1024 * 1024 * 1024;
 
-
 /**
  * `DictWriter` - writes an object as a plain values bag.
  *
@@ -55,7 +54,6 @@ export class DictWriter extends IRootWriter
 
   /** The member name the next value is written under. */
   _pendingName = null;
-
 
   /** The member names records interrupted, restored as each record ends. */
   _recordNames = [];
@@ -110,7 +108,7 @@ export class DictWriter extends IRootWriter
   WriteValue(value)
   {
     const container = this._stack[this._stack.length - 1];
-    this._estimatedBytes += EstimateJsonBytes(value) + (Array.isArray(container) ? 1 : this._pendingName.length + 4);
+    this._estimatedBytes += DictWriter._EstimateJsonBytes(value) + (Array.isArray(container) ? 1 : this._pendingName.length + 4);
     if (Array.isArray(container)) container.push(value);
     else container[this._pendingName] = value;
   }
@@ -209,7 +207,6 @@ export class DictWriter extends IRootWriter
     this._pendingName = savedName;
   }
 
-
   /**
    * Writes nothing: a values bag carries no binary block.
    *
@@ -261,32 +258,32 @@ export class DictWriter extends IRootWriter
     this._estimatedBytes = 0;
     this._anchorNumber = 1;
   }
-}
 
-/**
- * The approximate JSON length of one written value, not counting what a
- * container holds (those are counted as they are written).
- *
- * @param {*} value The value.
- * @returns {number} Bytes.
- */
-function EstimateJsonBytes(value)
-{
-  switch (typeof value)
+  /**
+   * The approximate JSON length of one written value, not counting what a
+   * container holds (those are counted as they are written).
+   *
+   * @param {*} value The value.
+   * @returns {number} Bytes.
+   */
+  static _EstimateJsonBytes(value)
   {
-    case "string": return value.length + 2;
-    case "number": return 8;
-    case "boolean": return 5;
-    case "object":
-      if (value === null) return 4;
-      if (Array.isArray(value)) return value.reduce((n, item) => n + EstimateJsonBytes(item) + 1, 2);
-      {
-        // A bag being filled is still empty here; a nested plain value is complete.
-        let n = 2;
-        for (const key in value) n += key.length + 4 + EstimateJsonBytes(value[key]);
-        return n;
-      }
-    default: return 4;
+    switch (typeof value)
+    {
+      case "string": return value.length + 2;
+      case "number": return 8;
+      case "boolean": return 5;
+      case "object":
+        if (value === null) return 4;
+        if (Array.isArray(value)) return value.reduce((n, item) => n + DictWriter._EstimateJsonBytes(item) + 1, 2);
+        {
+          // A bag being filled is still empty here; a nested plain value is complete.
+          let n = 2;
+          for (const key in value) n += key.length + 4 + DictWriter._EstimateJsonBytes(value[key]);
+          return n;
+        }
+      default: return 4;
+    }
   }
 }
 

@@ -37,32 +37,6 @@ import { normalizeResPath } from "#utils/path";
 import { BlueResFileSystemForm } from "./IBlueResFileSystem.js";
 
 /**
- * `atoi`: leading whitespace, an optional sign, then digits; 0 when there are
- * none. Carbon reads the size column with it (cpp:371).
- */
-function atoi(text)
-{
-  const match = /^[\t\n\v\f\r ]*([+-]?\d+)/u.exec(text);
-  return match ? Number.parseInt(match[1], 10) : 0;
-}
-
-/**
- * `std::string::find` from `start`, with `npos` as -1. Carbon's column split
- * relies on `npos + 1` wrapping to 0 (cpp:356-366), so a caller emulates that.
- */
-function find(text, character, start)
-{
-  if (start > text.length) return -1;
-  return text.indexOf(character, start);
-}
-
-/** `std::string::substr(start, count)`, where a count of -1 is `npos`. */
-function substr(text, start, count)
-{
-  return count === -1 ? text.slice(start) : text.slice(start, start + count);
-}
-
-/**
  * `RemoteFileCache` - a build's file index, and the downloads and local cache
  * it drives. One instance per build.
  */
@@ -471,22 +445,22 @@ export class RemoteFileCache
       if (line === "") continue;
 
       let start = 0;
-      let commaPos = find(line, ",", start);
-      const resPath = substr(line, start, commaPos === -1 ? -1 : commaPos - start);
+      let commaPos = RemoteFileCache._find(line, ",", start);
+      const resPath = RemoteFileCache._substr(line, start, commaPos === -1 ? -1 : commaPos - start);
 
       start = commaPos + 1;
-      commaPos = find(line, ",", start);
-      const cachedName = substr(line, start, commaPos === -1 ? -1 : commaPos - start);
+      commaPos = RemoteFileCache._find(line, ",", start);
+      const cachedName = RemoteFileCache._substr(line, start, commaPos === -1 ? -1 : commaPos - start);
 
       start = commaPos + 1;
-      commaPos = find(line, ",", start);
-      const checksum = substr(line, start, commaPos === -1 ? -1 : commaPos - start);
+      commaPos = RemoteFileCache._find(line, ",", start);
+      const checksum = RemoteFileCache._substr(line, start, commaPos === -1 ? -1 : commaPos - start);
 
       start = commaPos + 1;
-      commaPos = find(line, ",", start);
-      const sizeAsString = substr(line, start, commaPos === -1 ? -1 : commaPos - start);
+      commaPos = RemoteFileCache._find(line, ",", start);
+      const sizeAsString = RemoteFileCache._substr(line, start, commaPos === -1 ? -1 : commaPos - start);
 
-      this._fileIndex.set(resPath, { cachedName, checksum, size: atoi(sizeAsString), verified: false });
+      this._fileIndex.set(resPath, { cachedName, checksum, size: RemoteFileCache._atoi(sizeAsString), verified: false });
       this._AddResPathToFolderIndex(resPath);
     }
   }
@@ -574,6 +548,32 @@ export class RemoteFileCache
   {
     if (!this._md5) throw new Error("RemoteFileCache verifies contents, and needs an md5 from its host to do so.");
     return this._md5(bytes);
+  }
+
+  /**
+   * `atoi`: leading whitespace, an optional sign, then digits; 0 when there are
+   * none. Carbon reads the size column with it (cpp:371).
+   */
+  static _atoi(text)
+  {
+    const match = /^[\t\n\v\f\r ]*([+-]?\d+)/u.exec(text);
+    return match ? Number.parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * `std::string::find` from `start`, with `npos` as -1. Carbon's column split
+   * relies on `npos + 1` wrapping to 0 (cpp:356-366), so a caller emulates that.
+   */
+  static _find(text, character, start)
+  {
+    if (start > text.length) return -1;
+    return text.indexOf(character, start);
+  }
+
+  /** `std::string::substr(start, count)`, where a count of -1 is `npos`. */
+  static _substr(text, start, count)
+  {
+    return count === -1 ? text.slice(start) : text.slice(start, start + count);
   }
 }
 

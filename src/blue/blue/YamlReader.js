@@ -79,7 +79,7 @@ export class YamlReader extends IRootReaderBase
     let result = null;
     try
     {
-      this._LoadEvents(ReadStream(stream));
+      this._LoadEvents(YamlReader._ReadStream(stream));
       let foundStart = false;
       while (!this._IsParserExhausted())
       {
@@ -122,7 +122,7 @@ export class YamlReader extends IRootReaderBase
     this._objectMarkers.length = 0;
     try
     {
-      this._LoadEvents(ReadStream(stream));
+      this._LoadEvents(YamlReader._ReadStream(stream));
       const marker = this._eventList.findIndex(event => event.type === "MAPPING_START");
       if (marker === -1) return false;
       this._objectMarkers.push(marker);
@@ -491,7 +491,7 @@ export class YamlReader extends IRootReaderBase
   {
     this._GetNextEvent();
     this._VerifyEvent("SCALAR");
-    return ScalarText(this._event.node);
+    return YamlReader._ScalarText(this._event.node);
   }
 
   /**
@@ -503,7 +503,7 @@ export class YamlReader extends IRootReaderBase
   _ReadMemberName()
   {
     this._GetNextEvent();
-    return this._event.type === "SCALAR" ? ScalarText(this._event.node) : null;
+    return this._event.type === "SCALAR" ? YamlReader._ScalarText(this._event.node) : null;
   }
 
   /**
@@ -535,7 +535,7 @@ export class YamlReader extends IRootReaderBase
    * @adapted
    */
 
-  _ExtractAnchorFromMappingStart() { return AnchorId(this._event.node?.anchor); }
+  _ExtractAnchorFromMappingStart() { return YamlReader._AnchorId(this._event.node?.anchor); }
 
   /**
    * Creates directly through the registered factory; no values/hydration adapter intervenes.
@@ -550,7 +550,7 @@ export class YamlReader extends IRootReaderBase
     if (!registration) { this._ParseUntilMatchingMappingEnd(); return null; }
     const instance = registration.createFn();
     if (!instance) this._ReportError(`Factory '${registration.name}' returned no object`);
-    const proxy = QueryInterface(instance, IBlueObjectProxy);
+    const proxy = YamlReader._QueryInterface(instance, IBlueObjectProxy);
     if (this._cached && proxy)
     {
       const name = this._ReadMemberName();
@@ -569,7 +569,7 @@ export class YamlReader extends IRootReaderBase
     }
     else this._ReadMembers(instance);
 
-    const initialize = QueryInterface(instance, IInitialize);
+    const initialize = YamlReader._QueryInterface(instance, IInitialize);
     if (this._doInitialize && initialize) initialize.Initialize();
     // CE-210: anchors become visible only AFTER completion (YamlReader.cpp:1033-1036).
     if (anchor) this._anchorClassMap.set(anchor, instance);
@@ -588,14 +588,14 @@ export class YamlReader extends IRootReaderBase
     if (this._event.type === "MAPPING_START") return this._ReadIRootClassInternal();
     if (this._event.type === "SCALAR")
     {
-      const value = ScalarText(this._event.node);
+      const value = YamlReader._ScalarText(this._event.node);
       if (value !== "null" && value !== "~") this._ReportError(`Expected 'null' or '~' but got: ${value}`);
       return null;
     }
     if (this._event.type === "ALIAS")
     {
       const name = this._event.node.source;
-      const id = AnchorId(name);
+      const id = YamlReader._AnchorId(name);
       if (!this._anchorClassMap.has(id)) this._ReportError(`Reference to anchor '${name}' that hasn't been previously defined!`);
       const instance = this._anchorClassMap.get(id);
       if (!instance) this._ReportWarning(`Reference to anchor '${name}' that hasn't been previously set - referencing inside a proxy?`);
@@ -623,7 +623,7 @@ export class YamlReader extends IRootReaderBase
       return;
     }
     this._ReadMembers(instance);
-    const initialize = QueryInterface(instance, IInitialize);
+    const initialize = YamlReader._QueryInterface(instance, IInitialize);
     if (this._doInitialize && initialize) initialize.Initialize();
   }
 
@@ -635,8 +635,8 @@ export class YamlReader extends IRootReaderBase
 
   _ReadMembers(instance)
   {
-    const initialize = QueryInterface(instance, IInitialize);
-    const notify = initialize ? null : QueryInterface(instance, INotify);
+    const initialize = YamlReader._QueryInterface(instance, IInitialize);
+    const notify = initialize ? null : YamlReader._QueryInterface(instance, INotify);
     let first = true;
     for (let name = this._ReadMemberName(); name !== null; name = this._ReadMemberName())
     {
@@ -671,7 +671,7 @@ export class YamlReader extends IRootReaderBase
     while (this._event.type !== "MAPPING_END")
     {
       this._VerifyEvent("SCALAR");
-      const key = ScalarText(this._event.node);
+      const key = YamlReader._ScalarText(this._event.node);
       BeObjectMetadata.Set(instance, key, this._ReadScalar());
       this._GetNextEvent();
     }
@@ -712,7 +712,7 @@ export class YamlReader extends IRootReaderBase
       if (value && type.className)
       {
         const Declared = typeof type.className === "function" ? type.className : CjsSchema.getConstructor(type.className);
-        if (!Declared || !QueryInterface(value, Declared)) this._ReportError("Incorrect type for member");
+        if (!Declared || !YamlReader._QueryInterface(value, Declared)) this._ReportError("Incorrect type for member");
       }
       writeDictionaryValue(instance, field, value);
     }
@@ -758,7 +758,7 @@ export class YamlReader extends IRootReaderBase
    * @adapted
    */
 
-  _ReadValue__Int32() { return Number(BigInt.asIntN(32, Decimal(this._ReadScalar()))); }
+  _ReadValue__Int32() { return Number(BigInt.asIntN(32, YamlReader._Decimal(this._ReadScalar()))); }
 
   /**
    * Windows strtoul's 32-bit saturation and unsigned sign conversion.
@@ -766,7 +766,7 @@ export class YamlReader extends IRootReaderBase
    * @adapted
    */
 
-  _ReadValue__UInt32() { return Number(Unsigned(this._ReadScalar(), 32)); }
+  _ReadValue__UInt32() { return Number(YamlReader._Unsigned(this._ReadScalar(), 32)); }
 
   /**
    * Native atoi followed by uint16 storage conversion.
@@ -816,7 +816,7 @@ export class YamlReader extends IRootReaderBase
 
   _ReadValue__Int64()
   {
-    const value = Decimal(this._ReadScalar());
+    const value = YamlReader._Decimal(this._ReadScalar());
     return value < -(1n << 63n) ? -(1n << 63n) : value > (1n << 63n) - 1n ? (1n << 63n) - 1n : value;
   }
 
@@ -826,7 +826,7 @@ export class YamlReader extends IRootReaderBase
    * @adapted
    */
 
-  _ReadValue__UInt64() { return Unsigned(this._ReadScalar(), 64); }
+  _ReadValue__UInt64() { return YamlReader._Unsigned(this._ReadScalar(), 64); }
 
   /**
    * C locale atof decimal prefixes and nonfinite spellings, using JS binary64.
@@ -834,7 +834,7 @@ export class YamlReader extends IRootReaderBase
    * @adapted
    */
 
-  _ReadValue__Double() { return NativeDouble(this._ReadScalar()); }
+  _ReadValue__Double() { return YamlReader._NativeDouble(this._ReadScalar()); }
 
   /**
    * Rounds at the native float assignment.
@@ -933,7 +933,7 @@ export class YamlReader extends IRootReaderBase
       this._GetNextEvent();
       for (let i = 0; i < count && this._event.type === "SCALAR"; ++i)
       {
-        const value = NativeDouble(ScalarText(this._event.node));
+        const value = YamlReader._NativeDouble(YamlReader._ScalarText(this._event.node));
         values[i] = doublePrecision ? value : Math.fround(value);
         this._GetNextEvent();
       }
@@ -979,8 +979,8 @@ export class YamlReader extends IRootReaderBase
     let size = 0;
     for (let index = 0; index < text.length; index += 4)
     {
-      const a = Base64Digit(text[index]), b = Base64Digit(text[index + 1]);
-      const c = Base64Digit(text[index + 2]), d = Base64Digit(text[index + 3]);
+      const a = YamlReader._Base64Digit(text[index]), b = YamlReader._Base64Digit(text[index + 1]);
+      const c = YamlReader._Base64Digit(text[index + 2]), d = YamlReader._Base64Digit(text[index + 3]);
       bytes[size++] = ((a & 63) << 2) | ((b & 48) >> 4);
       if (c === 99) break;
       bytes[size++] = ((b & 15) << 4) | ((c & 60) >> 2);
@@ -1040,7 +1040,7 @@ export class YamlReader extends IRootReaderBase
 
   _ReadList(list)
   {
-    const nativeList = QueryInterface(list, IList);
+    const nativeList = YamlReader._QueryInterface(list, IList);
     if (nativeList) nativeList.Remove(-1);
     else list.length = 0;
     if (!this._ReadVectorBegin()) this._ReportError("Error reading list");
@@ -1118,7 +1118,7 @@ export class YamlReader extends IRootReaderBase
     const matches = wire.length === definition.members.length && wire.every((member, index) =>
     {
       const native = definition.members[index];
-      return member.name === native.name && member.offset === native.offset && member.dataType === StructureDataType(native.dataType);
+      return member.name === native.name && member.offset === native.offset && member.dataType === YamlReader._StructureDataType(native.dataType);
     });
     if (!matches) CcpLog.CCP_LOGWARN("Structure list definition in the .red file does not match run-time definition. Skipping structure list.");
     while (this._ReadVectorNext())
@@ -1182,6 +1182,81 @@ export class YamlReader extends IRootReaderBase
       if (item) item[member.name] = vector ?? value;
     }
   }
+
+  /** CE-209: UTF-8 anchor bytes truncate as memcpy into uint64 (YamlReader.cpp:929-948). */
+  static _AnchorId(anchor)
+  {
+    const bytes = new TextEncoder().encode(anchor ?? "");
+    let result = 0n;
+    for (let i = 0; i < Math.min(8, bytes.length); ++i) result |= BigInt(bytes[i]) << BigInt(i * 8);
+    return result;
+  }
+
+  /** Libyaml's char* readers stop at the first embedded NUL. */
+  static _ScalarText(node)
+  { return String(node?.value ?? "").split("\0", 1)[0]; }
+
+  /** Decimal prefix conversion used by native atoi/strto*; no YAML number inference. */
+  static _Decimal(text)
+  {
+    const match = /^[\t\n\v\f\r ]*([+-]?\d+)/.exec(text);
+    return match ? BigInt(match[1]) : 0n;
+  }
+
+  /** Windows unsigned strto* saturation followed by native unsigned negation. */
+  static _Unsigned(text, bits)
+  {
+    const value = YamlReader._Decimal(text), max = (1n << BigInt(bits)) - 1n;
+    const magnitude = value < 0n ? -value : value;
+    return magnitude > max ? max : BigInt.asUintN(bits, value);
+  }
+
+  /** C-locale atof accepts decimal prefixes, infinity and nan; invalid input becomes zero. */
+  static _NativeDouble(text)
+  {
+    if (/^[\t\n\v\f\r ]*[+-]?inf/i.test(text)) return /^\s*-/.test(text) ? -Infinity : Infinity;
+    if (/^[\t\n\v\f\r ]*[+-]?nan/i.test(text)) return NaN;
+    const value = Number.parseFloat(text);
+    return Number.isNaN(value) ? 0 : value;
+  }
+
+  /** Base64.cpp's table maps invalid bytes to zero and padding to 99. */
+  static _Base64Digit(character)
+  {
+    if (character === "=") return 99;
+    const index = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(character);
+    return index < 0 ? 0 : index;
+  }
+
+  /** Schema-supported subset of IBlueStructureList.h's numeric type codes. */
+  static _StructureDataType(name)
+  {
+    const split = name.lastIndexOf("_");
+    const base = { BYTE: 0, SHORT: 1, INT32: 2, FLOAT16: 3, FLOAT32: 4, SHAREDSTRING: 5, BOOL8: 7, UBYTE: 8, USHORT: 9, UINT32: 10 }[name.slice(0, split)];
+    return base === undefined ? -1 : base | ((Number(name.slice(split + 1)) - 1) << 5);
+  }
+
+  /** Buffers a host synchronous stream without exposing a second Red decoding path. */
+  static _ReadStream(stream)
+  {
+    const buffer = new Uint8Array(16384);
+    const decoder = new TextDecoder();
+    let text = "";
+    for (;;)
+    {
+      const count = stream.Read(buffer, buffer.length);
+      if (!Number.isInteger(count) || count < 0 || count > buffer.length) throw new IRootReaderException("Invalid stream read count");
+      if (!count) break;
+      text += decoder.decode(buffer.subarray(0, count), { stream: true });
+    }
+    return text + decoder.decode();
+  }
+
+  /** Native QueryInterface uses the exposed IID table, not C++ dynamic_cast lineage. */
+  static _QueryInterface(value, Interface)
+  {
+    return value && mappedInterfaces(value.constructor).has(Interface) ? value : null;
+  }
 }
 
 // Explicit registration keeps the public Blue source importable without a decorator transform.
@@ -1197,76 +1272,3 @@ be.mapInterface(IBlueObjectBuilder)(YamlReader);
 be.mapInterface(ICacheable)(YamlReader);
 be.inherit(IRootReaderBase)(YamlReader);
 
-/** CE-209: UTF-8 anchor bytes truncate as memcpy into uint64 (YamlReader.cpp:929-948). */
-function AnchorId(anchor)
-{
-  const bytes = new TextEncoder().encode(anchor ?? "");
-  let result = 0n;
-  for (let i = 0; i < Math.min(8, bytes.length); ++i) result |= BigInt(bytes[i]) << BigInt(i * 8);
-  return result;
-}
-
-/** Libyaml's char* readers stop at the first embedded NUL. */
-function ScalarText(node) { return String(node?.value ?? "").split("\0", 1)[0]; }
-
-/** Decimal prefix conversion used by native atoi/strto*; no YAML number inference. */
-function Decimal(text)
-{
-  const match = /^[\t\n\v\f\r ]*([+-]?\d+)/.exec(text);
-  return match ? BigInt(match[1]) : 0n;
-}
-
-/** Windows unsigned strto* saturation followed by native unsigned negation. */
-function Unsigned(text, bits)
-{
-  const value = Decimal(text), max = (1n << BigInt(bits)) - 1n;
-  const magnitude = value < 0n ? -value : value;
-  return magnitude > max ? max : BigInt.asUintN(bits, value);
-}
-
-/** C-locale atof accepts decimal prefixes, infinity and nan; invalid input becomes zero. */
-function NativeDouble(text)
-{
-  if (/^[\t\n\v\f\r ]*[+-]?inf/i.test(text)) return /^\s*-/.test(text) ? -Infinity : Infinity;
-  if (/^[\t\n\v\f\r ]*[+-]?nan/i.test(text)) return NaN;
-  const value = Number.parseFloat(text);
-  return Number.isNaN(value) ? 0 : value;
-}
-
-/** Base64.cpp's table maps invalid bytes to zero and padding to 99. */
-function Base64Digit(character)
-{
-  if (character === "=") return 99;
-  const index = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(character);
-  return index < 0 ? 0 : index;
-}
-
-/** Schema-supported subset of IBlueStructureList.h's numeric type codes. */
-function StructureDataType(name)
-{
-  const split = name.lastIndexOf("_");
-  const base = { BYTE: 0, SHORT: 1, INT32: 2, FLOAT16: 3, FLOAT32: 4, SHAREDSTRING: 5, BOOL8: 7, UBYTE: 8, USHORT: 9, UINT32: 10 }[name.slice(0, split)];
-  return base === undefined ? -1 : base | ((Number(name.slice(split + 1)) - 1) << 5);
-}
-
-/** Buffers a host synchronous stream without exposing a second Red decoding path. */
-function ReadStream(stream)
-{
-  const buffer = new Uint8Array(16384);
-  const decoder = new TextDecoder();
-  let text = "";
-  for (;;)
-  {
-    const count = stream.Read(buffer, buffer.length);
-    if (!Number.isInteger(count) || count < 0 || count > buffer.length) throw new IRootReaderException("Invalid stream read count");
-    if (!count) break;
-    text += decoder.decode(buffer.subarray(0, count), { stream: true });
-  }
-  return text + decoder.decode();
-}
-
-/** Native QueryInterface uses the exposed IID table, not C++ dynamic_cast lineage. */
-function QueryInterface(value, Interface)
-{
-  return value && mappedInterfaces(value.constructor).has(Interface) ? value : null;
-}

@@ -98,7 +98,7 @@ export class BluePaths extends IBluePaths
    */
   SetLocalFileSystem(fileSystem)
   {
-    if (fileSystem !== null) assertDeclared(fileSystem);
+    if (fileSystem !== null) BluePaths._assertDeclared(fileSystem);
     if (this._localFileSystem !== null)
     {
       this._resFileSystems.splice(this._resFileSystems.indexOf(this._localFileSystem), 1);
@@ -152,7 +152,7 @@ export class BluePaths extends IBluePaths
    */
   RegisterFileSystem(fileSystem, beforeOrAfter = BluePathsBeforeOrAfter.AFTER)
   {
-    assertDeclared(fileSystem);
+    BluePaths._assertDeclared(fileSystem);
     if (beforeOrAfter === BluePathsBeforeOrAfter.BEFORE) this._resFileSystems.unshift(fileSystem);
     else this._resFileSystems.push(fileSystem);
     return this;
@@ -226,7 +226,7 @@ export class BluePaths extends IBluePaths
    */
   Filter(path, matcher = null)
   {
-    let root = filterResPath(path);
+    let root = BluePaths._filterResPath(path);
     let pattern = null;
     let test = matcher;
     let maxDepth = Infinity;
@@ -245,7 +245,7 @@ export class BluePaths extends IBluePaths
         {
           throw new TypeError("Filter: a glob after the root must be relative.");
         }
-        pattern = filterResPath(root + matcher);
+        pattern = BluePaths._filterResPath(root + matcher);
         if (!pattern.startsWith(root)) throw new TypeError("Filter: the glob escapes its root.");
       }
       else if (matcher instanceof RegExp)
@@ -269,7 +269,7 @@ export class BluePaths extends IBluePaths
       root = pattern.slice(0, pattern.lastIndexOf("/", wildcard === -1 ? pattern.length : wildcard) + 1);
       const tail = pattern.slice(root.length);
       if (!tail.includes("**")) maxDepth = tail.split("/").length - 1;
-      const regex = filterGlob(pattern);
+      const regex = BluePaths._filterGlob(pattern);
       test = value => regex.test(value);
     }
 
@@ -281,7 +281,7 @@ export class BluePaths extends IBluePaths
       const [directory, depth] = pending.pop();
       for (const name of this.GetDirectoryContents(directory))
       {
-        const entry = filterResPath(directory + name);
+        const entry = BluePaths._filterResPath(directory + name);
         if (!entry.startsWith(root)) throw new TypeError("Filter: a directory entry escapes the search root.");
         if (this.IsDirectory(entry))
         {
@@ -297,7 +297,6 @@ export class BluePaths extends IBluePaths
     }
     return [...matches].sort();
   }
-
 
   /**
    * `IsDirectory` - whether any file system has a directory at the path (cpp:119-130).
@@ -408,19 +407,19 @@ export class BluePaths extends IBluePaths
     const serving = this._resFileSystems.filter(fileSystem => fileSystem.constructor.protocols.includes(key));
     if (serving.length === 0)
     {
-      throw pathsError("CJS_BEPATHS_NO_FILE_SYSTEM", path, `BePaths: no file system serves "${protocol}:" (${path}).`);
+      throw BluePaths._pathsError("CJS_BEPATHS_NO_FILE_SYSTEM", path, `BePaths: no file system serves "${protocol}:" (${path}).`);
     }
 
     // Match: each one's form to ask for, and the bridge to an accepted form.
     const plans = [];
     for (const fileSystem of serving)
     {
-      const plan = matchForm(fileSystem.constructor.forms, accept);
+      const plan = BluePaths._matchForm(fileSystem.constructor.forms, accept);
       if (plan) plans.push({ fileSystem, ...plan });
     }
     if (plans.length === 0)
     {
-      throw pathsError("CJS_BEPATHS_NO_FORM", path,
+      throw BluePaths._pathsError("CJS_BEPATHS_NO_FORM", path,
         `BePaths: no file system for "${protocol}:" produces a form in [${accept.join(", ")}] (${path}).`);
     }
 
@@ -437,6 +436,98 @@ export class BluePaths extends IBluePaths
     }
     return null;
   }
+
+  /**
+   * The form to ask a file system for: the first accepted form it produces;
+   * failing that, the first accepted form a bridge reaches from one it
+   * produces; failing both, `null`.
+   *
+   * @param {string[]} produces The file system's declared forms.
+   * @param {string[]} accept The caller's accepted forms, preferred first.
+   * @returns {{produce: string, bridge: {to: string, convert: Function}|null}|null} The plan, or `null`.
+   */
+  static _matchForm(produces, accept)
+  {
+    for (const form of accept)
+    {
+      if (produces.includes(form)) return { produce: form, bridge: null };
+    }
+
+    for (const form of accept)
+    {
+      for (const produced of produces)
+      {
+        const convert = BRIDGES[produced]?.[form];
+        if (convert) return { produce: produced, bridge: { to: form, convert } };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Refuses a file system whose class does not declare its protocols and forms.
+   *
+   * @throws {TypeError} Naming what is missing.
+   */
+  static _assertDeclared(fileSystem)
+  {
+    const { protocols, forms } = fileSystem.constructor;
+    if (!Array.isArray(protocols) || protocols.length === 0)
+    {
+      throw new TypeError("BePaths: a file system's class must declare the protocols it serves (static protocols).");
+    }
+    if (!Array.isArray(forms) || forms.length === 0 || !forms.every(form => KNOWN_FORMS.has(form)))
+    {
+      throw new TypeError(`BePaths: a file system's class must declare the forms it produces from [${[ ...KNOWN_FORMS ].join(", ")}] (static forms).`);
+    }
+  }
+
+  /** A paths-service error with its code and path. */
+  static _pathsError(code, path, message)
+  {
+    const error = new Error(message);
+    error.code = code;
+    error.path = path;
+    return error;
+  }
+
+  /** Canonicalizes a rooted res path without guessing a protocol or root. */
+  static _filterResPath(path)
+  {
+    const normalized = typeof path === "string" ? normalizeResPath(path.toLowerCase()) : null;
+    if (normalized === null || !normalized.startsWith("res:/"))
+    {
+      throw new TypeError("Filter: a rooted res:/ path is required.");
+    }
+    return normalized;
+  }
+
+  /** Compiles the private *, ** and ? glob grammar, escaping every other regex character. */
+  static _filterGlob(pattern)
+  {
+    let source = "^";
+    for (let index = 0; index < pattern.length; index++)
+    {
+      const character = pattern[index];
+      if (character === "*")
+      {
+        if (pattern[index + 1] === "*")
+        {
+          index++;
+          if ((index === 1 || pattern[index - 2] === "/") && pattern[index + 1] === "/")
+          {
+            source += "(?:.*/)?";
+            index++;
+          }
+          else source += ".*";
+        }
+        else source += "[^/]*";
+      }
+      else if (character === "?") source += "[^/]";
+      else source += /[\\^$.*+?()[\]{}|]/u.test(character) ? "\\" + character : character;
+    }
+    return new RegExp(source + "$", "iu");
+  }
 }
 
 CjsSchema.exposure.mapInterface(IBluePaths)(BluePaths);
@@ -450,95 +541,3 @@ CjsSchema.be.define(BluePaths, {
   members: [ { name: "cacheFileExistance", key: "_cacheFileExistance", type: { kind: "boolean" }, edit: { read: true, write: true }, carbon: { member: true } } ]
 });
 
-
-/**
- * The form to ask a file system for: the first accepted form it produces;
- * failing that, the first accepted form a bridge reaches from one it
- * produces; failing both, `null`.
- *
- * @param {string[]} produces The file system's declared forms.
- * @param {string[]} accept The caller's accepted forms, preferred first.
- * @returns {{produce: string, bridge: {to: string, convert: Function}|null}|null} The plan, or `null`.
- */
-function matchForm(produces, accept)
-{
-  for (const form of accept)
-  {
-    if (produces.includes(form)) return { produce: form, bridge: null };
-  }
-
-  for (const form of accept)
-  {
-    for (const produced of produces)
-    {
-      const convert = BRIDGES[produced]?.[form];
-      if (convert) return { produce: produced, bridge: { to: form, convert } };
-    }
-  }
-  return null;
-}
-
-/**
- * Refuses a file system whose class does not declare its protocols and forms.
- *
- * @throws {TypeError} Naming what is missing.
- */
-function assertDeclared(fileSystem)
-{
-  const { protocols, forms } = fileSystem.constructor;
-  if (!Array.isArray(protocols) || protocols.length === 0)
-  {
-    throw new TypeError("BePaths: a file system's class must declare the protocols it serves (static protocols).");
-  }
-  if (!Array.isArray(forms) || forms.length === 0 || !forms.every(form => KNOWN_FORMS.has(form)))
-  {
-    throw new TypeError(`BePaths: a file system's class must declare the forms it produces from [${[ ...KNOWN_FORMS ].join(", ")}] (static forms).`);
-  }
-}
-
-/** A paths-service error with its code and path. */
-function pathsError(code, path, message)
-{
-  const error = new Error(message);
-  error.code = code;
-  error.path = path;
-  return error;
-}
-
-/** Canonicalizes a rooted res path without guessing a protocol or root. */
-function filterResPath(path)
-{
-  const normalized = typeof path === "string" ? normalizeResPath(path.toLowerCase()) : null;
-  if (normalized === null || !normalized.startsWith("res:/"))
-  {
-    throw new TypeError("Filter: a rooted res:/ path is required.");
-  }
-  return normalized;
-}
-
-/** Compiles the private *, ** and ? glob grammar, escaping every other regex character. */
-function filterGlob(pattern)
-{
-  let source = "^";
-  for (let index = 0; index < pattern.length; index++)
-  {
-    const character = pattern[index];
-    if (character === "*")
-    {
-      if (pattern[index + 1] === "*")
-      {
-        index++;
-        if ((index === 1 || pattern[index - 2] === "/") && pattern[index + 1] === "/")
-        {
-          source += "(?:.*/)?";
-          index++;
-        }
-        else source += ".*";
-      }
-      else source += "[^/]*";
-    }
-    else if (character === "?") source += "[^/]";
-    else source += /[\\^$.*+?()[\]{}|]/u.test(character) ? "\\" + character : character;
-  }
-  return new RegExp(source + "$", "iu");
-}

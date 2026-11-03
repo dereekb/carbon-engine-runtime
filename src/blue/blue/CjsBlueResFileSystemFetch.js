@@ -108,7 +108,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
    */
   SetPath(prefix, urlBase)
   {
-    const key = normalizePathPrefix(prefix);
+    const key = CjsBlueResFileSystemFetch._normalizePathPrefix(prefix);
     if (!CjsBlueResFileSystemFetch.protocols.includes(key) || key === "http" || key === "https")
     {
       throw new TypeError(`CjsBlueResFileSystemFetch does not map the protocol "${key}".`);
@@ -140,13 +140,13 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
   /** Whether a protocol has a URL base. */
   HasPath(prefix)
   {
-    return this.paths.has(normalizePathPrefix(prefix));
+    return this.paths.has(CjsBlueResFileSystemFetch._normalizePathPrefix(prefix));
   }
 
   /** A protocol's URL base, or `null`. */
   GetPath(prefix)
   {
-    return this.paths.get(normalizePathPrefix(prefix)) ?? null;
+    return this.paths.get(CjsBlueResFileSystemFetch._normalizePathPrefix(prefix)) ?? null;
   }
 
   /**
@@ -281,7 +281,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
       }
 
       if (!failure.retryable || attempt >= this.retries) throw failure;
-      await wait(this.retryDelayMilliseconds * 2 ** attempt, signal);
+      await CjsBlueResFileSystemFetch._wait(this.retryDelayMilliseconds * 2 ** attempt, signal);
     }
   }
 
@@ -299,7 +299,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
     signal?.addEventListener("abort", onCallerAbort, { once: true });
 
     const timer = this.timeoutMilliseconds > 0
-      ? setTimeout(() => abort(fetchError(path, url, `timed out after ${this.timeoutMilliseconds} ms`, { retryable: true })), this.timeoutMilliseconds)
+      ? setTimeout(() => abort(CjsBlueResFileSystemFetch._fetchError(path, url, `timed out after ${this.timeoutMilliseconds} ms`, { retryable: true })), this.timeoutMilliseconds)
       : null;
 
     try
@@ -314,14 +314,14 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
       {
         throw controller.signal.aborted && controller.signal.reason?.code === "CJS_RESOURCE_FETCH_FAILED"
           ? controller.signal.reason
-          : fetchError(path, url, error?.message ?? String(error), { retryable: true, cause: error });
+          : CjsBlueResFileSystemFetch._fetchError(path, url, error?.message ?? String(error), { retryable: true, cause: error });
       }
 
       // Status.
       if (ABSENT_STATUSES.has(response.status)) return null;
       if (!response.ok)
       {
-        throw fetchError(path, url, `${response.status} ${response.statusText}`, {
+        throw CjsBlueResFileSystemFetch._fetchError(path, url, `${response.status} ${response.statusText}`, {
           retryable: RETRY_STATUSES.has(response.status),
           status: response.status,
           statusText: response.statusText
@@ -389,7 +389,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
       if (this.stallMilliseconds <= 0) return;
       clearTimeout(stall);
       stall = setTimeout(() => controller.abort(
-        fetchError(path, url, `stalled: no data for ${this.stallMilliseconds} ms`, { retryable: true })
+        CjsBlueResFileSystemFetch._fetchError(path, url, `stalled: no data for ${this.stallMilliseconds} ms`, { retryable: true })
       ), this.stallMilliseconds);
     };
 
@@ -407,7 +407,7 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
         {
           throw controller.signal.aborted && controller.signal.reason?.code === "CJS_RESOURCE_FETCH_FAILED"
             ? controller.signal.reason
-            : fetchError(path, url, error?.message ?? String(error), { retryable: true, cause: error });
+            : CjsBlueResFileSystemFetch._fetchError(path, url, error?.message ?? String(error), { retryable: true, cause: error });
         }
         if (chunk.done) break;
         chunks.push(chunk.value);
@@ -430,54 +430,54 @@ export class CjsBlueResFileSystemFetch extends IBlueResFileSystem
     }
     return bytes;
   }
-}
 
-/**
- * A protocol key: lower-case, without a trailing `:` or `:/`.
- *
- * @param {*} value Candidate protocol.
- * @returns {string}
- */
-function normalizePathPrefix(value)
-{
-  const prefix = String(value ?? "").trim().replace(/:\/?$/u, "").toLowerCase();
-  if (!/^[a-z][a-z0-9+.-]*$/u.test(prefix)) throw new TypeError("CjsBlueResFileSystemFetch path prefixes must be URI scheme names.");
-  return prefix;
-}
-
-/**
- * The read failure: `CJS_RESOURCE_FETCH_FAILED`, as the resource manager's
- * worker reported it, with the path and URL.
- */
-function fetchError(path, url, detail, { retryable = false, status, statusText, cause } = {})
-{
-  const error = new Error(`Resource fetch failed: ${detail} (${url})`, cause === undefined ? undefined : { cause });
-  error.code = "CJS_RESOURCE_FETCH_FAILED";
-  error.path = path;
-  error.url = url;
-  error.retryable = retryable;
-  if (status !== undefined) error.status = status;
-  if (statusText !== undefined) error.statusText = statusText;
-  return error;
-}
-
-/** Waits, ending early with the signal's reason when it aborts. */
-function wait(milliseconds, signal)
-{
-  return new Promise((resolve, reject) =>
+  /**
+   * A protocol key: lower-case, without a trailing `:` or `:/`.
+   *
+   * @param {*} value Candidate protocol.
+   * @returns {string}
+   */
+  static _normalizePathPrefix(value)
   {
-    const timer = setTimeout(() =>
+    const prefix = String(value ?? "").trim().replace(/:\/?$/u, "").toLowerCase();
+    if (!/^[a-z][a-z0-9+.-]*$/u.test(prefix)) throw new TypeError("CjsBlueResFileSystemFetch path prefixes must be URI scheme names.");
+    return prefix;
+  }
+
+  /**
+   * The read failure: `CJS_RESOURCE_FETCH_FAILED`, as the resource manager's
+   * worker reported it, with the path and URL.
+   */
+  static _fetchError(path, url, detail, { retryable = false, status, statusText, cause } = {})
+  {
+    const error = new Error(`Resource fetch failed: ${detail} (${url})`, cause === undefined ? undefined : { cause });
+    error.code = "CJS_RESOURCE_FETCH_FAILED";
+    error.path = path;
+    error.url = url;
+    error.retryable = retryable;
+    if (status !== undefined) error.status = status;
+    if (statusText !== undefined) error.statusText = statusText;
+    return error;
+  }
+
+  /** Waits, ending early with the signal's reason when it aborts. */
+  static _wait(milliseconds, signal)
+  {
+    return new Promise((resolve, reject) =>
     {
-      signal?.removeEventListener("abort", onAbort);
-      resolve();
-    }, milliseconds);
-    const onAbort = () =>
-    {
-      clearTimeout(timer);
-      reject(signal.reason);
-    };
-    signal?.addEventListener("abort", onAbort, { once: true });
-  });
+      const timer = setTimeout(() =>
+      {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      }, milliseconds);
+      const onAbort = () =>
+      {
+        clearTimeout(timer);
+        reject(signal.reason);
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  }
 }
 
 CjsSchema.meta.define(CjsBlueResFileSystemFetch, {

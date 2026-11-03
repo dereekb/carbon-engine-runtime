@@ -17,12 +17,6 @@ import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
 import { BlueResFileSystemForm, IBlueResFileSystem } from "./IBlueResFileSystem.js";
 
-/** Throws the "no disk" error for one member. */
-function noDisk(member)
-{
-  throw new Error(`BlueResFileSystemLocal.${member}: a host must implement the local file system; a browser has no disk.`);
-}
-
 /**
  * `BlueResFileSystemLocal` - the local disk as a res file system. Every member
  * throws until a host extends the class; see the top of this file.
@@ -40,21 +34,21 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    *
    * @notImplemented
    */
-  FileExists(_filename) { return noDisk("FileExists"); }
+  FileExists(_filename) { return BlueResFileSystemLocal._noDisk("FileExists"); }
 
   /**
    * `IsDirectory` - whether a search path holds a directory at the path.
    *
    * @notImplemented
    */
-  IsDirectory(_dir) { return noDisk("IsDirectory"); }
+  IsDirectory(_dir) { return BlueResFileSystemLocal._noDisk("IsDirectory"); }
 
   /**
    * `GetDirectoryContents` - adds the entries every search path holds for the directory.
    *
    * @notImplemented
    */
-  GetDirectoryContents(_dir, _results) { return noDisk("GetDirectoryContents"); }
+  GetDirectoryContents(_dir, _results) { return BlueResFileSystemLocal._noDisk("GetDirectoryContents"); }
 
   /**
    * `GetStreamFromPathW` - the file's bytes from the first search path that holds it.
@@ -62,7 +56,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @notImplemented
    * @renamed GetStreamFromPathW
    */
-  async GetStreamFromPath(_resPath, _request) { return noDisk("GetStreamFromPath"); }
+  async GetStreamFromPath(_resPath, _request) { return BlueResFileSystemLocal._noDisk("GetStreamFromPath"); }
 
   /**
    * `ResolvePathW` - the disk path of the file in the first search path that
@@ -75,7 +69,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @param {string} _path Res path.
    * @returns {string|null} The absolute disk path, or `null`.
    */
-  ResolvePathW(_path) { return noDisk("ResolvePathW"); }
+  ResolvePathW(_path) { return BlueResFileSystemLocal._noDisk("ResolvePathW"); }
 
   /**
    * `ResolvePath` - the disk path of the file, or an empty string when
@@ -97,14 +91,14 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    *
    * @notImplemented
    */
-  Initialize(_initialPath) { return noDisk("Initialize"); }
+  Initialize(_initialPath) { return BlueResFileSystemLocal._noDisk("Initialize"); }
 
   /**
    * `InitializeStdAppPaths` - ensures the standard app paths exist, with defaults.
    *
    * @notImplemented
    */
-  InitializeStdAppPaths() { return noDisk("InitializeStdAppPaths"); }
+  InitializeStdAppPaths() { return BlueResFileSystemLocal._noDisk("InitializeStdAppPaths"); }
 
   /**
    * `SetSearchPathW` - sets a protocol's search path: a semicolon-separated
@@ -134,7 +128,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @cjs
    * @notSupported
    */
-  SetSearchPath(_key, _value) { return noDisk("SetSearchPath"); }
+  SetSearchPath(_key, _value) { return BlueResFileSystemLocal._noDisk("SetSearchPath"); }
 
   /**
    * `GetSearchPathW` - a protocol's search path as set.
@@ -162,14 +156,14 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @cjs
    * @notSupported
    */
-  GetSearchPath(_key) { return noDisk("GetSearchPath"); }
+  GetSearchPath(_key) { return BlueResFileSystemLocal._noDisk("GetSearchPath"); }
 
   /**
    * `ClearSearchPaths` - removes every search path.
    *
    * @notImplemented
    */
-  ClearSearchPaths() { return noDisk("ClearSearchPaths"); }
+  ClearSearchPaths() { return BlueResFileSystemLocal._noDisk("ClearSearchPaths"); }
 
   /**
    * `ResolvePathForWritingW` - the first disk path a file could be written to,
@@ -196,7 +190,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @cjs
    * @notSupported
    */
-  ResolvePathForWriting(_path) { return noDisk("ResolvePathForWriting"); }
+  ResolvePathForWriting(_path) { return BlueResFileSystemLocal._noDisk("ResolvePathForWriting"); }
 
   /**
    * `ResolvePathToRootW` - a disk path back to a res path under the given
@@ -228,7 +222,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @cjs
    * @notSupported
    */
-  ResolvePathToRoot(_root, _path) { return noDisk("ResolvePathToRoot"); }
+  ResolvePathToRoot(_root, _path) { return BlueResFileSystemLocal._noDisk("ResolvePathToRoot"); }
 
   /**
    * `GetExpandedSearchPaths()` - every protocol's expanded search path.
@@ -236,7 +230,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @notImplemented
    * @returns {Map<string, string[]>} Expanded folders by lower-case protocol.
    */
-  GetExpandedSearchPaths() { return noDisk("GetExpandedSearchPaths"); }
+  GetExpandedSearchPaths() { return BlueResFileSystemLocal._noDisk("GetExpandedSearchPaths"); }
 
   /**
    * `GetExpandedSearchPaths(key, paths)` - one protocol's expanded search
@@ -247,21 +241,21 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    * @param {string} _key Protocol, compared lower-case.
    * @returns {string[]} The protocol's expanded folders; empty when it has none.
    */
-  GetExpandedSearchPaths__Key(_key) { return noDisk("GetExpandedSearchPaths__Key"); }
+  GetExpandedSearchPaths__Key(_key) { return BlueResFileSystemLocal._noDisk("GetExpandedSearchPaths__Key"); }
 
   /**
    * `LogPaths` - writes the search paths to the log.
    *
    * @notImplemented
    */
-  LogPaths() { return noDisk("LogPaths"); }
+  LogPaths() { return BlueResFileSystemLocal._noDisk("LogPaths"); }
 
   /**
    * `GetInitialWorkingDirectory` - the working directory when the file system was initialized.
    *
    * @notImplemented
    */
-  GetInitialWorkingDirectory() { return noDisk("GetInitialWorkingDirectory"); }
+  GetInitialWorkingDirectory() { return BlueResFileSystemLocal._noDisk("GetInitialWorkingDirectory"); }
 
   /**
    * initialWorkingDirectory (MAP_PROPERTY_READONLY): Carbon's property over GetInitialWorkingDirectory, which the macro calls.
@@ -279,7 +273,7 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    *
    * @notImplemented
    */
-  GetAllSearchPaths() { return noDisk("GetAllSearchPaths"); }
+  GetAllSearchPaths() { return BlueResFileSystemLocal._noDisk("GetAllSearchPaths"); }
 
   /**
    * `GetExpandedSearchPathsAsDict` (Blue name `GetExpandedSearchPaths`) -
@@ -299,7 +293,13 @@ export class BlueResFileSystemLocal extends IBlueResFileSystem
    *
    * @notImplemented
    */
-  ListDirFromScript(_dir) { return noDisk("ListDirFromScript"); }
+  ListDirFromScript(_dir) { return BlueResFileSystemLocal._noDisk("ListDirFromScript"); }
+
+  /** Throws the "no disk" error for one member. */
+  static _noDisk(member)
+  {
+    throw new Error(`BlueResFileSystemLocal.${member}: a host must implement the local file system; a browser has no disk.`);
+  }
 }
 
 CjsSchema.exposure.mapInterface(IBlueResFileSystem)(BlueResFileSystemLocal);

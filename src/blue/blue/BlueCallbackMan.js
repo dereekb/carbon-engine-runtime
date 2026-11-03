@@ -50,31 +50,11 @@ const CCP_THREAD_PRIORITY_HIGHEST = 2;
 /** The most threads `SetThreadCount` allows (CallbackMan.cpp:86-90). */
 const MAX_THREAD_COUNT = 32;
 
-/**
- * Carbon's `CcpGetTimestamp()` (core/CcpTime.cpp:11-23), the steady counter the
- * queue stamps and measures against (CallbackMan.cpp:123, :408-411), as uint64
- * nanosecond ticks; its frequency, `CcpGetTimestampFrequency()`, is 1e9 here.
- * Adapted: the counter is Blue's host monotonic clock, `BlueOS.Monotonic()`
- * (milliseconds), which every steady-clock port reads (blue-clock-epoch).
- */
-function timestampTicks()
-{
-  return BigInt.asUintN(64, BigInt(Math.trunc(BlueOS.Monotonic() * 1e6)));
-}
-
 /** Carbon's `CallbackMan` log channel (CallbackMan.cpp:10). */
 const CALLBACKMAN_CHANNEL = CcpLog.CCP_LOG_DEFINE_CHANNEL("CallbackMan", "blue");
 
 /** Gives each manager a serial, so its entries' saga ids never meet another manager's. */
 let nextManagerSerial = 1;
-
-/** The rejection a cancelled entry's promise gets. */
-function createCancelledError(id)
-{
-  const error = new Error(`BlueCallbackMan: entry ${id} was cancelled.`);
-  error.name = "AbortError";
-  return error;
-}
 
 /** `BlueCallbackMan` - a callback queue run by its own workers or by `Update`. */
 export class BlueCallbackMan extends IBlueCallbackMan
@@ -309,7 +289,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
       name,
       context,
       transfer,
-      timeStamp: timestampTicks(),
+      timeStamp: BlueCallbackMan._timestampTicks(),
       fenceMask: 0,
       completion,
       label: undefined
@@ -357,13 +337,13 @@ export class BlueCallbackMan extends IBlueCallbackMan
       if (pending)
       {
         td.worker.postMessage({ kind: "cancel", id });
-        pending.completion.reject(createCancelledError(id));
+        pending.completion.reject(BlueCallbackMan._createCancelledError(id));
       }
       const local = this._localEntries.get(id);
       if (local)
       {
         local.controller.abort();
-        local.completion.reject(createCancelledError(id));
+        local.completion.reject(BlueCallbackMan._createCancelledError(id));
       }
       return td.inProgress ? td.inProgress.then(() => {}, () => {}) : Promise.resolve();
     }
@@ -371,7 +351,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
     const entry = this._RemoveFromQueue(this._urgentQueue, id)
       || this._RemoveFromQueue(this._queue, id)
       || this._RemoveFromQueue(this._fenceQueue, id);
-    if (entry && entry.completion) entry.completion.reject(createCancelledError(id));
+    if (entry && entry.completion) entry.completion.reject(BlueCallbackMan._createCancelledError(id));
     return Promise.resolve();
   }
 
@@ -554,7 +534,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
         if (entry.name === null) continue;
         queue.splice(i, 1);
         --this._size;
-        entry.completion.reject(createCancelledError(entry.id));
+        entry.completion.reject(BlueCallbackMan._createCancelledError(entry.id));
       }
     }
   }
@@ -710,7 +690,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
     const started = BlueOS.Monotonic();
     const threadName = this._isRunningOwnThreads ? td.name : BlueThreadMonitor.MAIN_THREAD;
     this._Report(entry.id, entry, "started",
-      { kind, thread: threadName, waited: Number(timestampTicks() - entry.timeStamp) / 1e9 },
+      { kind, thread: threadName, waited: Number(BlueCallbackMan._timestampTicks() - entry.timeStamp) / 1e9 },
       "Processing %s entry %d on thread %d", kind, entry.id, td.threadIndex);
 
     // The thread works for the entry (CallbackMan.cpp:322, ScopedThreadStatus).
@@ -748,7 +728,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
    */
   _ProcessEntry(td, entry, processedFenceEntry, thread, previousStatus, started, threadName)
   {
-    const delta = timestampTicks() - entry.timeStamp;
+    const delta = BlueCallbackMan._timestampTicks() - entry.timeStamp;
     if (delta > 0n)
     {
       if (delta > this._timeInQueueMax) this._timeInQueueMax = delta;
@@ -1211,11 +1191,30 @@ export class BlueCallbackMan extends IBlueCallbackMan
 
   /** Carbon BlueCallbackMan::ThreadData (private, CallbackMan.h:124-148). */
   static ThreadData = BlueCallbackManThreadData;
+
+  /**
+   * Carbon's `CcpGetTimestamp()` (core/CcpTime.cpp:11-23), the steady counter the
+   * queue stamps and measures against (CallbackMan.cpp:123, :408-411), as uint64
+   * nanosecond ticks; its frequency, `CcpGetTimestampFrequency()`, is 1e9 here.
+   * Adapted: the counter is Blue's host monotonic clock, `BlueOS.Monotonic()`
+   * (milliseconds), which every steady-clock port reads (blue-clock-epoch).
+   */
+  static _timestampTicks()
+  {
+    return BigInt.asUintN(64, BigInt(Math.trunc(BlueOS.Monotonic() * 1e6)));
+  }
+
+  /** The rejection a cancelled entry's promise gets. */
+  static _createCancelledError(id)
+  {
+    const error = new Error(`BlueCallbackMan: entry ${id} was cancelled.`);
+    error.name = "AbortError";
+    return error;
+  }
 }
 
 CjsSchema.exposure.mapInterface(IBlueCallbackMan)(BlueCallbackMan);
 be.define("BlueCallbackMan")(BlueCallbackMan);
-
 
 /**
  * `BeCallbackMan` (ResourceLoading.cpp:24, :81-91) - the global background

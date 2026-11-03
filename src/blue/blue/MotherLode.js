@@ -24,8 +24,6 @@ const MEGABYTE = 1024 * 1024;
  */
 const DEFAULT_CACHE_SIZE = 256 * MEGABYTE;
 
-
-
 /**
  * `BlueClasses.BLUEQIOPT.BEQI_SILENT`, written out because importing
  * BlueClasses reaches CjsBlue, which builds the resMan that owns this registry.
@@ -270,12 +268,12 @@ export class MotherLode
   {
     if (!this._active)
     {
-      throw motherLodeInactiveError();
+      throw MotherLode._motherLodeInactiveError();
     }
 
-    key = normalizeResolvedKey(key);
-    const options = normalizeOptions(insertOptions, "insert");
-    assertResource(resource);
+    key = MotherLode._normalizeResolvedKey(key);
+    const options = MotherLode._normalizeOptions(insertOptions, "insert");
+    MotherLode._assertResource(resource);
 
     const existing = this._entries.get(key) || null;
     if (existing && existing.resource === resource)
@@ -284,11 +282,11 @@ export class MotherLode
       this._UpdateRecord(updated, options);
       this._TouchRecord(updated, options);
       Object.assign(existing, updated);
-      return createInsertResult(key, resource, false, false, null);
+      return MotherLode._createInsertResult(key, resource, false, false, null);
     }
     if (existing && options.replace === false)
     {
-      return createInsertResult(key, existing.resource, false, false, null);
+      return MotherLode._createInsertResult(key, existing.resource, false, false, null);
     }
 
     const record = this._CreateRecord(key, resource, options);
@@ -299,9 +297,8 @@ export class MotherLode
     }
     this._entries.set(key, record);
 
-    return createInsertResult(key, resource, true, Boolean(existing), existing?.resource || null);
+    return MotherLode._createInsertResult(key, resource, true, Boolean(existing), existing?.resource || null);
   }
-
 
   /**
    * Test a canonical identity without loading or renewing its activity.
@@ -315,7 +312,7 @@ export class MotherLode
    */
   HasKey(key, variant = undefined)
   {
-    return this._entries.has(normalizeLookupKey(key, variant));
+    return this._entries.has(MotherLode._normalizeLookupKey(key, variant));
   }
 
   /**
@@ -330,7 +327,7 @@ export class MotherLode
    */
   Lookup(key, variant = undefined)
   {
-    return this._entries.get(normalizeLookupKey(key, variant))?.resource || null;
+    return this._entries.get(MotherLode._normalizeLookupKey(key, variant))?.resource || null;
   }
 
   /**
@@ -348,7 +345,7 @@ export class MotherLode
    */
   Delete(key, variantOrOptions = undefined, maybeOptions = undefined)
   {
-    const { resolvedKey, options } = normalizeDeleteArguments(key, variantOrOptions, maybeOptions);
+    const { resolvedKey, options } = MotherLode._normalizeDeleteArguments(key, variantOrOptions, maybeOptions);
     const record = this._entries.get(resolvedKey);
     if (!record) return false;
 
@@ -369,7 +366,7 @@ export class MotherLode
    */
   DeleteAllVariants(path, options = {})
   {
-    const normalizedPath = normalizePath(path);
+    const normalizedPath = MotherLode._normalizePath(path);
     const prefix = `${normalizedPath}\u0000`;
     const records = [];
 
@@ -440,10 +437,10 @@ export class MotherLode
    */
   KeepAlive(key, variantOrOptions = undefined, maybeOptions = undefined)
   {
-    const { resolvedKey, options } = normalizeActivityArguments(key, variantOrOptions, maybeOptions);
+    const { resolvedKey, options } = MotherLode._normalizeActivityArguments(key, variantOrOptions, maybeOptions);
     const record = this._entries.get(resolvedKey);
     if (!record) return null;
-    Uncache(record);
+    MotherLode._Uncache(record);
     this._TouchRecord(record, options);
     return record.resource;
   }
@@ -477,7 +474,7 @@ export class MotherLode
       const renewed = resource ? resource._lastUsedTime : undefined;
       if (typeof renewed !== "number" || !(renewed > record.lastUsedTime)) continue;
       record.lastUsedTime = renewed;
-      Uncache(record);
+      MotherLode._Uncache(record);
     }
   }
 
@@ -499,7 +496,7 @@ export class MotherLode
   {
     const record = this._entries.get(key);
     if (!record) return this.KeepAlive(key, options);
-    Uncache(record);
+    MotherLode._Uncache(record);
     this._TouchRecord(record, options ?? EMPTY_ACTIVITY);
     return record.resource;
   }
@@ -530,10 +527,10 @@ export class MotherLode
    */
   KeepPayloadAlive(key, variantOrOptions = undefined, maybeOptions = undefined)
   {
-    const { resolvedKey, options } = normalizeActivityArguments(key, variantOrOptions, maybeOptions);
+    const { resolvedKey, options } = MotherLode._normalizeActivityArguments(key, variantOrOptions, maybeOptions);
     const record = this._entries.get(resolvedKey);
     if (!record) return null;
-    Uncache(record);
+    MotherLode._Uncache(record);
     this._TouchRecord(record, options);
     record.payloadLastUsedFrame = record.lastUsedFrame;
     record.payloadLastUsedTime = record.lastUsedTime;
@@ -551,10 +548,10 @@ export class MotherLode
    */
   Lock(key, variant = undefined)
   {
-    const record = this._entries.get(normalizeLookupKey(key, variant));
+    const record = this._entries.get(MotherLode._normalizeLookupKey(key, variant));
     if (!record) return 0;
     record.lockCount += 1;
-    Uncache(record);
+    MotherLode._Uncache(record);
     this._TouchRecord(record, {});
     return record.lockCount;
   }
@@ -570,7 +567,7 @@ export class MotherLode
    */
   Unlock(key, variant = undefined)
   {
-    const record = this._entries.get(normalizeLookupKey(key, variant));
+    const record = this._entries.get(MotherLode._normalizeLookupKey(key, variant));
     if (!record) return 0;
     if (record.lockCount > 0) record.lockCount -= 1;
     return record.lockCount;
@@ -608,7 +605,7 @@ export class MotherLode
   PurgeInactive(options = {})
   {
     this._SettleRenewals();
-    const policy = normalizePurgeOptions(options, this._activityFrame, this._now);
+    const policy = MotherLode._normalizePurgeOptions(options, this._activityFrame, this._now);
     this._activityFrame = Math.max(this._activityFrame, policy.frame);
 
     const purgedKeys = [];
@@ -626,7 +623,7 @@ export class MotherLode
       }
       if (record.cached) continue;
 
-      if (isInactive(
+      if (MotherLode._isInactive(
         record.lastUsedFrame,
         record.lastUsedTime,
         policy.frame,
@@ -642,7 +639,7 @@ export class MotherLode
         }
         catch (cause)
         {
-          errors.push(motherLodeCleanupError("cache", key, record.resource, cause));
+          errors.push(MotherLode._motherLodeCleanupError("cache", key, record.resource, cause));
           continue;
         }
         if (admitted)
@@ -665,18 +662,18 @@ export class MotherLode
         purgedKeys.push(key);
         try
         {
-          if (CastResource(record.resource)) blueService.resMan._MarkResourcePurged(record.resource);
+          if (MotherLode._CastResource(record.resource)) blueService.resMan._MarkResourcePurged(record.resource);
         }
         catch (cause)
         {
-          errors.push(motherLodeCleanupError("mark purged", key, record.resource, cause));
+          errors.push(MotherLode._motherLodeCleanupError("mark purged", key, record.resource, cause));
         }
         continue;
       }
 
       if (policy.releasePayload !== false
-        && hasOwnedPayload(record.resource)
-        && isInactive(
+        && MotherLode._hasOwnedPayload(record.resource)
+        && MotherLode._isInactive(
           record.payloadLastUsedFrame,
           record.payloadLastUsedTime,
           policy.frame,
@@ -692,12 +689,12 @@ export class MotherLode
         }
         catch (cause)
         {
-          errors.push(motherLodeCleanupError("release inactive payload", key, record.resource, cause));
+          errors.push(MotherLode._motherLodeCleanupError("release inactive payload", key, record.resource, cause));
         }
       }
     }
 
-    const result = createPurgeResult(policy.frame, policy.time, purgedKeys, payloadKeys, cachedKeys, locked);
+    const result = MotherLode._createPurgeResult(policy.frame, policy.time, purgedKeys, payloadKeys, cachedKeys, locked);
     if (errors.length)
     {
       const error = new AggregateError(errors, "MotherLode inactivity purge failed.");
@@ -733,7 +730,7 @@ export class MotherLode
    */
   TrimCache(options = {})
   {
-    const policy = normalizeOptions(options, "cache trim");
+    const policy = MotherLode._normalizeOptions(options, "cache trim");
     const evictedKeys = [];
     const failedKeys = [];
     const errors = [];
@@ -748,13 +745,13 @@ export class MotherLode
       let size;
       try
       {
-        const cacheable = QueryCacheable(record.resource);
+        const cacheable = MotherLode._QueryCacheable(record.resource);
         if (!cacheable.IsMemoryUsageKnown()) continue;
         size = this._AcceptedSize(cacheable.GetMemoryUsage());
       }
       catch (cause)
       {
-        errors.push(motherLodeCleanupError("size cached entry", record.key, record.resource, cause));
+        errors.push(MotherLode._motherLodeCleanupError("size cached entry", record.key, record.resource, cause));
         failedKeys.push(record.key);
         continue;
       }
@@ -794,7 +791,7 @@ export class MotherLode
     }
 
     const afterBytes = this._GetCacheBytes();
-    const result = createCacheTrimResult(
+    const result = MotherLode._createCacheTrimResult(
       this._cacheSize,
       beforeBytes,
       afterBytes,
@@ -827,7 +824,7 @@ export class MotherLode
   _WeakRefNotify(record)
   {
     if (!record.cacheable || !this._cacheSize) return false;
-    const cacheable = QueryCacheable(record.resource);
+    const cacheable = MotherLode._QueryCacheable(record.resource);
     if (!cacheable) return false;
 
     if (cacheable.IsMemoryUsageKnown())
@@ -908,11 +905,11 @@ export class MotherLode
 
     try
     {
-      if (CastResource(record.resource)) blueService.resMan._MarkResourcePurged(record.resource);
+      if (MotherLode._CastResource(record.resource)) blueService.resMan._MarkResourcePurged(record.resource);
     }
     catch (cause)
     {
-      errors.push(motherLodeCleanupError("mark cache eviction purged", record.key, record.resource, cause));
+      errors.push(MotherLode._motherLodeCleanupError("mark cache eviction purged", record.key, record.resource, cause));
       failedKeys.push(record.key);
     }
     return true;
@@ -934,7 +931,7 @@ export class MotherLode
   SetCacheSize(bytes, options = {})
   {
     assertNonNegativeInteger(bytes, "MotherLode cache size");
-    const policy = normalizeOptions(options, "set cache size");
+    const policy = MotherLode._normalizeOptions(options, "set cache size");
     this._cacheSize = bytes;
     this.TrimCache(policy);
     return this;
@@ -1011,12 +1008,12 @@ export class MotherLode
         cacheBytes += record.bytes;
       }
       if (record.lockCount > 0) locked += 1;
-      if (hasOwnedPayload(record.resource)) payloads += 1;
+      if (MotherLode._hasOwnedPayload(record.resource)) payloads += 1;
 
-      const path = CastResource(record.resource)?.GetPath() || getKeyPath(record.key);
+      const path = MotherLode._CastResource(record.resource)?.GetPath() || MotherLode._getKeyPath(record.key);
       if (path) paths.add(path);
 
-      const state = CastResource(record.resource) ? blueService.resMan.GetResourceStatus(record.resource).phase : "unknown";
+      const state = MotherLode._CastResource(record.resource) ? blueService.resMan.GetResourceStatus(record.resource).phase : "unknown";
       states[state] = (states[state] || 0) + 1;
     }
 
@@ -1126,7 +1123,7 @@ export class MotherLode
   _UpdateRecord(record, options)
   {
     if (options.cacheable !== undefined) record.cacheable = Boolean(options.cacheable);
-    if (!record.cacheable || record.lockCount > 0) Uncache(record);
+    if (!record.cacheable || record.lockCount > 0) MotherLode._Uncache(record);
     return record;
   }
 
@@ -1184,11 +1181,11 @@ export class MotherLode
   {
     try
     {
-      cleanupOwnedResource(record.resource, options);
+      MotherLode._cleanupOwnedResource(record.resource, options);
     }
     catch (cause)
     {
-      throw motherLodeCleanupError(operation, record.key, record.resource, cause);
+      throw MotherLode._motherLodeCleanupError(operation, record.key, record.resource, cause);
     }
   }
 
@@ -1209,16 +1206,313 @@ export class MotherLode
     {
       try
       {
-        cleanupOwnedResource(record.resource, options);
+        MotherLode._cleanupOwnedResource(record.resource, options);
       }
       catch (cause)
       {
-        errors.push(motherLodeCleanupError(operation, record.key, record.resource, cause));
+        errors.push(MotherLode._motherLodeCleanupError(operation, record.key, record.resource, cause));
       }
     }
     if (errors.length) throw new AggregateError(errors, "MotherLode " + operation + " cleanup failed.");
   }
 
+  static _normalizeDeleteArguments(key, variantOrOptions, maybeOptions)
+  {
+    if (variantOrOptions && typeof variantOrOptions === "object" && !Array.isArray(variantOrOptions))
+    {
+      return {
+        resolvedKey: MotherLode._normalizeResolvedKey(key),
+        options: MotherLode._normalizeOptions(variantOrOptions, "delete")
+      };
+    }
+    return {
+      resolvedKey: MotherLode._normalizeLookupKey(key, variantOrOptions),
+      options: MotherLode._normalizeOptions(maybeOptions || {}, "delete")
+    };
+  }
+
+  static _normalizeActivityArguments(key, variantOrOptions, maybeOptions)
+  {
+    if (variantOrOptions && typeof variantOrOptions === "object" && !Array.isArray(variantOrOptions))
+    {
+      return {
+        resolvedKey: MotherLode._normalizeResolvedKey(key),
+        options: MotherLode._normalizeOptions(variantOrOptions, "activity")
+      };
+    }
+    return {
+      resolvedKey: MotherLode._normalizeLookupKey(key, variantOrOptions),
+      options: MotherLode._normalizeOptions(maybeOptions || {}, "activity")
+    };
+  }
+
+  static _normalizeLookupKey(key, variant)
+  {
+    return variant === undefined ? MotherLode._normalizeResolvedKey(key) : getMotherLodeKey(key, variant);
+  }
+
+  static _normalizeResolvedKey(key)
+  {
+    if (typeof key !== "string" || !key)
+    {
+      throw new TypeError("MotherLode requires a canonical string key.");
+    }
+    const separator = key.indexOf("\u0000");
+    return separator === -1
+      ? getMotherLodeKey(key)
+      : getMotherLodeKey(key.slice(0, separator), key.slice(separator + 1));
+  }
+
+  static _normalizePath(path)
+  {
+    const normalizedPath = normalizeResourcePath(path);
+    if (!normalizedPath) throw new TypeError("MotherLode requires a resource path.");
+    return normalizedPath;
+  }
+
+  /**
+   * `Value::Uncache` (MotherLode.h:139): the entry is back in use, and its size
+   * no longer counts against the cache.
+   *
+   * @param {object} record Internal ownership record.
+   * @returns {void}
+   */
+  static _Uncache(record)
+  {
+    record.cached = false;
+    record.pending = false;
+    record.bytes = 0;
+    record.cacheSequence = 0;
+  }
+
+  /**
+   * Carbon's `QueryInterface(GetICacheableIID(), ..., BEQI_SILENT)`
+   * (MotherLode.cpp:340): the resource when its class maps `ICacheable`.
+   *
+   * @param {object|Function} resource Registered resource.
+   * @returns {ICacheable|null} The resource, or null.
+   */
+  static _QueryCacheable(resource)
+  {
+    return IRoot.prototype.QueryInterface.call(resource, ICacheable, BEQI_SILENT);
+  }
+
+  static _normalizeOptions(options, operation)
+  {
+    if (options === null || options === undefined) return {};
+    if (!options || typeof options !== "object" || Array.isArray(options))
+    {
+      throw new TypeError(`MotherLode ${operation} options must be an object.`);
+    }
+    return options;
+  }
+
+  /**
+   * Normalize one explicit inactivity sweep without mutating registry entries.
+   *
+   * @param {CjsMotherLodePurgeOptions} options Caller policy.
+   * @param {number} activityFrame Current registry frame.
+   * @param {() => number} now Registry clock.
+   * @returns {CjsMotherLodePurgeOptions & {frame: number, time: number}} Validated sweep policy.
+   */
+  static _normalizePurgeOptions(options, activityFrame, now)
+  {
+    const policy = MotherLode._normalizeOptions(options, "purge");
+    const frame = policy.frame === undefined ? activityFrame + 1 : policy.frame;
+    assertNonNegativeInteger(frame, "MotherLode purge frame");
+
+    const time = policy.time === undefined ? now() : policy.time;
+    assertNonNegativeNumber(time, "MotherLode purge time");
+
+    for (const name of [ "maxIdleFrames", "payloadMaxIdleFrames" ])
+    {
+      if (policy[name] !== undefined)
+      {
+        assertNonNegativeInteger(policy[name], `MotherLode ${name}`);
+      }
+    }
+    for (const name of [ "maxIdleMilliseconds", "payloadMaxIdleMilliseconds" ])
+    {
+      if (policy[name] !== undefined)
+      {
+        assertNonNegativeNumber(policy[name], `MotherLode ${name}`);
+      }
+    }
+
+    return { ...policy, frame, time };
+  }
+
+  /**
+   * Test whether either configured frame/time limit has elapsed.
+   *
+   * @param {number} lastFrame Last explicit lease frame.
+   * @param {number} lastTime Last explicit lease timestamp.
+   * @param {number} frame Current sweep frame.
+   * @param {number} time Current sweep timestamp.
+   * @param {number|undefined} maxFrames Optional frame limit.
+   * @param {number|undefined} maxMilliseconds Optional millisecond limit.
+   * @returns {boolean} Whether at least one configured limit has elapsed.
+   */
+  static _isInactive(lastFrame, lastTime, frame, time, maxFrames, maxMilliseconds)
+  {
+    const frameExpired = maxFrames !== undefined
+      && frame >= lastFrame
+      && frame - lastFrame >= maxFrames;
+    const timeExpired = maxMilliseconds !== undefined
+      && time >= lastTime
+      && time - lastTime >= maxMilliseconds;
+    return frameExpired || timeExpired;
+  }
+
+  /**
+   * The registered object as a {@link BlueAsyncRes}, or null. Carbon's registry
+   * holds any `IRoot` (IMotherLode.h:60) and reaches a narrower interface by
+   * cast (MotherLode.cpp:77, 340); payload, adapter and lifecycle ownership are
+   * BlueAsyncRes's, so they are reached the same way.
+   *
+   * @param {object|Function} resource Registered object.
+   * @returns {BlueAsyncRes|null} The resource, or null.
+   */
+  static _CastResource(resource)
+  {
+    return CjsSchema.cast(resource, IBlueResource);
+  }
+
+  /**
+   * Return whether a resource currently holds a releasable CPU payload.
+   *
+   * @param {object|Function} resource Candidate resource.
+   * @returns {boolean} Whether the manager retains releasable plain or object data.
+   */
+  static _hasOwnedPayload(resource)
+  {
+    const owned = MotherLode._CastResource(resource);
+    return owned !== null && blueService.resMan.HasResourcePayload(owned);
+  }
+
+  /** Clean an owned native resource through the global manager. */
+  static _cleanupOwnedResource(resource, options)
+  {
+    if (options.cleanup === false) return;
+    if (typeof options.cleanup === "function")
+    {
+      options.cleanup(resource);
+      return;
+    }
+    if (MotherLode._CastResource(resource)) blueService.resMan._CleanupResource(resource, options);
+  }
+
+  static _assertResource(resource)
+  {
+    if ((typeof resource !== "object" && typeof resource !== "function") || resource === null)
+    {
+      throw new TypeError("MotherLode requires a resource object.");
+    }
+  }
+
+  /**
+   * Create one Insert result.
+   *
+   * @param {string} key Canonical resolved identity key.
+   * @param {object|Function} resource Canonical owner after the insert.
+   * @param {boolean} inserted Whether the supplied resource was published.
+   * @param {boolean} replaced Whether a previous owner was displaced.
+   * @param {object|Function|null} displaced Former owner when replaced.
+   * @returns {CjsMotherLodeInsertResult} Canonical ownership result.
+   */
+  static _createInsertResult(key, resource, inserted, replaced, displaced)
+  {
+    return { key, resource, inserted, replaced, displaced };
+  }
+
+  /**
+   * Create one exact-owner compare-and-swap result.
+   *
+   * @param {string} key Canonical resolved identity key.
+   * @param {boolean} committed Whether publication replaced the expected owner.
+   * @param {object|Function|null} resource Canonical owner after the attempt.
+   * @param {object|Function|null} displaced Former owner when committed.
+   * @returns {CjsMotherLodeConditionalReplaceResult} Replacement result.
+   */
+  static _createConditionalReplaceResult(key, committed, resource, displaced)
+  {
+    return { key, committed, resource, displaced };
+  }
+
+  /**
+   * Create one inactivity-sweep result and its affected-key snapshots.
+   *
+   * @param {number} frame Sweep frame.
+   * @param {number} time Sweep timestamp.
+   * @param {string[]} purgedKeys Removed canonical keys.
+   * @param {string[]} payloadKeys Keys whose payloads were released.
+   * @param {string[]} cachedKeys Keys that entered the cache instead of being purged.
+   * @param {number} locked Number of locked entries skipped.
+   * @returns {CjsMotherLodePurgeResult} Sweep result.
+   */
+  static _createPurgeResult(frame, time, purgedKeys, payloadKeys, cachedKeys, locked)
+  {
+    return {
+      frame,
+      time,
+      purged: purgedKeys.length,
+      payloadsReleased: payloadKeys.length,
+      cached: cachedKeys.length,
+      locked,
+      purgedKeys: purgedKeys,
+      payloadKeys: payloadKeys,
+      cachedKeys: cachedKeys
+    };
+  }
+
+  /**
+   * Create one byte-budget housekeeping result and its affected-key snapshots.
+   *
+   * @param {number} cacheSize Configured cache budget.
+   * @param {number} beforeBytes Cached bytes before housekeeping.
+   * @param {number} afterBytes Cached bytes after housekeeping.
+   * @param {number} evictedBytes Successfully removed cached bytes.
+   * @param {string[]} evictedKeys Successfully removed canonical identities.
+   * @param {string[]} failedKeys Candidate identities that reported failure.
+   * @returns {CjsMotherLodeCacheTrimResult} Cache-housekeeping result.
+   */
+  static _createCacheTrimResult(cacheSize, beforeBytes, afterBytes, evictedBytes, evictedKeys, failedKeys)
+  {
+    return {
+      cacheSize,
+      beforeBytes,
+      afterBytes,
+      evictedBytes,
+      overBudget: afterBytes > cacheSize,
+      evicted: evictedKeys.length,
+      failed: failedKeys.length,
+      evictedKeys: evictedKeys,
+      failedKeys: failedKeys
+    };
+  }
+
+  static _motherLodeInactiveError()
+  {
+    const error = new Error("MotherLode is shut down. Call Startup() before inserting resources.");
+    error.code = "CJS_MOTHERLODE_INACTIVE";
+    return error;
+  }
+
+  static _motherLodeCleanupError(operation, key, resource, cause)
+  {
+    const error = new Error(`MotherLode ${operation} cleanup failed for ${key}.`, { cause });
+    error.code = "CJS_MOTHERLODE_CLEANUP_FAILED";
+    error.operation = operation;
+    error.key = key;
+    error.resource = resource;
+    return error;
+  }
+
+  static _getKeyPath(key)
+  {
+    const separator = key.indexOf("\u0000");
+    return separator === -1 ? key : key.slice(0, separator);
+  }
 }
 
 /**
@@ -1239,7 +1533,7 @@ export class MotherLode
  */
 export function getMotherLodeKey(path, variant = "")
 {
-  const normalizedPath = normalizePath(path);
+  const normalizedPath = MotherLode._normalizePath(path);
   if (variant === null || variant === undefined || variant === "") return normalizedPath;
 
   const normalizedVariant = String(variant);
@@ -1250,321 +1544,14 @@ export function getMotherLodeKey(path, variant = "")
   return `${normalizedPath}\u0000${normalizedVariant}`;
 }
 
-function normalizeDeleteArguments(key, variantOrOptions, maybeOptions)
-{
-  if (variantOrOptions && typeof variantOrOptions === "object" && !Array.isArray(variantOrOptions))
-  {
-    return {
-      resolvedKey: normalizeResolvedKey(key),
-      options: normalizeOptions(variantOrOptions, "delete")
-    };
-  }
-  return {
-    resolvedKey: normalizeLookupKey(key, variantOrOptions),
-    options: normalizeOptions(maybeOptions || {}, "delete")
-  };
-}
-
-function normalizeActivityArguments(key, variantOrOptions, maybeOptions)
-{
-  if (variantOrOptions && typeof variantOrOptions === "object" && !Array.isArray(variantOrOptions))
-  {
-    return {
-      resolvedKey: normalizeResolvedKey(key),
-      options: normalizeOptions(variantOrOptions, "activity")
-    };
-  }
-  return {
-    resolvedKey: normalizeLookupKey(key, variantOrOptions),
-    options: normalizeOptions(maybeOptions || {}, "activity")
-  };
-}
-
-function normalizeLookupKey(key, variant)
-{
-  return variant === undefined ? normalizeResolvedKey(key) : getMotherLodeKey(key, variant);
-}
-
-function normalizeResolvedKey(key)
-{
-  if (typeof key !== "string" || !key)
-  {
-    throw new TypeError("MotherLode requires a canonical string key.");
-  }
-  const separator = key.indexOf("\u0000");
-  return separator === -1
-    ? getMotherLodeKey(key)
-    : getMotherLodeKey(key.slice(0, separator), key.slice(separator + 1));
-}
-
-function normalizePath(path)
-{
-  const normalizedPath = normalizeResourcePath(path);
-  if (!normalizedPath) throw new TypeError("MotherLode requires a resource path.");
-  return normalizedPath;
-}
-
-/**
- * `Value::Uncache` (MotherLode.h:139): the entry is back in use, and its size
- * no longer counts against the cache.
- *
- * @param {object} record Internal ownership record.
- * @returns {void}
- */
-function Uncache(record)
-{
-  record.cached = false;
-  record.pending = false;
-  record.bytes = 0;
-  record.cacheSequence = 0;
-}
-
-/**
- * Carbon's `QueryInterface(GetICacheableIID(), ..., BEQI_SILENT)`
- * (MotherLode.cpp:340): the resource when its class maps `ICacheable`.
- *
- * @param {object|Function} resource Registered resource.
- * @returns {ICacheable|null} The resource, or null.
- */
-function QueryCacheable(resource)
-{
-  return IRoot.prototype.QueryInterface.call(resource, ICacheable, BEQI_SILENT);
-}
-
 /** Shared empty activity options for the canonical fast path; never mutated. */
 const EMPTY_ACTIVITY = {};
-
-function normalizeOptions(options, operation)
-{
-  if (options === null || options === undefined) return {};
-  if (!options || typeof options !== "object" || Array.isArray(options))
-  {
-    throw new TypeError(`MotherLode ${operation} options must be an object.`);
-  }
-  return options;
-}
-
-/**
- * Normalize one explicit inactivity sweep without mutating registry entries.
- *
- * @param {CjsMotherLodePurgeOptions} options Caller policy.
- * @param {number} activityFrame Current registry frame.
- * @param {() => number} now Registry clock.
- * @returns {CjsMotherLodePurgeOptions & {frame: number, time: number}} Validated sweep policy.
- */
-function normalizePurgeOptions(options, activityFrame, now)
-{
-  const policy = normalizeOptions(options, "purge");
-  const frame = policy.frame === undefined ? activityFrame + 1 : policy.frame;
-  assertNonNegativeInteger(frame, "MotherLode purge frame");
-
-  const time = policy.time === undefined ? now() : policy.time;
-  assertNonNegativeNumber(time, "MotherLode purge time");
-
-  for (const name of [ "maxIdleFrames", "payloadMaxIdleFrames" ])
-  {
-    if (policy[name] !== undefined)
-    {
-      assertNonNegativeInteger(policy[name], `MotherLode ${name}`);
-    }
-  }
-  for (const name of [ "maxIdleMilliseconds", "payloadMaxIdleMilliseconds" ])
-  {
-    if (policy[name] !== undefined)
-    {
-      assertNonNegativeNumber(policy[name], `MotherLode ${name}`);
-    }
-  }
-
-  return { ...policy, frame, time };
-}
-
-/**
- * Test whether either configured frame/time limit has elapsed.
- *
- * @param {number} lastFrame Last explicit lease frame.
- * @param {number} lastTime Last explicit lease timestamp.
- * @param {number} frame Current sweep frame.
- * @param {number} time Current sweep timestamp.
- * @param {number|undefined} maxFrames Optional frame limit.
- * @param {number|undefined} maxMilliseconds Optional millisecond limit.
- * @returns {boolean} Whether at least one configured limit has elapsed.
- */
-function isInactive(lastFrame, lastTime, frame, time, maxFrames, maxMilliseconds)
-{
-  const frameExpired = maxFrames !== undefined
-    && frame >= lastFrame
-    && frame - lastFrame >= maxFrames;
-  const timeExpired = maxMilliseconds !== undefined
-    && time >= lastTime
-    && time - lastTime >= maxMilliseconds;
-  return frameExpired || timeExpired;
-}
-
-/**
- * The registered object as a {@link BlueAsyncRes}, or null. Carbon's registry
- * holds any `IRoot` (IMotherLode.h:60) and reaches a narrower interface by
- * cast (MotherLode.cpp:77, 340); payload, adapter and lifecycle ownership are
- * BlueAsyncRes's, so they are reached the same way.
- *
- * @param {object|Function} resource Registered object.
- * @returns {BlueAsyncRes|null} The resource, or null.
- */
-function CastResource(resource)
-{
-  return CjsSchema.cast(resource, IBlueResource);
-}
-
-/**
- * Return whether a resource currently holds a releasable CPU payload.
- *
- * @param {object|Function} resource Candidate resource.
- * @returns {boolean} Whether the manager retains releasable plain or object data.
- */
-function hasOwnedPayload(resource)
-{
-  const owned = CastResource(resource);
-  return owned !== null && blueService.resMan.HasResourcePayload(owned);
-}
-
-
-/** Clean an owned native resource through the global manager. */
-function cleanupOwnedResource(resource, options)
-{
-  if (options.cleanup === false) return;
-  if (typeof options.cleanup === "function")
-  {
-    options.cleanup(resource);
-    return;
-  }
-  if (CastResource(resource)) blueService.resMan._CleanupResource(resource, options);
-}
-
-function assertResource(resource)
-{
-  if ((typeof resource !== "object" && typeof resource !== "function") || resource === null)
-  {
-    throw new TypeError("MotherLode requires a resource object.");
-  }
-}
-
-/**
- * Create one Insert result.
- *
- * @param {string} key Canonical resolved identity key.
- * @param {object|Function} resource Canonical owner after the insert.
- * @param {boolean} inserted Whether the supplied resource was published.
- * @param {boolean} replaced Whether a previous owner was displaced.
- * @param {object|Function|null} displaced Former owner when replaced.
- * @returns {CjsMotherLodeInsertResult} Canonical ownership result.
- */
-function createInsertResult(key, resource, inserted, replaced, displaced)
-{
-  return { key, resource, inserted, replaced, displaced };
-}
-
-/**
- * Create one exact-owner compare-and-swap result.
- *
- * @param {string} key Canonical resolved identity key.
- * @param {boolean} committed Whether publication replaced the expected owner.
- * @param {object|Function|null} resource Canonical owner after the attempt.
- * @param {object|Function|null} displaced Former owner when committed.
- * @returns {CjsMotherLodeConditionalReplaceResult} Replacement result.
- */
-function createConditionalReplaceResult(key, committed, resource, displaced)
-{
-  return { key, committed, resource, displaced };
-}
-
-/**
- * Create one inactivity-sweep result and its affected-key snapshots.
- *
- * @param {number} frame Sweep frame.
- * @param {number} time Sweep timestamp.
- * @param {string[]} purgedKeys Removed canonical keys.
- * @param {string[]} payloadKeys Keys whose payloads were released.
- * @param {string[]} cachedKeys Keys that entered the cache instead of being purged.
- * @param {number} locked Number of locked entries skipped.
- * @returns {CjsMotherLodePurgeResult} Sweep result.
- */
-function createPurgeResult(frame, time, purgedKeys, payloadKeys, cachedKeys, locked)
-{
-  return {
-    frame,
-    time,
-    purged: purgedKeys.length,
-    payloadsReleased: payloadKeys.length,
-    cached: cachedKeys.length,
-    locked,
-    purgedKeys: purgedKeys,
-    payloadKeys: payloadKeys,
-    cachedKeys: cachedKeys
-  };
-}
-
-/**
- * Create one byte-budget housekeeping result and its affected-key snapshots.
- *
- * @param {number} cacheSize Configured cache budget.
- * @param {number} beforeBytes Cached bytes before housekeeping.
- * @param {number} afterBytes Cached bytes after housekeeping.
- * @param {number} evictedBytes Successfully removed cached bytes.
- * @param {string[]} evictedKeys Successfully removed canonical identities.
- * @param {string[]} failedKeys Candidate identities that reported failure.
- * @returns {CjsMotherLodeCacheTrimResult} Cache-housekeeping result.
- */
-function createCacheTrimResult(
-  cacheSize,
-  beforeBytes,
-  afterBytes,
-  evictedBytes,
-  evictedKeys,
-  failedKeys
-)
-{
-  return {
-    cacheSize,
-    beforeBytes,
-    afterBytes,
-    evictedBytes,
-    overBudget: afterBytes > cacheSize,
-    evicted: evictedKeys.length,
-    failed: failedKeys.length,
-    evictedKeys: evictedKeys,
-    failedKeys: failedKeys
-  };
-}
-
-function motherLodeInactiveError()
-{
-  const error = new Error("MotherLode is shut down. Call Startup() before inserting resources.");
-  error.code = "CJS_MOTHERLODE_INACTIVE";
-  return error;
-}
-
-function motherLodeCleanupError(operation, key, resource, cause)
-{
-  const error = new Error(`MotherLode ${operation} cleanup failed for ${key}.`, { cause });
-  error.code = "CJS_MOTHERLODE_CLEANUP_FAILED";
-  error.operation = operation;
-  error.key = key;
-  error.resource = resource;
-  return error;
-}
-
-function getKeyPath(key)
-{
-  const separator = key.indexOf("\u0000");
-  return separator === -1 ? key : key.slice(0, separator);
-}
 
 /** Purge timers are ours (MotherLode.cpp has none); they read blue's host milliseconds. */
 function defaultNow()
 {
   return BlueOS.Monotonic();
 }
-
 
 CjsSchema.decorateMethod(MotherLode, "Insert", CjsSchema.be.method);
 CjsSchema.decorateMethod(MotherLode, "Lookup", CjsSchema.be.method);
@@ -1577,7 +1564,4 @@ CjsSchema.decorateMethod(MotherLode, "GetSize", CjsSchema.be.method);
 CjsSchema.be.define(MotherLode, {
   className: "MotherLode"
 });
-
-
-
 

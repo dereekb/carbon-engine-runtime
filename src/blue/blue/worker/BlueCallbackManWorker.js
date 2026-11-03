@@ -1,43 +1,3 @@
-// The worker side of a `BlueCallbackMan` running its own threads.
-//
-// Ours: Carbon's callback threads run functions already in the process
-// (CallbackMan.cpp:215-243). A browser worker can only run code its own
-// module loaded, so a worker module installs this host with the callbacks it
-// exports, by name, and the manager sends entries naming them. Each callback
-// gets the entry's context and an AbortSignal that fires when the entry is
-// cancelled; a long callback checks it between pieces of work, since a
-// cancel message is only delivered when the callback yields.
-//
-// An entry may instead name the module that holds its callback
-// (`BlueCallbackMan.RegisterCallbackModule`). The host imports that module the
-// first time one of its callbacks runs and keeps it, so a worker that never
-// runs a module's callbacks never loads it. Once installed, the host reports
-// "ready", so the manager can tell a worker that never loaded from one that
-// failed later.
-
-/**
- * Buffers in a result, moved rather than copied back to the manager.
- *
- * @param {*} value Callback result.
- * @returns {ArrayBuffer[]} Unique buffers of the top-level typed arrays and
- *   buffers in the result, or of the result itself.
- */
-function collectTransfer(value)
-{
-  const buffers = new Set();
-  const add = item =>
-  {
-    if (item instanceof ArrayBuffer) buffers.add(item);
-    else if (ArrayBuffer.isView(item) && item.buffer instanceof ArrayBuffer) buffers.add(item.buffer);
-  };
-
-  add(value);
-  if (value !== null && typeof value === "object" && !ArrayBuffer.isView(value) && !(value instanceof ArrayBuffer))
-  {
-    for (const item of Object.values(value)) add(item);
-  }
-  return [ ...buffers ];
-}
 
 /** Installs the callback host on a worker scope. */
 export class BlueCallbackManWorker
@@ -86,7 +46,7 @@ export class BlueCallbackManWorker
         if (typeof callback !== "function") throw new Error(`BlueCallbackManWorker: no callback named "${message.name}".`);
 
         const result = await callback(message.context, { signal: controller.signal });
-        scope.postMessage({ kind: "done", id: message.id, result }, collectTransfer(result));
+        scope.postMessage({ kind: "done", id: message.id, result }, BlueCallbackManWorker._collectTransfer(result));
       }
       catch (error)
       {
@@ -105,5 +65,46 @@ export class BlueCallbackManWorker
     scope.addEventListener("message", onMessage);
     scope.postMessage({ kind: "ready" });
     return () => scope.removeEventListener("message", onMessage);
+  }
+
+  // The worker side of a `BlueCallbackMan` running its own threads.
+  //
+  // Ours: Carbon's callback threads run functions already in the process
+  // (CallbackMan.cpp:215-243). A browser worker can only run code its own
+  // module loaded, so a worker module installs this host with the callbacks it
+  // exports, by name, and the manager sends entries naming them. Each callback
+  // gets the entry's context and an AbortSignal that fires when the entry is
+  // cancelled; a long callback checks it between pieces of work, since a
+  // cancel message is only delivered when the callback yields.
+  //
+  // An entry may instead name the module that holds its callback
+  // (`BlueCallbackMan.RegisterCallbackModule`). The host imports that module the
+  // first time one of its callbacks runs and keeps it, so a worker that never
+  // runs a module's callbacks never loads it. Once installed, the host reports
+  // "ready", so the manager can tell a worker that never loaded from one that
+  // failed later.
+  
+  /**
+   * Buffers in a result, moved rather than copied back to the manager.
+   *
+   * @param {*} value Callback result.
+   * @returns {ArrayBuffer[]} Unique buffers of the top-level typed arrays and
+   *   buffers in the result, or of the result itself.
+   */
+  static _collectTransfer(value)
+  {
+    const buffers = new Set();
+    const add = item =>
+    {
+      if (item instanceof ArrayBuffer) buffers.add(item);
+      else if (ArrayBuffer.isView(item) && item.buffer instanceof ArrayBuffer) buffers.add(item.buffer);
+    };
+
+    add(value);
+    if (value !== null && typeof value === "object" && !ArrayBuffer.isView(value) && !(value instanceof ArrayBuffer))
+    {
+      for (const item of Object.values(value)) add(item);
+    }
+    return [ ...buffers ];
   }
 }

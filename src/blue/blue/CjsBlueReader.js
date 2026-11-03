@@ -229,7 +229,7 @@ export class CjsBlueReader extends CjsReader
         {
             // A binary block's bytes go to the instance (YamlReader::ReadBinaryBlock,
             // YamlReader.cpp:539-556), never through the values transport.
-            for (const member of BinaryMembers(target.constructor))
+            for (const member of CjsBlueReader._BinaryMembers(target.constructor))
             {
                 if (!Object.hasOwn(values, member.name) || !ArrayBuffer.isView(values[member.name])) continue;
                 if (!this.ReadBinaryBlock(target, member.name, values[member.name])) continue;
@@ -308,7 +308,7 @@ export class CjsBlueReader extends CjsReader
     {
         const Constructor = this.ResolveClass(kind);
         if (!Constructor || CjsSchema.getClassName(Constructor) === null) return undefined;
-        const member = BinaryMembers(Constructor).find(item => item.name === propertyName);
+        const member = CjsBlueReader._BinaryMembers(Constructor).find(item => item.name === propertyName);
         if (!member) return undefined;
         const instance = new Constructor();
         if (!this.ReadBinaryBlock(instance, propertyName, bytes)) return undefined;
@@ -737,18 +737,17 @@ export class CjsBlueReader extends CjsReader
             && Number.isInteger(expectedLength)
             && value.length !== expectedLength;
     }
-}
 
-/**
- * A class's `type.binary` members: Carbon's BINARYBLOCK attributes.
- *
- * @param {Function} Constructor A registered class.
- * @returns {object[]} Its binary member declarations.
- */
-function BinaryMembers(Constructor)
-{
-    return CjsSchema.getSchema(Constructor).members.filter(member => member.type?.binary === true);
+    /**
+     * A class's `type.binary` members: Carbon's BINARYBLOCK attributes.
+     *
+     * @param {Function} Constructor A registered class.
+     * @returns {object[]} Its binary member declarations.
+     */
+    static _BinaryMembers(Constructor)
+    {
+        return CjsSchema.getSchema(Constructor).members.filter(member => member.type?.binary === true);
+    }
 }
-
 
 CjsSchema.meta.define("CjsBlueReader")(CjsBlueReader);

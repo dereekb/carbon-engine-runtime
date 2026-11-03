@@ -45,7 +45,7 @@ export class CjsResManMainThreadLoader
    */
   ReadFormat(descriptor, input, formatOptions = {}, context = null)
   {
-    return readFormatOnCurrentThread(descriptor, input, formatOptions, context);
+    return CjsResManMainThreadLoader._readFormatOnCurrentThread(descriptor, input, formatOptions, context);
   }
 
   /**
@@ -57,57 +57,52 @@ export class CjsResManMainThreadLoader
   {
     return 0;
   }
-}
 
-/**
- * Invoke a format facade without crossing a worker boundary.
- *
- * @param {object} descriptor Registered format descriptor.
- * @param {*} input Reader input.
- * @param {object} formatOptions Normalized format options.
- * @param {object|null} context Normalized resource path context.
- * @returns {Promise<*>} Reader result.
- */
-async function readFormatOnCurrentThread(
-  descriptor,
-  input,
-  formatOptions = {},
-  context = null
-)
-{
-  if (!descriptor.Format)
+  /**
+   * Invoke a format facade without crossing a worker boundary.
+   *
+   * @param {object} descriptor Registered format descriptor.
+   * @param {*} input Reader input.
+   * @param {object} formatOptions Normalized format options.
+   * @param {object|null} context Normalized resource path context.
+   * @returns {Promise<*>} Reader result.
+   */
+  static async _readFormatOnCurrentThread(descriptor, input, formatOptions = {}, context = null)
   {
-    formatOptions = descriptor.GetValues(formatOptions);
-    const data = await descriptor.ReadDataAsync(input, formatOptions, context);
-    return descriptor.FinishRead(data, formatOptions, context);
-  }
-  const Format = descriptor?.Format;
+    if (!descriptor.Format)
+    {
+      formatOptions = descriptor.GetValues(formatOptions);
+      const data = await descriptor.ReadDataAsync(input, formatOptions, context);
+      return descriptor.FinishRead(data, formatOptions, context);
+    }
+    const Format = descriptor?.Format;
 
-  if (typeof Format !== "function")
-  {
-    throw new TypeError("Resource format descriptor requires a Format class.");
-  }
-  if (typeof Format.readAsync === "function")
-  {
-    return Format.readAsync(input, formatOptions, context);
-  }
-  if (typeof Format.read === "function")
-  {
-    return Format.read(input, formatOptions, context);
-  }
+    if (typeof Format !== "function")
+    {
+      throw new TypeError("Resource format descriptor requires a Format class.");
+    }
+    if (typeof Format.readAsync === "function")
+    {
+      return Format.readAsync(input, formatOptions, context);
+    }
+    if (typeof Format.read === "function")
+    {
+      return Format.read(input, formatOptions, context);
+    }
 
-  const reader = new Format(formatOptions);
+    const reader = new Format(formatOptions);
 
-  if (typeof reader.ReadAsync === "function")
-  {
-    return reader.ReadAsync(input, formatOptions, context);
-  }
-  if (typeof reader.Read === "function")
-  {
-    return reader.Read(input, formatOptions, context);
-  }
+    if (typeof reader.ReadAsync === "function")
+    {
+      return reader.ReadAsync(input, formatOptions, context);
+    }
+    if (typeof reader.Read === "function")
+    {
+      return reader.Read(input, formatOptions, context);
+    }
 
-  throw new TypeError(`${Format.name} does not expose a read operation.`);
+    throw new TypeError(`${Format.name} does not expose a read operation.`);
+  }
 }
 
 CjsSchema.meta.define("CjsResManMainThreadLoader")(CjsResManMainThreadLoader);
