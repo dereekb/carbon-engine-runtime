@@ -23,7 +23,8 @@
 // - the order of the member rows;
 // - interfaces and chainTo, as sets. Carbon's MAP_INTERFACE of the class
 //   itself is implied by the bag and not listed in it.
-// A MAPFLOATARRAYSIZE row is satisfied by a property row on a getter under its
+// A MAPFLOATARRAYSIZE row, or a MAP_ATTRIBUTE over one field of an array
+// element (m_x[i].field), is satisfied by a property row on a getter under its
 // exposed name: PROP_RO for READ, PROP_PERSISTED for READWRITE | PERSIST.
 // MAP_FUNCTION rows are skipped: they register module functions
 // (BlueRegistration.h:226-230), not members of the enclosing class.
@@ -266,8 +267,8 @@ export function compareBag(bag, rows)
             findings.push({ key: `${carbon.label} kind`, detail: `Carbon writes ${carbon.row.macro} (${where}); the bag writes ${label(member)}.` });
         if (carbon.flags !== undefined && member.flags !== undefined && carbon.flags !== member.flags)
             findings.push({ key: `${carbon.label} flags`, detail: `Carbon's flags are ${carbon.row.flags.join(" | ")} (${where}); the bag's evaluate to ${member.flags === null ? "an expression it cannot read" : `0x${member.flags.toString(16)}`}.` });
-        if (carbon.row.macro === "MAPFLOATARRAYSIZE" && !(bag.accessors ?? new Set()).has(member.key))
-            findings.push({ key: `${carbon.label} accessor`, detail: `MAPFLOATARRAYSIZE (${where}) is realised as an accessor "${member.key}" returning a view over the member's floats; the class has no such getter.` });
+        if (carbon.accessor && !(bag.accessors ?? new Set()).has(member.key))
+            findings.push({ key: `${carbon.label} accessor`, detail: `${carbon.row.macro} over ${carbon.row.member} (${where}) is realised as an accessor "${member.key}"; the class has no such getter.` });
         // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds.
         const key = carbon.family === "METHOD" && member.key ? member.key.replace(/__\w+$/, "") : member.key;
         if (carbon.keys && !carbon.keys.includes(key))
@@ -303,12 +304,13 @@ export function carbonRow(row)
         };
     }
     const flags = (row.flags ?? []).reduce((value, flag) => value | (EDIT_FLAGS[flag] ?? NaN), 0);
-    if (row.macro === "MAPFLOATARRAYSIZE")
+    // A float view over the member (MAPFLOATARRAYSIZE), or a MAP_ATTRIBUTE over one field of an array element (m_x[i].field), is an
+    // accessor property under the exposed name (operator ruling, 2026-11-03): read-only for READ, persisted for READWRITE | PERSIST.
+    // Any other flags have no ruled form.
+    if (row.macro === "MAPFLOATARRAYSIZE" || (row.macro === "MAP_ATTRIBUTE" && /\]\s*\.\s*\w+\s*$/.test(row.member ?? "")))
     {
-        // A float view over the member is an accessor property under the exposed name (operator ruling, 2026-11-03): read-only for
-        // READ, persisted for READWRITE | PERSIST. Any other flags have no ruled form.
         const kind = flags === EDIT_FLAGS.READ ? "PROP_RO" : flags === (EDIT_FLAGS.READWRITE | EDIT_FLAGS.PERSIST) ? "PROP_PERSISTED" : null;
-        return { family: "PROP", kind, name: row.name, label: `property ${row.name}` };
+        return { family: "PROP", kind, name: row.name, label: `property ${row.name}`, accessor: true };
     }
     const indexed = /\[/.test(row.member ?? "");
     const kind = row.macro === "MAP_ATTRIBUTE_WITH_CHOOSER" ? "ATTR_CHOOSER" : row.macro === "MAP_ATTRIBUTE" ? (indexed ? "ATTR_INDEX" : "ATTR") : null;

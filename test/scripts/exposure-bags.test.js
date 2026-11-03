@@ -139,6 +139,16 @@ test("MAPFLOATARRAYSIZE is a property row on an accessor: PROP_RO for READ, PROP
     assert.deepEqual(keys(source("PROP_RO"), floats([ "READWRITE" ])), [ "property boundingSphereCenter no bag kind" ]);
 });
 
+test("a MAP_ATTRIBUTE over a field of an array element is a property row on an accessor", () =>
+{
+    order = 0;
+    const rows = [ row("ATTR", { name: "firingDelay1", member: "m_perMuzzleData[0].constantDelay", flags: [ "READWRITE", "PERSIST" ], macro: "MAP_ATTRIBUTE" }) ];
+    const source = (kind, body) => bagSource({ rows: [ `[ be.${kind}, "firingDelay1" ]` ], interfaces: "[]", chainTo: null, body });
+    assert.deepEqual(keys(source("PROP_PERSISTED", "get firingDelay1() { return 0; } set firingDelay1(v) {}"), rows), []);
+    assert.deepEqual(keys(source("PROP_PERSISTED", "firingDelay1 = 0;"), rows), [ "property firingDelay1 accessor" ]);
+    assert.deepEqual(keys(bagSource({ rows: [ "[ be.ATTR, \"firingDelay1\", be.READWRITE | be.PERSIST ]" ], interfaces: "[]", chainTo: null }), rows), [ "attribute firingDelay1 extra", "property firingDelay1 missing" ]);
+});
+
 test("a macro the bag has no row kind for is reported, not guessed", () =>
 {
     order = 0;
