@@ -49,7 +49,7 @@ const INVERSE_WORLD_SCRATCH = mat4.create();
     [ be.ATTR, "maxTrackingTime", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "state", be.READ | be.PERSIST ],
     [ be.PROP, "targetObject" ],
-    [ be.ATTR, "target", be.READ, "_target" ],
+    [ be.ATTR, "target", be.READ ],
     [ be.ATTR, "sysBoneHeight", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "sysBonePitchFactor", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "sysBonePitchOffset", be.READWRITE | be.PERSIST ],
@@ -256,7 +256,7 @@ export class EveChildTurret extends EveChildMesh
   // enabled (EveChildTurret.cpp:26-27); Blue exposes it READ-only.
 
   @type.object.ref("EveTurretTarget")
-  _target = new EveTurretTarget();
+  target = new EveTurretTarget();
 
   _aiming = new EveTurretAiming();
 
@@ -288,7 +288,7 @@ export class EveChildTurret extends EveChildMesh
   constructor()
   {
     super();
-    this._target.SetFadeOnLocatorChange(true);
+    this.target.SetFadeOnLocatorChange(true);
     // Carbon's ctor also calls PrepareResources(); the browser runtime's
     // resource lifecycle is not ported yet and has no per-child prepare hook.
   }
@@ -301,7 +301,7 @@ export class EveChildTurret extends EveChildMesh
    */
   GetTarget()
   {
-    return this._target;
+    return this.target;
   }
 
   /**
@@ -340,7 +340,7 @@ export class EveChildTurret extends EveChildMesh
 
   Initialize()
   {
-    this._target.SetImpactBehaviour(this.impactSize, this.impactBehaviour);
+    this.target.SetImpactBehaviour(this.impactSize, this.impactBehaviour);
     if (!this._firingEffect && this.firingEffectResPath)
     {
       this._LoadFiringEffectFromPath();
@@ -361,7 +361,7 @@ export class EveChildTurret extends EveChildMesh
   {
     if (IsMatch(value, "impactSize") || IsMatch(value, "impactBehaviour"))
     {
-      this._target.SetImpactBehaviour(this.impactSize, this.impactBehaviour);
+      this.target.SetImpactBehaviour(this.impactSize, this.impactBehaviour);
     }
     if (IsMatch(value, "firingEffectResPath") && this.firingEffectResPath)
     {
@@ -458,8 +458,8 @@ export class EveChildTurret extends EveChildMesh
         {
           vec3.set(FIRE_SOURCE_SCRATCH,
             this.worldTransform[12], this.worldTransform[13], this.worldTransform[14]);
-          const closestLocator = this._target.FindClosestLocator(FIRE_SOURCE_SCRATCH, FIRE_POSITION_SCRATCH);
-          if (closestLocator >= 0 && closestLocator !== this._target.GetLocator())
+          const closestLocator = this.target.FindClosestLocator(FIRE_SOURCE_SCRATCH, FIRE_POSITION_SCRATCH);
+          if (closestLocator >= 0 && closestLocator !== this.target.GetLocator())
           {
             this.SetupFiringState();
           }
@@ -475,7 +475,7 @@ export class EveChildTurret extends EveChildMesh
     {
       this._firingEffect.GetStartPosition(FIRE_POSITION_SCRATCH);
     }
-    this._target.Update(deltaT, FIRE_POSITION_SCRATCH);
+    this.target.Update(deltaT, FIRE_POSITION_SCRATCH);
 
     if (this.mesh && this.turretMovementObserver)
     {
@@ -547,7 +547,7 @@ export class EveChildTurret extends EveChildMesh
         this._firingEffectMuzzlePosSet = true;
       }
 
-      this._firingEffect.SetEndPosition(this._target.GetTargetPosition());
+      this._firingEffect.SetEndPosition(this.target.GetTargetPosition());
 
       if (this._firingEffect.UpdateAsynchronous(updateContext))
       {
@@ -559,7 +559,7 @@ export class EveChildTurret extends EveChildMesh
           }
           this._firingEffectMuzzlePosSet = true;
         }
-        this._firingEffect.SetDisplayDestObject(this._target.ShowDestObject());
+        this._firingEffect.SetDisplayDestObject(this.target.ShowDestObject());
       }
     }
     return result;
@@ -731,7 +731,7 @@ export class EveChildTurret extends EveChildMesh
         // eslint-disable-next-line no-fallthrough
       case State.STATE_TARGETING:
         this._delayToFadeOutTracking = 0.0001;
-        this._target.StopFireAtLocator();
+        this.target.StopFireAtLocator();
         this.PlayAnimation("Pack", "Inactive", TRACKING_FADE_TIME);
         break;
       default:
@@ -769,7 +769,7 @@ export class EveChildTurret extends EveChildMesh
       case State.STATE_TARGETING:
       case State.STATE_FIRING:
         this._delayToFadeOutTracking = 0.0001;
-        this._target.StopFireAtLocator();
+        this.target.StopFireAtLocator();
         if (this._firingEffect) this._firingEffect.StopFiring();
         this.PlayAnimation("", "Active", TRACKING_FADE_TIME);
         if (this.playMovementSound && this.targetingToIdleMovementAudioEvent)
@@ -813,7 +813,7 @@ export class EveChildTurret extends EveChildMesh
       case State.STATE_TARGETING:
         break;
       case State.STATE_FIRING:
-        this._target.StopFireAtLocator();
+        this.target.StopFireAtLocator();
         if (this._firingEffect) this._firingEffect.StopFiring();
         this.PlayAnimation("", "Active", 0);
         break;
@@ -862,7 +862,7 @@ export class EveChildTurret extends EveChildMesh
       {
         this._firingEffect.PrepareFiring(0);
       }
-      this._firingEffect.SetImpactConfiguration(this._target.GetImpactConfiguration());
+      this._firingEffect.SetImpactConfiguration(this.target.GetImpactConfiguration());
     }
 
     this.state = State.STATE_FIRING;
@@ -886,7 +886,7 @@ export class EveChildTurret extends EveChildMesh
     }
     vec3.set(FIRE_SOURCE_SCRATCH,
       this.worldTransform[12], this.worldTransform[13], this.worldTransform[14]);
-    const closestLocator = this._target.FindClosestLocator(FIRE_SOURCE_SCRATCH, FIRE_POSITION_SCRATCH);
+    const closestLocator = this.target.FindClosestLocator(FIRE_SOURCE_SCRATCH, FIRE_POSITION_SCRATCH);
 
     if (this.maxCyclingFirePos > 1)
     {
@@ -909,14 +909,14 @@ export class EveChildTurret extends EveChildMesh
       case State.STATE_RELOADING:
         this._delayToFadeInTracking = 0.0001;
         this.PlayAnimation(this._GetFireAnimationName(), "Active", this.maxTrackingTime);
-        this._target.StartFireAtLocator(
+        this.target.StartFireAtLocator(
           closestLocator, this.maxTrackingTime + effectPeakTime,
           effectTotalTime - effectPeakTime, FIRE_SOURCE_SCRATCH);
         break;
       case State.STATE_FIRING:
       case State.STATE_TARGETING:
         this.PlayAnimation(this._GetFireAnimationName(), "Active", this.maxTrackingTime);
-        this._target.StartFireAtLocator(
+        this.target.StartFireAtLocator(
           closestLocator, this.maxTrackingTime + effectPeakTime,
           effectTotalTime - effectPeakTime, FIRE_SOURCE_SCRATCH);
         break;
@@ -948,7 +948,7 @@ export class EveChildTurret extends EveChildMesh
       case State.STATE_TARGETING:
       case State.STATE_FIRING:
         this._delayToFadeOutTracking = 0.0001;
-        this._target.StopFireAtLocator();
+        this.target.StopFireAtLocator();
         if (this._firingEffect) this._firingEffect.StopFiring();
         this.PlayAnimation("Reload", "Active", TRACKING_FADE_TIME);
         break;
@@ -967,7 +967,7 @@ export class EveChildTurret extends EveChildMesh
   {
     this.trackingInfluence = 0;
     this._delayToFadeOutTracking = 0;
-    this._target.StopFireAtLocator();
+    this.target.StopFireAtLocator();
     if (this._firingEffect) this._firingEffect.StopFiring();
     this.state = EveChildTurret.State.STATE_DEACTIVE;
     this.ForceIdleAnimation();
@@ -1127,7 +1127,7 @@ export class EveChildTurret extends EveChildMesh
   {
     if (this.trackingInfluence === 0) return;
 
-    const tracking = this._target.GetTrackingPosition();
+    const tracking = this.target.GetTrackingPosition();
     if (!mat4.invert(INVERSE_WORLD_SCRATCH, this.worldTransform))
     {
       mat4.identity(INVERSE_WORLD_SCRATCH);
@@ -1341,15 +1341,15 @@ export class EveChildTurret extends EveChildMesh
       {
         this.EnterStateIdle();
       }
-      this._target.SetTargetable(null);
+      this.target.SetTargetable(null);
       return;
     }
-    const oldTarget = this._target.GetTargetable();
-    this._target.SetTargetable(target);
+    const oldTarget = this.target.GetTargetable();
+    this.target.SetTargetable(target);
 
     if (this.playMovementSound && this.idleToTargetingMovementAudioEvent)
     {
-      if (this.state === EveChildTurret.State.STATE_IDLE || oldTarget !== this._target.GetTargetable())
+      if (this.state === EveChildTurret.State.STATE_IDLE || oldTarget !== this.target.GetTargetable())
       {
         this._SendMovementAudioEvent(this.idleToTargetingMovementAudioEvent);
       }
@@ -1365,7 +1365,7 @@ export class EveChildTurret extends EveChildMesh
 
   GetTargetObject()
   {
-    return this._target.GetTargetable();
+    return this.target.GetTargetable();
   }
 
   /**
@@ -1378,7 +1378,7 @@ export class EveChildTurret extends EveChildMesh
   {
     if (this._firingEffect)
     {
-      this._firingEffect.SetScaleByRadius(this._target.GetRadius());
+      this._firingEffect.SetScaleByRadius(this.target.GetRadius());
     }
   }
 
