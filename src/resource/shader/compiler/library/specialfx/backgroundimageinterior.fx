@@ -10,7 +10,9 @@
 // widths and heights (+x right, +y down); .zw scales it. BackgroundSettings.x
 // picks how the image fits the screen before placement: 0 stretches it over
 // the screen, 1 covers the screen keeping its aspect, 2 fits inside it keeping
-// its aspect. Outside the image the pass shows BackgroundColor.
+// its aspect. BackgroundSettings.y picks the wrap outside the image: 0 border
+// shows BackgroundColor, 1 clamp extends the edge pixels, 2 repeats it, 3
+// mirrors it.
 
 #define BACKGROUND_INTERIOR
 #include "../cbuffers/Tr2PerFrame.fxh"

@@ -27,6 +27,27 @@ SamplerState BackgroundMapSampler
 #define FIT_COVER 1
 #define FIT_CONTAIN 2
 
+#define WRAP_BORDER 0
+#define WRAP_CLAMP 1
+#define WRAP_REPEAT 2
+#define WRAP_MIRROR 3
+
+// Applies BackgroundSettings.y's wrap mode to uv in the shader, so the result
+// does not depend on the sampler's address modes.
+float2 WrapUV( float2 uv, int wrap )
+{
+    if( wrap == WRAP_REPEAT )
+    {
+        return frac( uv );
+    }
+    if( wrap == WRAP_MIRROR )
+    {
+        float2 cell = frac( uv * 0.5 ) * 2.0;
+        return 1.0 - abs( cell - 1.0 );
+    }
+    return saturate( uv );
+}
+
 struct BackgroundImageVSInput
 {
     float4 position : POSITION;
@@ -90,12 +111,16 @@ float4 BackgroundImagePS( BackgroundImageVSOutput input ) : SV_Target
         * BackgroundPlacement.zw;
     float2 uv = (input.texCoord - 0.5 - BackgroundPlacement.xy) / size + 0.5;
 
+    int wrap = (int)BackgroundSettings.y;
+
     // Sampled before the outside test, never under it: WebGPU allows an
     // implicit-derivative sample only in uniform control flow, and the test
-    // varies per pixel. The clamped sampler makes the outside sample harmless.
-    float4 image = BackgroundMap.Sample( BackgroundMapSampler, uv ) * BackgroundTint;
+    // varies per pixel. Border mode samples the clamped uv and then shows
+    // BackgroundColor outside [0,1]; the other modes never show it.
+    float4 image = BackgroundMap.Sample( BackgroundMapSampler, WrapUV( uv, wrap ) ) * BackgroundTint;
     float outside = any( uv < 0.0 ) || any( uv > 1.0 ) ? 1.0 : 0.0;
-    return lerp( image, BackgroundColor, outside );
+    float border = wrap == WRAP_BORDER ? outside : 0.0;
+    return lerp( image, BackgroundColor, border );
 }
 
 technique Main
