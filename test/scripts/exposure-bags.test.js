@@ -126,6 +126,15 @@ test("an indexed member is ATTR_INDEX, keyed by the array", () =>
     assert.deepEqual(keys(source("sizeList"), rows), [ "attribute sizeSTANDARD key" ]);
 });
 
+test("MAPFLOATARRAYSIZE is ATTR_FLOAT_ARRAY, its size checked against Carbon's", () =>
+{
+    order = 0;
+    const rows = [ row("ATTR", { name: "boundingSphereCenter", member: "m_boundingSphere", flags: [ "READ" ], length: 3, macro: "MAPFLOATARRAYSIZE" }) ];
+    const source = size => bagSource({ rows: [ `[ be.ATTR_FLOAT_ARRAY, "boundingSphereCenter", be.READ, ${size}, "boundingSphere" ]` ], interfaces: "[]", chainTo: null });
+    assert.deepEqual(keys(source(3), rows), []);
+    assert.deepEqual(keys(source(4), rows), [ "attribute boundingSphereCenter size" ]);
+});
+
 test("a macro the bag has no row kind for is reported, not guessed", () =>
 {
     order = 0;

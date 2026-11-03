@@ -52,7 +52,7 @@ export const EDIT_FLAGS = {
 };
 
 /** The bag's row kinds and method modes, by the `be` constant a row is written with. */
-const ROW_KINDS = new Set([ "ATTR", "ATTR_CHOOSER", "ATTR_INDEX", "PROP", "PROP_RO", "PROP_PERSISTED", "METHOD", "ICACHEABLE_METHODS" ]);
+const ROW_KINDS = new Set([ "ATTR", "ATTR_CHOOSER", "ATTR_INDEX", "ATTR_FLOAT_ARRAY","PROP", "PROP_RO", "PROP_PERSISTED", "METHOD", "ICACHEABLE_METHODS" ]);
 const METHOD_MODES = { WRAP: "MAP_METHOD_AND_WRAP", WRAP_OPTIONAL_ARGS: "MAP_METHOD_AND_WRAP_OPTIONAL_ARGS", AS_METHOD: "MAP_METHOD_AS_METHOD" };
 const PROPERTY_MACROS = { PROP: "MAP_PROPERTY", PROP_RO: "MAP_PROPERTY_READONLY", PROP_PERSISTED: "MAP_PROPERTY_PERSISTED" };
 
@@ -179,6 +179,8 @@ function readRow(node)
             return { kind, name, flags: flagValue(rest[0]), key: literal(rest[2]) ?? name };
         case "ATTR_INDEX":
             return { kind, name, flags: flagValue(rest[0]), key: literal(rest[2]) ?? null };
+        case "ATTR_FLOAT_ARRAY":
+            return { kind, name, flags: flagValue(rest[0]), size: rest[1] && rest[1].type === "NumericLiteral" ? rest[1].value : null, key: literal(rest[2]) ?? name };
         case "METHOD":
         {
             // No mode, or `undefined` before an explicit method, is plain MAP_METHOD.
@@ -261,6 +263,8 @@ export function compareBag(bag, rows)
             findings.push({ key: `${carbon.label} kind`, detail: `Carbon writes ${carbon.row.macro} (${where}); the bag writes ${label(member)}.` });
         if (carbon.flags !== undefined && member.flags !== undefined && carbon.flags !== member.flags)
             findings.push({ key: `${carbon.label} flags`, detail: `Carbon's flags are ${carbon.row.flags.join(" | ")} (${where}); the bag's evaluate to ${member.flags === null ? "an expression it cannot read" : `0x${member.flags.toString(16)}`}.` });
+        if (member.kind === "ATTR_FLOAT_ARRAY" && carbon.kind === "ATTR_FLOAT_ARRAY" && member.size !== carbon.size)
+            findings.push({ key: `${carbon.label} size`, detail: `Carbon exposes ${carbon.size} floats (${where}); the bag says ${member.size ?? "a size it cannot read"}.` });
         // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds.
         const key = carbon.family === "METHOD" && member.key ? member.key.replace(/__\w+$/, "") : member.key;
         if (carbon.keys && !carbon.keys.includes(key))
@@ -296,11 +300,13 @@ export function carbonRow(row)
         };
     }
     const indexed = /\[/.test(row.member ?? "");
-    const kind = row.macro === "MAP_ATTRIBUTE_WITH_CHOOSER" ? "ATTR_CHOOSER" : row.macro === "MAP_ATTRIBUTE" ? (indexed ? "ATTR_INDEX" : "ATTR") : null;
+    const kind = row.macro === "MAP_ATTRIBUTE_WITH_CHOOSER" ? "ATTR_CHOOSER"
+        : row.macro === "MAPFLOATARRAYSIZE" ? "ATTR_FLOAT_ARRAY"
+            : row.macro === "MAP_ATTRIBUTE" ? (indexed ? "ATTR_INDEX" : "ATTR") : null;
     const member = (row.member ?? "").replace(/\[.*$/, "").trim();
     const plain = /^m_(\w+)$/.exec(member);
     return {
-        family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`,
+        family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`, size: row.length,
         flags: (row.flags ?? []).reduce((value, flag) => value | (EDIT_FLAGS[flag] ?? NaN), 0),
         keys: plain ? [ plain[1], `_${plain[1]}` ] : undefined, source: `member ${member}`
     };
