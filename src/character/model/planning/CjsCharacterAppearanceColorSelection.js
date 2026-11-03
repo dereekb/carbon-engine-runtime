@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** One plan-local authored paper-doll colour selection. */

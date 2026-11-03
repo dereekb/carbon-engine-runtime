@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Logical alpha policy for one final character texture binding. */

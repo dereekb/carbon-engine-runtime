@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Additive typed projection beside one losslessly retained authored modifier string. */

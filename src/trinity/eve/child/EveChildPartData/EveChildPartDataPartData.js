@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildPartData.h
 //   struct PartData, nested in EveChildPartData; flattened for JS.
 import { quat } from "#math/quat";

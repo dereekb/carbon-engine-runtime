@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Plan-local source-version contributor with optional exact configuration and geometry choices. */

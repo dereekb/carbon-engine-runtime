@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveScalar.h
 // Source: trinity/trinity/Curves/Tr2CurveScalar.cpp
 import { meta, type, blue } from "#schema";

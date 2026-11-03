@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Serializable diagnostic emitted while resolving a character appearance plan. */

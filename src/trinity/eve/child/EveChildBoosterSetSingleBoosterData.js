@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBoosterSet.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBoosterSet.cpp
 import { mat4 } from "#math/mat4";

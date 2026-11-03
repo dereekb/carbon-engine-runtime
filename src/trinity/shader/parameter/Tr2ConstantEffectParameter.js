@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { meta, blue } from "#schema";

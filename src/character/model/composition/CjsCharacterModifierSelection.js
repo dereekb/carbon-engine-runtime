@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** One authored paper-doll resource selection at a resolved modifier location. */

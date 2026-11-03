@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { createChild, addChild, removeChild, deleteChild, clearChildren } from "../../../blue/blue/children.js";
 import "./CjsCharacterAppearanceBinding.js";

@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Source: trinity/trinity/Shader/Tr2Effect.cpp:84-107
 import { meta, type, blue } from "#schema";

@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Plan-local resolved character choice with explicit selection-group ownership. */

@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { vec4 } from "#math/vec4";
 import { CjsCharacterRecord } from "../CjsCharacterRecord.js";

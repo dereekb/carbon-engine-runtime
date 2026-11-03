@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h
 //
 // The members are Carbon StaticPerInstanceData's (worldTransform,

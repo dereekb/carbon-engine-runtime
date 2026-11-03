@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h
 //   struct Mesh, nested in EveChildInstancedMeshes (line 132); flattened for JS
 //   under a name that drops the donor's plural. See EveChildInstancedMeshArea.js.

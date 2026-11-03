@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.h
 // Source: trinity/trinity/Curves/Tr2CurveQuaternion.cpp
 import { quat } from "#math/quat";

@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Reusable appearance coverage expression shared across logical composition passes. */

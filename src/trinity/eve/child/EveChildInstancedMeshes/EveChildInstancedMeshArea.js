@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h
 //   struct MeshArea, nested in EveChildInstancedMeshes (line 73); flattened for
 //   JS. Our name drops the donor's plural, so it reads as though Carbon had an

@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:112-120
 import { meta, type, blue } from "#schema";
 import { quat } from "#math/quat";

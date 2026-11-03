@@ -1,4 +1,3 @@
-import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 
 /** Resolved texture asset with independent decoded placement and semantic role. */
