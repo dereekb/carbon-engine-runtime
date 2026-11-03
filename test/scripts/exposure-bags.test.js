@@ -32,7 +32,7 @@ const members = [
     "[ be.ICACHEABLE_METHODS ]"
 ];
 
-function bagSource({ rows = members, interfaces = "[ IListNotify ]", chainTo = "FixtureBase", name = "Fixture" } = {})
+function bagSource({ rows = members, interfaces = "[ IListNotify ]", chainTo = "FixtureBase", name = "Fixture", body = "" } = {})
 {
     return `@be.define({
   name: "${name}",
@@ -43,7 +43,7 @@ function bagSource({ rows = members, interfaces = "[ IListNotify ]", chainTo = "
   ],
   ${chainTo ? `chainTo: ${chainTo}` : ""}
 })
-export class Fixture extends FixtureBase {}`;
+export class Fixture extends FixtureBase { ${body} }`;
 }
 
 const keys = (source, rows = fixtureRows()) => compareBag(readBags(source)[0], rows).map(finding => finding.key);
@@ -126,13 +126,17 @@ test("an indexed member is ATTR_INDEX, keyed by the array", () =>
     assert.deepEqual(keys(source("sizeList"), rows), [ "attribute sizeSTANDARD key" ]);
 });
 
-test("MAPFLOATARRAYSIZE is ATTR_FLOAT_ARRAY, its size checked against Carbon's", () =>
+test("MAPFLOATARRAYSIZE is a property row on an accessor: PROP_RO for READ, PROP_PERSISTED for READWRITE | PERSIST", () =>
 {
     order = 0;
-    const rows = [ row("ATTR", { name: "boundingSphereCenter", member: "m_boundingSphere", flags: [ "READ" ], length: 3, macro: "MAPFLOATARRAYSIZE" }) ];
-    const source = size => bagSource({ rows: [ `[ be.ATTR_FLOAT_ARRAY, "boundingSphereCenter", be.READ, ${size}, "boundingSphere" ]` ], interfaces: "[]", chainTo: null });
-    assert.deepEqual(keys(source(3), rows), []);
-    assert.deepEqual(keys(source(4), rows), [ "attribute boundingSphereCenter size" ]);
+    const floats = flags => [ row("ATTR", { name: "boundingSphereCenter", member: "m_boundingSphere", flags, length: 3, macro: "MAPFLOATARRAYSIZE" }) ];
+    const getter = "get boundingSphereCenter() { return this._center; }";
+    const source = (kind, body = getter) => bagSource({ rows: [ `[ be.${kind}, "boundingSphereCenter" ]` ], interfaces: "[]", chainTo: null, body });
+    assert.deepEqual(keys(source("PROP_RO"), floats([ "READ" ])), []);
+    assert.deepEqual(keys(source("PROP_PERSISTED"), floats([ "READWRITE", "PERSIST" ])), []);
+    assert.deepEqual(keys(source("PROP"), floats([ "READ" ])), [ "property boundingSphereCenter kind" ]);
+    assert.deepEqual(keys(source("PROP_RO", "boundingSphereCenter = null;"), floats([ "READ" ])), [ "property boundingSphereCenter accessor" ]);
+    assert.deepEqual(keys(source("PROP_RO"), floats([ "READWRITE" ])), [ "property boundingSphereCenter no bag kind" ]);
 });
 
 test("a macro the bag has no row kind for is reported, not guessed", () =>

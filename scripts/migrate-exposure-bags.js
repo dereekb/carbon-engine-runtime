@@ -33,7 +33,6 @@ const MAP_DECORATORS = {
     mapAttribute: { family: "ATTR", kind: "ATTR", name: 1 },
     mapAttributeWithChooser: { family: "ATTR", kind: "ATTR_CHOOSER", name: 2 },
     mapAttribute__Index: { family: "ATTR", kind: "ATTR_INDEX", name: 1 },
-    mapFloatArraySize: { family: "ATTR", kind: "ATTR_FLOAT_ARRAY", name: 2 },
     mapProperty: { family: "PROP", kind: "PROP", name: 0 },
     mapPropertyReadOnly: { family: "PROP", kind: "PROP_RO", name: 0 },
     mapPropertyPersisted: { family: "PROP", kind: "PROP_PERSISTED", name: 0 },
@@ -272,8 +271,7 @@ function rowFrom(spec, args, exposed, key, decorator, text)
         flagsText: flagsArg ? text(flagsArg) : undefined,
         flagsValue: flagsArg ? flagValue(flagsArg) : undefined,
         chooserText: spec.kind === "ATTR_CHOOSER" && args[1] ? text(args[1]) : undefined,
-        indexText: spec.kind === "ATTR_INDEX" && args[2] ? text(args[2]) : undefined,
-        sizeText: spec.kind === "ATTR_FLOAT_ARRAY" && args[1] ? text(args[1]) : undefined
+        indexText: spec.kind === "ATTR_INDEX" && args[2] ? text(args[2]) : undefined
     };
 }
 
@@ -300,7 +298,6 @@ function renderRow(row)
         case "ATTR": return `[ be.ATTR, ${name}, ${row.flagsText}${key ? `, ${key}` : ""} ]`;
         case "ATTR_CHOOSER": return `[ be.ATTR_CHOOSER, ${name}, ${row.flagsText}, ${row.chooserText}${key ? `, ${key}` : ""} ]`;
         case "ATTR_INDEX": return `[ be.ATTR_INDEX, ${name}, ${row.flagsText}, ${row.indexText}, ${JSON.stringify(row.key)} ]`;
-        case "ATTR_FLOAT_ARRAY": return `[ be.ATTR_FLOAT_ARRAY, ${name}, ${row.flagsText}, ${row.sizeText}, ${JSON.stringify(row.key)} ]`;
         case "METHOD":
         {
             const mode = row.mode ? `, be.${row.mode}` : key ? ", undefined" : "";
