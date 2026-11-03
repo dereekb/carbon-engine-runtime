@@ -39,12 +39,21 @@ export class Tr2Vector4Parameter extends ITriEffectParameter
   usedByCurrentEffect = false;
 
   @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
-
-
   @type.string
   name = "";
 
-  linearValue = vec4.fromValues(1, 1, 1, 1);
+  /**
+   * Carbon `m_linearValue`: the gamma-to-linear mirror of `value`, uploaded
+   * instead of it when the bound constant is sRGB.
+   *
+   * `null` until first needed: most parameters are never sRGB, so the mirror is
+   * created by the first refresh that needs it. This is the one ruled exception
+   * to typed-array defaults (operator, 2026-11-03). Carbon embeds the member,
+   * initialised to (1, 1, 1, 1) (Tr2Vector4Parameter.cpp).
+   *
+   * @type {Float32Array|null}
+   */
+  linearValue = null;
 
   #bindings = [];
 
@@ -414,20 +423,15 @@ export class Tr2Vector4Parameter extends ITriEffectParameter
   }
 
   /**
-   * Refreshes the linear mirror: a plain copy when not sRGB, otherwise
-   * gamma-to-linear on the first three components with alpha passed through
-   * unchanged.
+   * Refreshes the linear mirror for an sRGB constant: gamma-to-linear on the
+   * first three components, alpha passed through unchanged. Nothing reads the
+   * mirror otherwise, so a non-sRGB parameter neither creates nor refreshes it.
    */
   #updateLinearValue()
   {
-    if (!this.isSrgb)
-    {
-      for (let i = 0; i < 4; i++)
-      {
-        this.linearValue[i] = this.value[i];
-      }
-      return;
-    }
+    if (!this.isSrgb) return;
+
+    this.linearValue ??= vec4.create();
     this.linearValue[0] = num.gammaToLinearCarbon(this.value[0]);
     this.linearValue[1] = num.gammaToLinearCarbon(this.value[1]);
     this.linearValue[2] = num.gammaToLinearCarbon(this.value[2]);

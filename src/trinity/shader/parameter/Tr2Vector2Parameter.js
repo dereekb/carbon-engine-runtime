@@ -43,8 +43,18 @@ export class Tr2Vector2Parameter extends ITriEffectParameter
   /** m_isSrgb - shader-annotation driven; not Blue-exposed on vec2 in Carbon. */
   isSrgb = false;
 
-  /** m_linearValue - gamma-to-linear mirror uploaded when isSrgb. */
-  linearValue = vec2.fromValues(1, 1);
+  /**
+   * Carbon `m_linearValue`: the gamma-to-linear mirror of `value`, uploaded
+   * instead of it when the bound constant is sRGB.
+   *
+   * `null` until first needed: most parameters are never sRGB, so the mirror is
+   * created by the first refresh that needs it. This is the one ruled exception
+   * to typed-array defaults (operator, 2026-11-03). Carbon embeds the member,
+   * initialised to (1, 1) (Tr2Vector2Parameter.cpp).
+   *
+   * @type {Float32Array|null}
+   */
+  linearValue = null;
 
   #bindings = [];
 
@@ -406,19 +416,15 @@ export class Tr2Vector2Parameter extends ITriEffectParameter
   }
 
   /**
-   * Refreshes the linear mirror: a plain copy when not sRGB, otherwise
-   * gamma-to-linear on both components.
+   * Refreshes the linear mirror for an sRGB constant: gamma-to-linear on both
+   * components. Nothing reads the mirror otherwise, so a non-sRGB parameter
+   * neither creates nor refreshes it.
    */
   #updateLinearValue()
   {
-    if (!this.isSrgb)
-    {
-      for (let i = 0; i < 2; i++)
-      {
-        this.linearValue[i] = this.value[i];
-      }
-      return;
-    }
+    if (!this.isSrgb) return;
+
+    this.linearValue ??= vec2.create();
     this.linearValue[0] = num.gammaToLinearCarbon(this.value[0]);
     this.linearValue[1] = num.gammaToLinearCarbon(this.value[1]);
   }
