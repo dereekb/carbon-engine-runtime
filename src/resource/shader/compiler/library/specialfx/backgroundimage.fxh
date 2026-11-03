@@ -90,11 +90,12 @@ float4 BackgroundImagePS( BackgroundImageVSOutput input ) : SV_Target
         * BackgroundPlacement.zw;
     float2 uv = (input.texCoord - 0.5 - BackgroundPlacement.xy) / size + 0.5;
 
-    if( any( uv < 0.0 ) || any( uv > 1.0 ) )
-    {
-        return BackgroundColor;
-    }
-    return BackgroundMap.Sample( BackgroundMapSampler, uv ) * BackgroundTint;
+    // Sampled before the outside test, never under it: WebGPU allows an
+    // implicit-derivative sample only in uniform control flow, and the test
+    // varies per pixel. The clamped sampler makes the outside sample harmless.
+    float4 image = BackgroundMap.Sample( BackgroundMapSampler, uv ) * BackgroundTint;
+    float outside = any( uv < 0.0 ) || any( uv > 1.0 ) ? 1.0 : 0.0;
+    return lerp( image, BackgroundColor, outside );
 }
 
 technique Main

@@ -1,7 +1,7 @@
 import { readEffectFixture } from "../support/resourceFixtures.js";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { Tr2EffectRes } from "../../npm/dist/trinity/shader/Tr2EffectRes.js";
 import { readBackendBlock } from "../../src/resource/format/index.js";
@@ -122,6 +122,49 @@ test("the selection effects compile, every permutation, to WGSL that Dawn accept
             }
             const vs = pass.stages.find(stage => stage.type === 0);
             const ps = pass.stages.find(stage => stage.type === 1);
+            assert.equal(await pipelineError(vs.shaderData, ps.shaderData, buffersFor(vs)), null, effect);
+        }
+    }
+});
+
+/**
+ * Every effect in the library, as the overlay script compiles them.
+ *
+ * @param {string} [directory] A folder under the library.
+ * @returns {string[]} The effects' paths, as the driver opens them.
+ */
+function libraryEffects(directory = "")
+{
+    return readdirSync(join(LIBRARY_ROOT, directory), { withFileTypes: true }).flatMap(entry =>
+    {
+        const path = `${directory}/${entry.name}`;
+        if (entry.isDirectory()) return libraryEffects(path);
+        return entry.name.endsWith(".fx") ? [ path ] : [];
+    }).sort();
+}
+
+// Dawn's validation is what the browser applies: an effect whose WGSL it refuses fails CreateShaderModule, and the
+// invalid pipeline poisons the whole frame's command buffer. backgroundimage once sampled under a per-pixel branch,
+// which WebGPU's uniformity rule refuses.
+test("every library effect compiles, every permutation, to WGSL that Dawn accepts and links", async () =>
+{
+    const effects = libraryEffects();
+    assert.ok(effects.includes("/specialfx/backgroundimageinterior.fx"));
+    for (const effect of effects)
+    {
+        const { bytes, messages, results } = compile(effect);
+        assert.deepEqual(messages, [], effect);
+        assert.ok(bytes, effect);
+        for (const pass of passesOf(results))
+        {
+            for (const stage of pass.stages)
+            {
+                assert.deepEqual(await wgslErrors(stage.shaderData), [], `${effect} stage ${stage.type}:\n${stage.shaderData}`);
+            }
+            const vs = pass.stages.find(stage => stage.type === 0);
+            const ps = pass.stages.find(stage => stage.type === 1);
+            // A pixel stage writing depth links only with a depth target; planet selection's own test links it.
+            if (/@builtin\(frag_depth\)/u.test(ps.shaderData)) continue;
             assert.equal(await pipelineError(vs.shaderData, ps.shaderData, buffersFor(vs)), null, effect);
         }
     }
