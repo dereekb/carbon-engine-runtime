@@ -355,7 +355,7 @@ test("EveTurretTarget fades over locator changes only when opted in", () =>
   fading.Update(0.25, [ 0, 0, 0 ]);
   fading.StopFireAtLocator();
   assert.equal(fading.positionOldInfluence, 1);
-  assert.deepEqual(Array.from(fading.positionOld), Array.from(fading.position));
+  assert.deepEqual(Array.from(fading.positionOld), Array.from(fading._trackingPosition));
 
   fading.positionOldInfluence = -1;
   fading.StartFireAtLocator(0, 0, 0, [ 0, 0, 0 ]);
@@ -366,7 +366,7 @@ test("EveTurretTarget fades over locator changes only when opted in", () =>
   const split = new EveTurretTarget();
   split.SetBehaviour(true, true, 5, EveTurretTarget.ImpactBehaviour.CENTER);
   split.SetImpactBehaviour(9, EveTurretTarget.ImpactBehaviour.SHIELD_ELLIPSOID);
-  assert.equal(split.behaviour, EveTurretTarget.ImpactBehaviour.SHIELD_ELLIPSOID);
+  assert.equal(split._impactBehaviour, EveTurretTarget.ImpactBehaviour.SHIELD_ELLIPSOID);
   assert.equal(split.SetTargetable(targetable), true);
   split.SetShotMissed(true);
   split.PopShotMissed();
