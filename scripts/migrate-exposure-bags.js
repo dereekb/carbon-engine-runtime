@@ -1,7 +1,7 @@
 // Rewrites a Carbon class's per-member exposure decorators as one `be.define` bag in Carbon's order (decorator-upgrade.md
 // § 000a). Run by hand; not part of the build.
 //
-//   node scripts/migrate-exposure-bags.js --path src/trinity/eve/attachment [--dry-run] [--report out.json]
+//   node scripts/migrate-exposure-bags.js --path src/trinity/eve/attachment [--dry-run] [--report out.json] [--exclude a.js,dir/]
 //
 // For each class declared `@be.define("Name")` under the path, it reads the class's `be.inherit`, `be.mapInterface`,
 // `be.exposureChainTo` and `be.map*` decorators (on members, and above the class for inherited members), pairs every Carbon
@@ -58,6 +58,8 @@ function main(argv)
     const scope = option("--path");
     if (!scope) throw new Error("Pass --path <directory under runtime>, e.g. src/trinity/eve/attachment.");
     const dryRun = argv.includes("--dry-run");
+    // Files someone else is changing: comma-separated paths or directory prefixes under runtime.
+    const excluded = (option("--exclude") ?? "").split(",").map(entry => entry.trim().replace(/\\/g, "/")).filter(Boolean);
     const reportRoot = path.resolve(option("--reports") ?? process.env.CARBON_BLUE_REPORTS ?? defaultReports);
     const carbon = readCarbon(REPORT_FILES.map(file => path.join(reportRoot, file)).filter(file => fs.existsSync(file))
         .map(file => JSON.parse(fs.readFileSync(file, "utf8"))));
@@ -69,7 +71,7 @@ function main(argv)
     for (const file of files)
     {
         const relative = path.relative(root, file).split(path.sep).join("/");
-        if (relative.startsWith("src/blue/")) continue;
+        if (relative.startsWith("src/blue/") || excluded.some(prefix => relative.startsWith(prefix))) continue;
         const source = fs.readFileSync(file, "utf8");
         if (!/@be\.define\(\s*"/.test(source)) continue;
         const { output, classes } = migrateSource(source, relative, carbon);
