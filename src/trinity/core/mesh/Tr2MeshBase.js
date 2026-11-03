@@ -424,7 +424,9 @@ export class Tr2MeshBase
 
   /**
    * The live area list for a TriBatchType, or null for a non-integer or unmapped
-   * type.
+   * type. Tr2Mesh maps it as GetAreas through a Python wrapper that takes the
+   * batch type and returns the list; JS returns the list directly.
+   * Carbon: PyGetAreas (trinity/trinity/Tr2Mesh_Blue.cpp:26-52)
    *
    * @implemented
    */

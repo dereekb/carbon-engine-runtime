@@ -11,8 +11,8 @@ import { Tr2SerializedMorphAnimation } from "./Tr2SerializedMorphAnimation.js";
 /**
  * A mesh backed by a geometry resource, adding the resource path plus the
  * morph-target weights and baked-morph state on top of Tr2MeshBase.
- * Carbon: PyGetAreas (trinity/trinity/Tr2Mesh_Blue.cpp:26-52)
- * Blue maps the inherited area-list query as GetAreas; JS already returns the list directly.
+ * Carbon: Tr2Mesh (trinity/trinity/Tr2Mesh.h:31-104)
+ * Blue maps the inherited area-list query as GetAreas (Tr2MeshBase.GetAreas).
  */
 @be.define("Tr2Mesh")
 @be.inherit(IInitialize, INotify)
