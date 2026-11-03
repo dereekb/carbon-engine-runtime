@@ -121,12 +121,12 @@ export { CjsBlueEnumRegistry, EnumRegistrationType } from "./enums/CjsBlueEnumRe
 // The values engine: Blue's dictionary reader and a writer modelled on YamlWriter.
 export * from "./interfaces/IBlueObjectMetadata.js";
 export * from "./BlueObjectMetadata.js";
-export * from "./IRootReader.js";
-export * from "./IRootReaderException.js";
-export * from "./InvalidAttributeException.js";
-export * from "./IRootReaderBase.js";
+export * from "./format/IRootReader.js";
+export * from "./format/IRootReaderException.js";
+export * from "./format/InvalidAttributeException.js";
+export * from "./format/IRootReaderBase.js";
 export * from "./DictReader.js";
-export * from "./IRootWriter.js";
+export * from "./format/IRootWriter.js";
 export * from "./DictWriter.js";
 export * from "./YamlWriter.js";
 export * from "./YamlReader.js";

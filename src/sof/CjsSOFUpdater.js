@@ -1,7 +1,7 @@
 import { CjsSchema, meta } from "#schema";
 import { getRegisteredClassName } from "../blue/compose/className.js";
 import { normalizeCarbonValue } from "../blue/schema/types/index.js";
-import { IRootReaderBase } from "../blue/blue/IRootReaderBase.js";
+import { IRootReaderBase } from "../blue/blue/format/IRootReaderBase.js";
 import { EveSOF } from "./EveSOF.js";
 import { EveSOFDNA } from "./EveSOFDNA.js";
 import { TriBatchType } from "#consts/graphics";

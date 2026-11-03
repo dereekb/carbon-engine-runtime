@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { parse } from "yaml";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { YamlWriter, BeObjectMetadata, blue } from "../../npm/dist/blue/blue/index.js";
-import { IRootReaderBase } from "../../npm/dist/blue/blue/IRootReaderBase.js";
+import { IRootReaderBase } from "../../npm/dist/blue/blue/format/IRootReaderBase.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import { CjsYamlFormat } from "../../npm/dist/resource/formats/yaml/index.js";

@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Controllers/Tr2BindingPoint.h
 // Source: trinity/trinity/Controllers/Tr2BindingPoint.cpp
-import { IRootReaderBase } from "../../../blue/blue/IRootReaderBase.js";
+import { IRootReaderBase } from "../../../blue/blue/format/IRootReaderBase.js";
 import { blue, BlueClasses, IList, INotify } from "#blue";
 import { meta, CjsSchema, CARBON_TYPE, getCarbonTypeDefinition, normalizeCarbonTypeDescriptor, type } from "#schema";
 

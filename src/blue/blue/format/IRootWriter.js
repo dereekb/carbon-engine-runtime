@@ -16,13 +16,13 @@
 import { IRootReaderBase } from "./IRootReaderBase.js";
 import { exposure as be } from "#be";
 import { CjsSchema, meta } from "#schema";
-import { IRoot } from "../blueexposure/IRoot.js";
-import { omitRuntimeValues } from "../schema/CjsSchema.js";
-import { exportCarbonValue } from "../schema/types/index.js";
-import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
-import { isWritableField } from "../compose/values.js";
-import { BeObjectMetadata } from "./BlueObjectMetadata.js";
-import { BLUE_OBJECT_METADATA_KEY } from "./interfaces/IBlueObjectMetadata.js";
+import { IRoot } from "../../blueexposure/IRoot.js";
+import { omitRuntimeValues } from "../../schema/CjsSchema.js";
+import { exportCarbonValue } from "../../schema/types/index.js";
+import { ICustomPersist } from "../../blueexposure/ICustomPersist.js";
+import { isWritableField } from "../../compose/values.js";
+import { BeObjectMetadata } from "../BlueObjectMetadata.js";
+import { BLUE_OBJECT_METADATA_KEY } from "../interfaces/IBlueObjectMetadata.js";
 
 /** Kinds written as an object that may be shared (IROOTPTR). */
 const OBJECT_KINDS = new Set([ "rootRef" ]);

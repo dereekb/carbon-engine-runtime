@@ -156,7 +156,7 @@ test("an index row on a float vector member reads as its float component", async
     const radius = Class => CjsSchema.getSchema(Class).members.find(member => member.name === "radius");
     assert.deepEqual(comparable(radius(BagProbeSphere)), comparable(radius(BagProbeSphereRows)), "the bag and the per-member decorator agree");
     assert.deepEqual([ radius(BagProbeSphere).key, radius(BagProbeSphere).index, radius(BagProbeSphere).type.kind ], [ "sphere", 3, "float32" ]);
-    const { IRootReaderBase } = await import("../../src/blue/blue/IRootReaderBase.js");
+    const { IRootReaderBase } = await import("../../src/blue/blue/format/IRootReaderBase.js");
     const readDictionaryValue = IRootReaderBase.readDictionaryValue;
     assert.equal(readDictionaryValue(new BagProbeSphere(), radius(BagProbeSphere)), 4);
 });

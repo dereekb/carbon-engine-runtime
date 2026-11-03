@@ -1,4 +1,4 @@
-import { IRootReaderBase } from "./IRootReaderBase.js";
+import { IRootReaderBase } from "./format/IRootReaderBase.js";
 import { CjsSchema } from "#schema/CjsSchema";
 import { DictReader } from "./DictReader.js";
 import { ICustomPersist } from "../blueexposure/ICustomPersist.js";

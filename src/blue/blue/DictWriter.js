@@ -23,9 +23,9 @@
 //   written at every reference, reads back as independent copies, and a cycle
 //   never ends. A flat copy of a large shared graph can be gigabytes (the
 //   mdeha01 hangar passed 12 GB).
-import { IRootReaderBase } from "./IRootReaderBase.js";
+import { IRootReaderBase } from "./format/IRootReaderBase.js";
 import { CjsSchema } from "#schema";
-import { IRootWriter } from "./IRootWriter.js";
+import { IRootWriter } from "./format/IRootWriter.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 /**

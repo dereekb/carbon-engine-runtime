@@ -14,7 +14,7 @@ import {
     CJS_BLACK_VERSION
 } from "../../../../src/blue/blue/formats/black/core/blackConstants.js";
 import { YamlReader } from "../../../../src/blue/blue/YamlReader.js";
-import { IRootReaderBase } from "../../../../src/blue/blue/IRootReaderBase.js";
+import { IRootReaderBase } from "../../../../src/blue/blue/format/IRootReaderBase.js";
 import { CjsYamlReader } from "../../../../src/resource/formats/yaml/core/CjsYamlReader.js";
 
 test("Black retains its hydration backend while YamlReader uses native IRootReaderBase", () =>

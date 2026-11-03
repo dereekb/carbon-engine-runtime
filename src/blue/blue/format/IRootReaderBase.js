@@ -28,10 +28,10 @@
 // `blue-values-engine.md`). Selection is owner-first, stored-before-live within
 // an owner, with no flag merging or filter fallback. Selected aliases name it too.
 import { CjsSchema, meta } from "#schema";
-import { omitRuntimeValues } from "../schema/CjsSchema.js";
-import { coerceCarbonMathInto, coerceCarbonTypedArrayInto, normalizeCarbonValue } from "../schema/types/index.js";
-import { mappedInterfaces } from "../compose/interface.js";
-import { ICustomPersist } from "../blueexposure/ICustomPersist.js";
+import { omitRuntimeValues } from "../../schema/CjsSchema.js";
+import { coerceCarbonMathInto, coerceCarbonTypedArrayInto, normalizeCarbonValue } from "../../schema/types/index.js";
+import { mappedInterfaces } from "../../compose/interface.js";
+import { ICustomPersist } from "../../blueexposure/ICustomPersist.js";
 import { IRootReaderException } from "./IRootReaderException.js";
 import { InvalidAttributeException } from "./InvalidAttributeException.js";
 
@@ -44,7 +44,7 @@ const CONTAINER_KINDS = new Set([ "list", "array", "map", "set" ]);
 
 /** Kinds read as a list of objects or values (BlueList). */
 const LIST_KINDS = new Set([ "list", "array" ]);
-import { isTransportedDeclaration } from "../compose/values.js";
+import { isTransportedDeclaration } from "../../compose/values.js";
 const VIEWS = new WeakMap();
 
 /**

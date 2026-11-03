@@ -4,7 +4,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { YamlWriter, BeObjectMetadata, blue } from "../../npm/dist/blue/blue/index.js";
-import { IRootReaderBase } from "../../npm/dist/blue/blue/IRootReaderBase.js";
+import { IRootReaderBase } from "../../npm/dist/blue/blue/format/IRootReaderBase.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/blue/formats/black/index.js";
 import { YamlReader } from "../../npm/dist/blue/blue/YamlReader.js";
 import "../../npm/dist/trinity/index.js";

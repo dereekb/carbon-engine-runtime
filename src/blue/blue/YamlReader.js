@@ -4,9 +4,9 @@
 import { exposure as be } from "#be";
 import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
 import { CjsSchema, type } from "#schema";
-import { IRootReaderBase } from "./IRootReaderBase.js";
-import { IRootReader } from "./IRootReader.js";
-import { IRootReaderException } from "./IRootReaderException.js";
+import { IRootReaderBase } from "./format/IRootReaderBase.js";
+import { IRootReader } from "./format/IRootReader.js";
+import { IRootReaderException } from "./format/IRootReaderException.js";
 import { IBlueObjectBuilder } from "./interfaces/IBlueObjectBuilder.js";
 import { IBlueObjectProxy } from "./interfaces/IBlueObjectProxy.js";
 import { ICacheable } from "./interfaces/ICacheable.js";
