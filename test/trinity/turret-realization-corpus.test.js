@@ -60,7 +60,7 @@ test("real turret geometry remains READ-accessible and collected but is excluded
   try { clone=new Copier().CloneTo(set); }
   finally { Object.defineProperty(set,"geometryResource",descriptor); }
   assert.ok(clone);t.after(()=>clone.Destruct());
-  assert.equal(clone._geomResPath,geometryPath);
+  assert.equal(clone.geometryResPath,geometryPath);
   assert.equal(clone.geometryResource,null,"READ-only LOD is not copied, so the constructor's initial LOD has no loaded handle");
   clone.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;clone.Initialize();
   assert.ok(clone.geometryResource===resource,"destination Initialize independently reacquires the resource by its authored path");
@@ -92,7 +92,7 @@ async function assets(t)
   blue.resMan=manager;t.after(()=>{blue.resMan=previous;});
   const makeResource=(prepared=true)=>{const value=new TriGeometryRes();value.ReadGrannyFile(bytes);if(prepared)prepareResourceFixture(value);return value;};
   const resource=makeResource();resources.set(geometryPath,resource);
-  const set=CjsSchema.from("EveTurretSet", CjsBlackFormat.readPayload(turretBytes).object);set._geomResPath=geometryPath;set.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;set.slotNumber=1;
+  const set=CjsSchema.from("EveTurretSet", CjsBlackFormat.readPayload(turretBytes).object);set.geometryResPath=geometryPath;set.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;set.slotNumber=1;
   t.after(()=>{set.ReleaseResources();trinity.UnregisterResource(set);});
   const ship=new EveShip2();// The catalog entry is an EveSOFDataHullLocator (_type); the ship locator takes its name and transform, as SOF builds it.
   ship.locators=hull.locatorTurrets.map(value=>CjsSchema.from("EveLocator2", { name:value.name, transform:value.transform }));ship.turretSets.push(set);
@@ -122,7 +122,7 @@ test("late old completion cannot replace current cache; an update after a purge 
   // Completions are pulled at the set's next update (BlueAsyncRes.ensureDependency).
   const frame=()=>set.UpdateSyncronous(updateContext({GetVisibilityThreshold:()=>1}));
   const old=makeResource(false),next=makeResource(false);resources.set(geometryPath,old);
-  set.Initialize();const second="res:/controlled-replacement.gr2";resources.set(second,next);set._geomResPath=second;set.OnModified("geometryResPath");
+  set.Initialize();const second="res:/controlled-replacement.gr2";resources.set(second,next);set.geometryResPath=second;set.OnModified("geometryResPath");
   prepareResourceFixture(old);frame();assert.ok(set.geometryResource===next,"replacement handle remains current");assert.ok(set._skeleton===null,"stale completion must not rebuild");
   prepareResourceFixture(next);frame();assert.ok(set._skeleton===next.GetSkeletonData(0),"current resource owns cached skeleton");
   let rebuilds=0;const rebuild=set.RebuildCachedData.bind(set);set.RebuildCachedData=value=>{rebuilds++;return rebuild(value);};
@@ -133,7 +133,7 @@ test("late old completion cannot replace current cache; an update after a purge 
   const matrices=set.GetTurrets().map(item=>Array.from(item.localMatrix));set.lodLevel=EveTurretSet.LOD.LOD_EMPTY;set.InitializeGeometryResource();
   assert.equal(set.geometryResource,null);assert.equal(set._turretVertexDeclElementCount,0);assert.ok(Array.from(set._systemBoneID).every(value=>value===0xffffffff));
   assert.deepEqual(set.GetTurrets().map(item=>Array.from(item.localMatrix)),matrices,"resource cleanup preserves mount placement");
-  set.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;set._geomResPath="";set.InitializeGeometryResource();assert.equal(set.geometryResource,null);
+  set.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;set.geometryResPath="";set.InitializeGeometryResource();assert.equal(set.geometryResource,null);
 });
 
 test("native locator scale removal preserves a rotated non-orthogonal basis on the real mount",{skip},async t=>
@@ -328,11 +328,11 @@ test("real turret aiming samples before yaw/pitch/height through a rotated scale
 for(const geometryFirst of [false,true])test(`real muzzle binding handles ${geometryFirst?"geometry":"effect"} first and copies the current full joint`,{skip},async t=>
 {
   const {set,ship}=await assets(t);ship.RebuildTurretPositions();
-  set._geomResPath="";set.InitializeGeometryResource();assert.equal(set.geometryResource,null);
+  set.geometryResPath="";set.InitializeGeometryResource();assert.equal(set.geometryResource,null);
   const bytes=await client.Read("res:/dx9/model/turret/energy/pulse/l/pulse_mega_fx.black");assert.equal(createHash("sha256").update(bytes).digest("hex"),"ec84e9ee2b9d9af295dff3ad7ad79551e8785027fd30a5121d4d92eaa31a1eb2");
   const effect=CjsSchema.from("EveTurretFiringFX", CjsBlackFormat.readPayload(bytes).object);
   const duration=effect.firingDuration,initialize=t.mock.method(effect,"Initialize");
-  const loadGeometry=()=>{set._geomResPath=geometryPath;set.Initialize();};
+  const loadGeometry=()=>{set.geometryResPath=geometryPath;set.Initialize();};
   if(geometryFirst)loadGeometry();set.firingEffect=effect;if(!geometryFirst)loadGeometry();
   assert.equal(effect.GetPerMuzzleEffectCount(),1);assert.equal(effect.GetPerMuzzleBoneID(0),10,"cpp:320 binding must resolve at the arrival boundary, before any later geometry reload");
   set.Initialize();

@@ -142,7 +142,7 @@ test("skinned models, primitive sets and turrets register no target on their pat
   const cases = [
     [new Tr2SkinnedModel(), "geometryResPath", "Initialize"],
     [new Tr2GrannyPrimitiveSet(), "grannyResPath", "SetGrannyResource"],
-    [new EveTurretSet(), "_geomResPath", "InitializeGeometryResource"]
+    [new EveTurretSet(), "geometryResPath", "InitializeGeometryResource"]
   ];
   for (const [owner, field, method] of cases)
   {
