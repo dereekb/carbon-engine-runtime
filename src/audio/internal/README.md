@@ -168,9 +168,12 @@ Music has two extra blocks: a Voice Volume RTPC anywhere on the path, and any
 audible Aux send.
 
 `wwiseVoiceLimits: "ignore"` only removes the separately classified
-`voice-limits` reason (the v150 Audio Bus `MaxNumInstances` RTPC). The
-dynamic count and the Wwise eviction policy are not applied. Static Bus
-maximum instances, stealing and virtual-voice policy are never enforced.
+`voice-limits` reason (the v150 Audio Bus `MaxNumInstances` RTPC). That
+dynamic count is not applied. Static Bus maximum instances, with their
+stealing (priority, then the tie rule) and virtual-voice policy, reach the
+backend as the library's `bus:<id>` counters and are enforced by the
+`CjsAudioBackendSfxVoiceLimitLedger` arbiter (see `../README.md`, Voice
+limits).
 
 ## Per-Bus and route-local control
 

@@ -2451,6 +2451,82 @@ test("Sound limit owners follow virtual overrides, priority, bus, and future sch
     assert.equal(result.nodes["206"].virtualVoice, undefined);
 });
 
+test("a limited timed silence on a delayed path is stripped, not refused", () =>
+{
+    const pluginId = 0x00650002;
+    const silence = (id, sourceId) => [ {
+        type: 2,
+        id,
+        pluginId,
+        pluginType: 2,
+        streamType: 0,
+        sourceId,
+        inMemoryMediaSize: 0,
+        payload: soundPayload({
+            pluginId,
+            sourceId,
+            inMemoryMediaSize: 0,
+            advancedFlags: 0x09,
+            maxInstances: 1,
+        }),
+    }, {
+        type: 17,
+        id: sourceId,
+        payload: silenceSourceEffectPayload({ pluginId, durationSeconds: 2 }),
+    } ];
+    const result = CjsAudioLibraryBuilder.createSfxGraph({
+        inspections: [ {
+            source: "effects.bnk",
+            bankVersion: 150,
+            hirc: [
+                ...silence(230, 900),
+                ...silence(231, 901),
+                {
+                    type: 5,
+                    id: 240,
+                    payload: randomSequencePayload({
+                        childID: 230,
+                        transitionTime: 100,
+                        transitionMode: 3,
+                        flags: 0x08,
+                    }),
+                },
+                ...[ 231, 240 ].map((targetId, index) => ({
+                    type: 3,
+                    id: 300 + index,
+                    actionType: 0x0403,
+                    targetId,
+                    payload: new Uint8Array(),
+                })),
+                { type: 4, id: 100, actionIds: [ 300 ], payload: new Uint8Array() },
+                { type: 4, id: 101, actionIds: [ 301 ], payload: new Uint8Array() },
+            ],
+        } ],
+        metadata: {
+            Events: {
+                limited_wait: { eventID: 100 },
+                delayed_wait: { eventID: 101 },
+            },
+        },
+        media: {},
+    });
+
+    assert.equal(result.nodes["231"].type, "timed-silence");
+    assert.deepEqual(result.nodes["231"].voiceLimits, [ {
+        counterId: "231",
+        scope: "game-object",
+        maxInstances: 1,
+        behavior: "reject-newest",
+        onLimit: "kill",
+    } ], "an immediate timed silence keeps its authored limit");
+    assert.ok(result.events.delayed_wait?.length, "the delayed event still builds");
+    assert.equal(result.nodes["230"].type, "timed-silence");
+    assert.equal(result.nodes["230"].voiceLimits, undefined,
+        "a Continuous Delay strips the timed silence's limit");
+    assert.equal(result.nodes["230"].priority, undefined);
+    assert.equal(result.nodes["230"].virtualVoice, undefined);
+});
+
 test("authored limits take ancestor, global, priority-offset and bus owners", () =>
 {
     const openBus = {
