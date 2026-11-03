@@ -5,49 +5,54 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Groups spotlight items with cone, glow, and flare textures plus skinning, depth, and visibility policy. */
-@be.define("EveSOFDataHullSpotlightSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullSpotlightSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:330-339, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "zOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneTextureResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "glowTextureResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "items", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullSpotlightSet extends IRoot
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_skinned (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   skinned = false;
 
   /** m_zOffset (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   zOffset = 0;
 
   /** m_coneTextureResPath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   coneTextureResPath = "";
 
   /** m_glowTextureResPath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   glowTextureResPath = "";
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_items (PEveSOFDataHullSpotlightSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullSpotlightSetItem")
   items = [];

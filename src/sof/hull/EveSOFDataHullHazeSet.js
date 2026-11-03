@@ -6,8 +6,18 @@ import { type } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 
 /** Groups named haze items with spherical-type, visibility, and skinning policy. */
-@be.define("EveSOFDataHullHazeSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullHazeSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:543-550, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "hazeType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullHazeSet.HazeType" ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "items", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullHazeSet extends IRoot
 {
 
@@ -15,31 +25,26 @@ export class EveSOFDataHullHazeSet extends IRoot
    * m_hazeType (HazeType - enum HazeType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:547); chooser EveSOFDataHazeTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:95).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullHazeSet.HazeType")
   @type.int32
   @type.enum("trinity.EveSOFDataHullHazeSet.HazeType")
   hazeType = 0;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_skinned (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   skinned = false;
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_items (PEveSOFDataHullHazeSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullHazeSetItem")
   items = [];

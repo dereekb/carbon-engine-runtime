@@ -5,31 +5,36 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Groups named sprite-line items with visibility and skinning policy. */
-@be.define("EveSOFDataHullSpriteLineSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullSpriteLineSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:506-512, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "skinned", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "items", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullSpriteLineSet extends IRoot
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_skinned (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   skinned = false;
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_items (PEveSOFDataHullSpriteLineSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullSpriteLineSetItem")
   items = [];

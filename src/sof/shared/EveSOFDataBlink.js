@@ -4,8 +4,12 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { blue } from "#schema";
 
 /** Empty native IRoot blink settings record; self exposure is in EveSOFData_Blue2.cpp:137-142. */
-@be.define("EveSOFDataBlink")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataBlink",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:139-140, in Carbon's order.
+  members: []
+})
 
 export class EveSOFDataBlink extends IRoot
 {

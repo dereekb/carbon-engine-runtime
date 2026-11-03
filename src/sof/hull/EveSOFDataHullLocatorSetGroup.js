@@ -5,19 +5,24 @@ import { type, blue } from "#schema";
 import { IEveSOFDataHullLocatorSet } from "./IEveSOFDataHullLocatorSet.js";
 
 /** Recursively groups polymorphic locator-set records under one name. */
-@be.define("EveSOFDataHullLocatorSetGroup")
-@be.mapInterface(IEveSOFDataHullLocatorSet)
+@be.define({
+  name: "EveSOFDataHullLocatorSetGroup",
+  // EveSOFData_Blue.cpp:805-810, in Carbon's order.
+  interfaces: [ IEveSOFDataHullLocatorSet ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locatorSets", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullLocatorSetGroup extends IEveSOFDataHullLocatorSet
 {
 
   /** m_locatorSets (PIEveSOFDataHullLocatorSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSOFDataHullLocatorSet")
   locatorSets = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

@@ -6,8 +6,21 @@ import { type, blue } from "#schema";
 import { EveSOFDataArea } from "../shared/EveSOFDataArea.js";
 
 /** Carbon-authored hull mesh-area record. */
-@be.define("EveSOFDataHullArea")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullArea",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:765-775, in Carbon's order.
+  members: [
+    [ be.ATTR, "index", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "count", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shader", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "blockedMaterials", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "areaType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataArea.AreaType" ],
+    [ be.ATTR, "textures", be.READ | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullArea extends IRoot
 {
   static AreaType = EveSOFDataArea.AreaType;
@@ -17,49 +30,41 @@ export class EveSOFDataHullArea extends IRoot
    * m_areaType (EveSOFDataArea::AreaType - enum AreaType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:773); chooser EveSOFDataAreaTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:113).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataArea.AreaType")
   @type.int32
   @type.enum("trinity.EveSOFDataArea.AreaType")
   areaType = 0;
 
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   textures = [];
 
   /** m_parameters (PEveSOFDataParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   parameters = [];
 
   /** m_index (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   index = 0;
 
   /** m_count (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   count = 1;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_shader (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   shader = "";
 
   /** m_blockedMaterials (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   blockedMaterials = 0;

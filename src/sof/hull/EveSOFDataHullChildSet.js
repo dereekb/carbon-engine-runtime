@@ -5,19 +5,25 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Groups child-resource placements under a named visibility identity. */
-@be.define("EveSOFDataHullChildSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullChildSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:830-835, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "items", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullChildSet extends IRoot
 {
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_items (PEveSOFDataHullChildSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullChildSetItem")
   items = [];
@@ -29,7 +35,6 @@ export class EveSOFDataHullChildSet extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {

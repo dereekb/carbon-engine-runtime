@@ -8,73 +8,78 @@ import { EveSOFDataHullExtensionPlacementDistributionPlacement } from "./EveSOFD
 import { vec3 } from "#math/vec3";
 
 /** Defines a concrete hull extension by DNA, locator, offset, distribution, conditions, and build flags. */
-@be.define("EveSOFDataHullExtensionPlacement")
-@be.mapInterface(IEveSOFDataHullExtensionPlacement)
+@be.define({
+  name: "EveSOFDataHullExtensionPlacement",
+  // EveSOFData_Blue2.cpp:267-280, in Carbon's order.
+  interfaces: [ IEveSOFDataHullExtensionPlacement ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "enabled", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "locatorSetName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "offset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distribution", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "distributionConditions", be.READ | be.PERSIST ],
+    [ be.ATTR, "descriptor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isInstanced", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isShared", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "extendsBoundingSphere", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "extendsShieldEllipsoid", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullExtensionPlacement extends IEveSOFDataHullExtensionPlacement
 {
 
   /** m_distributionConditions (PIEveSOFDataHullExtensionPlacementDistributionVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSOFDataHullExtensionPlacementDistribution")
   distributionConditions = [];
 
   /** m_extendsBoundingSphere (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   extendsBoundingSphere = true;
 
   /** m_extendsShieldEllipsoid (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   extendsShieldEllipsoid = true;
 
   /** m_isShared (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isShared = false;
 
   /** m_isInstanced (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isInstanced = true;
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   enabled = true;
 
   /** m_distribution (EveSOFDataHullExtensionPlacementDistributionPlacementPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataHullExtensionPlacementDistributionPlacement")
   distribution = new EveSOFDataHullExtensionPlacementDistributionPlacement();
 
   /** m_descriptor (EveSOFDNADescriptorPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDNADescriptor")
   descriptor = new EveSOFDNADescriptor();
 
   /** m_locatorSetName (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   locatorSetName = "";
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_offset (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   offset = vec3.create();

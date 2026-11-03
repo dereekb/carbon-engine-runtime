@@ -6,26 +6,31 @@ import { type, blue } from "#schema";
 import { vec4 } from "#math/vec4";
 
 /** Names a faction plane-set group and supplies its color. */
-@be.define("EveSOFDataFactionPlaneSet")
+@be.define({
+  name: "EveSOFDataFactionPlaneSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:432-437, in Carbon's order.
+  members: [
+    [ be.ATTR, "groupIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataFactionPlaneSet extends IRoot
 {
 
   /** m_groupIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   groupIndex = -1;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_color (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.create();

@@ -7,43 +7,48 @@ import { mat4 } from "#math/mat4";
 import { vec4 } from "#math/vec4";
 
 /** Defines a booster transform, functionality, trail, atlas, and light scale. */
-@be.define("EveSOFDataHullBoosterItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullBoosterItem",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:739-747, in Carbon's order.
+  members: [
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "functionality", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hasTrail", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "atlasIndex0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "atlasIndex1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightScale", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullBoosterItem extends IRoot
 {
 
   /** m_transform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();
 
   /** m_functionality (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   functionality = vec4.fromValues(0, 1, 1, 1);
 
   /** m_hasTrail (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   hasTrail = true;
 
   /** m_atlasIndex0 (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   atlasIndex0 = 0;
 
   /** m_atlasIndex1 (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   atlasIndex1 = 0;
 
   /** m_lightScale (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightScale = 1;

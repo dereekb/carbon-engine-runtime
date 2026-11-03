@@ -6,8 +6,24 @@ import { type, blue } from "#schema";
 import { vec3 } from "#math/vec3";
 
 /** Defines spotlight placement, intensity, saturation, cone angles, scales, noise, and profile data for an attachment. */
-@be.define("EveSOFDataSpotLightAttachment")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataSpotLightAttachment",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:290-303, in Carbon's order.
+  members: [
+    [ be.ATTR, "saturation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "intensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerAngleMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outerAngleMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerScaleMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outerScaleMultiplier", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseOctaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightProfilePath", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataSpotLightAttachment extends IRoot
 {
@@ -17,7 +33,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_saturation (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   saturation = 1;
@@ -27,7 +42,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_intensity (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   intensity = 1;
@@ -37,7 +51,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_translation (Vector3) [READWRITE, PERSIST]
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
@@ -47,7 +60,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_innerAngleMultiplier (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   innerAngleMultiplier = 0.5;
@@ -57,7 +69,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_outerAngleMultiplier (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   outerAngleMultiplier = 1;
@@ -67,7 +78,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_innerScaleMultiplier (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   innerScaleMultiplier = 1;
@@ -77,7 +87,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_outerScaleMultiplier (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   outerScaleMultiplier = 1;
@@ -87,7 +96,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_noiseAmplitude (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseAmplitude = 0;
@@ -97,7 +105,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_noiseFrequency (float) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseFrequency = 1;
@@ -107,7 +114,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_noiseOctaves (int32_t) [READWRITE, PERSIST]
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   noiseOctaves = 1;
@@ -117,7 +123,6 @@ export class EveSOFDataSpotLightAttachment extends IRoot
    * Native m_lightProfilePath (std::wstring) [READWRITE, PERSIST]
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wpath("Tr2LightProfileRes")
   lightProfilePath = "";

@@ -11,104 +11,109 @@ import { vec4 } from "#math/vec4";
  * preserve native defaults; no initialization, update or resource lifecycle
  * is required, and the native destructor is empty.
  */
-@be.define("EveSOFDataGenericHullDamage")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericHullDamage",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:462-480, in Carbon's order.
+  members: [
+    [ be.ATTR, "hullParticleRate", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleColorMidpoint", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleInnerAngle", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleMinMaxSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleMinMaxLifeTime", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleSizes", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleColor0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleColor1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleColor2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleColor3", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleTextureIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleVelocityStretchRotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleDrag", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleTurbulenceAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullParticleTurbulenceFrequency", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataGenericHullDamage extends IRoot
 {
 
   /** m_hullParticleRate (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleRate = 0;
 
   /** m_hullParticleAngle (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleAngle = 0;
 
   /** m_hullParticleColorMidpoint (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleColorMidpoint = 0.5;
 
   /** m_hullParticleInnerAngle (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleInnerAngle = 0;
 
   /** m_hullParticleMinMaxSpeed (Vector2) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec2
   hullParticleMinMaxSpeed = vec2.create();
 
   /** m_hullParticleMinMaxLifeTime (Vector2) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec2
   hullParticleMinMaxLifeTime = vec2.create();
 
   /** m_hullParticleSizes (Vector4) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   hullParticleSizes = vec4.create();
 
   /** m_hullParticleColor0 (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   hullParticleColor0 = vec4.create();
 
   /** m_hullParticleColor1 (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   hullParticleColor1 = vec4.create();
 
   /** m_hullParticleColor2 (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   hullParticleColor2 = vec4.create();
 
   /** m_hullParticleColor3 (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   hullParticleColor3 = vec4.create();
 
   /** m_hullParticleTextureIndex (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   hullParticleTextureIndex = 0;
 
   /** m_hullParticleVelocityStretchRotation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleVelocityStretchRotation = 0;
 
   /** m_hullParticleDrag (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleDrag = 0;
 
   /** m_hullParticleTurbulenceAmplitude (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   hullParticleTurbulenceAmplitude = 0;
 
   /** m_hullParticleTurbulenceFrequency (uint32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   hullParticleTurbulenceFrequency = 1;

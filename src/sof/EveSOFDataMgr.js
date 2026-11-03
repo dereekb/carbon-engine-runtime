@@ -30,8 +30,27 @@ const LOGO_KEYS = Object.freeze(["Primary", "Secondary", "Tertiary", "Marking_01
  * Carbon declares its many projection records as nested C++ structs. They are
  * plain JavaScript records here; they are not persisted fields on the manager.
  */
-@be.define("EveSOFDataMgr")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataMgr",
+  inherit: [ IRoot ],
+  // EveSOFDataMgr_Blue.cpp:13-89, in Carbon's order.
+  members: [
+    [ be.METHOD, "LoadData", be.WRAP ],
+    [ be.METHOD, "SetData", be.WRAP ],
+    [ be.METHOD, "UpdateHull", be.WRAP ],
+    [ be.METHOD, "UpdateFaction", be.WRAP ],
+    [ be.METHOD, "UpdateRace", be.WRAP ],
+    [ be.METHOD, "UpdateGeneric", be.WRAP ],
+    [ be.METHOD, "UpdateMaterial", be.WRAP ],
+    [ be.METHOD, "UpdatePattern", be.WRAP ],
+    [ be.METHOD, "UpdateLayout", be.WRAP ],
+    [ be.METHOD, "HasFactionData", be.WRAP ],
+    [ be.METHOD, "HasHullData", be.WRAP ],
+    [ be.METHOD, "HasRaceData", be.WRAP ],
+    [ be.METHOD, "HasMaterialData", be.WRAP ],
+    [ be.METHOD, "HasPatternData", be.WRAP ]
+  ]
+})
 
 export class EveSOFDataMgr extends IRoot
 {
@@ -79,7 +98,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   LoadData(filePath)
   {
     if (!this._resourceLoader) return false;
@@ -123,7 +141,6 @@ export class EveSOFDataMgr extends IRoot
    *   records. Generic data is still prepared here, as every build reads it.
    *   Callers get the same prepared records as before.
    */
-  @be.mapMethodAndWrap()
   SetData(data)
   {
     if (!data) return false;
@@ -146,7 +163,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasHullData(name)
   {
     return this._hullData.has(String(name));
@@ -170,7 +186,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasFactionData(name)
   {
     return this._factionData.has(String(name));
@@ -194,7 +209,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasRaceData(name)
   {
     return this._raceData.has(String(name));
@@ -218,7 +232,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasMaterialData(name)
   {
     return this._materialData.has(String(name));
@@ -242,7 +255,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasPatternData(name)
   {
     return this._patternData.has(String(name));
@@ -419,7 +431,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateHull(name, value)
   {
     return updateNamed(this._hullData, name, value, projectHull);
@@ -465,7 +476,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateFaction(name, value)
   {
     return updateNamed(this._factionData, name, value, projectFaction);
@@ -477,7 +487,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateRace(name, value)
   {
     return updateNamed(this._raceData, name, value, projectRace);
@@ -489,7 +498,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateMaterial(name, value)
   {
     return updateNamed(this._materialData, name, value, projectMaterial);
@@ -501,7 +509,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdatePattern(name, value)
   {
     if (!value) return false;
@@ -514,7 +521,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateLayout(name, value)
   {
     if (!value) return false;
@@ -527,7 +533,6 @@ export class EveSOFDataMgr extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   UpdateGeneric(value)
   {
     if (!value) return false;

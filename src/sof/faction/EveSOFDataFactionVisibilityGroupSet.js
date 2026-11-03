@@ -5,14 +5,19 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Defines faction visibility-group membership and object-visibility policy. */
-@be.define("EveSOFDataFactionVisibilityGroupSet")
+@be.define({
+  name: "EveSOFDataFactionVisibilityGroupSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:406-409, in Carbon's order.
+  members: [
+    [ be.ATTR, "visibilityGroups", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataFactionVisibilityGroupSet extends IRoot
 {
 
   /** m_visibilityGroups (PEveSOFDataGenericStringVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
   visibilityGroups = [];

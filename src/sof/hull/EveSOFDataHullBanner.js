@@ -10,8 +10,27 @@ import { vec3 } from "#math/vec3";
 import { EveSOFDataHullBannerLight } from "./EveSOFDataHullBannerLight.js";
 
 /** Defines a banner's usage, bone-relative transform, visibility, optional light override, aspect ratio, and flat or curved presentation. */
-@be.define("EveSOFDataHullBanner")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullBanner",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:665-684, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "usage", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullBanner.Usage" ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.PERSISTONLY, "_scaling" ],
+    [ be.PROP, "scaling" ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "angleX", be.PERSISTONLY, "_angleX" ],
+    [ be.PROP, "angleX" ],
+    [ be.ATTR, "angleY", be.PERSISTONLY, "_angleY" ],
+    [ be.PROP, "angleY" ],
+    [ be.ATTR, "lightOverride", be.READ | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maintainAspectRatio", be.READWRITE ]
+  ]
+})
 export class EveSOFDataHullBanner extends IRoot
 {
 
@@ -47,13 +66,11 @@ export class EveSOFDataHullBanner extends IRoot
    * m_usage (Usage - enum Usage) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:669); chooser EveSOFDataHullBannerUsageChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:554).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullBanner.Usage")
   @type.int32
   @type.enum("trinity.EveSOFDataHullBanner.Usage")
   usage = 3;
 
   /** m_boneIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = -1;
@@ -64,7 +81,6 @@ export class EveSOFDataHullBanner extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBanner::m_scaling (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:1041); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:672).
    */
-  @be.mapAttribute(be.PERSISTONLY, "scaling")
 
   @type.vec3
   _scaling = vec3.fromValues(1, 1, 1);
@@ -76,7 +92,6 @@ export class EveSOFDataHullBanner extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.vec3
   get scaling()
   {
@@ -99,7 +114,6 @@ export class EveSOFDataHullBanner extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBanner::m_angleX (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:1045); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:675).
    */
-  @be.mapAttribute(be.PERSISTONLY, "angleX")
 
   @type.float32
   _angleX = 0;
@@ -111,7 +125,6 @@ export class EveSOFDataHullBanner extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.float32
   get angleX()
   {
@@ -134,7 +147,6 @@ export class EveSOFDataHullBanner extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBanner::m_angleY (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:1046); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:677).
    */
-  @be.mapAttribute(be.PERSISTONLY, "angleY")
 
   @type.float32
   _angleY = 0;
@@ -146,7 +158,6 @@ export class EveSOFDataHullBanner extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.float32
   get angleY()
   {
@@ -164,36 +175,30 @@ export class EveSOFDataHullBanner extends IRoot
   }
 
   /** m_lightOverride (EveSOFDataHullBannerLightPtr) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.object.ref("EveSOFDataHullBannerLight")
   lightOverride = new EveSOFDataHullBannerLight();
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_maintainAspectRatio (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   maintainAspectRatio = true;
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";

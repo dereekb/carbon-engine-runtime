@@ -7,8 +7,40 @@ import { vec4 } from "#math/vec4";
 import { EveSOFDataBoosterShape } from "./EveSOFDataBoosterShape.js";
 
 /** Combines normal and warp booster colors, scales, shapes, textures, and light settings. */
-@be.define("EveSOFDataBooster")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataBooster",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:223-252, in Carbon's order.
+  members: [
+    [ be.ATTR, "scale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "glowColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "warpGlowColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "glowScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "warpHalpColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloScaleX", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "haloScaleY", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "symHaloScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "trailColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "trailSize", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shape0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shape1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "warpShape0", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "warpShape1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shapeAtlasResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "gradient0ResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "gradient1ResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shapeAtlasHeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shapeAtlasCount", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightOffset", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightWarpRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightFlickerAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightFlickerFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lightWarpColor", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataBooster extends IRoot
 {
@@ -17,7 +49,6 @@ export class EveSOFDataBooster extends IRoot
    * Four-component scale control forwarded to the booster effect; component meanings follow that shader.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   scale = vec4.fromValues(1, 1, 1, 1);
@@ -26,7 +57,6 @@ export class EveSOFDataBooster extends IRoot
    * Normal-flight glow color forwarded to the booster sprites.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   glowColor = vec4.create();
@@ -35,7 +65,6 @@ export class EveSOFDataBooster extends IRoot
    * Warp-flight glow color forwarded to the booster sprites.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   warpGlowColor = vec4.create();
@@ -44,7 +73,6 @@ export class EveSOFDataBooster extends IRoot
    * Size multiplier for the booster glow sprite.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   glowScale = 1;
@@ -53,7 +81,6 @@ export class EveSOFDataBooster extends IRoot
    * Normal-flight halo color for the booster sprites.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   haloColor = vec4.create();
@@ -62,7 +89,6 @@ export class EveSOFDataBooster extends IRoot
    * Warp-flight halo color; native exposure preserves this typo while its member is m_warpHaloColor.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   warpHalpColor = vec4.create();
@@ -71,7 +97,6 @@ export class EveSOFDataBooster extends IRoot
    * Horizontal size multiplier for the booster halo.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   haloScaleX = 1;
@@ -80,7 +105,6 @@ export class EveSOFDataBooster extends IRoot
    * Vertical size multiplier for the booster halo.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   haloScaleY = 1;
@@ -89,7 +113,6 @@ export class EveSOFDataBooster extends IRoot
    * Size multiplier for the symmetric booster halo.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   symHaloScale = 1;
@@ -98,7 +121,6 @@ export class EveSOFDataBooster extends IRoot
    * Color of the trail behind the booster.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   trailColor = vec4.create();
@@ -107,7 +129,6 @@ export class EveSOFDataBooster extends IRoot
    * Four-component trail-size control forwarded to the trail effect without unit conversion.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   trailSize = vec4.create();
@@ -116,7 +137,6 @@ export class EveSOFDataBooster extends IRoot
    * First normal-flight plume shape; constructed independently by default, while authored references may be null.
    * @type {EveSOFDataBoosterShape|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataBoosterShape")
   shape0 = new EveSOFDataBoosterShape();
@@ -125,7 +145,6 @@ export class EveSOFDataBooster extends IRoot
    * Second normal-flight plume shape; constructed independently by default, while authored references may be null.
    * @type {EveSOFDataBoosterShape|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataBoosterShape")
   shape1 = new EveSOFDataBoosterShape();
@@ -134,7 +153,6 @@ export class EveSOFDataBooster extends IRoot
    * First warp-flight plume shape; constructed independently by default, while authored references may be null.
    * @type {EveSOFDataBoosterShape|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataBoosterShape")
   warpShape0 = new EveSOFDataBoosterShape();
@@ -143,7 +161,6 @@ export class EveSOFDataBooster extends IRoot
    * Second warp-flight plume shape; constructed independently by default, while authored references may be null.
    * @type {EveSOFDataBoosterShape|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataBoosterShape")
   warpShape1 = new EveSOFDataBoosterShape();
@@ -152,7 +169,6 @@ export class EveSOFDataBooster extends IRoot
    * Resource path of the booster shape-atlas texture; a string rather than a held resource.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   shapeAtlasResPath = "";
@@ -161,7 +177,6 @@ export class EveSOFDataBooster extends IRoot
    * Resource path of the first booster gradient texture.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   gradient0ResPath = "";
@@ -170,7 +185,6 @@ export class EveSOFDataBooster extends IRoot
    * Resource path of the second booster gradient texture.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   gradient1ResPath = "";
@@ -179,7 +193,6 @@ export class EveSOFDataBooster extends IRoot
    * Unsigned atlas-height parameter packed into ShapeAtlasSize; no unit conversion is performed here.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   shapeAtlasHeight = 0;
@@ -188,7 +201,6 @@ export class EveSOFDataBooster extends IRoot
    * Unsigned number of shape-atlas entries packed into ShapeAtlasSize.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   shapeAtlasCount = 0;
@@ -197,7 +209,6 @@ export class EveSOFDataBooster extends IRoot
    * Offset used to place the booster light relative to its locator; no distance-unit conversion occurs here.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightOffset = 0;
@@ -206,7 +217,6 @@ export class EveSOFDataBooster extends IRoot
    * Normal-flight booster-light radius in the consumer scene-distance convention.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightRadius = 0;
@@ -215,7 +225,6 @@ export class EveSOFDataBooster extends IRoot
    * Warp-flight booster-light radius in the consumer scene-distance convention.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightWarpRadius = 0;
@@ -224,7 +233,6 @@ export class EveSOFDataBooster extends IRoot
    * Amplitude of booster-light flickering forwarded to the light setup.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightFlickerAmplitude = 0;
@@ -233,7 +241,6 @@ export class EveSOFDataBooster extends IRoot
    * Frequency control for booster-light flickering; no hertz conversion is established by this record.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   lightFlickerFrequency = 0;
@@ -242,7 +249,6 @@ export class EveSOFDataBooster extends IRoot
    * Normal-flight booster-light color.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   lightColor = vec4.create();
@@ -251,7 +257,6 @@ export class EveSOFDataBooster extends IRoot
    * Warp-flight booster-light color.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   lightWarpColor = vec4.create();

@@ -6,8 +6,19 @@ import { type, blue } from "#schema";
 import { vec4 } from "#math/vec4";
 
 /** Combines the noise, frequency, speed, and color parameters that define a booster shape. */
-@be.define("EveSOFDataBoosterShape")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataBoosterShape",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:207-215, in Carbon's order.
+  members: [
+    [ be.ATTR, "noiseFunction", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseSpeed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseAmplitureStart", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseAmplitureEnd", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataBoosterShape extends IRoot
 {
@@ -16,7 +27,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Numeric noise-function selector retained in authored and projected shape data (native float).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseFunction = 0;
@@ -25,7 +35,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Animation-speed control for the shape noise; shader-domain units are not converted here.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   noiseSpeed = 0;
@@ -34,7 +43,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Four-component noise amplitude at the start of the plume; native member and exposure retain the Ampliture spelling.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   noiseAmplitureStart = vec4.create();
@@ -43,7 +51,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Four-component noise amplitude at the end of the plume; native member and exposure retain the Ampliture spelling.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   noiseAmplitureEnd = vec4.create();
@@ -52,7 +59,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Four-component frequency control for the plume noise; forwarded unchanged to the shape parameters.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   noiseFrequency = vec4.create();
@@ -61,7 +67,6 @@ export class EveSOFDataBoosterShape extends IRoot
    * Color weight for this booster plume shape.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.create();

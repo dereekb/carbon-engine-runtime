@@ -10,8 +10,19 @@ import { type, blue } from "#schema";
  * construction needs no additional lifecycle, and the destructor is empty.
  * Existing JavaScript configuration helpers remain custom conveniences.
  */
-@be.define("EveSOFDataGenericShader")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericShader",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:519-527, in Carbon's order.
+  members: [
+    [ be.ATTR, "shader", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transparencyTextureName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "doGenerateDepthArea", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "defaultTextures", be.READ | be.PERSIST ],
+    [ be.ATTR, "defaultParameters", be.READ | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataGenericShader extends IRoot
 {
@@ -21,7 +32,6 @@ export class EveSOFDataGenericShader extends IRoot
    * (BlueSharedString).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   shader = "";
@@ -31,7 +41,6 @@ export class EveSOFDataGenericShader extends IRoot
    * m_transparencyTextureName (BlueSharedString).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   transparencyTextureName = "";
@@ -41,7 +50,6 @@ export class EveSOFDataGenericShader extends IRoot
    * m_doGenerateDepthArea (bool).
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   doGenerateDepthArea = true;
@@ -51,7 +59,6 @@ export class EveSOFDataGenericShader extends IRoot
    * Native m_parameters vector.
    * @type {Array<EveSOFDataGenericString>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
   parameters = [];
@@ -61,7 +68,6 @@ export class EveSOFDataGenericShader extends IRoot
    * vector.
    * @type {Array<EveSOFDataTexture>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   defaultTextures = [];
@@ -71,7 +77,6 @@ export class EveSOFDataGenericShader extends IRoot
    * m_defaultParameters vector.
    * @type {Array<EveSOFDataParameter>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   defaultParameters = [];

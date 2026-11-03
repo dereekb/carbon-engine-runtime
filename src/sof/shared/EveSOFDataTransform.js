@@ -14,8 +14,17 @@ import { vec3 } from "#math/vec3";
  * constructor-owned vectors require no update or resource lifecycle.
  * GetTransform remains a JavaScript convenience; native stores these fields only.
  */
-@be.define("EveSOFDataTransform")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataTransform",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:817-823, in Carbon's order.
+  members: [
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataTransform extends IRoot
 {
@@ -23,7 +32,6 @@ export class EveSOFDataTransform extends IRoot
    * Locator translation in the owning hull or bone's coordinate space; native m_position (Vector3).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
@@ -32,7 +40,6 @@ export class EveSOFDataTransform extends IRoot
    * Locator orientation quaternion (x, y, z, w); native m_rotation (Quaternion).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
@@ -41,7 +48,6 @@ export class EveSOFDataTransform extends IRoot
    * Independent locator scale along each local axis; native m_scaling (Vector3).
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
@@ -50,7 +56,6 @@ export class EveSOFDataTransform extends IRoot
    * Owning bone index, or -1 for an unbound locator; native m_boneIndex (int32_t).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @meta.ui.widget("boneindex")
   @type.int32

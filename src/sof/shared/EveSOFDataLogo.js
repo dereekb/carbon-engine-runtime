@@ -6,8 +6,14 @@ import { type, blue } from "#schema";
 import { EveSOFDataTexture } from "./EveSOFDataTexture.js";
 
 /** Stores a logo texture set and supports assignment and composition with another logo value. */
-@be.define("EveSOFDataLogo")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataLogo",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:128-130, in Carbon's order.
+  members: [
+    [ be.ATTR, "textures", be.READ | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataLogo extends IRoot
 {
@@ -15,7 +21,6 @@ export class EveSOFDataLogo extends IRoot
   /** Named texture bindings assigned into the logo texture map; native m_textures is a READ/PERSIST pointer vector, retained as a JS array.
    * @type {EveSOFDataTexture[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   textures = [];

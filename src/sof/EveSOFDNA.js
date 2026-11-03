@@ -32,8 +32,12 @@ const BUILD_CLASSES = Object.freeze([
 ]);
 
 /** Resolves a SOF DNA string against an EveSOFDataMgr. */
-@be.define("EveSOFDNA")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDNA",
+  inherit: [ IRoot ],
+  // EveSOFDNA_Blue.cpp:10-11, in Carbon's order.
+  members: []
+})
 
 export class EveSOFDNA extends IRoot
 {

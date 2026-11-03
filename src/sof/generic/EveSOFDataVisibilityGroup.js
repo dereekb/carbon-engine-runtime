@@ -9,20 +9,25 @@ import { type, blue } from "#schema";
  * preserve native defaults; no initialization, update or resource lifecycle
  * is required, and the native destructor is empty.
  */
-@be.define("EveSOFDataVisibilityGroup")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataVisibilityGroup",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:420-424, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "description", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataVisibilityGroup extends IRoot
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_description (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   description = "";

@@ -11,8 +11,15 @@ import { ReflectionMode } from "#consts/graphics";
  * preserve native defaults; no initialization, update or resource lifecycle
  * is required, and the native destructor is empty.
  */
-@be.define("EveSOFDataGenericHullCategory")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericHullCategory",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:559-563, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "reflectionMode", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EntityComponents.ReflectionMode" ]
+  ]
+})
 
 export class EveSOFDataGenericHullCategory extends IRoot
 {
@@ -21,7 +28,6 @@ export class EveSOFDataGenericHullCategory extends IRoot
 
 
   /** m_categoryName (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -30,7 +36,6 @@ export class EveSOFDataGenericHullCategory extends IRoot
    * m_reflectionMode (EntityComponents::ReflectionMode - enum ReflectionMode) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:563); chooser ReflectionModeChooser (trinity/trinity/Eve/EveEntity_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EntityComponents.ReflectionMode")
   @type.int32
   @type.enum("trinity.EntityComponents.ReflectionMode")
   reflectionMode = ReflectionMode.REFLECT_NEVER;

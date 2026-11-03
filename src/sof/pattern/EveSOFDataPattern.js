@@ -8,44 +8,49 @@ import { EveSOFDataPatternPerHull } from "./EveSOFDataPatternPerHull.js";
 import { ErrSOFProjectionNotFound } from "./ErrSOFProjectionNotFound.js";
 
 /** Defines a named two-layer pattern with application groups, per-hull lookup, flip policy, and custom mask support. */
-@be.define("EveSOFDataPattern")
+@be.define({
+  name: "EveSOFDataPattern",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:201-209, in Carbon's order.
+  members: [
+    [ be.ATTR, "sof6", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "projections", be.READ | be.PERSIST ],
+    [ be.ATTR, "applicationGroups", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPattern extends IRoot
 {
 
   /** m_projections (PEveSOFDataPatternPerHullVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataPatternPerHull")
   projections = [];
 
   /** m_applicationGroups (PEveSOFDataPatternApplicationGroupVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataPatternApplicationGroup")
   applicationGroups = [];
 
   /** m_layer1 (EveSOFDataPatternLayerPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternLayer")
   layer1 = null;
 
   /** m_layer2 (EveSOFDataPatternLayerPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternLayer")
   layer2 = null;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_sof6 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   sof6 = false;

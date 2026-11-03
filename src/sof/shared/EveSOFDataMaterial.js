@@ -9,8 +9,15 @@ import { type, blue } from "#schema";
  * are not loaded resources; native construction and empty destruction need
  * no additional initialization or update lifecycle.
  */
-@be.define("EveSOFDataMaterial")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataMaterial",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:189-193, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataMaterial extends IRoot
 {
@@ -20,7 +27,6 @@ export class EveSOFDataMaterial extends IRoot
    * Native m_name (std::string), READWRITE | PERSIST.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -30,7 +36,6 @@ export class EveSOFDataMaterial extends IRoot
    * Native m_parameters (PEveSOFDataParameterVector), READ | PERSIST.
    * @type {EveSOFDataParameter[]}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   parameters = [];

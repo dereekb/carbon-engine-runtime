@@ -5,20 +5,25 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Stores named faction hull-area parameters and provides case-insensitive lookup. */
-@be.define("EveSOFDataFactionHullArea")
+@be.define({
+  name: "EveSOFDataFactionHullArea",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:43-47, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataFactionHullArea extends IRoot
 {
 
   /** m_parameters (PEveSOFDataParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   parameters = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

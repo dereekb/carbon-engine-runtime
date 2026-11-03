@@ -5,19 +5,24 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Stores a named integer counter used to deplete layout-distribution capacity deterministically. */
-@be.define("EveSOFDataDistributionDepletionCounter")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataDistributionDepletionCounter",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:324-327, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataDistributionDepletionCounter extends IRoot
 {
 
   /** m_value (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   value = 1;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

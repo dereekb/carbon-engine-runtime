@@ -5,26 +5,31 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Names a faction child and records its group and visibility settings. */
-@be.define("EveSOFDataFactionChild")
+@be.define({
+  name: "EveSOFDataFactionChild",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:80-85, in Carbon's order.
+  members: [
+    [ be.ATTR, "groupIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isVisible", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataFactionChild extends IRoot
 {
 
   /** m_groupIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   groupIndex = -1;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_isVisible (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isVisible = false;

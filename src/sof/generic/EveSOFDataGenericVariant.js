@@ -10,26 +10,31 @@ import { type, blue } from "#schema";
  * is required, and the native destructor is empty.
  * The hull area is an authored object reference, not a held resource.
  */
-@be.define("EveSOFDataGenericVariant")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericVariant",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:548-553, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTransparent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hullArea", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataGenericVariant extends IRoot
 {
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_isTransparent (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTransparent = false;
 
   /** m_hullArea (EveSOFDataHullAreaPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataHullArea")
   hullArea = null;

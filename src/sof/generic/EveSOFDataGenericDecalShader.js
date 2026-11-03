@@ -10,8 +10,18 @@ import { type, blue } from "#schema";
  * construction needs no additional lifecycle, and the destructor is empty.
  * Existing JavaScript configuration helpers remain custom conveniences.
  */
-@be.define("EveSOFDataGenericDecalShader")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericDecalShader",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:534-541, in Carbon's order.
+  members: [
+    [ be.ATTR, "shader", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "defaultTextures", be.READ | be.PERSIST ],
+    [ be.ATTR, "parentTextures", be.READ | be.PERSIST ],
+    [ be.ATTR, "additive", be.READ | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataGenericDecalShader extends IRoot
 {
@@ -20,7 +30,6 @@ export class EveSOFDataGenericDecalShader extends IRoot
    * Shader filename identifying this decal shader definition; native m_shader (BlueSharedString).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   shader = "";
@@ -30,7 +39,6 @@ export class EveSOFDataGenericDecalShader extends IRoot
    * name. Native m_parameters vector.
    * @type {Array<EveSOFDataGenericString>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
   parameters = [];
@@ -40,7 +48,6 @@ export class EveSOFDataGenericDecalShader extends IRoot
    * vector.
    * @type {Array<EveSOFDataTexture>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   defaultTextures = [];
@@ -50,7 +57,6 @@ export class EveSOFDataGenericDecalShader extends IRoot
    * m_parentTextures vector.
    * @type {Array<EveSOFDataGenericString>}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
   parentTextures = [];
@@ -60,7 +66,6 @@ export class EveSOFDataGenericDecalShader extends IRoot
    * preserved as authored m_additive (bool).
    * @type {boolean}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.boolean
   additive = false;

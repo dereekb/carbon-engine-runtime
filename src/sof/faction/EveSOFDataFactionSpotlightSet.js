@@ -6,38 +6,43 @@ import { type, blue } from "#schema";
 import { vec4 } from "#math/vec4";
 
 /** Names a faction spotlight-set group and supplies its cone, sprite, and flare colors. */
-@be.define("EveSOFDataFactionSpotlightSet")
+@be.define({
+  name: "EveSOFDataFactionSpotlightSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:417-424, in Carbon's order.
+  members: [
+    [ be.ATTR, "groupIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spriteColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "flareColor", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataFactionSpotlightSet extends IRoot
 {
 
   /** m_groupIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   groupIndex = -1;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_coneColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   coneColor = vec4.create();
 
   /** m_spriteColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   spriteColor = vec4.create();
 
   /** m_flareColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   flareColor = vec4.create();

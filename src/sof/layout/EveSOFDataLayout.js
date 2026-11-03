@@ -5,37 +5,42 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Defines a named, seeded top-level layout with placements, counters, and randomization policy. */
-@be.define("EveSOFDataLayout")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataLayout",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:299-305, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "seed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "randomizeSeedOnLoad", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depletionCounters", be.READ | be.PERSIST ],
+    [ be.ATTR, "placements", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataLayout extends IRoot
 {
 
   /** m_depletionCounters (PEveSOFDataDistributionDepletionCounterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataDistributionDepletionCounter")
   depletionCounters = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_placements (PIEveSOFDataHullExtensionPlacementVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSOFDataHullExtensionPlacement")
   placements = [];
 
   /** m_randomizeSeedOnLoad (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   randomizeSeedOnLoad = false;
 
   /** m_seed (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   seed = 1337;

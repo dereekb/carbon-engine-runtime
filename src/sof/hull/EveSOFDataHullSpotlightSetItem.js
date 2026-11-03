@@ -8,8 +8,24 @@ import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 
 /** Defines a faction-aware spotlight placement with group and booster policy, cone, flare, sprite, saturation, scale, and typed spotlight-light data. */
-@be.define("EveSOFDataHullSpotlightSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullSpotlightSetItem",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:309-322, in Carbon's order.
+  members: [
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "colorType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType" ],
+    [ be.ATTR, "boosterGainInfluence", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "groupIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spriteScale", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "flareIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "spriteIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "saturation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "light", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullSpotlightSetItem extends IRoot
 {
   static ColorType = EveSOFDataFactionColorSet.ColorType;
@@ -19,67 +35,56 @@ export class EveSOFDataHullSpotlightSetItem extends IRoot
    * m_colorType (SOFDataFactionColorChooser::ColorType - enum ColorType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:314); chooser EveSOFDataFactionColorSetTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType")
   @type.int32
   @type.enum("trinity.SOFDataFactionColorChooser.ColorType")
   colorType = 12;
 
   /** m_boneIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = 0;
 
   /** m_transform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();
 
   /** m_boosterGainInfluence (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   boosterGainInfluence = false;
 
   /** m_groupIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   groupIndex = -1;
 
   /** m_spriteScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   spriteScale = vec3.fromValues(1, 1, 1);
 
   /** m_coneIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   coneIntensity = 0;
 
   /** m_flareIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   flareIntensity = 0;
 
   /** m_spriteIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   spriteIntensity = 0;
 
   /** m_saturation (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   saturation = 1;
 
   /** m_light (EveSOFDataSpotLightAttachmentPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataSpotLightAttachment")
   light = null;

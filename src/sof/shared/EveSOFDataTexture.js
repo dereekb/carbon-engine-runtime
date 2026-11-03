@@ -9,20 +9,25 @@ import { type, blue } from "#schema";
  * Native IRoot-only data with a self-only Blue table. The authored path is a
  * string, not a held resource; empty constructor/destructor need no lifecycle.
  */
-@be.define("EveSOFDataTexture")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataTexture",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:754-758, in Carbon's order.
+  members: [
+    [ be.ATTR, "resFilePath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataTexture extends IRoot
 {
 
   /** m_resFilePath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   resFilePath = "";
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

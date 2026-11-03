@@ -5,25 +5,30 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Groups named hull light items and their visibility policy. */
-@be.define("EveSOFDataHullLightSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullLightSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:117-121, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "items", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullLightSet extends IRoot
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_items (PEveSOFDataHullLightSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullLightSetItem")
   items = [];

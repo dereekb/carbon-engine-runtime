@@ -6,8 +6,15 @@ import { blue } from "#blue";
 import { IEveSOFDataHullExtensionPlacementDistribution } from "./IEveSOFDataHullExtensionPlacementDistribution.js";
 
 /** Tests map graphic-quality settings as a condition for a hull-extension placement. */
-@be.define("EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings")
-@be.mapInterface(IEveSOFDataHullExtensionPlacementDistribution)
+@be.define({
+  name: "EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings",
+  // EveSOFData_Blue2.cpp:365-369, in Carbon's order.
+  interfaces: [ IEveSOFDataHullExtensionPlacementDistribution ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "displayFilter", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings.DisplayQualityModifier" ]
+  ]
+})
 export class EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings extends IEveSOFDataHullExtensionPlacementDistribution
 {
 
@@ -15,13 +22,11 @@ export class EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings exte
    * m_displayFilter (DisplayQualityModifier - enum DisplayQualityModifier) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:369); chooser DisplayFlagModifierChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:52).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings.DisplayQualityModifier")
   @type.int32
   @type.enum("trinity.EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings.DisplayQualityModifier")
   displayFilter = 5;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

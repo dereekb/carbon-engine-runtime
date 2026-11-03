@@ -6,26 +6,31 @@ import { type, blue } from "#schema";
 import { EveSOFDataPatternTransform } from "./EveSOFDataPatternTransform.js";
 
 /** Stores named per-hull transforms for both pattern layers plus flip, clear, and customization policy. */
-@be.define("EveSOFDataPatternPerHull")
+@be.define({
+  name: "EveSOFDataPatternPerHull",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:254-259, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transformLayer1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transformLayer2", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPatternPerHull
 {
 
   /** m_transformLayer1 (EveSOFDataPatternTransformPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternTransform")
   transformLayer1 = null;
 
   /** m_transformLayer2 (EveSOFDataPatternTransformPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternTransform")
   transformLayer2 = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

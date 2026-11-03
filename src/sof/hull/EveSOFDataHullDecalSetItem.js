@@ -10,8 +10,26 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 
 /** Defines a logo or usage decal with faction color, bone and transform placement, mesh and material data, and single- or multi-hull index buffers. */
-@be.define("EveSOFDataHullDecalSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullDecalSetItem",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:1041-1055, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "usage", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullDecalSetItem.Usage" ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "meshIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "glowColorType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType" ],
+    [ be.ATTR_CHOOSER, "logoType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataLogoSet.LogoType" ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "textures", be.READ | be.PERSIST ],
+    [ be.ATTR, "indexBuffers", be.READ | be.PERSIST ],
+    [ be.ATTR, "multiHullIndexBuffers", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullDecalSetItem extends IRoot
 {
   static ColorType = EveSOFDataFactionColorSet.ColorType;
@@ -34,7 +52,6 @@ export class EveSOFDataHullDecalSetItem extends IRoot
    * m_logoType (EveSOFDataLogoSet::LogoType - enum LogoType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1051); chooser EveSOFDataLogoSetTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:60).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataLogoSet.LogoType")
   @type.int32
   @type.enum("trinity.EveSOFDataLogoSet.LogoType")
   logoType = 0;
@@ -43,7 +60,6 @@ export class EveSOFDataHullDecalSetItem extends IRoot
    * m_usage (Usage - enum Usage) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1044); chooser EveSOFDecalUsageChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1028).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullDecalSetItem.Usage")
   @type.int32
   @type.enum("trinity.EveSOFDataHullDecalSetItem.Usage")
   usage = 0;
@@ -52,67 +68,56 @@ export class EveSOFDataHullDecalSetItem extends IRoot
    * m_glowColorType (SOFDataFactionColorChooser::ColorType - enum ColorType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1050); chooser EveSOFDataFactionColorSetTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:10).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.SOFDataFactionColorChooser.ColorType")
   @type.int32
   @type.enum("trinity.SOFDataFactionColorChooser.ColorType")
   glowColorType = 0;
 
   /** m_boneIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = -1;
 
   /** m_parameters (PEveSOFDataParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   parameters = [];
 
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   textures = [];
 
   /** m_indexBuffers (PEveSOFDataDecalIndexBufferVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataDecalIndexBuffer")
   indexBuffers = [];
 
   /** m_multiHullIndexBuffers (PEveSOFDataMultiHullDecalIndexBuffersVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataMultiHullDecalIndexBuffers")
   multiHullIndexBuffers = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_meshIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   meshIndex = -1;

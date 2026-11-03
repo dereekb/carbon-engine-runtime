@@ -8,9 +8,21 @@ import { blue, EnumRegistrationType } from "#blue";
 import { Tr2Lod } from "#consts/trinity";
 
 /** Defines instanced-mesh geometry, shader, display and LOD policy, textures, and instance transforms. */
-@be.define("EveSOFDataInstancedMesh")
+@be.define({
+  name: "EveSOFDataInstancedMesh",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:65-74, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lowestLodVisible", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "displayModifier", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataInstancedMesh.DisplayQualityModifier" ],
+    [ be.ATTR, "geometryResPath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "instances", be.READ | be.PERSIST ],
+    [ be.ATTR, "shader", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "textures", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataInstancedMesh extends IRoot
 {
   static Tr2Lod = Tr2Lod;
@@ -20,44 +32,37 @@ export class EveSOFDataInstancedMesh extends IRoot
    * m_displayModifier (DisplayQualityModifier - enum DisplayQualityModifier) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:70); chooser DisplayFlagModifierChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:52).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataInstancedMesh.DisplayQualityModifier")
   @type.int32
   @type.enum("trinity.EveSOFDataInstancedMesh.DisplayQualityModifier")
   displayModifier = 5;
 
   /** m_instances (PEveSofDataMeshInstanceStructureList) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.structList("EveSofDataMeshInstance")
   instances = [];
 
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   textures = [];
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_lowestLodVisible (Tr2Lod - enum Tr2Lod) [READWRITE, PERSIST, ENUM] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   @type.enum("trinity.Tr2Lod")
   lowestLodVisible = 0;
 
   /** m_geometryResPath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
   /** m_shader (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   shader = "";

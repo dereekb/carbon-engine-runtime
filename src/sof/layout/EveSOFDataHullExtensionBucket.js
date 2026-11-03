@@ -10,7 +10,15 @@ import { EveSOFDataHullExtensionPlacement } from "./EveSOFDataHullExtensionPlace
 // and placements (EveSOFData_Blue2.cpp:292-299): the base placement surface
 // is not exposed for this type. The JavaScript inheritance stays real; the
 // inherited fields are hidden from this class's schema surface only.
-@be.define("EveSOFDataHullExtensionBucket")
+@be.define({
+  name: "EveSOFDataHullExtensionBucket",
+  // EveSOFData_Blue2.cpp:313-317, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depletionCounters", be.READ | be.PERSIST ],
+    [ be.ATTR, "placements", be.READ | be.PERSIST ]
+  ]
+})
 
 @meta.hideInherited([
   "distributionConditions",
@@ -28,19 +36,16 @@ export class EveSOFDataHullExtensionBucket extends EveSOFDataHullExtensionPlacem
 {
 
   /** m_depletionCounters (PEveSOFDataDistributionDepletionCounterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataDistributionDepletionCounter")
   depletionCounters = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_placements (PEveSOFDataHullExtensionPlacementVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullExtensionPlacement")
   placements = [];

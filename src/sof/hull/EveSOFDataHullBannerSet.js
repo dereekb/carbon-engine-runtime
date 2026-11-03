@@ -5,19 +5,25 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Groups banner items under a named visibility identity. */
-@be.define("EveSOFDataHullBannerSet")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullBannerSet",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:690-694, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR, "visibilityGroup", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "banners", be.READ | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullBannerSet extends IRoot
 {
 
   /** m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   visibilityGroup = "primary";
 
   /** m_banners (PEveSOFDataHullBannerSetItemVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataHullBannerSetItem")
   banners = [];
@@ -29,7 +35,6 @@ export class EveSOFDataHullBannerSet extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {

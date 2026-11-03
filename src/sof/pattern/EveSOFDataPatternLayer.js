@@ -6,9 +6,23 @@ import { type } from "#schema";
 import { blue, EnumRegistrationType } from "#blue";
 
 /** Defines a pattern layer's texture, material source, UV modes and slots, and helpers that populate textures and custom masks. */
-@be.define("EveSOFDataPatternLayer")
+@be.define({
+  name: "EveSOFDataPatternLayer",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:1199-1210, in Carbon's order.
+  members: [
+    [ be.ATTR, "textureName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "textureResFilePath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "projectionTypeU", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.ProjectionType" ],
+    [ be.ATTR_CHOOSER, "projectionTypeV", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.ProjectionType" ],
+    [ be.ATTR_CHOOSER, "materialSource", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.MaterialSource" ],
+    [ be.ATTR, "isTargetMtl1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl3", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl4", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPatternLayer
 {
 
@@ -33,7 +47,6 @@ export class EveSOFDataPatternLayer
    * m_materialSource (MaterialSource - enum MaterialSource) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1206); chooser EveSOFDataPatternLayerMaterialSourceChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1186).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.MaterialSource")
   @type.int32
   @type.enum("trinity.EveSOFDataPatternLayer.MaterialSource")
   materialSource = 0;
@@ -42,7 +55,6 @@ export class EveSOFDataPatternLayer
    * m_projectionTypeU (ProjectionType - enum ProjectionType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1204); chooser EveSOFDataPatternLayerProjectionTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1153).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.ProjectionType")
   @type.int32
   @type.enum("trinity.EveSOFDataPatternLayer.ProjectionType")
   projectionTypeU = 0;
@@ -51,43 +63,36 @@ export class EveSOFDataPatternLayer
    * m_projectionTypeV (ProjectionType - enum ProjectionType) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1205); chooser EveSOFDataPatternLayerProjectionTypeChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:1153).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataPatternLayer.ProjectionType")
   @type.int32
   @type.enum("trinity.EveSOFDataPatternLayer.ProjectionType")
   projectionTypeV = 0;
 
   /** m_textureName (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   textureName = "";
 
   /** m_textureResFilePath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("TriTextureRes")
   textureResFilePath = "";
 
   /** m_isTargetMtl1 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl1 = true;
 
   /** m_isTargetMtl2 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl2 = true;
 
   /** m_isTargetMtl3 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl3 = true;
 
   /** m_isTargetMtl4 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl4 = true;

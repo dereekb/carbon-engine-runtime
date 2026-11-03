@@ -5,32 +5,37 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Names per-layer pattern properties and provides searchable per-hull projections. */
-@be.define("EveSOFDataPatternApplicationGroup")
+@be.define({
+  name: "EveSOFDataPatternApplicationGroup",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:241-247, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer1Properties", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "layer2Properties", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "projections", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPatternApplicationGroup extends IRoot
 {
 
   /** m_layer1Properties (EveSOFDataPatternLayerPropertiesPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternLayerProperties")
   layer1Properties = null;
 
   /** m_layer2Properties (EveSOFDataPatternLayerPropertiesPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPatternLayerProperties")
   layer2Properties = null;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_projections (PEveSOFDataPatternPerHullVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataPatternPerHull")
   projections = [];

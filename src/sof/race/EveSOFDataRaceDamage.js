@@ -7,32 +7,37 @@ import { EveSOFDataParameter } from "../shared/EveSOFDataParameter.js";
 import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
 
 /** Stores, combines, and assigns race-level armor and shield damage parameters and textures. */
-@be.define("EveSOFDataRaceDamage")
+@be.define({
+  name: "EveSOFDataRaceDamage",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:260-266, in Carbon's order.
+  members: [
+    [ be.ATTR, "armorImpactParameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "armorImpactTextures", be.READ | be.PERSIST ],
+    [ be.ATTR, "shieldImpactParameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "shieldImpactTextures", be.READ | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataRaceDamage extends IRoot
 {
 
   /** m_armorImpactParameters (PEveSOFDataParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   armorImpactParameters = [];
 
   /** m_armorImpactTextures (PEveSOFDataTextureVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   armorImpactTextures = [];
 
   /** m_shieldImpactParameters (PEveSOFDataParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataParameter")
   shieldImpactParameters = [];
 
   /** m_shieldImpactTextures (PEveSOFDataTextureVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataTexture")
   shieldImpactTextures = [];

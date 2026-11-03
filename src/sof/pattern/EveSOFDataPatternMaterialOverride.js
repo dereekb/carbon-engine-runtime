@@ -5,32 +5,37 @@ import { IRoot } from "../../blue/blueexposure/IRoot.js";
 import { type, blue } from "#schema";
 
 /** Defines a four-slot target mask for overriding pattern materials. */
-@be.define("EveSOFDataPatternMaterialOverride")
+@be.define({
+  name: "EveSOFDataPatternMaterialOverride",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:228-234, in Carbon's order.
+  members: [
+    [ be.ATTR, "isTargetMtl1", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl2", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl3", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isTargetMtl4", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPatternMaterialOverride extends IRoot
 {
 
   /** m_isTargetMtl1 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl1 = true;
 
   /** m_isTargetMtl2 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl2 = true;
 
   /** m_isTargetMtl3 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl3 = true;
 
   /** m_isTargetMtl4 (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isTargetMtl4 = true;

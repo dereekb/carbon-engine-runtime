@@ -9,14 +9,19 @@ import { type, blue } from "#schema";
  * Native IRoot-only data with a self-only Blue table. Constructor/destructor
  * are empty; no initialization, update or resource lifecycle is required.
  */
-@be.define("EveSOFDataGenericString")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataGenericString",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:411-414, in Carbon's order.
+  members: [
+    [ be.ATTR, "str", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataGenericString extends IRoot
 {
 
   /** m_str (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   str = "";

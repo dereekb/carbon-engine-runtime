@@ -9,8 +9,26 @@ import { vec3 } from "#math/vec3";
 import { EveSOFDataHullBanner } from "./EveSOFDataHullBanner.js";
 
 /** Places one banner by usage, bone, and transform, with optional point-light, aspect-scale, and curvature settings. */
-@be.define("EveSOFDataHullBannerSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullBannerSetItem",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:700-717, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "usage", be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullBannerSetItem.Usage" ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.PERSISTONLY, "_scaling" ],
+    [ be.PROP, "scaling" ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "angleX", be.PERSISTONLY, "_angleX" ],
+    [ be.PROP, "angleX" ],
+    [ be.ATTR, "angleY", be.PERSISTONLY, "_angleY" ],
+    [ be.PROP, "angleY" ],
+    [ be.ATTR, "light", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "maintainAspectRatio", be.READWRITE ]
+  ]
+})
 export class EveSOFDataHullBannerSetItem extends IRoot
 {
 
@@ -46,13 +64,11 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    * m_usage (Usage - enum Usage) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:704); chooser EveSOFDataHullBannerSetItemUsageChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:585).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveSOFDataHullBannerSetItem.Usage")
   @type.int32
   @type.enum("trinity.EveSOFDataHullBannerSetItem.Usage")
   usage = 3;
 
   /** m_boneIndex (int32_t) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   boneIndex = -1;
@@ -63,7 +79,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBannerSetItem::m_scaling (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:954); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:706).
    */
-  @be.mapAttribute(be.PERSISTONLY, "scaling")
 
   @type.vec3
   _scaling = vec3.fromValues(1, 1, 1);
@@ -75,7 +90,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.vec3
   get scaling()
   {
@@ -98,7 +112,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBannerSetItem::m_angleX (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:958); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:709).
    */
-  @be.mapAttribute(be.PERSISTONLY, "angleX")
 
   @type.float32
   _angleX = 0;
@@ -110,7 +123,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.float32
   get angleX()
   {
@@ -133,7 +145,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    * Readers write it directly, bypassing the aspect-ratio correction.
    * Carbon: EveSOFDataHullBannerSetItem::m_angleY (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h:959); MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:711).
    */
-  @be.mapAttribute(be.PERSISTONLY, "angleY")
 
   @type.float32
   _angleY = 0;
@@ -145,7 +156,6 @@ export class EveSOFDataHullBannerSetItem extends IRoot
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.float32
   get angleY()
   {
@@ -163,31 +173,26 @@ export class EveSOFDataHullBannerSetItem extends IRoot
   }
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_light (EveSOFDataPointLightAttachmentPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("EveSOFDataPointLightAttachment")
   light = null;
 
   /** m_maintainAspectRatio (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   maintainAspectRatio = true;
 

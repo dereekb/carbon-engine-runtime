@@ -18,8 +18,15 @@ import { vec4 } from "#math/vec4";
  * Native IRoot-only data with a self-only Blue table. Defaults retain native
  * construction; the empty destructor needs no resource or update lifecycle.
  */
-@be.define("EveSOFDataParameter")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataParameter",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:12-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class EveSOFDataParameter extends IRoot
 {
@@ -29,7 +36,6 @@ export class EveSOFDataParameter extends IRoot
    * (BlueSharedString).
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -39,7 +45,6 @@ export class EveSOFDataParameter extends IRoot
    * m_value (Vector4); typed subclasses provide their own value representation.
    * @type {Float32Array}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec4
   value = vec4.create();

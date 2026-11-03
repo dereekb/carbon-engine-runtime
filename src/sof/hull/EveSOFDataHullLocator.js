@@ -6,19 +6,24 @@ import { type, blue } from "#schema";
 import { mat4 } from "#math/mat4";
 
 /** Stores a named hull locator and its transformation matrix. */
-@be.define("EveSOFDataHullLocator")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullLocator",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:782-786, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "transform", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class EveSOFDataHullLocator extends IRoot
 {
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_transform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   transform = mat4.create();

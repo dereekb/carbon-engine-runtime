@@ -10,8 +10,20 @@ import { vec3 } from "#math/vec3";
 import "./enums.js";
 
 /** Places a RED child resource with build and LOD policy plus scale, rotation, and translation, deriving its name from the resource path. */
-@be.define("EveSOFDataHullChildSetItem")
-@be.inherit(IRoot)
+@be.define({
+  name: "EveSOFDataHullChildSetItem",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue.cpp:841-849, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "name" ],
+    [ be.ATTR, "redFilePath", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lowestLodVisible", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "buildFilter", be.READWRITE | be.PERSIST, "trinity.EveSOFDataHullBuildFilter" ]
+  ]
+})
 export class EveSOFDataHullChildSetItem extends IRoot
 {
   static Tr2Lod = Tr2Lod;
@@ -21,37 +33,31 @@ export class EveSOFDataHullChildSetItem extends IRoot
    * m_buildFilter (uint32_t) [READWRITE, PERSIST]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:849); chooser EveSOFDataHullBuildFilterChooser (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:104).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST, "trinity.EveSOFDataHullBuildFilter")
   @type.uint32
   buildFilter = 0xffffffff;
 
   /** m_redFilePath (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.path("object")
   redFilePath = "";
 
   /** m_lowestLodVisible (Tr2Lod - enum Tr2Lod) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   @type.enum("trinity.Tr2Lod")
   lowestLodVisible = 0;
 
   /** m_translation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
@@ -63,7 +69,6 @@ export class EveSOFDataHullChildSetItem extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.string
   get name()
   {

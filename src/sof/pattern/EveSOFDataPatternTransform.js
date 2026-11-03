@@ -8,32 +8,37 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 
 /** Stores pattern position, scale, rotation, and mirror settings and composes their transformation matrix. */
-@be.define("EveSOFDataPatternTransform")
+@be.define({
+  name: "EveSOFDataPatternTransform",
+  inherit: [ IRoot ],
+  // EveSOFData_Blue2.cpp:216-222, in Carbon's order.
+  members: [
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isMirrored", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class EveSOFDataPatternTransform extends IRoot
 {
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_isMirrored (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isMirrored = false;
