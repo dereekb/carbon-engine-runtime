@@ -1,11 +1,11 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/EveChildProceduralContainer.h
 import { exposure as be } from "#be";
-import { INotify } from "../../../../blue/blueexposure/INotify.js";
+import { INotify } from "../../../../blue/exposure/INotify.js";
 import { IShaderConfigurer } from "../../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../../EveEntity.js";
 import { ITr2SoundEmitterOwner } from "../../ITr2SoundEmitterOwner.js";
-import { IListNotify } from "../../../../blue/blueexposure/IListNotify.js";
-import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
+import { IListNotify } from "../../../../blue/exposure/IListNotify.js";
+import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 import { ITr2CurveSetOwner } from "../../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObjectChild } from "../IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "../EveSpaceObjectChild.js";

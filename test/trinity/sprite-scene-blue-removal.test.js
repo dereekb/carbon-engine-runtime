@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blue, INotify, IListNotify, BlueList } from "../../npm/dist/blue/blue/index.js";
@@ -22,7 +22,7 @@ import { vec3 } from "../../npm/dist/global/math/vec3.js";
 
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/core/context/Tr2RenderContext.js";
 
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 
 const context={GetViewTransform:()=>mat4.create()};

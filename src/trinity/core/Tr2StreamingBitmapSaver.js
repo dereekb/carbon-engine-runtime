@@ -1,4 +1,4 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2StreamingBitmapSaver.h
 //   trinity/trinity/Tr2StreamingBitmapSaver.cpp

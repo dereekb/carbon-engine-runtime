@@ -1,4 +1,4 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/IEveShadowCaster.h:140-160
 //
 // The contract every shadow caster answers to, registered as the "ShadowCaster"

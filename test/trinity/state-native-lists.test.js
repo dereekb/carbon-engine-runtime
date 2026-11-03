@@ -1,11 +1,11 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
-import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
+import { IListNotify } from "../../npm/dist/blue/exposure/IListNotify.js";
+import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";

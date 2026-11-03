@@ -1,13 +1,13 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { ICustomPersist } from "../../npm/dist/blue/blueexposure/ICustomPersist.js";
-import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
-import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
+import { ICustomPersist } from "../../npm/dist/blue/exposure/ICustomPersist.js";
+import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
+import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { ITr2Updateable } from "../../npm/dist/trinity/core/ITr2Updateable.js";
@@ -342,10 +342,10 @@ test("all action null-chain tables isolate a temporary native parent query mappi
       import assert from "node:assert/strict";
       import { meta, CjsSchema } from ${JSON.stringify(moduleURL("blue/schema/index.js"))}; const blue = CjsSchema.be;
       import { mappedInterfaces } from ${JSON.stringify(moduleURL("blue/compose/interface.js"))};
-      import { IRoot } from ${JSON.stringify(moduleURL("blue/blueexposure/IRoot.js"))};
-            import { ICustomPersist } from ${JSON.stringify(moduleURL("blue/blueexposure/ICustomPersist.js"))};
-      import { IInitialize } from ${JSON.stringify(moduleURL("blue/blueexposure/IInitialize.js"))};
-      import { INotify } from ${JSON.stringify(moduleURL("blue/blueexposure/INotify.js"))};
+      import { IRoot } from ${JSON.stringify(moduleURL("blue/exposure/IRoot.js"))};
+            import { ICustomPersist } from ${JSON.stringify(moduleURL("blue/exposure/ICustomPersist.js"))};
+      import { IInitialize } from ${JSON.stringify(moduleURL("blue/exposure/IInitialize.js"))};
+      import { INotify } from ${JSON.stringify(moduleURL("blue/exposure/INotify.js"))};
       import { ITr2Updateable } from ${JSON.stringify(moduleURL("trinity/core/ITr2Updateable.js"))};
       import { ITr2ControllerAction } from ${JSON.stringify(moduleURL("trinity/controllers/action/ITr2ControllerAction.js"))};
       class ParentOnlyInterface {}

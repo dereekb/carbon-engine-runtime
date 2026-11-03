@@ -2,8 +2,8 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildAudio.cpp
 import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { mat4 } from "#math/mat4";

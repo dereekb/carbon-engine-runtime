@@ -1,12 +1,12 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
-import { INotify } from "../../blue/blueexposure/INotify.js";
+import { INotify } from "../../blue/exposure/INotify.js";
 import { ITr2DebugRenderable } from "../../global/interfaces/ITr2DebugRenderable.js";
 import { IWorldPosition } from "../core/IWorldPosition.js";
 // Source: trinity/trinity/Eve/AudioGameObject.h
 // Source: trinity/trinity/Eve/AudioGameObject.cpp
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../blue/exposure/IInitialize.js";
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "./IEveSpaceObject2.js";
 import { quat } from "#math/quat";

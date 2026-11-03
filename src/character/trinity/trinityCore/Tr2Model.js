@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 // Source: trinity/trinity/Tr2Model.h
 // Source: trinity/trinity/Tr2Model.cpp
 // Source: trinity/trinity/Tr2Model_Blue.cpp

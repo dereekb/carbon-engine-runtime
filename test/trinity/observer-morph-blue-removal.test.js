@@ -1,5 +1,5 @@
 import { prepareResourceFixture } from "../support/resourceFixtures.js";
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blue, BlueList } from "../../npm/dist/blue/blue/index.js";

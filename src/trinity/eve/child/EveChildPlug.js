@@ -1,10 +1,10 @@
 import { exposure as be } from "#be";
 import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildPlug.h
-import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
+import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { ITr2SoundEmitterOwner } from "../ITr2SoundEmitterOwner.js";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";

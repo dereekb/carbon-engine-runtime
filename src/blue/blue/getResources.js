@@ -1,4 +1,4 @@
-import { BlueClasses } from "../blueexposure/BlueClasses.js";
+import { BlueClasses } from "../exposure/BlueClasses.js";
 
 /**
  * Collects the unique resources reachable from an object, including a

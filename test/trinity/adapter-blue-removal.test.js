@@ -1,10 +1,10 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { blue, ITriFunction, ITriVectorFunction, ITriQuaternionFunction } from "../../npm/dist/blue/blue/index.js";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
 import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";

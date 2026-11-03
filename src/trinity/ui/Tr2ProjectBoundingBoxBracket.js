@@ -1,4 +1,4 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { ITriFunction } from "../../blue/blue/interfaces/ITriFunction.js";
 // Source: trinity/trinity/Tr2ProjectBoundingBoxBracket.h

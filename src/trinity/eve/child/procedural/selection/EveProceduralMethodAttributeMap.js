@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodAttributeMap.h
 import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
-import { INotify } from "../../../../../blue/blueexposure/INotify.js";
+import { INotify } from "../../../../../blue/exposure/INotify.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
 import { EveProceduralMethodAttributeMapParameter } from "./EveProceduralMethodAttributeMapParameter.js";

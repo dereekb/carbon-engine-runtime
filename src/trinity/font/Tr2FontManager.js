@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Font/Tr2FontManager.h
 // Source: trinity/trinity/Font/Tr2FontManager.cpp
 // Source: trinity/trinity/Font/Tr2FontManager_Blue.cpp

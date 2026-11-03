@@ -7,7 +7,7 @@ import test from "node:test";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { blue } from "../../src/blue/blue/index.js";
 import { DictReader } from "../../src/blue/blue/formats/graph/DictReader.js";
-import { INotify } from "../../src/blue/blueexposure/INotify.js";
+import { INotify } from "../../src/blue/exposure/INotify.js";
 import { DictWriter } from "../../src/blue/blue/formats/graph/DictWriter.js";
 import { CjsBlackReader } from "../../src/blue/blue/formats/black/core/CjsBlackReader.js";
 import { CjsGraphFormat } from "../../src/blue/blue/formats/graph/index.js";

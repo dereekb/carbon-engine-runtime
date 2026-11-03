@@ -3,8 +3,8 @@
 // Source: trinity/trinity/Tr2DynamicBinding_Blue.cpp
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
-import { IList } from "#blueexposure/IList";
-import { INotify } from "#blueexposure/INotify";
+import { IList } from "#exposure/IList";
+import { INotify } from "#exposure/INotify";
 import { ISimTimeRebaseNotify } from "#blue/interfaces/ISimTimeRebaseNotify";
 import { blue, CcpTime } from "#blue";
 import { TriValueBinding } from "./TriValueBinding.js";

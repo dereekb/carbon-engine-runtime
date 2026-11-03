@@ -2,8 +2,8 @@
 import { exposure as be } from "#be";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
-import { INotify, IsMatch } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify, IsMatch } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 // Hand-maintained from Carbon source.
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";

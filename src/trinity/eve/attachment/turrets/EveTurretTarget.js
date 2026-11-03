@@ -1,6 +1,6 @@
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
-import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/Turret/EveTurretTarget.h
 // Source: trinity/trinity/Eve/Turret/EveTurretTarget.cpp
 import { vec3 } from "#math/vec3";

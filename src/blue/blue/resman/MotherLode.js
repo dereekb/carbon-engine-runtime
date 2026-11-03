@@ -10,7 +10,7 @@ import { normalizeResourcePath } from "#utils/path";
 import { BlueOS } from "../services/BlueOS.js";
 import { ICacheable } from "../interfaces/ICacheable.js";
 import { IBlueResource } from "../interfaces/IBlueResource.js";
-import { IRoot } from "../../blueexposure/IRoot.js";
+import { IRoot } from "../../exposure/IRoot.js";
 
 /** Bytes in one megabyte, for the cache sizes below. */
 const MEGABYTE = 1024 * 1024;

@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildQuad.h
 import { exposure as be } from "#be";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.

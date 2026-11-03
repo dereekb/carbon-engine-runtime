@@ -1,16 +1,16 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { AudParameter } from "../../npm/dist/audio/trinity/audio/AudParameter.js";
 import { AudGameObjResource } from "../../npm/dist/audio/trinity/audio/AudGameObjResource.js";
 import { AudManager } from "../../npm/dist/audio/trinity/audio/AudManager.js";
 import { CjsWwiseSoundEngineStub } from "../../npm/dist/global/audio/CjsWwiseSoundEngineStub.js";
-import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
-import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
+import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
+import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
 import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
 import { DictWriter } from "../../npm/dist/blue/blue/formats/graph/DictWriter.js";
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 

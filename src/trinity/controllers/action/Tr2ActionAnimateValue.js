@@ -4,7 +4,7 @@
 import { exposure as be } from "#be";
 import { type } from "#schema";
 import { IsMatch, blue } from "#blue";
-import { INotify } from "#blueexposure/INotify";
+import { INotify } from "#exposure/INotify";
 import { CjsControllerExpressionProgram } from "../expression/CjsControllerExpressionProgram.js";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
 import { ITr2Updateable } from "../../core/ITr2Updateable.js";

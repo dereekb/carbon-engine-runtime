@@ -2,8 +2,8 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildTurret.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildTurret_Blue.cpp
 import { exposure as be } from "#be";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { CjsSchema, type } from "#schema";

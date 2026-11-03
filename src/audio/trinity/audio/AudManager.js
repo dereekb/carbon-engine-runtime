@@ -7,7 +7,7 @@ import { exposure as be } from "#be";
 // init, RenderAudio, and device concerns route through the backend seam
 // (AudGameObjResource.backend); state, bank tracking, deferred-event flush,
 // monitored-parameter refcounts, and prioritization wiring are pure logic.
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 import { IBlueEvents } from "#blue/interfaces/IBlueEvents";
 import { meta, type } from "#schema";
 import { AudGameObjResource } from "./AudGameObjResource.js";

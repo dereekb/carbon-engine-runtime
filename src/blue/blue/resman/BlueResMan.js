@@ -12,7 +12,7 @@ import { IBlueCallbackMan } from "../interfaces/IBlueCallbackMan.js";
 import { CjsSchema, meta } from "#schema";
 import { BlueResManQueue, IBlueResMan } from "../interfaces/IBlueResMan.js";
 import { IBlueEvents } from "../interfaces/IBlueEvents.js";
-import { IRoot } from "../../blueexposure/IRoot.js";
+import { IRoot } from "../../exposure/IRoot.js";
 import { IBlueResource } from "../interfaces/IBlueResource.js";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { hasOwnThen } from "#utils/object";

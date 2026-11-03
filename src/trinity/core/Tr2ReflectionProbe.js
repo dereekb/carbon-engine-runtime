@@ -2,7 +2,7 @@
 // Source: trinity/trinity/Tr2ReflectionProbe.cpp
 // Source: trinity/trinity/Tr2ReflectionProbe_Blue.cpp
 import { exposure as be } from "#be";
-import { INotify } from "../../blue/blueexposure/INotify.js";
+import { INotify } from "../../blue/exposure/INotify.js";
 //
 // Filters a cube into the prefiltered reflection EveSpaceSceneEnvMap reads:
 // a 256x256 HDR cube whose mips 1..7 hold the environment convolved for

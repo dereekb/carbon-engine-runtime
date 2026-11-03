@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { ITr2Renderable } from "../ITr2Renderable.js";
 import { ITr2Pickable } from "../ITr2Pickable.js";
 // Source: trinity/trinity/Tr2LineSet.h
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
 import { Tr2PrimitiveSet } from "./Tr2PrimitiveSet.js";

@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import { ITr2CurveSetOwner } from "../../npm/dist/trinity/curves/ITr2CurveSetOwner.js";
 import assert from "node:assert/strict";
 import test from "node:test";

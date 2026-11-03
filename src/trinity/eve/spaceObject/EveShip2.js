@@ -1,8 +1,8 @@
 // Source: trinity/trinity/Eve/SpaceObject/EveShip2.h
 // Source: trinity/trinity/Eve/SpaceObject/EveShip2.cpp
 import { exposure as be } from "#be";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
-import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
+import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 // Hand-maintained after promotion from generated schema intake.

@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import { createChild } from "../../npm/dist/blue/blue/children.js";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

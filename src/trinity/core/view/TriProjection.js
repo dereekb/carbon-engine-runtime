@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/TriProjection.h
 // Source: trinity/trinity/TriProjection.cpp
 // Source: trinity/trinity/TriProjection_Blue.cpp

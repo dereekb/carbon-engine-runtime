@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../blue/exposure/IRoot.js";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SeekTarget.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SeekTarget.cpp
@@ -7,7 +7,7 @@ import { random as carbonRandom } from "#math/random";
 import { IBehavior } from "./IBehavior.js";
 import { type } from "#schema";
 import { blue } from "#blue";
-import { BlueScriptCallback } from "#blueexposure/BlueScriptCallback";
+import { BlueScriptCallback } from "#exposure/BlueScriptCallback";
 import { mat3 } from "#math/mat3";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
 import { Tr2DynamicBinding, Tr2ExternalParameter, Tr2FloatParameter, TriValueBinding } from "../../npm/dist/trinity/index.js";
 
 function externalTo(destination, attribute = "scale")

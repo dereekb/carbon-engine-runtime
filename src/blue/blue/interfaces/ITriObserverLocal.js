@@ -1,4 +1,4 @@
-import { IRoot } from "../../blueexposure/IRoot.js";
+import { IRoot } from "../../exposure/IRoot.js";
 // Source: blue/include/ITriObserverLocal.h
 import { CjsSchema, meta } from "#schema";
 

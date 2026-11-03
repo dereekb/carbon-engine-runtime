@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta } from "../../src/blue/schema/index.js";
 import { CjsUnusedMethodError, CJS_UNUSED_METHOD, CjsError } from "../../src/global/utils/errors/index.js";
-import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
+import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;

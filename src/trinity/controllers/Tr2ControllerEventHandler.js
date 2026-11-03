@@ -7,7 +7,7 @@ import { type } from "#schema";
 import { BlueList, blue, BlueClasses } from "#blue";
 import { ITr2ControllerAction } from "./action/ITr2ControllerAction.js";
 import { BLUELISTEVENT } from "#consts/blue";
-import { IListNotify } from "#blueexposure/IListNotify";
+import { IListNotify } from "#exposure/IListNotify";
 
 
 /**

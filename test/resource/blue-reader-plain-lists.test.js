@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
-import { IList } from "../../npm/dist/blue/blueexposure/IList.js";
-import { IListNotify } from "../../npm/dist/blue/blueexposure/IListNotify.js";
-import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
-import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
+import { IList } from "../../npm/dist/blue/exposure/IList.js";
+import { IListNotify } from "../../npm/dist/blue/exposure/IListNotify.js";
+import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
+import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { CjsSchema, meta } from "../../npm/dist/blue/schema/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";

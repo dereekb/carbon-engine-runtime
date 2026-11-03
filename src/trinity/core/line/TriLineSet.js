@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/TriLineSet.h
 // Source: trinity/trinity/TriLineSet.cpp
 // Hand-maintained from Carbon source, promoted out of generated intake.

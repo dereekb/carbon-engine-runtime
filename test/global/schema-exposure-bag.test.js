@@ -4,7 +4,7 @@ import { transformSync } from "@babel/core";
 import decoratorsPlugin from "@babel/plugin-proposal-decorators";
 import { exposure as be } from "#be";
 import { CjsSchema } from "../../src/blue/schema/index.js";
-import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
+import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { blueEnums } from "../../src/blue/blue/enums/CjsBlueEnumRegistry.js";
 
@@ -13,7 +13,7 @@ blueEnums.RegisterEnum("test.BagProbeEnum", { NONE: 0, ONE: 1 }, { chooser: [ { 
 // decorator-upgrade.md § 000a: be.define(bag) declares a class's whole exposure block once, in Carbon's order. The bag must register
 // exactly what the per-member be.map* decorators register; only the stored row order is new.
 
-const beUrl = new URL("../../src/blue/blueexposure/be.js", import.meta.url).href;
+const beUrl = new URL("../../src/blue/exposure/be.js", import.meta.url).href;
 const schemaUrl = new URL("../../src/blue/schema/index.js", import.meta.url).href;
 async function load(source)
 {

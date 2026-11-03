@@ -51,7 +51,7 @@
         "global/logging",
         "global/audio",
         "trinityal",
-        "blue/blueexposure"
+        "blue/exposure"
       ]
     },
     "global/index.js": {
@@ -64,7 +64,7 @@
         "blue/schema",
         "global/model",
         "global/logging",
-        "blue/blueexposure"
+        "blue/exposure"
       ]
     },
     "resource/index.js": {
@@ -153,7 +153,7 @@
     "blue/schema": {
       "mayImport": [
         "blue/blue/enums",
-        "blue/blueexposure/classes",
+        "blue/exposure/classes",
         "blue/compose",
         "global/utils",
         "global/math",
@@ -173,7 +173,7 @@
         "global/consts",
         "blue/schema",
         "blue/blue",
-        "blue/blueexposure"
+        "blue/exposure"
       ],
       "why": [
         "CjsModel.get/set delegate to Blue's values engine (DictReader,",
@@ -186,17 +186,17 @@
         "blue/schema",
         "global/math",
         "blue/blue",
-        "blue/blueexposure"
+        "blue/exposure"
       ],
       "why": [
         "Interface roots use schema implementation metadata so required",
         "methods carry @impl.abstract as well as their throwing body.",
         "Tr2DebugColor, declared in the same Carbon header as ITr2DebugRenderer2,",
         "converts Carbon Colors to packed words through global/math/color.",
-        "Carbon interfaces derive from IRoot (BLUE_INTERFACE( X ) : IRoot), so they import blue/blueexposure/IRoot."
+        "Carbon interfaces derive from IRoot (BLUE_INTERFACE( X ) : IRoot), so they import blue/exposure/IRoot."
       ]
     },
-    "blue/blueexposure/classes": {
+    "blue/exposure/classes": {
       "mayImport": [
         "global/logging"
       ],
@@ -204,10 +204,10 @@
         "Complete class-registration storage shared by blueexposure and schema, and Carbon's global BeClasses; logging depends only on constants and its plain channel record. This leaf never imports either facade or a domain."
       ]
     },
-    "blue/blueexposure": {
+    "blue/exposure": {
       "mayImport": [
         "global/consts",
-        "blue/blueexposure/classes",
+        "blue/exposure/classes",
         "blue/compose",
         "blue/schema",
         "global/utils",
@@ -229,13 +229,13 @@
       "mayImport": [
         "global/consts",
         "blue/blue/enums",
-        "blue/blueexposure/classes",
+        "blue/exposure/classes",
         "blue/compose",
         "blue/schema",
         "global/utils",
         "global/logging",
         "global/audio",
-        "blue/blueexposure"
+        "blue/exposure"
       ],
       "why": [
         "Ports of Carbon's blueexposure layer - facilities Blue provides to every",

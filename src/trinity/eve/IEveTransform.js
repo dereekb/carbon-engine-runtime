@@ -1,4 +1,4 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/IEveTransform.h
 //
 // The contract for entries in a `children` list on EveSpaceObject2 and

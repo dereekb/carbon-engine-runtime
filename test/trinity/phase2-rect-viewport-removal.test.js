@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";

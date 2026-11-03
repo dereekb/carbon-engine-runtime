@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../src/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../src/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
@@ -6,9 +6,9 @@ import { transformSync } from "@babel/core";
 import decorators from "@babel/plugin-proposal-decorators";
 import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { composedContracts, mappedInterfaces, ownMappedInterfaces } from "../../src/blue/compose/interface.js";
-import { Copier } from "../../src/blue/blueexposure/Copier.js";
-import { IInitialize } from "../../src/blue/blueexposure/IInitialize.js";
-import { INotify } from "../../src/blue/blueexposure/INotify.js";
+import { Copier } from "../../src/blue/exposure/Copier.js";
+import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
+import { INotify } from "../../src/blue/exposure/INotify.js";
 import { applyReaderMember, finalizeReaderObject } from "../../src/blue/schema/hydration.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
@@ -37,7 +37,7 @@ test("the own table holds IRoot, the class, then explicit interfaces in Carbon o
 test("tables declared before IRoot registration resolve its identity on later access", () =>
 {
   const compose = new URL("../../src/blue/compose/interface.js", import.meta.url).href;
-  const root = new URL("../../src/blue/blueexposure/IRoot.js", import.meta.url).href;
+  const root = new URL("../../src/blue/exposure/IRoot.js", import.meta.url).href;
   execFileSync(process.execPath, ["--input-type=module", "--eval", `
     import assert from "node:assert/strict";
     import { carbonInterfaceDecorator, mappedInterfaces, ownMappedInterfaces } from ${JSON.stringify(compose)};
@@ -105,7 +105,7 @@ test("Stage-3 and imperative declarations share the public Blue exposure facade"
 {
   const source = `
     import { CjsSchema } from ${JSON.stringify(new URL("../../src/blue/schema/index.js", import.meta.url).href)}; const blue = CjsSchema.be;
-    import { INotify } from ${JSON.stringify(new URL("../../src/blue/blueexposure/INotify.js", import.meta.url).href)};
+    import { INotify } from ${JSON.stringify(new URL("../../src/blue/exposure/INotify.js", import.meta.url).href)};
     @blue.interface()
     export class Parent {}
     @blue.interface(INotify)

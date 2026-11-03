@@ -1,8 +1,8 @@
-import { IRoot } from "../../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodThresholdParameter.h
 import { IsMatch, INotify } from "#blue";
-import { IInitialize } from "../../../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { EveChildRef } from "../../../../eve/child/EveChildRef.js";

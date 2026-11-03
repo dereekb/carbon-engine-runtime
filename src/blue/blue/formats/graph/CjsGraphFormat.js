@@ -1,7 +1,7 @@
 import { createHandlers } from "./core/dataTypes.js";
 import { readEnvelope, writeEnvelope } from "./core/text.js";
 import { CjsSchema } from "../../../schema/CjsSchema.js";
-import { getClassRegistration } from "../../../blueexposure/classes/registry.js";
+import { getClassRegistration } from "../../../exposure/classes/registry.js";
 import { mappedInterfaces } from "../../../compose/interface.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { dataType, isRecord, memberPath, put } from "./core/dataTypes.js";

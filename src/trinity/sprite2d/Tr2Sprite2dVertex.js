@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dPolygon.h
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dPolygon.cpp
 // Source: trinity/trinity/Sprite2d/Tr2Sprite2dPolygon_Blue.cpp

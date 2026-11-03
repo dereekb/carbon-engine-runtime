@@ -1,8 +1,8 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/UI/EveEllipseDefinition.h
 import { type } from "#schema";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
 //   trinity/trinity/Eve/UI/EveEllipseDefinition.cpp
 import { vec3 } from "#math/vec3";
 

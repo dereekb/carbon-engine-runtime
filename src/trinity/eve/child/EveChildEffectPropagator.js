@@ -3,14 +3,14 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { CjsSchema, type } from "#schema";
 import { EveSpaceObject2 } from "../spaceObject/EveSpaceObject2.js";
 import { EveChildContainer } from "./EveChildContainer.js";
 import { EveEntity } from "../EveEntity.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
-import { INotify } from "#blueexposure/INotify";
+import { INotify } from "#exposure/INotify";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";

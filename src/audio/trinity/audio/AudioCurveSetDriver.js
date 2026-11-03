@@ -4,7 +4,7 @@
 import { exposure as be } from "#be";
 import { type } from "#schema";
 import { ICurveSetDriver } from "#blue/interfaces/ICurveSetDriver";
-import { IInitialize } from "#blueexposure/IInitialize";
+import { IInitialize } from "#exposure/IInitialize";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 
 /**

@@ -1,4 +1,4 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/IEveSpaceObject2.h
 //
 // The contract every top-level scene object answers to: everything

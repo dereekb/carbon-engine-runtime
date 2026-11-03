@@ -3,8 +3,8 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/EveBezierCurve_Blue.cpp
 import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
-import { INotify } from "../../../../blue/blueexposure/INotify.js";
+import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
+import { INotify } from "../../../../blue/exposure/INotify.js";
 import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { sph3 } from "#math/sph3";

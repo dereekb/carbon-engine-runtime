@@ -1,4 +1,4 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRenderable.js";
 // Source: trinity/trinity/Eve/VirtualCamera/EveVirtualCamera.h

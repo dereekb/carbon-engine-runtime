@@ -1,9 +1,9 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
 // Source: trinity/trinity/Tr2TextureAnimation.h
 // Source: trinity/trinity/Tr2TextureAnimation.cpp
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { type } from "#schema";
 import { blue } from "#blue";

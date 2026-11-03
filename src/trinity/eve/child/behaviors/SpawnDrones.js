@@ -1,4 +1,4 @@
-import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SpawnDrones.h

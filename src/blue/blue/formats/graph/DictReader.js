@@ -44,20 +44,20 @@ import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
 import { omitRuntimeValues } from "../../../schema/CjsSchema.js";
 import { normalizeCarbonValue } from "../../../schema/types/index.js";
-import { IRoot } from "../../../blueexposure/IRoot.js";
+import { IRoot } from "../../../exposure/IRoot.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
-import { getClassRegistration } from "../../../blueexposure/classes/registry.js";
+import { getClassRegistration } from "../../../exposure/classes/registry.js";
 // Exposure is read from the table directly, not through blue.classes: the standalone
 // format readers import this file and must load without the blue singleton
 // (test/resource/format-standalone.test.js). Carbon's DictReader has no IList query.
 import { mappedInterfaces } from "../../../compose/interface.js";
 import { finalizeReaderObject } from "../../../schema/hydration.js";
 import { BLUELISTEVENT } from "#consts/blue";
-import { IList } from "../../../blueexposure/IList.js";
-import { IListNotify } from "../../../blueexposure/IListNotify.js";
+import { IList } from "../../../exposure/IList.js";
+import { IListNotify } from "../../../exposure/IListNotify.js";
 
 /** Keys the reader consumes itself rather than as members (Carbon's `type`, plus the anchor keys). */
 const RESERVED_KEYS = new Set([ "_type", "_id", "_ref" ]);

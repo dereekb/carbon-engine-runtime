@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Tr2ShLightingManager.h:105-110
 //
 // A secondary light source for Tr2ShLightingManager: an object that lights its

@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/TriRigidOrientation.h
 // Promoted to hand-maintained source 2026-07-23 (Carbon-verified property shell; schema trinityCore/TriTorque.json.).
 import { type } from "#schema";

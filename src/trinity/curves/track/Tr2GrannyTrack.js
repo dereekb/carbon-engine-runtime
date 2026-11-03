@@ -1,9 +1,9 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2GrannyTrack.h
 // Source: trinity/trinity/Curves/Tr2GrannyTrack.cpp
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { meta, type } from "#schema";
 import { INotify, ITriFunction, ITriCurveLength } from "#blue";
 import { CjsGrannyCurves } from "./CjsGrannyCurves.js";

@@ -2,7 +2,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildLightingOverride.cpp
 import { exposure as be } from "#be";
 import { ITr2DebugRenderable, ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { EveEntity } from "../EveEntity.js";

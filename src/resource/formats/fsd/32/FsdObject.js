@@ -1,4 +1,4 @@
-import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../blue/exposure/IRoot.js";
 import { CjsSchema } from "#schema/CjsSchema";
 
 // Source: fsd/FsdObject.h

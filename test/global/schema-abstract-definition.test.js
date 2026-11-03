@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
-import * as classRegistry from "../../src/blue/blueexposure/classes/registry.js";
+import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
+import * as classRegistry from "../../src/blue/exposure/classes/registry.js";
 
 const { ClassRegistrarNullFactory, getClassRegistrationRevision } = classRegistry;
 

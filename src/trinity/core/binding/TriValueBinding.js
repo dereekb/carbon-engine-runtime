@@ -3,7 +3,7 @@
 // Source: trinity/trinity/TriValueBinding_Blue.cpp
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
-import { INotify } from "#blueexposure/INotify";
+import { INotify } from "#exposure/INotify";
 import { ITriReroutable } from "../ITriReroutable.js";
 import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";
 import { vec4 } from "#math/vec4";

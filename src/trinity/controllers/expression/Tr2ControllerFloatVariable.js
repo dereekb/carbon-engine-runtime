@@ -3,8 +3,8 @@
 // Source: trinity/trinity/Controllers/Tr2ControllerFloatVariable_Blue.cpp
 import { exposure as be } from "#be";
 import { type } from "#schema";
-import { IInitialize } from "#blueexposure/IInitialize";
-import { INotify } from "#blueexposure/INotify";
+import { IInitialize } from "#exposure/IInitialize";
+import { INotify } from "#exposure/INotify";
 import { Type } from "../enums.js";
 
 

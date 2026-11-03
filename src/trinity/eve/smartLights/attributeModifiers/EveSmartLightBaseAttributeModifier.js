@@ -1,8 +1,8 @@
-import { IRoot } from "../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier.h
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { INotify } from "#blue";

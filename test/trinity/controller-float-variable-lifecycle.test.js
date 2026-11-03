@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { IInitialize } from "../../npm/dist/blue/blueexposure/IInitialize.js";
-import { INotify } from "../../npm/dist/blue/blueexposure/INotify.js";
+import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
+import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";

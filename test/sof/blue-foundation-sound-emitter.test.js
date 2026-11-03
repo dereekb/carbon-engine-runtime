@@ -1,7 +1,7 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { CjsBlackReader } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackReader.js";

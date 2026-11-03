@@ -1,6 +1,6 @@
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
-import { IInitialize } from "../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../blue/exposure/IInitialize.js";
 // Source: trinity/trinity/Tr2PostProcess.h
 // Source: trinity/trinity/Tr2PostProcess.cpp
 import { type } from "#schema";

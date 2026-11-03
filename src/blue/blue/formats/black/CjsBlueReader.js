@@ -1,7 +1,7 @@
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { CjsSchema } from "#schema/CjsSchema";
 import { DictReader } from "../graph/DictReader.js";
-import { ICustomPersist } from "../../../blueexposure/ICustomPersist.js";
+import { ICustomPersist } from "../../../exposure/ICustomPersist.js";
 import { resolveHydrationAdapter } from "#schema/hydration";
 import {
     CARBON_TYPE,

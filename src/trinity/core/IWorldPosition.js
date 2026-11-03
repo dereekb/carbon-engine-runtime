@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/IWorldPosition.h:11-15
 
 /** Native IRoot-derived contract for a receiver's world position and rotation. */

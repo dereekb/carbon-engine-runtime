@@ -1,11 +1,11 @@
-import { IRoot as ExposureRoot } from "../../npm/dist/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { blue, ITriQuaternionFunction, ITriFunction, ITriCurveLength, IInitialize } from "../../npm/dist/blue/blue/index.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { DictReader } from "../../npm/dist/blue/blue/formats/graph/DictReader.js";
-import { Copier } from "../../npm/dist/blue/blueexposure/Copier.js";
+import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { CjsBlue, BlueClasses } from "../../npm/dist/blue/blue/index.js";
 import { GetResources } from "../../npm/dist/blue/blue/getResources.js";
 import { Tr2CurveEulerRotation } from "../../npm/dist/trinity/curves/curve/Tr2CurveEulerRotation.js";

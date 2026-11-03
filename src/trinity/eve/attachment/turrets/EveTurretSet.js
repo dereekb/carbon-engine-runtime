@@ -9,8 +9,8 @@ import { ITr2DebugRenderable, ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectR
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IEveShadowCaster } from "../../IEveShadowCaster.js";
 import { CjsSchema, type } from "#schema";
-import { IInitialize } from "#blueexposure/IInitialize";
-import { INotify } from "#blueexposure/INotify";
+import { IInitialize } from "#exposure/IInitialize";
+import { INotify } from "#exposure/INotify";
 import { ITr2ControllerOwner } from "../../../controllers/ITr2ControllerOwner.js";
 import { EveChildInstanceContainer } from "../../child/EveChildInstanceContainer.js";
 import { Tr2Lod } from "../../EveLODHelper.js";

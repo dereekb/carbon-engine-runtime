@@ -1,4 +1,4 @@
-import { IRoot } from "../../blueexposure/IRoot.js";
+import { IRoot } from "../../exposure/IRoot.js";
 // Source: blue/include/IBlueObjectBuilder.h:8-25
 //
 // What builds the object behind a BlueObjectProxy. The proxy hands back the

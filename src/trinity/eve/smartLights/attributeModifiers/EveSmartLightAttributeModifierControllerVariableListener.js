@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierControllerVariableListener.h
 import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
 import { INotify } from "#blue";

@@ -1,4 +1,4 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/ITr2EffectValue.h:14-19
 //
 // The flag word every effect parameter shares.

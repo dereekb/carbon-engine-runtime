@@ -1,9 +1,9 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh.h
 import { exposure as be } from "#be";
-import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
+import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { IEveShadowCaster } from "../IEveShadowCaster.js";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 //   trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh.cpp
 //   trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh_Blue.cpp

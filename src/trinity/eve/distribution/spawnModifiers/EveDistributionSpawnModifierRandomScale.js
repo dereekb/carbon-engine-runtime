@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomScale.h
 import { exposure as be } from "#be";
-import { IInitialize } from "../../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { blue } from "#blue";

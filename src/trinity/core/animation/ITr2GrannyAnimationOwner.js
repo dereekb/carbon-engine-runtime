@@ -1,4 +1,4 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Tr2GrannyAnimation.h:31-35
 import { CjsSchema, meta } from "#schema";
 

@@ -1,4 +1,4 @@
-import { IRoot as ExposureRoot } from "../../src/blue/blueexposure/IRoot.js";
+import { IRoot as ExposureRoot } from "../../src/blue/exposure/IRoot.js";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";

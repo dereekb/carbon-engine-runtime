@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 // Source: audio/src/AudActionLog.h
 
 /** Required logging contract consumed by AudManager. */

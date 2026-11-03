@@ -3,12 +3,12 @@ import test from "node:test";
 import fs from "node:fs";
 import { transformSync } from "@babel/core";
 import decoratorsPlugin from "@babel/plugin-proposal-decorators";
-import { IRoot } from "../../src/blue/blueexposure/IRoot.js";
-import { unregisterClass, getClassRegistration, getClassRegistrationRevision } from "../../src/blue/blueexposure/classes/registry.js";
+import { IRoot } from "../../src/blue/exposure/IRoot.js";
+import { unregisterClass, getClassRegistration, getClassRegistrationRevision } from "../../src/blue/exposure/classes/registry.js";
 import { exposure } from "#be";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { hasOwnInterfaceTable, mappedInterfaces, ownMappedInterfaces } from "../../src/blue/compose/interface.js";
-import { BlueClasses } from "../../src/blue/blueexposure/BlueClasses.js";
+import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;
@@ -218,7 +218,7 @@ test("method macro variants preserve their alias; notUsed throws", () =>
 test("Babel Stage-3 declarations record before instances exist, including class states and generated throws", async () =>
 {
     const schemaUrl = new URL("../../src/blue/schema/index.js",import.meta.url).href;
-    const targetUrl = new URL("../../src/blue/blueexposure/be.js",import.meta.url).href;
+    const targetUrl = new URL("../../src/blue/exposure/be.js",import.meta.url).href;
     const source = `import {meta,type,CjsSchema} from ${JSON.stringify(schemaUrl)};
         import {exposure as target} from ${JSON.stringify(targetUrl)};
         @target.define("TargetStage3")
@@ -342,7 +342,7 @@ test("Stage-3 own attributes and all object aliases register before construction
 
 test("separate Stage-3 interface maps preserve native row order while imperative maps append", async () =>
 {
-    const exposureUrl = new URL("../../src/blue/blueexposure/be.js", import.meta.url).href;
+    const exposureUrl = new URL("../../src/blue/exposure/be.js", import.meta.url).href;
     const source = `import { exposure } from ${JSON.stringify(exposureUrl)};
       export class First {} export class Second {}
       @exposure.define("Goal4bOrderedStage")
@@ -384,7 +384,7 @@ test("class donor comments leave registration, rows and factory policy unchanged
 test("Stage-3 donor comments coexist with exposure without registering donor identities", async () =>
 {
     const schemaUrl = new URL("../../src/blue/schema/index.js", import.meta.url).href;
-    const targetUrl = new URL("../../src/blue/blueexposure/be.js", import.meta.url).href;
+    const targetUrl = new URL("../../src/blue/exposure/be.js", import.meta.url).href;
     const source = `import { meta, type } from ${JSON.stringify(schemaUrl)};
         import { exposure } from ${JSON.stringify(targetUrl)};
         /**
@@ -413,7 +413,7 @@ test("Stage-3 donor comments coexist with exposure without registering donor ide
 test("a function exposed under two names keeps the second MAP_METHOD line as an alias (CE-214)", async () =>
 {
     const schemaUrl = new URL("../../src/blue/schema/index.js", import.meta.url).href;
-    const targetUrl = new URL("../../src/blue/blueexposure/be.js", import.meta.url).href;
+    const targetUrl = new URL("../../src/blue/exposure/be.js", import.meta.url).href;
     const source = `import { meta } from ${JSON.stringify(schemaUrl)};
         import { exposure } from ${JSON.stringify(targetUrl)};
         @exposure.define("TwoNamesStage3")
@@ -433,7 +433,7 @@ test("a function exposed under two names keeps the second MAP_METHOD line as an 
 test("mapProperty__Field* on a plain field carries the macro's flags and no accessor pair; the bare forms refuse a field", async () =>
 {
     const schemaUrl = new URL("../../src/blue/schema/index.js", import.meta.url).href;
-    const targetUrl = new URL("../../src/blue/blueexposure/be.js", import.meta.url).href;
+    const targetUrl = new URL("../../src/blue/exposure/be.js", import.meta.url).href;
     const source = `import { type } from ${JSON.stringify(schemaUrl)};
         import { exposure } from ${JSON.stringify(targetUrl)};
         @exposure.define("PropertyOnFieldStage3")

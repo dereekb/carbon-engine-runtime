@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 // Source: audio/src/AudStaticDataRepository.h + AudStaticDataRepository.cpp
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 

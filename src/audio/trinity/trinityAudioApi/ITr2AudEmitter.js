@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 // Source: trinityaudioapi/include/ITr2AudEmitter.h
 //
 // The contract audio2 exposes for an audio emitter. Carbon makes all fourteen

@@ -1,4 +1,4 @@
-import { IRoot } from "../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Include/TriMatrix.h, TriMatrix.cpp, TriMatrix_Blue.cpp

@@ -1,8 +1,8 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceContainer.h
 import { exposure as be } from "#be";
-import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
+import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
 import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";

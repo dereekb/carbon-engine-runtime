@@ -1,6 +1,6 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
-import { INotify } from "../../blue/blueexposure/INotify.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
+import { INotify } from "../../blue/exposure/INotify.js";
 import { IBlueEvents } from "../../blue/blue/interfaces/IBlueEvents.js";
 // Source: videoplayer/VideoPlayer.h, videoplayer/VideoPlayer.cpp:104-247
 // Browser adaptation: HTML media owns decoding, presentation and audio clocks.

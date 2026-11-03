@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "#blueexposure/IRoot";
+import { IRoot } from "#exposure/IRoot";
 // Source: trinityaudioapi/include/ITr2AudGeometry.h:23-40
 
 /** Transfers Trinity geometry and placement to the audio implementation. */

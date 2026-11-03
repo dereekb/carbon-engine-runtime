@@ -3,14 +3,14 @@ import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRendera
 // Source: trinity/trinity/Eve/EveEffectRoot2.h
 // Source: trinity/trinity/Eve/EveEffectRoot2.cpp
 // Source: trinity/trinity/Eve/EveEffectRoot2_Blue.cpp
-import { IListNotify } from "../../../blue/blueexposure/IListNotify.js";
+import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { IWorldPosition } from "../../core/IWorldPosition.js";
 import { ITriTargetable } from "../../core/ITriTargetable.js";
 import { ITr2SoundEmitterOwner } from "../ITr2SoundEmitterOwner.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
 import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import "#consts/trinity";
 import { addChild, removeChild, clearChildren } from "../../../blue/blue/children.js";
 import { mat4 } from "#math/mat4";

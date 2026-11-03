@@ -1,5 +1,5 @@
 import "../../../src/blue/blue/values.js";
-import { Copier } from "../../../src/blue/blueexposure/Copier.js";
+import { Copier } from "../../../src/blue/exposure/Copier.js";
 import { blue } from "../../../src/blue/blue/index.js";
 
 // Preorder over blue.EnumerateChildren, once per object.

@@ -1,10 +1,10 @@
 import { exposure as be } from "#be";
-import { INotify } from "../../../blue/blueexposure/INotify.js";
+import { INotify } from "../../../blue/exposure/INotify.js";
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay.h
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay.cpp
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay_Blue.cpp
 import { IsMatch } from "#blue";
-import { IInitialize } from "../../../blue/blueexposure/IInitialize.js";
+import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 // Promoted to hand-maintained source 2026-08-22; quad instance policy is portable CPU work.
 import { mat4 } from "#math/mat4";
 import { num } from "#math/num";

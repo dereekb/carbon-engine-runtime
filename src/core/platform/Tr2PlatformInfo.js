@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { IRoot } from "../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../blue/exposure/IRoot.js";
 import { meta } from "#schema";
 import { CjsWebGLProbe } from "./CjsWebGLProbe.js";
 import { ResolveDeviceRequirements } from "./deviceLimits.js";

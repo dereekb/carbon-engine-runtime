@@ -16,10 +16,10 @@
 import { IRootReaderBase } from "./IRootReaderBase.js";
 import { exposure as be } from "#be";
 import { CjsSchema, meta } from "#schema";
-import { IRoot } from "../../blueexposure/IRoot.js";
+import { IRoot } from "../../exposure/IRoot.js";
 import { omitRuntimeValues } from "../../schema/CjsSchema.js";
 import { exportCarbonValue } from "../../schema/types/index.js";
-import { ICustomPersist } from "../../blueexposure/ICustomPersist.js";
+import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { isWritableField } from "../../compose/values.js";
 import { BeObjectMetadata } from "../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../interfaces/IBlueObjectMetadata.js";

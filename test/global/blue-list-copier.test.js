@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BlueList } from "../../src/blue/blueexposure/BlueList.js";
-import { IList } from "../../src/blue/blueexposure/IList.js";
-import { IListNotify } from "../../src/blue/blueexposure/IListNotify.js";
-import { Copier } from "../../src/blue/blueexposure/Copier.js";
-import { ICopier } from "../../src/blue/blueexposure/ICopier.js";
-import { IInitialize } from "../../src/blue/blueexposure/IInitialize.js";
-import { INotify } from "../../src/blue/blueexposure/INotify.js";
+import { BlueList } from "../../src/blue/exposure/BlueList.js";
+import { IList } from "../../src/blue/exposure/IList.js";
+import { IListNotify } from "../../src/blue/exposure/IListNotify.js";
+import { Copier } from "../../src/blue/exposure/Copier.js";
+import { ICopier } from "../../src/blue/exposure/ICopier.js";
+import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
+import { INotify } from "../../src/blue/exposure/INotify.js";
 import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 

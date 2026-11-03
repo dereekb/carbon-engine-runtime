@@ -3,7 +3,7 @@
 // Source: trinity/trinity/Controllers/Actions/Tr2ActionSetValue_Blue.cpp
 import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
-import { INotify } from "#blueexposure/INotify";
+import { INotify } from "#exposure/INotify";
 import { type } from "#schema";
 import { CjsControllerExpressionProgram } from "../expression/CjsControllerExpressionProgram.js";
 import { ITr2ControllerAction } from "./ITr2ControllerAction.js";

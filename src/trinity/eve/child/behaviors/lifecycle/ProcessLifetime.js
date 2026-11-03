@@ -1,9 +1,9 @@
-import { IRoot } from "../../../../../blue/blueexposure/IRoot.js";
+import { IRoot } from "../../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/ProcessLifetime.h
-import { INotify } from "../../../../../blue/blueexposure/INotify.js";
-import { IInitialize } from "../../../../../blue/blueexposure/IInitialize.js";
+import { INotify } from "../../../../../blue/exposure/INotify.js";
+import { IInitialize } from "../../../../../blue/exposure/IInitialize.js";
 //   trinity/trinity/Eve/SpaceObject/Children/Behaviors/ProcessLifetime.cpp
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { IBehavior } from "../IBehavior.js";

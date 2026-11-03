@@ -1,6 +1,6 @@
 import { CjsSchema } from "../../blue/schema/CjsSchema.js";
 import { characterSourceLists } from "./characterSourceLists.js";
-import { getClassRegistrations } from "../../blue/blueexposure/classes/registry.js";
+import { getClassRegistrations } from "../../blue/exposure/classes/registry.js";
 
 const PYTHON_OBJECT = "tag:yaml.org,2002:python/object:";
 

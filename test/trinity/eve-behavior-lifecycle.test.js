@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { test } from "node:test";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
 import { quat } from "../../npm/dist/global/math/quat.js";
-import { BlueList } from "../../npm/dist/blue/blueexposure/BlueList.js";
+import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
 import { CjsBlackPropertyReaders } from "../../npm/dist/blue/blue/formats/black/core/CjsBlackPropertyReaders.js";
 import * as trinity from "../../npm/dist/trinity/index.js";
 import { CjsBlueReader } from "../../npm/dist/blue/blue/formats/black/CjsBlueReader.js";

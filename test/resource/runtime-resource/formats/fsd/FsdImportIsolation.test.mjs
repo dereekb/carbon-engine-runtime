@@ -10,10 +10,10 @@ const FSD_ROOT = path.join(PACKAGE_ROOT, "npm", "dist", "resource", "formats", "
 // FsdObject inherits Carbon's IRoot; admit its query/logging leaves and the class-info store its ClassType
 // reads, not Blue services or bootstrap.
 const SHARED_FORMAT_MODULES = new Set([
-    "blue/blueexposure/IRoot.js",
-    "blue/blueexposure/ClassInfo.js",
-    "blue/blueexposure/VarEntry.js",
-    "blue/blueexposure/classes/registry.js",
+    "blue/exposure/IRoot.js",
+    "blue/exposure/ClassInfo.js",
+    "blue/exposure/VarEntry.js",
+    "blue/exposure/classes/registry.js",
     "blue/compose/interface.js",
     "global/consts/ccpLog.js",
     "global/logging/CcpLogChannel_t.js",
