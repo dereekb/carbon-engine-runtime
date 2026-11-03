@@ -24,39 +24,45 @@ import { Tr2ControllerEventHandler } from "./Tr2ControllerEventHandler.js";
  * bypass both, as in BlueList. Child helpers notify explicitly.
  * Link binds the owner, variables and children; no Initialize contract is added.
  */
-@be.define("Tr2Controller")
-@be.inherit(ITr2ActionController, IListNotify)
-@be.mapInterface(ITr2Controller)
-@be.mapInterface(ITr2ActionController)
-@be.mapInterface(IListNotify)
-@be.exposureChainTo(EveThrottleable)
+@be.define({
+  name: "Tr2Controller",
+  inherit: [ ITr2ActionController, IListNotify ],
+  // Tr2Controller_Blue.cpp:15-65, in Carbon's order.
+  interfaces: [ ITr2Controller, ITr2ActionController, IListNotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "isShared", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stateMachines", be.READ | be.PERSIST ],
+    [ be.ATTR, "variables", be.READ | be.PERSIST ],
+    [ be.ATTR, "eventHandlers", be.READ | be.PERSIST ],
+    [ be.ATTR, "isPlaying", be.READ ],
+    [ be.PROP_RO, "callbackCount" ],
+    [ be.METHOD, "Start", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.METHOD, "HandleEvent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ],
+    [ be.METHOD, "RegisterCallback", be.WRAP ],
+    [ be.METHOD, "ClearCallbacks", be.WRAP ],
+    [ be.METHOD, "ReLink", be.WRAP ]
+  ],
+  chainTo: EveThrottleable
+})
 export class Tr2Controller extends EveThrottleable
 {
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2StateMachine")
   stateMachines = new BlueList(Tr2StateMachine, { className: "Tr2StateMachine", listOps: 0 });
-
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ControllerFloatVariable")
   variables = new BlueList(Tr2ControllerFloatVariable, { className: "Tr2ControllerFloatVariable", listOps: 0 });
 
-  @be.mapAttribute(be.READ | be.PERSIST)
-
   @type.list("Tr2ControllerEventHandler")
   eventHandlers = new BlueList(Tr2ControllerEventHandler, { className: "Tr2ControllerEventHandler", listOps: 0 });
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   isPlaying = false;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isShared = false;
@@ -99,7 +105,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {number} Live callback count.
    */
-  @be.mapPropertyReadOnly()
   @type.uint64
   get callbackCount()
   {
@@ -230,7 +235,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   ReLink()
   {
     const owner = this._owner;
@@ -258,7 +262,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Start()
   {
     if (this.isPlaying)
@@ -279,7 +282,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     if (!this.isPlaying)
@@ -354,7 +356,6 @@ export class Tr2Controller extends EveThrottleable
    * @param {string} eventName Authored event name.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   HandleEvent(eventName)
   {
     if (!this.isPlaying)
@@ -376,7 +377,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {object|null} Owner, or null when unlinked.
    */
-  @be.mapMethodAndWrap()
   GetOwner()
   {
     return this._owner;
@@ -621,7 +621,6 @@ export class Tr2Controller extends EveThrottleable
    * @param {Function} callback Function called without arguments.
    * @returns {boolean} Always true after registration.
    */
-  @be.mapMethodAndWrap()
   RegisterCallback(callbackName, callback)
   {
     this._callbacks.push({
@@ -637,7 +636,6 @@ export class Tr2Controller extends EveThrottleable
    * @implemented
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   ClearCallbacks()
   {
     this._callbacks = [];

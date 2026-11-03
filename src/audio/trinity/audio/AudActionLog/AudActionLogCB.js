@@ -15,8 +15,14 @@ import { AudActionRecordSetRTPC } from "./AudActionRecordSetRTPC.js";
  * Queues Carbon-shaped audio action records and flushes them to a registered
  * JavaScript callback during manager processing.
  */
-@be.define("AudActionLogCB")
-@be.mapInterface(IAudActionLog)
+@be.define({
+  name: "AudActionLogCB",
+  // AudActionLog_Blue.cpp:12-16, in Carbon's order.
+  interfaces: [ IAudActionLog ],
+  members: [
+    [ be.METHOD, "RegisterCallback", be.WRAP ]
+  ]
+})
 export class AudActionLogCB extends IAudActionLog
 {
 
@@ -36,7 +42,6 @@ export class AudActionLogCB extends IAudActionLog
    * @returns {void}
    * @throws {TypeError} If the callback cannot be invoked.
    */
-  @be.mapMethodAndWrap()
   RegisterCallback(callback)
   {
     this._callback = BlueScriptCallback.from(callback);

@@ -13,22 +13,29 @@ import { ITr2Controller } from "./ITr2Controller/index.js";
  * Stands in for a controller loaded from a resource path, forwarding the full
  * controller lifecycle to whichever controller the path resolves to.
  */
-@be.define("Tr2ControllerReference")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2Controller)
+@be.define({
+  name: "Tr2ControllerReference",
+  inherit: [ INotify, IInitialize ],
+  // Tr2ControllerReference_Blue.cpp:10-42, in Carbon's order.
+  interfaces: [ IInitialize, INotify, ITr2Controller ],
+  members: [
+    [ be.ATTR, "path", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "controller", be.READ ],
+    [ be.METHOD, "Start", be.WRAP ],
+    [ be.METHOD, "Stop", be.WRAP ],
+    [ be.METHOD, "HandleEvent", be.WRAP ],
+    [ be.METHOD, "GetOwner", be.WRAP ]
+  ]
+})
 export class Tr2ControllerReference extends ITr2Controller
 {
   /** Authored controller resource path; notifications reload the reference. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.path("object")
   path = "";
 
   /** Runtime loaded controller, exposed read-only and not persisted. */
-  @be.mapAttribute(be.READ)
   @type.object.ref("ITr2Controller")
   controller = null;
 
@@ -138,7 +145,6 @@ export class Tr2ControllerReference extends ITr2Controller
    * @adapted retain start intent until the asynchronous load is linked.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Start()
   {
     this._isActive = true;
@@ -151,7 +157,6 @@ export class Tr2ControllerReference extends ITr2Controller
    * @adapted cancel pending start intent before the asynchronous load completes.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Stop()
   {
     this._isActive = false;
@@ -194,7 +199,6 @@ export class Tr2ControllerReference extends ITr2Controller
    * @param {string} eventName Event forwarded to the loaded controller.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   HandleEvent(eventName)
   {
     this.controller?.HandleEvent(eventName);
@@ -206,7 +210,6 @@ export class Tr2ControllerReference extends ITr2Controller
    * @implemented
    * @returns {object|null} Current owner.
    */
-  @be.mapMethodAndWrap()
   GetOwner()
   {
     return this._owner;

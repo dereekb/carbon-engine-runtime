@@ -13,14 +13,23 @@ import { AudGameObjResource } from "./AudGameObjResource.js";
  * after configuration. The audio system adopts, retries initialization when enabled,
  * and disposes drivers. Construction alone installs no manager or audio backend.
  */
-@be.define("AudioCurveSetDriver")
-@be.inherit(IInitialize)
-@be.mapInterface(ICurveSetDriver)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "AudioCurveSetDriver",
+  inherit: [ IInitialize ],
+  // AudioCurveSetDriver_Blue.cpp:12-49, in Carbon's order.
+  interfaces: [ ICurveSetDriver, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "audioParameterName", be.PERSISTONLY, "_audioParameterName" ],
+    [ be.PROP, "audioParameterName" ],
+    [ be.ATTR, "audioParameterValue", be.READ ],
+    [ be.PROP_RO, "isValid" ],
+    [ be.ATTR, "fallbackCurve", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class AudioCurveSetDriver extends ICurveSetDriver
 {
   /** m_name: authored display name, stored as std::wstring. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   name = "";
@@ -28,7 +37,6 @@ export class AudioCurveSetDriver extends ICurveSetDriver
   /** m_audioParameterName: persistence bypasses the live registration setter.
    * Carbon: AudioCurveSetDriver::m_audioParameterName (audio/src/AudioCurveSetDriver.h:32); MAP_ATTRIBUTE (audio/src/AudioCurveSetDriver_Blue.cpp:23).
    */
-  @be.mapAttribute(be.PERSISTONLY, "audioParameterName")
 
   @type.wstring
   _audioParameterName = "";
@@ -38,7 +46,6 @@ export class AudioCurveSetDriver extends ICurveSetDriver
    *
    * @implemented
    */
-  @be.mapProperty()
   @type.wstring
   get audioParameterName()
   {
@@ -55,7 +62,6 @@ export class AudioCurveSetDriver extends ICurveSetDriver
   }
 
   /** m_audioParameterValue: cached float, retained when no parameter record exists. */
-  @be.mapAttribute(be.READ)
   @type.float32
   audioParameterValue = 0;
 
@@ -64,7 +70,6 @@ export class AudioCurveSetDriver extends ICurveSetDriver
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isValid()
   {
@@ -72,7 +77,6 @@ export class AudioCurveSetDriver extends ICurveSetDriver
   }
 
   /** m_fallbackCurve: sampled at the caller's unmodified time when audio is invalid. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   fallbackCurve = null;

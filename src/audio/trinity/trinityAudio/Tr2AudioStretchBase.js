@@ -11,28 +11,31 @@ import { AudGameObjResource } from "../audio/AudGameObjResource.js";
 import { StretchAudio } from "../audio/StretchAudio.js";
 
 /** Creates and updates the three Carbon emitters used by a Trinity audio stretch. */
-@be.define("Tr2AudioStretchBase")
-@be.inherit(IInitialize, ITr2DebugRenderable, ITr2Audio)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2DebugRenderable)
-@be.mapInterface(ITr2Audio)
+@be.define({
+  name: "Tr2AudioStretchBase",
+  inherit: [ IInitialize, ITr2DebugRenderable, ITr2Audio ],
+  // Tr2AudioStretchBase_Blue.cpp:12-27, in Carbon's order.
+  interfaces: [ IInitialize, ITr2DebugRenderable, ITr2Audio ],
+  members: [
+    [ be.ATTR, "sourceEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchEmitter", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2AudioStretchBase
 {
 
   /** m_stretchEmitter (ITr2AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITr2AudEmitter")
   stretchEmitter = null;
 
   /** m_destEmitter (ITr2AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITr2AudEmitter")
   destinationEmitter = null;
 
   /** m_sourceEmitter (ITr2AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITr2AudEmitter")
   sourceEmitter = null;

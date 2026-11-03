@@ -6,29 +6,34 @@ import { type } from "#schema";
 import { vec4 } from "#math/vec4";
 
 /** Configures screen-space subsurface scattering width, front-scatter color, scene presence, and enablement. */
-@be.define("Tr2SSSSS")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2SSSSS",
+  inherit: [ IRoot ],
+  // Tr2SSSSS_Blue.cpp:10-24, in Carbon's order.
+  members: [
+    [ be.ATTR, "enabled", be.READWRITE ],
+    [ be.ATTR, "subSurfaceScatteringWidth", be.READWRITE ],
+    [ be.ATTR, "subSurfaceFrontScatterColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "hasSSSSSInScene", be.READ ]
+  ]
+})
 export class Tr2SSSSS extends IRoot
 {
 
   /** m_subSurfaceFrontScatterColor (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   subSurfaceFrontScatterColor = vec4.fromValues(1, 1, 1, 1);
 
   /** m_subSurfaceScatteringWidth (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   subSurfaceScatteringWidth = 0.1277;
 
   /** m_hasSSSSSInScene (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   hasSSSSSInScene = true;
 
   /** m_enabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   enabled = true;
 

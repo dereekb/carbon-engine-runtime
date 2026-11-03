@@ -10,24 +10,31 @@ import { ITr2SoundEmitterOwner } from "../../eve/ITr2SoundEmitterOwner.js";
  * Controller action that sets an audio emitter's distance-attenuation scaling
  * factor on start, optionally multiplied by a named controller variable.
  */
-@be.define("Tr2ActionSetAttenuationScaling")
-@be.mapInterface(ITr2ControllerAction)
+@be.define({
+  name: "Tr2ActionSetAttenuationScaling",
+  // Tr2ActionSetAttenuationScaling_Blue.cpp:12-39, in Carbon's order.
+  interfaces: [ ITr2ControllerAction ],
+  members: [
+    [ be.ATTR, "emitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "controllerVariable", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scalingFactor", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "finalScalingFactor" ],
+    [ be.METHOD, "StartWithController", be.WRAP ]
+  ]
+})
 export class Tr2ActionSetAttenuationScaling extends ITr2ControllerAction
 {
   /** m_emitterName: narrow emitter lookup name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   emitter = "";
 
   /** m_controllerVariableName: optional variable sampled from the linked controller. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   controllerVariable = "";
 
   /** m_scalingFactor: authored attenuation multiplier. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scalingFactor = 1;
@@ -37,7 +44,6 @@ export class Tr2ActionSetAttenuationScaling extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.float32
   get finalScalingFactor()
   {
@@ -91,7 +97,6 @@ export class Tr2ActionSetAttenuationScaling extends ITr2ControllerAction
    * @adapted JavaScript TypeError represents native PyErr_SetString for null.
    * @param {ITr2ActionController} controller The invoking controller.
    */
-  @be.mapMethodAndWrap()
   StartWithController(controller)
   {
     this.Start(ITr2ControllerAction.requireController(controller, "StartWithController"));

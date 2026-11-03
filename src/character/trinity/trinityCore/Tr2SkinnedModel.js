@@ -24,11 +24,20 @@ const FLT_MAX = 3.4028234663852886e38;
  *
  * Each batch owns its area's remapped palette through Tr2PerAreaDataSkinned.
  */
-@be.define("Tr2SkinnedModel")
-@be.inherit(IInitialize, INotify, IListNotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.exposureChainTo(Tr2Model)
+@be.define({
+  name: "Tr2SkinnedModel",
+  inherit: [ IInitialize, INotify, IListNotify ],
+  // Tr2SkinnedModel_Blue.cpp:10-26, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "geometryRes", be.READ ],
+    [ be.ATTR_CHOOSER, "geometryResPath", be.READWRITE | be.NOTIFY | be.PERSIST, null ],
+    [ be.ATTR, "skeletonName", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "skinScale", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "ResetAnimationBindings", be.WRAP, "ResetBindings" ]
+  ],
+  chainTo: Tr2Model
+})
 export class Tr2SkinnedModel extends Tr2Model
 {
   /** Identity fallback is consumed synchronously while building one area's palette. */
@@ -116,24 +125,20 @@ export class Tr2SkinnedModel extends Tr2Model
   _dependencyRevisions = new Map();
 
   /** m_geometryResPath (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, null)
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
   /** m_geometryRes (TriGeometryResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
   geometryRes = null;
 
   /** m_skeletonName (std::string) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string
   skeletonName = "";
 
   /** m_skinScale (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   skinScale = vec3.fromValues(1, 1, 1);
@@ -307,7 +312,6 @@ export class Tr2SkinnedModel extends Tr2Model
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("ResetAnimationBindings")
   ResetBindings()
   {
     this._areAllMeshesBound = false;

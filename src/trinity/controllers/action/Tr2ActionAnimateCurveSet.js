@@ -13,22 +13,29 @@ import { ITr2Updateable } from "../../core/ITr2Updateable.js";
  * Controller action that registers for per-frame updates and drives a curve
  * set's playhead from an expression, by default the elapsed state time.
  */
-@be.define("Tr2ActionAnimateCurveSet")
-@be.inherit(ITr2Updateable, INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(ITr2Updateable)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionAnimateCurveSet",
+  inherit: [ ITr2Updateable, INotify ],
+  // Tr2ActionAnimateCurveSet_Blue.cpp:12-31, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, ITr2Updateable, INotify ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "curveSet", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isExpressionValid" ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "IsExpressionValid", be.WRAP, "IsAttrExpressionValid" ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ]
+  ]
+})
 export class Tr2ActionAnimateCurveSet extends ITr2ControllerAction
 {
   /** m_value: expression text, recompiled by Link and its NOTIFY callback. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   value = "StateTime()";
 
   /** m_curveSet: the curve set whose playhead this action drives. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("TriCurveSet")
   curveSet = null;
@@ -38,7 +45,6 @@ export class Tr2ActionAnimateCurveSet extends ITr2ControllerAction
    *
    * @adapted
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isExpressionValid()
   {
@@ -181,7 +187,6 @@ export class Tr2ActionAnimateCurveSet extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("IsExpressionValid")
   IsAttrExpressionValid(_attributeName)
   {
     return this.IsExpressionValid();
@@ -193,7 +198,6 @@ export class Tr2ActionAnimateCurveSet extends ITr2ControllerAction
    * @adapted the shared AST adapter supplies term records instead of native
    *   Tr2ExpressionTermInfo instances, followed by linked controller records.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     const result = [];
@@ -208,7 +212,6 @@ export class Tr2ActionAnimateCurveSet extends ITr2ControllerAction
    * @adapted retains the existing AST convenience return of zero for invalid
    *   syntax and permits unlinked evaluation, unlike native BlueStdResult errors.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     const state = {

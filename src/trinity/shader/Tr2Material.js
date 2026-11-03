@@ -42,9 +42,13 @@ function SamplerDescriptionFromOverride(override)
 }
 
 /** Owns a resolved shader's per-technique pass and library bindings, resource invalidation, texture LOD forwarding, and draw-sort state. */
-@be.define("Tr2Material")
+@be.define({
+  name: "Tr2Material",
+  inherit: [ IRoot ],
+  // Tr2Material_Blue.cpp:11-12, in Carbon's order.
+  members: []
+})
 
-@be.inherit(IRoot)
 export class Tr2Material extends IRoot
 {
 

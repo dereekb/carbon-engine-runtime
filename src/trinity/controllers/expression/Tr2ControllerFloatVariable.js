@@ -23,14 +23,22 @@ import { Type } from "../enums.js";
  * marks changes; it does not evaluate expressions or clear consumed dirty bits.
  * The destination storage remains caller-owned.
  */
-@be.define("Tr2ControllerFloatVariable")
-@be.inherit(INotify)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ControllerFloatVariable",
+  inherit: [ INotify ],
+  // Tr2ControllerFloatVariable_Blue.cpp:22-31, in Carbon's order.
+  interfaces: [ IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "variableType", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ControllerFloatVariable.Type" ],
+    [ be.ATTR, "value", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "defaultValue", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "enumValues", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ControllerFloatVariable extends IInitialize
 {
   /** Authored variable name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -39,25 +47,21 @@ export class Tr2ControllerFloatVariable extends IInitialize
    * Editor presentation type; runtime storage remains float32.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Controllers/Tr2ControllerFloatVariable_Blue.cpp:28); chooser TypeChooser (trinity/trinity/Controllers/Tr2ControllerFloatVariable_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ControllerFloatVariable.Type")
   @type.int32
   @type.enum("trinity.Tr2ControllerFloatVariable.Type")
   variableType = Type.FLOAT;
 
   /** Current runtime value; changes notify but do not persist. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   value = 0;
 
   /** Authored value assigned by Initialize without publishing. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   defaultValue = 0;
 
   /** Comma-separated editor value/name choices. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   enumValues = "";

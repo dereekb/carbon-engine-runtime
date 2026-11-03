@@ -5,28 +5,33 @@ import { exposure as be } from "#be";
 import { type } from "#schema";
 
 /** Carries shadow-effect, denoiser, enablement, and sun-angle state for Carbon's ray-tracing manager. */
-@be.define("Tr2RaytracingManager")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2RaytracingManager",
+  inherit: [ IRoot ],
+  // Tr2RaytracingManager_Blue.cpp:10-16, in Carbon's order.
+  members: [
+    [ be.ATTR, "shadowEffect", be.READ ],
+    [ be.ATTR, "sunAngle", be.READWRITE ],
+    [ be.ATTR, "applyDenoiser", be.READWRITE ],
+    [ be.ATTR, "denoiser", be.READ ]
+  ]
+})
 export class Tr2RaytracingManager extends IRoot
 {
 
   /** m_shadowEffect (Tr2EffectPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2Effect")
   shadowEffect = null;
 
   /** m_denoiser (Tr2DenoiserPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2Denoiser")
   denoiser = null;
 
   /** m_applyDenoiser (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   applyDenoiser = true;
 
   /** m_sunAngle (float) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.float32
   sunAngle = 0.01;
 

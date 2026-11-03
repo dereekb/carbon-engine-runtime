@@ -15,10 +15,18 @@ import { Tr2StateMachineState } from "./Tr2StateMachineState.js";
  * change. Its typed BlueList reports explicit list operations to this owner;
  * raw array operations bypass admission and notification.
  */
-@be.define("Tr2StateMachine")
-@be.inherit(IListNotify, ISimTimeRebaseNotify, INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2StateMachine",
+  inherit: [ IListNotify, ISimTimeRebaseNotify, INotify ],
+  // Tr2StateMachine_Blue.cpp:11-19, in Carbon's order.
+  interfaces: [ IListNotify, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "states", be.READ | be.PERSIST ],
+    [ be.ATTR, "startState", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "currentState", be.READ ]
+  ]
+})
 export class Tr2StateMachine
 {
   /**
@@ -26,7 +34,6 @@ export class Tr2StateMachine
    * notify this machine so it can maintain state linkage.
    * @type {BlueList}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2StateMachineState")
   states = new BlueList(Tr2StateMachineState, { className: "Tr2StateMachineState", listOps: 0 });
@@ -36,7 +43,6 @@ export class Tr2StateMachine
    * This reference is not persisted with the authored machine.
    * @type {Tr2StateMachineState|null}
    */
-  @be.mapAttribute(be.READ)
   @type.object.ref("Tr2StateMachineState")
   currentState = null;
 
@@ -45,7 +51,6 @@ export class Tr2StateMachine
    * restarts the machine; it refers to the state itself rather than a copy.
    * @type {Tr2StateMachineState|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2StateMachineState")
@@ -55,7 +60,6 @@ export class Tr2StateMachine
    * Authored identifier for this state machine within a controller.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

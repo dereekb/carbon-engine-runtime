@@ -14,18 +14,30 @@ import { ITr2Updateable } from "../../core/ITr2Updateable.js";
  * expression-driven value into a named Wwise real-time parameter on a sound
  * emitter.
  */
-@be.define("Tr2ActionBindRTPC")
-@be.inherit(ITr2Updateable, INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(ITr2Updateable)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionBindRTPC",
+  inherit: [ ITr2Updateable, INotify ],
+  // Tr2ActionBindRTPC_Blue.cpp:13-46, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, ITr2Updateable, INotify ],
+  members: [
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "emitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rtpcName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curve", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "isExpressionValid" ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "IsExpressionValid", be.WRAP, "IsAttrExpressionValid" ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ],
+    [ be.METHOD, "StartWithController", be.WRAP ],
+    [ be.METHOD, "StopWithController", be.WRAP ]
+  ]
+})
 export class Tr2ActionBindRTPC extends ITr2ControllerAction
 {
   /**
    * Expression evaluated each update to produce the RTPC value.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -35,7 +47,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * Name of the sound emitter receiving the RTPC updates.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   emitter = "";
@@ -44,7 +55,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * Wwise real-time parameter name; native storage is std::wstring.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   rtpcName = "";
@@ -53,7 +63,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * Optional scalar curve sampled by the expression Curve(time) helper.
    * @type {ITriScalarFunction|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   curve = null;
@@ -64,7 +73,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * @adapted
    * @returns {boolean} Whether a valid compiled expression is retained.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isExpressionValid()
   {
@@ -127,7 +135,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    *
    * @adapted JavaScript TypeError represents native Python null-argument errors.
    */
-  @be.mapMethodAndWrap()
   StartWithController(controller)
   {
     this.Start(ITr2ControllerAction.requireController(controller, "StartWithController"));
@@ -149,7 +156,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    *
    * @adapted JavaScript TypeError represents native Python null-argument errors.
    */
-  @be.mapMethodAndWrap()
   StopWithController(controller)
   {
     this.Stop(ITr2ControllerAction.requireController(controller, "StopWithController"));
@@ -219,7 +225,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("IsExpressionValid")
   IsAttrExpressionValid(_attributeName)
   {
     return this.IsExpressionValid();
@@ -242,7 +247,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    *
    * @adapted shared AST term records replace native Tr2ExpressionTermInfo objects.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     const result = [];
@@ -259,7 +263,6 @@ export class Tr2ActionBindRTPC extends ITr2ControllerAction
    * @adapted retains JS unlinked evaluation and zero fallback for invalid syntax
    *   rather than native BlueStdResult error returns.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     const state = {

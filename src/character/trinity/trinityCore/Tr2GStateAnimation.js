@@ -6,55 +6,93 @@ import { ITr2AnimationUpdater } from "../../../trinity/core/animation/ITr2Animat
 import { type } from "#schema";
 
 /** Character GState animation record for an external state-machine adapter. */
-@be.define("Tr2GStateAnimation")
-@be.inherit(IInitialize, ITr2AnimationUpdater)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2AnimationUpdater)
+@be.define({
+  name: "Tr2GStateAnimation",
+  inherit: [ IInitialize, ITr2AnimationUpdater ],
+  // Tr2GStateAnimation_Blue.cpp:16-255, in Carbon's order.
+  interfaces: [ IInitialize, ITr2AnimationUpdater ],
+  members: [
+    [ be.PROP, "resPath" ],
+    [ be.ATTR, "resPath_", be.PERSISTONLY ],
+    [ be.PROP, "gStateResPath" ],
+    [ be.ATTR, "gStateResPath_", be.PERSISTONLY ],
+    [ be.ATTR, "grannyRes", be.READ ],
+    [ be.PROP, "model" ],
+    [ be.ATTR, "model_", be.PERSISTONLY ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "debugRenderSkeleton", be.READWRITE ],
+    [ be.ATTR, "debugRenderJointNames", be.READWRITE ],
+    [ be.ATTR, "animationEnabled", be.READWRITE ],
+    [ be.ATTR, "eventListener", be.READWRITE ],
+    [ be.METHOD, "TogglePauseAnimations", be.WRAP ],
+    [ be.METHOD, "LoadModelFromGstate", be.WRAP ],
+    [ be.METHOD, "GetGStateAnimFileRefPaths", be.WRAP ],
+    [ be.METHOD, "GetTopLevelNodeNames", be.WRAP ],
+    [ be.METHOD, "GetTopLevelParameterNodeNames", be.WRAP ],
+    [ be.METHOD, "GetTopLevelStateNodeNames", be.WRAP ],
+    [ be.METHOD, "GetParameters", be.WRAP ],
+    [ be.METHOD, "GetParameterRange", be.WRAP ],
+    [ be.METHOD, "GetActiveMachineElementName", be.WRAP ],
+    [ be.METHOD, "GetStartStateIdx", be.WRAP ],
+    [ be.METHOD, "SetStartStateIdx", be.WRAP ],
+    [ be.METHOD, "SetStartStateByName", be.WRAP ],
+    [ be.METHOD, "RequestChangeToState", be.WRAP ],
+    [ be.METHOD, "ForceChangeToState", be.WRAP ],
+    [ be.METHOD, "StartTransitionByName", be.WRAP ],
+    [ be.METHOD, "GetParameter", be.WRAP ],
+    [ be.METHOD, "SetParameter", be.WRAP ],
+    [ be.METHOD, "RequestParameter", be.WRAP ],
+    [ be.METHOD, "RequestParameterByName", be.WRAP ],
+    [ be.METHOD, "GetParameterByName", be.WRAP ],
+    [ be.METHOD, "GetParameterIndexByName", be.WRAP ],
+    [ be.METHOD, "IsFullyLoaded", be.WRAP ],
+    [ be.METHOD, "InstantiateCharacter", be.WRAP ],
+    [ be.METHOD, "ResetParamsToDefault", be.WRAP ],
+    [ be.METHOD, "GetAnimationTime", be.WRAP ],
+    [ be.METHOD, "StartScrub", be.WRAP ],
+    [ be.METHOD, "ClearScrub", be.WRAP ],
+    [ be.METHOD, "PlayFromScrub", be.WRAP ],
+    [ be.METHOD, "StopPlayFromScrub", be.WRAP ],
+    [ be.METHOD, "GetScrubOffset", be.WRAP ],
+    [ be.METHOD, "SetScrubOffset", be.WRAP ]
+  ]
+})
 export class Tr2GStateAnimation extends IRoot
 {
 
   /** m_resPath (std::string) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   resPath_ = "";
 
   /** m_gStateResPath (std::string) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   gStateResPath_ = "";
 
   /** m_model (std::string) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.string
   model_ = "";
 
   /** m_gStateParameterList (PTr2GStateParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("Tr2GStateParameter")
   parameters = [];
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriGrannyRes")
   grannyRes = null;
 
   /** m_eventListener (IBlueEventListenerPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("IBlueEventListener")
   eventListener = null;
 
   /** m_animationEnabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   animationEnabled = true;
 
   /** m_debugRenderJointNames (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugRenderJointNames = false;
 
   /** m_debugRenderSkeleton (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   debugRenderSkeleton = false;
 
@@ -62,7 +100,6 @@ export class Tr2GStateAnimation extends IRoot
    * Returns the authored Granny animation resource path stored by this graph
    * shell.
    */
-  @be.mapProperty()
   @type.string
   get resPath()
   {
@@ -79,7 +116,6 @@ export class Tr2GStateAnimation extends IRoot
   }
 
   /** Returns the authored state-graph resource path stored by this graph shell. */
-  @be.mapProperty()
   @type.string
   get gStateResPath()
   {
@@ -96,7 +132,6 @@ export class Tr2GStateAnimation extends IRoot
   }
 
   /** Returns the authored Granny model name stored by this graph shell. */
-  @be.mapProperty()
   @type.string
   get model()
   {
@@ -182,7 +217,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   ClearScrub(...args)
   {
     throw new Error("Tr2GStateAnimation.ClearScrub is not implemented in CarbonEngineJS.");
@@ -193,7 +227,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   ForceChangeToState(...args)
   {
     throw new Error("Tr2GStateAnimation.ForceChangeToState is not implemented in CarbonEngineJS.");
@@ -204,7 +237,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetActiveMachineElementName(...args)
   {
     throw new Error("Tr2GStateAnimation.GetActiveMachineElementName is not implemented in CarbonEngineJS.");
@@ -215,7 +247,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetAnimationTime(...args)
   {
     throw new Error("Tr2GStateAnimation.GetAnimationTime is not implemented in CarbonEngineJS.");
@@ -226,7 +257,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetGStateAnimFileRefPaths(...args)
   {
     throw new Error("Tr2GStateAnimation.GetGStateAnimFileRefPaths is not implemented in CarbonEngineJS.");
@@ -237,7 +267,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetParameter(...args)
   {
     throw new Error("Tr2GStateAnimation.GetParameter is not implemented in CarbonEngineJS.");
@@ -248,7 +277,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetParameterByName(...args)
   {
     throw new Error("Tr2GStateAnimation.GetParameterByName is not implemented in CarbonEngineJS.");
@@ -259,7 +287,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetParameterIndexByName(...args)
   {
     throw new Error("Tr2GStateAnimation.GetParameterIndexByName is not implemented in CarbonEngineJS.");
@@ -270,7 +297,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetParameterRange(...args)
   {
     throw new Error("Tr2GStateAnimation.GetParameterRange is not implemented in CarbonEngineJS.");
@@ -281,7 +307,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetParameters(...args)
   {
     throw new Error("Tr2GStateAnimation.GetParameters is not implemented in CarbonEngineJS.");
@@ -292,7 +317,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetScrubOffset(...args)
   {
     throw new Error("Tr2GStateAnimation.GetScrubOffset is not implemented in CarbonEngineJS.");
@@ -303,7 +327,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetStartStateIdx(...args)
   {
     throw new Error("Tr2GStateAnimation.GetStartStateIdx is not implemented in CarbonEngineJS.");
@@ -314,7 +337,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetTopLevelNodeNames(...args)
   {
     throw new Error("Tr2GStateAnimation.GetTopLevelNodeNames is not implemented in CarbonEngineJS.");
@@ -325,7 +347,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetTopLevelParameterNodeNames(...args)
   {
     throw new Error("Tr2GStateAnimation.GetTopLevelParameterNodeNames is not implemented in CarbonEngineJS.");
@@ -336,7 +357,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   GetTopLevelStateNodeNames(...args)
   {
     throw new Error("Tr2GStateAnimation.GetTopLevelStateNodeNames is not implemented in CarbonEngineJS.");
@@ -347,7 +367,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   InstantiateCharacter(...args)
   {
     throw new Error("Tr2GStateAnimation.InstantiateCharacter is not implemented in CarbonEngineJS.");
@@ -358,7 +377,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   IsFullyLoaded(...args)
   {
     throw new Error("Tr2GStateAnimation.IsFullyLoaded is not implemented in CarbonEngineJS.");
@@ -369,7 +387,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   LoadModelFromGstate(...args)
   {
     throw new Error("Tr2GStateAnimation.LoadModelFromGstate is not implemented in CarbonEngineJS.");
@@ -380,7 +397,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   PlayFromScrub(...args)
   {
     throw new Error("Tr2GStateAnimation.PlayFromScrub is not implemented in CarbonEngineJS.");
@@ -391,7 +407,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   RequestChangeToState(...args)
   {
     throw new Error("Tr2GStateAnimation.RequestChangeToState is not implemented in CarbonEngineJS.");
@@ -402,7 +417,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   RequestParameter(...args)
   {
     throw new Error("Tr2GStateAnimation.RequestParameter is not implemented in CarbonEngineJS.");
@@ -413,7 +427,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   RequestParameterByName(...args)
   {
     throw new Error("Tr2GStateAnimation.RequestParameterByName is not implemented in CarbonEngineJS.");
@@ -424,7 +437,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   ResetParamsToDefault(...args)
   {
     throw new Error("Tr2GStateAnimation.ResetParamsToDefault is not implemented in CarbonEngineJS.");
@@ -435,7 +447,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   SetParameter(...args)
   {
     throw new Error("Tr2GStateAnimation.SetParameter is not implemented in CarbonEngineJS.");
@@ -446,7 +457,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   SetScrubOffset(...args)
   {
     throw new Error("Tr2GStateAnimation.SetScrubOffset is not implemented in CarbonEngineJS.");
@@ -457,7 +467,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   SetStartStateByName(...args)
   {
     throw new Error("Tr2GStateAnimation.SetStartStateByName is not implemented in CarbonEngineJS.");
@@ -468,7 +477,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   SetStartStateIdx(...args)
   {
     throw new Error("Tr2GStateAnimation.SetStartStateIdx is not implemented in CarbonEngineJS.");
@@ -479,7 +487,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   StartScrub(...args)
   {
     throw new Error("Tr2GStateAnimation.StartScrub is not implemented in CarbonEngineJS.");
@@ -490,7 +497,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   StartTransitionByName(...args)
   {
     throw new Error("Tr2GStateAnimation.StartTransitionByName is not implemented in CarbonEngineJS.");
@@ -501,7 +507,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   StopPlayFromScrub(...args)
   {
     throw new Error("Tr2GStateAnimation.StopPlayFromScrub is not implemented in CarbonEngineJS.");
@@ -512,7 +517,6 @@ export class Tr2GStateAnimation extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrap()
   TogglePauseAnimations(...args)
   {
     throw new Error("Tr2GStateAnimation.TogglePauseAnimations is not implemented in CarbonEngineJS.");

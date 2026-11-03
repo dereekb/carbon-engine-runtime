@@ -84,8 +84,17 @@ const CAPABILITY_NAMES = Object.freeze(Object.fromEntries(
 // the backend about the shading language rather than read this name.
 
 /** Browser feature report replacing Carbon's compile-time platform macros. */
-@be.define("Tr2PlatformInfo")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2PlatformInfo",
+  inherit: [ IRoot ],
+  // Tr2PlatformInfo_Blue.cpp:44-51, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "platformName" ],
+    [ be.PROP_RO, "platformID" ],
+    [ be.PROP_RO, "isLowPerformance" ],
+    [ be.METHOD, "GetStaticCap", be.WRAP ]
+  ]
+})
 export class Tr2PlatformInfo
 {
     /**
@@ -280,7 +289,6 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {string|null}
      */
-    @be.mapPropertyReadOnly()
     get platformName()
     {
         return this.GetPlatformName();
@@ -293,7 +301,6 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {number}
      */
-    @be.mapPropertyReadOnly()
     get platformID()
     {
         return this.GetPlatformID();
@@ -306,7 +313,6 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {boolean}
      */
-    @be.mapPropertyReadOnly()
     get isLowPerformance()
     {
         return this.IsLowPerformance();
@@ -317,7 +323,6 @@ export class Tr2PlatformInfo
      *
      * @adapted
      */
-    @be.mapMethodAndWrap()
     GetStaticCap(capability)
     {
         const name = typeof capability === "string"

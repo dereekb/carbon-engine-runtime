@@ -14,11 +14,32 @@ import { AudEventKey } from "../../generated/audio/AudEventKey.js";
 import "#consts/graphics/trinityEnums";
 
 /** Fires authored audio events as playback time crosses ordered event keys on a timeline curve. */
-@be.define("AudEventCurve")
-@be.inherit(IInitialize, ITriFunction, ITriCurveLength)
-@be.mapInterface(ITriFunction)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITriCurveLength)
+@be.define({
+  name: "AudEventCurve",
+  inherit: [ IInitialize, ITriFunction, ITriCurveLength ],
+  // AudEventCurve_Blue.cpp:15-110, in Carbon's order.
+  interfaces: [ ITriFunction, IInitialize, ITriCurveLength ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "time", be.READ ],
+    [ be.ATTR, "length", be.READ ],
+    [ be.ATTR, "localTime", be.READ ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "keys", be.PERSISTONLY ],
+    [ be.ATTR, "audioEmitter", be.READ ],
+    [ be.ATTR, "sourceTriObserver", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "extrapolation", be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIEXTRAPOLATION" ],
+    [ be.METHOD, "AddKey", be.WRAP ],
+    [ be.METHOD, "SetSourceTriObserver", be.WRAP ],
+    [ be.METHOD, "GetSourceTriObserver", be.WRAP ],
+    [ be.METHOD, "RemoveKey", be.WRAP ],
+    [ be.METHOD, "GetKeyCount", be.WRAP ],
+    [ be.METHOD, "GetKeyTime", be.WRAP ],
+    [ be.METHOD, "GetKeyValue", be.WRAP ],
+    [ be.METHOD, "SetKeyTime", be.WRAP ],
+    [ be.METHOD, "SetKeyValue", be.WRAP ]
+  ]
+})
 export class AudEventCurve extends IRoot
 {
 
@@ -26,51 +47,42 @@ export class AudEventCurve extends IRoot
    * m_extrapolation (TRIEXTRAPOLATION - enum TRIEXTRAPOLATION) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (audio/src/AudEventCurve_Blue.cpp:50); chooser TriExtrapolation (audio/src/AudConstants.cpp:6).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "blue.TRIEXTRAPOLATION")
   @type.int32
   @type.enum("blue.TRIEXTRAPOLATION")
   extrapolation = 0;
 
   /** m_time (double) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float64
   time = 0;
 
   /** m_length (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   length = 0;
 
   /** m_localTime (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   localTime = 0;
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_value (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   value = "";
 
   /** m_sourceTriObserver (ITriObserverLocalPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriObserverLocal")
   sourceTriObserver = null;
 
   /** m_keys (PAudEventKeyVector) [PERSISTONLY] */
-  @be.mapAttribute(be.PERSISTONLY)
   @type.list("AudEventKey")
   keys = [];
 
   /** m_audioEmitter (AudEmitterPtr) [READ] */
-  @be.mapAttribute(be.READ)
   @type.object.ref("AudEmitter")
   audioEmitter = null;
 
@@ -84,7 +96,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   AddKey(time, evtName)
   {
     const key = new AudEventKey();
@@ -112,7 +123,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyCount()
   {
     return this.keys.length;
@@ -123,7 +133,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyTime(ix)
   {
     return InRange(this.keys, ix) ? this.keys[ix].time : 0;
@@ -134,7 +143,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetKeyValue(ix)
   {
     return InRange(this.keys, ix) ? this.keys[ix].value : "";
@@ -145,7 +153,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyTime(ix, time)
   {
     if (!InRange(this.keys, ix))
@@ -162,7 +169,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetKeyValue(ix, value)
   {
     if (InRange(this.keys, ix))
@@ -177,7 +183,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   RemoveKey(ix)
   {
     if (!InRange(this.keys, ix))
@@ -260,7 +265,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetSourceTriObserver()
   {
     return this.sourceTriObserver;
@@ -271,7 +275,6 @@ export class AudEventCurve extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetSourceTriObserver(sourceTriObserver)
   {
     this.sourceTriObserver = sourceTriObserver;

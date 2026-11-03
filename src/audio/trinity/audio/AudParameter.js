@@ -8,17 +8,22 @@ import { INotify } from "#blueexposure/INotify";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 
 /** Binds a real-time parameter value to its owning audio game object. */
-@be.define("AudParameter")
-@be.mapInterface(INotify)
+@be.define({
+  name: "AudParameter",
+  // AudParameter_Blue.cpp:10-15, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE ],
+    [ be.ATTR, "value", be.READWRITE | be.NOTIFY ]
+  ]
+})
 export class AudParameter extends INotify
 {
   /** m_name: std::wstring, READWRITE without persistence. */
-  @be.mapAttribute(be.READWRITE)
   @type.wstring
   name = "";
 
   /** m_value: float, READWRITE and NOTIFY without persistence. */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
   @type.float32
   value = 0;

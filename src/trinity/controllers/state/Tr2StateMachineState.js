@@ -16,10 +16,19 @@ import { Tr2StateMachineTransition } from "./Tr2StateMachineTransition.js";
  * state. Its typed BlueLists report explicit list operations to this owner; raw
  * array operations bypass admission and notification.
  */
-@be.define("Tr2StateMachineState")
-@be.inherit(IListNotify, INotify)
-@be.mapInterface(IListNotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2StateMachineState",
+  inherit: [ IListNotify, INotify ],
+  // Tr2StateMachineState_Blue.cpp:13-22, in Carbon's order.
+  interfaces: [ IListNotify, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "actions", be.READ | be.PERSIST ],
+    [ be.ATTR, "transitions", be.READ | be.PERSIST ],
+    [ be.ATTR, "finalizer", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.METHOD, "GetStateMachine", be.WRAP, "GetStateMachinePtr" ]
+  ]
+})
 export class Tr2StateMachineState
 {
   /**
@@ -27,7 +36,6 @@ export class Tr2StateMachineState
    * and stopped on exit. The same actions can veto an outgoing transition.
    * @type {BlueList}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ControllerAction")
   actions = new BlueList(ITr2ControllerAction, { className: null, listOps: 0 });
@@ -37,7 +45,6 @@ export class Tr2StateMachineState
    * to select the next state. This state receives the list's notifications.
    * @type {BlueList}
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2StateMachineTransition")
   transitions = new BlueList(Tr2StateMachineTransition, { className: "Tr2StateMachineTransition", listOps: 0 });
@@ -47,7 +54,6 @@ export class Tr2StateMachineState
    * have been requested; null permits completion without this check.
    * @type {ITr2StateMachineStateFinalizer|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("ITr2StateMachineStateFinalizer")
@@ -57,7 +63,6 @@ export class Tr2StateMachineState
    * State name matched by machine lookups and transition destinations.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -384,7 +389,6 @@ export class Tr2StateMachineState
    * @implemented
    * @returns {Tr2StateMachine|null} Owning machine, or null while unlinked.
    */
-  @be.mapMethodAndWrap("GetStateMachine")
   GetStateMachinePtr()
   {
     return this.GetStateMachine();

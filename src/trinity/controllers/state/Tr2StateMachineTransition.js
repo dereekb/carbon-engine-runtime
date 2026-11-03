@@ -13,9 +13,21 @@ import { CjsControllerExpressionProgram } from "../expression/CjsControllerExpre
  * One outgoing edge of a state machine state: evaluates a boolean condition
  * expression and, when it passes, names the destination state to switch to.
  */
-@be.define("Tr2StateMachineTransition")
-@be.inherit(INotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2StateMachineTransition",
+  inherit: [ INotify ],
+  // Tr2StateMachineTransition_Blue.cpp:14-33, in Carbon's order.
+  interfaces: [ INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "condition", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "isConditionValid" ],
+    [ be.METHOD, "GetState", be.WRAP, "GetSource" ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "IsExpressionValid", be.WRAP ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ]
+  ]
+})
 export class Tr2StateMachineTransition extends IRoot
 {
   /**
@@ -23,7 +35,6 @@ export class Tr2StateMachineTransition extends IRoot
    * Changing it refreshes the linked transition's destination reference.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -34,7 +45,6 @@ export class Tr2StateMachineTransition extends IRoot
    * evaluation with a nonzero result permits activation.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -47,7 +57,6 @@ export class Tr2StateMachineTransition extends IRoot
    *   this property does not introduce native eager evaluator binding.
    * @returns {boolean} Whether the current condition compiles successfully.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isConditionValid()
   {
@@ -201,7 +210,6 @@ export class Tr2StateMachineTransition extends IRoot
    * @adapted
    * @returns {Tr2StateMachineState|null} Source state, or null while unlinked.
    */
-  @be.mapMethodAndWrap("GetState")
   GetSource()
   {
     return this._source;
@@ -276,7 +284,6 @@ export class Tr2StateMachineTransition extends IRoot
    * @param {string} [_attributeName] Ignored native attribute-name argument.
    * @returns {boolean} Current condition validity.
    */
-  @be.mapMethodAndWrap()
   IsExpressionValid(_attributeName)
   {
     return this.IsConditionValid();
@@ -289,7 +296,6 @@ export class Tr2StateMachineTransition extends IRoot
    * @param {string} expression Expression to evaluate in the current JS context.
    * @returns {number} Evaluated number, or the retained zero result for invalid compilation.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     // Carbon reports "controller needs to be running when evaluating expressions" without a source (cpp:130-133).
@@ -316,7 +322,6 @@ export class Tr2StateMachineTransition extends IRoot
    * @adapted
    * @returns {Array<object>} New collection of supported functions and linked variables.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     const result = [];

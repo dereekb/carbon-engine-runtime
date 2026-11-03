@@ -11,20 +11,26 @@ import { CreateLodAllocations } from "../../../trinity/core/mesh/TriGeometryResA
 import { Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
 
 /** Named character model record grouping its Trinity mesh objects. */
-@be.define("Tr2Model")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2Model",
+  inherit: [ IRoot ],
+  // Tr2Model_Blue.cpp:10-17, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "meshes", be.READ | be.PERSIST ],
+    [ be.METHOD, "GetBoundingBoxInLocalSpace", be.WRAP ]
+  ]
+})
 
 export class Tr2Model extends IRoot
 {
 
   /** m_meshes (PTr2MeshVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Mesh")
   meshes = [];
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
@@ -128,7 +134,6 @@ export class Tr2Model extends IRoot
    * @adapted the Blue pair becomes an array of vectors, and the native error
    *   result becomes an exception when no mesh supplies bounds.
    */
-  @be.mapMethodAndWrap()
   GetBoundingBoxInLocalSpace()
   {
     const min = vec3.fromValues(Infinity, Infinity, Infinity); // alloc: returned bound pair

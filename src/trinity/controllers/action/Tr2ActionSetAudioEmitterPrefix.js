@@ -10,18 +10,24 @@ import { ITr2SoundEmitterOwner } from "../../eve/ITr2SoundEmitterOwner.js";
  * Controller action that sets the event-name prefix on a named audio emitter
  * when it starts, changing which bank events later sounds resolve to.
  */
-@be.define("Tr2ActionSetAudioEmitterPrefix")
-@be.mapInterface(ITr2ControllerAction)
+@be.define({
+  name: "Tr2ActionSetAudioEmitterPrefix",
+  // Tr2ActionSetAudioEmitterPrefix_Blue.cpp:13-18, in Carbon's order.
+  interfaces: [ ITr2ControllerAction ],
+  members: [
+    [ be.ATTR, "emitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "prefix", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "StartWithController", be.WRAP ]
+  ]
+})
 export class Tr2ActionSetAudioEmitterPrefix extends ITr2ControllerAction
 {
   /** m_emitterName: narrow emitter lookup name. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   emitter = "";
 
   /** m_prefix: wide event prefix. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   prefix = "";
@@ -47,7 +53,6 @@ export class Tr2ActionSetAudioEmitterPrefix extends ITr2ControllerAction
    * @adapted JavaScript TypeError represents native PyErr_SetString for null.
    * @param {ITr2ActionController} controller The invoking controller.
    */
-  @be.mapMethodAndWrap()
   StartWithController(controller)
   {
     this.Start(ITr2ControllerAction.requireController(controller, "StartWithController"));

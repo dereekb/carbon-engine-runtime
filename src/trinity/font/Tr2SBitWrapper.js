@@ -38,18 +38,31 @@ function blendOverAlpha(bytes, index, col, sourceAlpha)
 }
 
 /** Models Carbon's cached font-glyph wrapper, including placement coordinates and buffer-copy entry points. */
-@be.define("Tr2SBitWrapper")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2SBitWrapper",
+  inherit: [ IRoot ],
+  // Tr2Sbit_Blue.cpp:9-70, in Carbon's order.
+  members: [
+    [ be.ATTR, "x", be.READ ],
+    [ be.ATTR, "y", be.READ ],
+    [ be.PROP_RO, "xOffset" ],
+    [ be.PROP_RO, "yOffset" ],
+    [ be.PROP_RO, "width" ],
+    [ be.PROP_RO, "height" ],
+    [ be.PROP_RO, "xadvance" ],
+    [ be.PROP_RO, "yadvance" ],
+    [ be.METHOD, "ToBuffer", be.WRAP ],
+    [ be.METHOD, "ToBufferWithUnderline", be.WRAP ]
+  ]
+})
 export class Tr2SBitWrapper extends IRoot
 {
 
   /** x (int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   x = 0;
 
   /** y (int) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   y = 0;
 
@@ -74,7 +87,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get xOffset()
   {
@@ -86,7 +98,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get yOffset()
   {
@@ -98,7 +109,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get width()
   {
@@ -110,7 +120,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get height()
   {
@@ -122,7 +131,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get xadvance()
   {
@@ -134,7 +142,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.int32
   get yadvance()
   {
@@ -206,7 +213,6 @@ export class Tr2SBitWrapper extends IRoot
    *
    * @adapted typed byte views replace the Python writable-buffer interface.
    */
-  @be.mapMethodAndWrap()
   ToBuffer(buffer, width, height, pitch, x, y, color)
   {
     const bytes = new Uint8Array(buffer.buffer ?? buffer, buffer.byteOffset ?? 0, buffer.byteLength); // alloc: byte view of caller-owned bitmap storage; does not copy pixels
@@ -306,7 +312,6 @@ export class Tr2SBitWrapper extends IRoot
    * @param {number} extraSpace Extra underline length after the advance.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   ToBufferWithUnderline(buffer, width, height, pitch, x, y, color, extraSpace)
   {
     this.ToBuffer(buffer, width, height, pitch, x, y, color);

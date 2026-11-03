@@ -11,8 +11,20 @@ import { TRITRANSFORMBASE } from "#consts/graphics";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 
 /** Composes authored translation, rotation, scale, and transform-base state into the matrix uploaded to a shader constant. */
-@be.define("TriTransformParameter")
-@be.mapInterface(ITriEffectParameter)
+@be.define({
+  name: "TriTransformParameter",
+  // TriTransformParameter_Blue.cpp:11-24, in Carbon's order.
+  interfaces: [ ITriEffectParameter ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotationCenter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "worldTransform", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "transformBase", be.READWRITE | be.PERSIST | be.ENUM, "blue.TRITRANSFORMBASE" ]
+  ]
+})
 export class TriTransformParameter extends ITriEffectParameter
 {
 
@@ -20,43 +32,36 @@ export class TriTransformParameter extends ITriEffectParameter
    * m_transformBase (TRITRANSFORMBASE - enum TRITRANSFORMBASE) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Shader/Parameter/TriTransformParameter_Blue.cpp:24); chooser TriTransformBase (trinity/trinity/TriConstants.cpp:111).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "blue.TRITRANSFORMBASE")
   @type.int32
   @type.enum("blue.TRITRANSFORMBASE")
   transformBase = 0;
 
   /** m_rotationCenter (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   rotationCenter = vec3.create();
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_rotation (Quaternion) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.quat
   rotation = quat.create();
 
   /** m_scaling (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** m_translation (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   translation = vec3.create();
 
   /** m_worldTransform (Matrix) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.mat4
   worldTransform = mat4.create();

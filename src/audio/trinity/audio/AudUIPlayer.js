@@ -15,8 +15,17 @@ const FLOAT_MAX = 3.4028234663852886e38;
  *
  * @abstract
  */
-@be.define("AudUIPlayer")
-@be.exposureChainTo(AudEmitter)
+@be.define({
+  name: "AudUIPlayer",
+  // AudUIPlayer_Blue.cpp:10-42, in Carbon's order.
+  members: [
+    [ be.METHOD, "SendEventWithCallback", be.WRAP ],
+    [ be.METHOD, "PostDialogueEvent", be.WRAP ],
+    [ be.METHOD, "GetEventPlayPosition", be.WRAP ],
+    [ be.ATTR, "eventSenderCallback", be.READWRITE ]
+  ],
+  chainTo: AudEmitter
+})
 @be.abstract
 export class AudUIPlayer extends AudEmitter
 {
@@ -27,7 +36,6 @@ export class AudUIPlayer extends AudEmitter
   _callbackEvents = new Map();
 
   /** m_callback (BlueScriptCallback) [READWRITE]: the stored script callback, or null. */
-  @be.mapAttribute(be.READWRITE)
   @type.rawStruct("BlueScriptCallback")
   get eventSenderCallback()
   {
@@ -69,7 +77,6 @@ export class AudUIPlayer extends AudEmitter
    * @param {number} playingID Event playing identifier.
    * @returns {number} Elapsed milliseconds, or -1.
    */
-  @be.mapMethodAndWrap()
   GetEventPlayPosition(playingID)
   {
     if (!this.constructor.manager?.enabled)
@@ -85,7 +92,6 @@ export class AudUIPlayer extends AudEmitter
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   PostDialogueEvent(eventName)
   {
     return this.constructor.manager?.enabled ? this.PostEvent(eventName, false, 0) : 0;
@@ -108,7 +114,6 @@ export class AudUIPlayer extends AudEmitter
    * @param {string} name Event name.
    * @returns {number} Playing identifier, or zero when not posted.
    */
-  @be.mapMethodAndWrap()
   SendEventWithCallback(name)
   {
     if (!this.constructor.manager?.enabled || !this.eventSenderCallback)

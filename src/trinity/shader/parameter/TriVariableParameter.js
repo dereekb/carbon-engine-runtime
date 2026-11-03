@@ -9,35 +9,37 @@ import { FNV1_INITIAL, hashFnv1String } from "#utils/hash";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
 
 /** Forwards a named variable-store entry into a named effect constant or resource. */
-@be.define("TriVariableParameter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(ITriEffectParameter)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "TriVariableParameter",
+  inherit: [ INotify, IInitialize ],
+  // TriVariableParameter_Blue.cpp:10-35, in Carbon's order.
+  interfaces: [ ITriEffectParameter, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "variableName", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.PROP_RO, "variableType" ],
+    [ be.ATTR, "usedByCurrentTechnique", be.READ ],
+    [ be.ATTR, "usedByCurrentEffect", be.READ ]
+  ]
+})
 export class TriVariableParameter extends ITriEffectParameter
 {
 
   /** m_name (BlueSharedString) [READWRITE, NOTIFY, PERSIST] */
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string
   name = "";
 
   /** m_isUsedByEffect (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentTechnique = false;
 
   /** m_isUsedByEffect (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentEffect = false;
 
   /** m_variableName (BlueSharedString) [READWRITE, NOTIFY, PERSIST] */
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string
@@ -216,7 +218,6 @@ export class TriVariableParameter extends ITriEffectParameter
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get variableType()
   {
     return this.GetVariableType();

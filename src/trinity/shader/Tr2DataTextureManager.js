@@ -31,39 +31,44 @@ const IMPACT_SHIELD_DATA_MAP = "ImpactShieldDataMap";
 const VEC4_BYTES = 16;
 
 /** Packs shader-readable data blocks into the shared impact data texture. */
-@be.define("Tr2DataTextureManager")
-@be.inherit(IInitialize, Tr2DeviceResource)
+@be.define({
+  name: "Tr2DataTextureManager",
+  inherit: [ IInitialize, Tr2DeviceResource ],
+  // Tr2DataTextureManager_Blue.cpp:10-18, in Carbon's order.
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "textureWidth", be.READ ],
+    [ be.ATTR, "textureHeight", be.READ ],
+    [ be.ATTR, "blockDataNextIdx", be.READ ],
+    [ be.ATTR, "maxBlockCount", be.READ ],
+    [ be.ATTR, "maxPixelCount", be.READ ]
+  ]
+})
 
 export class Tr2DataTextureManager
 {
 
   /** m_textureWidth (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   textureWidth = 256;
 
   /** m_textureHeight (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   textureHeight = 4;
 
   /** m_blockDataNextIdx (int32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.int32
   blockDataNextIdx = 1;
 
   /** m_maxBlockCount (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   maxBlockCount = 0;
 
   /** m_maxPixelCount (uint32_t) [READ] */
-  @be.mapAttribute(be.READ)
   @type.uint32
   maxPixelCount = 0;
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

@@ -9,8 +9,12 @@ import { vec3 } from "#math/vec3";
  * Stores browser-safe front, top, and position vectors for Carbon
  * placement-observer updates.
  */
-@be.define("AudPosition")
-@be.mapInterface(IBluePlacementObserver)
+@be.define({
+  name: "AudPosition",
+  // AudPosition_Blue.cpp:10-12, in Carbon's order.
+  interfaces: [ IBluePlacementObserver ],
+  members: []
+})
 export class AudPosition extends IBluePlacementObserver
 {
 

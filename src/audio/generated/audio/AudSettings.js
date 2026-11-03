@@ -5,44 +5,49 @@ import { IRoot } from "#blueexposure/IRoot";
 import { type, blue } from "#schema";
 
 /** Stores Carbon audio path, language, device-name, and spatial-audio settings. */
-@be.define("AudSettings")
-@be.inherit(IRoot)
+@be.define({
+  name: "AudSettings",
+  inherit: [ IRoot ],
+  // AudSettings_Blue.cpp:10-57, in Carbon's order.
+  members: [
+    [ be.ATTR, "baseSoundbankPath", be.READWRITE ],
+    [ be.ATTR, "soundbankLanguage", be.READWRITE ],
+    [ be.ATTR, "applicationName", be.READWRITE ],
+    [ be.ATTR, "stereoAudioDeviceName", be.READWRITE ],
+    [ be.ATTR, "spatialAudioDeviceName", be.READWRITE ],
+    [ be.ATTR, "spatialAudioEnabled", be.READWRITE ],
+    [ be.ATTR, "essentialPath", be.READWRITE ]
+  ]
+})
 
 export class AudSettings extends IRoot
 {
 
   /** m_baseSoundBankPath (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.path
   baseSoundbankPath = "res:/Audio";
 
   /** m_soundbankLanguage (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   soundbankLanguage = "en";
 
   /** m_spatialAudioDeviceName (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   spatialAudioDeviceName = "System";
 
   /** m_stereoAudioDeviceName (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   stereoAudioDeviceName = "System_Stereo";
 
   /** m_applicationName (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   applicationName = "Eve Online";
 
   /** m_essentialPath (std::string) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.string
   essentialPath = "Essential_Media";
 
   /** m_spatialAudioEnabled (bool) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   spatialAudioEnabled = true;
 

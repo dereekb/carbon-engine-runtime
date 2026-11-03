@@ -7,37 +7,42 @@ import { IRoot } from "#blue";
 import { vec3 } from "#math/vec3";
 
 /** Authored placeable geometry, animations, fade distances and cached bounds. */
-@be.define("WodPlaceableRes")
+@be.define({
+  name: "WodPlaceableRes",
+  inherit: [ IRoot ],
+  // WodPlaceableRes_Blue.cpp:11-20, in Carbon's order.
+  members: [
+    [ be.ATTR, "visualModel", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "farFadeDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "nearFadeDistance", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "isShadowCaster", be.READWRITE | be.PERSIST ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class WodPlaceableRes
 {
   /** Native visual model. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2Model")
   visualModel = null;
 
   /** Native squared far fade distance. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   farFadeDistance = 10000;
 
   /** Native squared near fade distance. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   nearFadeDistance = 2500;
 
   /** Curves animating the placeable graph. */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** Whether this resource participates in shadow casting. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   isShadowCaster = true;

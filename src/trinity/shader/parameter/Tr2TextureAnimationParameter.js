@@ -9,28 +9,32 @@ import { ITriEffectResourceParameter } from "./ITriEffectResourceParameter.js";
 import { ResourceFlags } from "./ITr2EffectValue.js";
 
 /** Exposes one named channel of a texture animation as a shader resource and invalidates attached materials as it changes. */
-@be.define("Tr2TextureAnimationParameter")
-@be.inherit(ITriEffectResourceParameter, INotify)
-@be.mapInterface(ITriEffectResourceParameter)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2TextureAnimationParameter",
+  inherit: [ ITriEffectResourceParameter, INotify ],
+  // Tr2TextureAnimationParameter_Blue.cpp:11-19, in Carbon's order.
+  interfaces: [ ITriEffectResourceParameter, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "channel", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "animation", be.READWRITE | be.PERSIST | be.NOTIFY ]
+  ]
+})
 export class Tr2TextureAnimationParameter extends ITriEffectResourceParameter
 {
 
   /** m_animation (Tr2TextureAnimationPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("Tr2TextureAnimation")
   animation = null;
 
   /** m_channel (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   channel = "";
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";

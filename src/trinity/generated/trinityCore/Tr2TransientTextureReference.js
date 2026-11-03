@@ -5,8 +5,12 @@ import { type } from "#schema";
 import { ITr2TextureProvider } from "../../core/ITr2TextureProvider.js";
 
 /** Models Carbon's caller-owned texture pointer wrapper without claiming responsibility for the texture's lifetime. */
-@be.define("Tr2TransientTextureReference")
-@be.mapInterface(ITr2TextureProvider)
+@be.define({
+  name: "Tr2TransientTextureReference",
+  // Tr2TextureReference_Blue.cpp:38-40, in Carbon's order.
+  interfaces: [ ITr2TextureProvider ],
+  members: []
+})
 export class Tr2TransientTextureReference extends ITr2TextureProvider
 {
 

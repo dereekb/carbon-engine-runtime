@@ -12,9 +12,15 @@ import { ITr2StateMachineStateFinalizer } from "./state/ITr2StateMachineStateFin
  * State finalizer that holds a state machine in its current state until the
  * animation layer named by `mask` has finished playing.
  */
-@be.define("Tr2SyncToAnimation")
-@be.inherit(ITr2StateMachineStateFinalizer)
-@be.mapInterface(ITr2StateMachineStateFinalizer)
+@be.define({
+  name: "Tr2SyncToAnimation",
+  inherit: [ ITr2StateMachineStateFinalizer ],
+  // Tr2SyncToAnimation_Blue.cpp:12-16, in Carbon's order.
+  interfaces: [ ITr2StateMachineStateFinalizer ],
+  members: [
+    [ be.ATTR, "mask", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2SyncToAnimation extends IRoot
 {
   /**
@@ -22,7 +28,6 @@ export class Tr2SyncToAnimation extends IRoot
    * An empty string selects the animation controller's base layer.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   mask = "";

@@ -15,8 +15,17 @@ import { type, blue } from "#schema";
  * properties over them. Number arithmetic (rather than native float intermediates)
  * is a retained adapter.
  */
-@be.define("Range")
-@be.inherit(IRoot)
+@be.define({
+  name: "Range",
+  inherit: [ IRoot ],
+  // Range_Blue.cpp:10-18, in Carbon's order.
+  members: [
+    [ be.PROP_RO, "centerPoint" ],
+    [ be.PROP_RO, "minRangePoint" ],
+    [ be.PROP_RO, "maxRangePoint" ],
+    [ be.PROP_RO, "isUniform" ]
+  ]
+})
 export class Range extends IRoot
 {
   /**
@@ -25,7 +34,6 @@ export class Range extends IRoot
    * @type {number}
    * Carbon: MAP_PROPERTY_READONLY (trinity/trinity/Utilities/Range_Blue.cpp:15); getter GetCenterPoint only reads m_centerPoint.
    */
-  @be.mapPropertyReadOnly__Field()
   @type.float32
   centerPoint = 0;
 
@@ -35,7 +43,6 @@ export class Range extends IRoot
    * @type {boolean}
    * Carbon: MAP_PROPERTY_READONLY (trinity/trinity/Utilities/Range_Blue.cpp:18); getter GetIsUniform only reads m_isUniform.
    */
-  @be.mapPropertyReadOnly__Field()
   @type.boolean
   isUniform = true;
 
@@ -134,7 +141,6 @@ export class Range extends IRoot
    *
    * @adapted
    */
-  @be.mapPropertyReadOnly()
   get minRangePoint()
   {
     return this.GetMinRangePoint();
@@ -158,7 +164,6 @@ export class Range extends IRoot
    *
    * @adapted
    */
-  @be.mapPropertyReadOnly()
   get maxRangePoint()
   {
     return this.GetMaxRangePoint();

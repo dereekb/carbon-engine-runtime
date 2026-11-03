@@ -16,49 +16,58 @@ import { Tr2BindingPoint } from "../expression/Tr2BindingPoint.js";
  * an expression-driven value, by default the action's curve sampled at state
  * time, into a bound destination property.
  */
-@be.define("Tr2ActionAnimateValue")
-@be.inherit(ITr2Updateable, INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(ITr2Updateable)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionAnimateValue",
+  inherit: [ ITr2Updateable, INotify ],
+  // Tr2ActionAnimateValue_Blue.cpp:12-46, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, ITr2Updateable, INotify ],
+  members: [
+    [ be.ATTR, "path", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destination", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "attribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "curve", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delayBinding", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "isBindingValid" ],
+    [ be.PROP_RO, "isExpressionValid" ],
+    [ be.METHOD, "GetDestination", be.WRAP ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "IsExpressionValid", be.WRAP, "IsAttrExpressionValid" ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ]
+  ]
+})
 export class Tr2ActionAnimateValue extends ITr2ControllerAction
 {
   /** Flattened adapter storage for m_destination.m_path. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   path = "";
 
   /** Flattened adapter storage for m_destination.m_object. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.rootRef("IRoot")
   destination = null;
 
   /** Flattened adapter storage for m_destination.m_attribute. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   attribute = "";
 
   /** m_value: expression compiled when linked or notified. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   value = "Curve(StateTime())";
 
   /** m_curve: native scalar curve, without member notification. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("ITriScalarFunction")
   curve = null;
 
   /** m_delayBinding: defers a nonempty path binding to Start. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -69,7 +78,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isBindingValid()
   {
@@ -81,7 +89,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isExpressionValid()
   {
@@ -265,7 +272,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("IsExpressionValid")
   IsAttrExpressionValid(_attributeName)
   {
     return this.IsExpressionValid();
@@ -288,7 +294,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetDestination()
   {
     return this.GetBindingPoint().GetBoundObject();
@@ -300,7 +305,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    * @adapted shared AST term records replace native evaluator metadata; a
    *   linked controller supplies its required GetExpressionTermInfo operation.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     const result = [];
@@ -318,7 +322,6 @@ export class Tr2ActionAnimateValue extends ITr2ControllerAction
    *   context instead of native BlueStdResult failures. Native typed error and
    *   float32 evaluation parity remain outside this class-removal batch.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     const state = {

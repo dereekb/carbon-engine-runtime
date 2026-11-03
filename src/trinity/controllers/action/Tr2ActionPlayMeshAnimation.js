@@ -15,17 +15,33 @@ import { Tr2BindingPoint } from "../expression/Tr2BindingPoint.js";
  * destination object's animation controller when it starts, and stops or
  * enqueues a stop when it ends.
  */
-@be.define("Tr2ActionPlayMeshAnimation")
-@be.inherit(INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionPlayMeshAnimation",
+  inherit: [ INotify ],
+  // Tr2ActionPlayMeshAnimation_Blue.cpp:32-79, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, INotify ],
+  members: [
+    [ be.ATTR, "animation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "mask", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "playAction", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.PlayAction" ],
+    [ be.ATTR_CHOOSER, "stopAction", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.StopAction" ],
+    [ be.ATTR, "loops", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "delay", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "speed", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "destinationType", be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.DestinationType" ],
+    [ be.ATTR, "path", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destination", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "delayBinding", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "isBindingValid" ],
+    [ be.METHOD, "GetDestination", be.WRAP ]
+  ]
+})
 export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
 {
   /**
    * Name of the geometry animation to play or enqueue.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   animation = "";
@@ -34,7 +50,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Animation track-mask and layer name; empty selects the default layer.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   mask = "";
@@ -44,7 +59,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:39); chooser PlayActionChooser (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:11).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.PlayAction")
   @type.int32
   @type.enum("trinity.Tr2ActionPlayMeshAnimation.PlayAction")
   playAction = PlayAction.ENQUEUE_PLAY;
@@ -54,7 +68,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:40); chooser StopActionChooser (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:16).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.StopAction")
   @type.int32
   @type.enum("trinity.Tr2ActionPlayMeshAnimation.StopAction")
   stopAction = StopAction.ENQUEUE_STOP;
@@ -63,7 +76,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Signed loop count; native values at or below zero request infinite playback.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.int32
   loops = -1;
@@ -72,7 +84,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Delay before animation playback, in seconds (native float).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   delay = 0;
@@ -81,7 +92,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Animation playback speed multiplier (native float).
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   speed = 1;
@@ -91,7 +101,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * @type {number}
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:45); chooser DestinationTypeChooser (trinity/trinity/Controllers/Actions/Tr2ActionPlayMeshAnimation_Blue.cpp:22).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST | be.ENUM, "trinity.Tr2ActionPlayMeshAnimation.DestinationType")
   @type.int32
   @type.enum("trinity.Tr2ActionPlayMeshAnimation.DestinationType")
   destinationType = DestinationType.OWNER;
@@ -100,7 +109,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Child binding path used by the flattened JavaScript destination adapter.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -110,7 +118,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Explicit destination object in the JavaScript adapter for native embedded Tr2BindingPoint storage.
    * @type {IRoot|null}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.rootRef("IRoot")
@@ -120,7 +127,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * Whether a nonempty destination path is resolved at action execution instead of Link.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -132,7 +138,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * @implemented
    * @returns {boolean} Whether the binding is valid without resolving it.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isBindingValid()
   {
@@ -302,7 +307,6 @@ export class Tr2ActionPlayMeshAnimation extends ITr2ControllerAction
    * @adapted preserves lazy resolution and explicit controller selection; native
    *   GetDestination only observes its linked controller or cached child.
    */
-  @be.mapMethodAndWrap()
   GetDestination(controller = this._controller)
   {
     if (this.destinationType === DestinationType.OWNER)

@@ -17,11 +17,28 @@ import { Tr2KelvinColor } from "../../../trinity/core/lighting/Tr2KelvinColor.js
  * Authored interior light definition with position, color, falloff, cone, and
  * animation settings.
  */
-@be.define("Tr2InteriorLightSource")
-@be.inherit(IInitialize, INotify, ITr2InteriorLight, ITr2DebugRenderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapInterface(ITr2InteriorLight)
+@be.define({
+  name: "Tr2InteriorLightSource",
+  inherit: [ IInitialize, INotify, ITr2InteriorLight, ITr2DebugRenderable ],
+  // Tr2InteriorLightSource_Blue.cpp:13-34, in Carbon's order.
+  interfaces: [ IInitialize, INotify, ITr2InteriorLight ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "kelvinColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "useKelvinColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "falloff", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "specularIntensity", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "coneAlphaOuter", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "coneAlphaInner", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "coneDirection", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "primaryLighting", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.METHOD, "IsSpotLight", be.WRAP ]
+  ]
+})
 export class Tr2InteriorLightSource extends IRoot
 {
   /** Native public m_viewProjection (h:83, cpp:40), already packed by the scene. */
@@ -36,47 +53,40 @@ export class Tr2InteriorLightSource extends IRoot
 
 
   /** m_coneDirection (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   coneDirection = vec3.fromValues(0, -1, 0);
 
   /** m_coneAlphaInner (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   coneAlphaInner = 180;
 
   /** m_coneAlphaOuter (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   coneAlphaOuter = 180;
 
   /** m_specularIntensity (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   specularIntensity = 1;
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
   curveSets = [];
 
   /** m_primaryLighting (bool) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
   primaryLighting = true;
 
   /** m_falloff (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   falloff = 1;
@@ -87,39 +97,33 @@ export class Tr2InteriorLightSource extends IRoot
    * A pointer member, but the Carbon constructor CreateInstance()s it
    * (cpp:42), so the record exists with the light.
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("Tr2KelvinColor")
   kelvinColor = new Tr2KelvinColor();
 
   /** m_radius (float) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.float32
   radius = 1;
 
   /** m_position (Vector3) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.vec3
   position = vec3.create();
 
   /** m_color (Color) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
   /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   name = "";
 
   /** m_useKelvinColor (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   useKelvinColor = false;
@@ -136,7 +140,6 @@ export class Tr2InteriorLightSource extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   IsSpotLight()
   {
     return this.coneAlphaOuter < 89;

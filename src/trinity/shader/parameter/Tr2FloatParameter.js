@@ -12,11 +12,18 @@ import { FNV1_INITIAL, hashFnv1Floats, hashFnv1String } from "#utils/hash";
  * Single float value for a named shader constant, with optional rerouting into
  * an external scalar destination.
  */
-@be.define("Tr2FloatParameter")
-@be.inherit(ITriReroutable, IInitialize)
-@be.mapInterface(ITriEffectParameter)
-@be.mapInterface(ITriReroutable)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "Tr2FloatParameter",
+  inherit: [ ITriReroutable, IInitialize ],
+  // Tr2FloatParameter_Blue.cpp:10-22, in Carbon's order.
+  interfaces: [ ITriEffectParameter, ITriReroutable, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "value", be.PERSISTONLY, "_value" ],
+    [ be.PROP, "value" ],
+    [ be.ATTR, "usedByCurrentEffect", be.READ ]
+  ]
+})
 export class Tr2FloatParameter extends ITriEffectParameter
 {
   /** m_value: Carbon's float. A one-element typed array so GetDestination can hand out its address (&m_value). */
@@ -27,7 +34,6 @@ export class Tr2FloatParameter extends ITriEffectParameter
    *
    * @implemented
    */
-  @be.mapAttribute(be.PERSISTONLY, "value")
   @type.float32
   get _value()
   {
@@ -40,13 +46,10 @@ export class Tr2FloatParameter extends ITriEffectParameter
     this.#valueRef[0] = Number(value);
   }
 
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
-
 
   @type.string
   name = "";
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentEffect = false;
 
@@ -112,7 +115,6 @@ export class Tr2FloatParameter extends ITriEffectParameter
    *
    * @implemented
    */
-  @be.mapProperty()
   get value()
   {
     return this.GetValue();

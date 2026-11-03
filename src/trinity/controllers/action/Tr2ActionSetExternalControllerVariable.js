@@ -12,17 +12,27 @@ import { ITr2ControllerAction } from "./ITr2ControllerAction.js";
  * controller variable on a different object, named by destinationOwner among the
  * owner's binding roots.
  */
-@be.define("Tr2ActionSetExternalControllerVariable")
-@be.inherit(INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionSetExternalControllerVariable",
+  inherit: [ INotify ],
+  // Tr2ActionSetExternalControllerVariable_Blue.cpp:12-24, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, INotify ],
+  members: [
+    [ be.ATTR, "destinationOwner", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destination", be.READ ],
+    [ be.ATTR, "variable", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "sourceVariable", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "startControllers", be.READWRITE | be.PERSIST ],
+    [ be.PROP_RO, "destinationIsValid" ]
+  ]
+})
 export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
 {
   /**
    * Binding-root name used to resolve the object whose controller variable is changed.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
@@ -32,7 +42,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * Resolved destination owner; native BlueWeakRef<IRoot>, retained as a live JavaScript reference.
    * @type {IRoot|null}
    */
-  @be.mapAttribute(be.READ)
   @type.object.weak("IRoot")
   destination = null;
 
@@ -40,7 +49,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * Name of the destination controller variable written on Start.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   variable = "";
@@ -49,7 +57,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * Constant float value, also used when the selected source variable is unavailable.
    * @type {number}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   value = 0;
@@ -58,7 +65,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * Optional linked-controller float-variable name sampled instead of the authored constant.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   sourceVariable = "";
@@ -67,7 +73,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * Whether Start first starts the resolved destination controllers before writing the variable.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   startControllers = false;
@@ -78,7 +83,6 @@ export class Tr2ActionSetExternalControllerVariable extends ITr2ControllerAction
    * @implemented
    * @returns {boolean} Whether the cached destination is non-null.
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get destinationIsValid()
   {

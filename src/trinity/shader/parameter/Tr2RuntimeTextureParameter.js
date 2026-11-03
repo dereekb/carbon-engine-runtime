@@ -15,24 +15,26 @@ import { RealizeTexture } from "../../core/Tr2ImageIOHelpers.js";
  * A named texture slot fed by a runtime-supplied texture provider rather than an
  * authored res path.
  */
-@be.define("Tr2RuntimeTextureParameter")
-@be.inherit(ITriEffectResourceParameter, INotify)
-@be.mapInterface(ITriEffectResourceParameter)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2RuntimeTextureParameter",
+  inherit: [ ITriEffectResourceParameter, INotify ],
+  // Tr2RuntimeTextureParameter_Blue.cpp:11-21, in Carbon's order.
+  interfaces: [ ITriEffectResourceParameter, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "texture", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "uavMipLevel", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "Create" ]
+  ]
+})
 export class Tr2RuntimeTextureParameter extends ITriEffectResourceParameter
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
 
   @type.object.ref("ITr2TextureProvider")
   texture = null;
 
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.string
   name = "";
-
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.uint32
   uavMipLevel = 0;
@@ -56,7 +58,6 @@ export class Tr2RuntimeTextureParameter extends ITriEffectResourceParameter
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs("__init__")
   Create(name, texture, uavMipLevel = 0)
   {
     const nextName = String(name);

@@ -72,94 +72,118 @@ function NowMs()
  *
  * @abstract
  */
-@be.define("AudGameObjResource")
-@be.inherit(IInitialize, IListNotify, INotify, IPrioritizedObject)
-@be.mapInterface(IInitialize)
-@be.mapInterface(IListNotify)
-@be.mapInterface(INotify)
+@be.define({
+  name: "AudGameObjResource",
+  inherit: [ IInitialize, IListNotify, INotify, IPrioritizedObject ],
+  // AudGameObjResource_Blue.cpp:12-173, in Carbon's order.
+  interfaces: [ IInitialize, IListNotify, INotify ],
+  members: [
+    [ be.ATTR, "ID", be.READ ],
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "parameters", be.READ | be.PERSIST ],
+    [ be.ATTR, "scalingFactor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "eventPrefix", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "cumulativeWeight", be.READ ],
+    [ be.ATTR, "isUsed", be.READ ],
+    [ be.ATTR, "isVisible", be.READ ],
+    [ be.ATTR, "listenerInRange", be.READ ],
+    [ be.ATTR, "playing2DSound", be.READ ],
+    [ be.ATTR, "playingVitalSound", be.READ ],
+    [ be.ATTR, "additionalCullingWeight", be.READ ],
+    [ be.ATTR, "distanceFromListener", be.READ ],
+    [ be.ATTR, "forceCullingState", be.READ ],
+    [ be.ATTR, "eventName", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "position", be.READ ],
+    [ be.PROP_RO, "maxAttenuationRadius" ],
+    [ be.METHOD, "SetAttenuationScalingFactor", be.WRAP ],
+    [ be.METHOD, "SetSwitch", be.WRAP ],
+    [ be.METHOD, "SetRTPC", be.WRAP ],
+    [ be.METHOD, "SeekOnEventPercent", be.WRAP ],
+    [ be.METHOD, "SeekOnEventMs", be.WRAP ],
+    [ be.METHOD, "StopAll", be.WRAP ],
+    [ be.METHOD, "StopEvent", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "StopSound", be.WRAP ],
+    [ be.METHOD, "GetSwitches", be.WRAP ],
+    [ be.METHOD, "GetPlayingEvents", be.WRAP ],
+    [ be.METHOD, "Cull", be.WRAP ],
+    [ be.METHOD, "Wake", be.WRAP ],
+    [ be.METHOD, "IsCulled", be.WRAP ],
+    [ be.METHOD, "ForceCullingStateChange", be.WRAP ],
+    [ be.METHOD, "ReleaseForcedCullingState", be.WRAP ],
+    [ be.METHOD, "Mute", be.WRAP ],
+    [ be.METHOD, "Unmute", be.WRAP ],
+    [ be.METHOD, "IsMuted", be.WRAP ],
+    [ be.METHOD, "HasUsableWorldPosition", be.WRAP ]
+  ]
+})
 @be.abstract
 export class AudGameObjResource
 {
 
   /** m_eventPrefix (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   eventPrefix = "";
 
   /** m_additionalCullingWeight (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   additionalCullingWeight = 0;
 
   /** m_ID (AkGameObjectID) [READ] */
-  @be.mapAttribute(be.READ)
   @type.rawStruct("AkGameObjectID")
   ID = null;
 
   /** m_parameters (PAudParameterVector) [READ, PERSIST] */
-  @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("AudParameter")
   parameters = new BlueList(AudParameter);
 
   /** m_name (std::string) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   name = "";
 
   /** m_playingVitalSound (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   playingVitalSound = false;
 
   /** m_playing2DSound (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   playing2DSound = false;
 
   /** m_listenerInRange (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   listenerInRange = false;
 
   /** m_isUsed (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isUsed = false;
 
   /** m_eventName (std::wstring) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.wstring
   eventName = "";
 
   /** m_cumulativeWeight (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   cumulativeWeight = 0;
 
   /** m_distanceSqFromListener (float) [READ] */
-  @be.mapAttribute(be.READ)
   @type.float32
   distanceFromListener = 0;
 
   /** m_scalingFactor (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   scalingFactor = 1;
 
   /** m_isVisible (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   isVisible = false;
 
   /** m_forceCullingState (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   forceCullingState = false;
 
@@ -167,7 +191,6 @@ export class AudGameObjResource
    * m_position (Vector3) [READ]. Starts at the `WWISE_INIT_POSITION` sentinel
    * (cpp:30,69), so an object nobody has placed reports no usable position.
    */
-  @be.mapAttribute(be.READ)
   @type.vec3
   position = vec3.fromValues(WWISE_INIT_POSITION, WWISE_INIT_POSITION, WWISE_INIT_POSITION);
 
@@ -377,7 +400,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
   StopEvent(eventName, fadeOutDuration = 1000)
   {
     const fullEventName = PrepareEvent(this.eventPrefix, eventName, false);
@@ -398,7 +420,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StopSound(playingID, fadeOutDuration = 1000)
   {
     if (AudGameObjResource.manager?.enabled)
@@ -428,7 +449,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SeekOnEventPercent(playingID, percentToSeek)
   {
     if (!AudGameObjResource.manager?.enabled || !this._playingEvents.has(playingID))
@@ -443,7 +463,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SeekOnEventMs(playingID, msToSeek)
   {
     if (!AudGameObjResource.manager?.enabled || !this._playingEvents.has(playingID))
@@ -458,7 +477,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   StopAll()
   {
     if (AudGameObjResource.manager?.enabled)
@@ -523,7 +541,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetRTPC(rtpcName, rtpcValue)
   {
     this._rtpcValues.set(String(rtpcName), Number(rtpcValue));
@@ -548,7 +565,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetSwitch(switchGroup, switchState)
   {
     this._switchValues.set(String(switchGroup), String(switchState));
@@ -573,7 +589,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Wake()
   {
     if (!AudGameObjResource.manager?.enabled || this.forceCullingState || this._muted || !this._hasReceivedPosition)
@@ -619,7 +634,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Cull()
   {
     if (!AudGameObjResource.manager?.enabled || this.forceCullingState)
@@ -654,7 +668,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   IsCulled()
   {
     return this._culled;
@@ -665,7 +678,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ForceCullingStateChange()
   {
     this.forceCullingState = false;
@@ -685,7 +697,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   ReleaseForcedCullingState()
   {
     this.forceCullingState = false;
@@ -696,7 +707,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Mute()
   {
     if (this._muted)
@@ -718,7 +728,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   Unmute()
   {
     if (!this._muted)
@@ -738,7 +747,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   IsMuted()
   {
     return this._muted;
@@ -871,7 +879,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetAttenuationScalingFactor(value)
   {
     if (AudGameObjResource.manager?.enabled && this._gameObjRegistered)
@@ -1031,7 +1038,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get maxAttenuationRadius()
   {
     return this.GetMaxAttenuationRadius();
@@ -1192,7 +1198,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetPlayingEvents()
   {
     return new Map(this._playingEvents);
@@ -1203,7 +1208,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetSwitches()
   {
     return this._switchValues;
@@ -1239,7 +1243,6 @@ export class AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   HasUsableWorldPosition()
   {
     return IsUsableWorldPosition(this.position);

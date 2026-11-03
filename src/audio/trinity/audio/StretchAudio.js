@@ -11,52 +11,56 @@ import { AudEmitter } from "./AudEmitter.js";
 import { AudGameObjResource } from "./AudGameObjResource.js";
 
 /** Positions source, destination, and stretch emitters along one beam segment, with the listener projected onto that segment. */
-@be.define("StretchAudio")
-@be.inherit(IInitialize, ITr2DebugRenderable)
-@be.mapInterface(IInitialize)
-@be.mapInterface(ITr2DebugRenderable)
-@be.mapInterface(IStretchAudio)
+@be.define({
+  name: "StretchAudio",
+  inherit: [ IInitialize, ITr2DebugRenderable ],
+  // StretchAudio_Blue.cpp:12-60, in Carbon's order.
+  interfaces: [ IInitialize, ITr2DebugRenderable, IStretchAudio ],
+  members: [
+    [ be.ATTR, "sourceEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "destinationEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchEmitter", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "outburstEvent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "impactEvent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "stretchEvent", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "shotMissedEvent", be.READWRITE | be.PERSIST ],
+    [ be.METHOD, "SetShotMissed", be.WRAP ]
+  ]
+})
 export class StretchAudio extends IStretchAudio
 {
 
   /** m_stretchEmitter (AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("AudEmitter")
   stretchEmitter = null;
 
   /** m_destEmitter (AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("AudEmitter")
   destinationEmitter = null;
 
   /** m_sourceEmitter (AudEmitterPtr) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.object.ref("AudEmitter")
   sourceEmitter = null;
 
   /** m_impactEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   impactEvent = "";
 
   /** m_outburstEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   outburstEvent = "";
 
   /** m_stretchEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   stretchEvent = "";
 
   /** m_shotMissedEvent (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   shotMissedEvent = "";
@@ -237,7 +241,6 @@ export class StretchAudio extends IStretchAudio
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   SetShotMissed(missed)
   {
     this._shotMissed = !!missed;

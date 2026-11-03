@@ -11,42 +11,45 @@ import { ITriEffectParameter } from "./ITriEffectParameter.js";
 import { ITriEffectResourceParameter } from "./ITriEffectResourceParameter.js";
 
 /** Carries a named shader-buffer path for host resolution or a caller-owned GPU buffer reference. */
-@be.define("Tr2GeometryBufferParameter")
-@be.inherit(ITriEffectResourceParameter, IInitialize, INotify)
-@be.mapInterface(ITriEffectParameter)
-@be.mapInterface(ITriEffectResourceParameter)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2GeometryBufferParameter",
+  inherit: [ ITriEffectResourceParameter, IInitialize, INotify ],
+  // Tr2GeometryBufferParameter_Blue.cpp:10-41, in Carbon's order.
+  interfaces: [ ITriEffectParameter, ITriEffectResourceParameter, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "resourcePath", be.READWRITE | be.NOTIFY | be.PERSIST, null ],
+    [ be.ATTR, "meshIndex", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.PROP_RO, "isValid" ],
+    [ be.ATTR, "gpuBuffer", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "usedByCurrentEffect", be.READ ]
+  ]
+})
 export class Tr2GeometryBufferParameter extends ITriEffectResourceParameter
 {
 
   /** m_resourcePath (std::wstring) [READWRITE, NOTIFY, PERSIST] */
 
-  @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.PERSIST, null)
   @type.wpath
   resourcePath = "";
 
   /** m_gpuBuffer (ITr2GpuBufferPtr) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.object.ref("ITr2GpuBuffer")
   gpuBuffer = null;
 
   /** m_isUsedByEffect (bool) [READ] */
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentEffect = false;
 
   /** m_meshIndex (int32_t) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.int32
   meshIndex = 0;
 
   /** m_name (BlueSharedString) [READWRITE, NOTIFY, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string
@@ -199,7 +202,6 @@ export class Tr2GeometryBufferParameter extends ITriEffectResourceParameter
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   get isValid()
   {
     return this.IsValid();

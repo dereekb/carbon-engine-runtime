@@ -14,8 +14,14 @@ const INVALID_UNIQUE_ID = 0;
  * project, letting the engine reason about events without Wwise. Populated at
  * runtime (no persisted fields) from a plain audio metadata object.
  */
-@be.define("AudStaticDataRepository")
-@be.inherit(IRoot)
+@be.define({
+  name: "AudStaticDataRepository",
+  inherit: [ IRoot ],
+  // AudStaticDataRepository_Blue.cpp:10-13, in Carbon's order.
+  members: [
+    [ be.METHOD, "Initialize", be.WRAP ]
+  ]
+})
 
 export class AudStaticDataRepository extends IRoot
 {
@@ -42,7 +48,6 @@ export class AudStaticDataRepository extends IRoot
    * @param {object} audioMetadata Metadata containing Events, SoundBanks and WemFileIDs sections.
    * @returns {void}
    */
-  @be.mapMethodAndWrap()
   Initialize(audioMetadata)
   {
     if (!audioMetadata || typeof audioMetadata !== "object")

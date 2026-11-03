@@ -7,8 +7,17 @@ import { vec3 } from "#math/vec3";
 import { TriDebugFont } from "../include/enums.js";
 
 /** Positions a displayable text label with its font and content inside a primitive scene. */
-@be.define("Tr2PrimitiveText")
-@be.inherit(IRoot)
+@be.define({
+  name: "Tr2PrimitiveText",
+  inherit: [ IRoot ],
+  // Tr2PrimitiveText_Blue.cpp:19-25, in Carbon's order.
+  members: [
+    [ be.ATTR, "text", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "font", be.READWRITE | be.PERSIST | be.ENUM, "trinity.TriDebugFont" ]
+  ]
+})
 export class Tr2PrimitiveText extends IRoot
 {
 
@@ -16,25 +25,21 @@ export class Tr2PrimitiveText extends IRoot
    * m_font (TriDebugFont - enum TriDebugFont) [READWRITE, PERSIST, ENUM]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2PrimitiveText_Blue.cpp:25); chooser TriDebugFontChooser (trinity/trinity/Tr2PrimitiveText_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.TriDebugFont")
   @type.int32
   @type.enum("trinity.TriDebugFont")
   font = 0;
 
   /** m_text (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   text = "";
 
   /** m_display (bool) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   display = true;
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.vec3
   position = vec3.create();

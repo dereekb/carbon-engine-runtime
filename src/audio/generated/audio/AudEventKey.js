@@ -5,20 +5,25 @@ import { IRoot } from "#blueexposure/IRoot";
 import { type, blue } from "#schema";
 
 /** Stores one authored event name and time for an audio event curve. */
-@be.define("AudEventKey")
-@be.inherit(IRoot)
+@be.define({
+  name: "AudEventKey",
+  inherit: [ IRoot ],
+  // AudEventKey_Blue.cpp:10-21, in Carbon's order.
+  members: [
+    [ be.ATTR, "time", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class AudEventKey extends IRoot
 {
 
   /** m_value (std::wstring) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.wstring
   value = "";
 
   /** m_time (float) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.float32
   time = 0;

@@ -95,8 +95,12 @@ function MakeGeometryParams(geometryData, manager)
  * Maintains Carbon geometry-set reference counts and routes Wwise-shaped
  * geometry lifecycle values to an optional browser backend.
  */
-@be.define("AudGeometry")
-@be.mapInterface(ITr2AudGeometry)
+@be.define({
+  name: "AudGeometry",
+  // AudGeometry_Blue.cpp:9-10, in Carbon's order.
+  interfaces: [ ITr2AudGeometry ],
+  members: []
+})
 export class AudGeometry extends ITr2AudGeometry
 {
 

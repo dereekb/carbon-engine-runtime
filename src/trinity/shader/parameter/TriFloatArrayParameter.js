@@ -9,28 +9,29 @@ import { FNV1_INITIAL, hashFnv1Floats, hashFnv1String } from "#utils/hash";
 
 
 /** An ordered list of vec4 rows uploaded into one named shader constant array. */
-@be.define("TriFloatArrayParameter")
-@be.inherit(INotify, IInitialize)
-@be.mapInterface(ITriEffectParameter)
-@be.mapInterface(INotify)
-@be.mapInterface(IInitialize)
+@be.define({
+  name: "TriFloatArrayParameter",
+  inherit: [ INotify, IInitialize ],
+  // TriFloatArrayParameter_Blue.cpp:22-31, in Carbon's order.
+  interfaces: [ ITriEffectParameter, INotify, IInitialize ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "value", be.READ | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "usedByCurrentTechnique", be.READ ],
+    [ be.ATTR, "usedByCurrentEffect", be.READ ]
+  ]
+})
 export class TriFloatArrayParameter extends ITriEffectParameter
 {
-  @be.mapAttribute(be.READ | be.NOTIFY | be.PERSIST)
-
 
   @type.list("TriVector4")
   value = [];
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentTechnique = false;
 
-  @be.mapAttribute(be.READ)
   @type.boolean
   usedByCurrentEffect = false;
-
-  @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
   @type.string

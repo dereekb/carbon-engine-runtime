@@ -62,9 +62,16 @@ blueEnums.Create("trinity.WodBakingScene.VisualizerChooser", VisualizeMethod, {
  * skinned-object batches; CarbonEngineJS keeps the scene contract here and
  * leaves render-target realization to an engine adapter.
  */
-@be.define("WodBakingScene")
-@be.inherit(ITr2Scene)
-@be.mapInterface(ITr2Scene)
+@be.define({
+  name: "WodBakingScene",
+  inherit: [ ITr2Scene ],
+  // WodBakingScene_Blue.cpp:61-67, in Carbon's order.
+  interfaces: [ ITr2Scene ],
+  members: [
+    [ be.ATTR_CHOOSER, "visualizeMethod", be.READWRITE | be.ENUM | be.NOTIFY, "trinity.WodBakingScene.VisualizerChooser" ],
+    [ be.ATTR, "Avatar", be.READWRITE ]
+  ]
+})
 export class WodBakingScene extends IRoot
 {
 
@@ -72,13 +79,11 @@ export class WodBakingScene extends IRoot
    * m_visualizeMethod (VisualizeMethod - enum VisualizeMethod) [READWRITE, ENUM, NOTIFY]
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Wod/WodBakingScene_Blue.cpp:65); chooser VisualizerChooser (trinity/trinity/Wod/WodBakingScene_Blue.cpp:9).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM | be.NOTIFY, "trinity.WodBakingScene.VisualizerChooser")
   @type.int32
   @type.enum("trinity.WodBakingScene.VisualizerChooser")
   visualizeMethod = 0;
 
   /** m_skinnedObject (Tr2SkinnedObjectPtr) [READWRITE] */
-  @be.mapAttribute(be.READWRITE)
   @type.object.ref("Tr2SkinnedObject")
   Avatar = null;
 

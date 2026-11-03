@@ -17,42 +17,52 @@ import { Tr2BindingPoint } from "../expression/Tr2BindingPoint.js";
  * Controller action that evaluates a value expression once on start and writes
  * the result into a bound destination property.
  */
-@be.define("Tr2ActionSetValue")
-@be.inherit(INotify)
-@be.mapInterface(ITr2ControllerAction)
-@be.mapInterface(INotify)
+@be.define({
+  name: "Tr2ActionSetValue",
+  inherit: [ INotify ],
+  // Tr2ActionSetValue_Blue.cpp:12-44, in Carbon's order.
+  interfaces: [ ITr2ControllerAction, INotify ],
+  members: [
+    [ be.ATTR, "path", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "destination", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "attribute", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "value", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "delayBinding", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.PROP_RO, "isExpressionValid" ],
+    [ be.PROP_RO, "isBindingValid" ],
+    [ be.METHOD, "GetDestination", be.WRAP ],
+    [ be.METHOD, "GetExpressionTermInfo", be.WRAP ],
+    [ be.METHOD, "IsExpressionValid", be.WRAP, "IsAttrExpressionValid" ],
+    [ be.METHOD, "EvaluateExpression", be.WRAP ]
+  ]
+})
 export class Tr2ActionSetValue extends ITr2ControllerAction
 {
   /** Flattened adapter storage for m_destination.m_path. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   path = "";
 
   /** Flattened adapter storage for m_destination.m_object. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.rootRef("IRoot")
   destination = null;
 
   /** Flattened adapter storage for m_destination.m_attribute. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   attribute = "";
 
   /** m_value: expression compiled when linked or notified. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.string
   value = "";
 
   /** m_delayBinding: delays a nonempty path binding until Start. */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
 
   @type.boolean
@@ -63,7 +73,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isExpressionValid()
   {
@@ -75,7 +84,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapPropertyReadOnly()
   @type.boolean
   get isBindingValid()
   {
@@ -205,7 +213,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap("IsExpressionValid")
   IsAttrExpressionValid(_attributeName)
   {
     return this.IsExpressionValid();
@@ -216,7 +223,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    *
    * @implemented
    */
-  @be.mapMethodAndWrap()
   GetDestination()
   {
     return this.GetBindingPoint().GetBoundObject();
@@ -228,7 +234,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    * @adapted shared AST term records replace native evaluator term metadata;
    *   a linked controller supplies its required GetExpressionTermInfo operation.
    */
-  @be.mapMethodAndWrap()
   GetExpressionTermInfo()
   {
     const result = [];
@@ -248,7 +253,6 @@ export class Tr2ActionSetValue extends ITr2ControllerAction
    * @throws {CjsControllerExpressionCompileError} If parsing fails.
    * @throws {CjsControllerExpressionEvaluateError} If unlinked or evaluation fails.
    */
-  @be.mapMethodAndWrap()
   EvaluateExpression(expression)
   {
     if (!this._controller)

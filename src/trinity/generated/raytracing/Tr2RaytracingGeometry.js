@@ -6,8 +6,12 @@ import { ITr2GpuBuffer } from "../../core/ITr2GpuBuffer.js";
 import { mat4 } from "#math/mat4";
 
 /** Collects mesh-area, material, transforms, skinning buffers, bindless resources, and acceleration-structure state for ray-traced geometry. */
-@be.define("Tr2RaytracingGeometry")
-@be.mapInterface(ITr2GpuBuffer)
+@be.define({
+  name: "Tr2RaytracingGeometry",
+  // Tr2RaytracingGeometry_Blue.cpp:11-13, in Carbon's order.
+  interfaces: [ ITr2GpuBuffer ],
+  members: []
+})
 export class Tr2RaytracingGeometry extends ITr2GpuBuffer
 {
 

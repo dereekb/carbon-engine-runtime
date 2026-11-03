@@ -12,9 +12,18 @@ import { Tr2PresentParametersAL } from "../../trinityal/Tr2PresentParametersAL.j
  * adapt Blue's nested member offsets to the existing JavaScript property path.
  * Its exposure table advertises no concrete or secondary query interfaces.
  */
-@be.define("Tr2PresentParameters")
+@be.define({
+  name: "Tr2PresentParameters",
+  inherit: [ IRoot ],
+  // Tr2PresentParameters_Blue.cpp:11-27, in Carbon's order.
+  members: [
+    [ be.ATTR, "backBufferWidth", be.READWRITE ],
+    [ be.ATTR, "backBufferHeight", be.READWRITE ],
+    [ be.ATTR, "windowed", be.READWRITE ],
+    [ be.ATTR_CHOOSER, "software", be.READWRITE | be.ENUM, "trinity.TriDevice.DeviceType" ]
+  ]
+})
 
-@be.inherit(IRoot)
 export class Tr2PresentParameters extends Tr2PresentParametersAL
 {
   /**
@@ -25,7 +34,6 @@ export class Tr2PresentParameters extends Tr2PresentParametersAL
    * @adapted
    * @returns {number} Back-buffer pixel width.
    */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   get backBufferWidth()
   {
@@ -50,7 +58,6 @@ export class Tr2PresentParameters extends Tr2PresentParametersAL
    * @adapted
    * @returns {number} Back-buffer pixel height.
    */
-  @be.mapAttribute(be.READWRITE)
   @type.uint32
   get backBufferHeight()
   {
@@ -68,7 +75,6 @@ export class Tr2PresentParameters extends Tr2PresentParametersAL
   }
 
   /** Native windowed member, initialized false by the UI constructor. */
-  @be.mapAttribute(be.READWRITE)
   @type.boolean
   windowed = false;
 
@@ -76,7 +82,6 @@ export class Tr2PresentParameters extends Tr2PresentParametersAL
    * Native bool with the existing hardware/software chooser identity.
    * Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/UI/Tr2PresentParameters_Blue.cpp:27); chooser TriDeviceTypeChooser (trinity/trinity/TriDevice_Blue.cpp:151).
    */
-  @be.mapAttributeWithChooser(be.READWRITE | be.ENUM, "trinity.TriDevice.DeviceType")
   @type.boolean
   @type.enum("trinity.TriDevice.DeviceType")
   software = false;

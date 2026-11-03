@@ -7,13 +7,17 @@ import { type, blue } from "#schema";
 
 
 /** One vec4 row of a TriFloatArrayParameter's value list. */
-@be.define("TriVector4")
-@be.inherit(IRoot)
+@be.define({
+  name: "TriVector4",
+  inherit: [ IRoot ],
+  // TriFloatArrayParameter_Blue.cpp:9-12, in Carbon's order.
+  members: [
+    [ be.ATTR, "data", be.READWRITE | be.PERSIST ]
+  ]
+})
 
 export class TriVector4 extends IRoot
 {
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
   @type.vec4
   data = vec4.create();
 }

@@ -14,16 +14,23 @@ import { ITr2Updateable } from "../../core/ITr2Updateable.js";
  * its owner for the duration of the action, and can hold off state transitions
  * until a synced range iteration has completed.
  */
-@be.define("Tr2ActionPlayCurveSet")
-@be.inherit(ITr2Updateable)
-@be.mapInterface(ITr2ControllerAction)
+@be.define({
+  name: "Tr2ActionPlayCurveSet",
+  inherit: [ ITr2Updateable ],
+  // Tr2ActionPlayCurveSet_Blue.cpp:11-17, in Carbon's order.
+  interfaces: [ ITr2ControllerAction ],
+  members: [
+    [ be.ATTR, "curveSetName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rangeName", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "syncToRange", be.READWRITE | be.PERSIST ]
+  ]
+})
 export class Tr2ActionPlayCurveSet extends ITr2ControllerAction
 {
   /**
    * Name of the owner curve set played on Start and stopped on Stop.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   curveSetName = "";
@@ -32,7 +39,6 @@ export class Tr2ActionPlayCurveSet extends ITr2ControllerAction
    * Named time range to play; an empty string selects the full curve set.
    * @type {string}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.string
   rangeName = "";
@@ -41,7 +47,6 @@ export class Tr2ActionPlayCurveSet extends ITr2ControllerAction
    * Whether transitions wait for a named range iteration boundary when its duration is positive.
    * @type {boolean}
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.boolean
   syncToRange = false;

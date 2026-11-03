@@ -15,8 +15,12 @@ const FLOAT_MAX = 3.4028234663852886e38;
  *
  * @abstract
  */
-@be.define("AudMusicPlayer")
-@be.exposureChainTo(AudEmitter)
+@be.define({
+  name: "AudMusicPlayer",
+  // AudMusicPlayer_Blue.cpp:10-13, in Carbon's order.
+  members: [],
+  chainTo: AudEmitter
+})
 @be.abstract
 export class AudMusicPlayer extends AudEmitter
 {
