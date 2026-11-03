@@ -56,3 +56,19 @@ test("changing the backdrop destructs the effect it replaces, but not an effect 
     CjsCharacterBackdrops.apply(scene, path);
     assert.equal(destructAuthored.mock.callCount(), 0, "an effect this scene did not get from apply is left alone");
 });
+
+test("placement sets fit, wrap, offset, scale and colour on the applied backdrop", () =>
+{
+    const scene = new Tr2InteriorScene();
+    assert.equal(CjsCharacterBackdrops.SetPlacement(scene, { wrap: "repeat" }), null, "no backdrop, nothing placed");
+    const effect = CjsCharacterBackdrops.apply(scene, CjsCharacterBackdrops.directory + "background_0.dds", { wrap: "mirror" });
+    const value = name => Array.from(effect.parameters.find(parameter => parameter.name === name).value);
+    assert.deepEqual(value("BackgroundSettings"), [ 1, 3, 0, 0 ]);
+    CjsCharacterBackdrops.SetPlacement(scene, { fit: "contain", wrap: "clamp", offset: [ 0.25, -0.5 ], scale: [ 2, 2 ], color: [ 1, 0, 0, 1 ] });
+    assert.deepEqual(value("BackgroundSettings"), [ 2, 1, 0, 0 ]);
+    assert.deepEqual(value("BackgroundPlacement"), [ 0.25, -0.5, 2, 2 ]);
+    assert.deepEqual(value("BackgroundColor"), [ 1, 0, 0, 1 ]);
+    CjsCharacterBackdrops.SetPlacement(scene);
+    assert.deepEqual(value("BackgroundSettings"), [ 1, 0, 0, 0 ], "cover and border by default");
+    assert.throws(() => CjsCharacterBackdrops.SetPlacement(scene, { wrap: "tile" }), /border, clamp, repeat or mirror/);
+});
