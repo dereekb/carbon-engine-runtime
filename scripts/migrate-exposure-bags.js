@@ -187,16 +187,11 @@ function planClass(node, source, carbon)
         else if (fn === "exposureChainTo") chainTo = { name: referenceName(args[0]), text: text(args[0]) };
         else if (MAP_DECORATORS[fn])
         {
-            // Above the class: the row names a member the class inherits, so its key is the exposed name.
             const spec = MAP_DECORATORS[fn];
             if (spec.family === "ICACHEABLE") { jsRows.push({ ...spec, exposed: null, key: null, decorator: d }); continue; }
-            const nameArg = args[spec.name];
-            const names = nameArg?.type === "ArrayExpression" ? nameArg.elements : [ nameArg ];
-            for (const n of names)
-            {
-                if (n?.type !== "StringLiteral") { unresolved.push(`class-level be.${fn} has a name that is not a string literal`); continue; }
-                jsRows.push(rowFrom(spec, args, n.value, n.value, d, text));
-            }
+            // Above the class, a be.map* names a member the class inherits. A bag row on an inherited key does not yet register like
+            // that decorator: an attribute loses the base member's type (EveChildParticleSystem.useSRT read as "missing").
+            unresolved.push(`class-level be.${fn} maps an inherited member; bag rows on inherited members are not supported yet`);
         }
     }
 
