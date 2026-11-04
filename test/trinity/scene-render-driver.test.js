@@ -1236,3 +1236,22 @@ test("a custom stencil format gives the depth pass a custom stencil target, publ
 
   driver.Destruct();
 });
+
+test("post quality follows the driver and visualization temporarily forces LOW", () =>
+{
+  const driver = driverOver([]);
+  const quality = EveSpaceSceneRenderDriver.Quality;
+  for (const requested of [ quality.LOW, quality.MEDIUM, quality.HIGH ])
+  {
+    driver.postProcessingQuality = requested;
+    driver._PropagateSettings();
+    assert.equal(driver.postProcess.GetPostProcessingQuality(), requested);
+  }
+  driver.visualizeMethod = 1;
+  driver._PropagateSettings();
+  assert.equal(driver.postProcess.GetPostProcessingQuality(), quality.LOW);
+  assert.equal(driver.postProcessingQuality, quality.HIGH, "visualization preserves the user's setting");
+  driver.visualizeMethod = EveSpaceSceneRenderDriver.EveVisualizeMethod.VM_NONE;
+  driver._PropagateSettings();
+  assert.equal(driver.postProcess.GetPostProcessingQuality(), quality.HIGH);
+});

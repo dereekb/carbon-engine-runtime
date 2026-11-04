@@ -1404,15 +1404,12 @@ export class EveSpaceSceneRenderDriver
   }
 
   /**
-   * Carbon's private PropagateSettings (cpp:212-280), the anti-aliasing and
-   * ambient-occlusion parts. Anti-aliasing creates, updates or removes the TAA
-   * effect on the scene's default post process, whose quality is the
-   * setting's value. Ambient occlusion enables the SSAO, when there is one,
-   * at the quality the setting maps to.
+   * Carbon: EveSpaceSceneRenderDriver::PropagateSettings (trinity/trinity/Eve/EveSpaceSceneRenderDriver.cpp:212-296)
+   * Applies anti-aliasing, shadow, ambient-occlusion, post and volumetric quality.
+   * Debug visualizations force LOW post quality; normal rendering uses the setting.
    *
-   * Adapted: Carbon's shadow propagation sits between the two, and its
-   * post-process quality, volumetric and upscaling propagation follow; none
-   * of those passes run in this driver yet.
+   * @adapted Ray-traced shadow propagation remains unavailable; raster shadows
+   *   and post quality follow Carbon's settings.
    *
    * @returns {void}
    */
@@ -1472,6 +1469,10 @@ export class EveSpaceSceneRenderDriver
         }
       }
     }
+
+    this.postProcess.SetPostProcessingQuality(this.visualizeMethod !== EveVisualizeMethod.VM_NONE
+      ? Quality.LOW : this.postProcessingQuality);
+
     if (this.scene.volumetricsRenderer) this.scene.volumetricsRenderer.SetQuality(this.volumetricQuality);
   }
 
