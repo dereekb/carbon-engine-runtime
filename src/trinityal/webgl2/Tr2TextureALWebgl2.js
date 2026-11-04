@@ -540,8 +540,11 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
   /**
    * Allocates immutable storage for every mip and uploads the initial data,
-   * slices by mips as Carbon indexes it (`Tr2TextureALMetal.mm:204-243`).
+   * slices by mips as Carbon indexes it (`Tr2TextureALMetal.mm:262-305`).
    *
+   * @adapted WebGL texture completeness also applies to samplerless texelFetch. Set
+   *   nearest defaults so depth, integer and non-filterable float textures remain
+   *   readable without an authored sampler; bound sampler objects override these.
    * @returns {WebGLTexture|null} The texture.
    */
   _CreateStorage(gl, layout, initialData)
@@ -555,6 +558,8 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     const previous = gl.getParameter(this._BindingOf(gl, target));
 
     gl.bindTexture(target, texture);
+    gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
     if (target === gl.TEXTURE_3D || target === gl.TEXTURE_2D_ARRAY)
     {

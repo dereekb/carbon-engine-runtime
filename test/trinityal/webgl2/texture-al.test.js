@@ -36,6 +36,21 @@ function create(desc, { msaa = new Tr2MsaaDesc(), gpuUsage = Tr2GpuUsage.NONE, c
 
 const called = (calls, name) => calls.filter(call => call[0] === name);
 
+test("samplerless loads have complete nearest defaults for depth, integer and float storage", () =>
+{
+    for (const format of [PixelFormat.PIXEL_FORMAT_D32_FLOAT, PixelFormat.PIXEL_FORMAT_R32_UINT, PixelFormat.PIXEL_FORMAT_R32_FLOAT])
+    {
+        const gpuUsage = Tr2GpuUsage.SHADER_RESOURCE | (format === PixelFormat.PIXEL_FORMAT_D32_FLOAT ? Tr2GpuUsage.DEPTH_STENCIL : Tr2GpuUsage.NONE);
+        const { gl, calls, result } = create(dims(TextureType.TEX_TYPE_2D, format, 8, 4), { gpuUsage });
+
+        assert.equal(result, ALResult.S_OK);
+        assert.ok(called(calls, "texParameteri").some(call => call[1] === gl.TEXTURE_2D
+            && call[2] === gl.TEXTURE_MIN_FILTER && call[3] === gl.NEAREST));
+        assert.ok(called(calls, "texParameteri").some(call => call[1] === gl.TEXTURE_2D
+            && call[2] === gl.TEXTURE_MAG_FILTER && call[3] === gl.NEAREST));
+        assert.equal(called(calls, "bindSampler").length, 0);
+    }
+});
 test("TAA's RGBA16 UNORM target keeps its exact extension format and framebuffer attachment", () =>
 {
     // Tr2PostProcessRenderer.cpp:1458-1471 requests normalized16 accumulation.
