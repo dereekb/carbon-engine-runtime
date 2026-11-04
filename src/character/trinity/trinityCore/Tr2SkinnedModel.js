@@ -74,7 +74,7 @@ export class Tr2SkinnedModel extends Tr2Model
   {
     if (!mesh.GetDisplay()) return;
     const geometry = mesh.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return;
+    if (!geometry || !geometry.IsGood()) return;
     const meshIndex = mesh.GetMeshIndex();
     const lod = geometry.GetMeshLod__LodIndex(meshIndex, 0);
     if (!lod || !CreateLodAllocations(geometry, meshIndex, lod, Tr2RenderContext_GetMainThreadRenderContext())) return;

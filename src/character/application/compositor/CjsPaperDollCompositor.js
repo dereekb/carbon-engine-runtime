@@ -213,6 +213,12 @@ export class CjsPaperDollCompositor
         }
     }
 
+    /** Transitional host compatibility while consumers migrate to IsGood. */
+    EnsureGood()
+    {
+        return this.IsGood();
+    }
+
     /**
      * Renews every effect this compositor holds, with its effect resource and textures, and answers whether all
      * of them can draw now.
@@ -225,10 +231,10 @@ export class CjsPaperDollCompositor
      * synchronous draw calls in Graphene's composers (about 20 sites) asynchronous.
      * @returns {boolean} Whether every held effect is good.
      */
-    EnsureGood()
+    IsGood()
     {
         let good = true;
-        for (const value of this.effects) if (!value.EnsureGood()) good = false;
+        for (const value of this.effects) if (!value.IsGood()) good = false;
         return good;
     }
 

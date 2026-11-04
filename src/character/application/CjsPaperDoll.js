@@ -70,6 +70,12 @@ export class CjsPaperDoll
         return this.front ? this.front.Update(this.definition) : false;
     }
 
+    /** Transitional host compatibility while consumers migrate to IsGood. */
+    EnsureGood()
+    {
+        return this.IsGood();
+    }
+
     /**
      * Renews everything this character needs to be drawn, animated and recomposed, and answers whether all of it
      * is good: its compositors' effects, its skeleton and clips, and the geometry and area effects of its drawn
@@ -83,27 +89,27 @@ export class CjsPaperDoll
      * to the doll; moving them into the runtime character is a separate operator call.
      * @returns {boolean} Whether everything is good.
      */
-    EnsureGood()
+    IsGood()
     {
         let good = true;
-        for (const compositor of this.compositors) if (!compositor.EnsureGood()) good = false;
-        if (this.skeletonResource && !this.skeletonResource.EnsureGood()) good = false;
-        if (this.animationResources) for (const resource of this.animationResources.values()) if (!resource.EnsureGood()) good = false;
+        for (const compositor of this.compositors) if (!compositor.IsGood()) good = false;
+        if (this.skeletonResource && !this.skeletonResource.IsGood()) good = false;
+        if (this.animationResources) for (const resource of this.animationResources.values()) if (!resource.IsGood()) good = false;
         if (this.front)
         {
             for (const object of this.front.objects)
             {
                 const model = object.visualModel;
                 if (!model) continue;
-                if (model.geometryRes && !model.geometryRes.EnsureGood()) good = false;
+                if (model.geometryRes && !model.geometryRes.IsGood(model)) good = false;
                 for (const mesh of model.GetMeshes())
                 {
                     const geometry = mesh.GetGeometryResource();
-                    if (!geometry || !geometry.EnsureGood()) good = false;
+                    if (!geometry || !geometry.IsGood()) good = false;
                     for (const area of mesh.GetAllAreas())
                     {
                         const material = area.GetMaterialInterface();
-                        if (material && !material.EnsureGood()) good = false;
+                        if (material && !material.IsGood()) good = false;
                     }
                 }
             }
