@@ -2982,29 +2982,45 @@ export class DxbcGlslEmitter
             return;
         }
 
+        // DXBC sample_controls are integer texel offsets, applied at the
+        // selected mip. Preserve them with GLSL's offset overloads (adding to
+        // normalized UVs would change mip selection and filtering semantics).
+        const sampleOffsets = instruction.extensions?.find(extension => extension.typeName === "sample_controls")?.sampleOffsets;
+        const hasOffset = sampleOffsets && (sampleOffsets.u || sampleOffsets.v || sampleOffsets.w);
+        let offset = null;
+        if (hasOffset)
+        {
+            if (![ 3, 5, 8 ].includes(dimension))
+            {
+                throw new WebglReadError("Sample offsets are not supported for this resource dimension", { dimension });
+            }
+            offset = dimension === 5
+                ? `ivec3(${sampleOffsets.u}, ${sampleOffsets.v}, ${sampleOffsets.w})`
+                : `ivec2(${sampleOffsets.u}, ${sampleOffsets.v})`;
+        }
         let call;
         if (gradOperandIndexes !== null)
         {
             const gradMask = coordMask === "xyzw" ? "xyz" : coordMask;
             const gradX = this._vecArg(state, instruction.operands[gradOperandIndexes[0]], gradMask);
             const gradY = this._vecArg(state, instruction.operands[gradOperandIndexes[1]], gradMask);
-            call = `textureGrad(${texName}, ${coord}, ${gradX}, ${gradY})`;
+            call = offset ? `textureGradOffset(${texName}, ${coord}, ${gradX}, ${gradY}, ${offset})` : `textureGrad(${texName}, ${coord}, ${gradX}, ${gradY})`;
         }
         else if (lodOperandIndex !== null)
         {
             const lod = state.formatter.sourceExpression(instruction.operands[lodOperandIndex], { destMask: "x" });
-            call = `textureLod(${texName}, ${coord}, ${lod})`;
+            call = offset ? `textureLodOffset(${texName}, ${coord}, ${lod}, ${offset})` : `textureLod(${texName}, ${coord}, ${lod})`;
         }
         else if (biasOperandIndex !== null)
         {
             const bias = state.formatter.sourceExpression(instruction.operands[biasOperandIndex], { destMask: "x" });
-            call = `texture(${texName}, ${coord}, ${bias})`;
+            call = offset ? `textureOffset(${texName}, ${coord}, ${offset}, ${bias})` : `texture(${texName}, ${coord}, ${bias})`;
         }
         else
         {
-            call = `texture(${texName}, ${coord})`;
+            call = offset ? `textureOffset(${texName}, ${coord}, ${offset})` : `texture(${texName}, ${coord})`;
         }
-        if (dimension === 3 && arrayLayer === null && state.stageName === "pixel"
+        if (!offset && dimension === 3 && arrayLayer === null && state.stageName === "pixel"
             && gradOperandIndexes === null && lodOperandIndex === null && biasOperandIndex === null)
         {
             const helper = this.helpers.require("cjsRawDepthLinear");
