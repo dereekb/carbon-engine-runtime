@@ -98,7 +98,7 @@ test("expired path-owned mesh and model resources reacquire on use but not after
   assert.equal(acquisitions, 3);
 });
 
-test("a shared-geometry animation pulls its geometry's changes at each update and registers no target", () =>
+test("a shared-geometry animation receives geometry callbacks without polling", () =>
 {
   const animation = new Tr2GrannyAnimation(), geometry = new TriGeometryRes(), seen = recordCachedData(animation);
   animation.SetSharedGeometryRes(geometry);
@@ -112,6 +112,7 @@ test("a shared-geometry animation pulls its geometry's changes at each update an
   assert.deepEqual(seen, [["rebuild", geometry]]);
 
   geometry._SetGood(false);
+  geometry._NotifyReleaseCachedData();
   animation._RenewResources();
   assert.deepEqual(seen.at(-1), ["release", geometry]);
 

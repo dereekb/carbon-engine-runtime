@@ -212,7 +212,7 @@ export class Tr2Effect extends Tr2Material
       this._ClearPassBindings();
     }
     this._effectResource = resource;
-    if (resource) blue.resMan.AddNotifyTarget(this, resource, "effectResource");
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "effectResource");
   }
 
   /** Backing storage for the resource property and its manager registration. */

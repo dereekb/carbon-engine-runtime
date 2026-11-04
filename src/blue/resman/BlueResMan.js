@@ -235,7 +235,7 @@ export class BlueResMan
   /** @cjs Owner-link lease in seconds; null follows the resource inactivity policy. */
   leaseSeconds = null;
 
-  /** @cjs Persistent owner/resource/property links, compacted during PurgeInactive. */
+  /** @cjs Persistent owner/resource/holder/key links, compacted during PurgeInactive. */
   _notifyTargets = [];
 
   /** @cjs Owner and resource index for allocation-free per-use link renewal. */
@@ -250,14 +250,16 @@ export class BlueResMan
    *   remove them. Revisit manager ownership once OnDestruct is guaranteed.
    * @param {object} owner Owner implementing Carbon's two cached-data handlers.
    * @param {BlueAsyncRes} resource Resource held by the owner.
-   * @param {string} propertyName Owner property holding the resource; expiry assigns null through its setter.
+   * @param {object|Map} holder Object or map holding the resource.
+   * @param {*} key Property name or map key; expiry clears only a matching value.
    * @returns {void}
    */
-  AddNotifyTarget(owner, resource, propertyName)
+  AddNotifyTarget(owner, resource, holder, key)
   {
-    if (typeof propertyName !== "string" || !propertyName || owner[propertyName] !== resource)
+    const isMap = holder instanceof Map;
+    if (!holder || (isMap ? holder.get(key) : holder[key]) !== resource)
     {
-      throw new TypeError("AddNotifyTarget requires the owner's property holding the resource.");
+      throw new TypeError("AddNotifyTarget requires the holder and key holding the resource.");
     }
     let resources = this._notifyTargetsByOwner.get(owner);
     if (!resources) this._notifyTargetsByOwner.set(owner, resources = new Map());
@@ -266,7 +268,7 @@ export class BlueResMan
     const now = this.motherLode.GetActivityTime();
     for (let i = 0; i < entries.length; i++)
     {
-      if (entries[i].propertyName === propertyName)
+      if (entries[i].holder === holder && entries[i].key === key)
       {
         entries[i].lastUsed = now;
         return;
@@ -274,7 +276,7 @@ export class BlueResMan
     }
     for (let i = 0; i < entries.length; i++) entries[i].lastUsed = now;
     const firstLink = entries.length === 0;
-    const entry = { owner, resource, propertyName, lastUsed: now, active: true };
+    const entry = { owner, resource, holder, key, isMap, lastUsed: now, active: true };
     entries.push(entry);
     this._notifyTargets.push(entry);
     if (firstLink && resource.IsPrepared()) owner.RebuildCachedData(resource);
@@ -314,7 +316,7 @@ export class BlueResMan
     for (let i = 0; i < entries.length; i++)
     {
       const entry = entries[i];
-      if (owner[entry.propertyName] !== resource) continue;
+      if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource) continue;
       entry.lastUsed = now;
       renewed = true;
     }
@@ -331,7 +333,7 @@ export class BlueResMan
   GetNotifyTargetsByOwner(owner)
   {
     return this._notifyTargets.filter(entry => entry.active && entry.owner === owner)
-      .map(entry => ({ owner: entry.owner, resource: entry.resource, propertyName: entry.propertyName, lastUsed: entry.lastUsed }));
+      .map(entry => ({ owner: entry.owner, resource: entry.resource, holder: entry.holder, key: entry.key, lastUsed: entry.lastUsed }));
   }
 
   /**
@@ -344,7 +346,7 @@ export class BlueResMan
   GetNotifyTargetsByResource(resource)
   {
     return this._notifyTargets.filter(entry => entry.active && entry.resource === resource)
-      .map(entry => ({ owner: entry.owner, resource: entry.resource, propertyName: entry.propertyName, lastUsed: entry.lastUsed }));
+      .map(entry => ({ owner: entry.owner, resource: entry.resource, holder: entry.holder, key: entry.key, lastUsed: entry.lastUsed }));
   }
 
   /**
@@ -363,7 +365,7 @@ export class BlueResMan
     if (!entries.length) resources.delete(entry.resource);
     if (!resources.size) this._notifyTargetsByOwner.delete(entry.owner);
     entry.active = false;
-    entry.owner = entry.resource = null;
+    entry.owner = entry.resource = entry.holder = entry.key = null;
   }
 
   /**
@@ -380,20 +382,34 @@ export class BlueResMan
   {
     const owner = entry.owner;
     const resource = entry.resource;
-    if (owner[entry.propertyName] !== resource)
+    if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
     {
-      const propertyName = entry.propertyName;
+      const key = entry.key;
       this._RemoveNotifyLink(entry);
-      CcpLog.CCP_LOGWARN_CH(s_ch, "Resource owner replaced %s without RemoveNotifyTarget (%s)", propertyName, resource.GetPath());
+      CcpLog.CCP_LOGWARN_CH(s_ch, "Resource owner replaced %s without RemoveNotifyTarget (%s)", String(key), resource.GetPath());
       return;
     }
-    const properties = this._notifyTargetsByOwner.get(owner).get(resource).map(link => link.propertyName);
+    const slots = this._notifyTargetsByOwner.get(owner).get(resource)
+      .map(link => ({ holder: link.holder, key: link.key, isMap: link.isMap }));
     this.RemoveNotifyTarget(owner, resource);
     owner.ReleaseCachedData(resource);
-    for (let i = 0; i < properties.length; i++)
+    for (let i = 0; i < slots.length; i++)
     {
-      const propertyName = properties[i];
-      if (owner[propertyName] === resource) owner[propertyName] = null;
+      const { holder, key, isMap } = slots[i];
+      if (isMap)
+      {
+        if (holder.get(key) === resource) holder.delete(key);
+      }
+      else if (holder[key] === resource) holder[key] = null;
+    }
+    // A setter can re-register another alias while the remaining slots are
+    // still being cleared. Drop only those new links whose slot is now empty;
+    // keep a callback's genuinely new resource slot intact.
+    const remaining = this._notifyTargetsByOwner.get(owner)?.get(resource)?.slice() ?? [];
+    for (const link of remaining)
+    {
+      if ((link.isMap ? link.holder.get(link.key) : link.holder[link.key]) !== resource)
+        this._RemoveNotifyLink(link);
     }
   }
 
@@ -466,7 +482,7 @@ export class BlueResMan
       const entry = entries[i];
       if (!entry.active) continue;
       const owner = entry.owner;
-      if (owner[entry.propertyName] !== resource)
+      if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
       {
         this._ExpireNotifyLink(entry);
         continue;

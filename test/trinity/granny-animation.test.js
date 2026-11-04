@@ -4,10 +4,84 @@ import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2GrannyAnimation } from "../../npm/dist/trinity/core/animation/Tr2GrannyAnimation.js";
 import { GrannyBoneOffset } from "../../npm/dist/trinity/core/index.js";
 import { MarkerTag } from "../support/markerTags.js";
+import { blue, BlueResMan } from "../../npm/dist/blue/index.js";
+import { TriGrannyRes } from "../../npm/dist/resource/index.js";
 
 
 const identity3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 const identity4 = [0, 0, 0, 1];
+
+test("secondary release clears layer and pose data; reload retains the slot and expiry removes it", t =>
+{
+  const previous = blue.resMan;
+  const manager = blue.resMan = new BlueResMan({ autoPurgePolicy: false });
+  const animation = new Tr2GrannyAnimation();
+  t.after(() => { animation.Destruct(); manager.Clear(); blue.resMan = previous; });
+  const primary = createResource();
+  animation.SetGrannyResource(primary);
+  const secondary = new TriGrannyRes();
+  secondary._grannyFile = createResource();
+  secondary._SetPrepared(true);
+  secondary._SetGood(true);
+  animation.SetSecondaryGrannyResource("res:/secondary.gr2", secondary);
+  animation.AddAnimationLayer("face", 0.5);
+  animation.PlayAnimation("Move");
+  animation.PlayLayerAnimation("face", "Move");
+  animation.Update(0.1);
+  const layer = animation.GetAnimationLayer("face");
+  assert.ok(animation._baseLayer.queue.length > 0);
+  assert.ok(layer.queue.length > 0);
+
+  secondary._NotifyReleaseCachedData();
+  assert.equal(animation._secondaryResources.get("res:/secondary.gr2"), secondary, "reload release retains the resource");
+  assert.equal(animation.IsInitialized(), false);
+  assert.equal(animation._runtimeModel, null);
+  assert.equal(animation._meshBonePalette, null);
+  assert.equal(animation._baseLayer.queue.length, 0);
+  assert.equal(layer.queue.length, 0);
+  assert.equal(layer.boneMask, null);
+  assert.equal(layer.weight, 0.5, "authored layer configuration survives");
+  secondary._NotifyRebuildCachedData();
+  assert.equal(animation.Initialize(), true, "explicit initialization rebuilds the released rig");
+  assert.ok(layer.boneMask);
+  manager._ExpireResourceNotifyTargets(secondary);
+  assert.equal(animation._secondaryResources.has("res:/secondary.gr2"), false);
+  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+});
+
+test("secondary resource replacement unregisters the old resource and destruction removes aliases", t =>
+{
+  const previous = blue.resMan;
+  const manager = blue.resMan = new BlueResMan({ autoPurgePolicy: false });
+  const animation = new Tr2GrannyAnimation();
+  t.after(() => { animation.Destruct(); manager.Clear(); blue.resMan = previous; });
+  const first = new TriGrannyRes(), replacement = new TriGrannyRes();
+  animation.SetSecondaryGrannyResource("first", first);
+  animation.SetSecondaryGrannyResource("alias", first);
+  animation.SetSecondaryGrannyResource("first", replacement);
+  assert.equal(manager.GetNotifyTargetsByResource(first).length, 1);
+  assert.equal(manager.GetNotifyTargetsByResource(replacement).length, 1);
+  manager._ExpireResourceNotifyTargets(first);
+  assert.equal(animation._secondaryResources.has("alias"), false);
+  assert.equal(animation._secondaryResources.get("first"), replacement);
+  animation.Destruct();
+  assert.equal(animation._secondaryResources.size, 0);
+  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+});
+
+test("expiry clears a resource shared by the primary property and secondary map without stale links", t =>
+{
+  const previous = blue.resMan;
+  const manager = blue.resMan = new BlueResMan({ autoPurgePolicy: false });
+  const animation = new Tr2GrannyAnimation(), resource = new TriGrannyRes();
+  t.after(() => { animation.Destruct(); manager.Clear(); blue.resMan = previous; });
+  animation.SetGrannyResource(resource);
+  animation.SetSecondaryGrannyResource("alias", resource);
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(animation.grannyRes, null);
+  assert.equal(animation._secondaryResources.has("alias"), false);
+  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+});
 
 
 function explicitCurve(knots, controls, dimension, degree = 1)

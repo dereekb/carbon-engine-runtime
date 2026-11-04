@@ -235,8 +235,8 @@ export class Tr2Mesh extends Tr2MeshBase
     this._geometry = resource ?? null;
     this._geometryNeedsReload = !!previous && !this._geometry && !!this.geometryResPath;
     if (previous && this.lowResGeometry === previous)
-      blue.resMan.AddNotifyTarget(this, previous, "lowResGeometry");
-    if (this.geometry) blue.resMan.AddNotifyTarget(this, this.geometry, "geometry");
+      blue.resMan.AddNotifyTarget(this, previous, this, "lowResGeometry");
+    if (this.geometry) blue.resMan.AddNotifyTarget(this, this.geometry, this, "geometry");
   }
 
   /**
@@ -275,8 +275,8 @@ export class Tr2Mesh extends Tr2MeshBase
     if (previous) blue.resMan.RemoveNotifyTarget(this, previous);
     this._lowResGeometry = resource ?? null;
     if (previous && this.geometry === previous)
-      blue.resMan.AddNotifyTarget(this, previous, "geometry");
-    if (this.lowResGeometry) blue.resMan.AddNotifyTarget(this, this.lowResGeometry, "lowResGeometry");
+      blue.resMan.AddNotifyTarget(this, previous, this, "geometry");
+    if (this.lowResGeometry) blue.resMan.AddNotifyTarget(this, this.lowResGeometry, this, "lowResGeometry");
   }
 
   /**

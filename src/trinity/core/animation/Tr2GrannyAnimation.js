@@ -1,4 +1,4 @@
-import { BlueAsyncRes } from "#blue";
+import { blue } from "#blue";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { ITr2AnimationUpdater } from "./ITr2AnimationUpdater.js";
@@ -50,11 +50,12 @@ const NO_BONES = Object.freeze({ bones: null, boneCount: 0 });
  * geometry or Granny resource (decoded data, null) is passed over.
  *
  * @param {*} resource The resource a controller samples, or its decoded data.
+ * @param {Tr2GrannyAnimation} target Animation owner whose registered links renew.
  */
-function RenewAnimationResource(resource)
+function RenewAnimationResource(resource, target)
 {
   const owner = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
-  if (owner) owner.KeepAlive();
+  if (owner) owner.IsGood(target);
 }
 
 
@@ -205,9 +206,6 @@ export class Tr2GrannyAnimation extends IRoot
   /** Whether grannyRes was borrowed from the mesh rather than resolved here. */
   _sharedGeometry = false;
 
-  /** What this controller last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
-
 
   _morphAnimations = new Map();
 
@@ -282,7 +280,31 @@ export class Tr2GrannyAnimation extends IRoot
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
   @type.object.ref("TriGrannyRes")
-  grannyRes = null;
+  get grannyRes() { return this._grannyRes; }
+
+  /**
+   * Moves the primary resource's notification link.
+   * @adapted Native targets (Tr2GrannyAnimation.cpp:327-338) use manager links;
+   *   decoded-data fixtures have no resource lifetime and remain unregistered.
+   */
+  set grannyRes(resource)
+  {
+    if (resource === this._grannyRes) return;
+    const previous = CjsSchema.cast(this._grannyRes, TriGeometryRes) ?? CjsSchema.cast(this._grannyRes, TriGrannyRes);
+    if (previous) blue.resMan.RemoveNotifyTarget(this, previous);
+    this.Cleanup();
+    this._grannyRes = resource;
+    if (previous)
+    {
+      for (const [path, secondary] of this._secondaryResources)
+        if (secondary === previous) blue.resMan.AddNotifyTarget(this, previous, this._secondaryResources, path);
+    }
+    const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
+    if (current) blue.resMan.AddNotifyTarget(this, current, this, "grannyRes");
+  }
+
+  /** Primary geometry/Granny resource or explicitly supplied decoded data. */
+  _grannyRes = null;
 
   /** m_eventListener (IBlueEventListenerPtr) [READWRITE] */
   @type.object.ref("IBlueEventListener")
@@ -334,9 +356,9 @@ export class Tr2GrannyAnimation extends IRoot
    */
   SetGrannyResource(resource)
   {
-    this.grannyRes = resource ?? null;
     this._sharedGeometry = false;
     this._resolvedPath = "";
+    this.grannyRes = resource ?? null;
     return this.RebuildCachedData();
   }
 
@@ -361,28 +383,48 @@ export class Tr2GrannyAnimation extends IRoot
       return this._initialized;
     }
     // Carbon cpp:288-294 moves its notify target to the new geometry, so a
-    // geometry still loading rebuilds this updater when it arrives. Here
-    // _RenewResources pulls that rebuild at each Update (slot "geometry").
-    this.grannyRes = resource ?? null;
+    // geometry still loading rebuilds this updater when it arrives.
     this._sharedGeometry = !!resource;
     this.resPath_ = "";
     this._resolvedPath = "";
+    this.grannyRes = resource ?? null;
     const initialized = this.RebuildCachedData();
-    BlueAsyncRes.ensureDependency(this.grannyRes, this, "geometry");
     return initialized;
   }
 
   /**
    * Carbon ReleaseCachedData (Tr2GrannyAnimation.cpp:362-365) runs Cleanup.
    *
-   * @adapted the JS pose model is the cached data, so dropping it is the
-   *   cleanup; the next RebuildCachedData builds it again.
+   * @implemented
    * @param {object} resource Resource that released its payload.
    */
 
-  ReleaseCachedData(resource)
+  ReleaseCachedData(_resource)
   {
-    if (resource === this.grannyRes) this._runtimeModel = null;
+    this.Cleanup();
+  }
+
+  /**
+   * Releases layers, poses, bounds and rig-derived state, retaining resources.
+   * Carbon: Tr2GrannyAnimation::Cleanup (Tr2GrannyAnimation.cpp:1868-1934).
+   * @adapted JS matrices and decoded references replace Granny allocations;
+   *   downstream animation notify targets are not yet ported.
+   */
+  Cleanup()
+  {
+    this._baseLayer.Cleanup();
+    for (const layer of this._layers.values()) layer.Cleanup();
+    this._runtimeModel = null;
+    this._initialized = false;
+    this._meshBoneIndices.length = 0;
+    this._meshBonePalette = null;
+    this._boneBounds.length = 0;
+    this._sampledPose = null;
+    this._poseModifierView = null;
+    this._curveCache = new WeakMap();
+    this._morphCurveCache = new WeakMap();
+    this._morphAnimations.clear();
+    this.boneOffset.ClearRigBindings();
   }
 
   /**
@@ -472,7 +514,7 @@ export class Tr2GrannyAnimation extends IRoot
 
   IsUsingCMF()
   {
-    return this._sharedGeometry ? this.grannyRes.IsUsingCMF() : false;
+    return this._sharedGeometry && this.grannyRes ? this.grannyRes.IsUsingCMF() : false;
   }
 
   /**
@@ -485,7 +527,7 @@ export class Tr2GrannyAnimation extends IRoot
 
   GetCMFData()
   {
-    return this._sharedGeometry ? this.grannyRes.GetCMFData() : null;
+    return this._sharedGeometry && this.grannyRes ? this.grannyRes.GetCMFData() : null;
   }
 
   /** The file whose animations this updater plays: the CMF data or the granny file. */
@@ -815,11 +857,8 @@ export class Tr2GrannyAnimation extends IRoot
    */
   _RenewResources()
   {
-    // Borrowed geometry stands in for Carbon's notify target: its changes are
-    // pulled here (Tr2GrannyAnimation.cpp:288-294, 513-520).
-    if (this._sharedGeometry) BlueAsyncRes.ensureDependency(this.grannyRes, this, "geometry");
-    else RenewAnimationResource(this.grannyRes);
-    for (const resource of this._secondaryResources.values()) RenewAnimationResource(resource);
+    RenewAnimationResource(this.grannyRes, this);
+    for (const resource of this._secondaryResources.values()) RenewAnimationResource(resource, this);
   }
 
   /**
@@ -1074,8 +1113,7 @@ export class Tr2GrannyAnimation extends IRoot
     {
       return false;
     }
-    this._secondaryResources.set(path, CjsGrannyCurves.resolveResource(path));
-    return true;
+    return this.SetSecondaryGrannyResource(path, CjsGrannyCurves.resolveResource(path));
   }
 
   /**
@@ -1091,7 +1129,24 @@ export class Tr2GrannyAnimation extends IRoot
     {
       return false;
     }
+    const previous = this._secondaryResources.get(path);
+    const oldResource = CjsSchema.cast(previous, TriGeometryRes) ?? CjsSchema.cast(previous, TriGrannyRes);
+    if (oldResource)
+    {
+      blue.resMan.RemoveNotifyTarget(this, oldResource);
+      this.ReleaseCachedData(oldResource);
+    }
     this._secondaryResources.set(path, resource ?? null);
+    // RemoveNotifyTarget removes a pair's links, including aliases in other slots.
+    if (oldResource)
+    {
+      if (this.grannyRes === oldResource) blue.resMan.AddNotifyTarget(this, oldResource, this, "grannyRes");
+      for (const [otherPath, other] of this._secondaryResources)
+        if (other === oldResource && otherPath !== path)
+          blue.resMan.AddNotifyTarget(this, oldResource, this._secondaryResources, otherPath);
+    }
+    const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
+    if (current) blue.resMan.AddNotifyTarget(this, current, this._secondaryResources, path);
     return true;
   }
 
@@ -2308,10 +2363,11 @@ export class Tr2GrannyAnimation extends IRoot
    */
   Destruct()
   {
+    for (const resource of this._secondaryResources.values()) blue.resMan.RemoveNotifyTarget(this, resource);
+    this._secondaryResources.clear();
     this.grannyRes = null;
     this._sharedGeometry = false;
-    this._runtimeModel = null;
-    this._dependencyRevisions.clear();
+    this.Cleanup();
   }
 }
 

@@ -25,8 +25,8 @@ test("manager registration rebuilds prepared resources immediately and remains r
   const { manager, resource, owner, calls } = fixture();
   resource._SetPrepared(true);
   resource._SetGood(true);
-  manager.AddNotifyTarget(owner, resource, "resource");
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   assert.deepEqual(calls, [["rebuild", resource]], "Carbon BlueAsyncRes.cpp:275-278 immediate prepared callback; repeated link registration is idempotent");
   manager._NotifyReleaseCachedData(resource);
   manager._NotifyRebuildCachedData(resource);
@@ -41,7 +41,7 @@ test("manager registration rebuilds prepared resources immediately and remains r
 test("waiting owners rebuild on completion and notification tolerates setter removal", () =>
 {
   const { manager, resource, owner, calls } = fixture();
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   assert.equal(calls.length, 0);
   owner.RebuildCachedData = value =>
   {
@@ -65,8 +65,8 @@ test("lease renewal is per owner; expiry calls the accessor and preserves a busy
     set(value) { assigned++; manager.RemoveNotifyTarget(owner, held); held = value; }
   });
   const peer = { resource, RebuildCachedData() {}, ReleaseCachedData() { throw new Error("renewed peer expired"); } };
-  manager.AddNotifyTarget(owner, resource, "resource");
-  manager.AddNotifyTarget(peer, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
+  manager.AddNotifyTarget(peer, resource, peer, "resource");
   state.advance(900);
   assert.equal(manager._KeepNotifyTargetAlive(peer, resource), true);
   state.advance(1100);
@@ -84,7 +84,7 @@ test("expiry never clears a replacement, including one installed by the release 
   const state = fixture();
   const { manager, resource, owner, calls } = state;
   const replacement = new BlueAsyncRes();
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   owner.resource = replacement;
   state.advance(1100);
   manager.PurgeInactive({ time: 1100 });
@@ -94,7 +94,7 @@ test("expiry never clears a replacement, including one installed by the release 
 
   owner.resource = resource;
   owner.ReleaseCachedData = () => { owner.resource = replacement; };
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   state.advance(2200);
   manager.PurgeInactive({ time: 2200 });
   assert.equal(owner.resource, replacement);
@@ -103,12 +103,12 @@ test("expiry never clears a replacement, including one installed by the release 
 test("explicit resource eviction clears every owner before data purge and permits re-registration", () =>
 {
   const { manager, resource, owner, calls } = fixture();
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   manager._ExpireResourceNotifyTargets(resource);
   assert.equal(owner.resource, null);
   assert.deepEqual(calls, [["release", resource]]);
   owner.resource = resource;
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   manager._NotifyRebuildCachedData(resource);
   assert.deepEqual(calls.map(call => call[0]), ["release", "rebuild"]);
   manager.Clear();
@@ -121,10 +121,10 @@ test("one owner can hold two resources and diagnostic snapshots cannot mutate li
   const { manager, resource, owner, calls } = fixture();
   const other = new BlueAsyncRes();
   owner.other = other;
-  manager.AddNotifyTarget(owner, resource, "resource");
-  manager.AddNotifyTarget(owner, other, "other");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
+  manager.AddNotifyTarget(owner, other, owner, "other");
   const snapshot = manager.GetNotifyTargetsByOwner(owner);
-  snapshot[0].propertyName = "other";
+  snapshot[0].key = "other";
   manager._ExpireResourceNotifyTargets(resource);
   assert.equal(owner.resource, null);
   assert.equal(owner.other, other);
@@ -141,8 +141,8 @@ test("two owner properties sharing one resource release once and both clear desp
     set(value) { manager.RemoveNotifyTarget(owner, first); first = value; }
   });
   owner.other = resource;
-  manager.AddNotifyTarget(owner, resource, "resource");
-  manager.AddNotifyTarget(owner, resource, "other");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "other");
   manager._ExpireResourceNotifyTargets(resource);
   assert.equal(owner.resource, null);
   assert.equal(owner.other, null);
@@ -166,7 +166,7 @@ function loadingFixture(t)
     RebuildCachedData(value) { calls.push(["rebuild", value]); },
     ReleaseCachedData(value) { calls.push(["release", value]); }
   };
-  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
   return { manager, resource, owner, calls, setInput(value) { input = value; } };
 }
 
@@ -226,8 +226,8 @@ test("IsGood renews each owner dependency even when an earlier dependency is bad
   const other = new BlueAsyncRes();
   owner.other = other;
   other._SetGood(true);
-  manager.AddNotifyTarget(owner, resource, "resource");
-  manager.AddNotifyTarget(owner, other, "other");
+  manager.AddNotifyTarget(owner, resource, owner, "resource");
+  manager.AddNotifyTarget(owner, other, owner, "other");
   advance(900);
   let good = true;
   if (!resource.IsGood(owner)) good = false;
@@ -238,4 +238,27 @@ test("IsGood renews each owner dependency even when an earlier dependency is bad
   manager.PurgeInactive({ time: 1100 });
   assert.equal(owner.resource, resource);
   assert.equal(owner.other, other);
+});
+
+test("map links expire by key and preserve replacements installed before or during cleanup", () =>
+{
+  const { manager, resource, owner, calls, advance } = fixture();
+  const replacement = new BlueAsyncRes();
+  const holder = new Map([["first", resource], ["second", resource]]);
+  manager.AddNotifyTarget(owner, resource, holder, "first");
+  manager.AddNotifyTarget(owner, resource, holder, "second");
+  holder.set("first", replacement);
+  owner.ReleaseCachedData = value => { calls.push(["release", value]); holder.set("second", replacement); };
+  advance(1100);
+  manager.PurgeInactive({ time: 1100 });
+  assert.equal(holder.get("first"), replacement);
+  assert.equal(holder.get("second"), replacement);
+  assert.deepEqual(calls, [["release", resource]]);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+
+  holder.set("third", resource);
+  manager.AddNotifyTarget(owner, resource, holder, "third");
+  advance(2200);
+  manager.PurgeInactive({ time: 2200 });
+  assert.equal(holder.has("third"), false);
 });

@@ -382,13 +382,15 @@ export class Tr2GrannyAnimationLayer
   }
 
   /**
-   * Not ported: no sequencer or Granny controls to release.
+   * Releases the layer's sampling state (Tr2GrannyAnimationLayer.cpp:901-928).
    *
-   * @notImplemented
+   * @adapted The JS queue owns decoded animation references in place of
+   *   native controls/sequencer players; authored layer settings survive.
    */
-  Cleanup(..._args)
+  Cleanup()
   {
-    throw new Error("Tr2GrannyAnimationLayer.Cleanup is not implemented in CarbonEngineJS.");
+    this.ClearAnimations();
+    this.boneMask = null;
   }
 
   /**

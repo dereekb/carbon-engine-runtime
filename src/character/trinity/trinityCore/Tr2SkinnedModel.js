@@ -149,7 +149,7 @@ export class Tr2SkinnedModel extends Tr2Model
       this.ReleaseCachedData(previous);
     }
     this._geometryRes = resource;
-    if (resource) blue.resMan.AddNotifyTarget(this, resource, "geometryRes");
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "geometryRes");
   }
 
   /** Geometry storage behind the notification-aware property. */

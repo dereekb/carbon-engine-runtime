@@ -48,12 +48,12 @@ later dependencies from renewing. This timestamp renewal stands in for Carbon's
 reference lifetime; it does not imply success. `EnsureGood()` temporarily forwards
 to `IsGood()` while existing callers migrate.
 
-The manager provides `AddNotifyTarget(owner, resource, propertyName)` and
+The manager provides `AddNotifyTarget(owner, resource, holder, key)` and
 `RemoveNotifyTarget(owner, resource)`. Registration immediately rebuilds prepared
 resources. Load/reload dispatches `RebuildCachedData(resource)`; reload and failure
 dispatch `ReleaseCachedData(resource)`. Unrenewed links expire in `PurgeInactive`:
-release cached data, clear the matching owner property through its setter, and
-remove the link. A replacement property is never cleared. Explicit destruction
+release cached data, clear the matching object property through its setter or
+delete the matching Map entry, and remove the link. A replacement is never cleared. Explicit destruction
 must still remove links. `GetNotifyTargetsByOwner` and `GetNotifyTargetsByResource`
 return diagnostic snapshots. This manager ownership is provisional until
 destruction can reliably unregister targets.
@@ -62,8 +62,13 @@ destruction can reliably unregister targets.
 replacement/destruction, and checks readiness before rendering. Expired internal
 acquisitions are reacquired on use. `Tr2Mesh` and `Tr2SkinnedModel` likewise register
 their geometry properties, receive completion callbacks, and reacquire cleared
-path-owned resources on use. Destroyed owners do not reacquire. Animation and
-the remaining geometry owners are still being migrated from pulling changes at use.
+path-owned resources on use. Destroyed owners do not reacquire. `Tr2GrannyAnimation`
+registers its primary resource property and secondary-resource map entries.
+Its release callback cleans layer sampling references and pose data while
+retaining resource slots for reload; expiry then removes those slots. Layer
+configuration survives cleanup. After secondary release, explicit initialization
+rebuilds the rig; secondary completion alone does not rebuild it, matching the
+native callback's early return. Remaining geometry owners still pull changes at use.
 Each resource counts its finished prepares in `_revision`. An owner records,
 per dependency slot, the revision it built from in its own
 `_dependencyRevisions` Map, and calls
