@@ -2,8 +2,7 @@ import { Tr2SkinnedModel } from "../../../npm/dist/character/trinity/trinityCore
 import { Tr2GrannyPrimitiveSet } from "../../../npm/dist/trinity/core/line/Tr2GrannyPrimitiveSet.js";
 import { EveTrailsSet } from "../../../npm/dist/trinity/eve/attachment/booster/EveTrailsSet.js";
 import { EveTurretSet } from "../../../npm/dist/trinity/eve/attachment/turrets/EveTurretSet.js";
-// Owners pull their dependencies' changes at use (BlueAsyncRes.ensureDependency)
-// instead of registering Carbon's notify targets (BlueAsyncRes.cpp:261-347).
+// Geometry owners still pull at use; effects now register manager-owned links.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { BlueAsyncRes, blue, BlueResMan } from "../../../npm/dist/blue/index.js";
@@ -97,15 +96,17 @@ function recordCachedData(owner)
   return seen;
 }
 
-test("an effect registers no notify target and pulls its resource's changes at EnsureGood", () =>
+test("an effect receives manager callbacks without a readiness poll and unregisters on destruction", () =>
 {
   const effect = new Tr2Effect(), resource = new BlueAsyncRes(), seen = recordCachedData(effect);
   effect.effectResource = resource;
+  assert.equal(blue.resMan.GetNotifyTargetsByOwner(effect).length, 1);
   assert.equal(effect.EnsureGood(), false);
   assert.deepEqual(seen, []);
 
   resource._SetPrepared(true);
   resource._SetGood(true);
+  resource._NotifyRebuildCachedData();
   effect.EnsureGood();
   effect.EnsureGood();
   assert.deepEqual(seen, [["rebuild", resource]]);
@@ -116,6 +117,7 @@ test("an effect registers no notify target and pulls its resource's changes at E
   assert.equal(seen.length, 2);
 
   resource._SetGood(false);
+  resource._NotifyReleaseCachedData();
   effect.EnsureGood();
   effect.EnsureGood();
   assert.deepEqual(seen.at(-1), ["release", resource]);
@@ -123,6 +125,82 @@ test("an effect registers no notify target and pulls its resource's changes at E
 
   effect.Destruct();
   effect.Destruct();
+  assert.equal(blue.resMan.GetNotifyTargetsByOwner(effect).length, 0);
+});
+
+test("effect replacement releases the previous resource and immediately rebuilds a prepared replacement", () =>
+{
+  const effect = new Tr2Effect(), first = new BlueAsyncRes(), second = new BlueAsyncRes();
+  const seen = recordCachedData(effect);
+  first._SetPrepared(true);
+  second._SetPrepared(true);
+  effect.effectResource = first;
+  effect.effectResource = second;
+  effect.effectResource = second;
+  assert.deepEqual(seen, [["rebuild", first], ["release", first], ["rebuild", second]]);
+  assert.equal(blue.resMan.GetNotifyTargetsByResource(first).length, 0);
+  assert.equal(blue.resMan.GetNotifyTargetsByResource(second).length, 1);
+  effect.Destruct();
+});
+
+test("Render renews every texture parameter even when the effect resource is bad", () =>
+{
+  const effect = new Tr2Effect(), resource = new BlueAsyncRes();
+  const renewed = [];
+  effect.resources = [
+    { KeepAlive() { renewed.push(1); return false; } },
+    { KeepAlive() { renewed.push(2); return true; } }
+  ];
+  effect.effectResource = resource;
+  effect.Render({ SubmitGeometry() { assert.fail("bad effect must not draw"); } }, {});
+  assert.deepEqual(renewed, [1, 2]);
+  effect.resources = [];
+  effect.Destruct();
+});
+
+test("Render reacquires an expired internal resource and draws only after its rebuild callback", t =>
+{
+  const manager = blue.resMan, original = manager.GetResource;
+  const effect = new Tr2Effect(), resource = new BlueAsyncRes();
+  let acquisitions = 0, draws = 0;
+  manager.GetResource = () => { acquisitions++; return resource; };
+  t.after(() => { effect.Destruct(); manager.GetResource = original; });
+  const shader = { GetPassCount() { return 1; }, ApplyAllStateForPass() {} };
+  effect.RebuildCachedData = value => { if (value === resource) effect.shader = shader; };
+  effect.GetShaderStateInterface = () => effect.shader;
+  effect.ApplyMaterialDataForPass = () => {};
+  effect.actualEffectFilePath = "res:/effect.fx";
+  const callback = { SubmitGeometry() { draws++; } };
+  effect.Render(callback, {});
+  assert.equal(acquisitions, 1);
+  assert.equal(draws, 0);
+  finish(resource, true);
+  effect.Render(callback, {});
+  assert.equal(draws, 1);
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(effect.effectResource, null);
+  assert.equal(effect.shader, null);
+  effect.Render(callback, {});
+  assert.equal(acquisitions, 2);
+  assert.equal(draws, 2);
+  assert.equal(manager.GetNotifyTargetsByOwner(effect).length, 1);
+});
+
+test("replacing an internal acquisition preserves the prepared manual replacement shader", t =>
+{
+  const manager = blue.resMan, original = manager.GetResource;
+  const effect = new Tr2Effect(), first = new BlueAsyncRes(), manual = new BlueAsyncRes();
+  manager.GetResource = () => first;
+  t.after(() => { effect.Destruct(); manager.GetResource = original; });
+  effect.RebuildCachedData = resource => { effect.shader = resource; };
+  effect.actualEffectFilePath = "res:/effect.fx";
+  effect.IsGood();
+  manual._SetPrepared(true);
+  manual._SetGood(true);
+  effect.effectResource = manual;
+  assert.equal(effect.IsGood(), true);
+  assert.equal(effect.shader, manual);
+  assert.equal(effect._acquiredEffectResource, null);
 });
 
 test("trails register no target when bound or rebound", () =>

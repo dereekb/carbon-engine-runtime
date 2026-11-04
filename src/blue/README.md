@@ -58,7 +58,10 @@ must still remove links. `GetNotifyTargetsByOwner` and `GetNotifyTargetsByResour
 return diagnostic snapshots. This manager ownership is provisional until
 destruction can reliably unregister targets.
 
-Production owners are still being migrated from pulling changes at use.
+`Tr2Effect` registers through its resource property setter, removes links on
+replacement/destruction, and checks readiness before rendering. Expired internal
+acquisitions are reacquired on use. Geometry and animation owners are still being
+migrated from pulling changes at use.
 Each resource counts its finished prepares in `_revision`. An owner records,
 per dependency slot, the revision it built from in its own
 `_dependencyRevisions` Map, and calls

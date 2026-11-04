@@ -35,7 +35,7 @@ function addTexture(effect, name, state)
 }
 
 
-test("EnsureGood renews every texture, with no early exit at the first one not ready; IsGood renews none", () =>
+test("IsGood and its transitional alias renew every texture without an early exit", () =>
 {
   const effect = new Tr2Effect();
   const pending = addTexture(effect, "pending", "pending");
@@ -43,11 +43,11 @@ test("EnsureGood renews every texture, with no early exit at the first one not r
   const ready = addTexture(effect, "ready", "ready");
 
   effect.IsGood();
-  assert.deepEqual([ pending.count, failed.count, ready.count ], [ 0, 0, 0 ]);
-  effect.EnsureGood();
   assert.deepEqual([ pending.count, failed.count, ready.count ], [ 1, 1, 1 ]);
   effect.EnsureGood();
   assert.deepEqual([ pending.count, failed.count, ready.count ], [ 2, 2, 2 ]);
+  effect.EnsureGood();
+  assert.deepEqual([ pending.count, failed.count, ready.count ], [ 3, 3, 3 ]);
 });
 
 
@@ -67,7 +67,7 @@ test("an effect without a resolved shader is not good", () =>
 });
 
 
-test("a pending effect resource is not good; once prepared, the effect rebuilds once at use", () =>
+test("a pending effect resource is not good; preparation rebuilds without waiting for use", () =>
 {
   const effect = new Tr2Effect();
   const resource = new Tr2EffectRes();
@@ -81,10 +81,10 @@ test("a pending effect resource is not good; once prepared, the effect rebuilds 
   let rebuilds = 0;
   effect.RebuildCachedDataInternal = () => { rebuilds += 1; };
   prepareResourceFixture(resource);
-  assert.equal(rebuilds, 0, "nothing is pushed when the resource finishes");
+  assert.equal(rebuilds, 1, "completion pushes the rebuild to the registered owner");
   effect.EnsureGood();
   effect.EnsureGood();
-  assert.equal(rebuilds, 1, "the effect pulls the change once, at use");
+  assert.equal(rebuilds, 1, "readiness checks do not rebuild again");
 });
 
 
@@ -112,7 +112,7 @@ test("pure queries on a purged resource do not revive it", () =>
   const resource = new CountingResource();
   resource._path = "res:/thing.dds";
   blue.resMan._MarkResourcePurged(resource);
-  resource.IsPrepared(); resource.IsLoading(); resource.IsGood(); blue.resMan.GetResourceStatus(resource);
+  resource.IsPrepared(); resource.IsLoading(); blue.resMan.GetResourceStatus(resource);
   assert.equal(resource.reloads, 0);
   assert.equal(blue.resMan.GetResourceStatus(resource).purged, true);
   resource.EnsureGood();

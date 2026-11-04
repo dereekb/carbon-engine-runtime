@@ -190,9 +190,10 @@ test("a hand-assigned resource is not replaced, and is not fetched for", async (
   //
   // The intent it was reaching for is real and survives: a caller who assigns
   // the resource owns it, and Tr2Effect must not go looking. So assign one,
-  // leave the manager uncomposed, and let the throw prove nothing asked.
+  // make acquisition throw while allowing ordinary manager link registration.
   const previous = blue.resMan;
-  blue.resMan = new IBlueResMan();
+  blue.resMan = new BlueResMan();
+  blue.resMan.GetResource = () => { throw new Error("manual resource must not be fetched"); };
   SetEffectPathDefaults({ platformName: "webgpu" });
 
   try
@@ -208,6 +209,7 @@ test("a hand-assigned resource is not replaced, and is not fetched for", async (
   }
   finally
   {
+    blue.resMan.Clear();
     blue.resMan = previous;
     SetEffectPathDefaults(null);
   }

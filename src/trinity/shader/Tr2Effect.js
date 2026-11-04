@@ -1,4 +1,3 @@
-import { BlueAsyncRes } from "#blue";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Shader/Tr2Effect.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
@@ -187,20 +186,43 @@ export class Tr2Effect extends Tr2Material
   /**
    * m_effectResource (Tr2EffectResPtr) [READ]
    * Loaded effect resource whose shader variations this instance uses.
+   * @implemented
    * @type {Tr2EffectRes|null}
    */
   @be.mapAttribute(be.READ)
   @type.object.ref("Tr2EffectRes")
-  effectResource = null;
+  get effectResource()
+  {
+    return this._effectResource;
+  }
+
+  /**
+   * Replaces the resource and registers Carbon's cached-data callbacks.
+   * @adapted Tr2Effect.cpp:384-402 uses native resource notifications;
+   *   manager-owned leases allow expiry without guaranteed JS destructors.
+   */
+  set effectResource(resource)
+  {
+    const previous = this._effectResource;
+    if (previous === resource) return;
+    if (previous)
+    {
+      blue.resMan.RemoveNotifyTarget(this, previous);
+      this.ReleaseCachedData(previous);
+      this._ClearPassBindings();
+    }
+    this._effectResource = resource;
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, "effectResource");
+  }
+
+  /** Backing storage for the resource property and its manager registration. */
+  _effectResource = null;
 
   /** JS acquisition ownership, separate from a resource assigned by the caller. */
   _acquiredEffectResource = null;
 
   /** Resolved path used for the internally acquired resource. */
   _acquiredEffectPath = "";
-
-  /** What this effect last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
 
   /**
    * m_actualEffectFilePath (std::string) [READ]
@@ -302,7 +324,6 @@ export class Tr2Effect extends Tr2Material
   {
     if (this._destroyed) return;
     this._destroyed = true;
-    this._dependencyRevisions.clear();
     this._acquiredEffectResource = null;
     this._acquiredEffectPath = "";
     for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
@@ -321,8 +342,7 @@ export class Tr2Effect extends Tr2Material
 
   /**
    * Carbon's two RebuildCachedData overloads (Tr2Effect.cpp:823-840). With a
-   * resource it is the dependency call (EnsureGood pulls it through
-   * `BlueAsyncRes.ensureDependency`): only this effect's own resource
+   * resource it is the dependency callback from resMan: only this effect's own resource
    * rebuilds, and insideStartUpdate is cleared around it so a shader arriving
    * during a batched Start/EndUpdate still rebuilds immediately. Without one it
    * is the Blue method (MAP_METHOD_AND_WRAP to RebuildCachedDataInternal).
@@ -553,6 +573,7 @@ export class Tr2Effect extends Tr2Material
 
   Render(callback, renderContext)
   {
+    if (!this.IsGood()) return;
     const shader = this.GetShaderStateInterface();
 
     if (!shader) return;
@@ -907,15 +928,13 @@ export class Tr2Effect extends Tr2Material
    *
    * Carbon fetches through the process-wide manager and registers this effect
    * as a notify target (`BeResMan->GetResource(...)` then `AddNotifyTarget(this)`,
-   * Tr2Effect.cpp:397-402). This fetches the same way and registers nothing:
-   * `EnsureGood` pulls RebuildCachedData when the resource is prepared or
-   * reloaded, at the effect's next use.
+   * Tr2Effect.cpp:397-402). Assignment registers through the resource setter.
    *
    * An unresolved path releases the prior internal acquisition without fetching.
    *
    * @cjs
-   * @adapted JavaScript has no destructor to unregister a notify target, so
-   *   the effect pulls the resource's changes at use instead.
+   * @adapted JavaScript uses manager-owned expiring links instead of a native
+   *   target list. A purged internal acquisition is reacquired on use.
    * @returns {void}
    */
   #AcquireEffectResource()
@@ -923,9 +942,6 @@ export class Tr2Effect extends Tr2Material
     const acquired = this._acquiredEffectResource;
     if (acquired && (acquired !== this.effectResource || this._acquiredEffectPath !== this.actualEffectFilePath))
     {
-      this.ReleaseCachedData();
-      this._ClearPassBindings();
-      this._dependencyRevisions.delete("effect");
       if (this.effectResource === acquired) this.effectResource = null;
       this._acquiredEffectResource = null;
       this._acquiredEffectPath = "";
@@ -942,7 +958,6 @@ export class Tr2Effect extends Tr2Material
     if (!resource) return;
     this._acquiredEffectResource = resource;
     this._acquiredEffectPath = this.actualEffectFilePath;
-    BlueAsyncRes.ensureDependency(resource, this, "effect");
   }
 
   /** Re-runs Initialize after notified fields change; always returns true. */
@@ -1046,57 +1061,44 @@ export class Tr2Effect extends Tr2Material
 
   /**
    * Whether this effect is good to draw - its effect resource is good and its
-   * shader resolved. Only asks: it renews nothing and rebuilds nothing.
+   * shader resolved. Renews every resource parameter independently.
    *
    * Ours: Carbon has no Tr2Effect::IsGood. Its effect stays registered as a
    * notify target, and a released resource nulls `m_shader` through
    * ReleaseCachedData (Tr2Effect.cpp:842-848), so a draw path asking for the
-   * shader finds none. JavaScript cannot unregister targets from a
-   * destructor, so the effect pulls instead, and draw-readiness sites ask
-   * `EnsureGood`.
+   * shader finds none. Manager-owned links provide those callbacks here.
    *
    * @cjs
-   * @adapted
+   * @adapted Browser leases require renewal and reacquisition after expiry.
    * @returns {boolean} Whether the effect can be drawn now.
    */
   IsGood()
   {
+    if (this._destroyed) return false;
+    for (const parameter of this.resources) parameter.KeepAlive();
+    this.#AcquireEffectResource();
     const resource = this.effectResource;
-    if (resource !== null && !resource.IsGood()) return false;
+    if (resource !== null && !resource.IsGood(this)) return false;
     return this.shader !== null;
   }
 
   /**
-   * Renews everything the effect uses and brings its shader up to date, then
-   * answers whether it can be drawn: Carbon's notify-target rebuild, pulled at
-   * use (`BlueAsyncRes.ensureDependency`, slot `"effect"`).
-   *
-   * Every resource parameter is renewed first, with no early exit, so a texture
-   * after one that is still loading is not left to be purged. The answer then
-   * comes from the effect's own resource alone: a missing or failed texture does
-   * not make the effect bad, because it draws with the fallback texture.
+   * Transitional entry while draw callers migrate to IsGood. Missing textures
+   * do not make the effect bad: drawing uses the fallback texture.
    *
    * @cjs As BlueAsyncRes `EnsureGood`.
-   * @adapted Carbon pushes RebuildCachedData to a registered target; JavaScript
-   *   has no destructor to unregister it, so the effect pulls at use.
+   * @implemented
    * @returns {boolean} Whether the effect can be drawn now.
    */
   EnsureGood()
   {
-    for (const parameter of this.resources) parameter.KeepAlive();
-
-    const resource = this.effectResource;
-    if (resource !== null && !BlueAsyncRes.ensureDependency(resource, this, "effect"))
-    {
-      return false;
-    }
-    return this.shader !== null;
+    return this.IsGood();
   }
 
   /**
    * Drops the resolved shader and clears every parameter's and resource's effect
    * handles by rebuilding them against null. Called for a dependency
-   * (Tr2Effect.cpp:842-855; pulled through `BlueAsyncRes.ensureDependency`), it
+   * (Tr2Effect.cpp:842-855; notified through resMan), it
    * acts only for this effect's own resource.
    *
    * @param {object} [resource] Resource that released its payload.
