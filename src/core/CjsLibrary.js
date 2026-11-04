@@ -38,6 +38,19 @@ const installedResourcePolicies = new WeakMap();
  */
 export class CjsLibrary
 {
+  /**
+   * The initialized application root, or null before startup and after shutdown.
+   * Startup reserves the single root before publishing it to application wrappers.
+   *
+   * @implemented
+   * @returns {CjsLibrary|null} The shared, initialized library.
+   */
+  static get instance()
+  {
+    return activeLibrary && !activeLibrary._initialization && activeLibrary._previousServices
+      ? activeLibrary : null;
+  }
+
   /** Requested entries; construction does not apply them to any owner. */
   _configuration = null;
   /** Entries whose owner call returned successfully; not a claim of GPU activation. */
