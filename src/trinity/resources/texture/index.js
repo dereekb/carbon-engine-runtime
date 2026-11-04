@@ -3,6 +3,7 @@ export * from "../../texturePipeline/CjsTexturePipelineStepArray.js";
 export * from "../../texturePipeline/CjsTexturePipelineStepPack.js";
 export * from "./CjsTexturePackConstructor.js";
 export * from "../../texturePipeline/CjsTexturePipelineStepConvert.js";
+export * from "../../texturePipeline/CjsTexturePipelineStepPublishSrgb.js";
 export * from "../../texturePipeline/CjsTexturePipelineStepResize.js";
 export * from "../procedural/SolidColorTextureConstructor.js";
 export * from "./Tr2ImageRes.js";

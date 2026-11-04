@@ -2,6 +2,7 @@
 export * from "./CjsTexturePipelineStepArray.js";
 export * from "./CjsTexturePipelineStepConvert.js";
 export * from "./CjsTexturePipelineStepPack.js";
+export * from "./CjsTexturePipelineStepPublishSrgb.js";
 export * from "./CjsTexturePipelineStepResize.js";
 export * from "./Tr2TexturePackChannel.js";
 export * from "./Tr2TexturePipeline.js";
