@@ -1734,12 +1734,19 @@ export class Tr2RenderContextALWebgl2
     const set = this._resourceSet ? this._resourceSet._resourceSet.implementation : null;
     if (!set || !set.IsValid()) return;
 
-    for (const unit of set.GetUnits())
+    const units = set.GetUnits();
+    for (let i = 0; i < units.length; ++i)
     {
+      const unit = units[i];
       gl.activeTexture(gl.TEXTURE0 + unit.unit);
 
       const resource = unit.resource;
-      const texture = resource && resource.IsValid() ? resource.TrinityALImpl_GetObject().GetShaderResourceTexture(unit.colorSpace) : null;
+      // Carbon binds retained buffer SRVs; the WebGL pair owns its one derived
+      // texture and uploads dirty ranges only after either source was written.
+      const packed = unit.packedLocalLights;
+      const texture = packed
+        ? packed.index ? packed.index._GetPackedShaderResourceTexture(packed) : null
+        : resource && resource.IsValid() ? resource.TrinityALImpl_GetObject().GetShaderResourceTexture(unit.colorSpace) : null;
       gl.bindTexture(unit.isBuffer || !resource || !resource.IsValid() ? gl.TEXTURE_2D : resource.TrinityALImpl_GetObject().GetTarget(), texture);
       gl.bindSampler(unit.unit, unit.sampler ? unit.sampler.GetGpuResource() : null);
     }
@@ -2437,7 +2444,7 @@ export class Tr2RenderContextALWebgl2
     }
     gl.bindBuffer(gl.COPY_READ_BUFFER, null);
     gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-    if (destinationImpl._srv) destinationImpl._srvDirty = true;
+    destinationImpl._InvalidateShaderResources(destinationOffset, length);
     return ALResult.S_OK;
   }
 

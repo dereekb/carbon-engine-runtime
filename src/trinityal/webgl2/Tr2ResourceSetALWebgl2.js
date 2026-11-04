@@ -249,6 +249,11 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
     this._empty = empty;
     // dx11 reads the program as a friend (`program.m_program`); ours is its implementation.
     this._units = this._PlaceUnits(program.TrinityALImpl_GetObject());
+    if (!this._units)
+    {
+      this._Reset();
+      return ALResult.E_INVALIDARG;
+    }
     this._PlaceAddressModes(program.TrinityALImpl_GetObject());
     this._isValid = true;
 
@@ -260,28 +265,60 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
    * holds and the sampler its paired sampler register holds. A buffer read
    * with `texelFetch` has no paired sampler and takes none.
    *
+   * Packed light metadata resolves both original source registers. Carbon's
+   * copied SRVs (Tr2ResourceSetALDx11.cpp:52-60) are retained here by the copied
+   * description's buffer handles; the combined texture belongs to their pair.
+   * Profile samples remain outside this data/index-only transport.
+   *
    * @param {import("./Tr2ShaderProgramALWebgl2.js").Tr2ShaderProgramALWebgl2} program The program.
-   * @returns {object[]} The placements; see `GetUnits`.
+   * @returns {object[]|null} The placements, or null for an invalid packed source pair.
    */
   _PlaceUnits(program)
   {
-    return program.GetTextures().map(texture =>
+    const textures = program.GetTextures();
+    const units = [];
+    for (let i = 0; i < textures.length; ++i)
     {
+      const texture = textures[i];
       const stage = this._stages[texture.stage];
+      if (texture.localLightRole === "packed-texture")
+      {
+        if (texture.format !== "RGBA32UI"
+          || !Number.isInteger(texture.lightIndexRegister) || texture.lightIndexRegister < 0 || texture.lightIndexRegister >= MAX_RESOURCES
+          || !Number.isInteger(texture.lightDataRegister) || texture.lightDataRegister < 0 || texture.lightDataRegister >= MAX_RESOURCES) return null;
+        const indices = stage.resources[texture.lightIndexRegister];
+        const data = stage.resources[texture.lightDataRegister];
+        let packedLocalLights = null;
+        if (indices || data)
+        {
+          if (!indices?.isBuffer || !data?.isBuffer || !indices.resource.IsValid() || !data.resource.IsValid()) return null;
+          const indexBuffer = indices.resource.TrinityALImpl_GetObject();
+          const dataBuffer = data.resource.TrinityALImpl_GetObject();
+          if (typeof indexBuffer._GetPackedShaderResource !== "function") return null;
+          packedLocalLights = indexBuffer._GetPackedShaderResource(dataBuffer, texture.width, texture.dataTexelBase);
+          if (!packedLocalLights) return null;
+        }
+        units.push({
+          unit: texture.unit, resource: indices?.resource ?? null, colorSpace: 0, isBuffer: true,
+          sampler: null, samplerConflict: false, packedLocalLights
+        });
+        continue;
+      }
       const slot = texture.kind === "uavTexture"
         ? this._uavs[texture.registerIndex]
         : stage.resources[texture.registerIndex];
       const sampler = texture.samplerRegister === null ? null : stage.samplers[texture.samplerRegister];
 
-      return {
+      units.push({
         unit: texture.unit,
         resource: slot?.resource ?? null,
         colorSpace: slot?.colorSpace ?? 0,
         isBuffer: slot?.isBuffer ?? false,
         sampler,
         samplerConflict: texture.samplerConflict
-      };
-    });
+      });
+    }
+    return units;
   }
 
   /**
@@ -291,7 +328,8 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
    * `sampler.GetGpuResource()` to `unit`; a null resource or sampler leaves
    * the unit empty, as dx11 binds a null view. `samplerConflict` marks a
    * texture the shader reads through more than one sampler, of which only the
-   * first can be honoured.
+   * first can be honoured. A packed-light placement additionally references its
+   * source pair's shared view; writes invalidate it independently of set identity.
    *
    * @returns {object[]} The placements.
    */

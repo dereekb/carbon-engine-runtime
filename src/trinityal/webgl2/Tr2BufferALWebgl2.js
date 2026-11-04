@@ -145,6 +145,9 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
   /** Whether the data texture is behind the buffer's bytes. */
   _srvDirty = false;
 
+  /** @adapted WebGL2 packs two buffer SRVs into one texture; both sources list each non-owning pair record. */
+  _packedViews = [];
+
   /** m_desc */
   _desc = new Tr2BufferDescriptionAL();
 
@@ -305,7 +308,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
       else gl.bufferSubData(gl.COPY_WRITE_BUFFER, offset, this._writeLockMemory, offset, size);
     }
     gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-    if (this._srv) this._srvDirty = true;
+    this._InvalidateShaderResources(offset, size);
   }
 
   /**
@@ -314,6 +317,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    */
   _Reset()
   {
+    while (this._packedViews.length) this._DestroyPackedShaderResource(this._packedViews[this._packedViews.length - 1]);
     // Carbon Tr2BufferALDx11.cpp:185, Tr2TextureALDx11.cpp:833: released storage leaves the counters.
     this._memory.Reset();
     const gl = this._gl;
@@ -701,6 +705,189 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     if (!this._srv) return null;
     if (this._srvDirty) this._UploadShaderResource();
     return this._srv;
+  }
+
+  /**
+   * Resolves the shared packed view for this index buffer and a data buffer.
+   * Carbon owns its SRV on the buffer (Tr2BufferALDx11.cpp:140-159); sets retain
+   * those views. WebGL2 has no buffer SRVs and limited texture units, so this
+   * private adaptation combines the emitter's two source registers. The copied
+   * resource-set description retains both buffers; the pair never retains handles
+   * back to its sources. Destroying either source releases the derived view.
+   * Profile samples are not populated by this data/index transport.
+   *
+   * @adapted One source-pair texture replaces two native buffer views on WebGL2.
+   * @param {Tr2BufferALWebgl2} data The data-buffer implementation on the same device.
+   * @param {number} width The emitter's power-of-two data-texture width.
+   * @param {number} dataTexelBase First RGBA32UI texel reserved for data.
+   * @returns {object|null} Shared private view, or null for an unrepresentable layout.
+   */
+  _GetPackedShaderResource(data, width, dataTexelBase)
+  {
+    const gl = this._gl;
+    if (!this.IsValid() || !data || !data.IsValid() || data === this || data._gl !== gl
+      || !HasFlag(this._desc.gpuUsage, Tr2GpuUsage.SHADER_RESOURCE)
+      || !HasFlag(data._desc.gpuUsage, Tr2GpuUsage.SHADER_RESOURCE)
+      || this._writeLockMemory.length % 4 || data._writeLockMemory.length % 4
+      || !Number.isSafeInteger(width) || width <= 0 || (width & (width - 1)) !== 0
+      || !Number.isSafeInteger(dataTexelBase) || dataTexelBase < Math.ceil(this._writeLockMemory.length / 16)) return null;
+
+    for (let i = 0; i < this._packedViews.length; ++i)
+    {
+      const view = this._packedViews[i];
+      if (view.index === this && view.data === data && view.width === width && view.dataTexelBase === dataTexelBase) return view;
+    }
+    const height = Math.ceil((dataTexelBase + Math.ceil(data._writeLockMemory.length / 16)) / width);
+    const limit = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    if (width > limit || height > limit || !Number.isSafeInteger(height) || height <= 0) return null;
+    const texture = gl.createTexture();
+    if (!texture) return null;
+    const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32UI, width, height);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, previous);
+
+    const view = {
+      index: this, data, width, height, dataTexelBase, texture,
+      indexWords: new Uint32Array(this._writeLockMemory.buffer, this._writeLockMemory.byteOffset, this._writeLockMemory.length / 4), // alloc: raw-word view, not a copy.
+      dataWords: new Uint32Array(data._writeLockMemory.buffer, data._writeLockMemory.byteOffset, data._writeLockMemory.length / 4), // alloc: raw-word view, not a copy.
+      tail: new Uint32Array(4), // alloc: one partial texel per shared view, never a full packed image.
+      indexStart: 0, indexEnd: this._writeLockMemory.length,
+      dataStart: 0, dataEnd: data._writeLockMemory.length,
+      memory: new Tr2MemoryCounterAL()
+    };
+    view.memory.Set__Size(Tr2MemoryCounterAL.MemoryType.TEXTURE, width * height * 16);
+    this._packedViews.push(view);
+    data._packedViews.push(view);
+    return view;
+  }
+
+  /**
+   * Marks only written byte ranges; binding never compares or scans source bytes.
+   * @adapted Native buffer views track writes automatically; WebGL textures require an explicit dirty range.
+   * @param {number} offset First changed byte.
+   * @param {number} size Number of changed bytes.
+   */
+  _InvalidateShaderResources(offset, size)
+  {
+    if (this._srv) this._srvDirty = true;
+    if (!size) return;
+    for (let i = 0; i < this._packedViews.length; ++i)
+    {
+      const view = this._packedViews[i];
+      if (view.index === this)
+      {
+        view.indexStart = Math.min(view.indexStart, offset);
+        view.indexEnd = Math.max(view.indexEnd, offset + size);
+      }
+      else
+      {
+        view.dataStart = Math.min(view.dataStart, offset);
+        view.dataEnd = Math.max(view.dataEnd, offset + size);
+      }
+    }
+  }
+
+  /**
+   * Uploads changed source ranges once, preserving every word including NaN payloads.
+   * @adapted RGBA32UI texels carry the raw words which translated buffer loads reinterpret.
+   * @param {object} view A shared pair record created by this buffer.
+   * @returns {WebGLTexture|null} Its updated texture, or null after either source was destroyed.
+   */
+  _GetPackedShaderResourceTexture(view)
+  {
+    if (!view.texture || view.index !== this) return null;
+    if (view.indexStart >= view.indexEnd && view.dataStart >= view.dataEnd) return view.texture;
+    const gl = this._gl;
+    const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    const unpack = gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING);
+    const alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
+    const rowLength = gl.getParameter(gl.UNPACK_ROW_LENGTH);
+    const skipRows = gl.getParameter(gl.UNPACK_SKIP_ROWS);
+    const skipPixels = gl.getParameter(gl.UNPACK_SKIP_PIXELS);
+    const flip = gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL);
+    const premultiply = gl.getParameter(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL);
+    gl.bindTexture(gl.TEXTURE_2D, view.texture);
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    try
+    {
+      this._UploadPackedShaderResourceRange(view, view.indexWords, view.indexStart, view.indexEnd, 0);
+      this._UploadPackedShaderResourceRange(view, view.dataWords, view.dataStart, view.dataEnd, view.dataTexelBase);
+      view.indexStart = view.dataStart = Infinity;
+      view.indexEnd = view.dataEnd = 0;
+    }
+    finally
+    {
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, alignment);
+      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, rowLength);
+      gl.pixelStorei(gl.UNPACK_SKIP_ROWS, skipRows);
+      gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, skipPixels);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply);
+      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpack);
+      gl.bindTexture(gl.TEXTURE_2D, previous);
+    }
+    return view.texture;
+  }
+
+  /**
+   * Uploads complete rows and boundary texels directly from a source's word view.
+   * @param {object} view The packed texture and its reusable partial texel.
+   * @param {Uint32Array} words Raw source words; no numeric float conversion.
+   * @param {number} start First dirty byte.
+   * @param {number} end Exclusive dirty byte end.
+   * @param {number} base Destination texel offset of this source.
+   */
+  _UploadPackedShaderResourceRange(view, words, start, end, base)
+  {
+    if (start >= end) return;
+    const gl = this._gl;
+    let texel = Math.floor(start / 16);
+    const last = Math.ceil(end / 16);
+    const fullEnd = Math.min(last, Math.floor(words.length / 4));
+    while (texel < fullEnd)
+    {
+      const address = base + texel;
+      const x = address % view.width;
+      const remaining = fullEnd - texel;
+      const rows = x === 0 && remaining >= view.width ? Math.floor(remaining / view.width) : 1;
+      const columns = rows > 1 ? view.width : Math.min(remaining, view.width - x);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, x, Math.floor(address / view.width), columns, rows,
+        gl.RGBA_INTEGER, gl.UNSIGNED_INT, words, texel * 4);
+      texel += columns * rows;
+    }
+    if (texel < last)
+    {
+      view.tail.fill(0);
+      view.tail.set(words.subarray(texel * 4));
+      const address = base + texel;
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, address % view.width, Math.floor(address / view.width), 1, 1,
+        gl.RGBA_INTEGER, gl.UNSIGNED_INT, view.tail);
+    }
+  }
+
+  /**
+   * Removes a derived view from both sources without retaining either buffer.
+   * @adapted Native SRV destruction is reference counted; the copied description supplies that lifetime here.
+   * @param {object} view The shared pair record to release exactly once.
+   */
+  _DestroyPackedShaderResource(view)
+  {
+    if (!view.texture) return;
+    this._gl.deleteTexture(view.texture);
+    view.memory.Reset();
+    view.index._packedViews.splice(view.index._packedViews.indexOf(view), 1);
+    view.data._packedViews.splice(view.data._packedViews.indexOf(view), 1);
+    view.texture = null;
+    view.index = view.data = view.indexWords = view.dataWords = view.tail = null;
   }
 
   /** Rebuilds the data texture from `_writeLockMemory`. */
