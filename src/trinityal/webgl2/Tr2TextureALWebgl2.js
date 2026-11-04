@@ -59,6 +59,7 @@ import { CopyRegion } from "../stub/Tr2TextureALStub.js";
 import { Tr2ReadbackALWebgl2 } from "./Tr2ReadbackALWebgl2.js";
 import {
   Tr2ColorSpace,
+  GetBlockByteSize,
   GetBytesPerPixel,
   HasBufferFlags,
   HasFlag,
@@ -591,6 +592,8 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
    * Decompresses first when the layout says so, swizzles BGRA, and sets the
    * unpack row length from the source pitch.
    *
+   * @adapted WebGL requires logical mip extents and an exactly sized, tightly
+   *   packed compressed view rather than D3D11's pitched pointer.
    * @param {WebGL2RenderingContext} gl The context.
    * @param {object} layout The texture's layout.
    * @param {WebGLTexture} texture The texture, already bound.
@@ -605,8 +608,11 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
   {
     const desc = this._desc;
     const target = this._target;
-    const mipWidth = desc.GetMipWidth(mip);
-    const mipHeight = desc.GetMipHeight(mip);
+    // BitmapDimensions::GetMipWidth/Height round BC storage to whole blocks
+    // (imageio/include/BitmapDimensions.h:194-224). Texture mip extents do not:
+    // dx11 creates them from the base width/height (Tr2TextureALDx11.cpp:106-113).
+    const mipWidth = Math.max(desc.GetWidth() >>> mip, 1);
+    const mipHeight = Math.max(desc.GetHeight() >>> mip, 1);
     const mipDepth = target === gl.TEXTURE_3D ? desc.GetMipDepth(mip) : 1;
     const x = box ? box.left : 0;
     const y = box ? box.top : 0;
@@ -622,6 +628,33 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
     if (layout.compressed)
     {
+      // HostBitmap::GetMipRawData is a pointer to the selected mip with all
+      // later mips/faces after it (HostBitmap.cpp:437-470). D3D consumes only
+      // this subresource using SysMemPitch; WebGL validates the view's exact
+      // byte length and has no compressed row-pitch parameter.
+      const rowBytes = Math.ceil(width / 4) * GetBlockByteSize(desc.GetFormat());
+      const rows = Math.ceil(height / 4);
+      const packedSlicePitch = rowBytes * rows;
+      const sourcePitch = pitch || rowBytes;
+      const sourceSlicePitch = slicePitch || sourcePitch * rows;
+      if (sourcePitch === rowBytes && (depth === 1 || sourceSlicePitch === packedSlicePitch))
+      {
+        bytes = bytes.subarray(0, packedSlicePitch * depth);
+      }
+      else
+      {
+        const packed = new Uint8Array(packedSlicePitch * depth);
+        for (let layer = 0; layer < depth; ++layer)
+        {
+          for (let row = 0; row < rows; ++row)
+          {
+            const start = layer * sourceSlicePitch + row * sourcePitch;
+            packed.set(bytes.subarray(start, start + rowBytes), layer * packedSlicePitch + row * rowBytes);
+          }
+        }
+        bytes = packed;
+      }
+
       if (layered) gl.compressedTexSubImage3D(target, mip, x, y, zOffset, width, height, depth, layout.internalFormat, bytes);
       else gl.compressedTexSubImage2D(faceTarget, mip, x, y, width, height, layout.internalFormat, bytes);
       return;

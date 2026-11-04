@@ -4,6 +4,8 @@ import { test } from "node:test";
 import { Tr2TextureALWebgl2 } from "../../../npm/dist/trinityal/webgl2/index.js";
 import { ALResult, Tr2BitmapDimensions, Tr2MsaaDesc, Tr2SubresourceData } from "../../../npm/dist/trinityal/index.js";
 import { PixelFormat, TextureType, Tr2ColorSpace, Tr2CpuUsage, Tr2GpuUsage } from "../../../npm/dist/global/consts/renderContext/index.js";
+import { HostBitmap } from "../../../npm/dist/global/imageio/index.js";
+import { DescribeBitmap } from "../../../npm/dist/trinity/core/Tr2ImageIOHelpers.js";
 import { FakeRenderContext, FakeWebgl2 } from "./fakeWebgl2.js";
 
 const S3TC = { COMPRESSED_RGBA_S3TC_DXT1_EXT: 0x83f1 };
@@ -80,6 +82,95 @@ test("BC1 with the S3TC extension uploads its blocks compressed", () =>
     const upload = called(calls, "compressedTexSubImage2D")[0];
     assert.equal(upload[7], 0x83f1);
     assert.equal(called(calls, "texSubImage2D").length, 0);
+});
+
+test("HostBitmap BC1 mip pointers upload exactly one mip, with logical 2x2 and 1x1 tails", () =>
+{
+    // Native HostBitmap.cpp:437-470 returns a pointer, not a bounded mip.
+    // BitmapDimensions.h:194-224 rounds BC storage extents up to whole blocks.
+    const bitmap = new HostBitmap();
+    assert.equal(bitmap.Create(8, 8, 0, PixelFormat.PIXEL_FORMAT_BC1_UNORM), true);
+    for (let mip = 0; mip < 4; ++mip) bitmap.GetMipRawData(mip).fill(mip + 1, 0, bitmap.GetMipSize(mip));
+    const described = DescribeBitmap(bitmap);
+    assert.deepEqual(described.initialData.map(level => level.sysMem.byteLength), [56, 24, 16, 8]);
+    assert.equal(bitmap.GetMipWidth(2), 4, "the native CPU storage extent remains block-rounded");
+
+    const { calls, result } = create(described.desc, { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: described.initialData },
+        { WEBGL_compressed_texture_s3tc: S3TC });
+    assert.equal(result, ALResult.S_OK);
+    const uploads = called(calls, "compressedTexSubImage2D");
+    assert.deepEqual(uploads.map(call => [call[2], call[5], call[6], call[8].byteLength]),
+        [[0, 8, 8, 32], [1, 4, 4, 8], [2, 2, 2, 8], [3, 1, 1, 8]],
+        "WebGL S3TC requires ceil(width/4) * ceil(height/4) * 8 bytes and the actual level extents");
+    for (let mip = 0; mip < uploads.length; ++mip)
+        assert.ok(uploads[mip][8].every(value => value === mip + 1), "no following mip bytes enter this upload");
+});
+
+test("BC7 cube and array uploads bound every face's mip bytes, including the sRGB view", () =>
+{
+    for (const cube of [true, false])
+    {
+        const bitmap = new HostBitmap();
+        const layers = cube ? 6 : 2;
+        assert.equal(cube ? bitmap.CreateCube(8, 0, PixelFormat.PIXEL_FORMAT_BC7_UNORM)
+            : bitmap.Create2DArray(8, 8, 0, layers, PixelFormat.PIXEL_FORMAT_BC7_UNORM), true);
+        for (let layer = 0; layer < layers; ++layer)
+            for (let mip = 0; mip < 4; ++mip)
+                bitmap.GetMipRawData(mip, layer).fill(layer * 4 + mip + 1, 0, bitmap.GetMipSize(mip));
+        const described = DescribeBitmap(bitmap);
+        const { gl, calls, texture, result } = create(described.desc,
+            { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: described.initialData }, { EXT_texture_compression_bptc: {} });
+        assert.equal(result, ALResult.S_OK);
+        texture.GetShaderResourceTexture(Tr2ColorSpace.COLOR_SPACE_SRGB);
+        const uploads = called(calls, cube ? "compressedTexSubImage2D" : "compressedTexSubImage3D");
+        assert.equal(uploads.length, layers * 4 * 2, "linear and sRGB views each upload all faces and mips");
+        for (let view = 0; view < 2; ++view)
+        {
+            for (let layer = 0; layer < layers; ++layer)
+            {
+                for (let mip = 0; mip < 4; ++mip)
+                {
+                    const upload = uploads[view * layers * 4 + layer * 4 + mip];
+                    const extent = 8 >> mip;
+                    const pixels = upload[cube ? 8 : 10];
+                    assert.equal(upload[2], mip);
+                    assert.equal(cube ? upload[1] : upload[5], cube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + layer : layer);
+                    assert.deepEqual(cube ? upload.slice(5, 7) : upload.slice(6, 9), cube ? [extent, extent] : [extent, extent, 1]);
+                    assert.equal(pixels.byteLength, mip === 0 ? 64 : 16);
+                    assert.ok(pixels.every(value => value === layer * 4 + mip + 1), "only the named face and mip are uploaded");
+                }
+            }
+        }
+    }
+});
+
+test("compressed upload repacks a pitched block row before passing it to WebGL", () =>
+{
+    // D3D11_SUBRESOURCE_DATA preserves SysMemPitch (Tr2TextureALDx11.cpp:11-26).
+    // WebGL's compressed upload accepts tightly packed blocks, not row padding.
+    const source = new Uint8Array(64).fill(0xee);
+    source.fill(0x11, 0, 16);
+    source.fill(0x22, 24, 40);
+    const { calls, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_BC1_UNORM, 8, 8),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: [data(source, 24, 48)] },
+        { WEBGL_compressed_texture_s3tc: S3TC });
+    assert.equal(result, ALResult.S_OK);
+    const pixels = called(calls, "compressedTexSubImage2D")[0][8];
+    assert.equal(pixels.byteLength, 32);
+    assert.ok(pixels.subarray(0, 16).every(value => value === 0x11));
+    assert.ok(pixels.subarray(16).every(value => value === 0x22));
+});
+
+test("BC3 volume fallback uploads logical mip dimensions after decoding the padded blocks", () =>
+{
+    const bitmap = new HostBitmap();
+    assert.equal(bitmap.CreateVolume(8, 8, 4, 0, PixelFormat.PIXEL_FORMAT_BC3_UNORM), true);
+    const described = DescribeBitmap(bitmap);
+    const { calls, result } = create(described.desc,
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: described.initialData });
+    assert.equal(result, ALResult.S_OK);
+    assert.deepEqual(called(calls, "texSubImage3D").map(call => [call[6], call[7], call[8], call[11].byteLength]),
+        [[8, 8, 4, 1024], [4, 4, 2, 128], [2, 2, 1, 16], [1, 1, 1, 4]]);
 });
 
 test("a BC3 volume is always decompressed: no extension fills a TEXTURE_3D with blocks", () =>
