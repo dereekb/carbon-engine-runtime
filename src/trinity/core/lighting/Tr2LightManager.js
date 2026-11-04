@@ -195,6 +195,15 @@ export class Tr2LightManager
 
   _packedCount = 0;
 
+  /** @adapted Temporary non-compute list producer; see _UpdateCpuLightLists. */
+  _cpuLightLists = false;
+
+  /** Retained list topology; positions/colours do not change its conservative membership. */
+  _cpuListFlags = new Uint16Array(0);
+  _cpuListWidth = 0;
+  _cpuListHeight = 0;
+  _cpuListDirty = true;
+
   // Non-Carbon: bumped by ResolveLightData so the AL can skip re-uploads.
   _revision = 0;
 
@@ -830,7 +839,9 @@ export class Tr2LightManager
    */
   _InitializeDevice(effectPath)
   {
-    this._effect.SetEffectPathName(effectPath);
+    // Do not load an unusable compute effect on the explicitly non-compute backend.
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE !== false)
+      this._effect.SetEffectPathName(effectPath);
     const store = Tr2VariableStore.globalStore();
     this._lightBufferVariable = store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, this._lightBuffer);
     this._indexBufferVariable = store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, this._indexBuffer);
@@ -902,18 +913,23 @@ export class Tr2LightManager
    * constants; the effect is pointed at all three buffers, its depth map
    * left empty until a dispatch sets it.
    *
-   * @implemented
+   * @adapted Backends without compute use the explicitly selected CPU light-list path.
    * @returns {boolean} True.
    */
   _OnPrepareResources()
   {
     const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
+    this._cpuLightLists = renderContext.GetCaps().SUPPORTS_COMPUTE === false;
+    this._cpuListDirty = true;
     const structured = Tr2GpuStructuredBuffer.CreationFlag;
     this._lightBuffer.Create(LIGHT_BUFFER_SIZE, BYTES_PER_LIGHT, structured.CPU_WRITABLE, renderContext);
     this._lightBuffer.SetName("Light buffer");
-    this._indexBuffer.Create(INDEX_BUFFER_SIZE, 4, structured.GPU_WRITABLE, renderContext);
+    // Not Carbon: the CPU producer grows to headers + shared chains, rather than mapping 32 MiB per frame.
+    this._indexBuffer.Create(this._cpuLightLists ? 1 : INDEX_BUFFER_SIZE, 4,
+      this._cpuLightLists ? structured.CPU_WRITABLE : structured.GPU_WRITABLE, renderContext);
     this._indexBuffer.SetName("Light indices");
-    this._indexBufferCounter.Create(1, PixelFormat.PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer.CreationFlags.GPU_WRITABLE, renderContext);
+    if (!this._cpuLightLists)
+      this._indexBufferCounter.Create(1, PixelFormat.PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer.CreationFlags.GPU_WRITABLE, renderContext);
     this.ClearLightIndices(renderContext);
     this._perFrameData.Create(this._perFrameRecord.byteLength, Tr2ConstantUsageAL.ONE_SHOT, null, renderContext);
 
@@ -941,7 +957,7 @@ export class Tr2LightManager
    * Carbon ClearLightIndices (cpp:370-378): the index buffer cleared to zero
    * as a UAV, so every tile head reads "no lights".
    *
-   * @implemented
+   * @adapted Backends without compute use the explicitly selected CPU light-list path.
    * @param {Tr2RenderContext} renderContext The context to clear through.
    * @returns {boolean} Whether the clear succeeded, or there was no buffer.
    */
@@ -949,6 +965,11 @@ export class Tr2LightManager
   {
     const buffer = this._indexBuffer.GetGpuBuffer(0);
     if (!buffer) return true;
+    if (this._cpuLightLists)
+    {
+      this._cpuListDirty = true;
+      return Tr2LightManager._WriteMapped(buffer, null, renderContext);
+    }
     const { words4_0 } = Tr2LightManager.scratch;
     words4_0.fill(0);
     return Succeeded(renderContext.ClearUav(buffer, words4_0));
@@ -1009,13 +1030,16 @@ export class Tr2LightManager
    * The tile count follows the render target's size, as Carbon's does. The
    * depth map is bound for the dispatch only.
    *
-   * @implemented
+   * @adapted Backends without compute use the explicitly selected CPU light-list path.
    * @param {Tr2TextureAL} depthMap The scene depth.
    * @param {Tr2RenderContext} renderContext The frame's context.
    * @returns {boolean} Whether both dispatches ran.
    */
   DoUpdateLists(depthMap, renderContext)
   {
+    if (this._cpuLightLists)
+      return this._lightBuffer.IsValid() && this._indexBuffer.IsValid()
+        && this.UpdateLightBuffer(renderContext) && this._UpdateCpuLightLists(renderContext);
     if (!this._lightBuffer.IsValid() || !this._indexBuffer.IsValid() || !this._indexBufferCounter.IsValid()) return false;
 
     if (!this.UpdateLightBuffer(renderContext)) return false;
@@ -1052,6 +1076,79 @@ export class Tr2LightManager
       // ON_BLOCK_EXIT (cpp:422): the depth map is unbound however the dispatch ends.
       this._effect.SetParameter__TextureAL("DepthMap", null);
     }
+  }
+
+  /**
+   * Not Carbon: ccpwgl's CPU light chain for backends without compute; native
+   * depth-tile culling parity to be revisited. Carbon DoUpdateLists
+   * (trinity/trinity/Tr2LightManager.cpp:401-440) dispatches depth-aware compute.
+   * Here every tile shares conservative chains. The shipped computelightlists
+   * Main body writes three heads: opaque, depth-expanded, and particles. Without
+   * depth rejection the first two share all records; the third only particle flags.
+   * Nodes retain native ZERO-based light IDs; zero terminates node pointers only.
+   * The pixel shaders still perform their own light volume/flag tests.
+   * @adapted Native head/node layout, deliberately no depth-tile culling.
+   * @param {Tr2RenderContext} renderContext Destination buffer's context.
+   * @returns {boolean} Whether a complete, bounded list is available.
+   */
+  _UpdateCpuLightLists(renderContext)
+  {
+    const esm = renderContext.GetEffectStateManager();
+    const width = esm.renderTargetWidth, height = esm.renderTargetHeight;
+    if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1) return false;
+    const tiles = Math.ceil(width / TILE_WIDTH) * Math.ceil(height / TILE_HEIGHT);
+    const count = this._packedCount;
+    let particles = 0;
+    let changed = this._cpuListDirty || width !== this._cpuListWidth || height !== this._cpuListHeight
+      || this._cpuListFlags.length !== count;
+    for (let i = 0; i < count; i++)
+    {
+      const flags = this._LightFlags(i);
+      if (flags & Tr2LightManager.FLAG_AFFECTS_PARTICLES) particles++;
+      if (this._cpuListFlags[i] !== flags) changed = true;
+    }
+    if (!changed) return true;
+    const headerWords = tiles * 3;
+    const required = headerWords + 2 * (count + particles);
+    if (!Number.isSafeInteger(required) || required > INDEX_BUFFER_SIZE) return false;
+    if (this._indexBuffer.GetCount() < required)
+    {
+      if (!Succeeded(this._indexBuffer.Create(required, 4, Tr2GpuStructuredBuffer.CreationFlag.CPU_WRITABLE, renderContext))) return false;
+      this._indexBuffer.SetName("Light indices");
+    }
+    const buffer = this._indexBuffer.GetGpuBuffer(0);
+    const { result, data } = buffer.MapForWriting(renderContext);
+    if (!Succeeded(result)) return false;
+    const words = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4);
+    words.fill(0);
+    const head = count ? headerWords : 0;
+    const particleHead = particles ? headerWords + count * 2 : 0;
+    for (let tile = 0; tile < tiles; tile++)
+    {
+      words[tile * 3] = head;
+      words[tile * 3 + 1] = head;
+      words[tile * 3 + 2] = particleHead;
+    }
+    let particle = 0;
+    for (let i = 0; i < count; i++)
+    {
+      const node = headerWords + i * 2;
+      words[node] = i;
+      words[node + 1] = i + 1 < count ? node + 2 : 0;
+      if (this._LightFlags(i) & Tr2LightManager.FLAG_AFFECTS_PARTICLES)
+      {
+        const entry = particleHead + particle++ * 2;
+        words[entry] = i;
+        words[entry + 1] = particle < particles ? entry + 2 : 0;
+      }
+    }
+    buffer.UnmapForWriting(renderContext);
+    if (this._cpuListFlags.length !== count) this._cpuListFlags = new Uint16Array(count); // alloc: variable-length flags, replaced only when the count changes.
+    for (let i = 0; i < count; i++) this._cpuListFlags[i] = this._LightFlags(i);
+    this._cpuListWidth = width;
+    this._cpuListHeight = height;
+    this._cpuListDirty = false;
+    return true;
   }
 
   /**

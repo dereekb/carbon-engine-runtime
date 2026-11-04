@@ -54,6 +54,16 @@ export const Tr2Webgl2PlatformCaps = Object.freeze({
  */
 export class Tr2CapsALWebgl2
 {
+  /**
+   * Carbon: TRINITY_PLATFORM_SUPPORTS_COMPUTE (trinity/trinityal/dx11/Tr2CapsALDx11.h:12).
+   * @adapted A per-backend value instead of a compile-time macro, since JS ships multiple ALs.
+   * @returns {boolean} Whether this backend takes the native compute path.
+   */
+  get SUPPORTS_COMPUTE()
+  {
+    return Tr2Webgl2PlatformCaps.SUPPORTS_COMPUTE;
+  }
+
   /** The context asked about optional features, or null. */
   _gl = null;
 

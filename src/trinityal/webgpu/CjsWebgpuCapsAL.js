@@ -81,6 +81,16 @@ export const CjsWebgpuPlatformCaps = Object.freeze({
  */
 export class CjsWebgpuCapsAL
 {
+  /**
+   * Carbon: TRINITY_PLATFORM_SUPPORTS_COMPUTE (trinity/trinityal/dx11/Tr2CapsALDx11.h:12).
+   * @adapted A per-backend value instead of a compile-time macro, since JS ships multiple ALs.
+   * @returns {boolean} Whether this backend takes the native compute path.
+   */
+  get SUPPORTS_COMPUTE()
+  {
+    return CjsWebgpuPlatformCaps.SUPPORTS_COMPUTE;
+  }
+
   _webgpu = null;
 
   /**

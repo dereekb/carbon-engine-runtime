@@ -221,7 +221,7 @@ const VIEW_INVERSE = [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1 ];
 const VIEW_INVERSE_TRANSPOSED = [ 1, 0, 0, 10, 0, 1, 0, 20, 0, 0, 1, 30, 0, 0, 0, 1 ];
 
 /** A render context that records what the manager asks of it. */
-function recordingContext({ width = 33, height = 17 } = {})
+function recordingContext({ width = 33, height = 17, compute = true } = {})
 {
   const log = [];
   const buffers = [];
@@ -230,11 +230,13 @@ function recordingContext({ width = 33, height = 17 } = {})
     log,
     buffers,
     constants,
+    GetCaps: () => ({ SUPPORTS_COMPUTE: compute }),
     CreateBuffer(desc)
     {
       let bytes = null;
       const buffer = {
         GetDesc: () => desc,
+        GetBytes: () => bytes,
         SetName() {},
         Destroy() {},
         // Mapped only for the light upload; the 32 MB index buffer never is.
@@ -289,7 +291,7 @@ async function preparedManager(context)
       super.SetParameter__TextureAL(name, texture, uavMipLevel);
     }
   })();
-  const own = [ "CreateBuffer", "ClearUav" ];
+  const own = [ "CreateBuffer", "ClearUav", "GetCaps" ];
   const al = main.GetRenderContextAL();
   const factory = al.CreateConstantBuffer;
   for (const name of own) main[name] = context[name];
@@ -445,4 +447,55 @@ test("the process-wide manager publishes its buffers; on the stub device the GPU
   Tr2LightManager.deleteInstance();
   assert.equal(Tr2LightManager.getInstance(), null);
   assert.notEqual(store.FindVariable("LightBuffer").GetValue(), manager._lightBuffer, "the globals stop naming the deleted manager's buffers");
+});
+
+/** Read the native two-word linked list, rejecting cycles/out-of-range pointers. */
+function chain(words, cursor)
+{
+  const result = [], seen = new Set();
+  while (cursor)
+  {
+    assert.ok(cursor + 1 < words.length && !seen.has(cursor));
+    seen.add(cursor);
+    result.push(words[cursor]);
+    cursor = words[cursor + 1];
+  }
+  return result;
+}
+
+test("non-compute lists preserve native zero IDs, three heads and particle filtering", async t =>
+{
+  const context = recordingContext({ compute: false });
+  const manager = await preparedManager(context);
+  await recordCompute(t, context.log, () => { throw new Error("CPU list must not dispatch"); });
+  assert.equal(context.buffers.length, 2, "no UAV counter allocated");
+  assert.equal(context.log.some(entry => entry[0] === "clearUav"), false);
+  addTwoLights(manager);
+  assert.equal(manager.UpdateLists(null, context), true);
+  let buffer = context.buffers.at(-1);
+  let words = new Uint32Array(buffer.GetBytes().buffer);
+  assert.equal(words.length, 18 + 4 + 2, "six tiles, two main nodes, one particle node");
+  for (let tile = 0; tile < 6; tile++)
+  {
+    assert.deepEqual(chain(words, words[tile * 3]), [0, 1]);
+    assert.deepEqual(chain(words, words[tile * 3 + 1]), [0, 1]);
+    assert.deepEqual(chain(words, words[tile * 3 + 2]), [1]);
+  }
+  const bytes = buffer.GetBytes();
+  assert.equal(manager.UpdateLists(null, context), true);
+  assert.equal(buffer.GetBytes(), bytes, "same topology reuses storage");
+  context.GetEffectStateManager = () => ({ renderTargetWidth: 65, renderTargetHeight: 33 });
+  assert.equal(manager.UpdateLists(null, context), true);
+  words = new Uint32Array(context.buffers.at(-1).GetBytes().buffer);
+  assert.equal(words[0], 45, "resize moves the chain after all fifteen headers");
+  assert.deepEqual(chain(words, words[0]), [0, 1]);
+  manager._packedCount = 0;
+  assert.equal(manager.UpdateLists(null, context), true);
+  assert.ok(new Uint32Array(context.buffers.at(-1).GetBytes().buffer).every(value => value === 0));
+  manager._packedCount = 2;
+  assert.equal(manager.UpdateLists(null, context), true);
+  assert.deepEqual(chain(new Uint32Array(context.buffers.at(-1).GetBytes().buffer), 45), [0, 1]);
+  context.GetEffectStateManager = () => ({ renderTargetWidth: 1000000, renderTargetHeight: 1000000 });
+  assert.equal(manager.UpdateLists(null, context), false, "oversized headers fail and clear stale lights");
+  assert.ok(new Uint32Array(context.buffers.at(-1).GetBytes().buffer).every(value => value === 0));
 });

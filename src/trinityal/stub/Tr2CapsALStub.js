@@ -43,6 +43,16 @@ export const Tr2StubPlatformCaps = Object.freeze({
 export class Tr2CapsALStub
 {
   /**
+   * Carbon: TRINITY_PLATFORM_SUPPORTS_COMPUTE (trinity/trinityal/dx11/Tr2CapsALDx11.h:12).
+   * @adapted A per-backend value instead of a compile-time macro, since JS ships multiple ALs.
+   * @returns {boolean} Whether this backend takes the native compute path.
+   */
+  get SUPPORTS_COMPUTE()
+  {
+    return Tr2StubPlatformCaps.SUPPORTS_COMPUTE;
+  }
+
+  /**
    * Whether half-precision floats are available.
    *
    * @implemented
