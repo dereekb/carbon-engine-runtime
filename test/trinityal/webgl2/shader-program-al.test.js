@@ -62,6 +62,28 @@ function shader(gl, type, source, signature = { backendBlock: block(), registers
     return { shader: created, result };
 }
 
+test("packed light source registers and addressing survive the serialized backend block", () =>
+{
+    const { gl } = FakeWebgl2();
+    const backendBlock = { bytes: writeGlslBackendBlock({ stages: { pixel: { bindings: [ {
+        kind: "structuredTexture", registerIndex: 5, name: "cjsLocalLightTexture",
+        strideBytes: 0, format: "RGBA32UI", width: 2048,
+        cjsSemantic: "packedLocalLights", lightIndexRegister: 5, lightDataRegister: 9,
+        lightProfileRegister: 11, dataTexelBase: 131072
+    } ] } } }) };
+    const vertex = shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader;
+    const pixel = shader(gl, ShaderType.PIXEL_SHADER,
+        "uniform highp usampler2D cjsLocalLightTexture; void main() {}", { backendBlock, registers: [] }).shader;
+    const program = new Tr2ShaderProgramALWebgl2();
+    assert.equal(program.Create(...link([ vertex, pixel ]), FakeRenderContext(gl)), ALResult.S_OK);
+    assert.deepEqual(program.GetTextures()[0], {
+        stage: ShaderType.PIXEL_SHADER, kind: "structuredTexture", registerIndex: 5,
+        name: "cjsLocalLightTexture", unit: 0, samplerRegister: null, samplerConflict: false,
+        format: "RGBA32UI", localLightRole: "packed-texture", lightIndexRegister: 5,
+        lightDataRegister: 9, lightProfileRegister: 11, width: 2048, dataTexelBase: 131072
+    });
+});
+
 test("a shader compiles its GLSL and keeps its own stage of the backend block", () =>
 {
     const { gl } = FakeWebgl2();

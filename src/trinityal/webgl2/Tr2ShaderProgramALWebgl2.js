@@ -221,6 +221,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
    * Gives every constant buffer a location or binding point and every sampler
    * uniform a texture unit, from the stages' backend blocks, and sets the
    * sampler uniforms to their units.
+   *
+   * @adapted WebGL2 has sampler uniforms instead of native resource views;
+   *   preserve the packed-light layout from the backend block for the resource set.
    */
   _LayOutBindings(gl, program, stages)
   {
@@ -278,7 +281,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
         }
 
         const paired = binding.pairedSamplerRegisters ?? [];
-        this._textures.push({
+        const texture = {
           stage: type,
           kind: binding.kind,
           registerIndex: binding.registerIndex,
@@ -287,7 +290,17 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
           samplerRegister: paired.length ? paired[0] : null,
           samplerConflict: paired.length > 1,
           format: binding.format ?? null
-        });
+        };
+        if (binding.localLightRole)
+        {
+          texture.localLightRole = binding.localLightRole;
+          texture.lightIndexRegister = binding.lightIndexRegister;
+          texture.lightDataRegister = binding.lightDataRegister;
+          texture.lightProfileRegister = binding.lightProfileRegister;
+          texture.width = binding.width;
+          texture.dataTexelBase = binding.dataTexelBase;
+        }
+        this._textures.push(texture);
       }
     }
 
