@@ -149,6 +149,26 @@ test("inactive fragment outputs are omitted while conflicting active locations r
     assert.equal(program._fragmentOutputMask, 0);
 });
 
+test("linked attribute types preserve float-lowered integer inputs separately from logical reflection", () =>
+{
+    const { gl, calls } = FakeWebgl2();
+    const inputs = [
+        { register: 2, name: "in_BLENDINDICES0", semanticName: "BLENDINDICES", semanticIndex: 0, componentTypeName: "uint32", mask: 15 },
+        { register: 5, name: "in_TEXCOORD0", semanticName: "TEXCOORD", semanticIndex: 0, componentTypeName: "int32", mask: 15 },
+        { register: 7, name: "in_TEXCOORD1", semanticName: "TEXCOORD", semanticIndex: 1, componentTypeName: "uint32", mask: 15 }
+    ];
+    const backendBlock = { bytes: writeGlslBackendBlock({ stages: { vertex: { stageInputs: inputs } } }) };
+    const source = "in highp vec4 in_BLENDINDICES0; in highp ivec4 in_TEXCOORD0; in highp uvec4 in_TEXCOORD1; void main() {}";
+    const vertex = shader(gl, ShaderType.VERTEX_SHADER, source, { backendBlock, registers: [] }).shader;
+    const program = new Tr2ShaderProgramALWebgl2();
+    assert.equal(program.Create(...link([ vertex ]), FakeRenderContext(gl)), ALResult.S_OK);
+    assert.deepEqual(program.GetVertexInputs(), inputs, "DXBC component types and registers stay unchanged");
+    assert.deepEqual(Array.from(program._vertexAttributeTypes), [ [ 2, "FLOAT" ], [ 5, "INT" ], [ 7, "UINT" ] ]);
+    assert.equal(calls.filter(call => call[0] === "getActiveAttrib").length, 3);
+    program.Destroy();
+    assert.equal(program._vertexAttributeTypes.size, 0);
+});
+
 test("a pixel program without output reflection is rejected instead of assuming depth-only", () =>
 {
     const { gl } = FakeWebgl2();

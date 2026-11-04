@@ -45,9 +45,9 @@ import { IsVertexElementType, VertexElementType } from "#trinityal/vertexElement
  * `UBYTE_4_NORM`, `UINT32_2`), or a geometry payload's type plus
  * `elementCount` (`Float32` x 3). A combined declaration has both - the
  * mesh's payload items and Carbon-named instance items added after them
- * (`EveChildInstancedMeshes.cpp:715-724`). An unnormalized integer is
- * `integer`, which the render context binds with `vertexAttribIPointer`, as
- * D3D's `_UINT` and `_SINT` formats reach the shader as integers.
+ * (`EveChildInstancedMeshes.cpp:715-724`). An unnormalized integer storage
+ * type is `integer`; the linked GLSL input decides whether the context uses
+ * an integer pointer or converts those stored values to floating point.
  *
  * @param {WebGL2RenderingContext} gl The context whose enums to use.
  * @param {string|object} element A declaration element, or a bare Carbon DataType name.
@@ -126,9 +126,10 @@ export class Tr2VertexLayoutALWebgl2 extends Tr2DeviceResourceAL
         usage: item.usage,
         usageIndex: item.usageIndex,
         format,
-        stream: item.stream,
+        // Payload declarations omit Item's zero defaults (Tr2VertexDefinition.cpp:20-22).
+        stream: item.stream ?? 0,
         offset: item.offset,
-        divisor: item.instanceStepRate
+        divisor: item.instanceStepRate ?? 0
       });
     }
 

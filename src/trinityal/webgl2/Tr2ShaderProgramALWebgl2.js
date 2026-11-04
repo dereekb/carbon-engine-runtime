@@ -15,7 +15,8 @@
 //
 // - VERTEX INPUTS are bound to attribute locations equal to their DXBC input
 //   registers before linking, so a vertex layout can address a register
-//   without knowing the program.
+//   without knowing the program. Linked scalar categories are kept separately:
+//   the GLSL emitter float-lowers integer inputs while retaining DXBC reflection.
 // - CONSTANT BUFFERS in the `array` style are `uniform vec4 cbN[]`, set with
 //   `uniform4fv`; in the `std140` style they are uniform blocks named
 //   `ConstantBufferN`, each given its own binding point here.
@@ -93,6 +94,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
 
   /** Vertex inputs: `{ register, name, semanticName, semanticIndex, componentTypeName, mask }`. */
   _vertexInputs = [];
+
+  /** @adapted Linked GLSL scalar categories by location; logical DXBC integer inputs can be float-lowered. */
+  _vertexAttributeTypes = new Map();
 
   /** @adapted WebGL2 draw buffers may enable only locations active in the linked fragment stage. */
   _fragmentOutputMask = 0;
@@ -214,6 +218,19 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     }
 
     this._program = program;
+    const attributeCount = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+    for (let index = 0; index < attributeCount; ++index)
+    {
+      const attribute = gl.getActiveAttrib(program, index);
+      const location = gl.getAttribLocation(program, attribute.name);
+      let scalar = "FLOAT";
+      switch (attribute.type)
+      {
+        case gl.INT: case gl.INT_VEC2: case gl.INT_VEC3: case gl.INT_VEC4: scalar = "INT"; break;
+        case gl.UNSIGNED_INT: case gl.UNSIGNED_INT_VEC2: case gl.UNSIGNED_INT_VEC3: case gl.UNSIGNED_INT_VEC4: scalar = "UINT"; break;
+      }
+      this._vertexAttributeTypes.set(location, scalar);
+    }
     if (fragment && !this._LayOutFragmentOutputs(gl, program, fragment))
     {
       this._Reset();
@@ -363,7 +380,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
 
   /**
    * Carbon's impl `Destroy`, before the registry is left.
-   * @adapted Also clears the linked WebGL2 fragment-output mask.
+   * @adapted Also clears the linked WebGL2 input categories and fragment-output mask.
    */
   _Reset()
   {
@@ -384,6 +401,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._constantBuffers = [];
     this._textures = [];
     this._vertexInputs = [];
+    this._vertexAttributeTypes = new Map();
     this._fragmentOutputMask = 0;
     this._gl = null;
   }

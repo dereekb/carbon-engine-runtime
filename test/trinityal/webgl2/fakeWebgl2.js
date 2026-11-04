@@ -20,7 +20,9 @@ const ENUMS = [
     "NEAREST_MIPMAP_NEAREST", "NEAREST_MIPMAP_LINEAR", "LINEAR_MIPMAP_NEAREST", "LINEAR_MIPMAP_LINEAR",
     "TEXTURE_WRAP_S", "TEXTURE_WRAP_T", "TEXTURE_WRAP_R", "TEXTURE_MIN_LOD", "TEXTURE_MAX_LOD",
     "TEXTURE_COMPARE_MODE", "TEXTURE_COMPARE_FUNC", "COMPARE_REF_TO_TEXTURE",
-    "INVALID_INDEX", "CURRENT_PROGRAM", "VERTEX_SHADER", "FRAGMENT_SHADER", "COMPILE_STATUS", "LINK_STATUS"
+    "INVALID_INDEX", "CURRENT_PROGRAM", "VERTEX_SHADER", "FRAGMENT_SHADER", "COMPILE_STATUS", "LINK_STATUS", "ACTIVE_ATTRIBUTES",
+    "FLOAT_VEC2", "FLOAT_VEC3", "FLOAT_VEC4", "INT_VEC2", "INT_VEC3", "INT_VEC4",
+    "UNSIGNED_INT_VEC2", "UNSIGNED_INT_VEC3", "UNSIGNED_INT_VEC4"
 ];
 
 /** `EXT_disjoint_timer_query_webgl2`'s enums, with their real values; offered when a test lists it in `gl.extensions`. */
@@ -176,8 +178,36 @@ export function FakeWebgl2()
         },
         attachShader(program, shader) { program.shaders.push(shader); },
         bindAttribLocation(program, location, name) { program.attributes.set(name, location); },
-        linkProgram(program) { calls.push([ "linkProgram", program ]); },
-        getProgramParameter(program) { return !program.shaders.some(shader => shader.source.includes("#nolink")); },
+        linkProgram(program)
+        {
+            program.activeAttributes = [];
+            const types = { float: gl.FLOAT, vec2: gl.FLOAT_VEC2, vec3: gl.FLOAT_VEC3, vec4: gl.FLOAT_VEC4,
+                int: gl.INT, ivec2: gl.INT_VEC2, ivec3: gl.INT_VEC3, ivec4: gl.INT_VEC4,
+                uint: gl.UNSIGNED_INT, uvec2: gl.UNSIGNED_INT_VEC2, uvec3: gl.UNSIGNED_INT_VEC3, uvec4: gl.UNSIGNED_INT_VEC4 };
+            for (const shader of program.shaders)
+            {
+                if (shader.type !== gl.VERTEX_SHADER) continue;
+                const declarations = shader.source.matchAll(/\bin\s+(?:(?:lowp|mediump|highp)\s+)?(float|vec[234]|int|ivec[234]|uint|uvec[234])\s+(\w+)\s*;/gu);
+                for (const declaration of declarations)
+                {
+                    const name = declaration[2];
+                    if (!program.attributes.has(name)) program.attributes.set(name, program.activeAttributes.length);
+                    program.activeAttributes.push({ name, size: 1, type: types[declaration[1]] });
+                }
+            }
+            calls.push([ "linkProgram", program ]);
+        },
+        getProgramParameter(program, name)
+        {
+            if (name === gl.ACTIVE_ATTRIBUTES) return program.activeAttributes.length;
+            return !program.shaders.some(shader => shader.source.includes("#nolink"));
+        },
+        getActiveAttrib(program, index)
+        {
+            calls.push([ "getActiveAttrib", program, index ]);
+            return program.activeAttributes[index] ?? null;
+        },
+        getAttribLocation(program, name) { return program.attributes.get(name) ?? -1; },
         getProgramInfoLog() { return "link failed"; },
         getFragDataLocation(program, name)
         {

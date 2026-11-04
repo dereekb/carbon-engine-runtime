@@ -205,6 +205,59 @@ test("an indexed draw binds the program, points the attribute and draws elements
     assert.equal(context.GetDrawCount(), 1);
 });
 
+test("vertex pointers and missing constants follow linked scalar types, including float-lowered bone indices", () =>
+{
+    const { gl, calls, context } = drawable();
+    const inputs = [
+        { register: 0, name: "in_BLENDINDICES0", semanticName: "BLENDINDICES", semanticIndex: 0, componentTypeName: "uint32", mask: 15 },
+        { register: 1, name: "in_TEXCOORD0", semanticName: "TEXCOORD", semanticIndex: 0, componentTypeName: "int32", mask: 15 },
+        { register: 2, name: "in_TEXCOORD1", semanticName: "TEXCOORD", semanticIndex: 1, componentTypeName: "uint32", mask: 15 }
+    ];
+    const pipelineInputs = [
+        { usage: 6, usageIndex: 0, registerIndex: 0, type: 2 },
+        { usage: 5, usageIndex: 0, registerIndex: 1, type: 1 },
+        { usage: 5, usageIndex: 1, registerIndex: 2, type: 2 }
+    ];
+    const source = `#version 300 es
+in highp vec4 in_BLENDINDICES0;
+in highp ivec4 in_TEXCOORD0;
+in highp uvec4 in_TEXCOORD1;
+void main() { gl_Position = vec4(ivec4(in_BLENDINDICES0) * ivec4(3) + in_TEXCOORD0 + ivec4(in_TEXCOORD1)); }`;
+    const backendBlock = { bytes: writeGlslBackendBlock({ stages: { vertex: { stageInputs: inputs },
+        pixel: { stageOutputs: [ { register: 0, name: "SV_Target0", width: 4, semanticName: "SV_Target", semanticIndex: 0 } ] } } }) };
+    const shaders = [ [ ShaderType.VERTEX_SHADER, source ], [ ShaderType.PIXEL_SHADER, PIXEL ] ].map(([ type, code ]) =>
+    {
+        const shader = new Tr2ShaderALWebgl2();
+        assert.equal(shader.Create(type, code, { backendBlock, registers: [], pipelineInputs }, "input conversion", context), ALResult.S_OK);
+        return Tr2ShaderAL.create__Shader(shader);
+    });
+    const program = context.CreateShaderProgram(shaders);
+    const items = [
+        { usage: 6, usageIndex: 0, type: "UInt16", elementCount: 4, offset: 0 },
+        { usage: 5, usageIndex: 0, type: "Int16", elementCount: 4, offset: 8 },
+        { usage: 5, usageIndex: 1, type: "UInt16", elementCount: 4, offset: 16 }
+    ];
+    const layout = context.CreateVertexLayout(items);
+    const vertices = context.CreateBuffer(Tr2BufferDescriptionAL.create__Stride(24, 3, Tr2GpuUsage.VERTEX_BUFFER, Tr2CpuUsage.NONE), new Uint16Array(36));
+    context.SetShaderProgram(program);
+    context.SetVertexLayout(layout);
+    context.SetStreamSource(0, vertices, 0, 24);
+    calls.length = 0;
+    assert.equal(context.DrawIndexedInstanced(3, 1), ALResult.S_OK);
+    assert.deepEqual(calledWith(calls, "vertexAttribPointer"), [ [ 0, 4, gl.UNSIGNED_SHORT, false, 24, 0 ] ]);
+    assert.deepEqual(calledWith(calls, "vertexAttribIPointer"), [ [ 1, 4, gl.SHORT, 24, 8 ], [ 2, 4, gl.UNSIGNED_SHORT, 24, 16 ] ]);
+    assert.deepEqual(calledWith(calls, "enableVertexAttribArray"), [ [ 0 ], [ 1 ], [ 2 ] ]);
+
+    // None of the three inputs has a declaration match now; their constants still use physical types.
+    context.SetVertexLayout(context.CreateVertexLayout([ { usage: 0, usageIndex: 0, type: "FLOAT32_3", offset: 0 } ]));
+    calls.length = 0;
+    assert.equal(context.DrawIndexedInstanced(3, 1), ALResult.S_OK);
+    assert.deepEqual(calledWith(calls, "vertexAttrib4f"), [ [ 0, 0, 0, 0, 0 ] ]);
+    assert.deepEqual(calledWith(calls, "vertexAttribI4i"), [ [ 1, 0, 0, 0, 0 ] ]);
+    assert.deepEqual(calledWith(calls, "vertexAttribI4ui"), [ [ 2, 0, 0, 0, 0 ] ]);
+    assert.equal(calledWith(calls, "getActiveAttrib").length, 0, "physical reflection was resolved at link, never at draw");
+});
+
 test("MRT draws select sparse fragment locations without releasing targets, and clear restores its slot", () =>
 {
     const { gl, calls, context, program: colour0 } = drawable();

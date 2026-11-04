@@ -92,6 +92,35 @@ test("an input the definition cannot feed becomes a constant of its declared typ
     assert.equal(undeclared.constant, "FLOAT", "Carbon's default: case");
 });
 
+test("decoded skinned geometry keeps Carbon's implicit stream zero and per-vertex rate", () =>
+{
+    // Real payload declarations carry offsets and component counts, but no stream/rate.
+    // Native Item defaults both to zero (Tr2VertexDefinition.cpp:20-22).
+    const items = [
+        { usage: 0, usageIndex: 0, type: "Float32", elementCount: 3, offset: 0 },
+        { usage: 2, usageIndex: 0, type: "Float32", elementCount: 3, offset: 12 },
+        { usage: 3, usageIndex: 0, type: "Float32", elementCount: 3, offset: 24 },
+        { usage: 4, usageIndex: 0, type: "Float32", elementCount: 3, offset: 36 },
+        { usage: 5, usageIndex: 0, type: "Float32", elementCount: 2, offset: 48 },
+        { usage: 5, usageIndex: 1, type: "Float32", elementCount: 2, offset: 56 },
+        { usage: 6, usageIndex: 0, type: "UInt16", elementCount: 4, offset: 64 },
+        { usage: 7, usageIndex: 0, type: "Float32", elementCount: 4, offset: 72 }
+    ];
+    const order = [0, 7, 6, 4, 1, 2, 3, 5];
+    const shader = vertexShader(order.map((index, registerIndex) => ({
+        usage: items[index].usage, usageIndex: items[index].usageIndex, registerIndex
+    })));
+    const { gl } = FakeWebgl2();
+    const { layout, result } = created(gl, items);
+    assert.equal(result, ALResult.S_OK);
+    assert.equal(layout.SetLayout(shader, FakeRenderContext(gl)), ALResult.S_OK);
+    assert.deepEqual(layout.GetCurrentPlan(), order.map((index, location) => ({
+        location, format: AttributeFormat(gl, items[index]), stream: 0,
+        offset: items[index].offset, divisor: 0, constant: null
+    })));
+    assert.equal(Object.hasOwn(items[0], "stream"), false, "the payload remains unchanged");
+});
+
 test("plans are cached per vertex shader, and Create clears the cache", () =>
 {
     const { gl } = FakeWebgl2();

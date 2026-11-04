@@ -1764,14 +1764,18 @@ export class Tr2RenderContextALWebgl2
     for (const entry of plan)
     {
       const location = entry.location;
+      // WebGL requires the pointer and constant category of the linked input.
+      // DxbcGlslEmitter float-lowers integer inputs and value-converts their reads.
+      const inputType = this._shaderProgram._vertexAttributeTypes.get(location);
+      if (inputType === undefined) continue;
       const stream = entry.format ? this._streams[entry.stream] : null;
       used.add(location);
 
       if (!stream || !stream.buffer)
       {
         gl.disableVertexAttribArray(location);
-        if (entry.constant === "INT") gl.vertexAttribI4i(location, 0, 0, 0, 0);
-        else if (entry.constant === "UINT") gl.vertexAttribI4ui(location, 0, 0, 0, 0);
+        if (inputType === "INT") gl.vertexAttribI4i(location, 0, 0, 0, 0);
+        else if (inputType === "UINT") gl.vertexAttribI4ui(location, 0, 0, 0, 0);
         else gl.vertexAttrib4f(location, 0, 0, 0, 0);
         continue;
       }
@@ -1781,7 +1785,7 @@ export class Tr2RenderContextALWebgl2
       const offset = stream.offset + entry.offset + skipped * stream.stride;
 
       gl.bindBuffer(gl.ARRAY_BUFFER, stream.buffer.GetGpuResource());
-      if (format.integer) gl.vertexAttribIPointer(location, format.size, format.type, stream.stride, offset);
+      if (inputType !== "FLOAT") gl.vertexAttribIPointer(location, format.size, format.type, stream.stride, offset);
       else gl.vertexAttribPointer(location, format.size, format.type, format.normalized, stream.stride, offset);
       gl.vertexAttribDivisor(location, divisor);
       gl.enableVertexAttribArray(location);
