@@ -2,7 +2,7 @@ import { Tr2SkinnedModel } from "../../../npm/dist/character/trinity/trinityCore
 import { Tr2GrannyPrimitiveSet } from "../../../npm/dist/trinity/core/line/Tr2GrannyPrimitiveSet.js";
 import { EveTrailsSet } from "../../../npm/dist/trinity/eve/attachment/booster/EveTrailsSet.js";
 import { EveTurretSet } from "../../../npm/dist/trinity/eve/attachment/turrets/EveTurretSet.js";
-// Geometry owners still pull at use; effects now register manager-owned links.
+// Meshes, skinned models and effects use manager links; animation migration follows.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { BlueAsyncRes, blue, BlueResMan } from "../../../npm/dist/blue/index.js";
@@ -23,7 +23,7 @@ function finish(resource, good)
   resource._NotifyRebuildCachedData();
 }
 
-test("a mesh pulls both geometry slots' changes at GetGeometryResource and registers no target", () =>
+test("a mesh receives both geometry slots' completion callbacks without polling", () =>
 {
   const mesh = new Tr2Mesh(), geometry = new TriGeometryRes(), low = new TriGeometryRes(), seen = recordCachedData(mesh);
   mesh.SetGeometryRes(geometry);
@@ -32,15 +32,70 @@ test("a mesh pulls both geometry slots' changes at GetGeometryResource and regis
   assert.deepEqual(seen, []);
 
   finish(low, true);
+  assert.deepEqual(seen, [["rebuild", low]]);
   mesh.GetGeometryResource();
   mesh.GetGeometryResource();
   assert.deepEqual(seen, [["rebuild", low]]);
 
   finish(geometry, true);
+  assert.deepEqual(seen, [["rebuild", low], ["rebuild", geometry]]);
   assert.equal(mesh.GetGeometryResource(), geometry);
   assert.deepEqual(seen, [["rebuild", low], ["rebuild", geometry]]);
 
   mesh.Destruct();
+});
+
+test("mesh renews both geometry links when the primary is bad and retires the stand-in on completion", () =>
+{
+  const mesh = new Tr2Mesh(), primary = new TriGeometryRes(), low = new TriGeometryRes();
+  mesh.SetGeometryRes(primary);
+  mesh.SetLowResGeometryRes(low);
+  const manager = blue.resMan, previousTime = manager.activityTime;
+  try
+  {
+    manager.activityTime = 1234;
+    assert.equal(mesh.GetGeometryResource(), low);
+    assert.deepEqual(manager.GetNotifyTargetsByOwner(mesh).map(link => link.lastUsed), [1234, 1234]);
+    finish(primary, true);
+    assert.equal(mesh.lowResGeometry, null);
+    assert.equal(manager.GetNotifyTargetsByResource(low).length, 0);
+  }
+  finally { mesh.Destruct(); manager.activityTime = previousTime; }
+  assert.equal(manager.GetNotifyTargetsByOwner(mesh).length, 0);
+});
+
+test("expired path-owned mesh and model resources reacquire on use but not after destruction", t =>
+{
+  const manager = blue.resMan, original = manager.GetResource;
+  const resource = new TriGeometryRes();
+  let acquisitions = 0;
+  manager.GetResource = () => { acquisitions++; return resource; };
+  t.after(() => { manager.GetResource = original; });
+  const mesh = new Tr2Mesh();
+  mesh.geometryResPath = "res:/mesh.gr2";
+  mesh.SetGeometryRes(resource);
+  // Keep this test independent of source-file existence and load-fence logic.
+  mesh.InitializeGeometryResource = () => mesh.SetGeometryRes(manager.GetResource(mesh.geometryResPath));
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(mesh.geometry, null);
+  mesh.GetGeometryResource();
+  assert.equal(acquisitions, 1);
+  assert.equal(mesh.geometry, resource);
+  mesh.Destruct();
+  assert.equal(mesh.GetGeometryResource(), null);
+  assert.equal(acquisitions, 1);
+
+  const model = new Tr2SkinnedModel();
+  model.geometryResPath = "res:/model.gr2";
+  model.Initialize();
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(model.geometryRes, null);
+  model.GetSkeleton();
+  assert.equal(model.geometryRes, resource);
+  assert.equal(acquisitions, 3);
+  model.Destruct();
+  assert.equal(model.GetSkeleton(), null);
+  assert.equal(acquisitions, 3);
 });
 
 test("a shared-geometry animation pulls its geometry's changes at each update and registers no target", () =>
@@ -63,7 +118,7 @@ test("a shared-geometry animation pulls its geometry's changes at each update an
   animation.Destruct();
 });
 
-test("a skinned model pulls its geometry's changes when its skeleton is asked for", t =>
+test("a skinned model receives geometry notifications and moves its link on reinitialization", t =>
 {
   const manager = blue.resMan, original = manager.GetResource, geometry = new TriGeometryRes();
   manager.GetResource = () => geometry;
@@ -79,7 +134,7 @@ test("a skinned model pulls its geometry's changes when its skeleton is asked fo
   // Initializing again rebuilds from the same resource, as Carbon's AddNotifyTarget does at once.
   model.Initialize();
   model.GetSkeleton();
-  assert.deepEqual(seen, [["rebuild", geometry], ["rebuild", geometry]]);
+  assert.deepEqual(seen, [["rebuild", geometry], ["release", geometry], ["rebuild", geometry]]);
   model.Destruct();
 });
 
@@ -211,7 +266,7 @@ test("trails register no target when bound or rebound", () =>
   owner.Destruct();
 });
 
-test("skinned models, primitive sets and turrets register no target on their path-acquired resources", t =>
+test("path-acquired geometry owners replace resources and destruct cleanly", t =>
 {
   const manager = blue.resMan, original = manager.GetResource;
   let next;

@@ -60,8 +60,10 @@ destruction can reliably unregister targets.
 
 `Tr2Effect` registers through its resource property setter, removes links on
 replacement/destruction, and checks readiness before rendering. Expired internal
-acquisitions are reacquired on use. Geometry and animation owners are still being
-migrated from pulling changes at use.
+acquisitions are reacquired on use. `Tr2Mesh` and `Tr2SkinnedModel` likewise register
+their geometry properties, receive completion callbacks, and reacquire cleared
+path-owned resources on use. Destroyed owners do not reacquire. Animation and
+the remaining geometry owners are still being migrated from pulling changes at use.
 Each resource counts its finished prepares in `_revision`. An owner records,
 per dependency slot, the revision it built from in its own
 `_dependencyRevisions` Map, and calls

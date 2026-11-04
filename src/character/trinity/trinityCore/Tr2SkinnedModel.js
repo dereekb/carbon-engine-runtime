@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Tr2SkinnedModel.h
 // Source: trinity/trinity/Tr2SkinnedModel.cpp
 import { exposure as be } from "#be";
-import { BlueAsyncRes, blue, IsMatch, IInitialize, INotify, IListNotify } from "#blue";
+import { blue, IsMatch, IInitialize, INotify, IListNotify } from "#blue";
 import { meta, type } from "#schema";
 import { Tr2Model } from "./Tr2Model.js";
 import { vec3 } from "#math/vec3";
@@ -50,7 +50,9 @@ export class Tr2SkinnedModel extends Tr2Model
    */
   GetBatches(batches, batchType, m, data)
   {
-    BlueAsyncRes.ensureDependency(this.geometryRes, this, "geometry");
+    if (this._destroyed) return;
+    if (!this.geometryRes && this.geometryResPath) this.Initialize();
+    if (this.geometryRes) this.geometryRes.IsGood(this);
     for (const mesh of this.meshes)
     {
       if (!mesh) continue;
@@ -121,16 +123,37 @@ export class Tr2SkinnedModel extends Tr2Model
   /** m_skeletonIx: the index of skeletonName in the geometry resource, or NO_SKELETON. */
   _skeletonIx = NO_SKELETON;
 
-  /** What this model last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
+  /** @cjs Prevents a destroyed model from reacquiring expired resources. */
+  _destroyed = false;
 
   /** m_geometryResPath (std::string) [READWRITE, NOTIFY, PERSIST] */
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
-  /** m_geometryRes (TriGeometryResPtr) [READ] */
+  /** m_geometryRes (TriGeometryResPtr) [READ]. @implemented */
   @type.object.ref("TriGeometryRes")
-  geometryRes = null;
+  get geometryRes() { return this._geometryRes; }
+
+  /**
+   * Moves the cached-skeleton notification to the assigned geometry.
+   * @adapted Tr2SkinnedModel.cpp:202-223 uses native target registration;
+   *   JavaScript uses manager-owned expiring links.
+   */
+  set geometryRes(resource)
+  {
+    const previous = this._geometryRes;
+    if (previous === resource) return;
+    if (previous)
+    {
+      blue.resMan.RemoveNotifyTarget(this, previous);
+      this.ReleaseCachedData(previous);
+    }
+    this._geometryRes = resource;
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, "geometryRes");
+  }
+
+  /** Geometry storage behind the notification-aware property. */
+  _geometryRes = null;
 
   /** m_skeletonName (std::string) [READWRITE, NOTIFY, PERSIST] */
 
@@ -166,8 +189,8 @@ export class Tr2SkinnedModel extends Tr2Model
    * Carbon Initialize (Tr2SkinnedModel.cpp:202-223): resets the skeleton and bindings, then acquires the geometry
    * resource, and RebuildCachedData selects the skeleton once it is prepared (at once when it already is).
    *
-   * @adapted Carbon registers the model as the geometry's notify target; ours pulls the geometry's changes at use
-   *   (BlueAsyncRes.ensureDependency, slot "geometry"), because JavaScript has no destructor to unregister it.
+   * @adapted The property setter registers an expiring manager link in place
+   *   of Carbon's native resource notify target.
    * @returns {boolean} true
    */
 
@@ -177,17 +200,11 @@ export class Tr2SkinnedModel extends Tr2Model
     this._skeletonIx = NO_SKELETON;
     this._areAllMeshesBound = false;
     this.geometryRes = null;
-    // Carbon registers the model as a notify target below, which rebuilds at
-    // once when the resource is prepared, even the same one. The pull does
-    // that here, and later changes are pulled at use
-    // (BlueAsyncRes.ensureDependency, slot "geometry").
-    this._dependencyRevisions.delete("geometry");
     if (!this.geometryResPath)
     {
       return true;
     }
     this.geometryRes = blue.resMan.GetResource(this.geometryResPath);
-    BlueAsyncRes.ensureDependency(this.geometryRes, this, "geometry");
     return true;
   }
 
@@ -252,7 +269,9 @@ export class Tr2SkinnedModel extends Tr2Model
 
   GetSkeleton()
   {
-    BlueAsyncRes.ensureDependency(this.geometryRes, this, "geometry");
+    if (this._destroyed) return null;
+    if (!this.geometryRes && this.geometryResPath) this.Initialize();
+    if (this.geometryRes && !this.geometryRes.IsGood(this)) return null;
     if (this._skeletonIx === NO_SKELETON)
     {
       return null;
@@ -273,12 +292,14 @@ export class Tr2SkinnedModel extends Tr2Model
 
   BindToRig(boneList, numBones, forceRebind)
   {
+    if (this._destroyed) return;
+    if (!this.geometryRes && this.geometryResPath) this.Initialize();
+    if (this.geometryRes && !this.geometryRes.IsGood(this)) return;
     if (!forceRebind && boneList === this._boneList && this._areAllMeshesBound)
     {
       return;
     }
 
-    BlueAsyncRes.ensureDependency(this.geometryRes, this, "geometry");
     if (this._skeletonIx === NO_SKELETON)
     {
       return;
@@ -402,8 +423,8 @@ export class Tr2SkinnedModel extends Tr2Model
    */
   Destruct()
   {
+    this._destroyed = true;
     this.geometryRes = null;
-    this._dependencyRevisions.clear();
     this.ReleaseCachedData();
   }
 }
