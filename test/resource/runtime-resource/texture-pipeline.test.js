@@ -17,6 +17,8 @@ import {
   TriTextureRes
 } from "../../../npm/dist/resource/index.js";
 import { MarkerTag } from "../../support/markerTags.js";
+import { BeCallbackMan } from "../../../npm/dist/blue/services/BlueCallbackMan.js";
+import { CONVERT_BITMAP_CALLBACK, IMAGE_DECODE_CALLBACK_MODULES } from "../../../npm/dist/resource/imageio/imageDecodeCallbacks.js";
 
 test("Tr2TextureLodManager mirrors Carbon registration and removal order", async () =>
 {
@@ -172,8 +174,12 @@ function Bgra(width, height, data)
   return bitmap;
 }
 
-test("our Convert and Resize steps let Pack join a compressed source and a differently sized one", async () =>
+test("our Convert and Resize steps let Pack join a compressed source and a differently sized one", async t =>
 {
+  BeCallbackMan.RegisterCallbackModule(CONVERT_BITMAP_CALLBACK, IMAGE_DECODE_CALLBACK_MODULES[CONVERT_BITMAP_CALLBACK]);
+  BeCallbackMan.Start(false);
+  const pump = setInterval(() => BeCallbackMan.Update(), 1);
+  t.after(() => clearInterval(pump));
   const { CjsTexturePipelineStepConvert, CjsTexturePipelineStepResize } = await import("../../../npm/dist/resource/index.js");
 
   // A 4x4 BC1 block of pure red (color0 = 0xF800, all indices 0) - EVE ships

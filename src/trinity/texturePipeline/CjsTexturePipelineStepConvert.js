@@ -1,8 +1,9 @@
 // Not Carbon. A texture-pipeline step of our own.
 import { CjsSchema, meta, type } from "#schema";
-import { HostBitmap } from "#imageio";
+import { BeCallbackMan, BlueCallbackMan } from "#blue/services/BlueCallbackMan";
 import { PixelFormat } from "#consts/render-context";
-import { CjsImageFormat } from "../../resource/format/CjsImageFormat.js";
+import { CONVERT_BITMAP_CALLBACK } from "../../resource/imageio/imageDecodeCallbacks.js";
+import { createDdsBitmap } from "../../resource/formats/dds/ddsBitmap.js";
 
 /**
  * Converts the pipeline's INPUTS to one pixel format before a later step reads
@@ -36,30 +37,64 @@ export class CjsTexturePipelineStepConvert
   }
 
   /**
-   * Replace each named input with a converted copy.
+   * Queue converted copies on BeCallbackMan, publishing only when every input succeeds.
+   * The host registers IMAGE_DECODE_CALLBACK_MODULES and starts the manager;
+   * workers decode off-thread, or the host ticks Update when workers are disabled.
    *
-   * @param {HostBitmap} _bitmap The pipeline's bitmap (unused).
-   * @param {Map<string, HostBitmap>} inputs Loaded inputs by path; entries are replaced.
-   * @returns {boolean} False when an input is missing or cannot be converted.
+   * @cjs Browser workers require clone-safe packets and an asynchronous result.
+   * @param {import("#imageio").HostBitmap} _bitmap The pipeline's bitmap (unused).
+   * @param {Map<string, import("#imageio").HostBitmap>} inputs Loaded inputs by path; entries are replaced.
+   * @param {object} _params Pipeline dimensions (unused by this step).
+   * @param {object} [options] Pipeline cancellation options.
+   * @param {AbortSignal} [options.signal] Cancels queued work and discards a running result.
+   * @returns {Promise<boolean>} False when cancelled or an input cannot be converted.
    */
-  Execute(_bitmap, inputs)
+  async Execute(_bitmap, inputs, _params, options = {})
   {
-    for (const path of this.paths.length ? this.paths : [ ...inputs.keys() ])
+    const signal = options.signal;
+    if (signal?.aborted) return false;
+
+    const converted = new Map();
+    const id = { value: 0 };
+    const cancel = () => BeCallbackMan.Cancel(id.value);
+    if (signal) signal.addEventListener("abort", cancel, { once: true });
+    try
     {
-      const source = inputs.get(path);
+      for (const path of this.paths.length ? this.paths : inputs.keys())
+      {
+        const source = inputs.get(path);
 
-      if (!source) return false;
-      if (source.GetFormat() === this.format) continue;
+        if (!source || signal?.aborted) return false;
+        if (source.GetFormat() === this.format) continue;
 
-      const copy = new HostBitmap();
-      if (!copy.CreateFromBitmapDimensions(source)) return false;
-      copy.GetRawData().set(source.GetRawData());
+        const result = await BeCallbackMan.Add__Name(CONVERT_BITMAP_CALLBACK, {
+          packet: {
+            description: {
+              type: source.GetType(), format: source.GetFormat(), width: source.GetWidth(),
+              height: source.GetHeight(), depth: source.GetDepth(), mipCount: source.GetMipCount(),
+              arraySize: source.GetArraySize()
+            },
+            data: source.GetRawData(),
+            metadata: source.metadata || { cutout: {}, metadata: [] }
+          },
+          format: this.format
+        }, BlueCallbackMan.BCBF_NONE, id);
+        if (!result || signal?.aborted) return false;
 
-      if (!CjsImageFormat.convertImage(copy, this.format)) return false;
+        converted.set(path, createDdsBitmap(result));
+      }
 
-      inputs.set(path, copy);
+      for (const [path, bitmap] of converted) inputs.set(path, bitmap);
+      return true;
     }
-    return true;
+    catch
+    {
+      return false;
+    }
+    finally
+    {
+      if (signal) signal.removeEventListener("abort", cancel);
+    }
   }
 
 }
