@@ -303,7 +303,7 @@ export class TriDevice extends IRoot
 
     this._minimumModelLOD = minimumModelLOD;
 
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
       const geometry = CjsSchema.cast(resource, TriGeometryRes);
       if (!geometry) continue;
@@ -655,7 +655,7 @@ export class TriDevice extends IRoot
     // resource drops back to NONE and keeps its entry, so the prepare walk below, or its
     // next use, prepares it again (docs internal/decisions/device-resource-registration.md,
     // Revised lifecycle § 3).
-    const registered = trinity.GetResourcesRegistered();
+    const registered = TriDevice.GetResourcesRegistered();
     for (let i = 0; i < registered.length; i++)
     {
       registered[i].ReleaseResources(storage);
@@ -683,7 +683,7 @@ export class TriDevice extends IRoot
   PrepareDeviceResources()
   {
     // Trinity's registry: a resource a prepare registers is prepared on its own use.
-    const registered = trinity.GetResourcesRegistered();
+    const registered = TriDevice.GetResourcesRegistered();
     for (let i = 0; i < registered.length; i++)
     {
       registered[i].PrepareResources();
@@ -693,48 +693,59 @@ export class TriDevice extends IRoot
     return this;
   }
 
-  /**
-   * Carbon RegisterResource (TriDevice.h:135): adds a device resource to the
-   * registry. Forwards to `trinity.RegisterResource`: registered until
-   * unregistered, Carbon's lifetime.
-   *
-   * @adapted the registry lives on `trinity` (CjsTrinity), because the device is
-   *   handed in after resources exist and the registry must exist before it, as
-   *   Carbon's statics outlive any one device. Callers use `trinity`; this keeps
-   *   Carbon's name for parity and for code ported from Carbon.
-   * @param {Tr2DeviceResource} resource The resource.
-   * @returns {void}
-   */
+  /** Native static registry, alive before a device is attached (TriDevice.h:262). */
+  static _resourcesRegistered = [];
+
+  /** @cjs Registration generations for safe removal during callbacks. */
+  static _registeredGenerations = [];
+
+  /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static RegisterResource(resource)
   {
-    trinity.RegisterResource(resource);
+    // An installed class takes the fields on first use (`@be.inherit` copies methods).
+    const generation = resource._generation | 0;
+    if (resource._registeredGeneration === generation) return;
+    resource._generation = generation;
+    resource._registeredGeneration = generation;
+    TriDevice._resourcesRegistered.push(resource);
+    TriDevice._registeredGenerations.push(generation);
   }
 
-  /**
-   * Carbon UnregisterResource (TriDevice.h:136): removes a device resource from
-   * the registry. Forwards to `trinity.UnregisterResource`.
-   *
-   * @adapted the registry lives on `trinity` (see RegisterResource).
-   * @param {Tr2DeviceResource} resource The resource.
-   * @returns {void}
-   */
+  /** @adapted Exposes the native static registry through the active device. */
+  RegisterResource(resource) { return TriDevice.RegisterResource(resource); }
+
+  /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static UnregisterResource(resource)
   {
-    trinity.UnregisterResource(resource);
+    resource._state = Tr2DeviceResourceState.DESTRUCTED;
+    resource._generation = (resource._generation | 0) + 1;
+    resource._listed = false;
   }
 
-  /**
-   * Carbon GetResourcesRegistered (TriDevice.h:266): the registered device
-   * resources. Forwards to `trinity.GetResourcesRegistered`.
-   *
-   * @adapted the registry lives on `trinity` (see RegisterResource); answers a
-   *   snapshot array where Carbon returns its ResourceSet by reference.
-   * @returns {Tr2DeviceResource[]} The registered resources.
-   */
+  /** @adapted Exposes the native static registry through the active device. */
+  UnregisterResource(resource) { return TriDevice.UnregisterResource(resource); }
+
+  /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static GetResourcesRegistered()
   {
-    return trinity.GetResourcesRegistered();
+    const resources = TriDevice._resourcesRegistered;
+    const generations = TriDevice._registeredGenerations;
+    const listed = [];
+    let write = 0;
+    for (let i = 0; i < resources.length; i++)
+    {
+      if ((resources[i]._generation | 0) !== generations[i]) continue;
+      resources[write] = resources[i];
+      generations[write++] = generations[i];
+      listed.push(resources[i]);
+    }
+    resources.length = write;
+    generations.length = write;
+    return listed;
   }
+
+  /** @adapted Exposes the native static registry through the active device. */
+  GetResourcesRegistered() { return TriDevice.GetResourcesRegistered(); }
 
   /**
    * Hands the present parameters to the ambient render context

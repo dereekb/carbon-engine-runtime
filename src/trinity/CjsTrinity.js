@@ -9,6 +9,7 @@
 // that state is instances on this object (docs
 // internal/decisions/device-resource-registration.md, projects/cjs-runtime-root.md).
 import { blue, IBlueEvents } from "#blue";
+import { CjsSchema } from "#schema";
 import { TriStorageFlags } from "#consts/graphics";
 import { noise } from "../global/math/noise.js";
 import { TRINITY } from "./core/device/trinityTickCookie.js";
@@ -27,7 +28,7 @@ import { TriVariableContentType } from "./generated/trinityCore/enums.js";
 
 /**
  * Trinity: the device, the global variable store, the font manager and the
- * device-resource registry, as one object classes import.
+ * device-resource compatibility entry points, as one object classes import.
  *
  * Ours (docs architecture/non-carbon-extensions.md, *Trinity's holder*):
  * Carbon has no class here; its trinity is a Python module.
@@ -78,31 +79,6 @@ export class CjsTrinity extends IBlueEvents
    * @type {Tr2GlobalVariableStore|null}
    */
   _variableStore = null;
-
-  /**
-   * Carbon's registry: every registered device resource, which a device swap or
-   * reset walks. Infrastructure is on it from its constructor to its `Destruct`;
-   * scene content while it is prepared. Each entry is the resource and, at the
-   * same index in `_registeredGenerations`, the generation it was registered
-   * with; an entry whose generation no longer matches is stale (destructed, or
-   * released by the sweep), skipped by every walk and compacted by the sweep.
-   *
-   * @adapted Carbon's is a static `std::set` of raw pointers on TriDevice
-   *   (`GetResourcesRegistered`, TriDevice.h:266), erased by the destructor. Here
-   *   it is an array on Trinity with the sweep's idiom (operator: arrays, not Maps
-   *   or Sets, for this registry), holding strongly until the sweep drops a stale
-   *   entry (*Revised lifecycle* § 1).
-   * @type {object[]}
-   */
-  _resourcesRegistered = [];
-
-  /**
-   * The generation of each entry in `_resourcesRegistered`, at the same index.
-   *
-   * @cjs
-   * @type {number[]}
-   */
-  _registeredGenerations = [];
 
   /**
    * The prepared scene-content device resources: the sweep's array. Each entry is
@@ -288,69 +264,30 @@ export class CjsTrinity extends IBlueEvents
   }
 
   /**
-   * Registers a device resource with Trinity, Carbon's registry
-   * (`TriDevice::RegisterResource`, TriDevice.h:135, TriDevice.cpp:1087-1091).
-   * Infrastructure calls it from its constructor, as Carbon's base constructor
-   * does; scene content is registered by its own `EnsureGood` while prepared.
-   * Works before `Initialize`: `Initialize` prepares what is registered.
-   *
-   * Carbon: TriDevice::RegisterResource (TriDevice.h:135)
-   * @adapted Carbon's is static on TriDevice; here the registry is Trinity's
-   *   (`_resourcesRegistered`), and an add is a push with the resource's current
-   *   generation, once per generation, as Carbon's set holds each resource once.
-   * @param {object} resource A `Tr2DeviceResource`.
-   * @returns {void}
+   * Transitional forwarding to Carbon's TriDevice registry.
+   * @adapted Resolve at call time to avoid a device-resource import cycle.
    */
   RegisterResource(resource)
   {
-    // An installed class takes the fields on first use (`@be.inherit` copies methods).
-    const generation = resource._generation | 0;
-    if (resource._registeredGeneration === generation) return;
-    resource._generation = generation;
-    resource._registeredGeneration = generation;
-    this._resourcesRegistered.push(resource);
-    this._registeredGenerations.push(generation);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(resource);
   }
 
   /**
-   * Takes a device resource out of the registry, as its destructor does in
-   * Carbon (`TriDevice::UnregisterResource`, TriDevice.h:136,
-   * TriDevice.cpp:1093-1106): the resource is destructed. A scene-content
-   * resource's state becomes `DESTRUCTED` and its generation moves on, so its
-   * entry in the sweep's array is stale and its `EnsureGood` never prepares again.
-   *
-   * Carbon: TriDevice::UnregisterResource (TriDevice.h:136)
-   * @adapted Carbon erases it, or queues it while a release walk iterates; here
-   *   the generation moving on makes its entries stale at once, every walk skips
-   *   them, and the sweep compacts them.
-   * @param {object} resource The registered resource.
-   * @returns {void}
+   * Transitional forwarding to Carbon's TriDevice registry.
+   * @adapted Resolve at call time to avoid a device-resource import cycle.
    */
   UnregisterResource(resource)
   {
-    resource._state = Tr2DeviceResourceState.DESTRUCTED;
-    resource._generation = (resource._generation | 0) + 1;
-    resource._listed = false;
+    CjsSchema.getConstructor("TriDevice").UnregisterResource(resource);
   }
 
   /**
-   * Every registered device resource (`TriDevice::GetResourcesRegistered`,
-   * TriDevice.h:266), as a snapshot.
-   *
-   * Carbon: TriDevice::GetResourcesRegistered (TriDevice.h:266)
-   * @adapted returns a copy, so walking it cannot change the registry.
-   * @returns {object[]} The registered resources.
+   * Transitional forwarding to Carbon's TriDevice registry.
+   * @adapted Resolve at call time to avoid a device-resource import cycle.
    */
   GetResourcesRegistered()
   {
-    const resources = this._resourcesRegistered;
-    const generations = this._registeredGenerations;
-    const listed = [];
-    for (let i = 0; i < resources.length; i++)
-    {
-      if ((resources[i]._generation | 0) === generations[i]) listed.push(resources[i]);
-    }
-    return listed;
+    return CjsSchema.getConstructor("TriDevice").GetResourcesRegistered();
   }
 
   /**
@@ -421,19 +358,8 @@ export class CjsTrinity extends IBlueEvents
     resources.length = write;
     generations.length = write;
 
-    // Carbon's registry: drop the stale entries, the same compaction.
-    const registered = this._resourcesRegistered;
-    const registeredGenerations = this._registeredGenerations;
-    let kept = 0;
-    for (let read = 0; read < registered.length; read++)
-    {
-      if ((registered[read]._generation | 0) !== registeredGenerations[read]) continue;
-      registered[kept] = registered[read];
-      registeredGenerations[kept] = registeredGenerations[read];
-      kept++;
-    }
-    registered.length = kept;
-    registeredGenerations.length = kept;
+    CjsSchema.getConstructor("TriDevice").GetResourcesRegistered();
+
   }
 
   static className = "CjsTrinity";

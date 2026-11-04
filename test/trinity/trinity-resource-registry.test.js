@@ -5,12 +5,24 @@
 // past the one rule and drops stale entries; the device is handed in and
 // replaced only through SetDevice.
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { beforeEach, afterEach } from "node:test";
 
 import { blue } from "../../npm/dist/blue/index.js";
-import { CjsTrinity, trinity, TriStorageFlags } from "../../npm/dist/index.js";
+import { CjsTrinity, trinity, TriDevice, TriStorageFlags } from "../../npm/dist/index.js";
 import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
 import { CjsLibrary } from "../../npm/dist/core/index.js";
+
+let previousResources, previousGenerations;
+beforeEach(() => {
+  previousResources = TriDevice._resourcesRegistered;
+  previousGenerations = TriDevice._registeredGenerations;
+  TriDevice._resourcesRegistered = [];
+  TriDevice._registeredGenerations = [];
+});
+afterEach(() => {
+  TriDevice._resourcesRegistered = previousResources;
+  TriDevice._registeredGenerations = previousGenerations;
+});
 
 /**
  * A stand-in device resource that counts its releases.
@@ -79,6 +91,12 @@ test("Carbon's registry: registering twice keeps one entry, before any device", 
   holder.RegisterResource(r);
   assert.equal(holder.device, null);
   assert.deepEqual(holder.GetResourcesRegistered(), [ r ]);
+  assert.equal(Object.hasOwn(holder, "_resourcesRegistered"), false);
+  assert.deepEqual(TriDevice.GetResourcesRegistered(), [ r ]);
+  const active = new TriDevice();
+  assert.deepEqual(active.GetResourcesRegistered(), [ r ]);
+  active.UnregisterResource(r);
+  assert.deepEqual(holder.GetResourcesRegistered(), []);
 });
 
 test("UnregisterResource is the destructor's: the resource leaves the registry, its entry goes stale and is dropped unreleased", t =>
@@ -89,10 +107,10 @@ test("UnregisterResource is the destructor's: the resource leaves the registry, 
   holder.UnregisterResource(r);
   assert.deepEqual(holder.GetResourcesRegistered(), [ other ]);
   assert.equal(r._state, 2, "DESTRUCTED");
-  assert.equal(holder._resourcesRegistered.length, 2, "an array: the stale entry stays until the sweep");
+  assert.deepEqual(TriDevice._resourcesRegistered, [ other ], "snapshot access compacts stale entries");
   holder.CollectResources();
   assert.deepEqual(holder._sceneResources, [ other ]);
-  assert.deepEqual(holder._resourcesRegistered, [ other ], "the sweep compacts Carbon's registry too");
+  assert.deepEqual(TriDevice._resourcesRegistered, [ other ], "the device owns the compacted registry");
   assert.equal(r.releases, 0, "its Destruct released it; the sweep does not again");
 });
 
