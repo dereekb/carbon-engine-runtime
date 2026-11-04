@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { CjsCarbonEffectWriter } from "../../../../src/resource/format/carbonEffect/CjsCarbonEffectWriter.js";
 import { buildSyntheticDescription, SYNTHETIC_PERMUTATIONS } from "../format/carbonEffectSynthetic.js";
 import { Tr2EffectRes } from "../../../../npm/dist/trinity/shader/Tr2EffectRes.js";
+import { Tr2Effect } from "../../../../npm/dist/trinity/shader/Tr2Effect.js";
+import { blue, BlueResMan } from "../../../../npm/dist/blue/index.js";
 
 // A browser backend translates the default permutation at load and hands the
 // resource a translator for the rest; the first request for another permutation
@@ -57,4 +59,26 @@ test("without a translator every index reads from the loaded container", () =>
     const res = readEffectFixture(new Tr2EffectRes(), container([ "A", "B", "C", "C" ]));
 
     assert.equal(nameOf(res.GetShaderByIndex(1)), "BConstant");
+});
+
+test("an unsupported permutation stays local to its effect during manager notification", t =>
+{
+    const previous = blue.resMan;
+    const manager = blue.resMan = new BlueResMan({ autoPurgePolicy: false });
+    const failed = new Tr2Effect(), ready = new Tr2Effect();
+    t.after(() => { failed.Destruct(); ready.Destruct(); manager.Clear(); blue.resMan = previous; });
+    const res = readEffectFixture(new Tr2EffectRes(), container([ "A", "B", "C", "C" ]));
+    res.SetPermutationTranslator(() => { throw new Error("unsupported synthetic shader instruction"); }, [1, 2, 3]);
+    failed.options = [{ name: "SKINNED", value: "0" }, { name: "DETAIL", value: "off" }];
+    ready.options = [{ name: "SKINNED", value: "1" }, { name: "DETAIL", value: "off" }];
+    failed.effectResource = res;
+    ready.effectResource = res;
+    res._SetPrepared(true);
+    res._SetGood(true);
+    assert.doesNotThrow(() => res._NotifyRebuildCachedData());
+    assert.equal(failed.shader, null);
+    assert.equal(failed.IsGood(), false);
+    assert.ok(ready.shader, "later targets still rebuild");
+    assert.equal(ready.IsGood(), true);
+    assert.throws(() => res.GetShaderByIndex(0), /unsupported synthetic/, "exact-index tooling remains strict");
 });

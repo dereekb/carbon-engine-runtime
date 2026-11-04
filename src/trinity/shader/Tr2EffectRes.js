@@ -12,6 +12,7 @@ import { validateResourcePayload } from "../resources/resourceBoundary.js";
 import { CjsCarbonEffectFormat } from "../../resource/formats/carbonEffect/index.js";
 import { Tr2Shader } from "./Tr2Shader.js";
 import { EffectCarriesBackendBlock, EffectPlatformFromPath } from "#utils/effectPath";
+import * as CcpLog from "../../global/logging/ccpLog.js";
 
 const globalEffectOptions = [];
 
@@ -190,7 +191,21 @@ export class Tr2EffectRes extends BlueAsyncRes
       multiplier *= axis.options.length;
     }
 
-    return this.GetShaderByIndex(index);
+    // Carbon GetShader returns null when reading the selected shader fails
+    // (Resources/Tr2EffectRes.cpp:133-136). Browser translation happens here
+    // rather than offline and reports failure by exception. Keep that failure
+    // local to this shader so notification fanout can rebuild other owners.
+    // Exact-index tooling retains GetShaderByIndex's throwing diagnostics.
+    try
+    {
+      return this.GetShaderByIndex(index);
+    }
+    catch (error)
+    {
+      CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"),
+        "Failed shader permutation %s in %s: %s", index, this.GetPath(), error.message);
+      return null;
+    }
   }
 
   /**
