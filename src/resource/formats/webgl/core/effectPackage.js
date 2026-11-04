@@ -1,6 +1,8 @@
 import { effectHeader } from "../../../format/effect/effectHeader.js";
 import { asUint8Array } from "#utils/bytes";
 import { CjsCarbonEffectFormat } from "../../carbonEffect/index.js";
+import { resolveSelectedOptions } from "../../carbonEffect/core/metadata.js";
+import { normalizeEffectPermutation, validateResolvedPermutation } from "../../../format/effect/effectPermutationSelection.js";
 import { buildEffectBindingManifest } from "../../../format/effect/effectBindingManifest.js";
 import { Tr2EffectResource } from "../../../shader/reflection/Tr2EffectResource.js";
 import { ShaderType as RenderContext } from "#consts/render-context";
@@ -54,6 +56,12 @@ const PACKAGE_VERSION = "0.11.1";
  * graph always covers every source permutation; only the backend programs
  * follow the selection.
  *
+ * Named `permutation` requests and `mode: "selected"` translate only the
+ * resolved body; `mode: "all"` or `allPermutations: true` retains strict whole-
+ * effect translation. With no mode or permutation request the existing whole-
+ * effect default remains. `allPermutations: false` selects the default body.
+ * The shared Carbon writer retains every permutation row and its body aliases.
+ *
  * @param {Uint8Array|ArrayBuffer|ArrayBufferView} input Compiled effect bytes.
  * @param {object} [options] Selection, provenance, and emitter policy.
  * @returns {object} Package bytes plus inspection and qualification records.
@@ -80,8 +88,12 @@ export function buildEffectPackage(input, options = {})
         );
     }
 
+    // Carbon owns mixed-radix resolution (Tr2EffectRes.cpp:51-136). Browser
+    // translation additionally asserts that every requested option resolved.
+    const selected = resolveSelectedOptions(reader, values.permutation);
+    validateResolvedPermutation(values.permutation, selected.selectedOptions);
     const permutationGraph = buildEffectPermutationGraph(effectHeader(reader));
-    const variants = buildExportVariants(reader, values.allPermutations);
+    const variants = buildExportVariants(reader, values.allPermutations, selected.bodyIndex);
     const bodyMap = new Map();
     const stageMap = new Map();
     const shaderMap = new Map();
@@ -259,6 +271,8 @@ export function buildEffectPackage(input, options = {})
     const metadata = {
         generatedAt: values.generatedAt,
         sourcePath: values.source,
+        bodyIndex: selected.bodyIndex,
+        selectedOptions: selected.selectedOptions,
         effectResource: {
             version: effectHeader(reader).version,
             compilerVersion: effectHeader(reader).compilerVersion,
@@ -397,6 +411,19 @@ function normalizeOptions(input, options)
         throw new TypeError("Carbon WebGL emitterOptions must be an object");
     }
 
+    if (options.allPermutations !== undefined && typeof options.allPermutations !== "boolean")
+    {
+        throw new TypeError("Effect allPermutations compatibility option must be boolean");
+    }
+    // Tr2EffectRes sends either mode:"all" or permutation:[...]. Preserve the
+    // format's pre-existing whole-effect default for callers that send neither.
+    const mode = String(options.allPermutations === true ? "all" : options.mode
+        ?? (options.permutation !== undefined || options.allPermutations === false ? "selected" : "all")).trim();
+    if (mode !== "selected" && mode !== "all")
+    {
+        throw new Error(`Effect package mode ${mode || "<empty>"} is not supported; supported modes are selected and all`);
+    }
+
     return {
         sourceBytes,
         source,
@@ -405,7 +432,8 @@ function normalizeOptions(input, options)
         generatedAt: options.generatedAt === undefined || options.generatedAt === null
             ? null
             : new Date(options.generatedAt).toISOString(),
-        allPermutations: options.allPermutations !== false,
+        allPermutations: mode === "all",
+        permutation: normalizeEffectPermutation(options.permutation),
         allowFailures: options.allowFailures === true,
         selection,
         // How to lower a recognised local-light family. Defaults to leaving it
@@ -548,7 +576,7 @@ function decodePermutationOptions(permutations, permutationIndex)
     });
 }
 
-function buildExportVariants(reader, allPermutations)
+function buildExportVariants(reader, allPermutations, selectedPermutationIndex)
 {
     if (allPermutations)
     {
@@ -576,12 +604,12 @@ function buildExportVariants(reader, allPermutations)
         });
     }
 
-    const permutationIndex = defaultPermutationIndex(effectHeader(reader).permutations);
+    const permutationIndex = selectedPermutationIndex;
     const record = effectHeader(reader).records[permutationIndex];
 
     if (!record)
     {
-        throw new Error(`Default permutation index ${permutationIndex} is not present`);
+        throw new Error(`Selected permutation index ${permutationIndex} is not present`);
     }
 
     return [ {

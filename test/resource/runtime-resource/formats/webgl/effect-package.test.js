@@ -6,6 +6,51 @@ import {
     inspectGlslEffectContainer
 } from "../../../../../src/resource/formats/webgl/core/inspectGlslEffectContainer.js";
 import { buildMinimalStagedEffectBytes } from "./synthetic.js";
+import { buildContainer, buildShex, opcodeToken, operandToken } from "../dxbc/synthetic.js";
+import { CjsCarbonEffectWriter } from "../../../../../src/resource/format/carbonEffect/CjsCarbonEffectWriter.js";
+import { CjsCarbonEffectFormat } from "../../../../../src/resource/formats/carbonEffect/index.js";
+import { buildSyntheticDescription, blob } from "../../format/carbonEffectSynthetic.js";
+import { Tr2EffectRes } from "../../../../../npm/dist/trinity/shader/Tr2EffectRes.js";
+import { readEffectFixture, resourceIdentityFixture } from "../../../../support/resourceFixtures.js";
+
+/** Two distinct raster bodies, each shared by two permutation rows. */
+function permutationFixture(unsupportedHigh = false)
+{
+    const writer = new CjsCarbonEffectWriter({ compilerVersion: [ 1, 2, 6, 0 ] });
+    writer.addPermutation({ name: "QUALITY", options: [ "LOW", "HIGH" ], defaultOption: 0 });
+    writer.addPermutation({ name: "SKINNED", options: [ "OFF", "ON" ], defaultOption: 0 });
+    for (let index = 0; index < 4; ++index)
+    {
+        const high = (index & 1) !== 0;
+        const description = buildSyntheticDescription({ label: high ? "High" : "Low" });
+        description.techniques.length = 1;
+        description.techniques[0].passes.length = 1;
+        for (const stage of description.techniques[0].passes[0].stages)
+        {
+            const instructions = [ opcodeToken(104, 2), 1 ]; // dcl_temps 1
+            if (stage.type === 0)
+            {
+                const output = operandToken(2, [ 0 ]) | 2 | (15 << 4);
+                instructions.push(opcodeToken(103, 4), output, 0, 1); // dcl_output_siv o0, position
+                instructions.push(opcodeToken(54, 8), output, 0, operandToken(4) | 2, 0, 0, 0, 0x3f800000);
+            }
+            if (high && unsupportedHigh && stage.type === 1)
+            {
+                // Typed UAV load: the supported sibling body must not make this
+                // requested body drawable, as with TAA's higher quality modes.
+                instructions.push(opcodeToken(156, 4) | (3 << 11), operandToken(30, [ 0 ]), 1, 0x4444);
+                instructions.push(opcodeToken(163, 7), operandToken(0, [ 0 ]), 0,
+                    operandToken(0, [ 0 ]), 0, operandToken(30, [ 0 ]), 1);
+            }
+            instructions.push(opcodeToken(62, 1));
+            stage.shaderData = blob(buildContainer([ { fourCC: "SHEX", payload: buildShex(instructions, {
+                programType: stage.type === 0 ? 1 : 0
+            }) } ]));
+        }
+        writer.addBody(index, description);
+    }
+    return writer.toBytes();
+}
 
 test("buildEffect converts compiled-effect bytes without filesystem dependencies", () =>
 {
@@ -182,4 +227,116 @@ test("Carbon WebGL source SHA-256 is an assertion, not caller-authored metadata"
         ),
         /does not match the exact effect input bytes/u
     );
+});
+
+test("selected named permutations retain dense rows, aliases and the loader's body index", () =>
+{
+    const source = permutationFixture();
+    const result = CjsWebglFormat.buildEffect(source, {
+        mode: "selected",
+        permutation: new Map([ [ "QUALITY", "HIGH" ], [ "SKINNED", "ON" ] ])
+    });
+    assert.equal(result.metadata.bodyIndex, 3);
+    assert.deepEqual(result.metadata.selectedOptions.map(({ name, value }) => [ name, value ]),
+        [ [ "QUALITY", "HIGH" ], [ "SKINNED", "ON" ] ]);
+    assert.deepEqual(result.metadata.variants.map(variant => variant.permutationIndex), [ 3 ]);
+    assert.equal(result.info.backendBodyCoverage, "selected");
+    assert.equal(result.qualification.ok, true);
+    assert.equal(result.inspection.recordCount, 4);
+    assert.equal(result.inspection.dense, true);
+    const selectedKey = result.permutationGraph.variants[3].bodyKey;
+    assert.deepEqual(result.permutationGraph.variants.filter(variant => variant.bodyKey === selectedKey)
+        .map(variant => variant.permutationIndex), [ 1, 3 ]);
+
+    const reader = CjsCarbonEffectFormat.read(result.bytes, { emit: "raw" });
+    for (let index = 0; index < 4; ++index)
+    {
+        const description = reader.readDescription(index, { backend: true });
+        const sizes = description.techniques[0].passes[0].stages.map(stage => stage.shaderData.size);
+        assert.equal(sizes.every(size => size > 0), (index & 1) !== 0,
+            "only selected-body aliases carry programs; other rows remain present and empty");
+    }
+});
+
+test("mode and named requests select bodies without changing bare whole-effect builds", () =>
+{
+    const source = permutationFixture();
+    const request = [ { name: "QUALITY", value: "HIGH" } ];
+    const selected = CjsWebglFormat.buildEffect(source, { permutation: request });
+    assert.equal(selected.metadata.bodyIndex, 1);
+    assert.equal(selected.metadata.variants.length, 1);
+    assert.equal(CjsWebglFormat.buildEffect(source, { permutation: [] }).metadata.bodyIndex, 0);
+    assert.equal(CjsWebglFormat.buildEffect(source, { allPermutations: false }).info.permutationMode, "selected");
+    for (const options of [ {}, { mode: "all", permutation: request }, { mode: "selected", allPermutations: true } ])
+    {
+        assert.equal(CjsWebglFormat.buildEffect(source, options).info.permutationMode, "all");
+    }
+    assert.throws(() => CjsWebglFormat.buildEffect(source, { mode: "unknown" }), /mode unknown is not supported/u);
+    assert.throws(() => CjsWebglFormat.buildEffect(source, { allPermutations: "false" }), /must be boolean/u);
+});
+
+test("named permutation assertions reject unknown, duplicate and malformed requests", () =>
+{
+    const source = permutationFixture();
+    for (const permutation of [
+        [ { name: "UNKNOWN", value: "HIGH" } ],
+        [ { name: "QUALITY", value: "UNKNOWN" } ],
+        [ { name: "QUALITY", value: "LOW" }, { name: "QUALITY", value: "HIGH" } ],
+        [ { name: "QUALITY", value: 1 } ],
+        { QUALITY: "HIGH" }
+    ])
+    {
+        assert.throws(() => CjsWebglFormat.buildEffect(source, { permutation }),
+            /Unknown effect permutation|requested .* but resolved|duplicates axis|malformed|array or Map/u);
+    }
+});
+
+test("unsupported selected bodies and strict all-mode fail while supported siblings translate", () =>
+{
+    const source = permutationFixture(true);
+    assert.equal(CjsWebglFormat.buildEffect(source, { permutation: [] }).qualification.ok, true);
+    for (const options of [ { permutation: [ { name: "QUALITY", value: "HIGH" } ] }, { mode: "all" }, {} ])
+    {
+        assert.throws(() => CjsWebglFormat.buildEffect(source, options), /Carbon WebGL target is incomplete/u);
+    }
+    const diagnostic = CjsWebglFormat.buildEffect(source, {
+        permutation: [ { name: "QUALITY", value: "HIGH" } ], allowFailures: true
+    });
+    assert.equal(diagnostic.metadata.bodyIndex, 1);
+    assert.deepEqual(diagnostic.glsl.shaders.filter(shader => shader.excluded)
+        .map(shader => shader.excluded.opcodeName), [ "ld_uav_typed" ]);
+});
+
+test("Tr2EffectRes on-demand translation caches aliases and propagates unsupported requests", () =>
+{
+    const calls = [];
+    const translator = { buildEffect(bytes, options) {
+        calls.push(options);
+        return CjsWebglFormat.buildEffect(bytes, options);
+    } };
+    Tr2EffectRes.CommitBackend({ source: "dx11", target: "webgl", translator, permutations: "onDemand" });
+    const resource = resourceIdentityFixture(new Tr2EffectRes(), "res:/graphics/effect.dx11/selection.sm_depth");
+    const failing = resourceIdentityFixture(new Tr2EffectRes(), "res:/graphics/effect.dx11/unsupported.sm_depth");
+    const nameOf = shader => shader.effect.techniques[0].passes[0].stageInputs[0].constants[0].name;
+    try
+    {
+        readEffectFixture(resource, permutationFixture());
+        assert.equal(nameOf(resource.GetShaderByIndex(2)), "LowConstant");
+        assert.equal(calls.length, 1, "default-body alias does not translate again");
+        assert.deepEqual(calls[0].permutation, []);
+        assert.equal(nameOf(resource.GetShaderByIndex(3)), "HighConstant");
+        assert.equal(nameOf(resource.GetShaderByIndex(1)), "HighConstant");
+        assert.equal(calls.length, 2, "named body is translated once for both aliases");
+        assert.deepEqual(calls[1].permutation, [ { name: "QUALITY", value: "HIGH" }, { name: "SKINNED", value: "ON" } ]);
+
+        readEffectFixture(failing, permutationFixture(true));
+        assert.throws(() => failing.GetShaderByIndex(1), /Carbon WebGL target is incomplete/u);
+        assert.equal(nameOf(failing.GetShaderByIndex(2)), "LowConstant", "failure does not poison a supported alias");
+        assert.deepEqual([ ...failing._translatedIndices ], [ 0, 2 ]);
+    }
+    finally
+    {
+        resource.ReleaseResources();
+        failing.ReleaseResources();
+    }
 });
