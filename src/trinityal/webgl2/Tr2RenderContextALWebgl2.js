@@ -1691,8 +1691,21 @@ export class Tr2RenderContextALWebgl2
   {
     const gl = this._gl;
 
-    for (const record of program.GetConstantBuffers())
+    const records = program.GetConstantBuffers();
+    for (let index = 0; index < records.length; ++index)
     {
+      const record = records[index];
+      if (record.addressModes)
+      {
+        const set = this._resourceSet ? this._resourceSet._resourceSet.implementation : null;
+        const modes = set && set.IsValid() ? set.GetAddressModes(record) ?? record.addressModes.empty : record.addressModes.empty;
+        if (record.location && record.addressModes.current !== modes)
+        {
+          gl.uniform4fv(record.location, modes);
+          record.addressModes.current = modes;
+        }
+        continue;
+      }
       const slot = this._constantSlots[record.stage * CB_SLOT_COUNT + record.registerIndex];
       if (!slot) continue;
 

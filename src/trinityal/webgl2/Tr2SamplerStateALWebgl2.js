@@ -11,12 +11,9 @@
 //
 // WHAT DOES NOT MAP, and what happens instead:
 //
-// - `TA_BORDER` has no GL wrap mode. It is set to `CLAMP_TO_EDGE` here, which
-//   is right wherever the border colour matches the edge and wrong elsewhere
-//   (decals need the real thing); the WebGPU backend emulates border addressing
-//   in the shader (runtime `038d1e0b`), and the GLSL path will need the same.
-// - `TA_MIRROR_ONCE` has no GL mode either; `MIRRORED_REPEAT` is used, which
-//   agrees inside [-1, 2] and repeats outside it where D3D clamps.
+// - `TA_BORDER` and `TA_MIRROR_ONCE` have no GL wrap mode. Both use
+//   `CLAMP_TO_EDGE`; translated sampling emulates them using the resolved
+//   Carbon modes retained here and uploaded by the resource-set binding path.
 // - `MipLODBias` has no sampler parameter in WebGL2. It is ignored here.
 // - Anisotropy needs `EXT_texture_filter_anisotropic`; without it the sampler
 //   filters linearly.
@@ -56,7 +53,6 @@ function WrapMode(gl, mode)
   {
     case TextureAddressMode.TA_WRAP: return gl.REPEAT;
     case TextureAddressMode.TA_MIRROR: return gl.MIRRORED_REPEAT;
-    case TextureAddressMode.TA_MIRROR_ONCE: return gl.MIRRORED_REPEAT;
     default: return gl.CLAMP_TO_EDGE;
   }
 }
@@ -100,6 +96,9 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
 
   /** The context the sampler was created on. */
   _gl = null;
+
+  /** The normalized Carbon description, retained for shader-emulated modes. */
+  _description = null;
 
   /**
    * Creates the sampler from a description, following dx11's field mapping
@@ -171,6 +170,7 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
 
     this._gl = gl;
     this._samplerState = sampler;
+    this._description = normalized;
 
     return ALResult.S_OK;
   }
@@ -182,6 +182,7 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
 
     this._samplerState = null;
     this._gl = null;
+    this._description = null;
   }
 
   /**
@@ -262,6 +263,18 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
   GetGpuResource()
   {
     return this._samplerState;
+  }
+
+  /**
+   * The resolved Carbon state before GL substitutes unsupported address modes.
+   * Native DX11 keeps these modes in ID3D11SamplerState; WebGL cannot query them
+   * back after substitution. This backend accessor also exists on WebGPU.
+   * @adapted WebGL loses native address modes after sampler substitution.
+   * @returns {object|null} The normalized description, or null before creation.
+   */
+  GetDescription()
+  {
+    return this._description;
   }
 }
 

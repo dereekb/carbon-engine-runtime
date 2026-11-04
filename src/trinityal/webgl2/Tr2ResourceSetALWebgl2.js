@@ -35,6 +35,7 @@ import { Tr2ALMemoryType } from "#consts/graphics";
 import { Tr2DeviceResourceAL } from "../Tr2DeviceResourceAL/index.js";
 import { ALResult } from "../ALResult.js";
 import { MAX_RESOURCES_IN_STAGE } from "../Tr2ResourceSetAL/Tr2RegisterMapAL.js";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "#resource/format/carbonEffect/carbonEffectBackendBlock";
 
 /** Tr2ResourceSetDescriptionAL::Resource::Type (`Tr2ResourceSetAL.h:74-80`). */
 const RESOURCE_NONE = 0;
@@ -99,6 +100,9 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
 
   /** The program's texture units, each with what fills it; see `GetUnits`. */
   _units = [];
+
+  /** Generated addressing arrays, keyed by the linked program's binding record. */
+  _addressModes = new Map();
 
   /** Stable owned binding values emulate independently retained API views. */
   _description = null;
@@ -245,6 +249,7 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
     this._empty = empty;
     // dx11 reads the program as a friend (`program.m_program`); ours is its implementation.
     this._units = this._PlaceUnits(program.TrinityALImpl_GetObject());
+    this._PlaceAddressModes(program.TrinityALImpl_GetObject());
     this._isValid = true;
 
     return ALResult.S_OK;
@@ -295,6 +300,48 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
     return this._units;
   }
 
+  /**
+   * Resolves the emitter's resource-indexed modes from Carbon sampler registers.
+   * RebuildSamplerOverrides replaces the sampler register for every paired
+   * texture (Tr2Effect.cpp:614-635); the owned description already contains that
+   * result. Arrays live with this immutable resource set, not with each draw.
+   * @adapted WebGL supplies unsupported sampler modes through generated uniforms.
+   * @param {object} program The linked WebGL program.
+   */
+  _PlaceAddressModes(program)
+  {
+    for (const binding of program.GetConstantBuffers())
+    {
+      if (binding.symbol !== CARBON_BACKEND_ADDRESS_MODES_SYMBOL) continue;
+      const modes = new Float32Array(binding.sizeInVec4 * 4);
+      const stage = this._stages[binding.stage];
+      for (const texture of program.GetTextures())
+      {
+        if (texture.stage !== binding.stage || texture.samplerRegister === null
+          || texture.registerIndex >= binding.sizeInVec4) continue;
+        const sampler = stage.samplers[texture.samplerRegister];
+        const description = sampler ? sampler.GetDescription() : null;
+        if (!description) continue;
+        const offset = texture.registerIndex * 4;
+        modes[offset] = description.addressU;
+        modes[offset + 1] = description.addressV;
+        modes[offset + 2] = description.addressW;
+      }
+      this._addressModes.set(binding, modes);
+    }
+  }
+
+  /**
+   * The cached modes for an explicitly identified generated binding.
+   * @adapted WebGL's draw binding reads the modes its sampler object cannot hold.
+   * @param {object} binding The linked program's constant-buffer record.
+   * @returns {Float32Array|null} Resolved modes, or null for another program.
+   */
+  GetAddressModes(binding)
+  {
+    return this._addressModes.get(binding) ?? null;
+  }
+
   /** Carbon's impl `Destroy` (`:179-190`), before the registry is left. */
   _Reset()
   {
@@ -308,6 +355,7 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
     this._empty = true;
     this._csUavs = false;
     this._units = [];
+    this._addressModes.clear();
   }
 
   /**

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "../../../../../src/resource/format/carbonEffect/carbonEffectBackendBlock.js";
 
 import {
     readGlslBackendBlock,
@@ -176,6 +177,17 @@ test("the pixel-stage cb7 remap is carried, not re-derived", () =>
     // bind nothing.
     assert.equal(cb.registerIndex, 0);
     assert.equal(cb.name, "cb7");
+});
+
+test("generated addressing identity survives while ordinary high registers stay ordinary", () =>
+{
+    const ordinary = { kind: "constantBuffer", registerIndex: 12, name: "cb12", sizeInVec4: 2, style: "array" };
+    const addressed = { kind: "constantBuffer", registerIndex: 5, name: "cb5", sizeInVec4: 7, style: "array",
+        symbol: CARBON_BACKEND_ADDRESS_MODES_SYMBOL };
+    const block = readGlslBackendBlock(writeGlslBackendBlock({ stages: { pixel: { bindings: [ordinary, addressed] } } }));
+    assert.deepEqual(block.stages.pixel.bindings, [ordinary, addressed]);
+    assert.throws(() => writeGlslBackendBlock({ stages: { pixel: { bindings: [ {...addressed, symbol: "unknown"} ] } } }),
+        /Unknown constant-buffer symbol/u);
 });
 
 test("the shared detail-map-array transform decodes with its derived fields", () =>

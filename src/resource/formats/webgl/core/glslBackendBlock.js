@@ -14,6 +14,7 @@ import {
 } from "../../../format/carbonEffect/backendEngineId.js";
 import { DxbcComponentTypeNames } from "../../dxbc/core/DxbcSignatureChunk.js";
 import { DxbcResourceDimensionNames } from "../../dxbc/core/decoder.js";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "../../../format/carbonEffect/carbonEffectBackendBlock.js";
 
 /**
  * The WebGL 2 pass block: what the GLSL text declares but cannot say how to
@@ -276,6 +277,13 @@ function writeBindingBody(writer, binding)
             }
             writer.u16(binding.sizeInVec4);
             writer.u8(style);
+            // Deleted, this breaks the WebGL AL's resolved sampler-mode upload:
+            // cb8 is a legal ordinary register, not an addressing identity.
+            if (binding.symbol !== undefined && binding.symbol !== CARBON_BACKEND_ADDRESS_MODES_SYMBOL)
+            {
+                throw new CjsFormatWriteError(`Unknown constant-buffer symbol "${binding.symbol}"`);
+            }
+            writer.u8(binding.symbol === CARBON_BACKEND_ADDRESS_MODES_SYMBOL ? 1 : 0);
             writeLocalLightRecord(writer, binding);
             break;
         }
@@ -348,7 +356,13 @@ function readBindingBody(reader, kind)
         case "constantBuffer": {
             const sizeInVec4 = reader.ReadUint16();
             const style = blueEnums.GetEnumInfo("resource.webgl.GLSL_BACKEND_CONSTANT_BUFFER_STYLE").members[reader.ReadUint8()]?.name;
-            return { sizeInVec4, style, ...(readLocalLightRecord(reader) ?? {}) };
+            const addressModes = reader.ReadUint8();
+            if (addressModes > 1) throw new CjsFormatReadError("Unknown constant-buffer addressing symbol");
+            return {
+                sizeInVec4, style,
+                ...(addressModes ? { symbol: CARBON_BACKEND_ADDRESS_MODES_SYMBOL } : {}),
+                ...(readLocalLightRecord(reader) ?? {})
+            };
         }
         case "resource": {
             const dimension = reader.ReadUint8();

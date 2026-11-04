@@ -3,6 +3,7 @@ import { WebglReadError } from "../WebglReadError.js";
 import { DxbcGlslOperandFormatter } from "./DxbcGlslOperandFormatter.js";
 import { DxbcGlslHelperRegistry } from "./DxbcGlslHelperRegistry.js";
 import { CARBON_VIEW_FORMATS } from "../../../hlsl/core/carbonTypedViews.js";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "../../../../format/carbonEffect/carbonEffectBackendBlock.js";
 
 const COMPONENTS = [ "x", "y", "z", "w" ];
 
@@ -1016,19 +1017,12 @@ export class DxbcGlslEmitter
         state.constantBufferNames.set(bufferRegister, name);
         state.addressBufferDeclared = true;
         state.declarationLines.push(`uniform vec4 ${name}[${rows}];`);
-        // An ordinary constantBuffer binding, deliberately with no extra fields.
-        // `cjsSemantic` is reserved vocabulary for the local-light family and
-        // the block writer throws on any other value, and the wire drops fields
-        // it does not encode - so an invented one would vanish for every effect
-        // loaded from bytes, which is exactly how the packed-light branch came
-        // to be silently dead.
-        //
-        // The consumer identifies it by register instead: Carbon declares only
-        // cb0-4, 6 and 7 across all 537 shipped effects, so a constant buffer at
-        // 8 or above is ours. That is a convention, and it is written down in
-        // the addressing contract rather than left to be inferred.
+        // The existing backend symbol identifies generated addressing state;
+        // neither a register number nor the uniform's spelling is its meaning.
+        // The GLSL backend block retains it for effects loaded from bytes.
         state.bindings.push({
             kind: "constantBuffer",
+            symbol: CARBON_BACKEND_ADDRESS_MODES_SYMBOL,
             registerIndex: bufferRegister,
             name,
             sizeInVec4: rows,

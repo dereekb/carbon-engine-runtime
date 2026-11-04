@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
 import { buildTwoSamplerPixelDxbc } from "./synthetic.js";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "../../../../../src/resource/format/carbonEffect/carbonEffectBackendBlock.js";
 
 /**
  * WebGL2 does REPEAT, MIRRORED_REPEAT and CLAMP_TO_EDGE natively. It has no
@@ -23,13 +24,7 @@ import { buildTwoSamplerPixelDxbc } from "./synthetic.js";
 const DXBC = buildTwoSamplerPixelDxbc([ 0, 1 ], [ 5, 6 ]);
 const addressing = (textures, extra = {}) => ({ textures, ...extra });
 
-// The buffer is identified by REGISTER, not by a marker field. `cjsSemantic` is
-// reserved vocabulary for the local-light family and the block writer throws on
-// any other value, and the wire drops fields it does not encode - so an invented
-// marker would vanish for every effect loaded from bytes. Carbon declares only
-// cb0-4, 6 and 7 across all 537 shipped effects, so 8 and above is ours.
-const CARBON_LAST_CB = 7;
-const isAddressBuffer = (b) => b.kind === "constantBuffer" && b.registerIndex > CARBON_LAST_CB;
+const isAddressBuffer = (b) => b.kind === "constantBuffer" && b.symbol === CARBON_BACKEND_ADDRESS_MODES_SYMBOL;
 
 test("without the profile nothing is emitted", () =>
 {
@@ -90,6 +85,16 @@ test("the binding is the consumer's signal, present only when the buffer is", ()
     assert.equal(has(unused), false, "no binding when nothing was addressed");
     assert.equal(has(used), true, "binding present when the buffer was declared");
     assert.equal(has(used), /uniform vec4 cb8\[/u.test(used.source), "binding tracks the declaration");
+});
+
+test("the addressing symbol is explicit even at an otherwise ordinary register", () =>
+{
+    const result = CjsWebglFormat.emitGlsl(DXBC, {
+        source: "synthetic",
+        emulatedAddressing: addressing([ { registerIndex: 6 } ], { bufferRegister: 5 })
+    });
+    assert.equal(result.bindings.find(isAddressBuffer).registerIndex, 5);
+    assert.match(result.source, /uniform vec4 cb5\[/u);
 });
 
 test("addressing is keyed by RESOURCE register, not sampler register", () =>

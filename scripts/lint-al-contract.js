@@ -284,9 +284,6 @@ const EXEMPT = new Map([
     [ "webgl2:Tr2PipelineStatsQueryALWebgl2.Destroy",
         "inherited: Tr2BaseDeviceResourceAL.Destroy unregisters the resource; dx11's Destroy only drops "
         + "m_query (Tr2PipelineStatsQueryALDx11.cpp:63-66), and WebGL2 never creates one" ],
-    [ "webgl2:Tr2SamplerStateALWebgl2.GetDescription",
-        "not Carbon: no backend declares it (Tr2SamplerStateALDx11.h:12-33, Tr2SamplerStateALStub.h:11-33); "
-        + "the stub stores the description as its own departure (Tr2SamplerStateALStub.js head comment)" ],
     [ "webgl2:Tr2ShaderALWebgl2.SetNullShaderType",
         "not in the donor: Carbon declares it on stub and metal only (Tr2ShaderALStub.h:42, "
         + "Tr2ShaderALMetal.h:42); dx11's Tr2ShaderAL has none" ],

@@ -40,6 +40,7 @@ import { ALResult } from "../ALResult.js";
 import { RenderContextALOf } from "../renderContextAL.js";
 import { Tr2RegisterMapAL } from "../Tr2ResourceSetAL/Tr2RegisterMapAL.js";
 import { ShaderType } from "#consts/render-context";
+import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "#resource/format/carbonEffect/carbonEffectBackendBlock";
 
 
 /** The full-screen triangle a compute-as-fragment pass draws with. */
@@ -320,6 +321,12 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
             style: binding.style,
             sizeInVec4: binding.sizeInVec4
           };
+
+          if (binding.symbol === CARBON_BACKEND_ADDRESS_MODES_SYMBOL)
+          {
+            record.symbol = binding.symbol;
+            record.addressModes = { empty: new Float32Array(binding.sizeInVec4 * 4), current: null };
+          }
 
           if (binding.style === "std140")
           {
