@@ -37,16 +37,28 @@ stores a manager attachment or a bundle of callbacks back into its manager.
 `GetResource(path, { ex })` selects by extension plus Carbon's suffix, initializes
 the handle and then inserts it into MotherLode. `Ready(resource)` waits for the
 current attempt. Reload and purge revival refill that same handle. Failed loads
-are prepared but not good; `EnsureGood()` and `KeepAlive()` do not retry them. Only an
+are prepared but not good; `IsGood()` and `KeepAlive()` do not retry them. Only an
 explicit reload retries failure. A policy purge can revive on use within the
 manager's retry cap. `GetResourceStatus` inspects flags without renewing use.
 
-`IsGood()` only asks: it returns the native good flag and renews nothing.
-`EnsureGood()` renews use (`KeepAlive()`), then answers `IsGood()`; call it
-where the resource is about to be used. This timestamp renewal stands in for
-Carbon's reference lifetime; it does not imply success.
+`IsGood(owner)` renews use (`KeepAlive()`), renews that owner's registered links,
+then returns the native good flag. Omit the owner to renew only the resource.
+Check every dependency independently so a bad first dependency does not prevent
+later dependencies from renewing. This timestamp renewal stands in for Carbon's
+reference lifetime; it does not imply success. `EnsureGood()` temporarily forwards
+to `IsGood()` while existing callers migrate.
 
-Owners pull a resource's changes at use instead of registering notify targets.
+The manager provides `AddNotifyTarget(owner, resource, propertyName)` and
+`RemoveNotifyTarget(owner, resource)`. Registration immediately rebuilds prepared
+resources. Load/reload dispatches `RebuildCachedData(resource)`; reload and failure
+dispatch `ReleaseCachedData(resource)`. Unrenewed links expire in `PurgeInactive`:
+release cached data, clear the matching owner property through its setter, and
+remove the link. A replacement property is never cleared. Explicit destruction
+must still remove links. `GetNotifyTargetsByOwner` and `GetNotifyTargetsByResource`
+return diagnostic snapshots. This manager ownership is provisional until
+destruction can reliably unregister targets.
+
+Production owners are still being migrated from pulling changes at use.
 Each resource counts its finished prepares in `_revision`. An owner records,
 per dependency slot, the revision it built from in its own
 `_dependencyRevisions` Map, and calls
@@ -63,7 +75,8 @@ not expose that handler. `GetResourcePayload`, `HasResourcePayload` and
 through its native owner, such as `GetBitmap` or `GetCMFData`. Releasing plain
 data preserves handle identity; the next explicit `Ready` reconstructs it.
 
-Full MotherLode cleanup cancels an attempt and calls the owner's cleanup hook;
-owners release their derived data at their next use. Its existing `releasePayload` and
+Full MotherLode cleanup cancels an attempt, expires registered owner links, and
+calls the resource's cleanup hook. Legacy pull-based owners release their derived
+data at their next use. Its existing `releasePayload` and
 `destroyAdapters` switches remain independent. Device-only release and
 plain-data expiry have narrower scopes than full resource cleanup.

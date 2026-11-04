@@ -316,21 +316,23 @@ export class BlueAsyncRes
   /**
    * Carbon: BlueAsyncRes::IsGood (blue/include/BlueAsyncRes.h:92-95)
    *
-   * Only asks: it renews nothing. Where the resource is about to be used,
-   * call `EnsureGood()`. A failed resource stays failed until an explicit
-   * Reload.
+   * Renews this resource and the calling owner's registered links before
+   * answering. A failed load stays failed until an explicit Reload.
    *
-   * @implemented
+   * @adapted Native references guarantee lifetime; manager leases require use
+   *   to renew both the resource and its owner links in JavaScript.
+   * @param {object} [owner] Registered owner using derived resource data.
    * @returns {boolean}
    */
-  IsGood()
+  IsGood(owner)
   {
+    this.KeepAlive();
+    if (owner !== undefined) blue.resMan._KeepNotifyTargetAlive(owner, this);
     return this._isGood;
   }
 
   /**
-   * Renews this resource for use, then answers `IsGood()`. Use it where the
-   * resource is about to be used; `IsGood()` only asks.
+   * Transitional forwarding entry while callers migrate to IsGood.
    *
    * @cjs Carbon's MotherLode keeps a resource alive by reference
    *   (MotherLode.h:31-39); ours expires it after inactivity, so use renews it.
@@ -340,7 +342,6 @@ export class BlueAsyncRes
    */
   EnsureGood()
   {
-    this.KeepAlive();
     return this.IsGood();
   }
 
@@ -614,7 +615,8 @@ export class BlueAsyncRes
     this._isLoading = false;
     this._isGood = good;
     blue.resMan._FinishResourceLoad(this);
-    if (this._notify) this._NotifyRebuildCachedData();
+    if (!good) blue.resMan._NotifyReleaseCachedData(this);
+    else if (this._notify) this._NotifyRebuildCachedData();
   }
 
     /**
@@ -638,7 +640,7 @@ export class BlueAsyncRes
     resource._isGood = false;
     resource._CleanupLoadData();
     blue.resMan._FinishResourceLoad(resource);
-    resource._NotifyRebuildCachedData();
+    blue.resMan._NotifyReleaseCachedData(resource);
   }
 
   /**
@@ -665,25 +667,24 @@ export class BlueAsyncRes
   /**
    * Carbon: BlueAsyncRes::NotifyRebuildCachedData (blue/src/BlueAsyncRes.cpp:354-360)
    *
-   * @adapted Carbon calls every registered target's RebuildCachedData here;
-   *   ours records the change (`_revision`) and each owner pulls it at its
-   *   next use (`ensureDependency`), so nothing holds the owners.
+   * @adapted resMan owns expiring links instead of a per-resource target list.
+   *   Revision tracking remains until the remaining pull-based owners migrate.
    */
   _NotifyRebuildCachedData()
   {
     this._revision++;
+    blue.resMan._NotifyRebuildCachedData(this);
   }
 
   /**
    * Carbon: BlueAsyncRes::NotifyReleaseCachedData (blue/src/BlueAsyncRes.cpp:362-368)
    *
-   * @adapted Carbon calls every registered target's ReleaseCachedData here;
-   *   ours has no targets. An owner releases at its next use, when
-   *   `ensureDependency` finds the dependency no longer good, which a reload or
-   *   purge makes it. Kept at Carbon's call sites for the parity checks.
+   * @adapted resMan owns expiring links because JavaScript cannot guarantee
+   *   destructor unregistration. The resource retains no target list.
    */
   _NotifyReleaseCachedData()
   {
+    blue.resMan._NotifyReleaseCachedData(this);
   }
 
   /**

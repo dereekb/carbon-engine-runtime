@@ -232,6 +232,268 @@ export class BlueResMan
    */
   static defaultAutoPurgePolicy = { intervalMilliseconds: 1000, maxIdleMilliseconds: 30000 };
 
+  /** @cjs Owner-link lease in seconds; null follows the resource inactivity policy. */
+  leaseSeconds = null;
+
+  /** @cjs Persistent owner/resource/property links, compacted during PurgeInactive. */
+  _notifyTargets = [];
+
+  /** @cjs Owner and resource index for allocation-free per-use link renewal. */
+  _notifyTargetsByOwner = new Map();
+
+  /**
+   * Registers an owner's resource property and rebuilds immediately if prepared.
+   *
+   * Carbon: BlueAsyncRes::AddNotifyTarget (blue/src/BlueAsyncRes.cpp:261-290).
+   * @adapted Links live on the manager and expire because JavaScript cannot
+   *   guarantee native destructor unregistration. Explicit teardown must still
+   *   remove them. Revisit manager ownership once OnDestruct is guaranteed.
+   * @param {object} owner Owner implementing Carbon's two cached-data handlers.
+   * @param {BlueAsyncRes} resource Resource held by the owner.
+   * @param {string} propertyName Owner property holding the resource; expiry assigns null through its setter.
+   * @returns {void}
+   */
+  AddNotifyTarget(owner, resource, propertyName)
+  {
+    if (typeof propertyName !== "string" || !propertyName || owner[propertyName] !== resource)
+    {
+      throw new TypeError("AddNotifyTarget requires the owner's property holding the resource.");
+    }
+    let resources = this._notifyTargetsByOwner.get(owner);
+    if (!resources) this._notifyTargetsByOwner.set(owner, resources = new Map());
+    let entries = resources.get(resource);
+    if (!entries) resources.set(resource, entries = []);
+    const now = this.motherLode.GetActivityTime();
+    for (let i = 0; i < entries.length; i++)
+    {
+      if (entries[i].propertyName === propertyName)
+      {
+        entries[i].lastUsed = now;
+        return;
+      }
+    }
+    for (let i = 0; i < entries.length; i++) entries[i].lastUsed = now;
+    const firstLink = entries.length === 0;
+    const entry = { owner, resource, propertyName, lastUsed: now, active: true };
+    entries.push(entry);
+    this._notifyTargets.push(entry);
+    if (firstLink && resource.IsPrepared()) owner.RebuildCachedData(resource);
+  }
+
+  /**
+   * Removes every property link between an owner and resource.
+   *
+   * Carbon: BlueAsyncRes::RemoveNotifyTarget (blue/src/BlueAsyncRes.cpp:292-347).
+   * @adapted Manager ownership replaces the native per-resource target list.
+   * @param {object} owner Owner replacing or destroying its resource slot.
+   * @param {BlueAsyncRes} resource Previously held resource.
+   * @returns {void}
+   */
+  RemoveNotifyTarget(owner, resource)
+  {
+    const resources = this._notifyTargetsByOwner.get(owner);
+    const entries = resources?.get(resource);
+    if (!entries) return;
+    while (entries.length) this._RemoveNotifyLink(entries[entries.length - 1]);
+  }
+
+  /**
+   * Renews all of an owner's links to a resource without allocating.
+   * @cjs Per-target activity replaces native destructor certainty.
+   * @implemented
+   * @param {object} owner Resource user.
+   * @param {BlueAsyncRes} resource Resource being used.
+   * @returns {boolean} Whether a registered link was renewed.
+   */
+  _KeepNotifyTargetAlive(owner, resource)
+  {
+    const entries = this._notifyTargetsByOwner.get(owner)?.get(resource);
+    if (!entries) return false;
+    const now = this.activityTime || this.motherLode.GetActivityTime();
+    let renewed = false;
+    for (let i = 0; i < entries.length; i++)
+    {
+      const entry = entries[i];
+      if (owner[entry.propertyName] !== resource) continue;
+      entry.lastUsed = now;
+      renewed = true;
+    }
+    return renewed;
+  }
+
+  /**
+   * Returns a detached diagnostic snapshot of links for an owner.
+   * @cjs Debugging manager-owned retention without exposing mutable link records.
+   * @implemented
+   * @param {object} owner Owner to inspect.
+   * @returns {object[]} Its active resource/property links.
+   */
+  GetNotifyTargetsByOwner(owner)
+  {
+    return this._notifyTargets.filter(entry => entry.active && entry.owner === owner)
+      .map(entry => ({ owner: entry.owner, resource: entry.resource, propertyName: entry.propertyName, lastUsed: entry.lastUsed }));
+  }
+
+  /**
+   * Returns a detached diagnostic snapshot of links for a resource.
+   * @cjs Debugging manager-owned retention without exposing mutable link records.
+   * @implemented
+   * @param {BlueAsyncRes} resource Resource to inspect.
+   * @returns {object[]} Its active owner/property links.
+   */
+  GetNotifyTargetsByResource(resource)
+  {
+    return this._notifyTargets.filter(entry => entry.active && entry.resource === resource)
+      .map(entry => ({ owner: entry.owner, resource: entry.resource, propertyName: entry.propertyName, lastUsed: entry.lastUsed }));
+  }
+
+  /**
+   * Removes an indexed link before callbacks can re-enter its owner's setter.
+   * @cjs A removed record releases its strong references before array compaction.
+   * @implemented
+   * @param {object} entry Active link.
+   * @returns {void}
+   */
+  _RemoveNotifyLink(entry)
+  {
+    if (!entry.active) return;
+    const resources = this._notifyTargetsByOwner.get(entry.owner);
+    const entries = resources.get(entry.resource);
+    entries.splice(entries.indexOf(entry), 1);
+    if (!entries.length) resources.delete(entry.resource);
+    if (!resources.size) this._notifyTargetsByOwner.delete(entry.owner);
+    entry.active = false;
+    entry.owner = entry.resource = null;
+  }
+
+  /**
+   * Releases an expired link and clears its still-matching owner property.
+   * @cjs Revisit aliveness checks once Destruct exists. Explicit Destruct must
+   *   remove links; expiry only bounds retention for owners that never clean up.
+   *   Assignment deliberately invokes accessors. A callback that replaces the
+   *   property must not have its replacement cleared by this expiry.
+   * @implemented
+   * @param {object} entry Link to expire.
+   * @returns {void}
+   */
+  _ExpireNotifyLink(entry)
+  {
+    const owner = entry.owner;
+    const resource = entry.resource;
+    if (owner[entry.propertyName] !== resource)
+    {
+      const propertyName = entry.propertyName;
+      this._RemoveNotifyLink(entry);
+      CcpLog.CCP_LOGWARN_CH(s_ch, "Resource owner replaced %s without RemoveNotifyTarget (%s)", propertyName, resource.GetPath());
+      return;
+    }
+    const properties = this._notifyTargetsByOwner.get(owner).get(resource).map(link => link.propertyName);
+    this.RemoveNotifyTarget(owner, resource);
+    owner.ReleaseCachedData(resource);
+    for (let i = 0; i < properties.length; i++)
+    {
+      const propertyName = properties[i];
+      if (owner[propertyName] === resource) owner[propertyName] = null;
+    }
+  }
+
+  /**
+   * Expires unrenewed owner links independently of whether their resource is busy.
+   * @cjs JavaScript has no reliable native last-reference/destructor signal.
+   * @implemented
+   * @param {number} now Registry activity time in milliseconds.
+   * @returns {void}
+   */
+  _PurgeNotifyTargets(now)
+  {
+    const seconds = this.leaseSeconds ?? (this._autoPurgePolicy?.maxIdleMilliseconds ?? 30000) / 1000;
+    assertNonNegativeNumber(seconds, "BlueResMan leaseSeconds");
+    const expiry = now - seconds * 1000;
+    const entries = this._notifyTargets;
+    const count = entries.length;
+    for (let i = 0; i < count; i++)
+    {
+      const entry = entries[i];
+      if (entry.active && entry.lastUsed < expiry) this._ExpireNotifyLink(entry);
+    }
+    let kept = 0;
+    for (let i = 0; i < entries.length; i++)
+    {
+      if (entries[i].active) entries[kept++] = entries[i];
+    }
+    entries.length = kept;
+  }
+
+  /**
+   * Rebuilds registered owners after a successful resource preparation.
+   * Carbon: BlueAsyncRes::NotifyRebuildCachedData (blue/src/BlueAsyncRes.cpp:354-360).
+   * @adapted The manager owns the links instead of the resource.
+   * @param {BlueAsyncRes} resource Prepared resource.
+   * @returns {void}
+   */
+  _NotifyRebuildCachedData(resource)
+  {
+    this._NotifyTargets(resource, true);
+  }
+
+  /**
+   * Releases registered owners' derived data before reload or after failure.
+   * Carbon: BlueAsyncRes::NotifyReleaseCachedData (blue/src/BlueAsyncRes.cpp:362-368).
+   * @adapted Links remain registered for the next completed attempt.
+   * @param {BlueAsyncRes} resource Resource losing its prepared data.
+   * @returns {void}
+   */
+  _NotifyReleaseCachedData(resource)
+  {
+    this._NotifyTargets(resource, false);
+  }
+
+  /**
+   * Dispatches a stable notification walk, once per owner/resource pair.
+   * @cjs Revisit aliveness checks once Destruct exists. Until explicit teardown
+   *   removes a dead owner's links, the manager retains it until lease expiry.
+   * @implemented
+   * @param {BlueAsyncRes} resource Resource whose state changed.
+   * @param {boolean} prepared True for rebuild, false for release.
+   * @returns {void}
+   */
+  _NotifyTargets(resource, prepared)
+  {
+    const entries = this._notifyTargets.filter(entry => entry.active && entry.resource === resource);
+    const notified = new Set();
+    for (let i = 0; i < entries.length; i++)
+    {
+      const entry = entries[i];
+      if (!entry.active) continue;
+      const owner = entry.owner;
+      if (owner[entry.propertyName] !== resource)
+      {
+        this._ExpireNotifyLink(entry);
+        continue;
+      }
+      if (notified.has(owner)) continue;
+      notified.add(owner);
+      if (prepared) owner.RebuildCachedData(resource);
+      else owner.ReleaseCachedData(resource);
+    }
+  }
+
+  /**
+   * Detaches every owner slot before an idle resource is purged.
+   * @cjs Manager eviction cannot leave a surviving owner using stale derived data.
+   * @implemented
+   * @param {BlueAsyncRes} resource Resource being purged.
+   * @returns {void}
+   */
+  _ExpireResourceNotifyTargets(resource)
+  {
+    const entries = this._notifyTargets.filter(entry => entry.active && entry.resource === resource);
+    for (let i = 0; i < entries.length; i++)
+    {
+      if (entries[i].active) this._ExpireNotifyLink(entries[i]);
+    }
+  }
+
   // The manager is no longer reachable from itself. Carbon's process-wide
   // handle is an extern beside the interface it points at, not a static on
   // the implementation (`blue/include/IBlueResMan.h:135`), and the port of
@@ -2159,6 +2421,7 @@ export class BlueResMan
    */
   PurgeInactive(options = {})
   {
+    this._PurgeNotifyTargets(options.time ?? this.motherLode.GetActivityTime());
     const resources = this.motherLode.PurgeInactive(options);
     const objects = this.loadObjectCache.PurgeInactive(options);
     return Object.freeze({
@@ -2416,6 +2679,12 @@ export class BlueResMan
    */
   Clear()
   {
+    const links = this._notifyTargets.slice();
+    for (let i = 0; i < links.length; i++)
+    {
+      if (links[i].active) this._ExpireNotifyLink(links[i]);
+    }
+    this._notifyTargets.length = 0;
     for (const lode of [ this.motherLode, this.loadObjectCache ])
     {
       for (const [, resource] of lode.Entries())
@@ -2980,7 +3249,7 @@ export class BlueResMan
     resource._isPrepared = true;
     resource._isLoading = false;
     this._FinishResourceLoad(resource);
-    resource._NotifyRebuildCachedData();
+    this._NotifyReleaseCachedData(resource);
   }
 
   /**
@@ -3254,7 +3523,7 @@ export class BlueResMan
   }
 
   /**
-   * Release native owned data while retaining persistent targets for revival.
+   * Detach owner slots before releasing native owned data.
    *
    * @cjs
    * @implemented
@@ -3264,7 +3533,7 @@ export class BlueResMan
   _CleanupResource(resource, options = {})
   {
     resource.CancelPendingLoad();
-    resource._NotifyReleaseCachedData();
+    this._ExpireResourceNotifyTargets(resource);
     resource._OnShutdown(options);
     if (options.releasePayload !== false) this.ReleaseResourcePayload(resource);
     resource._isGood = resource._isPrepared = false;

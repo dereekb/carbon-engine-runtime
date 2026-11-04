@@ -16,7 +16,7 @@ function managerFor(t)
   return manager;
 }
 
-test("EnsureGood renews while IsGood and pure inspection leave activity unchanged", async t =>
+test("IsGood renews while status inspection leaves activity unchanged", async t =>
 {
   const manager = managerFor(t), resource = manager.GetResource("res:/renew.json");
   await manager.Ready(resource);
@@ -24,12 +24,11 @@ test("EnsureGood renews while IsGood and pure inspection leave activity unchange
   resource.EnsureGood();
   assert.equal(resource._lastUsedTime, 100);
   manager.activityTime = 200;
-  resource.IsGood();
   resource.IsPrepared();
   resource.IsLoading();
   manager.GetResourceStatus(resource);
   assert.equal(resource._lastUsedTime, 100);
-  resource.EnsureGood();
+  resource.IsGood();
   assert.equal(resource._lastUsedTime, 200);
 });
 
@@ -52,9 +51,9 @@ test("a purged handle revives on use and successful preparation resets the retry
   manager.PurgeInactive({ maxIdleFrames: 0, maxIdleMilliseconds: 0 });
   assert.equal(manager.GetResourceStatus(resource).purged, true);
   assert.equal(resource.IsGood(), false);
-  assert.equal(manager.GetReloadAttempts(resource), 0, "asking does not revive");
+  assert.equal(manager.GetReloadAttempts(resource), 1, "IsGood renews and revives");
   assert.equal(resource.EnsureGood(), false);
-  assert.equal(manager.GetReloadAttempts(resource), 1, "use revives");
+  assert.equal(manager.GetReloadAttempts(resource), 1, "repeated use does not restart the pending load");
   await manager.Ready(resource);
   assert.equal(manager.GetReloadAttempts(resource), 0);
   assert.equal(manager.Lookup(resource.GetPath()), resource);

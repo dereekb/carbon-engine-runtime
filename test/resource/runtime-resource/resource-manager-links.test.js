@@ -1,0 +1,241 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { BlueAsyncRes, BlueResMan, MotherLode, blue } from "../../../npm/dist/blue/index.js";
+import { RegisterDataLoader } from "../../support/testDataRes.js";
+import "../../support/frameLoop.js";
+
+/** A manager with deterministic milliseconds, without network or loading work. */
+function fixture()
+{
+  let time = 0;
+  const manager = new BlueResMan({ motherLode: new MotherLode({ now: () => time }), autoPurgePolicy: false });
+  manager.leaseSeconds = 1;
+  const resource = new BlueAsyncRes();
+  const calls = [];
+  const owner = {
+    resource,
+    RebuildCachedData(value) { calls.push(["rebuild", value]); },
+    ReleaseCachedData(value) { calls.push(["release", value]); }
+  };
+  return { manager, resource, owner, calls, advance(value) { time = value; manager.activityTime = value; } };
+}
+
+test("manager registration rebuilds prepared resources immediately and remains registered for reload", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  resource._SetPrepared(true);
+  resource._SetGood(true);
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, "resource");
+  assert.deepEqual(calls, [["rebuild", resource]], "Carbon BlueAsyncRes.cpp:275-278 immediate prepared callback; repeated link registration is idempotent");
+  manager._NotifyReleaseCachedData(resource);
+  manager._NotifyRebuildCachedData(resource);
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release", "rebuild"]);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 1);
+  manager.RemoveNotifyTarget(owner, resource);
+  manager._NotifyRebuildCachedData(resource);
+  assert.equal(calls.length, 3);
+  assert.equal(manager.GetNotifyTargetsByResource(resource).length, 0);
+});
+
+test("waiting owners rebuild on completion and notification tolerates setter removal", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  manager.AddNotifyTarget(owner, resource, "resource");
+  assert.equal(calls.length, 0);
+  owner.RebuildCachedData = value =>
+  {
+    calls.push(["rebuild", value]);
+    manager.RemoveNotifyTarget(owner, value);
+    owner.resource = null;
+  };
+  manager._NotifyRebuildCachedData(resource);
+  assert.equal(calls.length, 1);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+});
+
+test("lease renewal is per owner; expiry calls the accessor and preserves a busy peer", () =>
+{
+  const state = fixture();
+  const { manager, resource, owner, calls } = state;
+  let held = resource;
+  let assigned = 0;
+  Object.defineProperty(owner, "resource", {
+    get() { return held; },
+    set(value) { assigned++; manager.RemoveNotifyTarget(owner, held); held = value; }
+  });
+  const peer = { resource, RebuildCachedData() {}, ReleaseCachedData() { throw new Error("renewed peer expired"); } };
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(peer, resource, "resource");
+  state.advance(900);
+  assert.equal(manager._KeepNotifyTargetAlive(peer, resource), true);
+  state.advance(1100);
+  manager.PurgeInactive({ time: 1100 });
+  assert.deepEqual(calls, [["release", resource]]);
+  assert.equal(assigned, 1);
+  assert.equal(owner.resource, null);
+  assert.equal(peer.resource, resource);
+  assert.equal(manager.GetNotifyTargetsByResource(resource).length, 1);
+  assert.equal(manager._KeepNotifyTargetAlive(owner, resource), false);
+});
+
+test("expiry never clears a replacement, including one installed by the release callback", () =>
+{
+  const state = fixture();
+  const { manager, resource, owner, calls } = state;
+  const replacement = new BlueAsyncRes();
+  manager.AddNotifyTarget(owner, resource, "resource");
+  owner.resource = replacement;
+  state.advance(1100);
+  manager.PurgeInactive({ time: 1100 });
+  assert.equal(owner.resource, replacement);
+  assert.equal(calls.length, 0);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+
+  owner.resource = resource;
+  owner.ReleaseCachedData = () => { owner.resource = replacement; };
+  manager.AddNotifyTarget(owner, resource, "resource");
+  state.advance(2200);
+  manager.PurgeInactive({ time: 2200 });
+  assert.equal(owner.resource, replacement);
+});
+
+test("explicit resource eviction clears every owner before data purge and permits re-registration", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(owner.resource, null);
+  assert.deepEqual(calls, [["release", resource]]);
+  owner.resource = resource;
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager._NotifyRebuildCachedData(resource);
+  assert.deepEqual(calls.map(call => call[0]), ["release", "rebuild"]);
+  manager.Clear();
+  assert.equal(owner.resource, null);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+});
+
+test("one owner can hold two resources and diagnostic snapshots cannot mutate live links", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  const other = new BlueAsyncRes();
+  owner.other = other;
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, other, "other");
+  const snapshot = manager.GetNotifyTargetsByOwner(owner);
+  snapshot[0].propertyName = "other";
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(owner.resource, null);
+  assert.equal(owner.other, other);
+  assert.deepEqual(calls, [["release", resource]]);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 1);
+});
+
+test("two owner properties sharing one resource release once and both clear despite setter removal", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  let first = resource;
+  Object.defineProperty(owner, "resource", {
+    get() { return first; },
+    set(value) { manager.RemoveNotifyTarget(owner, first); first = value; }
+  });
+  owner.other = resource;
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, resource, "other");
+  manager._ExpireResourceNotifyTargets(resource);
+  assert.equal(owner.resource, null);
+  assert.equal(owner.other, null);
+  assert.deepEqual(calls, [["release", resource]]);
+  assert.equal(manager.GetNotifyTargetsByResource(resource).length, 0);
+});
+
+/** Real asynchronous load queues with synthetic data and a restored global manager. */
+function loadingFixture(t)
+{
+  const previous = blue.resMan;
+  let input = "{}";
+  const manager = new BlueResMan({ source: { Read: () => input }, autoPurgePolicy: false });
+  blue.resMan = manager;
+  RegisterDataLoader(manager, "json", value => JSON.parse(value));
+  t.after(() => { try { manager.Clear(); } finally { blue.resMan = previous; } });
+  const resource = manager.GetResource("res:/owner-links.json");
+  const calls = [];
+  const owner = {
+    resource,
+    RebuildCachedData(value) { calls.push(["rebuild", value]); },
+    ReleaseCachedData(value) { calls.push(["release", value]); }
+  };
+  manager.AddNotifyTarget(owner, resource, "resource");
+  return { manager, resource, owner, calls, setInput(value) { input = value; } };
+}
+
+test("native loading and explicit reload notify registered owners without a readiness poll", async t =>
+{
+  const { manager, resource, owner, calls } = loadingFixture(t);
+  await manager.Ready(resource);
+  assert.deepEqual(calls, [["rebuild", resource]]);
+  resource.Reload();
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release"]);
+  await manager.Ready(resource);
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release", "rebuild"]);
+  assert.equal(owner.resource, resource);
+  assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 1);
+});
+
+test("failed reload releases cached data and retains the link for a later successful reload", async t =>
+{
+  const { manager, resource, owner, calls, setInput } = loadingFixture(t);
+  await manager.Ready(resource);
+  setInput("invalid JSON");
+  resource.Reload();
+  await assert.rejects(manager.Ready(resource));
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release", "release"]);
+  assert.equal(owner.resource, resource);
+  setInput("{}");
+  resource.Reload();
+  await manager.Ready(resource);
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release", "release", "release", "rebuild"]);
+});
+
+test("manager resource purge clears live owner slots before shutting down the resource", async t =>
+{
+  const { manager, resource, owner, calls } = loadingFixture(t);
+  await manager.Ready(resource);
+  manager.leaseSeconds = 1000000;
+  const shutdown = resource._OnShutdown;
+  let releasedBeforeShutdown = false;
+  resource._OnShutdown = function(options)
+  {
+    releasedBeforeShutdown = owner.resource === null && manager.GetNotifyTargetsByResource(this).length === 0;
+    return shutdown.call(this, options);
+  };
+  manager.PurgeInactive({ maxIdleFrames: 0, maxIdleMilliseconds: 0 });
+  assert.equal(releasedBeforeShutdown, true);
+  assert.equal(owner.resource, null);
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release"]);
+  assert.equal(manager.GetResourceStatus(resource).purged, true);
+});
+
+test("IsGood renews each owner dependency even when an earlier dependency is bad", t =>
+{
+  const previous = blue.resMan;
+  const { manager, resource, owner, advance } = fixture();
+  blue.resMan = manager;
+  t.after(() => { try { manager.Clear(); } finally { blue.resMan = previous; } });
+  const other = new BlueAsyncRes();
+  owner.other = other;
+  other._SetGood(true);
+  manager.AddNotifyTarget(owner, resource, "resource");
+  manager.AddNotifyTarget(owner, other, "other");
+  advance(900);
+  let good = true;
+  if (!resource.IsGood(owner)) good = false;
+  if (!other.IsGood(owner)) good = false;
+  assert.equal(good, false);
+  assert.deepEqual(manager.GetNotifyTargetsByOwner(owner).map(link => link.lastUsed), [900, 900]);
+  advance(1100);
+  manager.PurgeInactive({ time: 1100 });
+  assert.equal(owner.resource, resource);
+  assert.equal(owner.other, other);
+});
