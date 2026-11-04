@@ -6,6 +6,11 @@ import { Tr2Blitter } from "../../../trinity/core/Tr2Blitter.js";
 import { Tr2Effect } from "../../../trinity/shader/Tr2Effect.js";
 import { Tr2RenderTarget } from "../../../trinity/core/device/Tr2RenderTarget.js";
 import { Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
+import { Tr2TextureAL } from "#trinityal";
+import { Tr2HostBitmap } from "../../../trinity/core/Tr2HostBitmap.js";
+import { TriTextureRes } from "../../../trinity/resources/texture/TriTextureRes.js";
+import { CjsTexturePipelineStepPublishSrgb } from "../../../trinity/texturePipeline/CjsTexturePipelineStepPublishSrgb.js";
+import { Tr2TexturePipeline } from "../../../trinity/texturePipeline/Tr2TexturePipeline.js";
 import { CjsPaperDollCompositionTarget } from "./CjsPaperDollCompositionTarget.js";
 import { CjsPaperDollMaterialLayer } from "./CjsPaperDollMaterialLayer.js";
 
@@ -60,6 +65,15 @@ export class CjsPaperDollCompositor
      * @type {Set<object>}
      */
     _mipped = new Set();
+
+    /** Composed target revisions, changed only after a successful draw. @type {Map<object, number>} */
+    _targetRevisions = new Map();
+
+    /** Completed material publications, owned until replacement or destruction. @type {Map<object, object>} */
+    _publications = new Map();
+
+    /** Whether this compositor has released its targets. @type {boolean} */
+    _disposed = false;
 
     /**
      * @param {object} context The main render context.
@@ -169,6 +183,7 @@ export class CjsPaperDollCompositor
             mips ? PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM : PixelFormat.PIXEL_FORMAT_B8G8R8A8_UNORM);
         if (!target.IsValid()) throw new Error("Composition target creation failed");
         this.targets.push(target);
+        this._targetRevisions.set(target, 0);
         if (mips) this._mipped.add(target);
         return target;
     }
@@ -224,6 +239,10 @@ export class CjsPaperDollCompositor
      */
     Destruct()
     {
+        this._disposed = true;
+        for (const record of this._publications.values()) record.resource.Shutdown();
+        this._publications.clear();
+        this._targetRevisions.clear();
         for (const target of this.targets.splice(0)) target.Dispose();
         for (const value of this.effects.splice(0)) value.Destruct();
         this._mipped.clear();
@@ -274,6 +293,7 @@ export class CjsPaperDollCompositor
             esm.SetViewport(CjsPaperDollCompositor.viewport(width, height, region));
             esm.ApplyStandardStates(writeRGBA ? RenderingMode.RM_OPAQUE : RenderingMode.RM_ALPHA_ADDITIVE);
             if (!this.blitter.Draw__Effect(context, value)) throw new Error("Composition draw failed");
+            this._targetRevisions.set(target, (this._targetRevisions.get(target) || 0) + 1);
             esm.ApplyStandardStates(RenderingMode.RM_OPAQUE);
         }
         finally
@@ -282,6 +302,120 @@ export class CjsPaperDollCompositor
             Tr2Renderer.EndRenderContext();
             Tr2Renderer.EndFrame();
         }
+    }
+
+    /**
+     * Prepares material-only sRGB resources for this compositor's diffuse and specular targets.
+     * Not Carbon: WebGL2 has no texture views. The pipeline preserves encoded RGB, alpha and all existing mips;
+     * working targets remain UNORM so later composition retains its authored blend behaviour.
+     * Requests are captured before the first await. The caller keeps its last completed bindings until all
+     * compositors finish, applies the returned bindings, then calls complete(true). On failure or closure it
+     * calls complete(false). Completion releases the superseded or discarded resources exactly once.
+     *
+     * @param {object[]} effects The material consumers, with their selected shader reflection ready.
+     * @returns {Promise<{bindings: Map<object, TriTextureRes>, complete: function(boolean): void}>} Prepared bindings
+     *   and their ownership completion. No material parameter is changed here.
+     */
+    async PublishMaterials(effects)
+    {
+        this._build.CheckActive();
+        if (this._disposed) throw new Error("Compositor closed");
+        const requests = new Map();
+        const bindings = new Map();
+        const names = [ "DiffuseMap", "SpecularMap" ];
+        const created = new Map();
+        try
+        {
+            for (let i = 0; i < effects.length; ++i)
+            {
+                const effect = effects[i];
+                const shader = effect.effectResource?.GetShader(effect.options);
+                for (let j = 0; j < names.length; ++j)
+                {
+                    const name = names[j];
+                    const parameter = effect.GetResourceByName(name);
+                    const resource = parameter?.GetResource();
+                    let target = resource?.wrappedRenderTarget;
+                    if (!target)
+                    {
+                        for (const [ candidate, record ] of this._publications)
+                            if (record.resource === resource) { target = candidate; break; }
+                    }
+                    if (!this._targetRevisions.has(target)) continue;
+                    if (!shader) throw new Error("Material reflection is not ready for " + name);
+                    if (!shader.GetResource(name)?.isSRGB) continue;
+                    let request = requests.get(target);
+                    if (!request)
+                    {
+                        const revision = this._targetRevisions.get(target);
+                        const previous = this._publications.get(target);
+                        request = { revision, previous, parameters: [], source: null };
+                        if (!previous || previous.revision !== revision)
+                            request.source = new Tr2TextureAL({ copy: target.GetRenderTarget() });
+                        requests.set(target, request);
+                    }
+                    request.parameters.push(parameter);
+                }
+            }
+
+            const pipeline = new Tr2TexturePipeline();
+            pipeline.steps.push(new CjsTexturePipelineStepPublishSrgb());
+            for (const [ target, request ] of requests)
+            {
+                let resource = request.previous?.resource;
+                if (request.source)
+                {
+                    this._build.CheckActive();
+                    if (this._disposed) throw new Error("Compositor closed");
+                    const bitmap = new Tr2HostBitmap();
+                    try
+                    {
+                        if (!await pipeline.Execute(bitmap, new Map(), undefined,
+                            { source: request.source, renderContext: this._context }))
+                            throw new Error("Composition sRGB publication failed");
+                        this._build.CheckActive();
+                        if (this._disposed || this._targetRevisions.get(target) !== request.revision)
+                            throw new Error("Composition changed during sRGB publication");
+                        resource = new TriTextureRes();
+                        if (!resource.CreateFromHostBitmap(bitmap)) throw new Error("Composition sRGB resource creation failed");
+                        created.set(target, { revision: request.revision, resource });
+                    }
+                    catch (error)
+                    {
+                        bitmap.Destroy();
+                        throw error;
+                    }
+                }
+                for (const parameter of request.parameters) bindings.set(parameter, resource);
+            }
+        }
+        catch (error)
+        {
+            for (const record of created.values()) record.resource.Shutdown();
+            throw error;
+        }
+        finally
+        {
+            for (const request of requests.values()) request.source?.Destroy();
+        }
+        let completed = false;
+        return {
+            bindings,
+            complete: accepted =>
+            {
+                if (completed) return;
+                completed = true;
+                for (const [ target, record ] of created)
+                {
+                    if (accepted && !this._disposed)
+                    {
+                        this._publications.get(target)?.resource.Shutdown();
+                        this._publications.set(target, record);
+                    }
+                    else record.resource.Shutdown();
+                }
+            }
+        };
     }
 
     /**
