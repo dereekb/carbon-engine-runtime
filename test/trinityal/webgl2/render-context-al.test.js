@@ -519,3 +519,24 @@ test("wireframe cannot be rasterized, so the draw is refused", () =>
 
     assert.equal(context.DrawPrimitive(0, 1), ALResult.E_FAIL);
 });
+
+test("raw depth filtering switches off again for color and uploads only changed state", () =>
+{
+    const { gl, calls, context } = device();
+    const depth = texture(context, 8, 8, Tr2GpuUsage.SHADER_RESOURCE | Tr2GpuUsage.DEPTH_STENCIL, PixelFormat.PIXEL_FORMAT_D32_FLOAT);
+    const color = texture(context, 8, 8, Tr2GpuUsage.SHADER_RESOURCE | Tr2GpuUsage.RENDER_TARGET);
+    const point = {}, authored = {};
+    const state = { location: { name: "cjsRawDepthLinear_s0" }, current: false };
+    const unit = { unit: 0, resource: depth, colorSpace: 0, isBuffer: false, samplerConflict: false,
+        rawDepthLinearState: state, sampler: { GetRawDepthLinearResource: () => point, GetGpuResource: () => authored } };
+    context._resourceSet = { _resourceSet: { implementation: { IsValid: () => true, GetUnits: () => [unit] } } };
+    context._ApplyTextureUnits();
+    context._ApplyTextureUnits();
+    unit.resource = color;
+    context._ApplyTextureUnits();
+    context._ApplyTextureUnits();
+
+    assert.deepEqual(calledWith(calls, "uniform1i").filter(call => call[0] === "cjsRawDepthLinear_s0"),
+        [["cjsRawDepthLinear_s0", 1], ["cjsRawDepthLinear_s0", 0]]);
+    assert.deepEqual(calledWith(calls, "bindSampler").slice(-4), [[0, point], [0, point], [0, authored], [0, authored]]);
+});

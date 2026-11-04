@@ -126,3 +126,36 @@ test("an override's plain-float spelling reads the same fields, and no descripti
 
     assert.equal(new Tr2SamplerStateALWebgl2().Create(null, FakeRenderContext(gl)), ALResult.E_INVALIDARG);
 });
+
+test("raw depth linear helper owns a cached point-fetch sampler without changing authored state", () =>
+{
+    const { gl, calls, sampler } = sampled({ minFilter: TextureFilter.TF_LINEAR,
+        magFilter: TextureFilter.TF_POINT, mipFilter: TextureFilter.TF_POINT,
+        addressU: TextureAddressMode.TA_CLAMP, addressV: TextureAddressMode.TA_CLAMP });
+    const authored = sampler.GetGpuResource();
+    const raw = sampler.GetRawDepthLinearResource();
+    assert.ok(raw);
+    assert.notEqual(raw, authored);
+    assert.equal(sampler.GetRawDepthLinearResource(), raw);
+    assert.equal(sampler.GetGpuResource(), authored);
+    assert.equal(authored.parameters.get(gl.TEXTURE_MIN_FILTER), gl.LINEAR_MIPMAP_NEAREST);
+    assert.equal(raw.parameters.get(gl.TEXTURE_MIN_FILTER), gl.NEAREST);
+    assert.equal(raw.parameters.get(gl.TEXTURE_MAG_FILTER), gl.NEAREST);
+    sampler.Destroy();
+    assert.deepEqual(calls.filter(call => call[0] === "deleteSampler").map(call => call[1]), [authored, raw]);
+    assert.equal(sampler.GetRawDepthLinearResource(), null);
+});
+
+test("raw depth helper refuses sampling contracts it does not emulate", () =>
+{
+    const supported = { minFilter: TextureFilter.TF_LINEAR, magFilter: TextureFilter.TF_POINT,
+        mipFilter: TextureFilter.TF_POINT, addressU: TextureAddressMode.TA_CLAMP, addressV: TextureAddressMode.TA_CLAMP };
+    for (const change of [{ isComparisonFilter: true }, { addressU: TextureAddressMode.TA_WRAP },
+        { magFilter: TextureFilter.TF_LINEAR }, { mipFilter: TextureFilter.TF_LINEAR },
+        { minLOD: 1 }, { maxLOD: -1 }, { mipLODBias: 1 }])
+    {
+        const { sampler, calls } = sampled({ ...supported, ...change });
+        assert.equal(sampler.GetRawDepthLinearResource(), null);
+        assert.equal(calls.filter(call => call[0] === "createSampler").length, 1);
+    }
+});

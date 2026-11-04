@@ -254,6 +254,28 @@ export class DxbcGlslEmitter
    */
     _defineHelpers()
     {
+        // GLES forbids filtered raw-depth sampling. The backend enables this
+        // only for one mip, clamp addressing, linear minification and point
+        // magnification; the original DXBC sample remains the other branch.
+        this.helpers.define("cjsRawDepthLinear", {
+            source: [
+                "vec4 cjsRawDepthLinear(highp sampler2D tex, vec2 uv) {",
+                "    ivec2 size = textureSize(tex, 0);",
+                "    vec2 p = uv * vec2(size);",
+                "    vec2 dx = dFdx(p), dy = dFdy(p);",
+                "    if (max(dot(dx, dx), dot(dy, dy)) <= 1.0) return texelFetch(tex, clamp(ivec2(floor(p)), ivec2(0), size - 1), 0);",
+                "    vec2 q = p - 0.5;",
+                "    ivec2 i = ivec2(floor(q));",
+                "    vec2 f = fract(q);",
+                "    vec4 a = texelFetch(tex, clamp(i, ivec2(0), size - 1), 0);",
+                "    vec4 b = texelFetch(tex, clamp(i + ivec2(1, 0), ivec2(0), size - 1), 0);",
+                "    vec4 c = texelFetch(tex, clamp(i + ivec2(0, 1), ivec2(0), size - 1), 0);",
+                "    vec4 d = texelFetch(tex, clamp(i + ivec2(1, 1), ivec2(0), size - 1), 0);",
+                "    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);",
+                "}"
+            ].join("\n")
+        });
+
         // Texture address modes WebGL2 cannot express, emulated in the shader.
         //
         // WebGL2 does REPEAT, MIRRORED_REPEAT and CLAMP_TO_EDGE natively. It has
@@ -2981,6 +3003,15 @@ export class DxbcGlslEmitter
         else
         {
             call = `texture(${texName}, ${coord})`;
+        }
+        if (dimension === 3 && arrayLayer === null && state.stageName === "pixel"
+            && gradOperandIndexes === null && lodOperandIndex === null && biasOperandIndex === null)
+        {
+            const helper = this.helpers.require("cjsRawDepthLinear");
+            const uniform = `cjsRawDepthLinear_${texName}`;
+            const declaration = `uniform bool ${uniform};`;
+            if (!state.declarationLines.includes(declaration)) state.declarationLines.push(declaration);
+            call = `(${uniform} ? ${helper}(${texName}, ${coord}) : ${call})`;
         }
         call = this._applyEmulatedAddressing(state, instruction, call, coord, coordMask);
 

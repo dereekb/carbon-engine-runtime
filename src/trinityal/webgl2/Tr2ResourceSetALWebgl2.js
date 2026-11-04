@@ -315,7 +315,8 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
         colorSpace: slot?.colorSpace ?? 0,
         isBuffer: slot?.isBuffer ?? false,
         sampler,
-        samplerConflict: texture.samplerConflict
+        samplerConflict: texture.samplerConflict,
+        ...(texture.rawDepthLinearState ? { rawDepthLinearState: texture.rawDepthLinearState } : {})
       });
     }
     return units;

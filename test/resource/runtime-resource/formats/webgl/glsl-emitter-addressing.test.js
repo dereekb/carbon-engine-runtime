@@ -107,8 +107,8 @@ test("addressing is keyed by RESOURCE register, not sampler register", () =>
         emulatedAddressing: addressing([ { registerIndex: 6 } ])
     });
 
-    assert.match(result.source, /cjsAddressBorder\(texture\(s6,/u);
-    assert.match(result.source, /^\s*\S+ = texture\(s5,/mu);
+    assert.match(result.source, /cjsAddressBorder\(\(cjsRawDepthLinear_s6 \? [^;]* : texture\(s6,/u);
+    assert.match(result.source, /^\s*\S+ = \(cjsRawDepthLinear_s5 \? [^;]* : texture\(s5,/mu);
     assert.doesNotMatch(result.source, /cjsAddress\w+\(texture\(s5,/u);
 });
 
@@ -264,6 +264,6 @@ test("a texture whose mode arrives at bind time is gated even when the container
     });
 
     // No sampler in this fixture declares an emulated mode at all.
-    assert.match(result.source, /cjsAddressBorder\(texture\(s6,/u);
+    assert.match(result.source, /cjsAddressBorder\(\(cjsRawDepthLinear_s6 \? [^;]* : texture\(s6,/u);
     assert.match(result.source, /uniform vec4 cb8\[/u);
 });

@@ -1732,7 +1732,11 @@ export class Tr2RenderContextALWebgl2
     }
   }
 
-  /** The resource set's units: each unit's texture and sampler. */
+  /**
+   * Binds the resource set's texture/sampler pairs.
+   * @adapted Single-mip raw depth with the supported authored filter uses
+   *   point fetches plus shader filtering; GLES forbids native linear depth sampling.
+   */
   _ApplyTextureUnits()
   {
     const gl = this._gl;
@@ -1753,7 +1757,24 @@ export class Tr2RenderContextALWebgl2
         ? packed.index ? packed.index._GetPackedShaderResourceTexture(packed) : null
         : resource && resource.IsValid() ? resource.TrinityALImpl_GetObject().GetShaderResourceTexture(unit.colorSpace) : null;
       gl.bindTexture(unit.isBuffer || !resource || !resource.IsValid() ? gl.TEXTURE_2D : resource.TrinityALImpl_GetObject().GetTarget(), texture);
-      gl.bindSampler(unit.unit, unit.sampler ? unit.sampler.GetGpuResource() : null);
+      const rawDepthState = unit.rawDepthLinearState;
+      let rawDepthSampler = null;
+      if (rawDepthState && !unit.samplerConflict && unit.sampler
+        && !unit.isBuffer && resource && resource.IsValid())
+      {
+        const impl = resource.TrinityALImpl_GetObject();
+        if ((impl.GetGpuUsage() & Tr2GpuUsage.DEPTH_STENCIL) !== 0 && impl.GetMipCount() === 1)
+        {
+          rawDepthSampler = unit.sampler.GetRawDepthLinearResource();
+        }
+      }
+      const rawDepthEnabled = rawDepthSampler !== null;
+      if (rawDepthState && rawDepthState.current !== rawDepthEnabled)
+      {
+        gl.uniform1i(rawDepthState.location, rawDepthEnabled ? 1 : 0);
+        rawDepthState.current = rawDepthEnabled;
+      }
+      gl.bindSampler(unit.unit, rawDepthSampler ?? (unit.sampler ? unit.sampler.GetGpuResource() : null));
     }
   }
 

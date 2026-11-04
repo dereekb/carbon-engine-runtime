@@ -369,6 +369,8 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
           samplerConflict: paired.length > 1,
           format: binding.format ?? null
         };
+        const rawDepthLinearLocation = gl.getUniformLocation(program, `cjsRawDepthLinear_${binding.name}`);
+        if (rawDepthLinearLocation) texture.rawDepthLinearState = { location: rawDepthLinearLocation, current: false };
         if (binding.localLightRole)
         {
           texture.localLightRole = binding.localLightRole;

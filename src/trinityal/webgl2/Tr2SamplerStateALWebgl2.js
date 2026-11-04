@@ -91,6 +91,9 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
   /** m_samplerState: the `WebGLSampler`, or null. */
   _samplerState = null;
 
+  /** Cached point sampler for shader-filtered raw depth; allocated on first use. */
+  _rawDepthSampler = null;
+
   /** m_name */
   _name = "";
 
@@ -180,6 +183,9 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
   {
     if (this._gl && this._samplerState) this._gl.deleteSampler(this._samplerState);
 
+    if (this._gl && this._rawDepthSampler) this._gl.deleteSampler(this._rawDepthSampler);
+
+    this._rawDepthSampler = null;
     this._samplerState = null;
     this._gl = null;
     this._description = null;
@@ -263,6 +269,39 @@ export class Tr2SamplerStateALWebgl2 extends Tr2DeviceResourceAL
   GetGpuResource()
   {
     return this._samplerState;
+  }
+
+  /**
+   * Supplies point fetches for shader-emulated linear minification of raw depth.
+   * @adapted GLES 3.0 section 3.8.13 forbids filtering non-comparison depth.
+   *   Only this exact single-mip shader helper's sampler contract is accepted;
+   *   authored color, comparison and other filtering states remain unchanged.
+   * @returns {WebGLSampler|null} The cached sampler, or null for unsupported state.
+   */
+  GetRawDepthLinearResource()
+  {
+    const desc = this._description;
+    if (!this._samplerState || desc.isComparisonFilter
+      || desc.minFilter !== TextureFilter.TF_LINEAR || desc.magFilter !== TextureFilter.TF_POINT
+      || desc.mipFilter !== TextureFilter.TF_POINT || desc.mipLODBias !== 0
+      || desc.addressU !== TextureAddressMode.TA_CLAMP || desc.addressV !== TextureAddressMode.TA_CLAMP
+      || desc.minLOD > 0 || desc.maxLOD < 0) return null;
+
+    if (!this._rawDepthSampler)
+    {
+      const gl = this._gl;
+      const sampler = gl.createSampler();
+      if (!sampler) return null;
+
+      gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.samplerParameteri(sampler, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.samplerParameteri(sampler, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+      this._rawDepthSampler = sampler;
+    }
+
+    return this._rawDepthSampler;
   }
 
   /**
