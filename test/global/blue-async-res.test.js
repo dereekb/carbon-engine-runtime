@@ -10,6 +10,10 @@ import "../support/frameLoop.js";
 class QueueResMan extends BlueResMan
 {
   queued = [];
+  rebuilds = [];
+  releases = [];
+  _NotifyReleaseCachedData(resource) { this.releases.push(resource); super._NotifyReleaseCachedData(resource); }
+  _NotifyRebuildCachedData(resource) { this.rebuilds.push(resource); super._NotifyRebuildCachedData(resource); }
   cancelled = [];
   reserved = [];
   released = [];
@@ -54,7 +58,6 @@ class TestRes extends BlueAsyncRes
 
 class Target extends IBlueAsyncResNotifyTarget
 {
-  _dependencyRevisions = new Map();
   calls = [];
   RebuildCachedData(resource) { this.calls.push([ "rebuild", resource ]); }
   ReleaseCachedData(resource) { this.calls.push([ "release", resource ]); }
@@ -118,6 +121,8 @@ test("a successful load opens the file without its query, prepares and notifies"
   const { resMan, paths } = setup(t);
   paths.files.set("res:/a.bin", { form: "bytes", data: new Uint8Array(12) });
   const res = new TestRes(), target = new Target();
+  target.resource = res;
+  resMan.AddNotifyTarget(target, res, target, "resource");
   res.Initialize("res:/a.bin?q=1", "");
 
   await resMan.Run(resMan.queued[0]);
@@ -133,10 +138,8 @@ test("a successful load opens the file without its query, prepares and notifies"
   assert.equal(res.IsGood(), true);
   assert.equal(res.IsLoading(), false);
   assert.equal(res._loadCbId, 0);
-  assert.equal(res._revision, 1, "a finished prepare is one change");
-  assert.deepEqual(target.calls, [], "nothing is pushed to owners");
-  assert.equal(BlueAsyncRes.ensureDependency(res, target, "data"), true);
-  assert.deepEqual(target.calls, [ [ "rebuild", res ] ], "the owner pulls it at use");
+  assert.equal(resMan.rebuilds.filter(value => value === res).length, 1);
+  assert.deepEqual(target.calls, [ [ "rebuild", res ] ], "completion reaches the registered owner without polling");
 });
 
 test("a data stream loads through the global manager without a new memory budget", async t =>
@@ -154,7 +157,7 @@ test("a data stream loads through the global manager without a new memory budget
   assert.equal(res.IsLoading(), false);
   assert.equal(res._dataStream, null);
   assert.equal(res._reservedMemory, 0);
-  assert.equal(res._revision, 1);
+  assert.equal(res.IsPrepared(), true);
   for (const method of [ "ReserveBackgroundLoadMemory", "ReleaseBackgroundLoadMemory" ])
     assert.equal(CjsSchema.getMethod(BlueResMan, method).impl.status, "noop");
 });
@@ -177,10 +180,10 @@ test("prepare is budgeted on the logical main queue; DONTNOTIFY is not a change"
   assert.equal(res.IsPrepared(), true);
   assert.equal(res.IsGood(), true);
   assert.equal(res._prepareCbId, 0);
-  assert.equal(res._revision, 0, "Carbon's m_notify: owners are not told");
+  assert.equal(resMan.rebuilds.filter(value => value === res).length, 0);
 });
 
-test("a missing file queues the failure notice, which finishes as a change", async t =>
+test("a missing file queues the failure notice and releases cached data", async t =>
 {
   const { resMan } = setup(t);
   const res = new TestRes();
@@ -195,7 +198,8 @@ test("a missing file queues the failure notice, which finishes as a change", asy
   assert.equal(res.IsLoading(), false);
   assert.equal(res._loadSucceeded, false);
   assert.equal(res.cleanups, 1);
-  assert.equal(res._revision, 1, "a failed prepare is a change too");
+  assert.equal(resMan.rebuilds.filter(value => value === res).length, 0);
+  assert.equal(resMan.releases.filter(value => value === res).length, 1);
 });
 
 test("Reload cancels and queues a fresh load; starting it is not a change", t =>
@@ -208,16 +212,16 @@ test("Reload cancels and queues a fresh load; starting it is not a change", t =>
   res.Reload();
 
   assert.deepEqual(resMan.cancelled, [ { queue: BlueResManQueue.BRMQ_BACKGROUND, id: firstId } ]);
-  assert.equal(res._revision, 0);
+  assert.equal(resMan.rebuilds.length, 0);
   assert.equal(resMan.queued.length, 2);
   assert.equal(res.GetExt(), "ddsraw");
   assert.equal(res._loadCbId, resMan.queued[1].id);
 });
 
-test("Carbon's AddNotifyTarget and RemoveNotifyTarget are kept, unused: owners pull at use", t =>
+test("Carbon's AddNotifyTarget and RemoveNotifyTarget are kept, unused: owners register with resMan", t =>
 {
   setup(t);
   const res = new TestRes(), target = new Target();
-  assert.throws(() => res.AddNotifyTarget(target), /ensureDependency/u);
-  assert.throws(() => res.RemoveNotifyTarget(target), /ensureDependency/u);
+  assert.throws(() => res.AddNotifyTarget(target), /resMan/u);
+  assert.throws(() => res.RemoveNotifyTarget(target), /resMan/u);
 });

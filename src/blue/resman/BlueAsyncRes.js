@@ -16,8 +16,8 @@ import { IBlueResource } from "../interfaces/IBlueResource.js";
  *
  * Subclasses provide `_DoLoad` and `_DoPrepare`. JavaScript is single-threaded,
  * so Carbon's `CcpAtomic<uint32_t>` flags are plain booleans. Carbon's
- * notify-target block is not ported: owners pull a resource's changes at use
- * (`EnsureGood`, `_revision`, `ensureDependency`).
+ * notify targets live on resMan, which dispatches completion and release
+ * callbacks through expiring owner links.
  *
  * @abstract
  */
@@ -123,17 +123,6 @@ export class BlueAsyncRes
   _revivalAttempts = 0;
 
   /**
-   * How many times this resource has finished preparing, good or failed: the
-   * change owners compare against at use (`ensureDependency`). Not bumped when
-   * a reload starts or a purge drops data.
-   *
-   * @cjs Carbon tells owners of a change by calling them at once; ours lets
-   *   owners notice it at their next use, which needs something to compare.
-   * @type {number}
-   */
-  _revision = 0;
-
-  /**
    * `isGood` (MAP_PROPERTY_READONLY, _Blue.cpp:15-23).
    *
    * @implemented
@@ -216,16 +205,13 @@ export class BlueAsyncRes
   /**
    * Carbon: BlueAsyncRes::AddNotifyTarget (blue/src/BlueAsyncRes.cpp:261-290)
    *
-   * @notUsed Owners pull a dependency's changes at their next use
-   *   (`BlueAsyncRes.ensureDependency`) instead of registering here. Carbon's
-   *   destructors unregister their targets; JavaScript has none, so a
-   *   registration kept its owner alive. Calling it is an error.
+   * @notUsed Owner links belong to resMan, which expires inactive registrations.
    * @param {import("../interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
    * @throws {Error} Always.
    */
   AddNotifyTarget(_target)
   {
-    throw new Error("BlueAsyncRes.AddNotifyTarget is not used: owners call BlueAsyncRes.ensureDependency at use.");
+    throw new Error("BlueAsyncRes.AddNotifyTarget is not used: use blue.resMan owner links.");
   }
 
   /**
@@ -238,7 +224,7 @@ export class BlueAsyncRes
    */
   RemoveNotifyTarget(_target)
   {
-    throw new Error("BlueAsyncRes.RemoveNotifyTarget is not used: owners call BlueAsyncRes.ensureDependency at use.");
+    throw new Error("BlueAsyncRes.RemoveNotifyTarget is not used: use blue.resMan owner links.");
   }
 
   /**
@@ -343,65 +329,6 @@ export class BlueAsyncRes
   EnsureGood()
   {
     return this.IsGood();
-  }
-
-  /**
-   * Renews `dependency` for `owner`'s use and brings the owner's cached data up
-   * to date with it: Carbon's `RebuildCachedData(dependency)` when the
-   * dependency is good and its revision differs from the one the owner built
-   * from, and `ReleaseCachedData(dependency)` once when a dependency the owner
-   * had built from is no longer good (IBlueAsyncResNotifyTarget,
-   * BlueAsyncRes.h:26-27). The owner records what it built from in its own
-   * `_dependencyRevisions` Map, one entry per slot. A slot bound to another
-   * resource starts again: the new one is rebuilt from when good, and nothing
-   * is released for the old one (the owner's setter owns that, as Carbon's do).
-   * Call it at draw-readiness sites, for every dependency, without
-   * short-circuiting, so every dependency is renewed.
-   *
-   * @cjs Carbon pushes these calls from the resource to persistent notify
-   *   targets, which its destructors unregister; JavaScript has no destructors,
-   *   so the owner pulls them at its next use and nothing holds the owner.
-   * @implemented
-   * @param {BlueAsyncRes|null} dependency The resource in the slot, or null.
-   * @param {object} owner The owner: Carbon's two methods and a `_dependencyRevisions` Map.
-   * @param {string} slotKey Which of the owner's slots this is (`"geometry"`, `"lowResGeometry"`).
-   * @returns {boolean} The dependency's `EnsureGood()`; false for an empty slot.
-   * @throws {TypeError} When the owner has no `_dependencyRevisions` Map.
-   */
-  static ensureDependency(dependency, owner, slotKey)
-  {
-    const revisions = owner._dependencyRevisions;
-    if (!(revisions instanceof Map)) throw new TypeError(`${CjsSchema.getClassName(owner.constructor)} needs a _dependencyRevisions Map to track its dependencies.`);
-    let entry = revisions.get(slotKey);
-    if (!dependency)
-    {
-      revisions.delete(slotKey);
-      return false;
-    }
-    if (entry && entry.resource !== dependency)
-    {
-      revisions.delete(slotKey);
-      entry = undefined;
-    }
-    const good = dependency.EnsureGood();
-    // The slot is recorded before the owner is called: a rebuild that asks for
-    // the same dependency again (Tr2Mesh's morph targets read its geometry)
-    // then finds it current instead of rebuilding without end.
-    if (good)
-    {
-      if (!entry || !entry.built || entry.revision !== dependency._revision)
-      {
-        revisions.set(slotKey, { resource: dependency, revision: dependency._revision, built: true });
-        owner.RebuildCachedData(dependency);
-      }
-    }
-    else if (entry && entry.built)
-    {
-      entry.built = false;
-      entry.revision = dependency._revision;
-      owner.ReleaseCachedData(dependency);
-    }
-    return good;
   }
 
   /**
@@ -668,11 +595,9 @@ export class BlueAsyncRes
    * Carbon: BlueAsyncRes::NotifyRebuildCachedData (blue/src/BlueAsyncRes.cpp:354-360)
    *
    * @adapted resMan owns expiring links instead of a per-resource target list.
-   *   Revision tracking remains until the remaining pull-based owners migrate.
    */
   _NotifyRebuildCachedData()
   {
-    this._revision++;
     blue.resMan._NotifyRebuildCachedData(this);
   }
 

@@ -72,8 +72,8 @@ native callback's early return. `EveTrailsSet`, `EveTurretSet` and
 `Tr2GrannyPrimitiveSet` also register geometry properties, renew on use and
 reacquire expired path-owned resources unless destroyed. Granny primitive
 rebinding retains cached geometry until replacement completion; release callbacks
-clear it. No production owner calls `BlueAsyncRes.ensureDependency` now; its
-obsolete helper and revision machinery remain pending removal. Resource-local
+clear it. The obsolete `ensureDependency` helper and resource/atlas revision
+counters have been removed; manager notifications drive owner updates. Resource-local
 `AddNotifyTarget` and `RemoveNotifyTarget` are retained temporarily and throw.
 
 The internal `CjsLoadingObject` retains decoded plain data or a cached builder

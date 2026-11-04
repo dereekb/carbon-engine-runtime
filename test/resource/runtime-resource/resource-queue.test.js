@@ -333,7 +333,6 @@ test("Delete during an active native reader cancels its late completion", async 
   assert.equal(resource.IsPrepared(), false);
   assert.equal(resMan.GetResourceStatus(resource).error.code, "CJS_RESOURCE_LOAD_CANCELLED");
   assert.equal(resource.value, null);
-  assert.equal(resource._revision, 0, "a cancelled prepare is not a change");
   assert.equal(resMan.GetPendingPrepares(), 0);
 });
 
