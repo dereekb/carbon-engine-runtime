@@ -92,6 +92,11 @@ function stageBlockFor(shader)
     {
         block.stageInputs = shader.stageInputs;
     }
+    // An empty pixel output list is meaningful: a depth-only pass writes no colour.
+    if (Array.isArray(shader.stageOutputs))
+    {
+        block.stageOutputs = shader.stageOutputs;
+    }
     if (shader.computeFragment)
     {
         block.computeFragment = shader.computeFragment;

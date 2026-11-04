@@ -179,6 +179,19 @@ export function FakeWebgl2()
         linkProgram(program) { calls.push([ "linkProgram", program ]); },
         getProgramParameter(program) { return !program.shaders.some(shader => shader.source.includes("#nolink")); },
         getProgramInfoLog() { return "link failed"; },
+        getFragDataLocation(program, name)
+        {
+            for (const shader of program.shaders)
+            {
+                if (shader.type !== gl.FRAGMENT_SHADER) continue;
+                const outputs = shader.source.matchAll(/(?:layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*)?out\s+\w+\s+(\w+)\s*;/gu);
+                for (const output of outputs)
+                {
+                    if (output[2] === name) return Number(output[1] ?? 0);
+                }
+            }
+            return -1;
+        },
         deleteProgram(program) { calls.push([ "deleteProgram", program ]); },
         useProgram(program)
         {
@@ -201,6 +214,7 @@ export function FakeWebgl2()
         createFramebuffer() { return { kind: "framebuffer" }; },
         deleteFramebuffer() {},
         bindFramebuffer(...args) { calls.push([ "bindFramebuffer", ...args ]); },
+        drawBuffers(buffers) { calls.push([ "drawBuffers", Array.from(buffers) ]); },
         // A sync object signals when a test sets `signaled`; `finish` signals them all.
         fenceSync(condition, flags)
         {

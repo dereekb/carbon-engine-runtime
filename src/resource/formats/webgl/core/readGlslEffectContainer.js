@@ -186,6 +186,7 @@ export function readGlslEffectContainer(input, values = {})
                         const identity = `${JSON.stringify([
                             stageBackend.bindings ?? [],
                             stageBackend.stageInputs ?? [],
+                            stageBackend.stageOutputs ?? [],
                             stageBackend.computeFragment ?? null
                         ])} ${code}`;
                         const pooled = shaderKeyByIdentity.get(identity);
@@ -204,6 +205,7 @@ export function readGlslEffectContainer(input, values = {})
                                 hlsl2webgl: { ok: true },
                                 bindings: stageBackend.bindings ?? [],
                                 stageInputs: stageBackend.stageInputs ?? [],
+                                stageOutputs: stageBackend.stageOutputs ?? [],
                                 ...(stageBackend.computeFragment
                                     ? { computeFragment: stageBackend.computeFragment }
                                     : {})
@@ -219,7 +221,8 @@ export function readGlslEffectContainer(input, values = {})
                             source: "",
                             hlsl2webgl: { ok: false, reason: NO_PROGRAM_REASON },
                             bindings: stageBackend.bindings ?? [],
-                            stageInputs: stageBackend.stageInputs ?? []
+                            stageInputs: stageBackend.stageInputs ?? [],
+                            stageOutputs: stageBackend.stageOutputs ?? []
                         });
                     }
 

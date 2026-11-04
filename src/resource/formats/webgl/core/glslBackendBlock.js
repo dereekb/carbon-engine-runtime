@@ -24,7 +24,8 @@ import { DxbcResourceDimensionNames } from "../../dxbc/core/decoder.js";
  * resource-transform section verbatim. Everything else differs, because the two
  * backends' lowering decisions are genuinely different documents: WebGPU records
  * bind-group topology, while WebGL 2 records sampler and uniform declarations,
- * synthesised data textures and UBOs, the vertex attribute ABI, and the recipe
+ * synthesised data textures and UBOs, the vertex attribute ABI, stage output
+ * names and locations, and the recipe
  * for running a compute shader as a fragment pass.
  *
  * Which one parses a given block is decided by the resource path the file came
@@ -588,6 +589,18 @@ export function writeGlslBackendBlock(block)
             writer.u8(input.mask);
         }
 
+        // Retain the emitter's OSGN-derived declarations; AL must not re-parse GLSL.
+        const stageOutputs = stage.stageOutputs ?? [];
+        writer.u8(stageOutputs.length);
+        for (const output of stageOutputs)
+        {
+            writer.u8(output.register);
+            writeInlineString(writer, output.name);
+            writer.u8(output.width ?? 0);
+            writeInlineString(writer, output.semanticName ?? "");
+            writer.u8(output.semanticIndex);
+        }
+
         writeComputeFragment(writer, stage.computeFragment ?? null);
     }
 
@@ -653,11 +666,29 @@ export function readGlslBackendBlock(bytes, options = {})
             });
         }
 
+        const stageOutputs = [];
+        const stageOutputCount = reader.ReadUint8();
+        for (let outputIndex = 0; outputIndex < stageOutputCount; outputIndex += 1)
+        {
+            const register = reader.ReadUint8();
+            const name = readInlineString(reader);
+            const width = reader.ReadUint8();
+            const semanticName = readInlineString(reader);
+            stageOutputs.push({
+                register,
+                name,
+                ...(width ? { width } : {}),
+                semanticName: semanticName || null,
+                semanticIndex: reader.ReadUint8()
+            });
+        }
+
         const computeFragment = readComputeFragment(reader);
 
         stages[stageName] = {
             bindings,
             stageInputs,
+            stageOutputs,
             ...(computeFragment ? { computeFragment } : {})
         };
     }

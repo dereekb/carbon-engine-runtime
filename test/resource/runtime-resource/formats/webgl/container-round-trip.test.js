@@ -5,7 +5,8 @@ import path from "node:path";
 
 import { buildEffectPackage } from "../../../../../src/resource/formats/webgl/core/effectPackage.js";
 import { CjsCarbonEffectReader } from "../../../../../src/resource/format/carbonEffect/CjsCarbonEffectReader.js";
-import { writeGlslBackendBlock } from "../../../../../src/resource/formats/webgl/core/glslBackendBlock.js";
+import { readGlslBackendBlock, writeGlslBackendBlock } from "../../../../../src/resource/formats/webgl/core/glslBackendBlock.js";
+import { buildGlslBackendBodySet } from "../../../../../src/resource/formats/webgl/core/glslBackendBodySet.js";
 import { shaderStageNames } from "../../../../../src/resource/format/effect/shaderStageNames.js";
 
 /**
@@ -44,6 +45,24 @@ const STAGE_NAME = shaderStageNames;
 
 const corpusDir = process.env.WEBGL_CORPUS_DIR || null;
 const decoder = new TextDecoder();
+
+test("the body set carries sparse colour and explicit depth-only output reflection to the wire", () =>
+{
+    const sparse = [ { register: 1, name: "SV_Target2", width: 4, semanticName: "SV_Target", semanticIndex: 2 } ];
+    for (const stageOutputs of [ sparse, [] ])
+    {
+        const set = buildGlslBackendBodySet({
+            bodies: [ { key: "body" } ],
+            stages: [ { bodyKey: "body", techniqueName: "Main", passIndex: 0, stageName: "pixel", stageType: 1, shaderKey: "pixel" } ],
+            shaders: [ { key: "pixel", source: "void main() {}", stageOutputs } ],
+            variants: [ { bodyKey: "body", permutationIndex: 0 } ],
+            permutationGraph: { variants: [ { bodyKey: "body0" } ] }
+        });
+        assert.deepEqual(set.passUnits[0].block.pixel.stageOutputs, stageOutputs);
+        const decoded = readGlslBackendBlock(writeGlslBackendBlock({ stages: set.passUnits[0].block }));
+        assert.deepEqual(decoded.stages.pixel.stageOutputs, stageOutputs);
+    }
+});
 
 /**
  * Lists every compiled effect under a directory, recursively.

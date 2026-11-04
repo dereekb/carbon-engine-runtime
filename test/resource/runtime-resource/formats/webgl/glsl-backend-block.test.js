@@ -130,6 +130,27 @@ const BLOCK = {
     } ]
 };
 
+test("stage output names, sparse locations and optional vertex widths round trip byte-exactly", () =>
+{
+    const outputs = [
+        { register: 0, name: "SV_Target0", width: 4, semanticName: "SV_Target", semanticIndex: 0 },
+        { register: 1, name: "SV_Target2", width: 2, semanticName: "SV_Target", semanticIndex: 2 }
+    ];
+    const vertexOutputs = [
+        { register: 0, name: "gl_Position", semanticName: "SV_Position", semanticIndex: 0 },
+        { register: 3, name: "vs_r3", width: 4, semanticName: null, semanticIndex: 0 }
+    ];
+    const bytes = writeGlslBackendBlock({ stages: {
+        pixel: { stageOutputs: outputs }, vertex: { stageOutputs: vertexOutputs }
+    } });
+    const decoded = readGlslBackendBlock(bytes);
+
+    assert.deepEqual(decoded.stages.pixel.stageOutputs, outputs);
+    assert.deepEqual(decoded.stages.vertex.stageOutputs, vertexOutputs);
+    assert.deepEqual(writeGlslBackendBlock(decoded), bytes);
+    assert.deepEqual(readGlslBackendBlock(writeGlslBackendBlock({ stages: { pixel: { stageOutputs: [] } } })).stages.pixel.stageOutputs, []);
+});
+
 test("every binding kind survives a write/read round trip", () =>
 {
     const block = readGlslBackendBlock(writeGlslBackendBlock(BLOCK));

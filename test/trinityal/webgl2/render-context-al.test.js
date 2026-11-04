@@ -71,7 +71,7 @@ test("binding slot zero resets the viewport and attaches the target", () =>
 
     assert.deepEqual(context.GetViewport(), { x: 0, y: 0, width: 16, height: 8, minZ: 0, maxZ: 1 });
     assert.ok(calledWith(calls, "framebufferTexture2D").some(([ , point, , native ]) => point === gl.COLOR_ATTACHMENT0 && native === target.TrinityALImpl_GetObject().GetGpuResource()));
-    assert.deepEqual(calledWith(calls, "drawBuffers").at(-1), [ [ gl.COLOR_ATTACHMENT0 ] ]);
+    assert.equal(calledWith(calls, "drawBuffers").length, 0, "replacing the same active slot preserves its draw-buffer selection");
 });
 
 test("a depth-stencil of another size is not attached until the target matches, as dx11's", () =>
@@ -160,7 +160,7 @@ const BLOCK = {
                 bindings: [ { kind: "constantBuffer", registerIndex: 1, name: "cb1", sizeInVec4: 1, style: "array" } ],
                 stageInputs: [ { register: 0, name: "in_POSITION0", semanticName: "POSITION", semanticIndex: 0, componentTypeName: "float32", mask: 15 } ]
             },
-            pixel: { bindings: [] }
+            pixel: { bindings: [], stageOutputs: [ { register: 0, name: "SV_Target0", width: 4, semanticName: "SV_Target", semanticIndex: 0 } ] }
         }
     })
 };
@@ -203,6 +203,67 @@ test("an indexed draw binds the program, points the attribute and draws elements
     assert.ok(calledWith(calls, "bindBuffer").some(([ target, buffer ]) => target === gl.ELEMENT_ARRAY_BUFFER && buffer === indices.TrinityALImpl_GetObject().GetGpuResource()));
     assert.deepEqual(calledWith(calls, "drawElementsInstanced"), [ [ gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 6, 1 ] ], "one triangle from index 3");
     assert.equal(context.GetDrawCount(), 1);
+});
+
+test("MRT draws select sparse fragment locations without releasing targets, and clear restores its slot", () =>
+{
+    const { gl, calls, context, program: colour0 } = drawable();
+    const target1 = texture(context, 64, 32, Tr2GpuUsage.RENDER_TARGET);
+    const target2 = texture(context, 64, 32, Tr2GpuUsage.RENDER_TARGET);
+    const depth = texture(context, 64, 32, Tr2GpuUsage.DEPTH_STENCIL, PixelFormat.PIXEL_FORMAT_D32_FLOAT);
+    context.SetRenderTarget(1, target1);
+    context.SetRenderTarget(2, target2);
+    context.SetDepthStencil(depth);
+
+    const programs = [];
+    for (const locations of [ [ 0, 2 ], [ 2 ], [] ])
+    {
+        const outputs = locations.map(location => ({ register: location, name: `SV_Target${location}`, width: 4, semanticName: "SV_Target", semanticIndex: location }));
+        const source = `#version 300 es\nprecision highp float;\n${locations.map(location => `layout(location = ${location}) out vec4 SV_Target${location};`).join("\n")}\nvoid main() { ${locations.map(location => `SV_Target${location} = vec4(1.0);`).join(" ")} }`;
+        const backendBlock = { bytes: writeGlslBackendBlock({ stages: {
+            vertex: { stageInputs: [ { register: 0, name: "in_POSITION0", semanticName: "POSITION", semanticIndex: 0, componentTypeName: "float32", mask: 15 } ] },
+            pixel: { stageOutputs: outputs }
+        } }) };
+        const shaders = [ [ ShaderType.VERTEX_SHADER, VERTEX ], [ ShaderType.PIXEL_SHADER, source ] ].map(([ type, code ]) =>
+        {
+            const shader = new Tr2ShaderALWebgl2();
+            assert.equal(shader.Create(type, code, { backendBlock, registers: [], pipelineInputs: [ { usage: 0, usageIndex: 0, registerIndex: 0 } ] }, "MRT fixture", context), ALResult.S_OK);
+            return Tr2ShaderAL.create__Shader(shader);
+        });
+        programs.push(context.CreateShaderProgram(shaders));
+    }
+
+    calls.length = 0;
+    const expected = [
+        [ gl.COLOR_ATTACHMENT0, gl.NONE, gl.NONE ],
+        [ gl.COLOR_ATTACHMENT0, gl.NONE, gl.COLOR_ATTACHMENT0 + 2 ],
+        [ gl.NONE, gl.NONE, gl.COLOR_ATTACHMENT0 + 2 ],
+        [ gl.NONE, gl.NONE, gl.NONE ]
+    ];
+    for (const [ index, program ] of [ colour0, ...programs ].entries())
+    {
+        context.SetShaderProgram(program);
+        assert.equal(context.DrawIndexedPrimitive(4, 0, 1), ALResult.S_OK);
+        assert.deepEqual(calledWith(calls, "drawBuffers").at(-1), [ expected[index] ]);
+        assert.equal(context.GetRenderTarget(1).Equals(target1), true);
+        assert.equal(context.GetRenderTarget(2).Equals(target2), true);
+    }
+    assert.equal(calledWith(calls, "framebufferTexture2D").length, 0, "program changes keep colour attachments");
+    assert.equal(context.GetDepthStencil().Equals(depth), true);
+
+    context.Clear({ clearColor: true, slot: 1, color: 0 });
+    assert.deepEqual(calledWith(calls, "drawBuffers").at(-1), [ [ gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT0 + 1, gl.COLOR_ATTACHMENT0 + 2 ] ]);
+    assert.equal(calledWith(calls, "clearBufferfv").at(-1)[1], 1);
+    context.DrawIndexedPrimitive(4, 0, 1);
+    assert.deepEqual(calledWith(calls, "drawBuffers").at(-1), [ [ gl.NONE, gl.NONE, gl.NONE ] ]);
+    const selections = calledWith(calls, "drawBuffers").length;
+    context.DrawIndexedPrimitive(4, 0, 1);
+    assert.equal(calledWith(calls, "drawBuffers").length, selections, "unchanged draws reuse selection storage");
+
+    context.SetRenderTarget(2, null);
+    context.SetShaderProgram(programs[0]);
+    context.DrawIndexedPrimitive(4, 0, 1);
+    assert.deepEqual(calledWith(calls, "drawBuffers").at(-1), [ [ gl.COLOR_ATTACHMENT0, gl.NONE, gl.NONE ] ]);
 });
 
 test("shared geometry binds distinct vertex and index allocations with unchanged byte offsets", () =>

@@ -253,6 +253,9 @@ export class Tr2RenderContextALWebgl2
   /** What `_framebuffer` has attached now, so a change detaches the stale points. */
   _attached = new Map();
 
+  /** @adapted Reused WebGL2 draw-buffer selection, independent of retained attachments. */
+  _drawBuffers = [];
+
   /** m_allRenderStates: the last value each state was set to, 0xffffffff for unknown. */
   _allRenderStates = null;
 
@@ -1223,7 +1226,7 @@ export class Tr2RenderContextALWebgl2
    * binding depth with no target, resets the viewport and scissor to the new
    * size, which Trinity relies on.
    *
-   * @adapted
+   * @adapted WebGL2 attaches all retained targets; each draw selects its active outputs.
    * @param {number} changedSlot The slot that changed, or `MAX_RENDER_TARGET` for depth.
    */
   _SetRtDsToDevice(changedSlot)
@@ -1245,7 +1248,6 @@ export class Tr2RenderContextALWebgl2
       gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
 
       const wanted = new Map();
-      const drawBuffers = [];
 
       for (let slot = 0; slot < this._renderTargetHighWaterMark; slot++)
       {
@@ -1255,18 +1257,13 @@ export class Tr2RenderContextALWebgl2
         if (texture && texture.IsValid())
         {
           wanted.set(point, { texture, slice });
-          drawBuffers.push(point);
-        }
-        else
-        {
-          drawBuffers.push(gl.NONE);
         }
       }
 
       if (depth && !this._isDepthReadOnly) wanted.set(depth.TrinityALImpl_GetObject().GetDepthAttachmentPoint(), { texture: depth, slice: 0 });
 
       this._Attach(gl, wanted);
-      gl.drawBuffers(drawBuffers.length ? drawBuffers : [ gl.NONE ]);
+      this._ApplyDrawBuffers(0xff);
     }
 
     if (changedSlot === 0 || !primary)
@@ -1278,6 +1275,28 @@ export class Tr2RenderContextALWebgl2
         gl.scissor(0, 0, sized.GetWidth(), sized.GetHeight());
       }
     }
+  }
+
+  /**
+   * Enables attached colour slots selected by the current operation.
+   *
+   * @adapted WebGL2 rejects enabled slots without a fragment output; Carbon keeps them bound.
+   * @param {number} outputMask Fragment locations, or all bits for a clear.
+   */
+  _ApplyDrawBuffers(outputMask)
+  {
+    const gl = this._gl;
+    const count = Math.max(1, this._renderTargetHighWaterMark);
+    let changed = this._drawBuffers.length !== count;
+    this._drawBuffers.length = count;
+    for (let slot = 0; slot < count; slot++)
+    {
+      const point = gl.COLOR_ATTACHMENT0 + slot;
+      const value = (outputMask & (1 << slot)) && this._attached.has(point) ? point : gl.NONE;
+      if (this._drawBuffers[slot] !== value) changed = true;
+      this._drawBuffers[slot] = value;
+    }
+    if (changed) gl.drawBuffers(this._drawBuffers);
   }
 
   /** Attaches what is wanted and detaches whatever was attached before and is not. */
@@ -1381,7 +1400,7 @@ export class Tr2RenderContextALWebgl2
    * `clearStencil` are dx11's `CLEARFLAGS_TARGET`, `_ZBUFFER` and `_STENCIL`;
    * a call naming none of them clears the target and depth.
    *
-   * @adapted
+   * @adapted Restores target draw-buffer selection and opens GL masks for Carbon's clear semantics.
    * @param {object} [options] `{ color, depth, stencil, clearColor, clearDepth, clearStencil, slot }`.
    * @returns {number} `S_OK`.
    */
@@ -1403,6 +1422,7 @@ export class Tr2RenderContextALWebgl2
 
     if (clearTarget && this._boundRenderTargets[slot]?.texture)
     {
+      this._ApplyDrawBuffers(0xff);
       gl.colorMask(true, true, true, true);
       gl.clearBufferfv(gl.COLOR, slot, ClearColor(options.color ?? 0));
     }
@@ -1640,6 +1660,7 @@ export class Tr2RenderContextALWebgl2
    * attributes. The WebGL2 half of every dx11 draw, which binds these as they
    * are set.
    *
+   * @adapted Selects only attached locations active in the linked fragment shader.
    * @param {number} baseVertex Added to every non-instanced stream's offset,
    *   in vertices: WebGL2 has no base vertex.
    * @param {number} startInstance Added to every instanced stream's offset.
@@ -1658,6 +1679,7 @@ export class Tr2RenderContextALWebgl2
       this._currentProgram = native;
     }
 
+    this._ApplyDrawBuffers(program._fragmentOutputMask);
     this._ApplyConstants(program);
     this._ApplyTextureUnits();
     this._ApplyClipFlip(program, native);
@@ -2628,7 +2650,7 @@ export class Tr2RenderContextALWebgl2
    * Releases the context (`Tr2RenderContextDx11.cpp:820-889`,
    * `Tr2PrimaryRenderContextDx11.cpp:63-105`).
    *
-   * @adapted
+   * @adapted Releases GL state and resets the retained draw-buffer selection.
    * @returns {boolean} True.
    */
   Destroy()
@@ -2659,6 +2681,7 @@ export class Tr2RenderContextALWebgl2
     this._enabledAttributes = new Set();
     this._frameFences = [];
     this._framebuffer = null;
+    this._drawBuffers = [];
     this._presentFramebuffer = null;
     this._attached = new Map();
     this._boundRenderTargets = Array.from({ length: MAX_RENDER_TARGET }, () => ({ texture: null, slice: 0 }));

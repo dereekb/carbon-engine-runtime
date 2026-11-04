@@ -44,6 +44,7 @@ function block()
                     ]
                 },
                 pixel: {
+                    stageOutputs: [ { register: 0, name: "SV_Target0", width: 4, semanticName: "SV_Target", semanticIndex: 0 } ],
                     bindings: [
                         { kind: "constantBuffer", registerIndex: 0, name: "cb7", sizeInVec4: 2, style: "array" },
                         { kind: "resource", registerIndex: 0, name: "s0", dimensionName: "texture2d", pairedSamplerRegisters: [ 3 ] },
@@ -128,6 +129,41 @@ test("a program links its stages, binding vertex inputs to their registers", () 
     const linked = program.GetGpuResource();
     assert.equal(linked.attributes.get("in_POSITION0"), 0);
     assert.equal(linked.attributes.get("in_TEXCOORD0"), 1);
+    assert.equal(program._fragmentOutputMask, 1);
+});
+
+test("inactive fragment outputs are omitted while conflicting active locations reject the program", () =>
+{
+    const { gl } = FakeWebgl2();
+    const vertex = shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader;
+    const pixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL).shader;
+    const program = new Tr2ShaderProgramALWebgl2();
+    gl.getFragDataLocation = () => -1;
+    assert.equal(program.Create(...link([ vertex, pixel ]), FakeRenderContext(gl)), ALResult.S_OK);
+    assert.equal(program._fragmentOutputMask, 0);
+
+    gl.getFragDataLocation = () => 2;
+    assert.equal(program.Create(...link([ vertex, pixel ]), FakeRenderContext(gl)), ALResult.E_INVALIDARG);
+    assert.match(program.GetLinkLog(), /SV_Target0 linked at 2, expected 0/u);
+    assert.equal(program.IsValid(), false);
+    assert.equal(program._fragmentOutputMask, 0);
+});
+
+test("a pixel program without output reflection is rejected instead of assuming depth-only", () =>
+{
+    const { gl } = FakeWebgl2();
+    const pixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL, { registers: [] }).shader;
+    const program = new Tr2ShaderProgramALWebgl2();
+    assert.equal(program.Create(...link([ shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader, pixel ]), FakeRenderContext(gl)), ALResult.E_INVALIDARG);
+    assert.match(program.GetLinkLog(), /output reflection is missing/u);
+
+    const reflectedPixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL).shader;
+    for (const invalidOutputs of [ undefined, {} ])
+    {
+        reflectedPixel.GetStageBlock().stageOutputs = invalidOutputs;
+        assert.equal(program.Create(...link([ shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader, reflectedPixel ]), FakeRenderContext(gl)), ALResult.E_INVALIDARG);
+        assert.match(program.GetLinkLog(), /output reflection is missing/u);
+    }
 });
 
 test("the program gives each sampler uniform a unit and records its paired sampler", () =>
@@ -174,12 +210,16 @@ test("a link failure answers E_FAIL and keeps the log", () =>
 test("a compute-only program links with a full-screen vertex stage of its own", () =>
 {
     const { gl, calls } = FakeWebgl2();
-    const compute = shader(gl, ShaderType.COMPUTE_SHADER, PIXEL).shader;
+    const backendBlock = { bytes: writeGlslBackendBlock({ stages: { compute: { computeFragment: {
+        uavOutputs: [ { register: 0, location: 0, glslName: "SV_Target0" } ]
+    } } } }) };
+    const compute = shader(gl, ShaderType.COMPUTE_SHADER, PIXEL, { backendBlock, registers: [] }).shader;
     const program = new Tr2ShaderProgramALWebgl2();
 
     assert.equal(program.Create(...link([ compute ]), FakeRenderContext(gl)), ALResult.S_OK);
     const attached = program.GetGpuResource().shaders;
     assert.equal(attached.length, 2);
+    assert.equal(program._fragmentOutputMask, 1);
     assert.match(attached[0].source, /gl_VertexID/);
     assert.ok(calls.some(call => call[0] === "createShader" && call[1] === attached[0]));
 });

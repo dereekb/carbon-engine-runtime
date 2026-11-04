@@ -25,6 +25,9 @@
 //   sites. WebGL2 carries one sampler per unit, so a texture the shader samples
 //   through two different samplers is recorded as `samplerConflict`; the
 //   render context binds the first and reports it.
+// - FRAGMENT OUTPUTS retain the emitter's OSGN-derived names and locations.
+//   Linking resolves active outputs once; the render context enables only their
+//   attached draw buffers, without discarding the other bound targets.
 //
 // A compute stage runs as a fragment pass (see `Tr2ShaderALWebgl2`), so a
 // compute-only program is linked with a full-screen vertex stage of its own.
@@ -91,6 +94,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
   /** Vertex inputs: `{ register, name, semanticName, semanticIndex, componentTypeName, mask }`. */
   _vertexInputs = [];
 
+  /** @adapted WebGL2 draw buffers may enable only locations active in the linked fragment stage. */
+  _fragmentOutputMask = 0;
+
   /** The linker's info log from the last failed link. */
   _log = "";
 
@@ -138,7 +144,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
    * array does, and each one's implementation is read as dx11 reads
    * `shaders[i].m_shader` (`:48-49`).
    *
-   * @adapted
+   * @adapted Links WebGL stages and verifies retained output locations against the linked program.
    * @param {object[]} shaders The `Tr2ShaderAL` stages.
    * @param {number} count How many of them to link.
    * @param {object} renderContext The context to link against.
@@ -208,6 +214,11 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     }
 
     this._program = program;
+    if (fragment && !this._LayOutFragmentOutputs(gl, program, fragment))
+    {
+      this._Reset();
+      return ALResult.E_INVALIDARG;
+    }
     this._shaders = stages;
     this._vertexShader = stages.get(ShaderType.VERTEX_SHADER) ?? null;
     this._LayOutBindings(gl, program, stages);
@@ -215,6 +226,49 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._isValid = true;
 
     return ALResult.S_OK;
+  }
+
+  /**
+   * Resolves the retained output declarations once at link time.
+   *
+   * @adapted D3D keeps output locations in bytecode; WebGL2 validates active draw buffers.
+   * @param {WebGL2RenderingContext} gl The device.
+   * @param {WebGLProgram} program The linked program.
+   * @param {Tr2ShaderALWebgl2} fragment Its fragment stage.
+   * @returns {boolean} Whether active locations agree with the emitter's reflection.
+   */
+  _LayOutFragmentOutputs(gl, program, fragment)
+  {
+    const block = fragment.GetStageBlock();
+    if (!block)
+    {
+      this._log = "Fragment output reflection is missing";
+      return false;
+    }
+
+    const compute = fragment.GetType() === ShaderType.COMPUTE_SHADER;
+    const outputs = compute ? block.computeFragment?.uavOutputs ?? [] : block.stageOutputs;
+    if (!Array.isArray(outputs))
+    {
+      this._log = "Fragment output reflection is missing";
+      return false;
+    }
+    for (let index = 0; index < outputs.length; index++)
+    {
+      const output = outputs[index];
+      const name = compute ? output.glslName : output.name;
+      const expected = compute ? output.location : output.semanticIndex;
+      const location = gl.getFragDataLocation(program, name);
+      // OpenGL ES 3.0 GetFragDataLocation returns -1 for inactive outputs.
+      if (location === -1) continue;
+      if (location !== expected)
+      {
+        this._log = `Fragment output ${name} linked at ${location}, expected ${expected}`;
+        return false;
+      }
+      this._fragmentOutputMask |= 1 << location;
+    }
+    return true;
   }
 
   /**
@@ -307,7 +361,10 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     gl.useProgram(previous);
   }
 
-  /** Carbon's impl `Destroy`, before the registry is left. */
+  /**
+   * Carbon's impl `Destroy`, before the registry is left.
+   * @adapted Also clears the linked WebGL2 fragment-output mask.
+   */
   _Reset()
   {
     const gl = this._gl;
@@ -327,6 +384,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._constantBuffers = [];
     this._textures = [];
     this._vertexInputs = [];
+    this._fragmentOutputMask = 0;
     this._gl = null;
   }
 
