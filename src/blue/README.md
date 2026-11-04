@@ -68,15 +68,13 @@ Its release callback cleans layer sampling references and pose data while
 retaining resource slots for reload; expiry then removes those slots. Layer
 configuration survives cleanup. After secondary release, explicit initialization
 rebuilds the rig; secondary completion alone does not rebuild it, matching the
-native callback's early return. Remaining geometry owners still pull changes at use.
-Each resource counts its finished prepares in `_revision`. An owner records,
-per dependency slot, the revision it built from in its own
-`_dependencyRevisions` Map, and calls
-`BlueAsyncRes.ensureDependency(dependency, owner, slotKey)` at draw readiness:
-it renews the dependency, calls the owner's `RebuildCachedData(dependency)`
-when the revision changed, and `ReleaseCachedData(dependency)` once when the
-dependency is no longer good. Nothing holds the owner. `AddNotifyTarget` and
-`RemoveNotifyTarget` are kept for Carbon parity and throw.
+native callback's early return. `EveTrailsSet`, `EveTurretSet` and
+`Tr2GrannyPrimitiveSet` also register geometry properties, renew on use and
+reacquire expired path-owned resources unless destroyed. Granny primitive
+rebinding retains cached geometry until replacement completion; release callbacks
+clear it. No production owner calls `BlueAsyncRes.ensureDependency` now; its
+obsolete helper and revision machinery remain pending removal. Resource-local
+`AddNotifyTarget` and `RemoveNotifyTarget` are retained temporarily and throw.
 
 The internal `CjsLoadingObject` retains decoded plain data or a cached builder
 through the manager. `LoadObject` constructs a fresh graph per caller and does

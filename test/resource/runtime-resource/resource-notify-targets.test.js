@@ -259,11 +259,59 @@ test("replacing an internal acquisition preserves the prepared manual replacemen
   assert.equal(effect._acquiredEffectResource, null);
 });
 
-test("trails register no target when bound or rebound", () =>
+test("trails move their notification link when rebound", () =>
 {
   const owner = new EveTrailsSet(), first = new TriGeometryRes(), second = new TriGeometryRes();
   owner.SetGeometryResource(first);
+  assert.equal(blue.resMan.GetNotifyTargetsByOwner(owner).length, 1);
   owner.SetGeometryResource(second);
+  assert.equal(blue.resMan.GetNotifyTargetsByResource(first).length, 0);
+  assert.equal(blue.resMan.GetNotifyTargetsByResource(second).length, 1);
+  owner.Destruct();
+  assert.equal(blue.resMan.GetNotifyTargetsByOwner(owner).length, 0);
+});
+
+test("remaining geometry owners receive completion, expire and reacquire only while alive", t =>
+{
+  const manager = blue.resMan, original = manager.GetResource;
+  t.after(() => { manager.GetResource = original; });
+  for (const [owner, slot, path, use] of [
+    [new EveTrailsSet(), "geometryResource", "geometryResPath", value => value.GetBatches(null, null)],
+    [new EveTurretSet(), "geometryResource", "geometryResPath", value => value.UpdateSyncronous(null, null)],
+    [new Tr2GrannyPrimitiveSet(), "grannyRes", "grannyResPath", value => value.GetBatchesImpl(null, null, null, 0)]
+  ])
+  {
+    const resource = new TriGeometryRes(), seen = recordCachedData(owner);
+    let acquisitions = 0;
+    manager.GetResource = () => { acquisitions++; return resource; };
+    owner.EnsureGood = () => false;
+    if (owner instanceof EveTurretSet) owner.lodLevel = EveTurretSet.LOD.LOD_HIGHEST;
+    owner[path] = "res:/fixture.gr2";
+    owner[slot] = resource;
+    finish(resource, true);
+    assert.deepEqual(seen, [["rebuild", resource]]);
+    manager._ExpireResourceNotifyTargets(resource);
+    assert.equal(owner[slot], null);
+    assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+    use(owner);
+    assert.equal(owner[slot], resource);
+    assert.equal(acquisitions, 1);
+    owner.Destruct();
+    use(owner);
+    assert.equal(acquisitions, 1);
+    assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+  }
+});
+
+test("trails renew material and device readiness even with bad geometry", () =>
+{
+  const owner = new EveTrailsSet(), resource = new TriGeometryRes(), calls = [];
+  owner.geometryResource = resource;
+  resource.IsGood = target => { assert.equal(target, owner); calls.push("geometry"); return false; };
+  owner.effect = { IsGood() { calls.push("effect"); return false; } };
+  owner.EnsureGood = () => { calls.push("device"); return false; };
+  owner.GetBatches(null, null);
+  assert.deepEqual(calls, ["geometry", "effect", "device"]);
   owner.Destruct();
 });
 

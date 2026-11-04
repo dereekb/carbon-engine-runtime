@@ -14,6 +14,8 @@ import {TriBatchType} from '../../npm/dist/global/consts/graphics/index.js';
 import {Topology} from '../../npm/dist/global/consts/renderContext/index.js';
 import {Tr2PickType} from '../../npm/dist/global/consts/graphics/index.js';
 import {mat4} from '../../npm/dist/global/math/mat4.js';
+import {vec4} from '../../npm/dist/global/math/vec4.js';
+import {Tr2Renderer} from '../../npm/dist/trinity/index.js';
 import {StubResMan} from '../support/stubResMan.js';
 
 const OPAQUE=TriBatchType.TRIBATCHTYPE_OPAQUE,PICKING=TriBatchType.TRIBATCHTYPE_PICKING;
@@ -60,7 +62,7 @@ test('coalesced path/color changes acquire once and retain old storage while rep
  CjsSchema.setValues(p,{grannyResPath:'res:/b.gr2',color:[1,0,0,1]});
  assert.equal(manager.requests.length,2);assert.equal(p._points,old);near(p._points.slice(6,10),[1,0,0,1]);
  a._NotifyRebuildCachedData();purgeResourceFixture(a);assert.equal(p._points,old,'stale handle must not clear or rebuild');
- // The set pulls the completion at its next draw (BlueAsyncRes.ensureDependency).
+ // Manager completion rebuilds without a draw-time revision poll.
  prepareResourceFixture(b);batches(p);assert.notEqual(p._points,old);assert.equal(p._points[0],50);near(p._points.slice(6,10),[1,0,0,1]);
  // The next draw after a purge releases what the set built from it.
  const bound=p.boundingSphere.slice();purgeResourceFixture(b);assert.equal(batches(p).length,0);
@@ -70,9 +72,9 @@ test('coalesced path/color changes acquire once and retain old storage while rep
  purgeResourceFixture(b);prepareResourceFixture(b);assert.equal(p._points.length,0,'a detached owner hears nothing');
 });
 
-test('failed replacement retains cached geometry; completion after destroy cannot resurrect it',t=>{
+test('failed replacement releases cached geometry; completion after destroy cannot resurrect it',t=>{
  const a=geometry(),b=geometry([mesh('new',50)],false);setup(t,path=>path.endsWith('a.gr2')?a:b);const p=make('res:/a.gr2'),old=p._points;
- CjsSchema.setValues(p,{grannyResPath:'res:/bad.gr2'});failResourceFixture(b, new Error('fixture failure'));assert.equal(p._points,old);
+ CjsSchema.setValues(p,{grannyResPath:'res:/bad.gr2'});assert.equal(p._points,old);failResourceFixture(b, new Error('fixture failure'));assert.equal(p._points.length,0);
  p.Destruct();prepareResourceFixture(b);assert.equal(p._points.length,0);assert.equal(p._vertexBuffer.IsValid(),false);assert.equal(trinity.GetResourcesRegistered().includes(p),false);
 });
 
@@ -122,6 +124,7 @@ test('ordinary, solid and dedicated picking batches issue native indexed ranges 
 test('base transforms, bounds, sort and per-object bytes match nontrivial native composition',t=>{
  setup(t);const p=new Tr2PrimitiveSet();p.localTransform.set([0,2,0,0,-3,0,0,0,0,0,4,0,5,6,7,1]);p.boundingSphere.set([1,2,3,2]);
  const view=mat4.create(),context={GetViewTransform:()=>view,GetViewPosition:()=>[5,6,21],GetFieldOfView:()=>1};
+ for(const name of ['GetViewTransform','GetViewPosition','GetFieldOfView'])t.mock.method(Tr2Renderer,name,context[name]);
  p.scaleByDistanceToView=true;p.UpdateTransform(context);assert.equal(p.scale,2);near(p.worldTransform,[0,4,0,0,-6,0,0,0,0,0,8,0,5,6,7,1]);
  near(p.GetBoundingSphere(vec4.create()),[-7,10,31,4]);assert.ok(Math.abs(p.GetSortValue(context)-(Math.hypot(12,-4,-10)-4))<1e-5);
  const pod=p.GetPerObjectData({Alloc:name=>RawData.create(name)}),transposed=mat4.transpose(mat4.create(),p.worldTransform);

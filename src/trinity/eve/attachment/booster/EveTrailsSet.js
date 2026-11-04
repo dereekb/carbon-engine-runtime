@@ -1,4 +1,3 @@
-import { BlueAsyncRes } from "#blue";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet.h
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet.cpp
@@ -44,7 +43,13 @@ export class EveTrailsSet
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
   @type.object.ref("TriGeometryRes")
-  geometryResource = null;
+  get geometryResource() { return this._geometryResource; }
+
+  /** @implemented Routes property assignment through the resource binding. */
+  set geometryResource(resource) { this.SetGeometryResource(resource); }
+
+  /** Resource storage behind the notification-aware property. */
+  _geometryResource = null;
 
   /** m_fadeSpeed (float) [READWRITE, PERSIST] */
 
@@ -86,8 +91,8 @@ export class EveTrailsSet
   /** m_instanceBuffer: a shared-buffer allocation, null until built. */
   _instanceBuffer = null;
 
-  /** What this set last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
+  /** @cjs Explicit destruction prevents later draw-time reacquisition. */
+  _destroyed = false;
 
   /**
    * Carbon Initialize (cpp:38-43): load the trail mesh.
@@ -105,24 +110,17 @@ export class EveTrailsSet
    * Carbon InitializeGeometryResource (cpp:50-72): detach from the old mesh,
    * forget its declaration, request the new one and rebuild when it has loaded.
    *
-   * Carbon makes the set the resource's notify target (AddNotifyTarget); here
-   * GetBatches pulls the rebuild (`BlueAsyncRes.ensureDependency`, slot
-   * "geometry").
-   *
-   * @adapted JavaScript has no destructor to unregister a notify target, so
-   *   the set pulls the resource's changes at use instead.
+   * @adapted Manager-owned links replace native resource notify targets.
    */
 
   InitializeGeometryResource()
   {
     this.Cleanup();
-    // Carbon's AddNotifyTarget rebuilds at once even for the same resource.
-    this._dependencyRevisions.delete("geometry");
-
+    this.geometryResource = null;
+    if (this._destroyed) return;
     this.geometryResource = this.geometryResPath
       ? blue.resMan.GetResource(this.geometryResPath)
       : null;
-    BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry");
   }
 
   /**
@@ -318,12 +316,13 @@ export class EveTrailsSet
 
   GetBatches(accumulator, perObjectData)
   {
-    if (!this.display) return;
+    if (this._destroyed || !this.display) return;
+    if (!this.geometryResource && this.geometryResPath) this.InitializeGeometryResource();
     // Ask every dependency before combining, so none is left unrenewed while
-    // another loads. The geometry's changes are pulled here.
+    // another loads. Geometry changes arrive through manager callbacks.
     let good = true;
-    if (!BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry")) good = false;
-    if (!this.effect || !this.effect.EnsureGood()) good = false;
+    if (!this.geometryResource || !this.geometryResource.IsGood(this)) good = false;
+    if (!this.effect || !this.effect.IsGood()) good = false;
     // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Asked with the others, before the instance buffer preparing builds.
     if (!this.EnsureGood()) good = false;
     if (!good) return;
@@ -368,10 +367,10 @@ export class EveTrailsSet
   SetGeometryResource(resource)
   {
     if (this.geometryResource === resource) return;
+    if (this.geometryResource) blue.resMan.RemoveNotifyTarget(this, this.geometryResource);
     this.Cleanup();
-    this._dependencyRevisions.delete("geometry");
-    this.geometryResource = resource ?? null;
-    BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry");
+    this._geometryResource = resource ?? null;
+    if (this.geometryResource) blue.resMan.AddNotifyTarget(this, this.geometryResource, this, "geometryResource");
   }
 
   /** The trail placements as copies, for diagnostics. */
@@ -391,8 +390,8 @@ export class EveTrailsSet
    */
   Destruct()
   {
+    this._destroyed = true;
     this.Cleanup();
     this.geometryResource = null;
-    this._dependencyRevisions.clear();
   }
 }

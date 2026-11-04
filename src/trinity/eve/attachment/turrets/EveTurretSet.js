@@ -1,4 +1,3 @@
-import { BlueAsyncRes } from "#blue";
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 import { IShaderConfigurer } from "../../../shader/IShaderConfigurer.js";
@@ -293,7 +292,23 @@ export class EveTurretSet extends EveEntity
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
   @type.resource("TriGeometryRes")
-  geometryResource = null;
+  get geometryResource() { return this._geometryResource; }
+
+  /**
+   * Moves the geometry notification link and releases the old cached data.
+   * @adapted EveTurretSet.cpp:252-285 uses native targets; ours expire on resMan.
+   */
+  set geometryResource(resource)
+  {
+    if (this._geometryResource === resource) return;
+    if (this._geometryResource) blue.resMan.RemoveNotifyTarget(this, this._geometryResource);
+    this.Cleanup();
+    this._geometryResource = resource;
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "geometryResource");
+  }
+
+  /** Geometry storage behind the notification-aware property. */
+  _geometryResource = null;
 
   /** m_maxTrackingTime (float) [READWRITE, PERSIST] */
 
@@ -506,8 +521,8 @@ export class EveTurretSet extends EveEntity
 
   _turrets = [];
 
-  /** What this set last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
+  /** @cjs Explicit destruction prevents later update-time reacquisition. */
+  _destroyed = false;
 
   /** m_shipTransformPrev - last frame's parent transform, for motion vectors. */
   _shipTransformPrev = mat4.create();
@@ -606,12 +621,12 @@ export class EveTurretSet extends EveEntity
    */
   Destruct()
   {
+    this._destroyed = true;
     this.UnRegister(this.GetComponentRegistry());
 
     if (this.firingEffect) this.firingEffect.CleanUp();
     this.Cleanup();
     this.geometryResource = null;
-    this._dependencyRevisions.clear();
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
 
     trinity.UnregisterResource(this);
@@ -1267,21 +1282,19 @@ export class EveTurretSet extends EveEntity
   /**
    * Reloads the native LOD-selected geometry (EveTurretSet.cpp:252-290). Carbon
    * registers as its notify target, which rebuilds at once when the resource has
-   * already finished; UpdateSyncronous pulls that rebuild instead.
+   * already finished; manager registration preserves that immediate callback.
    *
-   * @adapted JavaScript has no destructor to unregister a notify target, so
-   *   the set pulls the resource's changes at use (`BlueAsyncRes.ensureDependency`).
+   * @adapted Manager-owned links replace native resource notify targets.
    */
 
   InitializeGeometryResource()
   {
     this.geometryResource = null;
-    this._dependencyRevisions.delete("geometry");
     this.Cleanup();
+    if (this._destroyed) return;
     if (this.lodLevel !== EveTurretSet.LOD.LOD_DISABLED && this.lodLevel !== EveTurretSet.LOD.LOD_HIGHEST) return;
     if (!this.geometryResPath) return;
     this.geometryResource = blue.resMan.GetResource(this.geometryResPath);
-    BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry");
   }
 
   /**
@@ -2079,10 +2092,12 @@ export class EveTurretSet extends EveEntity
 
   UpdateSyncronous(context, _parentMatrix)
   {
+    if (this._destroyed) return;
+    // Renew before any cached-bound or empty-turret early return. Expiry may
+    // have cleared the geometry while its authored path remains available.
+    if (!this.geometryResource && this.geometryResPath) this.InitializeGeometryResource();
+    if (this.geometryResource) this.geometryResource.IsGood(this);
     if (!this._turrets.length) return;
-    // Carbon's notify-target calls, pulled once an update and before visibility
-    // reads the bounds the rebuild sets (BlueAsyncRes.ensureDependency).
-    BlueAsyncRes.ensureDependency(this.geometryResource, this, "geometry");
     if (this.UpdateLOD(context))
     {
       this.InitializeGeometryResource();

@@ -1,5 +1,4 @@
 import { CjsSchema } from "#schema/CjsSchema";
-import { BlueAsyncRes } from "#blue";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2GrannyPrimitiveSet.h
 // Source: trinity/trinity/Tr2GrannyPrimitiveSet.cpp
@@ -52,7 +51,22 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
 
   /** The ordinary geometry factory supplies TriGeometryRes, replacing the raw SDK handle. */
   @type.object.ref("TriGeometryRes")
-  grannyRes = null;
+  get grannyRes() { return this._grannyRes; }
+
+  /**
+   * Moves the resource notification, retaining geometry until replacement completes.
+   * @adapted Tr2GrannyPrimitiveSet.cpp:214-237 uses native targets; ours live on resMan.
+   */
+  set grannyRes(resource)
+  {
+    if (this._grannyRes === resource) return;
+    if (this._grannyRes) blue.resMan.RemoveNotifyTarget(this, this._grannyRes);
+    this._grannyRes = resource;
+    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "grannyRes");
+  }
+
+  /** Resource storage behind the notification-aware property. */
+  _grannyRes = null;
 
   @type.float32Array
   _points = new Float32Array(0); // alloc: initially empty, owned variable-length geometry cache.
@@ -72,9 +86,6 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   _triangleIndexBuffer = new Tr2BufferAL();
   _lineIndexBuffer = new Tr2BufferAL();
   _destroyed = false;
-
-  /** What this set last built from, per slot (`BlueAsyncRes.ensureDependency`). */
-  _dependencyRevisions = new Map();
 
   /**
    * Acquires the authored resource after reader population (cpp:38-44).
@@ -116,18 +127,14 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   SetGrannyResource()
   {
     this.grannyRes = null;
-    this._dependencyRevisions.delete("granny");
     if (this._destroyed) return;
     if (!this.grannyResPath)
     {
       this.ReleaseCachedData(null);
       return;
     }
-    // Carbon registers a notify target here, which rebuilds at once when the
-    // resource has already finished; the pull does the same, and GetBatchesImpl
-    // pulls later changes (BlueAsyncRes.ensureDependency, slot "granny").
+    // Assignment registers the manager link and rebuilds if already prepared.
     this.grannyRes = blue.resMan.GetResource(this.grannyResPath);
-    if (this.grannyRes) BlueAsyncRes.ensureDependency(this.grannyRes, this, "granny");
   }
 
   /**
@@ -355,10 +362,8 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Emits native ordinary or dedicated picking ranges (cpp:135-171).
    *
-   * @adapted the resource is asked first, through `BlueAsyncRes.ensureDependency`,
-   *   which renews it (standing in for Carbon's retained handle) and pulls
-   *   Carbon's notify-target calls: RebuildCachedData when it is prepared or
-   *   reloaded, ReleaseCachedData once when it goes bad.
+   * @adapted Resource and device readiness renew independently; manager
+   *   notifications rebuild or release the derived primitive data.
    * @param {Tr2BatchAccumulator} accumulator Batch destination.
    * @param {object} perObjectData Owner per-object constants.
    * @param {Tr2Effect|null} effect Explicit effect override.
@@ -367,10 +372,14 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
 
   GetBatchesImpl(accumulator, perObjectData, effect, reason)
   {
+    if (this._destroyed) return;
+    if (!this.grannyRes && this.grannyResPath) this.SetGrannyResource();
     const resource = this.grannyRes;
-    if (resource && !BlueAsyncRes.ensureDependency(resource, this, "granny")) return;
+    let good = true;
+    if (resource && !resource.IsGood(this)) good = false;
     // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the buffer checks: preparing builds them.
-    if (!this.EnsureGood()) return;
+    if (!this.EnsureGood()) good = false;
+    if (!good) return;
     if (!this._vertexBuffer.IsValid() || this._vertexDeclHandle === Tr2EffectStateManager.Unknown) return;
     const picking = reason === Tr2PrimitiveSet.GetBatchesReason.Picking;
     const solid = this.renderSolid || picking, batch = new Tr2RenderBatch();
@@ -408,7 +417,6 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   {
     this._destroyed = true;
     this.grannyRes = null;
-    this._dependencyRevisions.clear();
     this.CleanUp();
     trinity.UnregisterResource(this);
   }
