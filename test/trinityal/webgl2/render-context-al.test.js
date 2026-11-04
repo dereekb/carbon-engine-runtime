@@ -120,7 +120,7 @@ test("Clear unpacks dx11's ARGB colour and clears depth, opening masks and sciss
     assert.ok(calledWith(calls, "depthMask").some(([ write ]) => write === true));
 });
 
-test("Present copies the back buffer to the canvas flipped, and counts frames by fence", () =>
+test("Present counts frames by fence without publishing the canvas", () =>
 {
     const { gl, calls, context } = device();
     calls.length = 0;
@@ -128,14 +128,44 @@ test("Present copies the back buffer to the canvas flipped, and counts frames by
     assert.equal(context.GetRecordingFrameNumber(), 1);
     assert.equal(context.Present(), ALResult.S_OK);
 
-    assert.deepEqual(calledWith(calls, "blitFramebuffer")[0], [ 0, 0, 64, 32, 0, 32, 64, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST ],
-        "row 0 of the back buffer is the top; row 0 of the canvas is the bottom");
+    assert.equal(calledWith(calls, "blitFramebuffer").length, 0);
     assert.equal(context.GetRecordingFrameNumber(), 2);
     assert.equal(context.GetRenderedFrameNumber(), 0, "the frame fence has not signalled");
 
     gl.finish();
     context.Present();
     assert.equal(context.GetRenderedFrameNumber(), 1, "frame 1's fence signalled; frame 2's was put after the finish");
+});
+
+test("EndScene publishes after drawing and resize without adding frame fences", () =>
+{
+    const { gl, calls, context } = device();
+    context.Present();
+    context.BeginScene();
+    calls.length = 0;
+    context.Clear({ color: 0xffff0000 });
+    assert.equal(context.EndScene(), ALResult.S_OK);
+    assert.deepEqual(calledWith(calls, "blitFramebuffer")[0], [ 0, 0, 64, 32, 0, 32, 64, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST ]);
+    assert.ok(calls.findIndex(call => call[0] === "clearBufferfv") < calls.findIndex(call => call[0] === "blitFramebuffer"));
+    assert.equal(context.GetRecordingFrameNumber(), 2);
+    assert.equal(calledWith(calls, "fenceSync").length, 0);
+
+    context.Present();
+    context.SetPresentParameters({ mode: { width: 96, height: 48 } });
+    context.BeginScene();
+    calls.length = 0;
+    context.Clear({ color: 0xff00ff00 });
+    context.EndScene();
+    assert.deepEqual(calledWith(calls, "blitFramebuffer")[0], [ 0, 0, 96, 48, 0, 48, 96, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST ]);
+    assert.equal(context.GetRecordingFrameNumber(), 3);
+    assert.equal(calledWith(calls, "fenceSync").length, 0);
+
+    gl.lost = true;
+    calls.length = 0;
+    assert.equal(context.EndScene(), ALResult.E_FAIL);
+    assert.equal(context.Present(), ALResult.E_FAIL);
+    assert.equal(calledWith(calls, "blitFramebuffer").length, 0);
+    assert.equal(calledWith(calls, "fenceSync").length, 0);
 });
 
 // ---------------------------------------------------------------- drawing

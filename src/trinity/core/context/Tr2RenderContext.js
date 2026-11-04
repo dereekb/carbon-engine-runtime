@@ -1437,8 +1437,10 @@ export class Tr2RenderContext
    * THIS IS NOT THE SWAP CHAIN'S PRESENT. Carbon has two, and they are reached
    * from different places: `TriDevice::HandleRenderTick` calls
    * `renderContext.Present()` (`TriDeviceStub.cpp:25`), which is the AL
-   * context's frame boundary and what advances the frame number; publishing the
-   * surface is `Tr2SwapChain::Present`, reached from `TriStepPresentSwapChain`.
+   * context's frame boundary and what advances the frame number. Native DX11
+   * also presents its primary swap chain there (Tr2PrimaryRenderContextDx11.cpp:624-632).
+   * Standalone surfaces use Tr2SwapChain::Present via TriStepPresentSwapChain.
+   * Browser backends publish completed canvas work in EndScene instead.
    *
    * Carbon's `Tr2RenderContext` INHERITS `Tr2RenderContextAL`, so its `Present`
    * is the AL's. We compose, so this forwards. It was called `PresentSwapChain`

@@ -30,13 +30,13 @@ import { Tr2PipelineStatsQueryALWebgl2 } from "./Tr2PipelineStatsQueryALWebgl2.j
 // any depth buffer. WebGL2's own drawing buffer cannot share a framebuffer with
 // a texture depth buffer, so the back buffer here is an ordinary render-target
 // texture, created by `SetPresentParameters` as the stub creates its own, and
-// `Present` copies it to the canvas.
+// `EndScene` copies it to the canvas before the browser presents it.
 //
 // EVERY TARGET IS STORED TOP-DOWN, AS D3D STORES IT. The GLSL emitter's
 // `clipYFlip` profile negates clip-space Y when its `ssyf` uniform says so, so
 // row 0 of every render target is the top row, as in D3D. Viewports and
 // scissor rectangles therefore carry D3D's coordinates unchanged, and the one
-// flip happens in `Present`'s copy to the canvas, whose row 0 is the bottom.
+// flip happens in `EndScene`'s copy to the canvas, whose row 0 is the bottom.
 //
 // ONE FRAMEBUFFER. dx11 binds render-target and depth-stencil views
 // (`SetRtDsToDevice`, `Tr2RenderContextDx11.cpp:1322-1423`); WebGL2 attaches
@@ -891,44 +891,25 @@ export class Tr2RenderContextALWebgl2
   }
 
   /**
-   * Shows the frame (`Tr2PrimaryRenderContextDx11.cpp:554-696`): the back
-   * buffer is copied to the canvas, flipped, since the canvas's row 0 is its
-   * bottom; see the head comment. A frame fence is put and earlier ones
-   * collected, as dx11 does, which is what advances the rendered frame
-   * number; and the back buffer is bound again.
+   * Advances the device frame and restores the default target.
    *
-   * Presenting does not end the frame: the browser shows the canvas once
-   * control returns to it.
+   * Carbon: Tr2PrimaryRenderContextAL::Present (trinity/trinityal/dx11/Tr2PrimaryRenderContextDx11.cpp:554-696)
    *
-   * @adapted
-   * @returns {number} An `ALResult`: whether the frame was shown.
+   * @adapted The browser presents after JS returns. EndScene copies the
+   *   completed scene to the canvas; this pre-render boundary only puts and
+   *   collects frame fences, advances the frame number and restores the target.
+   *   Native DX11 also presents its primary swap chain here (:624-632).
+   * @returns {number} An ALResult; fails on a lost or destroyed context.
    */
   Present()
   {
     if (!this.IsValid()) return ALResult.E_FAIL;
 
-    const gl = this._gl;
-    const backBuffer = this._defaultBackBuffer;
-
-    if (backBuffer.IsValid())
-    {
-      const width = backBuffer.GetWidth();
-      const height = backBuffer.GetHeight();
-
-      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._presentFramebuffer);
-      backBuffer.TrinityALImpl_GetObject().AttachToFramebuffer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, 0, 0);
-      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
-      gl.disable(gl.SCISSOR_TEST);
-      gl.blitFramebuffer(0, 0, width, height, 0, gl.drawingBufferHeight, gl.drawingBufferWidth, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
-    }
-
     this._PutFrameFence();
     this._recordingFrame++;
     this._CollectFrameFences();
 
-    this.SetRenderTarget(0, backBuffer);
-    return ALResult.S_OK;
+    return this.SetRenderTarget(0, this._defaultBackBuffer);
   }
 
   /** dx11's frame fence put, reusing a collected fence slot (`:598-622`). */
@@ -1001,13 +982,37 @@ export class Tr2RenderContextALWebgl2
   }
 
   /**
-   * Closes a scene; dx11 does nothing here.
+   * Publishes the completed back buffer without advancing the device frame.
    *
-   * @implemented
-   * @returns {number} `S_OK`.
+   * Carbon: Tr2RenderContextAL::EndScene (trinity/trinityal/dx11/Tr2RenderContextDx11.h:68-71)
+   *
+   * @adapted DX11 does nothing here. WebGL must copy the persistent texture
+   *   to the browser-owned drawing buffer after drawing, before returning to
+   *   the browser, so publication includes the current draw and any resize.
+   *   Like the WebGPU EndScene submission, this publishes the surface without
+   *   adding a second device frame tick.
+   * @returns {number} An ALResult; fails on a lost or destroyed context.
    */
   EndScene()
   {
+    if (!this.IsValid()) return ALResult.E_FAIL;
+
+    const gl = this._gl;
+    const backBuffer = this._defaultBackBuffer;
+
+    if (backBuffer.IsValid())
+    {
+      const width = backBuffer.GetWidth();
+      const height = backBuffer.GetHeight();
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._presentFramebuffer);
+      backBuffer.TrinityALImpl_GetObject().AttachToFramebuffer(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, 0, 0);
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+      gl.disable(gl.SCISSOR_TEST);
+      gl.blitFramebuffer(0, 0, width, height, 0, gl.drawingBufferHeight, gl.drawingBufferWidth, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+    }
+
     return ALResult.S_OK;
   }
 
