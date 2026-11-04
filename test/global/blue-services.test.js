@@ -40,17 +40,16 @@ test("Blue composition owns the resource manager and the holder keeps inert shar
   }
 });
 
-test("Blue Fetch routes DNA and resource schemes without changing options or results", async () =>
+test("Blue Fetch delegates without interpreting DNA or changing options or results", async () =>
 {
   const value = new CjsBlue(), options = {privateOption: {}}, result = {};
   const calls = [];
   value.resMan = {Fetch(input, received) { calls.push(["resource", input, received]); return result; }};
-  await assert.rejects(value.Fetch("hull:faction:race"), /SOF is not configured/);
-  value.sof = {Fetch(input, received) { calls.push(["sof", input, received]); return result; }};
+  value.sof = {BuildFromDNA() { assert.fail("Blue does not orchestrate SOF"); }};
   for (const dna of ["chjita:caldarinavy:caldari", "mdeha01:deathless:deathless:layout?deathless_hangar"])
   {
     assert.equal(await value.Fetch(dna, options), result);
-    assert.deepEqual(calls.pop(), ["sof", dna, options]);
+    assert.deepEqual(calls.pop(), ["resource", dna, options]);
   }
   for (const resource of ["res:/thing:black:part", "dynamic:/inspacevideos:a:b", "http://localhost:5510/a:b", "res:\\thing:a:b", "hull:faction", {path: "res:/x.black"}])
   {
@@ -58,7 +57,7 @@ test("Blue Fetch routes DNA and resource schemes without changing options or res
     assert.deepEqual(calls.pop(), ["resource", resource, options]);
   }
   const failure = new Error("provider failure");
-  value.sof = {Fetch() { throw failure; }};
+  value.resMan = {Fetch() { throw failure; }};
   await assert.rejects(value.Fetch("a:b:c"), error => error === failure);
 });
 
@@ -106,13 +105,15 @@ test("CjsLibrary initializes once, rejects a second root and restores borrowed p
   t.after(() => library.Shutdown());
   t.after(() => second.Shutdown());
   const os = new BlueOS(), audio = new CjsWwiseSoundEngineStub();
-  const result = {}, sof = {Fetch: () => result};
+  const result = {_type: "Tr2FloatParameter", value: 7}, sof = {BuildFromDNA: () => result};
   t.mock.method(audio, "Init", () => assert.fail("borrowed audio remains unstarted"));
   const first = library.Initialize({os, sof, audio});
   assert.deepEqual(await Promise.all([first, library.Initialize()]), [library, library]);
   await assert.rejects(second.Initialize(), /already active/);
   assert.equal(os.IsRegisteredForTicks(blue.resMan), true);
-  assert.equal(await library.Fetch("a:b:c"), result);
+  const built = await library.Fetch("a:b:c");
+  assert.equal(CjsSchema.getClassName(built.constructor), "Tr2FloatParameter");
+  assert.equal(built.value, 7);
   assert.equal(await library.Initialize(), library);
   await library.Shutdown();
   for (const [key, value] of Object.entries(original)) assert.equal(blue[key], value, key);

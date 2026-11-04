@@ -707,7 +707,7 @@ export class EveSOF extends IRoot
 
   /**
    * Acquires a DNA build through the configured async SOF resource boundary.
-   * Custom: Blue delegates DNA here without importing the SOF implementation.
+   * Custom: direct SOF service access retains the values-building contract.
    */
   async Fetch(dna, options = {})
   {

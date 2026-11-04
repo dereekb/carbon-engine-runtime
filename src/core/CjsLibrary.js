@@ -265,7 +265,9 @@ export class CjsLibrary
 
   /**
    * Claims the single application root and installs Blue's named providers.
-   * A default SOF and character library are constructed lazily here, never by the global holder.
+   * A default SOF and character library are constructed here, never by the global holder.
+   * The default SOF reads its catalog lazily through the installed resource manager;
+   * a supplied SOF retains its caller's configuration.
    * Repeated initialization returns this root until Shutdown; the first call
    * chooses its providers. All provider validation precedes publication.
    *
@@ -288,10 +290,11 @@ export class CjsLibrary
       try
       {
         const services = { ...options };
+        let createdSof = null;
         if (!Object.hasOwn(services, "sof"))
         {
           const { EveSOF } = await import("../sof/EveSOF.js");
-          services.sof = new EveSOF();
+          createdSof = services.sof = new EveSOF();
         }
         let createdCharacterLibrary = null;
         if (!Object.hasOwn(services, "characterLibrary"))
@@ -320,6 +323,16 @@ export class CjsLibrary
         // original policy, never its newly requested pending policy.
         if (installedPolicy) startup.settings = { ...startup.settings, ...installedPolicy.settings };
         this._ApplyConfiguration(startup);
+        if (createdSof)
+        {
+          const resMan = blue.resMan;
+          await createdSof.Register({
+            resources: { getObject: path => resMan.FetchObject(path) },
+            paths: blue.paths,
+            lazyData: true
+          });
+        }
+
         this._StartCallbackMan();
         if (!installedPolicy)
         {
@@ -399,10 +412,28 @@ export class CjsLibrary
     this._callbackManTickOs = blue.os;
   }
 
-  /** Acquires a DNA build or resource through the installed Blue services. */
+  /**
+   * Acquires a live DNA graph through SOF, or an object/resource through resMan.
+   *
+   * @cjs Application routing belongs to the composition root; Blue only holds the services.
+   * @adapted TEMPORARY: SOF emits values. Hydrate them here until the new type
+   *   handlers replace CjsSchema.from, then direct SOF construction replaces the
+   *   intermediate graph. Keep this bridge in one place; service values builds stay unchanged.
+   * @param {string} value DNA or resource path.
+   * @param {object} [options] Options forwarded unchanged to the selected service.
+   * @returns {Promise<object|null>} Constructed graph, loaded resource, or the SOF's null build result.
+   */
   async Fetch(value, options)
   {
-    return blue.Fetch(value, options);
+    if (typeof value === "string" && !/^[a-z][a-z0-9+.-]*:[/\\]/i.test(value)
+      && value.split(":").length >= 3)
+    {
+      if (!blue.sof) throw new Error("SOF is not configured");
+      const values = await blue.sof.BuildFromDNA(value, options);
+      return values === null ? null : CjsSchema.from(values._type, values);
+    }
+
+    return blue.resMan.Fetch(value, options);
   }
 }
 

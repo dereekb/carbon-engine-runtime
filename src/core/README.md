@@ -14,6 +14,16 @@ host-pumped resource tick hook, and submits configuration to those actual owners
 The standard Blue tick registration does not pump or request resources. A custom
 host must not begin resource work inside its registration hook.
 
+The default SOF is configured to acquire its catalog lazily through the installed
+resource manager and paths. Supplying a preconfigured SOF preserves its setup;
+`sof: null` disables DNA builds. Initialization itself does not fetch the catalog.
+`Fetch` routes DNA to SOF and paths to resMan. For now, one temporary
+`CjsSchema.from` call in that DNA route constructs the emitted type and initializes
+it; this bridge will move to the new type handlers. The SOF values-building
+methods remain unchanged for service consumers. No extra object copy or second
+initialization is performed, and the null build result remains null. A host must
+pump Blue while awaiting resources; Fetch does not create another loop.
+
 `SetConfiguration` replaces each supplied named entry within a section. Omitted
 entries remain; objects inside an entry are not deep-merged. Before initialization
 it records requests. Afterwards only supplied entries are submitted. Resource

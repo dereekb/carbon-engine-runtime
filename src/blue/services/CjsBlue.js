@@ -60,20 +60,13 @@ export class CjsBlue
   audio = new CjsWwiseSoundEngineStub();
 
   /**
-   * Delegates DNA to the installed SOF and all other requests to ResMan.
-   * Custom: the application-facing common entry point needs only this routing.
-   * Three or more colon-separated segments identify DNA unless a path scheme
-   * is present. Carbon's backslash path spelling is accepted alongside '/'.
-   * Options and results pass through unchanged; the services own readiness.
+   * Delegates resource requests to ResMan without interpreting application data.
+   * @cjs Convenience access to the installed manager. SOF-aware routing belongs
+   *   to CjsLibrary; retaining the SOF service does not make Blue its orchestrator.
+   * Options and results pass through unchanged; resMan owns readiness.
    */
   async Fetch(value, options)
   {
-    if (typeof value === "string" && !/^[a-z][a-z0-9+.-]*:[/\\]/i.test(value)
-      && value.split(":").length >= 3)
-    {
-      if (!this.sof) throw new Error("SOF is not configured");
-      return this.sof.Fetch(value, options);
-    }
     return this.resMan.Fetch(value, options);
   }
 
