@@ -534,7 +534,9 @@ export class EveStretch2 extends IEveFiringEffectElement
 
   GetBatches(batches, batchType, perObjectData, _reason)
   {
-    if (batchType !== TriBatchType.TRIBATCHTYPE_ADDITIVE || !this.effect || !this.effect.GetShaderStateInterface())
+    // Carbon GetBatches (EveStretch2.cpp:341) reads the notified shader. Pull
+    // readiness here, before a null shader could skip the refresh itself.
+    if (batchType !== TriBatchType.TRIBATCHTYPE_ADDITIVE || !this.effect || !this.effect.EnsureGood())
     {
       return false;
     }
@@ -546,9 +548,6 @@ export class EveStretch2 extends IEveFiringEffectElement
 
     const indexBuffer = Tr2Renderer.GetQuadListIndexBuffer();
     if (!indexBuffer.IsValid()) return false;
-    // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-    if (!this.effect.EnsureGood()) return false;
-
     const batch = new Tr2RenderBatch();
     batch.SetMaterial(this.effect);
     batch.SetPerObjectData(perObjectData);

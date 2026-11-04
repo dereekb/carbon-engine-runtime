@@ -1625,6 +1625,13 @@ export class Tr2Sprite2dScene extends ITr2Scene
   _SelectEffect()
   {
     const effect = this.is2dRender ? this.ubershader2d : this.ubershader3d;
+    // Carbon SelectEffect (Tr2Sprite2dScene.cpp:1701-1711) reads a shader
+    // refreshed by notifications. Pull that refresh before reading or reusing it.
+    if (effect && !effect.EnsureGood())
+    {
+      this._effect = null;
+      return false;
+    }
     if (effect === this._effect) return effect !== null;
     this._effect = null;
     if (!effect) return false;
