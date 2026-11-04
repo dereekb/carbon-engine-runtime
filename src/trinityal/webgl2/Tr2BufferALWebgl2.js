@@ -40,6 +40,10 @@
 // array. Uploads and reads therefore go through `COPY_WRITE_BUFFER` and
 // `COPY_READ_BUFFER`, which the render context never draws from; only the
 // first bind, which fixes the buffer's type, uses the real target.
+// Carbon's shared geometry buffer has both vertex and index usage
+// (Resources/TriGeometryRes.cpp:33-38). WebGL2 section 5.1 forbids one GL
+// buffer serving both types, so that AL resource owns two synchronized device
+// allocations. The render context, Carbon's friend, selects the index copy.
 
 import { CjsSchema, type } from "#schema";
 import { Tr2ALMemoryType } from "#consts/graphics";
@@ -123,6 +127,9 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
   /** m_buffer: the `WebGLBuffer`, or null. */
   _buffer = null;
 
+  /** @adapted WebGL2 requires separate index storage for combined vertex/index usage. */
+  _indexBuffer = null;
+
   /**
    * m_staging: the bytes of the last read-back, kept between maps only for a
    * `READ_OFTEN` buffer, as dx11 keeps its staging buffer.
@@ -160,7 +167,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    * what it refuses, with one refusal of its own: `UNORDERED_ACCESS`, which
    * WebGL2 cannot provide.
    *
-   * @adapted
+   * @adapted WebGL2 splits combined vertex/index usage into two device allocations.
    * @param {Tr2BufferDescriptionAL} desc The buffer description.
    * @param {ArrayBufferView|null} initialData Initial contents, if any.
    * @param {object} renderContext The context to create against.
@@ -204,12 +211,23 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
 
     this._gl = gl;
     this._buffer = buffer;
-    this._target = HasFlag(desc.gpuUsage, Tr2GpuUsage.INDEX_BUFFER) ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
-    this._BindTypeFixing();
+    const indexUsage = HasFlag(desc.gpuUsage, Tr2GpuUsage.INDEX_BUFFER);
+    const vertexUsage = HasFlag(desc.gpuUsage, Tr2GpuUsage.VERTEX_BUFFER);
+    this._target = indexUsage && !vertexUsage ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
+    this._BindTypeFixing(buffer, this._target);
 
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, buffer);
-    gl.bufferData(gl.COPY_WRITE_BUFFER, this._writeLockMemory, usage);
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+    if (indexUsage && vertexUsage)
+    {
+      this._indexBuffer = gl.createBuffer();
+      if (!this._indexBuffer)
+      {
+        this._Reset();
+        return ALResult.E_OUTOFMEMORY;
+      }
+      this._BindTypeFixing(this._indexBuffer, gl.ELEMENT_ARRAY_BUFFER);
+    }
+
+    this._Upload(0, size, usage);
 
     if (HasFlag(desc.gpuUsage, Tr2GpuUsage.SHADER_RESOURCE))
     {
@@ -232,8 +250,8 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     this._desc = Object.assign(new Tr2BufferDescriptionAL(), desc);
     this._desc.stride = stride;
 
-    // Carbon Tr2BufferALDx11.cpp:176: stride times count.
-    this._memory.Set__Size(Tr2MemoryCounterAL.MemoryType.BUFFER, desc.stride * desc.count);
+    // Carbon counts allocated bytes; combined usage has two WebGL allocations.
+    this._memory.Set__Size(Tr2MemoryCounterAL.MemoryType.BUFFER, size * (this._indexBuffer ? 2 : 1));
     return ALResult.S_OK;
   }
 
@@ -243,26 +261,57 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    * An index buffer is bound with no vertex array current, because binding
    * `ELEMENT_ARRAY_BUFFER` writes into whichever vertex array is bound; the
    * caller's bindings are put back afterwards.
+   *
+   * @adapted WebGL2 fixes the resource type at its first binding.
+   * @param {WebGLBuffer} buffer The new allocation.
+   * @param {number} target Its first binding target.
    */
-  _BindTypeFixing()
+  _BindTypeFixing(buffer, target)
   {
     const gl = this._gl;
 
-    if (this._target === gl.ELEMENT_ARRAY_BUFFER)
+    if (target === gl.ELEMENT_ARRAY_BUFFER)
     {
       const vertexArray = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
       gl.bindVertexArray(null);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._buffer);
+      const previous = gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, previous);
       gl.bindVertexArray(vertexArray);
       return;
     }
 
     const previous = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, previous);
   }
 
-  /** Carbon's impl `Destroy`, before the registry is left. */
+  /**
+   * Uploads retained bytes to every allocation of this AL buffer.
+   *
+   * @adapted WebGL2's vertex/index split requires both device copies to change together.
+   * @param {number} offset First byte to upload.
+   * @param {number} size Byte count.
+   * @param {number} usage A GL usage to replace storage, or zero to update a range.
+   */
+  _Upload(offset, size, usage)
+  {
+    const gl = this._gl;
+    const count = this._indexBuffer ? 2 : 1;
+    for (let index = 0; index < count; index++)
+    {
+      gl.bindBuffer(gl.COPY_WRITE_BUFFER, index === 0 ? this._buffer : this._indexBuffer);
+      if (usage) gl.bufferData(gl.COPY_WRITE_BUFFER, this._writeLockMemory, usage);
+      else gl.bufferSubData(gl.COPY_WRITE_BUFFER, offset, this._writeLockMemory, offset, size);
+    }
+    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+    if (this._srv) this._srvDirty = true;
+  }
+
+  /**
+   * Carbon's impl `Destroy`, before the registry is left.
+   * @adapted Releases both allocations of a combined vertex/index buffer.
+   */
   _Reset()
   {
     // Carbon Tr2BufferALDx11.cpp:185, Tr2TextureALDx11.cpp:833: released storage leaves the counters.
@@ -272,10 +321,12 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     if (gl)
     {
       if (this._buffer) gl.deleteBuffer(this._buffer);
+      if (this._indexBuffer) gl.deleteBuffer(this._indexBuffer);
       if (this._srv) gl.deleteTexture(this._srv);
     }
 
     this._buffer = null;
+    this._indexBuffer = null;
     this._staging = null;
     this._srv = null;
     this._srvLayout = null;
@@ -475,7 +526,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    * on. With it, and for `WRITE`, it is `bufferSubData` over the old storage,
    * dx11's `WRITE_NO_OVERWRITE` and `UpdateSubresource`.
    *
-   * @adapted
+   * @adapted WebGL2 uploads CPU mapping bytes to every device allocation.
    * @param {object} renderContext The context the map was made against.
    */
   UnmapForWriting(renderContext)
@@ -486,20 +537,8 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     const gl = this._gl;
     const cpu = this._desc.cpuUsage;
 
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, this._buffer);
-
-    if (HasFlag(cpu, Tr2CpuUsage.WRITE_OFTEN) && !HasFlag(cpu, Tr2CpuUsage.NON_SYNCRONIZED_WRITE))
-    {
-      gl.bufferData(gl.COPY_WRITE_BUFFER, this._writeLockMemory, gl.DYNAMIC_DRAW);
-    }
-    else
-    {
-      gl.bufferSubData(gl.COPY_WRITE_BUFFER, 0, this._writeLockMemory);
-    }
-
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-
-    if (this._srv) this._srvDirty = true;
+    const discard = HasFlag(cpu, Tr2CpuUsage.WRITE_OFTEN) && !HasFlag(cpu, Tr2CpuUsage.NON_SYNCRONIZED_WRITE);
+    this._Upload(0, this._writeLockMemory.length, discard ? gl.DYNAMIC_DRAW : 0);
   }
 
   /**
@@ -511,6 +550,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    * writes the range from the retained shadow.
    *
    * @cjs See Tr2BufferAL.UnmapForWriting__WrittenRange.
+   * @adapted Updates both allocations of combined vertex/index buffers.
    * @param {number} offset Byte offset of the written range.
    * @param {number} size Bytes written.
    * @param {object} renderContext The context the map was made against.
@@ -527,12 +567,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     const al = RenderContextALOf(renderContext);
     if (!al || !al.IsValid() || !this.IsValid()) return;
 
-    const gl = this._gl;
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, this._buffer);
-    gl.bufferSubData(gl.COPY_WRITE_BUFFER, offset, this._writeLockMemory, offset, size);
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-
-    if (this._srv) this._srvDirty = true;
+    this._Upload(offset, size, 0);
   }
 
   /**
@@ -542,7 +577,7 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
    * is mapped, copied into and unmapped; a `WRITE` buffer takes a boxed
    * `UpdateSubresource`, which is `bufferSubData` at the offset.
    *
-   * @implemented
+   * @adapted WebGL2 updates both allocations of combined vertex/index buffers.
    * @param {number} offset Byte offset of the range.
    * @param {number} size Bytes in the range.
    * @param {ArrayBufferView} data The bytes.
@@ -570,14 +605,8 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     }
     else if (HasFlag(this._desc.cpuUsage, Tr2CpuUsage.WRITE))
     {
-      const gl = this._gl;
-
       this._writeLockMemory.set(bytes, offset);
-      gl.bindBuffer(gl.COPY_WRITE_BUFFER, this._buffer);
-      gl.bufferSubData(gl.COPY_WRITE_BUFFER, offset, bytes);
-      gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-
-      if (this._srv) this._srvDirty = true;
+      this._Upload(offset, size, 0);
     }
     else
     {

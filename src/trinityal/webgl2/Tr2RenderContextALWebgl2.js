@@ -2286,7 +2286,10 @@ export class Tr2RenderContextALWebgl2
     return ALResult.E_FAIL;
   }
 
-  /** The indexed draw every indexed verb comes to. */
+  /**
+   * The indexed draw every indexed verb comes to.
+   * @adapted Combined vertex/index buffers have a separate WebGL2 index allocation.
+   */
   _DrawIndexed(indexCount, instanceCount, startIndex, baseVertex, startInstance)
   {
     if (!this.ApplyShadowRenderStates()) return ALResult.E_FAIL;
@@ -2299,7 +2302,7 @@ export class Tr2RenderContextALWebgl2
     if (!this._ApplyDrawBindings(baseVertex, startInstance)) return ALResult.E_FAIL;
 
     const stride = this._indexStride === 2 ? 2 : 4;
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices.GetGpuResource());
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indices._indexBuffer || indices.GetGpuResource());
     gl.drawElementsInstanced(mode, indexCount, stride === 2 ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT, startIndex * stride, instanceCount);
     this._drawCount++;
     return ALResult.S_OK;
@@ -2345,7 +2348,8 @@ export class Tr2RenderContextALWebgl2
    * Copies a byte range between buffers (`:1532-1560`), with
    * `copyBufferSubData`.
    *
-   * @implemented
+   * @adapted WebGL2 requires matching buffer types for GPU copies; incompatible types
+   *   upload the retained CPU bytes. Both allocations and the shader view stay current.
    * @param {object} destination The destination buffer.
    * @param {number} destinationOffset Byte offset into it.
    * @param {object} source The source buffer.
@@ -2358,9 +2362,43 @@ export class Tr2RenderContextALWebgl2
     if (!this.IsValid() || !destination || !source || !destination.IsValid() || !source.IsValid()) return ALResult.E_FAIL;
 
     const gl = this._gl;
-    gl.bindBuffer(gl.COPY_READ_BUFFER, source.TrinityALImpl_GetObject().GetGpuResource());
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, destination.TrinityALImpl_GetObject().GetGpuResource());
-    gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, sourceOffset, destinationOffset, length);
+    const sourceImpl = source.TrinityALImpl_GetObject();
+    const destinationImpl = destination.TrinityALImpl_GetObject();
+    const sourceBytes = sourceImpl.GetCpuBytes();
+    const destinationBytes = destinationImpl.GetCpuBytes();
+    if (sourceOffset < 0 || destinationOffset < 0 || length < 0
+      || sourceOffset + length > sourceBytes.length || destinationOffset + length > destinationBytes.length)
+    {
+      return ALResult.E_INVALIDARG;
+    }
+    if (length === 0) return ALResult.S_OK;
+    if (sourceImpl === destinationImpl && sourceOffset < destinationOffset + length && destinationOffset < sourceOffset + length)
+    {
+      return ALResult.E_INVALIDARG;
+    }
+
+    // Tr2RenderContextAL is Carbon's buffer friend (Tr2BufferALDx11.h:59).
+    destinationBytes.set(sourceBytes.subarray(sourceOffset, sourceOffset + length), destinationOffset);
+    const count = destinationImpl._indexBuffer ? 2 : 1;
+    for (let index = 0; index < count; index++)
+    {
+      const target = index === 0 ? destinationImpl._target : gl.ELEMENT_ARRAY_BUFFER;
+      const sourceBuffer = target === sourceImpl._target ? sourceImpl.GetGpuResource()
+        : target === gl.ELEMENT_ARRAY_BUFFER ? sourceImpl._indexBuffer : null;
+      gl.bindBuffer(gl.COPY_WRITE_BUFFER, index === 0 ? destinationImpl.GetGpuResource() : destinationImpl._indexBuffer);
+      if (sourceBuffer)
+      {
+        gl.bindBuffer(gl.COPY_READ_BUFFER, sourceBuffer);
+        gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, sourceOffset, destinationOffset, length);
+      }
+      else
+      {
+        gl.bufferSubData(gl.COPY_WRITE_BUFFER, destinationOffset, destinationBytes, destinationOffset, length);
+      }
+    }
+    gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+    if (destinationImpl._srv) destinationImpl._srvDirty = true;
     return ALResult.S_OK;
   }
 

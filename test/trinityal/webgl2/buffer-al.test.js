@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Tr2BufferALWebgl2, DATA_TEXTURE_WIDTH } from "../../../npm/dist/trinityal/webgl2/index.js";
-import { ALResult, Tr2BufferDescriptionAL } from "../../../npm/dist/trinityal/index.js";
+import { ALResult, Tr2BufferDescriptionAL, Tr2MemoryCounterAL } from "../../../npm/dist/trinityal/index.js";
 import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "../../../npm/dist/global/consts/renderContext/index.js";
 import { FakeRenderContext, FakeWebgl2 } from "./fakeWebgl2.js";
 
@@ -60,6 +60,91 @@ test("an index buffer fixes its type with no vertex array bound, then restores i
     const vertexArrays = calls.filter(call => call[0] === "bindVertexArray").map(call => call[1]);
     assert.deepEqual(vertexArrays, [ vao, null, vao ]);
     assert.ok(calls.some(call => call[0] === "bindBuffer" && call[1] === gl.ELEMENT_ARRAY_BUFFER && call[2] === buffer.GetGpuResource()));
+});
+
+test("creating an index buffer preserves both current and default VAO index bindings", () =>
+{
+    const { gl } = FakeWebgl2();
+    const defaultIndices = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, defaultIndices);
+    const vao = { kind: "vao" };
+    gl.bindVertexArray(vao);
+    const currentIndices = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, currentIndices);
+    const buffer = new Tr2BufferALWebgl2();
+    const desc = Tr2BufferDescriptionAL.create__Stride(2, 3, Tr2GpuUsage.INDEX_BUFFER, Tr2CpuUsage.WRITE);
+
+    assert.equal(buffer.Create(desc, null, FakeRenderContext(gl)), ALResult.S_OK);
+    assert.equal(gl.getParameter(gl.VERTEX_ARRAY_BINDING), vao);
+    assert.equal(gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING), currentIndices);
+    gl.bindVertexArray(null);
+    assert.equal(gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING), defaultIndices);
+    buffer.Destroy();
+});
+
+test("shared vertex/index usage uploads, accounts for and releases both WebGL buffer types", () =>
+{
+    const memoryBefore = Tr2MemoryCounterAL.gpuMemoryBufferEst;
+    const usage = Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER | Tr2GpuUsage.SHADER_RESOURCE;
+    const desc = Tr2BufferDescriptionAL.create__Stride(4, 4, usage, Tr2CpuUsage.WRITE | Tr2CpuUsage.READ);
+    const contents = new Uint8Array([ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ]);
+    const { gl, calls, context, buffer, result } = created(desc, contents);
+    const allocations = calls.filter(call => call[0] === "createBuffer").map(call => call[1]);
+
+    assert.equal(result, ALResult.S_OK);
+    assert.equal(allocations.length, 2);
+    assert.deepEqual(allocations.map(allocation => allocation.type), [ gl.ARRAY_BUFFER, gl.ELEMENT_ARRAY_BUFFER ]);
+    assert.equal(buffer.GetGpuResource(), allocations[0]);
+    for (const allocation of allocations) assert.deepEqual(allocation.bytes, contents);
+    assert.equal(Tr2MemoryCounterAL.gpuMemoryBufferEst - memoryBefore, 32);
+
+    buffer.GetShaderResourceTexture();
+    assert.equal(buffer.UpdateBuffer(4, 4, new Uint8Array([ 21, 22, 23, 24 ]), context), ALResult.S_OK);
+    contents.set([ 21, 22, 23, 24 ], 4);
+    for (const allocation of allocations) assert.deepEqual(allocation.bytes, contents);
+    assert.deepEqual(buffer.MapForReading(context).data, contents);
+    buffer.UnmapForReading(context);
+    buffer.GetShaderResourceTexture();
+    assert.equal(calls.filter(call => call[0] === "texImage2D").length, 2, "shader bytes refreshed after the write");
+
+    buffer.Destroy();
+    assert.deepEqual(calls.filter(call => call[0] === "deleteBuffer").map(call => call[1]), allocations);
+    assert.equal(Tr2MemoryCounterAL.gpuMemoryBufferEst, memoryBefore);
+});
+
+test("combined buffer whole and ranged mappings keep index and vertex storage synchronized", () =>
+{
+    for (const cpu of [ Tr2CpuUsage.WRITE, Tr2CpuUsage.WRITE_OFTEN, Tr2CpuUsage.WRITE_OFTEN | Tr2CpuUsage.NON_SYNCRONIZED_WRITE ])
+    {
+        const desc = Tr2BufferDescriptionAL.create__Stride(4, 4, Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER, cpu);
+        const { calls, context, buffer } = created(desc);
+        const allocations = calls.filter(call => call[0] === "createBuffer").map(call => call[1]);
+        assert.equal(allocations.length, 2);
+        const mapped = buffer.MapForWriting(context).data;
+        mapped.fill(7);
+        buffer.UnmapForWriting(context);
+        for (const allocation of allocations) assert.deepEqual(allocation.bytes, mapped);
+
+        mapped.set([ 1, 2, 3, 4 ], 8);
+        buffer.UnmapForWriting__WrittenRange(8, 4, context);
+        for (const allocation of allocations) assert.deepEqual(allocation.bytes, mapped);
+        buffer.Destroy();
+    }
+});
+
+test("failure to allocate the index counterpart releases the first allocation", () =>
+{
+    const { gl, calls } = FakeWebgl2();
+    const createBuffer = gl.createBuffer;
+    let count = 0;
+    gl.createBuffer = () => ++count === 1 ? createBuffer() : null;
+    const buffer = new Tr2BufferALWebgl2();
+    const desc = Tr2BufferDescriptionAL.create__Stride(4, 4, Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER, Tr2CpuUsage.WRITE);
+
+    assert.equal(buffer.Create(desc, null, FakeRenderContext(gl)), ALResult.E_OUTOFMEMORY);
+    assert.equal(buffer.IsValid(), false);
+    assert.equal(buffer.GetCpuBytes().length, 0);
+    assert.equal(calls.filter(call => call[0] === "deleteBuffer").length, 1);
 });
 
 test("unordered access is refused: WebGL2 has no storage buffers", () =>

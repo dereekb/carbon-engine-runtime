@@ -2,8 +2,9 @@
 //
 // It records every call and keeps buffer contents, so a test can assert both
 // what the backend asked the device to do and what bytes ended up where. It is
-// not a GL implementation: it checks nothing a real context would refuse
-// beyond what a test asserts itself.
+// not a GL implementation. Buffer bindings enforce WebGL2's index/other-data
+// distinction and retain element bindings per VAO; other validation is left
+// to each test and the real-device checks.
 
 let nextEnum = 0x9000;
 
@@ -11,7 +12,7 @@ let nextEnum = 0x9000;
 const ENUMS = [
     "ARRAY_BUFFER", "ELEMENT_ARRAY_BUFFER", "COPY_READ_BUFFER", "COPY_WRITE_BUFFER", "UNIFORM_BUFFER",
     "STATIC_DRAW", "DYNAMIC_DRAW",
-    "VERTEX_ARRAY_BINDING", "ARRAY_BUFFER_BINDING", "TEXTURE_BINDING_2D",
+    "VERTEX_ARRAY_BINDING", "ARRAY_BUFFER_BINDING", "ELEMENT_ARRAY_BUFFER_BINDING", "TEXTURE_BINDING_2D",
     "TEXTURE_2D", "TEXTURE_MIN_FILTER", "TEXTURE_MAG_FILTER", "NEAREST",
     "R32F", "RED", "FLOAT", "R32UI", "RED_INTEGER", "UNSIGNED_INT", "R32I", "INT",
     "RGBA32F", "RGBA", "RGBA32UI", "RGBA_INTEGER",
@@ -34,6 +35,7 @@ export function FakeWebgl2()
 {
     const calls = [];
     const bindings = new Map();
+    const elementBindings = new Map();
     const gl = { calls };
 
     for (const name of ENUMS) gl[name] = nextEnum++;
@@ -43,13 +45,24 @@ export function FakeWebgl2()
     Object.assign(gl, {
         createBuffer()
         {
-            const buffer = { kind: "buffer", bytes: new Uint8Array(0), usage: 0 };
+            const buffer = { kind: "buffer", bytes: new Uint8Array(0), usage: 0, type: 0 };
             calls.push([ "createBuffer", buffer ]);
             return buffer;
         },
         deleteBuffer(buffer) { calls.push([ "deleteBuffer", buffer ]); },
         bindBuffer(target, buffer)
         {
+            if (buffer)
+            {
+                const copyTarget = target === gl.COPY_READ_BUFFER || target === gl.COPY_WRITE_BUFFER;
+                const type = target === gl.ELEMENT_ARRAY_BUFFER ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
+                if (buffer.type && !copyTarget && buffer.type !== type)
+                {
+                    throw new Error("INVALID_OPERATION: incompatible element array buffer target");
+                }
+                if (!buffer.type) buffer.type = type;
+            }
+            if (target === gl.ELEMENT_ARRAY_BUFFER) elementBindings.set(vertexArray, buffer);
             bindings.set(target, buffer);
             calls.push([ "bindBuffer", target, buffer ]);
         },
@@ -61,12 +74,23 @@ export function FakeWebgl2()
             buffer.usage = usage;
             calls.push([ "bufferData", target, buffer, buffer.bytes.slice(), usage ]);
         },
-        bufferSubData(target, offset, data)
+        bufferSubData(target, offset, data, sourceOffset = 0, length = 0)
         {
             const buffer = bindings.get(target);
-            const bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+            const elementSize = data.BYTES_PER_ELEMENT ?? 1;
+            const byteOffset = sourceOffset * elementSize;
+            const byteLength = length ? length * elementSize : data.byteLength - byteOffset;
+            const bytes = new Uint8Array(data.buffer, data.byteOffset + byteOffset, byteLength);
             buffer.bytes.set(bytes, offset);
             calls.push([ "bufferSubData", target, buffer, offset, bytes.slice() ]);
+        },
+        copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size)
+        {
+            const source = bindings.get(readTarget);
+            const destination = bindings.get(writeTarget);
+            if (source.type !== destination.type) throw new Error("INVALID_OPERATION: incompatible buffer copy types");
+            destination.bytes.set(source.bytes.subarray(readOffset, readOffset + size), writeOffset);
+            calls.push([ "copyBufferSubData", readTarget, writeTarget, readOffset, writeOffset, size ]);
         },
         getBufferSubData(target, offset, view)
         {
@@ -101,12 +125,14 @@ export function FakeWebgl2()
         bindVertexArray(array)
         {
             vertexArray = array;
+            bindings.set(gl.ELEMENT_ARRAY_BUFFER, elementBindings.get(array) ?? null);
             calls.push([ "bindVertexArray", array ]);
         },
         getParameter(name)
         {
             if (name === gl.VERTEX_ARRAY_BINDING) return vertexArray;
             if (name === gl.ARRAY_BUFFER_BINDING) return bindings.get(gl.ARRAY_BUFFER) ?? null;
+            if (name === gl.ELEMENT_ARRAY_BUFFER_BINDING) return bindings.get(gl.ELEMENT_ARRAY_BUFFER) ?? null;
             if (name === gl.TEXTURE_BINDING_2D) return bindings.get(gl.TEXTURE_2D) ?? null;
             if (name === gl.CURRENT_PROGRAM) return bindings.get("program") ?? null;
             if (name === TIMER_QUERY.GPU_DISJOINT_EXT) return gl.disjoint === true;

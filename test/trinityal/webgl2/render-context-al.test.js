@@ -205,6 +205,65 @@ test("an indexed draw binds the program, points the attribute and draws elements
     assert.equal(context.GetDrawCount(), 1);
 });
 
+test("shared geometry binds distinct vertex and index allocations with unchanged byte offsets", () =>
+{
+    const { gl, calls, context } = drawable();
+    const bytes = new Uint8Array(60);
+    new Uint16Array(bytes.buffer, 48).set([ 0, 1, 2, 0, 2, 3 ]);
+    const shared = context.CreateBuffer(Tr2BufferDescriptionAL.create__Stride(4, 15,
+        Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER, Tr2CpuUsage.NONE), bytes);
+    context.SetStreamSource(0, shared, 0, 12);
+    context.SetIndices__Stride(shared, 2);
+    calls.length = 0;
+
+    assert.equal(context.DrawIndexedPrimitive(4, 24, 1), ALResult.S_OK);
+    const vertex = calledWith(calls, "bindBuffer").find(([ target ]) => target === gl.ARRAY_BUFFER)[1];
+    const index = calledWith(calls, "bindBuffer").find(([ target ]) => target === gl.ELEMENT_ARRAY_BUFFER)[1];
+    assert.notEqual(vertex, index);
+    assert.deepEqual(vertex.bytes, bytes);
+    assert.deepEqual(index.bytes, bytes);
+    assert.deepEqual(calledWith(calls, "drawElementsInstanced"), [ [ gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 48, 1 ] ]);
+    shared.Destroy();
+});
+
+test("CopySubBuffer keeps all usage combinations, CPU bytes and shader views consistent", () =>
+{
+    const { gl, calls, context } = device();
+    const usages = [ Tr2GpuUsage.VERTEX_BUFFER, Tr2GpuUsage.INDEX_BUFFER, Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER ];
+    for (const sourceUsage of usages)
+    {
+        for (const destinationUsage of usages)
+        {
+            const sourceBytes = new Uint8Array([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]);
+            const source = context.CreateBuffer(Tr2BufferDescriptionAL.create__Stride(4, 4, sourceUsage, Tr2CpuUsage.NONE), sourceBytes);
+            calls.length = 0;
+            const destination = context.CreateBuffer(Tr2BufferDescriptionAL.create__Stride(4, 4,
+                destinationUsage | Tr2GpuUsage.SHADER_RESOURCE, Tr2CpuUsage.WRITE | Tr2CpuUsage.READ), null);
+            const allocations = calledWith(calls, "createBuffer").map(([ buffer ]) => buffer);
+            const impl = destination.TrinityALImpl_GetObject();
+            impl.GetShaderResourceTexture();
+
+            assert.equal(context.CopySubBuffer(destination, 4, source, 8, 4), ALResult.S_OK);
+            const expected = new Uint8Array(16);
+            expected.set([ 8, 9, 10, 11 ], 4);
+            assert.deepEqual(impl.GetCpuBytes(), expected);
+            for (const allocation of allocations) assert.deepEqual(allocation.bytes, expected);
+            impl.GetShaderResourceTexture();
+            assert.equal(calledWith(calls, "texImage2D").length, 2);
+
+            assert.equal(context.CopySubBuffer(destination, 12, destination, 4, 4), ALResult.S_OK);
+            expected.set([ 8, 9, 10, 11 ], 12);
+            for (const allocation of allocations) assert.deepEqual(allocation.bytes, expected);
+            assert.deepEqual(impl.GetCpuBytes(), expected);
+            assert.equal(context.CopySubBuffer(destination, 14, source, 0, 4), ALResult.E_INVALIDARG);
+            assert.equal(context.CopySubBuffer(destination, 5, destination, 4, 4), ALResult.E_INVALIDARG);
+            assert.equal(gl.getParameter(gl.ELEMENT_ARRAY_BUFFER_BINDING), null);
+            source.Destroy();
+            destination.Destroy();
+        }
+    }
+});
+
 test("the base vertex moves the stream offset, which WebGL2 draws have no argument for", () =>
 {
     const { calls, context } = drawable();
