@@ -137,6 +137,8 @@ const COMPRESSED = new Map([
  * format a depth-stencil texture is made from takes the depth layout (dx11
  * makes such textures typeless so it can view them both ways).
  *
+ * @adapted WebGL2 requires EXT_texture_norm16 for Carbon's RGBA16 UNORM;
+ *   without it the exact format is unavailable and creation is refused.
  * @param {WebGL2RenderingContext} gl The context whose enums to use.
  * @param {number} format A `PixelFormat` value.
  * @param {boolean} depthStencil Whether the texture is a depth-stencil target.
@@ -178,6 +180,15 @@ export function UncompressedLayout(gl, format, depthStencil)
     case F.PIXEL_FORMAT_R32G32B32_FLOAT: return L(gl.RGB32F, gl.RGB, gl.FLOAT);
     case F.PIXEL_FORMAT_R16G16B16A16_TYPELESS:
     case F.PIXEL_FORMAT_R16G16B16A16_FLOAT: return L(gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
+    case F.PIXEL_FORMAT_R16G16B16A16_UNORM:
+    {
+      // Carbon's TAA accumulation uses this exact normalized format
+      // (Tr2PostProcessRenderer.cpp:1458-1471). WebGL2 exposes its storage,
+      // filtering and renderability through EXT_texture_norm16:
+      // https://registry.khronos.org/webgl/extensions/EXT_texture_norm16/
+      const norm16 = gl.getExtension("EXT_texture_norm16");
+      return norm16 ? L(norm16.RGBA16_EXT, gl.RGBA, gl.UNSIGNED_SHORT) : null;
+    }
     case F.PIXEL_FORMAT_R16G16B16A16_UINT: return L(gl.RGBA16UI, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT);
     case F.PIXEL_FORMAT_R16G16B16A16_SINT: return L(gl.RGBA16I, gl.RGBA_INTEGER, gl.SHORT);
     case F.PIXEL_FORMAT_R32G32_TYPELESS:

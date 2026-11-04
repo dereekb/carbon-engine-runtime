@@ -36,6 +36,53 @@ function create(desc, { msaa = new Tr2MsaaDesc(), gpuUsage = Tr2GpuUsage.NONE, c
 
 const called = (calls, name) => calls.filter(call => call[0] === name);
 
+test("TAA's RGBA16 UNORM target keeps its exact extension format and framebuffer attachment", () =>
+{
+    // Tr2PostProcessRenderer.cpp:1458-1471 requests normalized16 accumulation.
+    // EXT_texture_norm16 makes RGBA16_EXT color-renderable; it is not RGBA16F.
+    const norm16 = { RGBA16_EXT: 0x805b };
+    const format = PixelFormat.PIXEL_FORMAT_R16G16B16A16_UNORM;
+    const { gl, calls, texture, result } = create(dims(TextureType.TEX_TYPE_2D, format, 8, 4),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE | Tr2GpuUsage.RENDER_TARGET }, { EXT_texture_norm16: norm16 });
+
+    assert.equal(result, ALResult.S_OK);
+    assert.equal(texture.GetFormat(), format);
+    assert.equal(texture.GetMipSize(0), 8 * 4 * 8);
+    assert.deepEqual(called(calls, "texStorage2D")[0].slice(1), [gl.TEXTURE_2D, 1, norm16.RGBA16_EXT, 8, 4]);
+    assert.ok(texture.GetGpuResource());
+    assert.equal(texture.GetShaderResourceTexture(Tr2ColorSpace.COLOR_SPACE_LINEAR), texture.GetGpuResource());
+    texture.AttachToFramebuffer(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, 0, 0);
+    assert.deepEqual(called(calls, "framebufferTexture2D")[0].slice(1),
+        [gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.GetGpuResource(), 0]);
+});
+
+test("RGBA16 UNORM uploads preserve unsigned16 words from a byte-offset source", () =>
+{
+    const words = new Uint16Array([0xeeee, 0, 1, 32768, 65535, 0xffff]);
+    const bytes = new Uint8Array(words.buffer, 2, 8);
+    const { gl, calls, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_R16G16B16A16_UNORM, 1, 1),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: [data(bytes, 8)] },
+        { EXT_texture_norm16: { RGBA16_EXT: 0x805b } });
+
+    assert.equal(result, ALResult.S_OK);
+    const upload = called(calls, "texSubImage2D")[0];
+    assert.deepEqual(upload.slice(7, 9), [gl.RGBA, gl.UNSIGNED_SHORT]);
+    assert.ok(upload[9] instanceof Uint16Array);
+    assert.deepEqual(Array.from(upload[9]), [0, 1, 32768, 65535]);
+});
+
+test("RGBA16 UNORM without EXT_texture_norm16 refuses before allocating a substitute", () =>
+{
+    const { calls, texture, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_R16G16B16A16_UNORM, 4, 4),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE | Tr2GpuUsage.RENDER_TARGET });
+
+    assert.equal(result, ALResult.E_INVALIDARG);
+    assert.equal(texture.IsValid(), false);
+    assert.equal(texture.GetGpuResource(), null);
+    assert.equal(called(calls, "createTexture").length, 0);
+    assert.equal(called(calls, "createRenderbuffer").length, 0);
+});
+
 test("dx11's refusals hold: a cube must have six faces", () =>
 {
     const { result } = create(dims(TextureType.TEX_TYPE_CUBE, PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM, 4, 4, 1, 1, 4),
