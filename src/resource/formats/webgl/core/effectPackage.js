@@ -800,9 +800,10 @@ function normalizeLocalLightMode(value)
  *
  * @param {object} plan Recognised local-light family.
  * @param {string} mode Lowering mode.
+ * @param {object} emitterOptions Caller layout options; source registers still come from reflection.
  * @returns {object|null} Emitter options fragment, or null when not lowering.
  */
-function localLightEmitterOptions(plan, mode)
+function localLightEmitterOptions(plan, mode, emitterOptions)
 {
     if (!plan || mode === "none") return null;
 
@@ -823,7 +824,8 @@ function localLightEmitterOptions(plan, mode)
                 profileRegister: plan.profileRegister,
                 registerIndex: plan.indexRegister,
                 name: "cjsLocalLightTexture",
-                dataTexelBase: 131072
+                // Preserve the caller layout; the native index buffer can occupy 32 MiB.
+                dataTexelBase: emitterOptions?.lightPackedTexture?.dataTexelBase ?? 131072
             }
         };
     }
@@ -882,7 +884,7 @@ function translateStages(shaderMap, stageMap, values)
                     ? { emulatedAddressing: record.emulatedAddressing }
                     : {}),
                 ...(record.typedViewFormats?.length ? { typedViewFormats: record.typedViewFormats } : {}),
-                ...(localLightEmitterOptions(record.localLights, values.localLights) ?? {}),
+                ...(localLightEmitterOptions(record.localLights, values.localLights, values.emitterOptions) ?? {}),
                 ...(profileNeutral ?? {})
             });
 

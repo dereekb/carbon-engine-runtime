@@ -463,3 +463,17 @@ test("packed profiles preserve sample_l red-channel swizzles without a second sa
     assert.doesNotMatch(sampled.source, /sampler2DArray/);
     assert.equal(sampled.bindings.filter(binding => binding.kind === "structuredTexture").length, 1);
 });
+
+test("packed local-light translation preserves the native-capacity caller layout", { skip: realEffect.skip ?? false }, async () =>
+{
+    const bytes = await realEffect.Read(REAL_EFFECT);
+    const built = CjsWebglFormat.buildEffect(bytes, {
+        localLights: "packed-texture",
+        emitterOptions: { lightPackedTexture: { dataTexelBase: 2097152 }, packedLightProfiles: false }
+    });
+    const doc = CjsWebglFormat.read(built.bytes);
+    const packed = doc.shaders.flatMap(shader => shader.bindings).filter(binding => binding.localLightRole === "packed-texture");
+    assert.ok(packed.length > 0, "real local-light shader must carry the packed binding");
+    for (const binding of packed) assert.equal(binding.dataTexelBase, 2097152);
+    assert.ok(doc.shaders.some(shader => shader.source?.includes("2097152 +")), "shader address and binding metadata agree");
+});
