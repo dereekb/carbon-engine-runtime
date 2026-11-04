@@ -11,6 +11,9 @@ import { exposure as be } from "#be";
 /** Native picking attachments and their explicit device-resource lifetime. */
 export class Tr2PickBuffer
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   // Fields in Carbon's member order (Tr2PickBuffer.h:51-57).
 
   /** Carbon `int m_size`, the constructor's `size = 1` (Tr2PickBuffer.h:14, :51). */

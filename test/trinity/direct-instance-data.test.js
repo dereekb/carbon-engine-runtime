@@ -109,7 +109,7 @@ test("asking a destructed provider whether it is ready does not register it agai
   assert.equal(provider.IsInstanceDataReady(), false);
   assert.equal(trinity.GetResourcesRegistered().includes(provider), false, "a readiness query is not a use");
   trinity.CollectResources();
-  assert.equal(trinity._sceneResources.includes(provider), false, "the sweep drops the destructed provider's entry");
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false, "the sweep drops the destructed provider's entry");
 });
 
 test("an instanced mesh's draw is its provider's use", t =>

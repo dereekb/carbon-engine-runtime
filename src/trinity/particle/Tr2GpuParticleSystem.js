@@ -127,6 +127,9 @@ function CheckEffect(effect)
 })
 export class Tr2GpuParticleSystem
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /** m_enableEmit (bool) [READWRITE] */
   @type.boolean

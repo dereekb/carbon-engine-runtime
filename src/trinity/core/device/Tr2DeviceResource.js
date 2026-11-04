@@ -1,25 +1,15 @@
 // Source: trinity/trinity/Tr2DeviceResource.h
 // Source: trinity/trinity/Tr2DeviceResource.cpp
 //
-// Carbon's base for objects that own device resources. The registry (on
-// `trinity`; TriDevice forwards Carbon's names) prepares them when resources may
-// be created and releases them before a reset or shutdown.
-//
-// Carbon notes this is "not a proper Blue interface - it does not inherit
-// from IRoot" (h:19-21): a class takes it as one of several C++ bases. In
-// JavaScript a class has one base, so the Eve and Trinity classes take it the
-// way they take their other secondary bases, through `@be.inherit`, which
-// installs PrepareResources, IsGood, KeepAlive, EnsureGood and GetDescription
-// where the class has none. That route has no constructor. Most such classes
-// register on use, through EnsureGood at their use site, and are released when idle; infrastructure (scene,
-// render driver, pools, managers) registers in its own constructor with
-// `trinity.RegisterResource(this)`, as this constructor does, and
-// unregisters in its Destruct, where Carbon's destructor would (cpp:11-14)
-// (docs internal/decisions/device-resource-registration.md).
+// Carbon's base for objects that own device resources. TriDevice owns the
+// registry and prepares registered resources on its tick. IsGood renews use
+// without preparing; idle scene content is purged, while explicitly flagged
+// infrastructure survives until teardown. Secondary bases use @be.inherit,
+// which installs methods without running this constructor or copying fields.
 import { CjsSchema, meta } from "#schema";
 import { blue } from "#blue";
 import { trinity } from "../../CjsTrinity.js";
-import { Tr2DeviceResourceState, TICKS_PER_SECOND, PREPARE_RETRY_SECONDS } from "./deviceResourceState.js";
+import { Tr2DeviceResourceState } from "./deviceResourceState.js";
 
 
 
@@ -27,6 +17,9 @@ import { Tr2DeviceResourceState, TICKS_PER_SECOND, PREPARE_RETRY_SECONDS } from 
 
 export class Tr2DeviceResource
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /**
    * Carbon's constructor (cpp:6-9): registers with the device. Resolve its class
@@ -97,64 +90,33 @@ export class Tr2DeviceResource
   }
 
   /**
-   * Whether this device resource's device objects exist now. Only asks: it
-   * neither stamps, prepares nor lists, so a status or harness can look without
-   * keeping anything alive. A destructed resource answers false.
-   *
-   * @cjs Carbon's Tr2DeviceResource has no IsGood (h:22-62): its device objects
-   *   live from registration to destructor. The question exists here because a
-   *   JavaScript resource is prepared at use and released when idle (docs
-   *   internal/decisions/device-resource-registration.md); it answers as
-   *   `BlueAsyncRes.IsGood` does, and use goes through `EnsureGood`.
-   * @returns {boolean} Whether the device objects exist now.
+   * Renews use and answers readiness, without preparing device objects.
+   * @cjs Use-driven device residency; Carbon retains resources until destruction.
    */
   IsGood()
   {
+    this.KeepAlive();
     return this._state === Tr2DeviceResourceState.PREPARED;
   }
 
   /**
-   * Marks this resource as in use now: stamps Blue's current frame time, so the
-   * sweep does not release it before its idle rule has passed. Never stamps
-   * ahead and does nothing else; a holder that wants a resource kept renews it at
-   * least once per idle rule.
-   *
-   * @cjs MotherLode's name for the same thing on resources (`MotherLode.KeepAlive`);
-   *   Carbon's device resources live until their destructor (*Revised lifecycle* § 4).
-   * @returns {void}
+   * Stamps use and registers for device-tick preparation; destroyed resources stay dead.
+   * @cjs Use-driven device residency; Carbon retains resources until destruction.
    */
   KeepAlive()
   {
     if (this._state === Tr2DeviceResourceState.DESTRUCTED) return;
     const now = blue.os.GetCurrentFrameTime();
     if (!(this._stamp >= now)) this._stamp = now;
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
-   * Uses this resource: renews it (`KeepAlive`), prepares its device objects if
-   * it has none, lists it with `trinity` once prepared (the sweep's array and
-   * Carbon's registry), then answers `IsGood()`. Called at each draw or update
-   * site, after the gates; a resource used nowhere goes idle and is released by
-   * the sweep. A failed prepare waits `PREPARE_RETRY_SECONDS` before trying
-   * again, unlisted. A destructed resource answers false and never prepares again.
-   *
-   * @cjs Carbon registers a device resource in its constructor and prepares it
-   *   when the device can create resources; JavaScript has no destructor to
-   *   unregister it, so registration and preparing follow use (device resource
-   *   registration decision, *Where `IsGood` lives*, *Revised lifecycle* § 3-4),
-   *   as `BlueAsyncRes.EnsureGood` renews a resource at use.
-   * @returns {boolean} Whether the device objects exist now.
+   * Transitional alias for IsGood; preparation belongs to the device tick.
+   * @cjs Use-driven device residency; Carbon retains resources until destruction.
    */
   EnsureGood()
   {
-    if (this._state === Tr2DeviceResourceState.DESTRUCTED) return false;
-    this.KeepAlive();
-    const now = blue.os.GetCurrentFrameTime();
-    if (this._state !== Tr2DeviceResourceState.PREPARED && !(now < this._retryAt))
-    {
-      if (!this.PrepareResources()) this._retryAt = now + PREPARE_RETRY_SECONDS * TICKS_PER_SECOND;
-    }
-    if (this._state === Tr2DeviceResourceState.PREPARED && this._listed !== true) trinity._ListSceneResource(this);
     return this.IsGood();
   }
 
@@ -177,22 +139,13 @@ export class Tr2DeviceResource
   _stamp = 0;
 
   /**
-   * Moves on whenever this resource's entry in the sweep's array stops being
+   * Moves on whenever this resource's registration stops being
    * valid (destructed, or released by the sweep), so the old entry is dropped.
    *
    * @cjs
    * @type {number}
    */
   _generation = 0;
-
-  /**
-   * Whether it has a valid entry in the sweep's array, so a use never lists it
-   * twice.
-   *
-   * @cjs
-   * @type {boolean}
-   */
-  _listed = false;
 
   /**
    * The generation of its entry in Carbon's registry, so it is registered once

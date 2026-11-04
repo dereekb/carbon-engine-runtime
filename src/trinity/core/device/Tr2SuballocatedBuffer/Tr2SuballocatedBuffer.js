@@ -31,6 +31,9 @@ export const SHARED_BUFFER_MAX_SIZE = 2048 * 1024 * 1024;
  */
 export class Tr2SuballocatedBuffer
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   _name = "";
 
   _gpuUsage = 0;

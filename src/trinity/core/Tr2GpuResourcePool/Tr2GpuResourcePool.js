@@ -44,6 +44,9 @@ export function fail(message)
  */
 export class Tr2GpuResourcePool
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   /** m_outer - the pool a miss falls through to. */
   #outer = null;
 

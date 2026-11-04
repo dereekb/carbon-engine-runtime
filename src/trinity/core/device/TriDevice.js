@@ -24,7 +24,7 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2Rende
 import { ExecuteMainThreadActions } from "../continueOnMainThread.js";
 import { TRINITY } from "./trinityTickCookie.js";
 import { trinity } from "../../CjsTrinity.js";
-import { Tr2DeviceResourceState } from "./deviceResourceState.js";
+import { Tr2DeviceResourceState, TICKS_PER_SECOND, PREPARE_RETRY_SECONDS } from "./deviceResourceState.js";
 import "#consts/renderContext/presentation";
 import "#consts/renderContext/upscaling";
 import { blueEnums } from "#blue/enums/CjsBlueEnumRegistry";
@@ -477,6 +477,13 @@ export class TriDevice extends IRoot
   OnTick(realTime = 0, simTime = 0, _cookie = null)
   {
     this.frameCounter++;
+    const now = blue.os.GetCurrentFrameTime();
+    if (now - this._lastResourceSweep >= TriDevice.resourceSweepInterval * TICKS_PER_SECOND)
+    {
+      this._lastResourceSweep = now;
+      this.CollectResources();
+    }
+    this._PreparePendingResources();
 
     let delta = Number(simTime) - this.simTime;
     if (!(delta > 0)) delta = 0;
@@ -699,14 +706,84 @@ export class TriDevice extends IRoot
   /** @cjs Registration generations for safe removal during callbacks. */
   static _registeredGenerations = [];
 
+  /** @cjs Idle scene-content lifetime, in seconds of Blue frame time. */
+  static resourceIdleRule = 30;
+
+  /** @cjs Seconds between idle sweeps. */
+  static resourceSweepInterval = 60;
+
+  /** @cjs Maximum preparation attempts per tick, with round-robin fairness. */
+  resourcePrepareBudget = 32;
+
+  /** @cjs Next registration to consider for preparation. */
+  _resourcePrepareCursor = 0;
+
+  /** @cjs Blue frame time of the last idle sweep. */
+  _lastResourceSweep = 0;
+
+  /**
+   * Prepares pending registrations outside draw-time readiness checks.
+   * @cjs Bounded, retrying preparation supplements Carbon's device-reset walk.
+   */
+  _PreparePendingResources()
+  {
+    if (!Tr2Renderer.IsResourceCreationAllowed()) return;
+    const resources = TriDevice._resourcesRegistered;
+    const generations = TriDevice._registeredGenerations;
+    const count = resources.length, now = blue.os.GetCurrentFrameTime();
+    let attempts = 0;
+    for (let visited = 0; visited < count && attempts < this.resourcePrepareBudget; visited++)
+    {
+      if (!resources.length) break;
+      const index = this._resourcePrepareCursor % resources.length;
+      this._resourcePrepareCursor = index + 1;
+      const resource = resources[index], generation = generations[index];
+      if ((resource._generation | 0) !== generation || resource._state === Tr2DeviceResourceState.DESTRUCTED ||
+          resource._state === Tr2DeviceResourceState.PREPARED || now < resource._retryAt) continue;
+      attempts++;
+      let prepared = false;
+      try { prepared = resource.PrepareResources() === true; }
+      catch (error)
+      {
+        CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "Device resource preparation failed: %s", error.message);
+      }
+      // A callback may destroy or unregister itself. Never resurrect it here.
+      if ((resource._generation | 0) !== generation || resource._state === Tr2DeviceResourceState.DESTRUCTED) continue;
+      resource._state = prepared ? Tr2DeviceResourceState.PREPARED : Tr2DeviceResourceState.NONE;
+      resource._retryAt = prepared ? 0 : now + PREPARE_RETRY_SECONDS * TICKS_PER_SECOND;
+    }
+  }
+
+  /**
+   * Releases idle scene-content video memory; infrastructure is explicitly exempt.
+   * @cjs Timer eviction supplements Carbon's explicit destruction and device reset.
+   */
+  static CollectResources()
+  {
+    const expiry = blue.os.GetCurrentFrameTime() - TriDevice.resourceIdleRule * TICKS_PER_SECOND;
+    for (const resource of TriDevice.GetResourcesRegistered())
+    {
+      if (resource._neverPurge || resource._state === Tr2DeviceResourceState.DESTRUCTED || !(resource._stamp < expiry)) continue;
+      // Unregister first: a release callback may renew and register a new generation.
+      TriDevice.UnregisterResource(resource);
+      resource.ReleaseResources(TriStorageFlags.TRISTORAGE_VIDEOMEMORY);
+    }
+    TriDevice.GetResourcesRegistered();
+  }
+
+  /** @cjs Active-device entry point for the idle sweep. */
+  CollectResources() { TriDevice.CollectResources(); }
+
   /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static RegisterResource(resource)
   {
+    if (resource._state === Tr2DeviceResourceState.DESTRUCTED) return;
     // An installed class takes the fields on first use (`@be.inherit` copies methods).
     const generation = resource._generation | 0;
     if (resource._registeredGeneration === generation) return;
     resource._generation = generation;
     resource._registeredGeneration = generation;
+    if (resource._stamp === undefined) resource._stamp = blue.os.GetCurrentFrameTime();
     TriDevice._resourcesRegistered.push(resource);
     TriDevice._registeredGenerations.push(generation);
   }
@@ -717,9 +794,8 @@ export class TriDevice extends IRoot
   /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static UnregisterResource(resource)
   {
-    resource._state = Tr2DeviceResourceState.DESTRUCTED;
+    if (resource._state !== Tr2DeviceResourceState.DESTRUCTED) resource._state = Tr2DeviceResourceState.NONE;
     resource._generation = (resource._generation | 0) + 1;
-    resource._listed = false;
   }
 
   /** @adapted Exposes the native static registry through the active device. */

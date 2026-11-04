@@ -9,7 +9,7 @@ test("a scene is on Carbon's registry from construction, never swept, and leaves
 {
   const scene = new EveSpaceScene();
   assert.ok(trinity.GetResourcesRegistered().includes(scene), "registered by its constructor, as Carbon's base does");
-  assert.equal(trinity._sceneResources.includes(scene), false, "infrastructure is not in the sweep's array");
+  assert.equal(scene._neverPurge, true, "infrastructure has an explicit purge exemption");
   trinity.CollectResources();
   assert.ok(trinity.GetResourcesRegistered().includes(scene), "an unused scene is never swept");
 

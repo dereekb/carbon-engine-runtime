@@ -393,5 +393,6 @@ export class EveTrailsSet
     this._destroyed = true;
     this.Cleanup();
     this.geometryResource = null;
+    trinity.UnregisterResource(this);
   }
 }

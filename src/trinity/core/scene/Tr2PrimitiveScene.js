@@ -28,6 +28,9 @@ import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 @be.mapInterface(ITr2Scene)
 export class Tr2PrimitiveScene extends ITr2PickableScene
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2PrimitiveSet")

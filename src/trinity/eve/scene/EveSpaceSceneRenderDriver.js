@@ -113,6 +113,9 @@ const CARBON_DEFAULT_SETTINGS = new EveSpaceSceneRenderDriverSettings();
 })
 export class EveSpaceSceneRenderDriver
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /**
    * Carbon's constructor (EveSpaceSceneRenderDriver.cpp:143-160) takes

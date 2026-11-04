@@ -23,6 +23,9 @@ const DEBUG_LINE_EFFECT_PATH = "res:/Graphics/Effect/Managed/Utility/DebugLine.f
 @meta.carbon("TriDebugResourceHelper")
 export class TriDebugResourceHelper
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   /** m_vertexPosColorDecl */
   _vertexPosColorDecl = Tr2EffectStateManager.Unknown;
 

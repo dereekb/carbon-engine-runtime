@@ -31,6 +31,9 @@ import { trinity } from "../../CjsTrinity.js";
 })
 export class EveSprite2dBracketRenderer extends Tr2SpriteObject
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /**
    * Carbon's constructor (cpp:9-13).

@@ -289,6 +289,9 @@ function CopyToTexture(bitmap, texture, x, y, margin, renderContext)
 })
 export class Tr2TextureAtlas extends ITr2TextureProvider
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /**
    * m_format (Tr2RenderContextEnum::PixelFormat) [READ, ENUM]

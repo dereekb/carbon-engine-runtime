@@ -19,6 +19,8 @@ const s_buffers = {
   resources: new Map(),
 
   registered: false,
+  /** @cjs Process infrastructure is exempt from idle purge. */
+  _neverPurge: true,
 
   /** Carbon GetResource (cpp:14-28): the named entry, made now when a device allows it. */
   GetResource(name, factory)

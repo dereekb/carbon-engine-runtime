@@ -244,6 +244,9 @@ function EmptyShadowResources()
 @be.mapInterface(INotify)
 export class EveSpaceScene
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /**
    * m_visualizeMethod (EveVisualizeMethod - enum EveVisualizeMethod) [READWRITE, ENUM]

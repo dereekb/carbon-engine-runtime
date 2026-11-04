@@ -142,6 +142,9 @@ const toHalf = num.toHalfFloatCarbon;
 @meta.carbon("Tr2LightManager")
 export class Tr2LightManager
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   // Carbon m_lightData after the TLS flatten: the frame's accepted records,
   // plain-object copies (every producer reuses a static scratch record, so

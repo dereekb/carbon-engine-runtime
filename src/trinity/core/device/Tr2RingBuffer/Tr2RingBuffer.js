@@ -75,6 +75,9 @@ const INVALID_OFFSET = 0xffffffff;
 
 export class Tr2RingBuffer
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   /** One arena per data type, as Carbon's typed `GetInstance` gives. */
   static _instances = new Map();
 

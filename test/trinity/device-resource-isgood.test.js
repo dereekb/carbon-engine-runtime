@@ -1,187 +1,95 @@
-// Tr2DeviceResource.IsGood, KeepAlive and EnsureGood (docs internal/decisions/device-resource-registration.md,
-// Revised lifecycle): a use (EnsureGood) stamps Blue's current frame time, prepares and lists a
-// resource that has no device objects, and answers IsGood; KeepAlive only stamps; IsGood only asks.
-// The sweep releases what goes unused past the rule and the next use prepares it again; a
-// destructed resource never prepares again.
 import assert from "node:assert/strict";
 import test from "node:test";
-
 import { blue } from "../../npm/dist/blue/index.js";
-import { trinity, Tr2DeviceResource, Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/index.js";
-import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
-import { InitializeTrinityStub } from "../support/trinityStub.js";
-
-// A stub backend whose device exists, so resource creation is allowed (PrepareResources).
-const al = new Tr2RenderContextALStub();
-al.CreateDevice();
-Tr2RenderContext_GetMainThreadRenderContext().SetRenderContextAL(al);
-InitializeTrinityStub();
-
-/**
- * A device resource as an inheriting class sees it: Tr2DeviceResource's methods,
- * none of its fields, no constructor registration.
- *
- * @param {boolean} [prepares=true] What OnPrepareResources answers.
- * @returns {object} The resource.
- */
-function resource(prepares = true)
-{
-  const r = Object.create(Tr2DeviceResource.prototype);
-  r.prepares = 0;
-  r.releases = 0;
-  r._OnPrepareResources = function() { this.prepares++; return prepares; };
-  r.ReleaseResources = function() { this.releases++; };
-  return r;
-}
-
-/** Blue ticks per second. */
+import { TriDevice, trinity, Tr2DeviceResource, Tr2Renderer, EveTrailsSet } from "../../npm/dist/trinity/index.js";
 const SECOND = 10000000;
-
-/**
- * Controls Blue's frame time for one test.
- *
- * @param {object} t The test context.
- * @returns {{ at: function(number): void }} Sets the frame time, in seconds.
- */
-function clock(t)
-{
+function setup(t) {
+  const oldResources = TriDevice._resourcesRegistered, oldGenerations = TriDevice._registeredGenerations;
+  TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
   let now = 1000 * SECOND;
   t.mock.method(blue.os, "GetCurrentFrameTime", () => now);
-  return { at(seconds) { now = (1000 + seconds) * SECOND; } };
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  const device = new TriDevice();
+  t.after(() => { TriDevice._resourcesRegistered = oldResources; TriDevice._registeredGenerations = oldGenerations; });
+  return { device, at: seconds => { now = (1000 + seconds) * SECOND; } };
 }
-
-test("the first EnsureGood prepares and lists; later ones only stamp the current frame", t =>
-{
-  const time = clock(t);
-  const r = resource();
-  assert.equal(trinity.GetResourcesRegistered().includes(r), false, "built and never used: not registered");
-  assert.equal(r.EnsureGood(), true);
-  assert.equal(r.prepares, 1);
-  assert.equal(trinity.GetResourcesRegistered().includes(r), true);
-  assert.equal(trinity._sceneResources.filter(x => x === r).length, 1);
-  time.at(3);
-  assert.equal(r.EnsureGood(), true);
-  assert.equal(r.prepares, 1, "no second prepare while prepared");
-  assert.equal(r._stamp, 1003 * SECOND, "Blue's current frame time");
-  assert.equal(trinity._sceneResources.filter(x => x === r).length, 1, "listed once");
-  trinity.UnregisterResource(r);
-  trinity.CollectResources();
+function resource(result = true) {
+  const r = Object.create(Tr2DeviceResource.prototype);
+  r.prepares = 0; r.releases = 0;
+  r._OnPrepareResources = () => { r.prepares++; return result; };
+  r.ReleaseResources = () => { r.releases++; };
+  return r;
+}
+test("readiness renews and registers without preparing; device preparation makes it good", t => {
+  const { device, at } = setup(t), r = resource();
+  assert.equal(r.IsGood(), false); assert.equal(r.prepares, 0);
+  assert.deepEqual(device.GetResourcesRegistered(), [r]);
+  assert.equal(r.EnsureGood(), false); assert.equal(r.prepares, 0);
+  device._PreparePendingResources(); assert.equal(r.IsGood(), true); assert.equal(r.prepares, 1);
+  at(5); r.KeepAlive(); assert.equal(r._stamp, 1005 * SECOND);
+  device._PreparePendingResources(); assert.equal(r.prepares, 1);
 });
-
-test("a failed prepare answers false and lists nothing", t =>
-{
-  clock(t);
-  const r = resource(false);
-  assert.equal(r.EnsureGood(), false);
-  assert.equal(trinity._sceneResources.includes(r), false);
+test("failed and throwing preparation back off without starving other resources", t => {
+  const { device, at } = setup(t), bad = resource(false), throws = resource(), good = resource();
+  throws._OnPrepareResources = () => { throws.prepares++; throw new Error("fixture"); };
+  for (const r of [bad, throws, good]) r.KeepAlive();
+  device._PreparePendingResources(); device._PreparePendingResources();
+  assert.equal(bad.prepares, 1); assert.equal(throws.prepares, 1); assert.equal(good.IsGood(), true);
+  at(1); device._PreparePendingResources(); assert.equal(bad.prepares, 2); assert.equal(throws.prepares, 2);
 });
-
-test("a failed prepare backs off for a second of frame time before the next use tries again", t =>
-{
-  const time = clock(t);
-  const r = resource(false);
-  r.EnsureGood();
-  r.EnsureGood();
-  assert.equal(r.prepares, 1, "no retry within the back-off");
-  time.at(1.5);
-  r.EnsureGood();
-  assert.equal(r.prepares, 2, "retried after it");
-  assert.equal(trinity._sceneResources.includes(r), false, "never listed while failing");
+test("idle expiry releases once; next use registers and waits for preparation", t => {
+  const { device, at } = setup(t), r = resource();
+  r.KeepAlive(); device._PreparePendingResources(); at(TriDevice.resourceIdleRule + 1);
+  device.CollectResources(); device.CollectResources(); assert.equal(r.releases, 1);
+  assert.deepEqual(device.GetResourcesRegistered(), []); assert.equal(r._state, 0);
+  assert.equal(r.IsGood(), false); assert.equal(r.prepares, 1);
+  device._PreparePendingResources(); assert.equal(r.IsGood(), true); assert.equal(r.prepares, 2);
 });
-
-test("unused past the rule it is released and dropped; the next EnsureGood prepares and lists it again", t =>
-{
-  const time = clock(t);
-  const r = resource();
-  r.EnsureGood();
-  time.at(trinity.resourceIdleRule + 1);
-  trinity.CollectResources();
-  assert.equal(r.releases, 1);
-  assert.equal(trinity.GetResourcesRegistered().includes(r), false);
-  assert.equal(r._state, 0, "NONE");
-  assert.equal(r.EnsureGood(), true);
-  assert.equal(r.prepares, 2);
-  assert.equal(trinity.GetResourcesRegistered().includes(r), true);
-  trinity.UnregisterResource(r);
-  trinity.CollectResources();
+test("renewed and exempt infrastructure resources survive idle collection", t => {
+  const { device, at } = setup(t), used = resource(), infrastructure = resource();
+  infrastructure._neverPurge = true; used.KeepAlive(); infrastructure.KeepAlive();
+  device._PreparePendingResources(); at(TriDevice.resourceIdleRule + 1); used.IsGood(); device.CollectResources();
+  assert.equal(used.releases, 0); assert.equal(infrastructure.releases, 0);
 });
-
-test("used within the rule it survives every sweep", t =>
-{
-  const time = clock(t);
-  const r = resource();
-  for (let i = 0; i < 30; i++)
-  {
-    time.at(i * trinity.resourceIdleRule / 2);
-    r.EnsureGood();
-    trinity.CollectResources();
-  }
-  assert.equal(r.releases, 0);
-  assert.equal(r.prepares, 1);
-  trinity.UnregisterResource(r);
-  trinity.CollectResources();
+test("destroyed resources cannot register or prepare again", t => {
+  const { device } = setup(t), r = resource(); r.KeepAlive();
+  trinity.UnregisterResource(r); assert.equal(r.IsGood(), false); device._PreparePendingResources();
+  assert.equal(r.prepares, 0); assert.deepEqual(device.GetResourcesRegistered(), []);
 });
-
-test("KeepAlive only stamps the current frame: it neither prepares nor lists, and keeps a prepared resource through the sweep", t =>
-{
-  const time = clock(t);
-  const r = resource();
-  r.KeepAlive();
-  assert.equal(r.prepares, 0, "no prepare");
-  assert.equal(trinity._sceneResources.includes(r), false, "not listed");
-  assert.equal(r._stamp, 1000 * SECOND);
-  r.EnsureGood();
-  time.at(trinity.resourceIdleRule - 1);
-  r.KeepAlive();
-  time.at(2 * trinity.resourceIdleRule - 2);
-  trinity.CollectResources();
-  assert.equal(r.releases, 0, "renewed within the rule");
-  assert.equal(r.prepares, 1);
-  trinity.UnregisterResource(r);
-  trinity.CollectResources();
+test("trail destruction removes pending device registration immediately", t => {
+  const { device } = setup(t), trails = new EveTrailsSet();
+  trails.KeepAlive(); assert.ok(device.GetResourcesRegistered().includes(trails));
+  trails.Destruct(); device._PreparePendingResources();
+  assert.equal(device.GetResourcesRegistered().includes(trails), false);
+  assert.equal(trails.IsGood(), false);
 });
-
-test("IsGood only asks: no stamp, no prepare, no listing", t =>
-{
-  const time = clock(t);
-  const r = resource();
-  assert.equal(r.IsGood(), false);
-  assert.equal(r.prepares, 0);
-  assert.equal(r._stamp, undefined, "not stamped");
-  assert.equal(trinity._sceneResources.includes(r), false);
-  r.EnsureGood();
-  time.at(5);
-  assert.equal(r.IsGood(), true);
-  assert.equal(r._stamp, 1000 * SECOND, "asking does not renew");
-  trinity.UnregisterResource(r);
-  assert.equal(r.IsGood(), false, "destructed");
-  trinity.CollectResources();
+test("preparation budget progresses fairly across ticks", t => {
+  const { device } = setup(t); device.resourcePrepareBudget = 1;
+  const a = resource(false), b = resource(), c = resource();
+  for (const r of [a,b,c]) r.KeepAlive();
+  device._PreparePendingResources(); assert.deepEqual([a.prepares,b.prepares,c.prepares], [1,0,0]);
+  device._PreparePendingResources(); device._PreparePendingResources();
+  assert.deepEqual([a.prepares,b.prepares,c.prepares], [1,1,1]);
 });
-
-test("a destructed resource answers false and never prepares again", t =>
-{
-  clock(t);
-  const r = resource();
-  r.EnsureGood();
-  trinity.UnregisterResource(r);
-  assert.equal(r.EnsureGood(), false);
-  assert.equal(r.prepares, 1);
-  trinity.CollectResources();
-  assert.equal(trinity._sceneResources.includes(r), false);
+test("resource creation gate and destruction during preparation are respected", t => {
+  const { device } = setup(t), r = resource(); r.KeepAlive();
+  Tr2Renderer.IsResourceCreationAllowed.mock.mockImplementation(() => false);
+  device._PreparePendingResources(); assert.equal(r.prepares, 0);
+  Tr2Renderer.IsResourceCreationAllowed.mock.mockImplementation(() => true);
+  r.PrepareResources = () => { trinity.UnregisterResource(r); return true; };
+  device._PreparePendingResources(); assert.equal(r._state, 2); assert.equal(r.IsGood(), false);
 });
-
-test("a device release drops the state until the device prepares it again, keeping its one entry", t =>
-{
-  clock(t);
-  const r = resource();
-  r.EnsureGood();
-  trinity.device.ReleaseDeviceResources();
-  assert.equal(r._state, 0, "NONE");
-  trinity.device.PrepareDeviceResources();
-  assert.equal(r._state, 1, "PREPARED");
-  assert.equal(r.EnsureGood(), true);
-  assert.equal(r.prepares, 2);
-  assert.equal(trinity._sceneResources.filter(x => x === r).length, 1);
-  trinity.UnregisterResource(r);
-  trinity.CollectResources();
+test("release callback can renew without its new registration being removed", t => {
+  const { device, at } = setup(t), r = resource(); r.KeepAlive(); device._PreparePendingResources();
+  r.ReleaseResources = () => { r.releases++; r.KeepAlive(); };
+  at(TriDevice.resourceIdleRule + 1); device.CollectResources();
+  assert.deepEqual(device.GetResourcesRegistered(), [r]); assert.equal(r.releases, 1);
+  device._PreparePendingResources(); assert.equal(r.IsGood(), true);
+});
+test("OnTick prepares pending resources and performs the idle sweep", t => {
+  const { device, at } = setup(t), r = resource();
+  t.mock.method(device, "Update", () => {}); t.mock.method(device, "HandleRenderTick", () => {});
+  r.KeepAlive(); device.OnTick(); assert.equal(r.prepares, 1);
+  at(TriDevice.resourceSweepInterval + TriDevice.resourceIdleRule + 1);
+  device.OnTick(); assert.equal(r.releases, 1); assert.deepEqual(device.GetResourcesRegistered(), []);
 });

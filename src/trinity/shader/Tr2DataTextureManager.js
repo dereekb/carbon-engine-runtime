@@ -47,6 +47,9 @@ const VEC4_BYTES = 16;
 
 export class Tr2DataTextureManager
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /** m_textureWidth (uint32_t) [READ] */
   @type.uint32

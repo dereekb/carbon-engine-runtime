@@ -58,6 +58,9 @@ function copyHash(out, value)
 })
 export class Tr2ImpostorManager
 {
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
 
   /** m_height (uint32_t) [READWRITE, PERSIST, NOTIFY] */
 

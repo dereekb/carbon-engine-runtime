@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { TriBatchType, RenderingMode } from "../../npm/dist/global/consts/graphics/index.js";
 import {
-  EveTacticalTrails, EveUpdateContext, Tr2Effect, Tr2TranslationAdapter, Tr2RenderContext_GetMainThreadRenderContext
+  EveTacticalTrails, EveUpdateContext, TriDevice, Tr2Effect, Tr2TranslationAdapter, Tr2RenderContext_GetMainThreadRenderContext
 } from "../../npm/dist/trinity/index.js";
 import { TriRenderBatchAccumulator } from "../../npm/dist/trinity/core/batch/TriRenderBatch/TriRenderBatchAccumulator.js";
 import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
@@ -132,6 +132,9 @@ test("GetBatches draws twelve vertices per segment, transparent only, under RM_A
   accumulator.Commit = (batch) => { committed.push(batch); return commit(batch); };
   trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_ADDITIVE, null, 0);
   assert.equal(committed.length, 0);
+  trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT, null, 0);
+  assert.equal(committed.length, 0, "first use queues preparation rather than preparing during draw");
+  new TriDevice()._PreparePendingResources();
   trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT, null, 0);
   assert.equal(committed.length, 1);
   assert.equal(committed[0].indexCountPerInstance, 24);
