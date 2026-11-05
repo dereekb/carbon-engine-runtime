@@ -168,7 +168,7 @@ export class Tr2Sprite2dPickingMask extends IRoot
   SampleMask(point, topLeft, width, height)
   {
     const mask = this.mask;
-    if (!mask || !mask.EnsureGood()) return false;
+    if (!mask || !mask.IsGood()) return false;
 
     const bitmap = mask.GetBitmap();
     const maskWidth = bitmap.GetWidth();

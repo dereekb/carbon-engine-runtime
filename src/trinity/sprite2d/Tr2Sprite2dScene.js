@@ -854,17 +854,18 @@ export class Tr2Sprite2dScene extends ITr2Scene
   /**
    * Checks every texture required by the active effect.
    *
-   * @implemented
+   * @adapted Renews every required texture even when an earlier slot is unavailable.
    */
 
   _TexturesReady()
   {
+    let good = true;
     for (let i = 0; i < this._numTexturesUsed; i++)
     {
-      if (!this._texture[i] || !this._texture[i].EnsureGood()) return false;
+      if (!this._texture[i] || !this._texture[i].IsGood()) good = false;
     }
 
-    return true;
+    return good;
   }
 
   /**
@@ -1565,8 +1566,11 @@ export class Tr2Sprite2dScene extends ITr2Scene
     // Effect is still loading - can't render any UI
     if (!effectRes || effectRes.IsLoading()) return false;
 
-    if (!effectRes.EnsureGood())
+    if (!effectRes.IsGood())
     {
+      // IsGood can start manager revival after expiry; do not restart that load.
+      if (effectRes.IsLoading()) return false;
+
       // Effect load failed - can't render any UI
       CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "%s: Effect used for rendering failed to load - attempting to reload", "Tr2Sprite2dScene::PrepareResourcesForRender");
       effectRes.Reload();
@@ -1626,8 +1630,8 @@ export class Tr2Sprite2dScene extends ITr2Scene
   {
     const effect = this.is2dRender ? this.ubershader2d : this.ubershader3d;
     // Carbon SelectEffect (Tr2Sprite2dScene.cpp:1701-1711) reads a shader
-    // refreshed by notifications. Pull that refresh before reading or reusing it.
-    if (effect && !effect.EnsureGood())
+    // refreshed by notifications. Renew its owner link before reading or reusing it.
+    if (effect && !effect.IsGood())
     {
       this._effect = null;
       return false;

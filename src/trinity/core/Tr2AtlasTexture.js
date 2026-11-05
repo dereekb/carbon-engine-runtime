@@ -201,8 +201,8 @@ export class Tr2AtlasTexture extends IRoot
 
     if (this._texture.IsValid()) return this._texture;
 
-    // The texture is about to be drawn with, so its resource is renewed (EnsureGood), not only asked.
-    if (this._textureRes && this._textureRes.EnsureGood()) return this._textureRes.GetTexture();
+    // Renew the backing resource before using its GPU texture.
+    if (this._textureRes && this._textureRes.IsGood()) return this._textureRes.GetTexture();
 
     return null;
   }
@@ -782,14 +782,15 @@ export class Tr2AtlasTexture extends IRoot
   }
 
   /**
-   * BlueAsyncRes `IsGood`.
+   * Reports atlas readiness and renews a dynamic backing resource.
    *
-   * @implemented
+   * @adapted Dynamic resources must remain alive while their atlas wrapper is used.
    * @returns {boolean} Whether the texture holds valid pixels.
    */
   IsGood()
   {
-    return this._isGood;
+    const resourceGood = this._textureRes ? this._textureRes.IsGood() : true;
+    return this._isGood && resourceGood;
   }
 
   /**

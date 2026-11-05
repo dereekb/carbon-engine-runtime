@@ -261,6 +261,7 @@ export class Tr2Sprite2dArc extends Tr2SpriteObject
    *   zero-construct, so theirs are (0, 0) in Carbon too; only the fill's CCP_MALLOC'd vertices
    *   (cpp:212-214) hold indeterminate heap memory (bug, CE-156). JS cannot reproduce indeterminate
    *   memory, so they are 0.
+   * Required textures are renewed independently before returning for an unavailable slot.
    * @param {Tr2Sprite2dScene} renderer Scene gathering this arc.
    * @returns {void}
    */
@@ -282,12 +283,15 @@ export class Tr2Sprite2dArc extends Tr2SpriteObject
       if (this.spriteEffect >= effects.TR2_SFX_ONE_TEXTURE)
       {
         // Don't draw if no texture is set, or it is still loading (or failed).
-        if (!this.texturePrimary || !this.texturePrimary.EnsureGood()) return;
+        const primaryGood = this.texturePrimary ? this.texturePrimary.IsGood() : false;
+        const needsSecondary = this.spriteEffect >= effects.TR2_SFX_TWO_TEXTURES;
+        const secondaryGood = needsSecondary && this.textureSecondary ? this.textureSecondary.IsGood() : false;
+        if (!primaryGood) return;
         this.texturePrimary.Apply(renderer, 0);
 
         if (this.spriteEffect >= effects.TR2_SFX_TWO_TEXTURES)
         {
-          if (!this.textureSecondary || !this.textureSecondary.EnsureGood()) return;
+          if (!secondaryGood) return;
           this.textureSecondary.Apply(renderer, 1);
         }
       }

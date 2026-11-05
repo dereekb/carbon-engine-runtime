@@ -124,19 +124,22 @@ export class Tr2TexturedSpriteObject extends Tr2SpriteObject
   /**
    * Validates required textures and applies their current renderer settings.
    *
-   * @implemented
+   * @adapted Renews both required textures before returning for an unavailable slot.
    */
 
   _ValidateAndSetTextures(renderer)
   {
     if (this.spriteEffect >= Tr2SpriteObjectEffect.TR2_SFX_ONE_TEXTURE)
     {
-      if (!this._texturePrimary || !this._texturePrimary.EnsureGood()) return false;
+      const primaryGood = this._texturePrimary ? this._texturePrimary.IsGood() : false;
+      const needsSecondary = this.spriteEffect >= Tr2SpriteObjectEffect.TR2_SFX_TWO_TEXTURES;
+      const secondaryGood = needsSecondary && this._textureSecondary ? this._textureSecondary.IsGood() : false;
+      if (!primaryGood) return false;
 
       this._texturePrimary.Apply(renderer, 0);
       if (this.spriteEffect >= Tr2SpriteObjectEffect.TR2_SFX_TWO_TEXTURES)
       {
-        if (!this._textureSecondary || !this._textureSecondary.EnsureGood()) return false;
+        if (!secondaryGood) return false;
 
         this._textureSecondary.Apply(renderer, 1);
       }
