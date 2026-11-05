@@ -1,5 +1,3 @@
-import { VARTYPE } from "../BlueTypes.js";
-
 /**
  * Shared JavaScript scalar value operations for the standalone type handlers.
  *
@@ -7,14 +5,11 @@ import { VARTYPE } from "../BlueTypes.js";
  * stored-value change, not Carbon Copy's success result. No schema lookup or
  * input validation occurs during assignment; Is is a separate operation.
  */
-export class CjsTypeScalar
+export class CjsGraphTypeScalar
 {
 
   /** Definition name. */
   name = "Scalar";
-
-  /** Unspecified storage until specialised. */
-  varType = VARTYPE.INVALID;
 
   /** Scalar values have no declared array length. */
   length = null;
@@ -23,7 +18,7 @@ export class CjsTypeScalar
    * Returns the stored value.
    * @cjs JavaScript property access.
    */
-  static get(target, key)
+  static get(target, key, options)
   {
     return target[key];
   }
@@ -41,9 +36,9 @@ export class CjsTypeScalar
    * Assigns only when the converted value differs, including signed zero.
    * @cjs Change reporting.
    */
-  static set(target, key, value)
+  static set(target, key, value, options)
   {
-    const converted = this.convert(value);
+    const converted = this.convert(value, options);
     if (this.isExactEqual(target[key], converted)) return false;
 
     target[key] = converted;
@@ -63,7 +58,7 @@ export class CjsTypeScalar
    * Returns the immutable scalar value.
    * @cjs No storage allocation is required.
    */
-  static clone(target, key)
+  static clone(target, key, options)
   {
     return target[key];
   }
@@ -99,9 +94,9 @@ export class CjsTypeScalar
    * Instance shortcut to get.
    * @cjs
    */
-  Get(target, key)
+  Get(target, key, options = this)
   {
-    return this.constructor.get(target, key);
+    return this.constructor.get(target, key, options);
   }
 
   /**
@@ -126,9 +121,9 @@ export class CjsTypeScalar
    * Instance shortcut to clone.
    * @cjs
    */
-  Clone(target, key)
+  Clone(target, key, options = this)
   {
-    return this.constructor.clone(target, key);
+    return this.constructor.clone(target, key, options);
   }
 
   /**
@@ -158,7 +153,25 @@ export class CjsTypeScalar
     return this.constructor.is(value);
   }
 
+  /**
+   * Compares accepted representations after storage conversion.
+   * @cjs Same conversion as Set; no schema or format rules are consulted.
+   */
+  static isLike(a, b, options)
+  {
+    return this.isEqual(this.convert(a, options), this.convert(b, options));
+  }
+
+  /**
+   * Instance shortcut to isLike.
+   * @cjs Property options are supplied directly.
+   */
+  IsLike(a, b, options = this)
+  {
+    return this.constructor.isLike(a, b, options);
+  }
+
   /** Stable class identity. */
-  static className = "CjsTypeScalar";
+  static className = "CjsGraphTypeScalar";
 
 }

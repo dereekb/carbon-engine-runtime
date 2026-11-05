@@ -1,19 +1,15 @@
-import { VARTYPE } from "../BlueTypes.js";
-import { CjsTypeScalar } from "./CjsTypeScalar.js";
+import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
 
 /**
  * Boolean storage definition and value operations.
  * Modelled on: Be::BOOL (blueexposure/BlueVariable.cpp:250-271)
- * @cjs JavaScript handler with native storage identity; assignment uses JS conversion.
+ * @cjs JavaScript value handler; Blue supplies native exposure identity externally.
  */
-export class CjsTypeBoolean extends CjsTypeScalar
+export class CjsGraphTypeBoolean extends CjsGraphTypeScalar
 {
 
   /** Definition name. */
   name = "Boolean";
-
-  /** Carbon storage identifier. */
-  varType = VARTYPE.BOOL;
 
   /** JavaScript value constructor. */
   ctor = Boolean;
@@ -39,10 +35,12 @@ export class CjsTypeBoolean extends CjsTypeScalar
    */
   static isEqual(a, b)
   {
+    if (!this.is(a) || !this.is(b)) return false;
+
     return a === b;
   }
 
   /** Stable class identity. */
-  static className = "CjsTypeBoolean";
+  static className = "CjsGraphTypeBoolean";
 
 }

@@ -1,19 +1,15 @@
-import { VARTYPE } from "../BlueTypes.js";
-import { CjsTypeScalar } from "./CjsTypeScalar.js";
+import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
 
 /**
  * Float64 storage definition and value operations.
  * Modelled on: Be::DOUBLE (blueexposure/BlueVariable.cpp:224-244)
- * @cjs JavaScript handler with native storage identity; assignment uses JS conversion.
+ * @cjs JavaScript value handler; Blue supplies native exposure identity externally.
  */
-export class CjsTypeFloat64 extends CjsTypeScalar
+export class CjsGraphTypeFloat64 extends CjsGraphTypeScalar
 {
 
   /** Definition name. */
   name = "Float64";
-
-  /** Carbon storage identifier. */
-  varType = VARTYPE.DOUBLE;
 
   /** JavaScript value constructor. */
   ctor = Number;
@@ -42,10 +38,12 @@ export class CjsTypeFloat64 extends CjsTypeScalar
    */
   static isEqual(a, b)
   {
+    if (!this.is(a) || !this.is(b)) return false;
+
     return Math.abs(a - b) < 1e-12;
   }
 
   /** Stable class identity. */
-  static className = "CjsTypeFloat64";
+  static className = "CjsGraphTypeFloat64";
 
 }

@@ -1,6 +1,4 @@
-import { VARTYPE } from "../BlueTypes.js";
-import { CjsTypeScalar } from "./CjsTypeScalar.js";
-import { isTag } from "#utils/is";
+import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
 
 /**
  * Float-array operations on caller-owned storage.
@@ -9,14 +7,11 @@ import { isTag } from "#utils/is";
  * length fixes storage size; -1 permits resizing. No implicit lazy allocation
  * for fixed-length members: their owner must provide the declared storage.
  */
-export class CjsTypeFloat32Array extends CjsTypeScalar
+export class CjsGraphTypeFloat32Array extends CjsGraphTypeScalar
 {
 
   /** Definition name. */
   name = "Float32Array";
-
-  /** Carbon storage identifier. */
-  varType = VARTYPE.FLOATARRAY;
 
   /** Storage constructor. */
   ctor = Float32Array;
@@ -28,7 +23,7 @@ export class CjsTypeFloat32Array extends CjsTypeScalar
    * Returns an independent plain values array.
    * @cjs Values-bag representation.
    */
-  static get(target, key)
+  static get(target, key, options)
   {
     return Array.from(target[key]);
   }
@@ -67,7 +62,7 @@ export class CjsTypeFloat32Array extends CjsTypeScalar
    * Creates an independently owned copy, not a scratch buffer.
    * @cjs Explicit cloning allocation.
    */
-  static clone(target, key)
+  static clone(target, key, options)
   {
     return new Float32Array(target[key]); // alloc: explicit independent copy owned by the caller.
   }
@@ -78,7 +73,7 @@ export class CjsTypeFloat32Array extends CjsTypeScalar
    */
   static is(value)
   {
-    return isTag(value, "[object Float32Array]");
+    return Object.prototype.toString.call(value) === "[object Float32Array]";
   }
 
   /**
@@ -99,6 +94,8 @@ export class CjsTypeFloat32Array extends CjsTypeScalar
    */
   static isEqual(a, b)
   {
+    if (!this.is(a) || !this.is(b)) return false;
+
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++)
     {
@@ -107,7 +104,24 @@ export class CjsTypeFloat32Array extends CjsTypeScalar
     return true;
   }
 
+  /**
+   * Compares array representations after Float32 conversion without scratch arrays.
+   * @adapted Uses Carbon float-array comparison after converting each input element.
+   */
+  static isLike(a, b, options)
+  {
+    const length = options?.length ?? -1;
+    if (a.length !== b.length || (length !== -1 && a.length !== length)) return false;
+
+    for (let i = 0; i < a.length; i++)
+    {
+      const difference = Math.fround(Math.fround(a[i]) - Math.fround(b[i]));
+      if (Math.abs(difference) >= Math.fround(1e-6)) return false;
+    }
+    return true;
+  }
+
   /** Stable class identity. */
-  static className = "CjsTypeFloat32Array";
+  static className = "CjsGraphTypeFloat32Array";
 
 }

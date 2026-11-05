@@ -1,19 +1,15 @@
-import { VARTYPE } from "../BlueTypes.js";
-import { CjsTypeScalar } from "./CjsTypeScalar.js";
+import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
 
 /**
  * String storage definition and value operations.
  * Modelled on: Be::STDSTRING (blueexposure/BlueVariable.cpp:879-905)
- * @cjs JavaScript handler with native storage identity; assignment uses JS conversion.
+ * @cjs JavaScript value handler; Blue supplies native exposure identity externally.
  */
-export class CjsTypeString extends CjsTypeScalar
+export class CjsGraphTypeString extends CjsGraphTypeScalar
 {
 
   /** Definition name. */
   name = "String";
-
-  /** Carbon storage identifier. */
-  varType = VARTYPE.STDSTRING;
 
   /** JavaScript value constructor. */
   ctor = String;
@@ -42,10 +38,12 @@ export class CjsTypeString extends CjsTypeScalar
    */
   static isEqual(a, b)
   {
+    if (!this.is(a) || !this.is(b)) return false;
+
     return a === b;
   }
 
   /** Stable class identity. */
-  static className = "CjsTypeString";
+  static className = "CjsGraphTypeString";
 
 }

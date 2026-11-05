@@ -165,6 +165,13 @@
         "CcpLogChannel_t as a Carbon class."
       ]
     },
+    "global/model/graph": {
+      "mayImport": [],
+      "why": [
+        "Independent graph definitions, operations and handlers import only themselves.",
+        "Blue supplies its declarations and policy from outside; no schema or format imports."
+      ]
+    },
     "global/model": {
       "mayImport": [
         "blue/compose",
