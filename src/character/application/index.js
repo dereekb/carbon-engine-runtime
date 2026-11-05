@@ -33,6 +33,7 @@ export { CjsPaperDollBottomOuter } from "./CjsPaperDollBottomOuter.js";
 export { CjsPaperDollFeet } from "./CjsPaperDollFeet.js";
 export { CjsPaperDollTopOuter } from "./CjsPaperDollTopOuter.js";
 export { CjsPaperDollOuter } from "./CjsPaperDollOuter.js";
+export { CjsPaperDollBeard } from "./CjsPaperDollBeard.js";
 export { CjsPaperDollHair } from "./CjsPaperDollHair.js";
 export { CjsPaperDollAccessory } from "./CjsPaperDollAccessory.js";
 export { CjsPaperDollGlasses } from "./CjsPaperDollGlasses.js";

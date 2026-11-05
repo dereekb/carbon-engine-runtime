@@ -24,6 +24,8 @@ export const PaperDollLayer = Object.freeze({
     EYESHADOW: 90,
     /** The hair painted on the scalp, between eye shadow and eyeliner (the earlier demo's order). Working rank, to confirm in game. */
     HAIR: 95,
+    /** Facial hair over the other skin detail, adjacent to scalp hair. Working rank, to confirm in game. */
+    BEARD: 96,
     EYELINER: 100,
     LIPSTICK: 110,
     /** Over the lipstick (operator, in game) and before every garment; its place against the scars is unconfirmed. */
