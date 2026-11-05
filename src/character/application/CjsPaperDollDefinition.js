@@ -68,6 +68,11 @@ export class CjsPaperDollDefinition
 
     _passDirty = 0;
 
+    /** Authored asset family. Changing it requires rebuilding the whole character instance. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.string
+    sex = "female";
+
     /** The character's name. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.string
