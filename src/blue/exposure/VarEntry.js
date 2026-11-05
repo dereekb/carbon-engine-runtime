@@ -1,5 +1,5 @@
 // Source: blueexposure/include/BlueTypes.h:321-375 (Be::VarEntry)
-import { VARTYPE } from "./BlueTypes.js";
+import { VARTYPE } from "../../global/model/graph/GraphTypes.js";
 
 /**
  * One row of a class's member table: Carbon's `Be::VarEntry`, which

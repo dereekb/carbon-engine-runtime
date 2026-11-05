@@ -213,6 +213,7 @@
     },
     "blue/exposure": {
       "mayImport": [
+        "global/model/graph",
         "global/consts",
         "blue/exposure/classes",
         "blue/compose",
