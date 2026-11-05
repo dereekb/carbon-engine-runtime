@@ -1021,12 +1021,14 @@ export class EveSpaceObject2 extends EveEntity
    * geometry's changes itself at use (Tr2GrannyAnimation.SetSharedGeometryRes),
    * and the audio geometry is not ported.
    *
-   * @adapted
+   * @adapted Manager leases can detach the updater while the mesh reacquires
+   *   the same cached handle, so compare the updater's actual binding too.
    */
   PrepareForAnimation()
   {
     const geometryRes = this.mesh.GetGeometryResource();
-    if (geometryRes && geometryRes !== this._geometryResFromMesh)
+    if (geometryRes && (geometryRes !== this._geometryResFromMesh
+      || geometryRes !== this.animationUpdater.GetSharedGeometryRes()))
     {
       this._geometryResFromMesh = geometryRes;
       this.animationUpdater.SetUseMeshBinding(true);
@@ -1713,6 +1715,9 @@ export class EveSpaceObject2 extends EveEntity
 
     // Carbon cpp:560-566: PrePhysicsAnimation reads Tr2Renderer's animation
     // clock; this port's updater steps by the frame's delta instead.
+    // Browser owner leases may have expired while updates were suspended.
+    // Rebind before sampling; unchanged live bindings retain their pose.
+    if (this.mesh) this.PrepareForAnimation();
     this.animationUpdater.Update(updateContext.GetDeltaT());
 
     // LOD-gated curve/overlay stamp (Carbon EveSpaceObject2::UpdateSyncronous:
