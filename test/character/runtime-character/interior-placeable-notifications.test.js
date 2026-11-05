@@ -189,6 +189,7 @@ test("strict model bounds require all meshes, while the public local-space query
   assert.deepEqual(model.GetBoundingBoxInLocalSpace().map(v => [...v]), [[-10, -1, -1], [6, 1, 1]]);
   prepareResourceFixture(resource); await Promise.resolve(); assert.equal(model.IsLoading(), false);
   assert.equal(model.GetBoundingBox(min, max), true); assert.deepEqual([...min], [-10, -1, -1]);
+  pending.SetMeshResPath("");
   pending.SetGeometryRes(null);
   assert.equal(model.GetBoundingBox(min, max), false);
   assert.deepEqual(model.GetBoundingBoxInLocalSpace().map(v => [...v]), [[4, -1, -1], [6, 1, 1]]);
@@ -238,7 +239,7 @@ function renderSetup(t)
   const draws = [], draw = al.DrawIndexedInstanced.bind(al);
   al.DrawIndexedInstanced = (...args) => { draws.push(args); return draw(...args); };
   const shader = { GetTechniqueIndex: () => 0, GetPassCount: () => 1, GetShaderTypeMask: () => 3, ApplyAllStateForPass() {} };
-  const material = { GetShaderStateInterface: () => shader, IsGood: () => true, EnsureGood: () => true, ApplyMaterialDataForPass() {} };
+  const material = { GetShaderStateInterface: () => shader, IsGood: () => true, ApplyMaterialDataForPass() {} };
   return { context, al, draws, material };
 }
 

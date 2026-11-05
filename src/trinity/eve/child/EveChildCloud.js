@@ -144,7 +144,7 @@ export class EveChildCloud extends EveSpaceObjectChild
    *
    * @adapted Carbon registers with the device and prepares here, as the
    *   Tr2DeviceResource base constructor registers (Tr2DeviceResource.cpp:6-9).
-   *   Here it does both on its first use (EnsureGood at its use site), so one built
+   *   Here it does both on its first use (IsGood at its use site), so one built
    *   and never drawn is never listed and holds no device objects, and one left
    *   unused is released (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
@@ -293,8 +293,8 @@ export class EveChildCloud extends EveSpaceObjectChild
   GetRenderables(renderables)
   {
     if (!this.isVisible || !this.hasUpdated) return;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the grid checks: preparing builds it.
-    if (!this.EnsureGood() || !this._indexBuffers.length || this._declaration === Tr2EffectStateManager.Unknown) return;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the grid checks: preparing builds it.
+    if (!this.IsGood() || !this._indexBuffers.length || this._declaration === Tr2EffectStateManager.Unknown) return;
     renderables.push(this);
   }
 
@@ -324,7 +324,7 @@ export class EveChildCloud extends EveSpaceObjectChild
     if (batchType !== TriBatchType.TRIBATCHTYPE_TRANSPARENT || !this.effect ||
       this._declaration === Tr2EffectStateManager.Unknown || !this._indexBuffers.length) return;
     // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-    if (!this.effect.EnsureGood()) return;
+    if (!this.effect.IsGood()) return;
     const indexBuffer = this._indexBuffers[Math.min(this.currentLod, this._indexBuffers.length - 1)];
     const batch = new Tr2RenderBatch();
     batch.SetMaterial(this.effect);

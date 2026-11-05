@@ -15,7 +15,7 @@ function manager(t, loader = bytes => bytes.length)
   return resMan;
 }
 
-test("EnsureGood renews the resource and answers IsGood", async t =>
+test("IsGood renews the resource and answers IsGood", async t =>
 {
   const resMan = manager(t);
   const resource = await resMan.FetchResource("res:/ensure/good.bin");
@@ -23,10 +23,10 @@ test("EnsureGood renews the resource and answers IsGood", async t =>
   const keepAlive = resource.KeepAlive;
   resource.KeepAlive = function (...args) { renewed++; return keepAlive.apply(this, args); };
 
-  assert.equal(resource.EnsureGood(), true);
-  assert.ok(renewed >= 1, "EnsureGood renews");
+  assert.equal(resource.IsGood(), true);
+  assert.ok(renewed >= 1, "IsGood renews");
   resource._isGood = false;
-  assert.equal(resource.EnsureGood(), false);
+  assert.equal(resource.IsGood(), false);
 });
 
 test("IsGood and its exposed property renew; manager status inspection does not", async t =>

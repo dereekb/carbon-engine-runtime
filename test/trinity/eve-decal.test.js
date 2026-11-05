@@ -248,6 +248,7 @@ function visibleDecal()
 
   decal.decalEffect = {};
   decal.Initialize();
+  decal.PrepareResources();
   assert.equal(decal.UpdateVisibility({}, new IEveSpaceObject2ParentData()), true);
 
   return decal;
@@ -457,7 +458,7 @@ test("GetBatches commits the hull LOD's vertices with the decal's own indices (c
   const decal = visibleDecal();
   const shader = { id: "decalv5" };
 
-  decal.decalEffect = { GetShaderStateInterface: () => shader, IsGood: () => true, EnsureGood: () => true };
+  decal.decalEffect = { GetShaderStateInterface: () => shader, IsGood: () => true };
   decal.batchType = 1;
   decal.SetIndices([ [ 3, 4, 5, 6, 7, 8 ] ]);
 
@@ -465,7 +466,7 @@ test("GetBatches commits the hull LOD's vertices with the decal's own indices (c
   const hull = {
     GetCMFData() { return { meshes: [ this.GetMeshData(0) ] }; }, GetMeshData: () => ({ lodMask: 1, lods: [ {} ] }),
     GetLodIndexForScreenSize: () => 0,
-    IsGood: () => true, EnsureGood: () => true,
+    IsGood: () => true,
     GetMeshCount: () => 1,
     GetMeshLod__LodIndex: () => ({ allocationsValid: true, vertexAllocation }),
     GetMeshVertexElements: () => []

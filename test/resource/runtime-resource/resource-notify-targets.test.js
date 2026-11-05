@@ -157,25 +157,25 @@ test("an effect receives manager callbacks without a readiness poll and unregist
   const effect = new Tr2Effect(), resource = new BlueAsyncRes(), seen = recordCachedData(effect);
   effect.effectResource = resource;
   assert.equal(blue.resMan.GetNotifyTargetsByOwner(effect).length, 1);
-  assert.equal(effect.EnsureGood(), false);
+  assert.equal(effect.IsGood(), false);
   assert.deepEqual(seen, []);
 
   resource._SetPrepared(true);
   resource._SetGood(true);
   resource._NotifyRebuildCachedData();
-  effect.EnsureGood();
-  effect.EnsureGood();
+  effect.IsGood();
+  effect.IsGood();
   assert.deepEqual(seen, [["rebuild", resource]]);
 
   resource._NotifyRebuildCachedData();
-  effect.EnsureGood();
+  effect.IsGood();
   assert.deepEqual(seen.at(-1), ["rebuild", resource]);
   assert.equal(seen.length, 2);
 
   resource._SetGood(false);
   resource._NotifyReleaseCachedData();
-  effect.EnsureGood();
-  effect.EnsureGood();
+  effect.IsGood();
+  effect.IsGood();
   assert.deepEqual(seen.at(-1), ["release", resource]);
   assert.equal(seen.length, 3);
 
@@ -284,7 +284,7 @@ test("remaining geometry owners receive completion, expire and reacquire only wh
     const resource = new TriGeometryRes(), seen = recordCachedData(owner);
     let acquisitions = 0;
     manager.GetResource = () => { acquisitions++; return resource; };
-    owner.EnsureGood = () => false;
+    owner.IsGood = () => false;
     if (owner instanceof EveTurretSet) owner.lodLevel = EveTurretSet.LOD.LOD_HIGHEST;
     owner[path] = "res:/fixture.gr2";
     owner[slot] = resource;
@@ -309,7 +309,7 @@ test("trails renew material and device readiness even with bad geometry", () =>
   owner.geometryResource = resource;
   resource.IsGood = target => { assert.equal(target, owner); calls.push("geometry"); return false; };
   owner.effect = { IsGood() { calls.push("effect"); return false; } };
-  owner.EnsureGood = () => { calls.push("device"); return false; };
+  owner.IsGood = () => { calls.push("device"); return false; };
   owner.GetBatches(null, null);
   assert.deepEqual(calls, ["geometry", "effect", "device"]);
   owner.Destruct();

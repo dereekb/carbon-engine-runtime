@@ -161,7 +161,7 @@ export class TnyOutlineHelper extends ITr2RenderNode
     const modes = this._Modes();
     // Every effect is asked, none skipped by an earlier answer, so none is left unrenewed.
     let good = modes.length > 0;
-    for (const effect of Object.values(this._effects)) if (!effect.EnsureGood()) good = false;
+    for (const effect of Object.values(this._effects)) if (!effect.IsGood()) good = false;
     if (!good) return;
     const variable = Tr2VariableStore.globalStore().FindVariable("DepthMap");
     const provider = variable ? variable.GetValue() : null;

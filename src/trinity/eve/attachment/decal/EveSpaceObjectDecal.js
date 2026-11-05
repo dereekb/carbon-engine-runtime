@@ -60,7 +60,7 @@ export class EveSpaceObjectDecal
    *
    * @adapted Carbon registers with the device and prepares its resources here,
    *   as its Tr2DeviceResource base does (Tr2DeviceResource.cpp:6-9); here the
-   *   decal does both on its first use, when GetRenderables asks EnsureGood, so a
+   *   decal does both on its first use, when GetRenderables asks IsGood, so a
    *   decal built and never drawn is never listed and holds no device objects
    *   (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *   Destruct still unregisters.
@@ -228,7 +228,7 @@ export class EveSpaceObjectDecal
    * and scaling; returns false when the composed matrix is not invertible.
    *
    * @adapted Carbon prepares here (cpp:80); here nothing prepares during a
-   *   build: the first use (EnsureGood) does, so a build that fails or is never drawn
+   *   build: the first use (IsGood) does, so a build that fails or is never drawn
    *   holds no device objects (docs internal/decisions/device-resource-registration.md,
    *   Revised lifecycle § 2).
    */
@@ -771,8 +771,8 @@ export class EveSpaceObjectDecal
   GetRenderables(out, _meshCache = null, geometryResource = null, screenSize = Infinity)
   {
     if (this._isVisible <= 0 || !geometryResource) return false;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood).
-    if (!this.EnsureGood()) return false;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood).
+    if (!this.IsGood()) return false;
 
     // A NEW MESH INVALIDATES THE BUILD. Carbon's comment calls this out as slow
     // and to be avoided, which is why it is keyed on identity rather than
@@ -923,8 +923,8 @@ export class EveSpaceObjectDecal
     // Ask both before drawing, so neither is left unrenewed while the other
     // loads: the effect's renewal and shader rebuild, and the geometry's.
     let good = true;
-    if (!this._baseGeometryResource.EnsureGood()) good = false;
-    if (!this.decalEffect.EnsureGood()) good = false;
+    if (!this._baseGeometryResource.IsGood()) good = false;
+    if (!this.decalEffect.IsGood()) good = false;
     if (!good) return;
     if (this._baseGeometryResource.GetMeshCount() < 1) return;
 

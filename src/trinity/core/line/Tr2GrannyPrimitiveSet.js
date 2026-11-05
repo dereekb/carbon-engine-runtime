@@ -91,7 +91,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * Acquires the authored resource after reader population (cpp:38-44).
    *
    * Carbon prepares here (Tr2GrannyPrimitiveSet::Initialize); here nothing prepares during a build: the
-   * first use (EnsureGood) does, so a build that fails or is never drawn holds no
+   * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
    * @adapted
@@ -154,7 +154,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * Prepares now, as Carbon does, rather than on first use: CreatePrimitive
    * replaced the points and index lists from the reloaded resource, and
    * preparing is what uploads them and recomputes boundingSphere (mean centre,
-   * maximum point distance), which picking and culling read. EnsureGood then
+   * maximum point distance), which picking and culling read. IsGood then
    * stamps the set as in use, since its resource reloaded under a set that is
    * being drawn; one rebuilt and never drawn is still released by the sweep
    * (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
@@ -168,7 +168,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
     this.CleanUp();
     this.CreatePrimitive();
     this.PrepareResources();
-    this.EnsureGood();
+    this.IsGood();
   }
 
   /**
@@ -288,7 +288,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * Prepares now, as Carbon does, rather than on first use: preparing is the
    * only path that copies the recoloured points into the vertex buffer, so a
    * set already drawn would otherwise keep its old colour. No CPU state changes
-   * here (the bounds it recomputes are unchanged). EnsureGood then lists and stamps the set
+   * here (the bounds it recomputes are unchanged). IsGood then lists and stamps the set
    * as in use, since a recolour is for display; one recoloured and never drawn
    * is still released by the sweep (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
@@ -299,7 +299,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   {
     for (let offset = 6; offset < this._points.length; offset += 10) this._points.set(color, offset);
     this.PrepareResources();
-    this.EnsureGood();
+    this.IsGood();
   }
 
   /**
@@ -377,8 +377,8 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
     const resource = this.grannyRes;
     let good = true;
     if (resource && !resource.IsGood(this)) good = false;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the buffer checks: preparing builds them.
-    if (!this.EnsureGood()) good = false;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the buffer checks: preparing builds them.
+    if (!this.IsGood()) good = false;
     if (!good) return;
     if (!this._vertexBuffer.IsValid() || this._vertexDeclHandle === Tr2EffectStateManager.Unknown) return;
     const picking = reason === Tr2PrimitiveSet.GetBatchesReason.Picking;

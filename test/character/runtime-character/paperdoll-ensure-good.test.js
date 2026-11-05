@@ -88,7 +88,7 @@ test("a bad character dependency never skips later renewals or the geometry owne
   assert.deepEqual(calls.map(([name]) => name), ["effect1", "effect2", "skeleton", "clip", "model", "mesh", "material"]);
   assert.equal(calls.find(([name]) => name === "model")[1], model);
   calls.length = 0;
-  assert.equal(doll.EnsureGood(), false, "host compatibility forwards to the same traversal");
+  assert.equal(doll.IsGood(), false, "repeated readiness preserves the same traversal");
   assert.equal(calls.length, 7);
 });
 

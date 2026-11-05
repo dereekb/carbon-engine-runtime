@@ -55,7 +55,7 @@ function createUpdaterDuck()
 function createGeometryDuck(bones)
 {
   return {
-    IsGood: () => true, EnsureGood: () => true,
+    IsGood: () => true,
     GetSkeletonCount: () => 1,
     GetSkeletonData: () => ({ bones })
   };

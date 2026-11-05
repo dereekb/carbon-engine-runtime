@@ -473,17 +473,6 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
   }
 
   /**
-   * Temporary compatibility alias for IsGood during caller migration.
-   *
-   * @cjs As BlueAsyncRes `EnsureGood`.
-   * @returns {boolean} Whether the atlas texture is ready.
-   */
-  EnsureGood()
-  {
-    return this._atlasTexture ? this._atlasTexture.IsGood() : false;
-  }
-
-  /**
    * Reads the native tile-x bit.
    *
    * @implemented

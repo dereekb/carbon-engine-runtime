@@ -135,7 +135,7 @@ export class EveBannerSet extends IEveSpaceObjectAttachment
    *
    * @adapted Carbon registers with the device and prepares the set here (cpp:98),
    *   as the Tr2DeviceResource base constructor registers (Tr2DeviceResource.cpp:6-9).
-   *   Here the set does both on use (EnsureGood at its use site), so one built and never
+   *   Here the set does both on use (IsGood at its use site), so one built and never
    *   drawn is never listed and holds no device objects, and one left unused is
    *   released (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
@@ -283,10 +283,10 @@ export class EveBannerSet extends IEveSpaceObjectAttachment
     if (batchType !== TriBatchType.TRIBATCHTYPE_ADDITIVE && batchType !== TriBatchType.TRIBATCHTYPE_PICKING) return;
     if (batchType === TriBatchType.TRIBATCHTYPE_PICKING && !this.isPickable) return;
     if (!this.display || !this._isVisible || !this.effect) return;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the buffer check: preparing builds it.
-    const good = this.EnsureGood();
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the buffer check: preparing builds it.
+    const good = this.IsGood();
     // Asked with it, not after: renews what the effect holds, and skips it while its resource is not good.
-    const effectGood = this.effect.EnsureGood();
+    const effectGood = this.effect.IsGood();
     if (!good || !effectGood || !this._vertexBuffer) return;
     if (this.primaryTextureParameter && !this.primaryTextureParameter.GetResource()) return;
 
@@ -794,7 +794,7 @@ export class EveBannerSet extends IEveSpaceObjectAttachment
    * constructor's PrepareResources (cpp:98).
    *
    * @adapted Carbon prepares here (the constructor, cpp:98); here nothing prepares during a
-   *   build: the first use (EnsureGood) does, so a build that fails or is never drawn
+   *   build: the first use (IsGood) does, so a build that fails or is never drawn
    *   holds no device objects (docs internal/decisions/device-resource-registration.md,
    *   Revised lifecycle § 2).
    */

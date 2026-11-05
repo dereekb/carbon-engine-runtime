@@ -35,7 +35,7 @@ function setup(t,resolve=null){
  al.CreateBuffer=(description,data,...args)=>{if(description.stride===4&&data)indices.push(new Uint32Array(data.buffer,data.byteOffset,data.byteLength/4).slice());return create(description,data,...args);};
  al.DrawIndexedInstanced=(...args)=>{draws.push(args);return draw(...args);};
  const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
- const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
+ const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
  t.after(()=>{for(const r of trinity.GetResourcesRegistered())if(!before.has(r)&&r.constructor===Tr2GrannyPrimitiveSet)r.Destruct();blue.resMan=manager;context.SetRenderContextAL(previous);});
  return {context,al,maps,indices,draws,effect,manager:blue.resMan};
 }
@@ -163,7 +163,7 @@ test('active draws renew the manager lease and recover a purged handle before th
  const manager=blue.resMan,renew=manager._KeepResourceAlive;
  t.mock.method(manager,"_KeepResourceAlive",function(resource,options){renewals++;return renew.call(this,resource,options);});
  t.mock.method(r,"Reload",()=>{reloads++;pendingResourceFixture(r);return true;});
- // EnsureGood renews; until IsGood goes pure, its IsGood renews again.
+ // Readiness renews use; repeated checks remain safe.
  assert.equal(batches(p).length,1);assert.equal(renewals,1);
  r.Shutdown();purgeResourceFixture(r);
  assert.equal(batches(p).length,0);assert.equal(p._vertexBuffer.IsValid(),false);assert.equal(reloads,1);assert.equal(r.IsLoading(),true);

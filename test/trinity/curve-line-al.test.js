@@ -1,3 +1,4 @@
+import { random as carbonRandom } from "../../npm/dist/global/math/random.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -17,7 +18,7 @@ function setup(t) {
   const draws=[],draw=al.DrawInstanced.bind(al);
   al.DrawInstanced=(...args)=>{draws.push(args);return draw(...args);};
   const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
+  const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
   t.after(()=>{
     for(const resource of trinity.GetResourcesRegistered())if(!registered.has(resource)&&CjsSchema.cast(resource,INotify))resource.Destruct();
     Tr2Renderer.PopProjection();Tr2Renderer.PopViewTransform();context.SetRenderContextAL(prior);
@@ -32,7 +33,7 @@ function near(actual,expected,epsilon=1e-5) {assert.equal(actual.length,expected
 
 test('line submission packs the native 80-byte stream, adjacency, stable IDs and declaration',t=>{
   // In use, as a drawn ship's is: nothing prepares during a build.
-  setup(t);const lines=new Tr2CurveLineSet();lines.EnsureGood();const removed=straight(lines);straight(lines);lines.RemoveLine(removed);
+  setup(t);const lines=new Tr2CurveLineSet();lines.PrepareResources();lines.IsGood();lines.PrepareResources();const removed=straight(lines);straight(lines);lines.RemoveLine(removed);
   assert.equal(straight(lines),0);lines.ChangeLineMultiColor(0,[0,1,0,1],0.3);lines.ChangeLineAnimation(0,[1,0,1,1],2,4);
   assert.equal(lines.FillVertexBuffer(),true);assert.equal(lines.GetNumOfLines(),2);
   const data=bytes(lines);assert.equal(data.length,960);
@@ -58,7 +59,7 @@ test('width notification updates mapped bytes once and a suppressed callback lea
 });
 
 test('curve and sphere tessellation preserve extrapolated neighbors and native sphere-box quirk',t=>{
-  setup(t);const lines=new Tr2CurveLineSet();
+  setup(t);const lines=new Tr2CurveLineSet();lines.PrepareResources();
   lines.AddCurvedLineCrt([0,0,0],[1,0,0,1],[2,0,0],[0,0,1,1],[1,2,0],1,2);lines.SubmitChanges();
   const curve=bytes(lines);
   near(floats(curve,56,3),[0.5,-1.5,0]);near(floats(curve,160,3),[1,0.5,0]);
@@ -73,7 +74,7 @@ test('curve and sphere tessellation preserve extrapolated neighbors and native s
 });
 
 test('particle packing keeps native fourth-color asymmetry and a shared random value per quad',t=>{
-  setup(t);t.mock.method(Math,'random',()=>0.25);const lines=new Tr2CurveLineSet();const id=straight(lines);
+  setup(t);t.mock.method(carbonRandom,'triFloatRandom01',()=>0.25);const lines=new Tr2CurveLineSet();lines.PrepareResources();const id=straight(lines);
   lines.lines[id].type=Tr2CurveLineSet.LineType.LINETYPE_PARTICLE;lines.lines[id].numOfSegments=2;
   lines.ChangeLineIntermediateCrt(id,[7,8,9]);lines.SubmitChanges();const data=bytes(lines);
   for(let i=0;i<6;i++){
@@ -97,7 +98,7 @@ test('spherical directions do not accumulate float32 translation error far from 
 });
 
 test('buffer capacity, allocation/map failures and device recreation follow native return contracts',t=>{
-  const {al,effect}=setup(t);const lines=new Tr2CurveLineSet();straight(lines);straight(lines);lines.SetDynamicFlag(true);
+  const {al,effect}=setup(t);const lines=new Tr2CurveLineSet();lines.PrepareResources();straight(lines);straight(lines);lines.SetDynamicFlag(true);
   lines.SubmitChanges();const implementation=lines._vertexBuffer.TrinityALImpl_GetObject();
   assert.equal(lines._vertexBuffer.GetDesc().cpuUsage,Tr2CpuUsage.WRITE_OFTEN);
   lines.RemoveLine(1);lines.SubmitChanges();assert.equal(lines._vertexBuffer.TrinityALImpl_GetObject(),implementation);assert.equal(bytes(lines).length,960);
@@ -112,7 +113,7 @@ test('buffer capacity, allocation/map failures and device recreation follow nati
 });
 
 test('line batch categories dispatch real nonindexed draws and camera depth uses the native local bound',t=>{
-  const {context,effect,draws}=setup(t);const lines=new Tr2CurveLineSet();straight(lines);lines.SubmitChanges();lines.SetLineEffect(effect);lines.SetPickEffect(effect);
+  const {context,effect,draws}=setup(t);const lines=new Tr2CurveLineSet();lines.PrepareResources();straight(lines);lines.SubmitChanges();lines.SetLineEffect(effect);lines.SetPickEffect(effect);
   assert.equal(collect(lines,TriBatchType.TRIBATCHTYPE_OPAQUE).length,0);assert.equal(collect(lines,TriBatchType.TRIBATCHTYPE_ADDITIVE).length,0);
   lines.SetAdditiveFlag(true);assert.equal(collect(lines).length,0);assert.equal(collect(lines,TriBatchType.TRIBATCHTYPE_ADDITIVE).length,1);
   const picking=collect(lines,TriBatchType.TRIBATCHTYPE_PICKING);assert.equal(picking.length,1);

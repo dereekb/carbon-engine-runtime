@@ -318,20 +318,6 @@ export class BlueAsyncRes
   }
 
   /**
-   * Transitional forwarding entry while callers migrate to IsGood.
-   *
-   * @cjs Carbon's MotherLode keeps a resource alive by reference
-   *   (MotherLode.h:31-39); ours expires it after inactivity, so use renews it.
-   *   KeepAlive also revives a policy-purged resource within resMan's cap.
-   * @implemented
-   * @returns {boolean} Whether the resource is good.
-   */
-  EnsureGood()
-  {
-    return this.IsGood();
-  }
-
-  /**
    * Carbon: BlueAsyncRes::GetFilePath (blue/src/BlueAsyncRes.cpp:444-455)
    *
    * @implemented

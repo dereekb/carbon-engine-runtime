@@ -376,7 +376,7 @@ export class EveBoosterSet2Renderable
 
       const effect = (this.boosterHighLod || !boosterSet.effectFar) ? boosterSet.effect : boosterSet.effectFar;
       // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-      if (!effect || !effect.EnsureGood()) return;
+      if (!effect || !effect.IsGood()) return;
       const batch = new Tr2RenderBatch();
       batch.SetMaterial(effect);
       batch.SetPerObjectData(perObjectData);

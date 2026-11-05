@@ -21,7 +21,7 @@ test("IsGood renews while status inspection leaves activity unchanged", async t 
   const manager = managerFor(t), resource = manager.GetResource("res:/renew.json");
   await manager.Ready(resource);
   manager.activityTime = 100;
-  resource.EnsureGood();
+  resource.IsGood();
   assert.equal(resource._lastUsedTime, 100);
   manager.activityTime = 200;
   resource.IsPrepared();
@@ -52,7 +52,7 @@ test("a purged handle revives on use and successful preparation resets the retry
   assert.equal(manager.GetResourceStatus(resource).purged, true);
   assert.equal(resource.IsGood(), false);
   assert.equal(manager.GetReloadAttempts(resource), 1, "IsGood renews and revives");
-  assert.equal(resource.EnsureGood(), false);
+  assert.equal(resource.IsGood(), false);
   assert.equal(manager.GetReloadAttempts(resource), 1, "repeated use does not restart the pending load");
   await manager.Ready(resource);
   assert.equal(manager.GetReloadAttempts(resource), 0);

@@ -794,19 +794,6 @@ export class Tr2AtlasTexture extends IRoot
   }
 
   /**
-   * BlueAsyncRes `EnsureGood`: nothing to renew (an atlas texture has no
-   * MotherLode identity; its owner keeps it), so it answers `IsGood()`.
-   *
-   * @cjs As BlueAsyncRes `EnsureGood`.
-   * @implemented
-   * @returns {boolean} Whether the texture holds valid pixels.
-   */
-  EnsureGood()
-  {
-    return this.IsGood();
-  }
-
-  /**
    * BlueAsyncRes `IsPrepared`.
    *
    * @implemented

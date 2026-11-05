@@ -86,6 +86,7 @@ function MakeAccumulator()
 test("UpdateAsyncronous composes world = local * parent with the operand swap (cpp:693)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   vec3.set(cloud.translation, 1, 0, 0);
 
@@ -109,6 +110,7 @@ test("UpdateAsyncronous composes world = local * parent with the operand swap (c
 test("UpdateAsyncronous bounding sphere is Carbon's cheap two-corner form (math Sphere.cpp:10-17)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   const parent = mat4.fromYRotation(mat4.create(), Math.PI / 4);
 
@@ -123,6 +125,7 @@ test("UpdateAsyncronous bounding sphere is Carbon's cheap two-corner form (math 
 test("UpdateAsyncronous map-offset scroll preserves the .z-by-tiling.y Carbon bug (cpp:701-703)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   vec3.set(cloud.textureTiling, 2, 3, 4);
   vec3.set(cloud.translation, 0.25, 0.35, 0.45);
@@ -138,6 +141,7 @@ test("UpdateAsyncronous map-offset scroll preserves the .z-by-tiling.y Carbon bu
 test("UpdateAsyncronous stamps adjustedMinScreenSize from the context lodFactor (cpp:706)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   cloud.minScreenSize = 40;
   // A REAL context, not a one-method literal. The production path also reads
@@ -153,6 +157,7 @@ test("UpdateAsyncronous stamps adjustedMinScreenSize from the context lodFactor 
 test("GetSortValue: frustum overload distance minus |scaling| * modifier (cpp:237-242), zero-arg float32 max (cpp:914-917)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.worldTransform[12] = 10;
   cloud.worldTransform[13] = 0;
   cloud.worldTransform[14] = 0;
@@ -169,6 +174,7 @@ test("GetSortValue: frustum overload distance minus |scaling| * modifier (cpp:23
 test("GetVolumetricBatches: gate order, one batch, renderedLastFrame stamp (cpp:244-284)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   const frustum = {
     IsSphereVisible__CenterRadius: () => true,
     GetPixelSizeAccross__Sphere: () => 250
@@ -214,6 +220,7 @@ test("GetVolumetricBatches: gate order, one batch, renderedLastFrame stamp (cpp:
 test("UpdateVolumetricLightmap: budget contract and slice arithmetic (cpp:319-382)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
   // Starts as a still-loading effect: no shader resolved yet.
@@ -261,6 +268,7 @@ test("UpdateVolumetricLightmap: budget contract and slice arithmetic (cpp:319-38
 test("SetSceneInformation: scale map, dirty asymmetry, sun threshold quirk, effect options (cpp:384-424)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   const parent = mat4.fromYRotation(mat4.create(), Math.PI / 2);
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: parent });
@@ -341,6 +349,7 @@ test("SetSceneInformation: scale map, dirty asymmetry, sun threshold quirk, effe
 test("SetupShadowFrustum: basis, mirrored ortho, magic z extension, world-first composition (cpp:886-907)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
 
@@ -372,6 +381,7 @@ test("SetupShadowFrustum: basis, mirrored ortho, magic z extension, world-first 
 test("GetVolumetricShadowBatches: gates and the declaration-less alpha triangle (cpp:759-785)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.display = false;
   cloud.castShadows = false;
   assert.equal(cloud.GetVolumetricShadowBatches(MakeAccumulator()), false, "display gate");
@@ -393,6 +403,7 @@ test("GetVolumetricShadowBatches: gates and the declaration-less alpha triangle 
 test("GetBatches: reflection-transparent only, screenSize 10000, no renderedLastFrame stamp (cpp:854-884)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 1, 1, 1);
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
   cloud.reflectionEffect = FixtureEffect({ name: "reflection" });
@@ -429,6 +440,7 @@ test("HasTransparentBatches is unconditionally true (cpp:909-912)", () =>
 test("IsVisible: display + frustum + live lod pixel gate (cpp:837-852)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.display = false;
   vec3.set(cloud.scaling, 1, 1, 1);
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
@@ -453,6 +465,7 @@ test("IsVisible: display + frustum + live lod pixel gate (cpp:837-852)", () =>
 test("GetLights: display gate, average basis scaling, duck submission (cpp:732-746)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.display = false;
   const calls = [];
   cloud.lights.push({ AddLight: (...args) => calls.push(args) });
@@ -474,8 +487,9 @@ test("GetLights: display gate, average basis scaling, duck submission (cpp:732-7
 test("UpdateSyncronous: effect-hash invalidation and the renderedLastFrame animation gate (cpp:621-685)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   let hash = 1;
-  cloud.effect = { GetHashValue: () => hash, GetShaderStateInterface: () => null, IsGood: () => false, EnsureGood: () => false };
+  cloud.effect = { GetHashValue: () => hash, GetShaderStateInterface: () => null, IsGood: () => false };
   cloud.lightmapDirty = false;
   cloud.lightmapWidth = 64;
 
@@ -510,6 +524,7 @@ test("UpdateSyncronous: effect-hash invalidation and the renderedLastFrame anima
 test("PopulatePerObjectData: swapped world*view product, element-read consumers, light block (cpp:544-619)", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   vec3.set(cloud.scaling, 2, 1, 3);
   const parent = mat4.create();
   mat4.translate(parent, parent, [10, 20, 30]);
@@ -569,6 +584,7 @@ test("PopulatePerObjectData: swapped world*view product, element-read consumers,
 test("PrepareCloudShadowMap creates and binds native D32F storage through the stub AL", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.receiveShadows = false;
   assert.equal(cloud.PrepareCloudShadowMap(null), false);
   cloud.receiveShadows = true;
@@ -611,6 +627,7 @@ test("Tr2Light.GetLight returns lightData position/radius and brightness-scaled 
 test("cube lifetime preserves Carbon release gates and binds native geometry", () =>
 {
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
   cloud.effect = FixtureEffect();
   const frustum = { IsSphereVisible__CenterRadius: () => true, GetPixelSizeAccross__Sphere: () => 10000 };
@@ -640,7 +657,7 @@ test("DensityMap supplies native 3D dimensions; missing LightMap selects the gra
   let hasLightMap = true;
   cloud.effect = { GetHashValue: () => hasLightMap ? 1 : 2,
     GetShaderStateInterface: () => ({ GetResource: () => hasLightMap ? {} : null }),
-    IsGood: () => true, EnsureGood: () => true,
+    IsGood: () => true,
     GetResourceByName: name => { assert.equal(name, "DensityMap"); return parameter; } };
   cloud.UpdateSyncronous(UpdateContext());
   assert.deepEqual([cloud.lightmapWidth, cloud.lightmapHeight, cloud.lightmapDepth], [64, 32, 16]);
@@ -658,6 +675,7 @@ test("Cloud2 uses separate native vertex and pixel buffers and binds the entire 
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext();
   const cloud = new EveChildCloud2();
+  cloud.PrepareResources();
   const data = cloud.GetPerObjectData(MakeAccumulator());
   const buffers = [context.GetConstantBuffer(0), context.GetConstantBuffer(1)];
   const bindings = [], original = context.SetConstants;

@@ -70,12 +70,6 @@ export class CjsPaperDoll
         return this.front ? this.front.Update(this.definition) : false;
     }
 
-    /** Transitional host compatibility while consumers migrate to IsGood. */
-    EnsureGood()
-    {
-        return this.IsGood();
-    }
-
     /**
      * Renews everything this character needs to be drawn, animated and recomposed, and answers whether all of it
      * is good: its compositors' effects, its skeleton and clips, and the geometry and area effects of its drawn

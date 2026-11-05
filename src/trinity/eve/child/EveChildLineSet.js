@@ -194,7 +194,7 @@ export class EveChildLineSet extends EveChildTransform
    *
    * @adapted Carbon registers with the device here, as the Tr2DeviceResource
    *   base constructor does (Tr2DeviceResource.cpp:6-9). Here it registers on
-   *   use (EnsureGood at its use site), so one built and never drawn is never listed
+   *   use (IsGood at its use site), so one built and never drawn is never listed
    *   and one left unused is released (docs internal/decisions/device-resource-registration.md).
    */
   constructor()
@@ -305,7 +305,7 @@ export class EveChildLineSet extends EveChildTransform
     if (this.renderType !== EveChildLineSet.lineSetType.LINE_RENDER && this.mesh)
     {
       const geometry = this.mesh.GetGeometryResource();
-      if (geometry && geometry.EnsureGood())
+      if (geometry && geometry.IsGood())
       {
         const { vec4_0 } = EveChildLineSet.scratch;
         geometry.GetBoundingSphere(this.mesh.GetMeshIndex(), vec4_0);
@@ -468,7 +468,7 @@ export class EveChildLineSet extends EveChildTransform
     {
       const geometry = this.mesh.GetGeometryResource();
       if (!geometry) return;
-      if (geometry.EnsureGood())
+      if (geometry.IsGood())
       {
         const index = this.mesh.GetMeshIndex();
         if (!CreateLodAllocations(geometry, index, geometry.GetMeshLod__LodIndex(index, 0), Tr2RenderContext_GetMainThreadRenderContext())) return;
@@ -507,11 +507,12 @@ export class EveChildLineSet extends EveChildTransform
   {
     if (!this.display) return;
     if ((this.renderType !== EveChildLineSet.lineSetType.OBJECT_RENDER && this.renderType !== EveChildLineSet.lineSetType.BOTH) || !this.mesh) return;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the instance buffer check: preparing builds it.
-    if (!this.EnsureGood()) return;
-    if (this._cachedSVD === Tr2EffectStateManager.Unknown || this._vertexDeclarationHandle === Tr2EffectStateManager.Unknown || !this._vertexBuffer.IsValid()) return;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the instance buffer check: preparing builds it.
+    const good = this.IsGood();
     const geometry = this.mesh.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return;
+    const geometryGood = geometry ? geometry.IsGood() : false;
+    if (!good || !geometryGood) return;
+    if (this._cachedSVD === Tr2EffectStateManager.Unknown || this._vertexDeclarationHandle === Tr2EffectStateManager.Unknown || !this._vertexBuffer.IsValid()) return;
     const context = Tr2RenderContext_GetMainThreadRenderContext();
     const lod = geometry.GetMeshLod__LodIndex(0, 0);
     if (!lod || !CreateLodAllocations(geometry, 0, lod, context)) return;

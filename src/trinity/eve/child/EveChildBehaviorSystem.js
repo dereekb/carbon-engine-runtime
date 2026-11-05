@@ -140,7 +140,7 @@ export class EveChildBehaviorSystem extends EveChildTransform
    *
    * @adapted Carbon registers with the device and prepares here, as the
    *   Tr2DeviceResource base constructor registers (Tr2DeviceResource.cpp:6-9).
-   *   Here it does both on its first use (EnsureGood at its use site), so one built
+   *   Here it does both on its first use (IsGood at its use site), so one built
    *   and never drawn is never listed and holds no device objects, and one left
    *   unused is released (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
@@ -428,7 +428,7 @@ export class EveChildBehaviorSystem extends EveChildTransform
    * Publishes the updated system, fills both AL streams, then its PlayFX
    * renderables (Carbon GetRenderables). Mapping remains on the render thread.
    *
-   * @implemented
+   * @adapted Waits for device-tick preparation before publishing or mapping streams.
    */
 
   GetRenderables(renderables)
@@ -443,8 +443,8 @@ export class EveChildBehaviorSystem extends EveChildTransform
       return renderables;
     }
 
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). UpdateBuffer fills, and GetBatches draws, the streams preparing builds.
-    this.EnsureGood();
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). UpdateBuffer fills, and GetBatches draws, the streams preparing builds.
+    if (!this.IsGood()) return renderables;
     renderables.push(this);
 
     this.UpdateBuffer(Tr2RenderContext_GetMainThreadRenderContext());
@@ -854,7 +854,7 @@ export class EveChildBehaviorSystem extends EveChildTransform
   {
     if (!group.display || !mesh) return;
     const geometry = mesh.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return;
+    if (!geometry || !geometry.IsGood()) return;
     const lod = geometry.GetMeshLod__LodIndex(mesh.GetMeshIndex(), 0);
     if (!lod || !CreateLodAllocations(geometry, mesh.GetMeshIndex(), lod, Tr2RenderContext_GetMainThreadRenderContext())) return;
     group.CreateVertexDeclaration();
@@ -864,7 +864,7 @@ export class EveChildBehaviorSystem extends EveChildTransform
       const material = area.GetMaterialInterface();
       if (!material) continue;
       // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-      if (!material.EnsureGood()) continue;
+      if (!material.IsGood()) continue;
       const reversed = area.GetReversed();
       if (reversed && !lod.reversedIndicesValid) continue;
       const draw = Tr2RenderBatch.resolveDrawArguments(lod, area.GetIndex(), area.GetCount(), reversed);

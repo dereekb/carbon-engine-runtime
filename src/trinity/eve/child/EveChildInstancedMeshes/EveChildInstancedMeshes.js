@@ -338,7 +338,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
     for (const mesh of this.meshes)
     {
       const geometry = mesh.GetGeometryResource();
-      if (!geometry || geometry.EnsureGood() === false)
+      if (!geometry || geometry.IsGood() === false)
       {
         continue;
       }
@@ -428,7 +428,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
       const info = EveDamageOverlayOwnerInfo.Reset(EveChildInstancedMeshes._partOwnerInfo);
       const found = this._FindMeshByPartTag(partTag);
       const geometry = found ? found.mesh.GetGeometryResource() : null;
-      if (geometry && geometry.EnsureGood())
+      if (geometry && geometry.IsGood())
       {
         const meshData = geometry.GetMeshData(found.mesh.meshIndex);
         if (meshData)
@@ -1462,7 +1462,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
       if (reason === Tr2RenderReason.TR2RENDERREASON_REFLECTION && !EntityComponents.shouldReflect(mesh.reflectionMode)) continue;
 
       const geometry = mesh.GetGeometryResource();
-      if (!geometry || geometry.EnsureGood() === false) continue;
+      if (!geometry || geometry.IsGood() === false) continue;
       if (!mesh.overlayAreaBlocksBuilt)
       {
         EveChildInstancedMeshes.rebuildOverlayAreaBlocks(mesh);
@@ -1643,7 +1643,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
       // (RebuildCachedData, an IBlueAsyncResNotifyTarget callback). That
       // notification is not ported, so the first pass that finds the
       // geometry good rebuilds it here.
-      if (geometry && mesh.combinedVertexDeclaration === Tr2EffectStateManager.Unknown && geometry.EnsureGood())
+      if (geometry && mesh.combinedVertexDeclaration === Tr2EffectStateManager.Unknown && geometry.IsGood())
       {
         this.RebuildCachedData(geometry);
       }
@@ -1654,7 +1654,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
         continue;
       }
       // cpp:771-775.
-      if (!geometry.EnsureGood())
+      if (!geometry.IsGood())
       {
         this._allRegistered = false;
         continue;
@@ -1694,7 +1694,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
           continue;
         }
         // Asked before registering: renews it, and a not-good effect retries later.
-        if (!area.effect || !area.effect.EnsureGood())
+        if (!area.effect || !area.effect.IsGood())
         {
           this._allRegistered = false;
           continue;

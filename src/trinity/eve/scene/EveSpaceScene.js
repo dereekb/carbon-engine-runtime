@@ -3078,7 +3078,7 @@ export class EveSpaceScene
 
       renderContext.GetEffectStateManager().ApplyStandardStates(RenderingMode.RM_OPAQUE);
       // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-      if (this.backgroundEffect.EnsureGood())
+      if (this.backgroundEffect.IsGood())
         Tr2Renderer.drawCameraSpaceScreenQuad(renderContext, this.backgroundEffect.GetShaderStateInterface(), this.backgroundEffect);
 
       if (reason === EveSpaceScene.BackgroundRenderingReason.BACKGROUND_RENDER_REFLECTION)

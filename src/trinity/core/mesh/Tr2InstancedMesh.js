@@ -281,20 +281,21 @@ export class Tr2InstancedMesh extends Tr2Mesh
   {
     if (!this.display) return false;
     const geometry = this.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return false;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). A bare call: the declaration check below
+    const geometryGood = geometry ? geometry.IsGood() : false;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). A bare call: the declaration check below
     // rebuilds what preparing makes.
-    this.EnsureGood();
+    this.IsGood();
     const provider = this.GetInstanceGeometryResource();
     if (!provider) return false;
-    // The provider's use (Tr2DeviceResource.EnsureGood registers and renews it) is asked here, by its consumer, before
+    // The provider's use (Tr2DeviceResource.IsGood registers and renews it) is asked here, by its consumer, before
     // its readiness: readiness is false until preparing has run, and stays a pure query, as Carbon's const
     // IsInstanceDataReady is. A provider that owns device objects is a Tr2DeviceResource (Tr2DirectInstanceData.h,
     // Tr2RuntimeInstanceData.h, Tr2ParticleSystem.h); a geometry resource is not and is skipped.
     const deviceProvider = CjsSchema.cast(provider, Tr2DeviceResource);
-    if (deviceProvider) deviceProvider.EnsureGood();
-    if (!provider.IsInstanceDataReady()) return false;
+    if (deviceProvider) deviceProvider.IsGood();
     const instanceGeometry = CjsSchema.cast(provider, TriGeometryRes);
+    const providerGood = instanceGeometry ? instanceGeometry.IsGood() : true;
+    if (!geometryGood || !providerGood || !provider.IsInstanceDataReady()) return false;
     if (instanceGeometry && !CreateLodAllocations(instanceGeometry, this.instanceMeshIndex,
       instanceGeometry.GetMeshLod__ScreenSize(this.instanceMeshIndex, screenSize), Tr2RenderContext_GetMainThreadRenderContext())) return false;
     if (this._vertexDeclaration === Tr2EffectStateManager.Unknown ||
@@ -316,7 +317,7 @@ export class Tr2InstancedMesh extends Tr2Mesh
       const material = area.GetMaterialInterface();
       if (!material) continue;
       // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-      if (!material.EnsureGood()) continue;
+      if (!material.IsGood()) continue;
       const reversed = area.GetReversed() !== reverseAreas;
       if (reversed && !lod.reversedIndicesValid) continue;
       const draw = Tr2RenderBatch.resolveDrawArguments(lod, area.GetIndex(), area.GetCount(), reversed);
@@ -362,7 +363,7 @@ export class Tr2InstancedMesh extends Tr2Mesh
     if (!definition) return;
     const instances = definition.items ?? definition;
     const geometry = this.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return;
+    if (!geometry || !geometry.IsGood()) return;
     const mesh = CarbonVertexElements(geometry.GetMeshVertexElements(this.meshIndex));
     if (!mesh.length || !instances.length) return;
     const merged = mesh.map(item => ({ ...item }));

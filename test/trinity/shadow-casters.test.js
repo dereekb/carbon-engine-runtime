@@ -65,7 +65,7 @@ test("EveTurretSet.IsCastingShadow: early-outs never write the out-param (cpp:20
   assert.equal(set.IsCastingShadow__ShadowFrustum({}, MakeShadowFrustum(), 0, stale), false, "geometry gate");
   assert.equal(stale[0], 99, "geometry early-out leaves the stale value");
 
-  set.geometryResource = {};
+  set.geometryResource = { IsPrepared: () => false };
   assert.equal(
     set.IsCastingShadow__ShadowFrustum({}, MakeShadowFrustum(), Tr2RenderReason.TR2RENDERREASON_REFLECTION, stale),
     false,
@@ -77,7 +77,7 @@ test("EveTurretSet.IsCastingShadow: early-outs never write the out-param (cpp:20
 test("EveTurretSet.IsCastingShadow: per-turret sphere transform, max accumulation, > 5 threshold (cpp:2034-2050)", () =>
 {
   const set = new EveTurretSet();
-  set.geometryResource = {};
+  set.geometryResource = { IsPrepared: () => false };
   vec4.set(set.boundingSphere, 0, 0, 0, 1);
   set.SetLocalTransform(0, mat4.create());
   set.SetLocalTransform(1, mat4.create());
@@ -116,7 +116,7 @@ function turretDrawFixture(t)
   geometry.ReadCMFFile({meshes:[{decl:[{usage:"Position",usageIndex:0,type:"Float32",elementCount:3,offset:0}],vertex:{position:[0,0,0,1,0,0,0,1,0]},indices:[{faces:[0,1,2]}],areas:[{firstElement:0,elementCount:1}]}]});prepareResourceFixture(geometry);
   t.after(()=>{set.Destruct();SharedGeometryBuffer(context).ReleaseResources();context.SetRenderContextAL(prior);});
   // In use, as a drawn ship's set is: nothing prepares during a build (registration and preparing follow use).
-  set.EnsureGood();
+  set.IsGood();set.PrepareResources();
   return {set,geometry};
 }
 
@@ -171,7 +171,7 @@ test("EveTurretSet.GetPerObjectData: null without geometry (legal on batches), f
 {
   const set = new EveTurretSet();
   assert.equal(set.GetPerObjectData(), null, "null without geometry");
-  set.geometryResource = { IsGood: () => true, EnsureGood: () => true, GetMeshCount: () => 1 };
+  set.geometryResource = { IsPrepared: () => false, IsGood: () => true, GetMeshCount: () => 1 };
   // Carbon allocates the record from the accumulator, so no accumulator means
   // no record - the same legal null the batch path already tolerates.
   assert.equal(set.GetShadowPerObjectData(), null, "null without an accumulator");

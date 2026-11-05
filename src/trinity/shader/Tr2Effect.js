@@ -1083,19 +1083,6 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
-   * Transitional entry while draw callers migrate to IsGood. Missing textures
-   * do not make the effect bad: drawing uses the fallback texture.
-   *
-   * @cjs As BlueAsyncRes `EnsureGood`.
-   * @implemented
-   * @returns {boolean} Whether the effect can be drawn now.
-   */
-  EnsureGood()
-  {
-    return this.IsGood();
-  }
-
-  /**
    * Drops the resolved shader and clears every parameter's and resource's effect
    * handles by rebuilding them against null. Called for a dependency
    * (Tr2Effect.cpp:842-855; notified through resMan), it

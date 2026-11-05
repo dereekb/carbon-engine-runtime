@@ -355,7 +355,7 @@ export class EveMeshOverlayEffect extends IRoot
       for (const effect of effects)
       {
         // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-        if (!effect.EnsureGood()) continue;
+        if (!effect.IsGood()) continue;
         for (const block of blocks)
         {
           committed = EveMeshOverlayEffect._commitOverlayBlock(
@@ -378,7 +378,7 @@ export class EveMeshOverlayEffect extends IRoot
     lod = null)
   {
     // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-    if (!effect.EnsureGood()) return false;
+    if (!effect.IsGood()) return false;
     let committed = false;
     for (const block of areaBlocks[EveMeshOverlayEffect.OverlayType.TYPE_ALL])
     {

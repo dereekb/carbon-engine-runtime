@@ -40,7 +40,7 @@ function setup(t) {
   const draws=[],draw=al.DrawIndexedInstanced.bind(al);
   al.DrawIndexedInstanced=(...args)=>{draws.push(args);return draw(...args);};
   const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,ApplyMaterialDataForPass(){}};
+  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true,ApplyMaterialDataForPass(){}};
   return {context,al,draws,material,manager:blue.resMan};
 }
 function pin(g=geometry()) {
@@ -114,7 +114,7 @@ test('pins share source indexes and publish before advancing curves in seconds',
 });
 
 test('selected sphere triangles submit through AL with separate native VS and PS registers',t=>{
-  const {context,draws,material}=setup(t),p=pin();p.pinEffect=material;p.pickEffect=material;
+  const {context,draws,material}=setup(t),p=pin();p.pinEffect=material;p.pickEffect=material;p.PrepareResources();
   const pod=p.GetPerObjectData({Alloc:name=>RawData.create(name)});assert.equal(pod.GetData().byteLength,160);
   const bindings=[],bind=context.SetConstants.bind(context);
   t.mock.method(context,'SetConstants',(buffer,stage,register)=>{bindings.push({buffer,stage,register});return bind(buffer,stage,register);});

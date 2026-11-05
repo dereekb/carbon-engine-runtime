@@ -213,12 +213,6 @@ export class CjsPaperDollCompositor
         }
     }
 
-    /** Transitional host compatibility while consumers migrate to IsGood. */
-    EnsureGood()
-    {
-        return this.IsGood();
-    }
-
     /**
      * Renews every effect this compositor holds, with its effect resource and textures, and answers whether all
      * of them can draw now.
@@ -227,7 +221,7 @@ export class CjsPaperDollCompositor
      * which can come long after the last draw; between them nothing else asks for their resources, so resMan's
      * automatic purge expired them and the next `Draw` found them reloading and threw ("Composition draw failed").
      * A live character therefore renews its compositors as part of its update, and a hidden one that should stay
-     * ready through `CjsPaperDoll.EnsureGood`. Rejected: having `Draw` wait for its inputs, which would make the
+     * ready through `CjsPaperDoll.IsGood`. Rejected: having `Draw` wait for its inputs, which would make the
      * synchronous draw calls in Graphene's composers (about 20 sites) asynchronous.
      * @returns {boolean} Whether every held effect is good.
      */

@@ -912,16 +912,16 @@ export class EveChildBoosterSet extends EveSpaceObjectChild
     if (this._CurrentFrameOffset() === INVALID_RING_OFFSET) return;
     if (!this._singleBoosters.length) return;
     if (!this._boostersVisible) return;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the declaration check: preparing makes it.
-    if (!this.EnsureGood() || this._vertexDeclHandle === Tr2EffectStateManager.Unknown) return;
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the declaration check: preparing makes it.
+    const good = this.IsGood();
+    const effect = (this._boosterHighLod || !this.effectFar) ? this.effect : this.effectFar;
+    const effectGood = effect ? effect.IsGood() : false;
+    if (!good || !effectGood || this._vertexDeclHandle === Tr2EffectStateManager.Unknown) return;
 
     // cpp:496.
     const indexBuffer = this._parentMirrored ? Tr2Renderer.GetReversedQuadListIndexBuffer() : Tr2Renderer.GetQuadListIndexBuffer();
     if (!indexBuffer.IsValid()) return;
 
-    const effect = (this._boosterHighLod || !this.effectFar) ? this.effect : this.effectFar;
-    // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-    if (!effect || !effect.EnsureGood()) return;
     // The shared allocation is null until a device has run the factory (Tr2ProceduralBuffer.GetSharedResource).
     const vb = this._vertexBuffer.GetSharedResource();
     if (!vb) return;

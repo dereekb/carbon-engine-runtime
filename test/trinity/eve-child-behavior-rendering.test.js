@@ -87,6 +87,8 @@ function system(t, groups)
   const value = new EveChildBehaviorSystem();
   value.behaviorGroups = groups;
   value.Initialize();
+  value.IsGood();
+  trinity.device._PreparePendingResources();
   value._hasUpdated = value._behaviorGroupLoaded = true;
   t.after(() => value.Destruct());
   return value;
@@ -181,7 +183,7 @@ test("allocation resize, empty groups, mapping failures and teardown obey owners
 {
   const value = system(t, [group()]);
   // In use, as a drawn ship's is: nothing prepares during a build.
-  value.EnsureGood();
+  value.IsGood();
   const a = value.behaviorGroups[0];
   a.SetVertexFunctionReferance(() => value.ChangeBufferInstanceCount());
   a.SetCount(4);
@@ -265,7 +267,7 @@ test("booster flare noise reads Blue frame ticks as seconds once", t =>
 {
   t.mock.method(blue.os, "GetCurrentFrameTime", () => 123456789);
   const booster = new BehaviorGroupBooster();
-  booster.ambientFlareEffect = FixtureEffect({});
+  booster.ambientFlareEffect = FixtureEffect({ GetHashValue: () => 0 });
   booster.ambientFlareBrightness = 2;
   booster.ambientFlareNoiseAmplitude = 0.7;
   booster.ambientFlareNoiseSpeed = 1.3;

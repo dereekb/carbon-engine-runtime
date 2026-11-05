@@ -665,7 +665,7 @@ export class EveTurretSet extends EveEntity
    * Native declaration and instance preparation (cpp:1103-1120).
    *
    * Carbon's constructor registers with the device and prepares (cpp:122). Here
-   * the set registers and prepares on its first use (EnsureGood at its use site), so a
+   * the set registers and prepares on its first use (IsGood at its use site), so a
    * build that fails or is never drawn holds no device objects
    * (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
@@ -2283,8 +2283,8 @@ export class EveTurretSet extends EveEntity
     this._parentShLighting = null;
     this.visibleCount = 0;
     if (!this.display) return;
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). GetBatches draws from the instance buffer preparing builds.
-    this.EnsureGood();
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). GetBatches draws from the instance buffer preparing builds.
+    this.IsGood();
     const frustum = context.GetFrustum();
     for (const turret of this._turrets)
     {
@@ -2370,8 +2370,8 @@ export class EveTurretSet extends EveEntity
     const geometry = this.geometryResource;
     // Ask both before drawing, so neither is left unrenewed while the other loads.
     let good = true;
-    if (!geometry || !geometry.EnsureGood()) good = false;
-    if (!this.turretEffect || !this.turretEffect.EnsureGood()) good = false;
+    if (!geometry || !geometry.IsGood()) good = false;
+    if (!this.turretEffect || !this.turretEffect.IsGood()) good = false;
     if (!good) return false;
     const lod = geometry.GetMeshLod__LodIndex(0, 0);
     if (!lod || !CreateLodAllocations(geometry, 0, lod, Tr2RenderContext_GetMainThreadRenderContext())) return false;
@@ -2457,8 +2457,8 @@ export class EveTurretSet extends EveEntity
     const geometry = this.geometryResource;
     // Ask both before drawing, so neither is left unrenewed while the other loads.
     let good = true;
-    if (!geometry || !geometry.EnsureGood()) good = false;
-    if (!this.turretEffect || !this.turretEffect.EnsureGood()) good = false;
+    if (!geometry || !geometry.IsGood()) good = false;
+    if (!this.turretEffect || !this.turretEffect.IsGood()) good = false;
     if (!good) return false;
     const lod = geometry.GetMeshLod__LodIndex(0, 0);
     if (!lod || !CreateLodAllocations(geometry, 0, lod, Tr2RenderContext_GetMainThreadRenderContext())) return false;
@@ -2487,7 +2487,7 @@ export class EveTurretSet extends EveEntity
 
   GetPerObjectData(accumulator = null)
   {
-    if (!this.geometryResource || !this.geometryResource.EnsureGood() || this.geometryResource.GetMeshCount() < 1 || !accumulator)
+    if (!this.geometryResource || !this.geometryResource.IsGood() || this.geometryResource.GetMeshCount() < 1 || !accumulator)
     {
       return null;
     }

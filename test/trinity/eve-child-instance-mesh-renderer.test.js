@@ -132,11 +132,6 @@ class TestGeometry extends TriGeometryRes
     return this.good;
   }
 
-  EnsureGood()
-  {
-    return this.good;
-  }
-
   GetBoundingSphere(meshIndex)
   {
     return meshIndex >= 0 && meshIndex < this.meshCount

@@ -61,7 +61,7 @@ export class Tr2ParticleSystem
    *
    * @adapted Carbon registers with the device here, as the Tr2DeviceResource
    *   base constructor does (Tr2DeviceResource.cpp:6-9). Here it registers on
-   *   use (EnsureGood at its use site), so one built and never drawn is never listed
+   *   use (IsGood at its use site), so one built and never drawn is never listed
    *   and one left unused is released (docs internal/decisions/device-resource-registration.md).
    */
   constructor()
@@ -673,7 +673,7 @@ export class Tr2ParticleSystem
     return true;
   }
 
-/**
+  /**
    * Advances aging, forces, movement, emitters, constraints and bounds.
    * JS uses typed-array views in place of native particle pointers and takes
    * dt first for the existing script caller; dirty and previous-data flags
@@ -1347,9 +1347,9 @@ export class Tr2ParticleSystem
   {
     this._shouldSortVisible = false;
     mat4.copy(this._worldTransform, worldTransform);
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the dirty gate, so a system in view that is not changing
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the dirty gate, so a system in view that is not changing
     // stays registered, and before the buffer check: preparing builds it.
-    this.EnsureGood();
+    this.IsGood();
     if (!this._bufferDirty && !this.requiresSorting) return;
     if (!this._vertexBuffer || !this._vertexBuffer.IsValid()) return;
     this._shouldSortVisible = true;

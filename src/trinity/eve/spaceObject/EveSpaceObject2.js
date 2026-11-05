@@ -2455,7 +2455,7 @@ export class EveSpaceObject2 extends EveEntity
       const material = collector.shaderMaterial;
       if (!material) continue;
       // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-      if (!material.EnsureGood()) continue;
+      if (!material.IsGood()) continue;
       for (const block of collector.areaBlockVector)
       {
         const batch = new Tr2RenderBatch();
@@ -2491,7 +2491,7 @@ export class EveSpaceObject2 extends EveEntity
     this._EnsureCachedAreaBlocks();
 
     const geometry = mesh.GetGeometryResource();
-    if (!geometry || !geometry.EnsureGood()) return false;
+    if (!geometry || !geometry.IsGood()) return false;
 
     const meshIndex = mesh.GetMeshIndex();
     const lod = geometry.GetMeshLod__ScreenSize(meshIndex, this._meshScreenSize);
@@ -3078,7 +3078,7 @@ export class EveSpaceObject2 extends EveEntity
         {
           return false;
         }
-        if (geometry.EnsureGood())
+        if (geometry.IsGood())
         {
           const areaStart = this._damageFilterAreas.length;
           EveCollectAreas(TriBatchType.TRIBATCHTYPE_OPAQUE, this.mesh, this._damageFilterAreas);
@@ -3113,7 +3113,7 @@ export class EveSpaceObject2 extends EveEntity
         this._damageFilterAreas.length = 0;
         return false;
       }
-      if (!source.geometry.EnsureGood()) continue;
+      if (!source.geometry.IsGood()) continue;
 
       const fromObject = mat4.create();
       if (!mat4.invert(fromObject, source.childToObject)) mat4.identity(fromObject);
@@ -4137,7 +4137,7 @@ export class EveSpaceObject2 extends EveEntity
       return false;
     }
     const geometryRes = mesh.GetGeometryResource();
-    if (!geometryRes || !geometryRes.EnsureGood())
+    if (!geometryRes || !geometryRes.IsGood())
     {
       return false;
     }
@@ -4401,7 +4401,7 @@ export class EveSpaceObject2 extends EveEntity
   {
     if (!this.mesh) return false;
     const geometryResource = this.mesh.GetGeometryResource();
-    return geometryResource ? geometryResource.EnsureGood() : false;
+    return geometryResource ? geometryResource.IsGood() : false;
   }
 
   /**

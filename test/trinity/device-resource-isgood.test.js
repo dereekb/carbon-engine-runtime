@@ -24,7 +24,7 @@ test("readiness renews and registers without preparing; device preparation makes
   const { device, at } = setup(t), r = resource();
   assert.equal(r.IsGood(), false); assert.equal(r.prepares, 0);
   assert.deepEqual(device.GetResourcesRegistered(), [r]);
-  assert.equal(r.EnsureGood(), false); assert.equal(r.prepares, 0);
+  assert.equal(r.IsGood(), false); assert.equal(r.prepares, 0);
   device._PreparePendingResources(); assert.equal(r.IsGood(), true); assert.equal(r.prepares, 1);
   at(5); r.KeepAlive(); assert.equal(r._stamp, 1005 * SECOND);
   device._PreparePendingResources(); assert.equal(r.prepares, 1);

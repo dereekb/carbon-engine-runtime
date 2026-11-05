@@ -1227,7 +1227,7 @@ export class Tr2DebugRenderer
 
     // Carbon EndRender (Tr2DebugRenderer.cpp:832) reads the notified shader;
     // the JS effect must pull its resource changes before that read.
-    if (!this._effect.EnsureGood()) return;
+    if (!this._effect.IsGood()) return;
     const shader = this._effect.GetShaderStateInterface();
     if (!shader)
     {

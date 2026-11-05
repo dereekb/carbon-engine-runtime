@@ -50,7 +50,7 @@ function setup(t) {
     draws.push(args);return draw(...args);
   };
   const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,ApplyMaterialDataForPass(){}};
+  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true,ApplyMaterialDataForPass(){}};
   return {context,al,draws,material};
 }
 function circle(count=4) {const p=new EveCircle();p.numSegments=count;p.circleRadius=2;p.lineWidth=0.25;p.billboardObjects=false;return p;}
@@ -151,8 +151,8 @@ test('synchronous updates animate all paths before the owner visibility gate',t=
   c.lines.forEach((p,i)=>assert.equal(p.animValue,before[i]+0.125));assert.equal(write.mock.callCount(),0);assert.equal(c.GetOwnerMaxSpeed(),123);
 });
 
-test('native instance aliases and mesh-zero LOD survive real indexed draw submission',t=>{
-  const {context,draws,material}=setup(t),c=child(t),{g}=mesh(c,material,1);c.renderType=BOTH;c.Initialize();update(c);
+test('native instance aliases and mesh-zero LOD survive resource release and indexed draw submission',t=>{
+  const {context,draws,material}=setup(t),c=child(t),{g}=mesh(c,material,1);c.renderType=BOTH;c.Initialize();c.ReleaseResources();c.PrepareResources();update(c);
   assert.equal(c._boundingSphere[3],9.25,'bounds use authored mesh index one');
   const base=Tr2EffectStateManager.getVertexDeclarationElements(g.GetMeshData(1).vertexDeclarationHandle),snapshot=structuredClone(base);
   const definition=Tr2EffectStateManager.getVertexDeclarationElements(c._vertexDeclarationHandle);
@@ -229,4 +229,18 @@ test('real deathless layout child line sets hydrate and produce nonzero instance
   }
   assert.equal(draws.length,20);assert.ok(points>100);assert.equal(draws.reduce((n,d)=>n+d[1],0),points);
   t.diagnostic(`${found.length} authored line owners, ${points} instance records, ${draws.length} headless draws`);
+});
+
+// Carbon EveChildLineSet.cpp:67,342 starts cachedSVD at zero and rebuilds only
+// when the source declaration differs. Preserve this native cold-zero edge;
+// device release (cpp:542-543) invalidates the cache and allows recovery.
+test('native cached-zero declaration recovers after resource release', t => {
+  const {material}=setup(t),c=child(t);mesh(c,material);
+  t.mock.method(Tr2EffectStateManager,'getVertexDeclarationHandle',()=>0);
+  t.mock.method(Tr2EffectStateManager,'getVertexDeclarationElements',()=>({items:[],nextOffset:[0,0]}));
+  c.CreateSpriteVertexDeclaration();
+  assert.equal(c._cachedSVD,0);
+  assert.equal(c._vertexDeclarationHandle,Tr2EffectStateManager.Unknown);
+  c.ReleaseResources();c.CreateSpriteVertexDeclaration();
+  assert.equal(c._vertexDeclarationHandle,0);
 });

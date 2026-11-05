@@ -527,7 +527,7 @@ export class EveChildInstanceMeshRenderer extends EveChildMesh
 
     let baseMeshSize = 0;
     const geometry = this.mesh.GetGeometryResource();
-    if (geometry && geometry.EnsureGood())
+    if (geometry && geometry.IsGood())
     {
       const sphere = geometry.GetBoundingSphere(this.mesh.GetMeshIndex());
       if (!sphere || sphere.length < 4)

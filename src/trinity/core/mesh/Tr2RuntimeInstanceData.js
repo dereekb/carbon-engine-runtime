@@ -221,7 +221,7 @@ export class Tr2RuntimeInstanceData
    * @cjs Carbon persists no rows, so it has no Initialize. A prepared provider
    *   publishes through UpdateData; one not yet prepared only marks the rows
    *   published, because nothing prepares during a build and the first use
-   *   (EnsureGood) allocates the shared range from these same repacked bytes, so a
+   *   (IsGood) allocates the shared range from these same repacked bytes, so a
    *   hydrated provider that is never drawn holds no device range (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
   Initialize()
@@ -351,7 +351,7 @@ export class Tr2RuntimeInstanceData
    * Prepares now when the stream is not valid, as Carbon does (cpp:454-457),
    * rather than on first use: the caller publishes rows so that the instanced
    * mesh draws them, and preparing is what allocates the shared range and
-   * uploads the packed bytes into it. EnsureGood then lists and stamps the provider as in
+   * uploads the packed bytes into it. IsGood then lists and stamps the provider as in
    * use, since published rows are about to be drawn; one published and never
    * drawn is still released by the sweep, and its CPU rows survive for the next
    * prepare (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
@@ -373,7 +373,7 @@ export class Tr2RuntimeInstanceData
         if (Failed(this.#allocation.Update(this.#bytes, context))) return false;
       }
       else if (!this.PrepareResources()) return false;
-      this.EnsureGood();
+      this.IsGood();
     }
     this.#dirty = false;
     this.#dataRevision++;

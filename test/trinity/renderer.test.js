@@ -28,7 +28,7 @@ function material(log = [])
   return {
     log,
     GetShaderStateInterface: () => shader,
-    IsGood: () => true, EnsureGood: () => true,
+    IsGood: () => true,
     ApplyMaterialDataForPass: (technique, pass) => log.push(`data:${technique}:${pass}`)
   };
 }

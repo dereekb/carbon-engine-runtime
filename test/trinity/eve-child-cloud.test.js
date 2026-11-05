@@ -47,7 +47,7 @@ function setup(t)
   const pool = new TriPoolAllocator().RegisterCatalog();
   const accumulator = new TriRenderBatchAccumulator().SetTriPoolAllocator(pool);
   const shader = { GetTechniqueIndex: () => 0, GetPassCount: () => 1, GetShaderTypeMask: () => 3, ApplyAllStateForPass() {} };
-  const effect = { GetShaderStateInterface: () => shader, IsGood: () => true, EnsureGood: () => true, CompatibleWithGdr: () => false, ApplyMaterialDataForPass() {} };
+  const effect = { GetShaderStateInterface: () => shader, IsGood: () => true, CompatibleWithGdr: () => false, ApplyMaterialDataForPass() {} };
   t.after(() =>
   {
     for (const resource of trinity.GetResourcesRegistered())
@@ -71,7 +71,7 @@ test("native staggered grid retains alternating winding and LODs above sixteen",
   const { uploads } = setup(t);
   const cloud = CjsSchema.from("EveChildCloud", { preTesselationLevel: 64 });
   // In use, as a drawn ship's is: nothing prepares during a build.
-  cloud.EnsureGood();
+  cloud.IsGood();cloud.PrepareResources();
   const vertices = uploads.filter(item => item.description.stride === 8).at(-1).data;
   assert.equal(vertices.length, 65 * 65 * 2);
   near(vertices.slice(0, 4), [-1 - 1 / 63.5, -1, -1 + 1 / 63.5, -1]);
@@ -92,7 +92,7 @@ test("notified tessellation edits and device release rebuild owned storage", t =
   setup(t);
   const cloud = CjsSchema.from("EveChildCloud", { preTesselationLevel: 64 });
   // In use, as a drawn ship's is: nothing prepares during a build.
-  cloud.EnsureGood();
+  cloud.IsGood();cloud.PrepareResources();
   const vertex = cloud._vertexBuffer, oldIndex = cloud._indexBuffers[0];
   CjsSchema.setValues(cloud, { preTesselationLevel: 16 });
   assert.equal(oldIndex.IsValid(), false);
@@ -147,7 +147,7 @@ test("rotated nonuniform parent, visibility, sorting and pre-update collection",
   cloud.UpdateVisibility(update);
   cloud.GetRenderables(renderables); assert.equal(renderables.length, 0);
   Object.assign(update.GetFrustum(), { IsSphereVisible: () => true, GetPixelSizeAccross: () => 10 });
-  cloud.UpdateVisibility(update); cloud.GetRenderables(renderables);
+  cloud.UpdateVisibility(update); cloud.PrepareResources(); cloud.GetRenderables(renderables);
   assert.deepEqual(renderables, [cloud]);
   assert.ok(Math.abs(cloud.GetSortValue(context) - (Math.hypot(4, 22, -18) - Math.sqrt(3))) < 0.00001);
 });
@@ -199,7 +199,7 @@ test("LOD preserves Carbon's width-for-both-axes quirk and near-plane clipping",
   const { accumulator } = setup(t);
   const cloud = CjsSchema.from("EveChildCloud", { preTesselationLevel: 128, cellScreenSize: 1 });
   // In use, as a drawn ship's is: nothing prepares during a build.
-  cloud.EnsureGood();
+  cloud.IsGood();cloud.PrepareResources();
   mat4.fromScaling(cloud.worldTransform, [1, 4, 1]); cloud.worldTransform[14] = -100;
   const record = cloud.GetPerObjectData(accumulator);
   assert.equal(cloud.currentLod, 2);
@@ -221,7 +221,7 @@ test("native transparent batch reaches AL indexed draw and constants use the ver
   const { context, accumulator, draws, effect } = setup(t);
   const cloud = new EveChildCloud();
   // In use, as a drawn ship's is: nothing prepares during a build.
-  cloud.EnsureGood();
+  cloud.IsGood();cloud.PrepareResources();
   cloud.effect = effect;
   mat4.fromTranslation(cloud.worldTransform, [0, 0, -10]);
   const record = cloud.GetPerObjectData(accumulator);

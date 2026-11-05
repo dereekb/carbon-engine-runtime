@@ -48,7 +48,7 @@ function setup(t)
     draws.push(args);return draw(...args);
   };
   const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,ApplyMaterialDataForPass(){}};
+  const material={GetShaderStateInterface:()=>shader,IsGood:()=>true,ApplyMaterialDataForPass(){}};
   return {context,al,draws,material,uploads};
 }
 function geometry()
@@ -62,7 +62,7 @@ function particles(t)
   const p=new Tr2ParticleSystem();p.maxParticleCount=8;
   p.elements.push(Object.assign(new Tr2ParticleElementDeclaration(),{elementType:1}));p.Initialize();
   // In use, as a drawn ship's is: nothing prepares during a build.
-  p.EnsureGood();
+  p.IsGood();p.PrepareResources();
   p.SpawnParticle({position:[1,2,3]});p.SpawnParticle({position:[3,4,5]});p.SortParticles();
   t.after(()=>p.ReleaseResources());return p;
 }

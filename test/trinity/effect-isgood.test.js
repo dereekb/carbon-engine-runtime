@@ -44,9 +44,9 @@ test("IsGood and its transitional alias renew every texture without an early exi
 
   effect.IsGood();
   assert.deepEqual([ pending.count, failed.count, ready.count ], [ 1, 1, 1 ]);
-  effect.EnsureGood();
+  effect.IsGood();
   assert.deepEqual([ pending.count, failed.count, ready.count ], [ 2, 2, 2 ]);
-  effect.EnsureGood();
+  effect.IsGood();
   assert.deepEqual([ pending.count, failed.count, ready.count ], [ 3, 3, 3 ]);
 });
 
@@ -82,8 +82,8 @@ test("a pending effect resource is not good; preparation rebuilds without waitin
   effect.RebuildCachedDataInternal = () => { rebuilds += 1; };
   prepareResourceFixture(resource);
   assert.equal(rebuilds, 1, "completion pushes the rebuild to the registered owner");
-  effect.EnsureGood();
-  effect.EnsureGood();
+  effect.IsGood();
+  effect.IsGood();
   assert.equal(rebuilds, 1, "readiness checks do not rebuild again");
 });
 
@@ -115,7 +115,7 @@ test("pure queries on a purged resource do not revive it", () =>
   resource.IsPrepared(); resource.IsLoading(); blue.resMan.GetResourceStatus(resource);
   assert.equal(resource.reloads, 0);
   assert.equal(blue.resMan.GetResourceStatus(resource).purged, true);
-  resource.EnsureGood();
+  resource.IsGood();
   assert.equal(resource.reloads, 1, "use revives");
 });
 
@@ -169,7 +169,7 @@ test("the light manager asks a profile IsGood where it packs it, and packs none 
   profile.KeepAlive = () => { renewals += 1; };
 
   assert.equal(manager._ProfileSlot(profile), 0, "loading: no profile");
-  // EnsureGood renews; until IsGood goes pure, its IsGood renews again.
+  // Readiness renews use; repeated checks remain safe.
   assert.equal(renewals, 1, "and asking renewed it once");
 });
 

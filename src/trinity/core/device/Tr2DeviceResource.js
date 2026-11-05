@@ -112,15 +112,6 @@ export class Tr2DeviceResource
   }
 
   /**
-   * Transitional alias for IsGood; preparation belongs to the device tick.
-   * @cjs Use-driven device residency; Carbon retains resources until destruction.
-   */
-  EnsureGood()
-  {
-    return this.IsGood();
-  }
-
-  /**
    * `NONE`, `PREPARED` or `DESTRUCTED` (`Tr2DeviceResourceState`). Installed
    * classes take it on first use (`@be.inherit` copies methods, not fields), so
    * an undefined state reads as `NONE`.

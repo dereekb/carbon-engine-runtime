@@ -380,7 +380,7 @@ export class EveChildCloud2 extends EveSpaceObjectChild
    *
    * @adapted Carbon registers with the device and prepares here, as the
    *   Tr2DeviceResource base constructor registers (Tr2DeviceResource.cpp:6-9).
-   *   Here it does both on its first use (EnsureGood at its use site), so one built
+   *   Here it does both on its first use (IsGood at its use site), so one built
    *   and never drawn is never listed and holds no device objects, and one left
    *   unused is released (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    */
@@ -659,7 +659,7 @@ export class EveChildCloud2 extends EveSpaceObjectChild
         this.lightmapDepth = 0;
       }
       // Asked before reading its shader: renews the effect while the cloud updates.
-      const shader = this.effect.EnsureGood() ? this.effect.GetShaderStateInterface() : null;
+      const shader = this.effect.IsGood() ? this.effect.GetShaderStateInterface() : null;
       if (this._lightmapDirty && this.lightmapWidth === 0 && shader)
       {
         if (shader.GetResource("LightMap"))
@@ -964,10 +964,10 @@ export class EveChildCloud2 extends EveSpaceObjectChild
     {
       return false;
     }
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the cube checks: preparing builds it.
-    const good = this.EnsureGood();
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the cube checks: preparing builds it.
+    const good = this.IsGood();
     // Asked with it, not after: renews what the effect holds, and skips it while its resource is not good.
-    const effectGood = !!this.effect && this.effect.EnsureGood();
+    const effectGood = !!this.effect && this.effect.IsGood();
     if (!good || !effectGood) return false;
     if (!this._vertexBuffer.IsValid() || this._declaration === Tr2EffectStateManager.Unknown) return false;
 
@@ -1141,7 +1141,7 @@ export class EveChildCloud2 extends EveSpaceObjectChild
     // (Tr2Shader.GetTechniqueIndex) returns an INDEX: -1 for missing, 0..n
     // for found - 0 is a valid technique (compare < 0, never truthiness).
     // Ask before drawing: renews what the effect holds, and skips it while its resource is not good.
-    if (!this.effect.EnsureGood()) return false;
+    if (!this.effect.IsGood()) return false;
     const shader = this.effect.GetShaderStateInterface();
     if (!shader) return false;
     if (shader.GetTechniqueIndex("Shadow") < 0)
@@ -1305,10 +1305,10 @@ export class EveChildCloud2 extends EveSpaceObjectChild
     {
       return false;
     }
-    // Registers with trinity on first use and renews it (Tr2DeviceResource.EnsureGood). Before the cube checks: preparing builds it.
-    const good = this.EnsureGood();
+    // Registers with trinity on first use and renews it (Tr2DeviceResource.IsGood). Before the cube checks: preparing builds it.
+    const good = this.IsGood();
     // Asked with it, not after: renews what the effect holds, and skips it while its resource is not good.
-    const effectGood = !!this.reflectionEffect && this.reflectionEffect.EnsureGood();
+    const effectGood = !!this.reflectionEffect && this.reflectionEffect.IsGood();
     if (!good || !effectGood) return false;
     if (!this._vertexBuffer.IsValid() || this._declaration === Tr2EffectStateManager.Unknown) return false;
 

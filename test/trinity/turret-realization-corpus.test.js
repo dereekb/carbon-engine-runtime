@@ -474,7 +474,7 @@ test("real packed turret shader receives native instance IDs and final opaque/sh
   // Only pass execution is stubbed: geometry, metadata, declaration conversion,
   // allocations, batch submission and final AL draw are the real Node path.
   const shader={GetTechniqueIndex:name=>{currentInputs=metadata.effect.techniques.find(item=>item.name===name).passes[0].stageInputs.find(item=>item?.stageName==="vertex").signature.pipelineInputs;return 0;},GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  set.turretEffect={GetShaderStateInterface:()=>shader,ApplyMaterialDataForPass(){},IsGood:()=>true, EnsureGood: () => true};
+  set.turretEffect={GetShaderStateInterface:()=>shader,ApplyMaterialDataForPass(){},IsGood:()=>true};
   set.displayEffects=false;
   const coefficients=ship._psData.Get("shLightingCoefficients");for(let i=0;i<coefficients.length;i++)coefficients[i]=i+.25;
   const renderables=ship.GetRenderables__Impostors([]);assert.ok(renderables.includes(set),"EveMobile.cpp:291 forwards the turret renderable and SH span");

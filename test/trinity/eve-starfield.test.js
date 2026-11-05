@@ -16,13 +16,13 @@ function setup(t) {
   al.CreateBuffer=(desc,data,...rest)=>{if(desc.stride===32&&data)uploads.push(new Uint8Array(data.buffer,data.byteOffset,data.byteLength).slice());return create(desc,data,...rest);};
   al.DrawIndexedInstanced=(...args)=>{draws.push(args);return draw(...args);};
   const shader={GetTechniqueIndex:()=>0,GetPassCount:()=>1,GetShaderTypeMask:()=>3,ApplyAllStateForPass(){}};
-  const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true, EnsureGood: () => true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
+  const effect={GetShaderStateInterface:()=>shader,IsGood:()=>true,CompatibleWithGdr:()=>false,ApplyMaterialDataForPass(){}};
   t.after(()=>{for(const resource of trinity.GetResourcesRegistered())if(!before.has(resource)&&resource.constructor===EveStarfield)resource.Destruct();SharedGeometryBuffer(context).ReleaseResources();context.SetRenderContextAL(prior);});
   return {context,al,uploads,draws,effect};
 }
 
 // In use, as a drawn ship's is: nothing prepares during a build.
-function make(values={}) {const stars=CjsSchema.from('EveStarfield',{numStars:3,...values});stars.EnsureGood();return stars;}
+function make(values={}) {const stars=CjsSchema.from('EveStarfield',{numStars:3,...values});stars.IsGood();stars.PrepareResources();return stars;}
 function collect(stars) {const batches=[];stars.GetBatches({Commit:b=>batches.push(b)},null);return batches;}
 
 test('mapped starfield initialization uploads seeded native sprite records',t=>{
