@@ -16,6 +16,9 @@ export class CjsGraph
   /** Invalidates derived descriptions after registration changes, including late parents. */
   static _revision = 0;
 
+  /** Derived selection tables, weakly keyed by immutable selection descriptions. */
+  static _selections = new WeakMap();
+
   /** Reusable traversal storage, isolated by active call depth for nested visitors. */
   static _traversals = [];
 
@@ -86,9 +89,64 @@ export class CjsGraph
    */
   static traverse(root, visit, options = {})
   {
+    return this._traverse(root, visit, options, null, null);
+  }
+
+  /**
+   * Compiles a class-only selection without reading any graph instances.
+   * definition: { matchClass(classInfo), edges?, acceptMember(member, classInfo)? }.
+   * Predicates must remain stable for the selection lifetime; create a new selection if they change.
+   * @cjs Resource matching is supplied by the caller; graph imports no resource services.
+   */
+  static compileSelection(definition, diagnostics = null)
+  {
+    if (typeof definition.matchClass !== "function") throw new TypeError("Selection requires matchClass.");
+    const selection = Object.freeze({
+      matchClass: definition.matchClass,
+      acceptMember: definition.acceptMember ?? null,
+      edges: Object.freeze(Array.from(definition.edges ?? ["embed", "ref"]))
+    });
+    this._selections.set(selection, this._compileSelection(selection, diagnostics));
+    return selection;
+  }
+
+  /**
+   * Appends matching identities in traversal order; output is caller-owned and not cleared.
+   * options.prune=false runs the full traversal as the reference result. Both paths use the
+   * same compiled eligibility and traversal. Optional stats records visited/matched/skippedEdges/
+   * compiledClasses. Registration changes rebuild before walking; diagnostics reports dynamic edges.
+   * @cjs Selection assumes valid declared graphs; pruned branches are not validated or read.
+   */
+  static select(root, selection, output, options = {})
+  {
+    let compiled = this._selections.get(selection);
+    if (!compiled) throw new TypeError("Selection must come from compileSelection.");
+    let compiledClasses = 0;
+    if (compiled.revision !== this._revision)
+    {
+      compiled = this._compileSelection(selection, options.diagnostics ?? null);
+      this._selections.set(selection, compiled);
+      compiledClasses = compiled.classes.size;
+    }
+
+    const start = output.length;
+    const stats = options.stats;
+    if (stats) Object.assign(stats, { visited: 0, matched: 0, skippedEdges: 0, compiledClasses });
+    const visited = this._traverse(root, null, options, compiled, output);
+    if (stats)
+    {
+      stats.visited = visited;
+      stats.matched = output.length - start;
+    }
+    return output;
+  }
+
+  /** Executes both full enumeration and compiled selection with one iterative walk. @cjs */
+  static _traverse(root, visit, options, selection, output)
+  {
     const depth = this._traversalDepth++;
     const state = this._traversals[depth] ??= {
-      frames: [], seen: new WeakMap(), pass: 0, classes: new Map()
+      frames: [], seen: new WeakMap(), types: new WeakMap(), pass: 0, classes: new Map()
     };
     if (state.pass === Number.MAX_SAFE_INTEGER)
     {
@@ -110,7 +168,7 @@ export class CjsGraph
         if (!frame.members)
         {
           const object = frame.object;
-          if (object === null || state.seen.get(object) === pass)
+          if (object === null)
           {
             this._clearFrame(frame);
             top--;
@@ -118,22 +176,41 @@ export class CjsGraph
           }
 
           const info = this._getObjectInfo(object, frame.type);
+          if (state.seen.get(object) === pass)
+          {
+            if (state.types.get(object) !== info) throw new TypeError("Shared graph struct has conflicting declared types.");
+            this._clearFrame(frame);
+            top--;
+            continue;
+          }
           state.seen.set(object, pass);
+          state.types.set(object, info);
           count++;
-          if (visit(object, info) === false)
+
+          if (selection)
+          {
+            const row = selection.classes.get(info);
+            if (row.matches) output.push(object);
+            frame.members = options.prune === false ? row.full : row.selected;
+            if (options.stats) options.stats.skippedEdges += row.full.length - frame.members.length;
+          }
+          else if (visit(object, info) === false)
           {
             this._clearFrame(frame);
             top--;
             continue;
           }
 
-          let members = state.classes.get(info);
-          if (!members)
+          else
           {
-            members = this._selectEdges(info, options);
-            state.classes.set(info, members);
+            let members = state.classes.get(info);
+            if (!members)
+            {
+              members = this._selectEdges(info, options);
+              state.classes.set(info, members);
+            }
+            frame.members = members;
           }
-          frame.members = members;
         }
 
         if (revision !== this._revision) throw new Error("Graph declarations changed during traversal.");
@@ -205,8 +282,109 @@ export class CjsGraph
   {
     if (typeof object !== "object") throw new TypeError("Graph edge requires an object.");
     const prototype = Object.getPrototypeOf(object);
-    if (type && (prototype === Object.prototype || prototype === null)) return this.getClassInfo(type);
+    if (type)
+    {
+      const declared = this.getClassInfo(type);
+      if (prototype === Object.prototype || prototype === null) return declared;
+      let current = prototype;
+      while (current && current !== declared.ctor.prototype) current = Object.getPrototypeOf(current);
+      if (!current) throw new TypeError(`Graph edge is not assignable to ${declared.declared.name}.`);
+    }
     return this.getClassInfo(prototype?.constructor);
+  }
+
+  /**
+   * Derives reachability by propagating matches/dynamic edges through reverse dependencies.
+   * @cjs Cycles need no recursion or repeated whole-registry fixed-point scan. Registered derived
+   * classes are possible targets too. Unknown targets remain conservative until registration.
+   */
+  static _compileSelection(selection, diagnostics)
+  {
+    const revision = this._revision;
+    const classes = new Map(), descendants = new Map(), prototypes = new Map();
+    const queue = [];
+
+    for (const info of this._classes.values()) prototypes.set(info.ctor.prototype, info);
+
+    for (const info of this._classes.values())
+    {
+      this.getClassInfo(info.ctor);
+      const full = this._selectEdges(info, selection);
+      const matches = !!selection.matchClass(info);
+      if (revision !== this._revision) throw new Error("Graph declarations changed during selection compilation.");
+
+      const row = { info, full, matches, reachable: matches, parents: [], dependencies: [], selected: [] };
+      classes.set(info, row);
+      if (matches) queue.push(row);
+
+      // Use the same instance-prototype relation as runtime assignability, including
+      // classes whose prototype inheritance was established without `extends`.
+      for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
+      {
+        const base = prototypes.get(prototype);
+        if (!base) continue;
+        let targets = descendants.get(base);
+        if (!targets) descendants.set(base, targets = []);
+        targets.push(row);
+      }
+    }
+
+    for (const row of classes.values())
+    {
+      for (const member of row.full)
+      {
+        const type = member.edge.type;
+        const target = typeof type === "string" ? this._names.get(type) : this._classes.get(type);
+        const targets = target ? descendants.get(target) : null;
+        row.dependencies.push({ member, targets });
+        if (targets)
+        {
+          for (const child of targets) child.parents.push(row);
+        }
+        else
+        {
+          if (!row.reachable)
+          {
+            row.reachable = true;
+            queue.push(row);
+          }
+          if (diagnostics) diagnostics.push({
+            className: row.info.declared.name, member: member.name,
+            reason: type == null ? "dynamic" : "unregistered target"
+          });
+        }
+      }
+    }
+
+    for (let i = 0; i < queue.length; i++)
+    {
+      for (const parent of queue[i].parents)
+      {
+        if (parent.reachable) continue;
+        parent.reachable = true;
+        queue.push(parent);
+      }
+    }
+
+    for (const row of classes.values())
+    {
+      for (const dependency of row.dependencies)
+      {
+        let reachable = !dependency.targets;
+        if (dependency.targets)
+        {
+          for (const target of dependency.targets)
+          {
+            if (target.reachable) { reachable = true; break; }
+          }
+        }
+        if (reachable) row.selected.push(dependency.member);
+      }
+      // Only the warm execution data survives; discard compilation's dependency graph.
+      row.parents = null;
+      row.dependencies = null;
+    }
+    return { revision, classes };
   }
 
   /** Resolves eligible names before edge filtering, once per class per traversal. @cjs */

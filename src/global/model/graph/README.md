@@ -47,7 +47,39 @@ call depth. This supports plain registered instances without adding `__cjs` fiel
 and avoids nested passes overwriting outer marks. Completed/failed frames release
 graph references; weak keys do not retain visited objects. These enumeration marks
 are not the reference/update tables required by future Set and serialization.
-There is no resource fetch, reachability pruning or global traversal policy yet.
+
+## Cached selection
+
+`CjsGraph.compileSelection({ matchClass, acceptMember?, edges? }, diagnostics?)`
+snapshots a selection description and compiles its eligible members and class
+reachability. Matchers and member filters are class-only predicates, stable for the
+selection lifetime. If their meaning changes, create a new selection. Registration
+and definition replacement automatically invalidate derived selection tables.
+Prototype inheritance must also remain stable until the class is registered again.
+
+`CjsGraph.select(root, selection, output, options?)` appends matching identities to
+the caller's array in DFS order and returns that array. It does not fetch resources
+or assume a particular resource base class; the supplied matcher identifies those
+classes. Both full and pruned selection run through the same traversal engine.
+Set `options.prune: false` for the full reference walk. A matching object can itself
+contain further matches, so it does not stop descent. Failure leaves partial output
+intact and releases traversal state; there is no transactional rollback.
+
+Reachability includes registered subclasses of a declared target. Dynamic and
+unregistered target types remain conservative, including through class cycles.
+An optional diagnostics array receives class/member/reason records during explicit
+compilation, or via `options.diagnostics` during a registration-triggered rebuild.
+No diagnostic records are created by default. Optional `options.stats` is reset per
+call with visited/matched counts, skipped declared edges and compiledClasses (zero
+on warm calls). Compilation's dependency lists are discarded after the table is built.
+
+The selection contract requires valid declared storage. Typed object edges must be
+assignable to their declared class. A shared plain struct must have one canonical
+declared class across all incoming edges; it cannot represent two class views.
+Full traversal checks these constraints even for identities already visited.
+Pruning deliberately does not read excluded branches, so it is not a graph validator.
+Use full traversal when validating declared edge storage. Neither path permits topology or
+declaration mutation during a walk. There is no global traversal policy yet.
 
 GraphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
 The generic handlers are under types/. CjsGraphRoot will be added with working
