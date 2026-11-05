@@ -1544,7 +1544,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
    * default texture: a silent fix, kept until the operator rules on CE-126 (reproduce or
    * keep). That pending ruling, not a platform limit, is the reason for the adapted marker.
    *
-   * @adapted
+   * @adapted Retains the pending CE-126 declaration check and renews expiring effect owners.
    * @returns {boolean} Whether rendering can go forward.
    */
 
@@ -1561,6 +1561,10 @@ export class Tr2Sprite2dScene extends ITr2Scene
       if (!this._indexBuffer.IsValid() || !this._vertexBuffer.IsValid()) return false;
     }
 
+    // Renew both effect owners before inspecting their resource slots: an idle
+    // manager link may have cleared a slot that IsGood must reacquire.
+    this.ubershader2d.IsGood();
+    if (this.ubershader3d) this.ubershader3d.IsGood();
     const effectRes = this.ubershader2d.GetEffectRes();
 
     // Effect is still loading - can't render any UI

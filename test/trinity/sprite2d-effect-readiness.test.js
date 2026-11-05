@@ -115,7 +115,7 @@ for (const reviveOnUse of [false, true])
     const scene = Object.assign(Object.create(Tr2Sprite2dScene.prototype), {
       _vertexDecl: 0, _indexBuffer: { IsValid: () => true },
       _vertexBuffer: { IsValid: () => true },
-      ubershader2d: { GetEffectRes: () => resource }
+      ubershader2d: { IsGood: () => good, GetEffectRes: () => resource }
     });
     assert.equal(scene._PrepareResourcesForRender(), false);
     assert.equal(scene._PrepareResourcesForRender(), false);
@@ -125,3 +125,17 @@ for (const reviveOnUse of [false, true])
     assert.equal(scene._PrepareResourcesForRender(), true);
   });
 }
+
+
+test("UI preparation reacquires expired effect slots and renews both owners", () => {
+  const calls = [];
+  const resource = { IsLoading: () => false, IsGood: () => true };
+  let slot = null;
+  const scene = Object.assign(Object.create(Tr2Sprite2dScene.prototype), {
+    _vertexDecl: 0, _indexBuffer: { IsValid: () => true }, _vertexBuffer: { IsValid: () => true },
+    ubershader2d: { IsGood() { calls.push("2d"); slot = resource; return false; }, GetEffectRes: () => slot },
+    ubershader3d: { IsGood() { calls.push("3d"); return false; } }
+  });
+  assert.equal(scene._PrepareResourcesForRender(), true);
+  assert.deepEqual(calls, ["2d", "3d"]);
+});
