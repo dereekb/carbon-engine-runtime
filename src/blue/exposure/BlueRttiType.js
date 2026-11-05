@@ -67,7 +67,7 @@ export class BlueRttiType
         const entry = memberTable[i];
         // Be::HIDDEN (BlueTypes.h:292).
         if (entry.editFlags & 0x008) continue;
-        if (type !== ci && ci.hiddenInherited.has(entry.key)) continue;
+        if (type !== ci && ci.hiddenInherited.has(entry.meta.key)) continue;
         tmp.push([ entry.name, entry.getProperty ? { type: "pyproperty", var: entry } : { type: "var", var: entry } ]);
       }
     }

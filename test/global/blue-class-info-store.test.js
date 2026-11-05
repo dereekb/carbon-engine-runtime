@@ -59,7 +59,7 @@ test("every schema row is found by its exposed name with its flags and key, and 
       }
       const flags = ClassInfo._varEntryOf(type, row).editFlags;
       if (value.var.editFlags !== flags) problems.push(`${name}.${rowName}: flags ${value.var.editFlags}, schema ${flags}`);
-      if (value.var.key !== (row.key ?? row.name)) problems.push(`${name}.${rowName}: key ${value.var.key}, schema ${row.key}`);
+      if (value.var.meta.key !== (row.key ?? row.name)) problems.push(`${name}.${rowName}: key ${value.var.meta.key}, schema ${row.key}`);
     }
     for (const varName of rtti.varMap.keys()) if (!byName.has(varName)) problems.push(`${name}.${varName}: not in the schema`);
   }
@@ -79,7 +79,7 @@ test("the Blue view is PyGetTypeInfo's members and methods", () =>
     {
       for (const entry of level.memberTable)
       {
-        if (!entry.blue || (level !== ci && ci.hiddenInherited.has(entry.key))) continue;
+        if (!entry.meta.blue || (level !== ci && ci.hiddenInherited.has(entry.meta.key))) continue;
         rowCount.set(entry.name, (rowCount.get(entry.name) ?? 0) + 1);
         if (!blueRows.has(entry.name)) blueRows.set(entry.name, entry);
       }
@@ -119,6 +119,6 @@ test("our own map rows are in the store and left out of the Blue view", () =>
   const value = classes.GetRtti(ci).FindAttribute("speed");
   assert.equal(value.type, "var");
   assert.equal(value.var.editFlags, 0x013);
-  assert.equal(value.var.blue, false);
+  assert.equal(value.var.meta.blue, false);
   assert.equal(ci.blue, false);
 });

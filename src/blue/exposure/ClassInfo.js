@@ -144,7 +144,7 @@ export class ClassInfo
     ci.parentClassInfo = Parent ? ClassInfo.exposeToBlue(Parent) : null;
     for (let parent = ci.parentClassInfo; parent; parent = parent.parentClassInfo)
     {
-      for (const entry of parent.memberTable) if (CjsSchema.isFieldHidden(Constructor, entry.key)) ci.hiddenInherited.add(entry.key);
+      for (const entry of parent.memberTable) if (CjsSchema.isFieldHidden(Constructor, entry.meta.key)) ci.hiddenInherited.add(entry.meta.key);
     }
 
     // The class's own rows: those declared on it or on a superclass between it and its parent that has no class info of its own.
@@ -223,12 +223,12 @@ export class ClassInfo
     const type = member.type;
     const reference = type && (type.kind === "rootRef" || type.kind === "rootWeak") ? type.className : null;
     entry.name = member.name;
-    entry.key = member.key ?? member.name;
+    entry.meta.key = member.key ?? member.name;
     entry.type = getCarbonTypeDefinition(type).kind;
     entry.iid = typeof reference === "function" ? CjsSchema.getClassName(reference) : reference || null;
     entry.description = member.jessica && member.jessica.description ? member.jessica.description : "";
     // An older declaration without an exposure record is in Blue's view, as PyGetTypeInfo lists it today.
-    entry.blue = !member.exposure || member.exposure.origin !== "ours";
+    entry.meta.blue = !member.exposure || member.exposure.origin !== "ours";
     if (member.exposure) entry.editFlags = member.exposure.flags;
     else
     {
@@ -242,7 +242,7 @@ export class ClassInfo
     entry.chooserTable = chooser ? chooser.map(item => [ item.name, item.value, item.description || "" ]) : null;
     if (member.role === "property" || member.property)
     {
-      const descriptor = ClassInfo._findDescriptor(Constructor.prototype, entry.key);
+      const descriptor = ClassInfo._findDescriptor(Constructor.prototype, entry.meta.key);
       entry.getProperty = descriptor?.get ?? null;
       entry.setProperty = descriptor?.set ?? null;
     }

@@ -8,14 +8,14 @@ import { VARTYPE } from "./BlueTypes.js";
  * `ClassInfo.exposeToBlue` from the decorator metadata.
  *
  * Adapted: Carbon's `mOffset` and `mSize` locate the member's bytes in the
- * object; a JavaScript member is located by its property key, so `key` stands
+ * object; a JavaScript member is located by its property key, so `meta.key` stands
  * in for both. Carbon's table holds only Blue rows; ours also holds the rows
- * our own classes declare with `meta.map*`, and `blue` says which a row is
+ * our own classes declare with `meta.map*`, and `meta.blue` says which a row is
  * (`be` is `meta` plus Blue, decorator-upgrade.md § 6.8).
  *
  * Carbon: Be::VarEntry (blueexposure/include/BlueTypes.h:321-375)
  *
- * @adapted `key` stands in for `mOffset` and `mSize`, and the table also carries our own `meta.map*` rows, flagged by `blue`.
+ * @adapted `meta.key` stands in for `mOffset` and `mSize`, and the table also carries our own `meta.map*` rows, flagged by `meta.blue`.
  */
 export class VarEntry
 {
@@ -36,12 +36,14 @@ export class VarEntry
   type = VARTYPE.INVALID;
 
   /**
-   * Ours: the JavaScript property key that holds the value, in place of `mOffset` and `mSize`.
+   * JavaScript-specific member metadata. `key` locates the value instead of
+   * a native byte offset; `blue` marks rows exposed to Blue rather than
+   * only our own metadata consumers. Each entry owns its metadata object.
    *
    * @cjs
    * @implemented
    */
-  key = "";
+  meta = { key: "", blue: false };
 
   /**
    * `mIID`: the interface or class a reference member holds, by registered name, or null.
@@ -84,14 +86,6 @@ export class VarEntry
    * @implemented
    */
   setProperty = null;
-
-  /**
-   * Ours: whether the row is in Blue's view: false only for our own `meta.map*` rows (`exposure.origin: "ours"`).
-   *
-   * @cjs
-   * @implemented
-   */
-  blue = false;
 
   /**
    * Ours: the registered name, which minification cannot change.
