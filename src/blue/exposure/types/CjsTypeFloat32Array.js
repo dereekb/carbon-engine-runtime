@@ -1,5 +1,5 @@
 import { VARTYPE } from "../BlueTypes.js";
-import { CjsScalarType } from "./CjsScalarType.js";
+import { CjsTypeScalar } from "./CjsTypeScalar.js";
 import { isTag } from "#utils/is";
 
 /**
@@ -9,20 +9,25 @@ import { isTag } from "#utils/is";
  * length fixes storage size; -1 permits resizing. No implicit lazy allocation
  * for fixed-length members: their owner must provide the declared storage.
  */
-export class CjsFloat32ArrayType extends CjsScalarType
+export class CjsTypeFloat32Array extends CjsTypeScalar
 {
-  /** Stable class identity. */
-  static className = "CjsFloat32ArrayType";
+
   /** Definition name. */
   name = "Float32Array";
+
   /** Carbon storage identifier. */
   varType = VARTYPE.FLOATARRAY;
+
   /** Storage constructor. */
   ctor = Float32Array;
+
   /** Variable length unless the property supplies a fixed count. */
   length = -1;
 
-  /** Returns an independent plain values array. @cjs Values-bag representation. */
+  /**
+   * Returns an independent plain values array.
+   * @cjs Values-bag representation.
+   */
   static get(target, key)
   {
     return Array.from(target[key]);
@@ -58,19 +63,28 @@ export class CjsFloat32ArrayType extends CjsScalarType
     return changed;
   }
 
-  /** Creates an independently owned copy, not a scratch buffer. @cjs Explicit cloning allocation. */
+  /**
+   * Creates an independently owned copy, not a scratch buffer.
+   * @cjs Explicit cloning allocation.
+   */
   static clone(target, key)
   {
     return new Float32Array(target[key]); // alloc: explicit independent copy owned by the caller.
   }
 
-  /** Checks storage representation across realms. @cjs JavaScript representation query. */
+  /**
+   * Checks storage representation across realms.
+   * @cjs JavaScript representation query.
+   */
   static is(value)
   {
     return isTag(value, "[object Float32Array]");
   }
 
-  /** Compares elements as JS values, distinguishing signed zero. @cjs Exact change comparison. */
+  /**
+   * Compares elements as JS values, distinguishing signed zero.
+   * @cjs Exact change comparison.
+   */
   static isExactEqual(a, b)
   {
     if (a.length !== b.length) return false;
@@ -92,4 +106,8 @@ export class CjsFloat32ArrayType extends CjsScalarType
     }
     return true;
   }
+
+  /** Stable class identity. */
+  static className = "CjsTypeFloat32Array";
+
 }

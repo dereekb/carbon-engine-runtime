@@ -3,9 +3,9 @@
 These handlers are not registered with Blue or connected to the current readers,
 writers or schema. Object, list and struct classes remain placeholders.
 
-`CjsScalarType` shares property access and instance shortcuts. Float32, Float64,
+`CjsTypeScalar` shares property access and instance shortcuts. Float32, Float64,
 boolean and string specialisations supply storage identity and conversion.
-`CjsFloat32ArrayType` overrides array value operations. It accepts a property
+`CjsTypeFloat32Array` overrides array value operations. It accepts a property
 options record with `length` (`-1` for variable length); an instance's fields are
 its default options. It does not allocate a handler per property.
 
