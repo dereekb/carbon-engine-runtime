@@ -20,6 +20,33 @@ function fixture()
   return { manager, resource, owner, calls, advance(value) { time = value; manager.activityTime = value; } };
 }
 
+test("manager notification tracking is isolated and remains usable after Clear", () =>
+{
+  const first = fixture();
+  const second = fixture();
+  const resource = first.resource;
+  second.owner.resource = resource;
+  first.manager.AddNotifyTarget(first.owner, resource, first.owner, "resource");
+  second.manager.AddNotifyTarget(second.owner, resource, second.owner, "resource");
+
+  first.manager.Clear();
+  first.manager.Clear();
+  assert.equal(first.owner.resource, null);
+  assert.deepEqual(first.calls, [["release", resource]]);
+  assert.equal(first.manager.GetNotifyTargetsByResource(resource).length, 0);
+  assert.equal(second.owner.resource, resource);
+  assert.equal(second.manager.GetNotifyTargetsByResource(resource).length, 1);
+  assert.deepEqual(second.calls, []);
+
+  first.owner.resource = resource;
+  first.manager.AddNotifyTarget(first.owner, resource, first.owner, "resource");
+  first.manager._NotifyRebuildCachedData(resource);
+  assert.deepEqual(first.calls, [["release", resource], ["rebuild", resource]]);
+  assert.deepEqual(second.calls, []);
+  first.manager.Clear();
+  second.manager.Clear();
+});
+
 test("manager registration rebuilds prepared resources immediately and remains registered for reload", () =>
 {
   const { manager, resource, owner, calls } = fixture();
