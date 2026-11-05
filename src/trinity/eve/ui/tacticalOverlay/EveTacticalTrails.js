@@ -19,7 +19,6 @@ import { Tr2BufferDescriptionAL } from "../../../../trinityal/Tr2BufferAL/Tr2Buf
 import { Failed } from "../../../../trinityal/ALResult.js";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 import { Tr2RenderBatch } from "../../../core/batch/TriRenderBatch/Tr2RenderBatch.js";
-import { trinity } from "../../../CjsTrinity.js";
 
 
 // Carbon's anonymous-namespace LineVertex (EveTacticalTrails.cpp:15-21):
@@ -131,7 +130,7 @@ export class EveTacticalTrails
   {
     this.ReleaseResources();
     this._vertexBuffer.Destroy();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

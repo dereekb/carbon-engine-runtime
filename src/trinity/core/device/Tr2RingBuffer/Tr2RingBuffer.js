@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Tr2RingBuffer.h
 // Source: trinity/trinity/Tr2RingBuffer.cpp
 import { exposure as be } from "#be";
@@ -44,7 +45,6 @@ import { Tr2BufferDescriptionAL } from "../../../../trinityal/index.js";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../context/Tr2RenderContext.js";
 import { ITr2GpuBuffer } from "../../ITr2GpuBuffer.js";
-import { trinity } from "../../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../Tr2DeviceResource.js";
 
 
@@ -132,7 +132,7 @@ export class Tr2RingBuffer
   /** Registers the arena as Carbon's Tr2DeviceResource constructor does. */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -191,7 +191,7 @@ export class Tr2RingBuffer
     for (const ring of Tr2RingBuffer._instances.values())
     {
       ring._buffer?.Destroy();
-      trinity.UnregisterResource(ring);
+      Tr2DeviceResource.prototype.Destruct.call(ring);
     }
     Tr2RingBuffer._instances.clear();
   }

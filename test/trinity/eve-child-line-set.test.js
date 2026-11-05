@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import { prepareResourceFixture } from "../support/resourceFixtures.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 import assert from 'node:assert/strict';
@@ -26,14 +27,14 @@ function near(actual,expected,epsilon=1e-5) {
 }
 function setup(t) {
   const context=Tr2RenderContext_GetMainThreadRenderContext(),prior=context.GetRenderContextAL(),manager=blue.resMan;
-  const registered=new Set(trinity.GetResourcesRegistered());
+  const registered=new Set(TriDevice.GetResourcesRegistered());
   const al=new Tr2RenderContextALStub();al.CreateDevice();al.BeginScene();context.SetRenderContextAL(al);
   Tr2Renderer.SetViewTransform(mat4.create());blue.resMan=new StubResMan();
   t.after(()=>{
-    const resources=trinity.GetResourcesRegistered().filter(x=>!registered.has(x));
+    const resources=TriDevice.GetResourcesRegistered().filter(x=>!registered.has(x));
     for(const resource of resources) {
       if(resource.constructor===EveChildLineSet||resource.constructor===EveCurveLineSet) resource.Destruct();
-      else {resource.ReleaseResources();trinity.UnregisterResource(resource);}
+      else {resource.ReleaseResources();Tr2DeviceResource.prototype.Destruct.call(resource);}
     }
     SharedGeometryBuffer(context).ReleaseResources();context.SetRenderContextAL(prior);blue.resMan=manager;al.Destroy();
   });
@@ -188,16 +189,16 @@ test('owner buffer grows, reuses capacity, zeroes hidden nested paths, and relea
   assert.ok(new Uint8Array(c._instanceCursor.view.buffer,c._instanceCursor.view.byteOffset,140*48).every(x=>x===0));
   c.lines=[circle(4)];c.Initialize();c.UpdateBuffer(context);assert.equal(buffer.GetDesc().count,140);assert.equal(c._totalObjectCount,4);
   c.ReleaseResources();assert.equal(buffer.IsValid(),true);const owned=c.lineSet;
-  c.Destruct();assert.equal(buffer.IsValid(),false);assert.equal(trinity.GetResourcesRegistered().includes(c),false);assert.equal(trinity.GetResourcesRegistered().includes(owned),false);
+  c.Destruct();assert.equal(buffer.IsValid(),false);assert.equal(TriDevice.GetResourcesRegistered().includes(c),false);assert.equal(TriDevice.GetResourcesRegistered().includes(owned),false);
 });
 
 test('replaced defaults survive until final destruction while assigned line sets remain borrowed',t=>{
   setup(t);const c=child(t),old=c.lineSet,assigned=new EveCurveLineSet();c.lineSet=assigned;c.Initialize();
   // Both in use, so both are registered device resources.
   old.IsGood();assigned.IsGood();
-  assert.equal(trinity.GetResourcesRegistered().includes(old),true);assert.equal(trinity.GetResourcesRegistered().includes(assigned),true);
-  c.Destruct();assert.equal(trinity.GetResourcesRegistered().includes(old),false);
-  assert.equal(trinity.GetResourcesRegistered().includes(assigned),true);assigned.Destruct();
+  assert.equal(TriDevice.GetResourcesRegistered().includes(old),true);assert.equal(TriDevice.GetResourcesRegistered().includes(assigned),true);
+  c.Destruct();assert.equal(TriDevice.GetResourcesRegistered().includes(old),false);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(assigned),true);assigned.Destruct();
 });
 
 test('allocation and mapping failures do not publish a fabricated instance update',t=>{

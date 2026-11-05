@@ -26,7 +26,6 @@ import { Tr2VertexDefinition } from "../../../core/vertex/Tr2VertexDefinition/in
 import { TR2SHADERMODEL } from "#consts/graphics";
 import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
-import { trinity } from "../../../CjsTrinity.js";
 import {
   AddBoosterLights,
   CreateBoosterFlares,
@@ -347,7 +346,7 @@ export class EveBoosterSet2 extends EveEntity
   Destruct()
   {
     if (this._instanceBuffer.IsValid()) this._instanceBuffer._parent.Free(this._instanceBuffer);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** Carbon g_eveSpaceObjectTrailsEnabled (cpp:31-32), a registered engine setting: trails update and draw. */

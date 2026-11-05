@@ -34,7 +34,7 @@ beforeEach(t =>
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext();
   const prior = context.GetRenderContextAL();
-  const registered = new Set(trinity.GetResourcesRegistered());
+  const registered = new Set(TriDevice.GetResourcesRegistered());
   const al = new Tr2RenderContextALStub();
   context.SetRenderContextAL(al);
   al.CreateDevice();
@@ -43,7 +43,7 @@ beforeEach(t =>
   Tr2Renderer.SetProjectionTransform(mat4.create());
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
       if (!registered.has(resource) && resource.constructor === EveChildCloud2) resource.Destruct();
     context.SetRenderContextAL(prior);
   });

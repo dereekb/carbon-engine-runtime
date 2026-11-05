@@ -9,11 +9,9 @@
 // that state is instances on this object (docs
 // internal/decisions/device-resource-registration.md, projects/cjs-runtime-root.md).
 import { blue, IBlueEvents } from "#blue";
-import { CjsSchema } from "#schema";
 import { TriStorageFlags } from "#consts/graphics";
 import { noise } from "../global/math/noise.js";
 import { TRINITY } from "./core/device/trinityTickCookie.js";
-import { Tr2DeviceResourceState } from "./core/device/deviceResourceState.js";
 import { Tr2GlobalVariableStore } from "./core/variable/Tr2VariableStore.js";
 import { TriVariableContentType } from "./generated/trinityCore/enums.js";
 
@@ -28,7 +26,7 @@ import { TriVariableContentType } from "./generated/trinityCore/enums.js";
 
 /**
  * Trinity: the device, the global variable store, the font manager and the
- * device-resource compatibility entry points, as one object classes import.
+ * shared services, as one object classes import.
  *
  * Ours (docs architecture/non-carbon-extensions.md, *Trinity's holder*):
  * Carbon has no class here; its trinity is a Python module.
@@ -54,14 +52,6 @@ export class CjsTrinity extends IBlueEvents
 
   /** Root variable store, created on first read. */
   _variableStore = null;
-
-  /** @cjs Transitional access to the device's idle policy. */
-  get resourceIdleRule() { return CjsSchema.getConstructor("TriDevice").resourceIdleRule; }
-  set resourceIdleRule(value) { CjsSchema.getConstructor("TriDevice").resourceIdleRule = value; }
-
-  /** @cjs Transitional access to the device's sweep interval. */
-  get resourceSweepInterval() { return CjsSchema.getConstructor("TriDevice").resourceSweepInterval; }
-  set resourceSweepInterval(value) { CjsSchema.getConstructor("TriDevice").resourceSweepInterval = value; }
 
   /**
    * The root of the variable-store graph, created on first read.
@@ -207,45 +197,6 @@ export class CjsTrinity extends IBlueEvents
   OnTick(realTime, simTime, cookie = null)
   {
     this.device.OnTick(realTime, simTime, cookie);
-
-
-  }
-
-  /**
-   * Transitional forwarding to Carbon's TriDevice registry.
-   * @adapted Resolve at call time to avoid a device-resource import cycle.
-   */
-  RegisterResource(resource)
-  {
-    CjsSchema.getConstructor("TriDevice").RegisterResource(resource);
-  }
-
-  /**
-   * Transitional forwarding to Carbon's TriDevice registry.
-   * @adapted Resolve at call time to avoid a device-resource import cycle.
-   */
-  UnregisterResource(resource)
-  {
-    resource._state = Tr2DeviceResourceState.DESTRUCTED;
-    // Deep-imported CPU objects can be destroyed before TriDevice is loaded.
-    // They have never registered, so teardown must not require the renderer.
-    if (resource._registeredGeneration === undefined || resource._registeredGeneration < 0) return;
-    CjsSchema.getConstructor("TriDevice").UnregisterResource(resource);
-  }
-
-  /**
-   * Transitional forwarding to Carbon's TriDevice registry.
-   * @adapted Resolve at call time to avoid a device-resource import cycle.
-   */
-  GetResourcesRegistered()
-  {
-    return CjsSchema.getConstructor("TriDevice").GetResourcesRegistered();
-  }
-
-  /** @cjs Transitional on-demand sweep forwarding; policy belongs to TriDevice. */
-  CollectResources()
-  {
-    CjsSchema.getConstructor("TriDevice").CollectResources();
   }
 
   static className = "CjsTrinity";

@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
@@ -95,12 +96,12 @@ test("having lifecycle methods without native mappings does not opt into Black o
 function observeProductionLifecycle(t)
 {
   const calls = [];
-  const before = new Set(trinity.GetResourcesRegistered());
+  const before = new Set(TriDevice.GetResourcesRegistered());
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
-      if (!before.has(resource) && resource.constructor === EveBoosterSet2) trinity.UnregisterResource(resource);
+      if (!before.has(resource) && resource.constructor === EveBoosterSet2) Tr2DeviceResource.prototype.Destruct.call(resource);
     }
   });
   t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => false);

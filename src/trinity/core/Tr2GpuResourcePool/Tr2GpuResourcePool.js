@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Tr2GpuResourcePool.h
 // Source: trinity/trinity/Tr2GpuResourcePool.cpp
 //
@@ -25,7 +26,6 @@ import { Tr2CpuUsage } from "#consts/render-context";
 import { isFunction } from "#utils/is";
 import { TriStorageFlags } from "#consts/graphics";
 import { GpuResourceHandle } from "./GpuResourceHandle.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { exposure as be } from "#be";
 
@@ -77,7 +77,7 @@ export class Tr2GpuResourcePool
   {
     this.#outer = outer;
     allPools.add(this);
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -293,7 +293,7 @@ export class Tr2GpuResourcePool
   {
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
     allPools.delete(this);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
     this.#renderContext = null;
     this.#outer = null;
   }

@@ -478,7 +478,7 @@ export class EveChildCloud2 extends EveSpaceObjectChild
     this._emptyLightMap.GetTexture().Destroy();
     this._emptyLightMap.OnTextureChange().Broadcast();
     this.lights.SetNotify(null);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

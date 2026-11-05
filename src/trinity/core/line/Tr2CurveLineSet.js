@@ -22,7 +22,6 @@ import { vec4 } from "#math/vec4";
 import { TriBatchType } from "#consts/graphics";
 import { Tr2PickType, TR2_PICK_TYPE_DEFAULT } from "#consts/graphics/tr2PickType";
 import { ITr2Renderable } from "../ITr2Renderable.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 
@@ -215,7 +214,7 @@ export class Tr2CurveLineSet
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

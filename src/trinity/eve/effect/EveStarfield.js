@@ -15,7 +15,6 @@ import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../core/context/Tr2RenderContext.js";
 import { Tr2RenderBatch } from "../../core/batch/TriRenderBatch/index.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 
 /** Defines a procedurally seeded starfield with distance, flashing, effect, and star-count controls. */
@@ -112,7 +111,7 @@ export class EveStarfield
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

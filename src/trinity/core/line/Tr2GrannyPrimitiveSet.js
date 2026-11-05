@@ -17,7 +17,6 @@ import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { Tr2Renderer } from "../Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTypeSize } from "../../utilities/GeometryUtils.js";
 import { TriGeometryRes } from "#trinity/resources/geometry";
@@ -418,7 +417,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
     this._destroyed = true;
     this.grannyRes = null;
     this.CleanUp();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   static #declaration = new Tr2VertexDefinition();

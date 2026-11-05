@@ -1131,7 +1131,7 @@ export class EveSpaceScene
     this.dataTextureMgr.Release();
     this.ClearComponentRegistry();
     // Carbon's Tr2DeviceResource destructor (Tr2DeviceResource.cpp:11-14).
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**
@@ -2104,7 +2104,7 @@ export class EveSpaceScene
    */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
 
     // cpp:285.
     this._visualizerEffects[EveVisualizeMethod.VW_LIGHT_COUNT].type = VisualizerType.FULL_SCREEN_QUAD_OVERLAY;

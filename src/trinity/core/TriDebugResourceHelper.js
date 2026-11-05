@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/TriDebugResourceHelper.h
 // Source: trinity/trinity/TriDebugResourceHelper.cpp
 import { meta } from "#schema";
@@ -6,7 +7,6 @@ import { Tr2EffectStateManager } from "../shader/Tr2EffectStateManager.js";
 import { Tr2VertexDefinition } from "./vertex/Tr2VertexDefinition/Tr2VertexDefinition.js";
 import { TriDebugResourceHelperVertexPos } from "./TriDebugResourceHelperVertexPos.js";
 import { TriDebugResourceHelperVertexPosColor } from "./TriDebugResourceHelperVertexPosColor.js";
-import { trinity } from "../CjsTrinity.js";
 import { Tr2DeviceResource } from "./device/Tr2DeviceResource.js";
 import { exposure as be } from "#be";
 
@@ -41,7 +41,7 @@ export class TriDebugResourceHelper
   /** Registers the device-resource lifetime, as Carbon's Tr2DeviceResource base does. */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**

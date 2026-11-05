@@ -1,3 +1,4 @@
+import { TriDevice } from "../../npm/dist/trinity/index.js";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test, beforeEach, afterEach } from "node:test";
@@ -16,13 +17,13 @@ let priorAL, previousResources;
 beforeEach(() => {
   const context = trinity.Tr2RenderContext_GetMainThreadRenderContext();
   priorAL = context.GetRenderContextAL();
-  previousResources = new Set(trinity.trinity.GetResourcesRegistered());
+  previousResources = new Set(trinity.TriDevice.GetResourcesRegistered());
   const al = new Tr2RenderContextALStub();
   context.SetRenderContextAL(al);
   al.CreateDevice();
 });
 afterEach(() => {
-  for (const resource of trinity.trinity.GetResourcesRegistered()) {
+  for (const resource of trinity.TriDevice.GetResourcesRegistered()) {
     if (!previousResources.has(resource)) resource.Destruct();
   }
   trinity.Tr2RenderContext_GetMainThreadRenderContext().SetRenderContextAL(priorAL);

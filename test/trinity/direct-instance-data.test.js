@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { blue } from "../../npm/dist/blue/index.js";
@@ -19,7 +20,7 @@ function setup(t)
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext();
   const previous = context.GetRenderContextAL(), manager = blue.resMan;
-  const registered = new Set(trinity.GetResourcesRegistered());
+  const registered = new Set(TriDevice.GetResourcesRegistered());
   const al = new Tr2RenderContextALStub();
   al.CreateDevice();
   al.BeginScene();
@@ -27,11 +28,11 @@ function setup(t)
   blue.resMan = new StubResMan();
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
       if (registered.has(resource)) continue;
       resource.ReleaseResources();
-      trinity.UnregisterResource(resource);
+      Tr2DeviceResource.prototype.Destruct.call(resource);
     }
     context.SetRenderContextAL(previous);
     blue.resMan = manager;
@@ -52,11 +53,11 @@ test("direct instance buffer implements Carbon allocation, mapping and reset lif
 {
   setup(t);
   const provider = new Tr2DirectInstanceData();
-  assert.equal(trinity.GetResourcesRegistered().includes(provider), false, "built and never asked: not registered");
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false, "built and never asked: not registered");
   assert.equal(provider.IsInstanceDataReady(), false);
-  assert.equal(trinity.GetResourcesRegistered().includes(provider), false, "readiness is a pure query, as Carbon's const one is");
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false, "readiness is a pure query, as Carbon's const one is");
   provider.IsGood();
-  assert.ok(trinity.GetResourcesRegistered().includes(provider), "its consumer's use registers it");
+  assert.ok(TriDevice.GetResourcesRegistered().includes(provider), "its consumer's use registers it");
   assert.equal(provider.GetInstanceBufferVertexDeclaration(), Tr2EffectStateManager.Unknown);
   assert.equal(provider.GetData(3), null, "no stride means no allocation (cpp:175-178)");
   provider.SetLayout(layout());
@@ -93,7 +94,7 @@ test("direct instance buffer implements Carbon allocation, mapping and reset lif
   assert.equal(provider.IsInstanceDataReady(), false);
   assert.equal(provider.GetInstanceBufferVertexDeclaration(), declaration);
   provider.Destruct();
-  assert.equal(trinity.GetResourcesRegistered().includes(provider), false);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false);
 });
 
 test("asking a destructed provider whether it is ready does not register it again", t =>
@@ -104,11 +105,11 @@ test("asking a destructed provider whether it is ready does not register it agai
   provider.GetData(1);
   provider.UpdateData();
   provider.IsGood();
-  assert.ok(trinity.GetResourcesRegistered().includes(provider));
+  assert.ok(TriDevice.GetResourcesRegistered().includes(provider));
   provider.Destruct();
   assert.equal(provider.IsInstanceDataReady(), false);
-  assert.equal(trinity.GetResourcesRegistered().includes(provider), false, "a readiness query is not a use");
-  trinity.CollectResources();
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false, "a readiness query is not a use");
+  TriDevice.CollectResources();
   assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false, "the sweep drops the destructed provider's entry");
 });
 
@@ -119,9 +120,9 @@ test("an instanced mesh's draw is its provider's use", t =>
   mesh.SetInstanceGeometryRes(provider);
   // Past the geometry gate, which is not what this tests.
   t.mock.method(mesh, "GetGeometryResource", () => ({ IsGood: () => true }));
-  assert.equal(trinity.GetResourcesRegistered().includes(provider), false);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(provider), false);
   mesh.GetBatches({ Commit() {} }, [], null);
-  assert.ok(trinity.GetResourcesRegistered().includes(provider), "GetBatches asks IsGood on the provider before its readiness");
+  assert.ok(TriDevice.GetResourcesRegistered().includes(provider), "GetBatches asks IsGood on the provider before its readiness");
 });
 
 test("direct instance allocation and mapping failures remain visible", t =>

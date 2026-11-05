@@ -218,8 +218,8 @@ export class CjsLibrary
           else if (section === "settings") settings.SetValue(key, value);
           else if (section === "callbackModules") BeCallbackMan.RegisterCallbackModule(key, value);
           // Trinity's sweep reads them on its next tick.
-          else if (section === "deviceResources" && key === "idleRule") trinity.resourceIdleRule = value;
-          else if (section === "deviceResources" && key === "sweepInterval") trinity.resourceSweepInterval = value;
+          else if (section === "deviceResources" && key === "idleRule") TriDevice.resourceIdleRule = value;
+          else if (section === "deviceResources" && key === "sweepInterval") TriDevice.resourceSweepInterval = value;
           (this._configured[section] ??= {})[key] = value;
         }
         catch (error)

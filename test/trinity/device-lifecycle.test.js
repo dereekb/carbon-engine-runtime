@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import { addChild, removeChild } from "../../npm/dist/blue/children.js";
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -182,8 +183,8 @@ test("the device resource registry is prepared and released with the device", ()
     ReleaseResources: (storage) => events.push([ "release", storage ])
   };
 
-  trinity.RegisterResource(resource, Infinity);
-  assert.ok(trinity.GetResourcesRegistered().includes(resource));
+  TriDevice.RegisterResource(resource, Infinity);
+  assert.ok(TriDevice.GetResourcesRegistered().includes(resource));
 
   try
   {
@@ -201,10 +202,10 @@ test("the device resource registry is prepared and released with the device", ()
   }
   finally
   {
-    trinity.UnregisterResource(resource);
+    Tr2DeviceResource.prototype.Destruct.call(resource);
   }
 
-  assert.equal(trinity.GetResourcesRegistered().includes(resource), false);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(resource), false);
 });
 
 
@@ -245,20 +246,20 @@ test("Update advances playing curve sets and drops the finished ones", () =>
 test("device registry snapshots cannot mutate membership and retain their original contents", () =>
 {
   const resource = { PrepareResources() {}, ReleaseResources() {} };
-  trinity.RegisterResource(resource, Infinity);
+  TriDevice.RegisterResource(resource, Infinity);
   try
   {
-    const before = trinity.GetResourcesRegistered();
+    const before = TriDevice.GetResourcesRegistered();
     assert.ok(Array.isArray(before), "approved snapshot contract for native TriDevice.cpp:1061-1065");
     assert.ok(before.includes(resource));
-    const independent = trinity.GetResourcesRegistered();
+    const independent = TriDevice.GetResourcesRegistered();
     independent.length = 0;
-    assert.ok(trinity.GetResourcesRegistered().includes(resource), "editing a snapshot cannot unregister resources");
-    trinity.UnregisterResource(resource);
+    assert.ok(TriDevice.GetResourcesRegistered().includes(resource), "editing a snapshot cannot unregister resources");
+    Tr2DeviceResource.prototype.Destruct.call(resource);
     assert.ok(before.includes(resource), "existing snapshot is not live");
-    assert.equal(trinity.GetResourcesRegistered().includes(resource), false);
+    assert.equal(TriDevice.GetResourcesRegistered().includes(resource), false);
   }
-  finally { trinity.UnregisterResource(resource); }
+  finally { Tr2DeviceResource.prototype.Destruct.call(resource); }
 });
 
 test("particle final-owner Destruct detaches nine effect stores once and unregisters immediately", () =>
@@ -277,14 +278,14 @@ test("particle final-owner Destruct detaches nine effect stores once and unregis
   }
   try
   {
-    assert.ok(trinity.GetResourcesRegistered().includes(system));
+    assert.ok(TriDevice.GetResourcesRegistered().includes(system));
     system.ReleaseResources(3);
-    assert.ok(trinity.GetResourcesRegistered().includes(system), "cpp:180-198 device reset is not object destruction");
+    assert.ok(TriDevice.GetResourcesRegistered().includes(system), "cpp:180-198 device reset is not object destruction");
     assert.notEqual(system._variableStore, null);
     assert.equal(system.PrepareResources(), true, "an active resource remains preparable after reset");
     system.Destruct();
-    assert.equal(trinity.GetResourcesRegistered().includes(system), false, "Tr2DeviceResource.cpp:15-18 base destructor unregisters");
-    assert.ok(trinity.GetResourcesRegistered().includes(other), "unrelated resources stay registered");
+    assert.equal(TriDevice.GetResourcesRegistered().includes(system), false, "Tr2DeviceResource.cpp:15-18 base destructor unregisters");
+    assert.ok(TriDevice.GetResourcesRegistered().includes(other), "unrelated resources stay registered");
     assert.equal(system._variableStore, null);
     assert.deepEqual(events, slots.flatMap(slot => [ [ slot, "start" ], [ slot, "store", null ], [ slot, "end" ] ]), "Tr2GpuParticleSystem.cpp:106-119 preserves every effect update boundary");
     system.Destruct();
@@ -292,8 +293,8 @@ test("particle final-owner Destruct detaches nine effect stores once and unregis
   }
   finally
   {
-    trinity.UnregisterResource(system);
-    trinity.UnregisterResource(other);
+    Tr2DeviceResource.prototype.Destruct.call(system);
+    Tr2DeviceResource.prototype.Destruct.call(other);
   }
 });
 
@@ -311,25 +312,25 @@ test("scene and context setters preserve a shared system until its final caller 
     scene.SetGpuParticleSystem(shared); context.SetGpuParticleSystem(shared);
     scene.SetGpuParticleSystem(replacement);
     assert.ok(context.GetGpuParticleSystem() === shared, "EveUpdateContext.h:74 retains shared Tr2GpuParticleSystemPtr meaning");
-    assert.ok(trinity.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
+    assert.ok(TriDevice.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
     for (const slot of slots) assert.ok(shared[slot].variableStore === store, "other owner's effects remain connected");
     scene.SetGpuParticleSystem(shared);context.SetGpuParticleSystem(replacement);
     assert.ok(scene.GetGpuParticleSystem() === shared, "EveSpaceScene.h:526 forwards the same shared assignment");
-    assert.ok(trinity.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
+    assert.ok(TriDevice.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
     const oldHull = new EveShip2(), nextHull = new EveShip2();
     addChild(scene, "objects", oldHull, { listNotify: scene });addChild(scene, "objects", nextHull, { listNotify: scene });removeChild(scene, "objects", oldHull, { listNotify: scene });
     assert.ok(scene.GetGpuParticleSystem() === shared, "ordinary hull swap leaves scene-owned particles alive");
-    assert.ok(trinity.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
+    assert.ok(TriDevice.GetResourcesRegistered().includes(shared));assert.ok(shared._variableStore === store);
     // This caller owns the only remaining scene reference. Mirror the existing
     // demo.dispose boundary after its rendering loop has been stopped.
     const finalSystem = scene.GetGpuParticleSystem();scene.SetGpuParticleSystem(null);
-    assert.ok(trinity.GetResourcesRegistered().includes(finalSystem), "even final setter is assignment only");
+    assert.ok(TriDevice.GetResourcesRegistered().includes(finalSystem), "even final setter is assignment only");
     finalSystem.Destruct();
-    assert.equal(scene.GetGpuParticleSystem(), null);assert.equal(trinity.GetResourcesRegistered().includes(shared), false);
+    assert.equal(scene.GetGpuParticleSystem(), null);assert.equal(TriDevice.GetResourcesRegistered().includes(shared), false);
     assert.equal(shared._variableStore, null);for (const slot of slots) assert.equal(shared[slot].variableStore, null);
-    assert.ok(context.GetGpuParticleSystem() === replacement && trinity.GetResourcesRegistered().includes(replacement), "other system remains owned and registered");
+    assert.ok(context.GetGpuParticleSystem() === replacement && TriDevice.GetResourcesRegistered().includes(replacement), "other system remains owned and registered");
     assert.ok(slots.every((slot, i) => shared[slot] === effects[i]), "final owner detaches effect stores without destroying shared effect objects");
-    finalSystem.Destruct();assert.equal(trinity.GetResourcesRegistered().includes(shared), false);
+    finalSystem.Destruct();assert.equal(TriDevice.GetResourcesRegistered().includes(shared), false);
   }
   finally {scene.SetGpuParticleSystem(null);context.SetGpuParticleSystem(null);shared.Destruct();replacement.Destruct();}
 });
@@ -349,7 +350,7 @@ test("TriDevice.minimumModelLOD is an accessor over Get/SetMinimumModelLOD (TriD
   const geometry = new TriGeometryRes();
   const reloads = [];
   geometry.Reload = () => { reloads.push("reload"); return true; };
-  trinity.RegisterResource(geometry, Infinity);
+  TriDevice.RegisterResource(geometry, Infinity);
   try
   {
     device.SetMinimumModelLOD(2);
@@ -360,7 +361,7 @@ test("TriDevice.minimumModelLOD is an accessor over Get/SetMinimumModelLOD (TriD
   }
   finally
   {
-    trinity.UnregisterResource(geometry);
+    Tr2DeviceResource.prototype.Destruct.call(geometry);
   }
 
   const property = CjsSchema.getSchema(TriDevice).properties.find(entry => entry.name === "minimumModelLOD");

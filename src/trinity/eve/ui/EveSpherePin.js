@@ -27,7 +27,6 @@ import { Tr2BufferAL } from "../../../trinityal/Tr2BufferAL/Tr2BufferAL.js";
 import { Tr2BufferDescriptionAL } from "../../../trinityal/Tr2BufferAL/Tr2BufferDescriptionAL.js";
 import { Failed } from "../../../trinityal/ALResult.js";
 import { EveSpherePinIndexTree } from "./EveSpherePinIndexTree/index.js";
-import { trinity } from "../../CjsTrinity.js";
 
 // Native s_treeMap shares one index per source resource. Weak keys replace
 // its process-lifetime owning map so retired resources can be collected.
@@ -228,7 +227,7 @@ export class EveSpherePin
     this._geometryResource = null;
     this._tree = null;
     this.pinEffect = this.pickEffect = null;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

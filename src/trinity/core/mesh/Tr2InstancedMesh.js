@@ -97,7 +97,7 @@ export class Tr2InstancedMesh extends Tr2Mesh
     this._instanceGeometryResource = null;
     this._loadedGeometryResource = null;
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

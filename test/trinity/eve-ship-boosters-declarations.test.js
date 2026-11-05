@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
@@ -185,13 +186,13 @@ test("canonical Black and Copier keep production booster persistence off the liv
 /** Avoids device realization and releases only test-created booster registrations. */
 function guardDeviceCreation(t)
 {
-  const before = new Set(trinity.GetResourcesRegistered());
+  const before = new Set(TriDevice.GetResourcesRegistered());
   t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => false);
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
-      if (!before.has(resource) && resource.constructor === EveBoosterSet2) trinity.UnregisterResource(resource);
+      if (!before.has(resource) && resource.constructor === EveBoosterSet2) Tr2DeviceResource.prototype.Destruct.call(resource);
     }
   });
 }

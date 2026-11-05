@@ -629,7 +629,7 @@ export class EveTurretSet extends EveEntity
     this.geometryResource = null;
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
 
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

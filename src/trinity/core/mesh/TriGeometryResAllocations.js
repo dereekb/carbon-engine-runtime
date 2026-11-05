@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 // Source: trinity/trinity/Resources/TriGeometryRes.cpp:33-38, :2019-2140
 //   trinity/trinity/Tr2MeshBase.cpp:341-394
 //
@@ -27,7 +28,6 @@ import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { Tr2GpuUsage } from "#consts/render-context";
 import { Tr2SuballocatedBuffer } from "../device/Tr2SuballocatedBuffer/index.js";
 import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
-import { trinity } from "../../CjsTrinity.js";
 
 
 /**
@@ -53,7 +53,7 @@ export function ReleaseSharedGeometryBuffer(renderContext)
   const buffer = sharedBuffers.get(key);
   if (!buffer) return;
   buffer.ReleaseResources();
-  trinity.UnregisterResource(buffer);
+  Tr2DeviceResource.prototype.Destruct.call(buffer);
   sharedBuffers.delete(key);
 }
 

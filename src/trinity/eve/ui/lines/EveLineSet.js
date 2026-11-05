@@ -25,7 +25,6 @@ import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js"
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../../core/context/Tr2RenderContext.js";
 import { Tr2RenderBatch } from "../../../core/batch/TriRenderBatch/Tr2RenderBatch.js";
-import { trinity } from "../../../CjsTrinity.js";
 
 
 /** EveLineData (EveLineSet.h:22-28): position1, color1, position2, color2, two 28-byte vertices. */
@@ -164,7 +163,7 @@ export class EveLineSet
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

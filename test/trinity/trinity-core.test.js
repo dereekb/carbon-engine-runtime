@@ -114,12 +114,12 @@ test("Tr2DebugRenderer stores Carbon option, selection, and color state", () =>
 test("primitive sets retain CPU geometry and native AL submission state", t =>
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext(), previous = context.GetRenderContextAL();
-  const registered = new Set(trinity.GetResourcesRegistered()), al = new Tr2RenderContextALStub();
+  const registered = new Set(TriDevice.GetResourcesRegistered()), al = new Tr2RenderContextALStub();
   al.CreateDevice();
   al.BeginScene();
   context.SetRenderContextAL(al);
   t.after(() => {
-    for (const resource of trinity.GetResourcesRegistered()) if (!registered.has(resource)) resource.Destruct();
+    for (const resource of TriDevice.GetResourcesRegistered()) if (!registered.has(resource)) resource.Destruct();
     context.SetRenderContextAL(previous);
     al.Destroy();
   });
@@ -744,7 +744,7 @@ test("TriProjection exposes its source-backed schema and identity default", () =
     "customTransform"
   ])
   {
-    assertEquals(CjsSchema.getField(TriProjection, privateField), null);
+    assertEquals(CjsSchema.getField(TriProjection, privateField)?.edit, undefined);
   }
   assertEquals(projection.GetProjectionType(), 0);
   assertMatrixValues(projection.GetTransform(mat4.create()), mat4.create());

@@ -22,7 +22,6 @@ import { Tr2RenderBatch } from "../../core/batch/TriRenderBatch/Tr2RenderBatch.j
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { Tr2DeviceResourceState } from "../../core/device/deviceResourceState.js";
 
@@ -221,7 +220,7 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

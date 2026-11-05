@@ -12,7 +12,6 @@ import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { Tr2VertexDefinition } from "../vertex/Tr2VertexDefinition/Tr2VertexDefinition.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { ITr2InstanceData } from "./ITr2InstanceData/index.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 
@@ -70,7 +69,7 @@ export class Tr2DirectInstanceData
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

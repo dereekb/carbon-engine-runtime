@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 import { exposure as be } from "#be";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { vec4 } from "#math/vec4";
@@ -11,7 +12,6 @@ import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../core/context/Tr2RenderContext.js";
 import { Tr2SpriteObjectBlendMode, Tr2SpriteObjectEffect, Tr2SpriteTarget, Tr2Sprite2dTextureSettings } from "../../generated/sprite2d/enums.js";
 import { Tr2SpriteObject } from "../../sprite2d/Tr2SpriteObject.js";
-import { trinity } from "../../CjsTrinity.js";
 
 
 /**
@@ -45,7 +45,7 @@ export class EveSprite2dBracketRenderer extends Tr2SpriteObject
   constructor()
   {
     super();
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -64,7 +64,7 @@ export class EveSprite2dBracketRenderer extends Tr2SpriteObject
   Destruct()
   {
     this.ReleaseResources(0);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** m_iconAtlas (Tr2AtlasTexturePtr) [READWRITE] */

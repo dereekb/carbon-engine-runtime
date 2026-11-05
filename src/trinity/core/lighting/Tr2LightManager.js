@@ -848,7 +848,7 @@ export class Tr2LightManager
     const store = Tr2VariableStore.globalStore();
     this._lightBufferVariable = store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, this._lightBuffer);
     this._indexBufferVariable = store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, this._indexBuffer);
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
     this.PrepareResources();
     return this;
   }
@@ -889,7 +889,7 @@ export class Tr2LightManager
     const instance = Tr2LightManager._instance;
     if (!instance) return;
     Tr2LightManager._instance = null;
-    trinity.UnregisterResource(instance);
+    Tr2DeviceResource.prototype.Destruct.call(instance);
     const store = Tr2VariableStore.globalStore();
     store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());
     store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());

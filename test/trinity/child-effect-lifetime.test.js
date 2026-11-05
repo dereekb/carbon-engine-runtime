@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { blue } from "../../npm/dist/blue/index.js";
@@ -17,7 +18,7 @@ function particleChild(onDestroy)
 
 test("child-effect cycles return particle and mesh registrations and buffers to baseline", async t =>
 {
-  const baseline = trinity.GetResourcesRegistered().length;
+  const baseline = TriDevice.GetResourcesRegistered().length;
   let live = 0;
   t.mock.method(blue.resMan, "LoadObject", async () => { live++; return particleChild(() => live--); });
   const owner = new EveChildContainer(), action = new Tr2ActionChildEffect();
@@ -31,13 +32,13 @@ test("child-effect cycles return particle and mesh registrations and buffers to 
     action.Stop(controller);
     assert.equal(owner.objects.length, 0);
     assert.equal(live, 0);
-    assert.equal(trinity.GetResourcesRegistered().length, baseline);
+    assert.equal(TriDevice.GetResourcesRegistered().length, baseline);
   }
 });
 
 test("a child arriving after Stop releases the cancelled graph", async t =>
 {
-  const baseline = trinity.GetResourcesRegistered().length;
+  const baseline = TriDevice.GetResourcesRegistered().length;
   let resolveLoad, destroyed = 0;
   t.mock.method(blue.resMan, "LoadObject", () => new Promise(resolve => { resolveLoad = resolve; }));
   const owner = new EveChildContainer(), action = new Tr2ActionChildEffect();
@@ -49,7 +50,7 @@ test("a child arriving after Stop releases the cancelled graph", async t =>
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(destroyed, 1);
   assert.equal(owner.objects.length, 0);
-  assert.equal(trinity.GetResourcesRegistered().length, baseline);
+  assert.equal(TriDevice.GetResourcesRegistered().length, baseline);
 });
 
 test("a retained sibling keeps its shared particle provider alive", async t =>
@@ -73,7 +74,7 @@ test("a retained sibling keeps its shared particle provider alive", async t =>
 
 test("100 recurring behavior ads release both instance buffers of both systems", async t =>
 {
-  const baseline = trinity.GetResourcesRegistered().length;
+  const baseline = TriDevice.GetResourcesRegistered().length;
   let live = 0;
   t.mock.method(blue.resMan, "LoadObject", async () =>
   {
@@ -98,6 +99,6 @@ test("100 recurring behavior ads release both instance buffers of both systems",
     assert.equal(live, 4);
     action.Stop(controller);
     assert.equal(live, 0);
-    assert.equal(trinity.GetResourcesRegistered().length, baseline);
+    assert.equal(TriDevice.GetResourcesRegistered().length, baseline);
   }
 });

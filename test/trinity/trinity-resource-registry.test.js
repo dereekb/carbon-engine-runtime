@@ -54,16 +54,16 @@ test("Carbon's registry: registering twice keeps one entry, before any device", 
 {
   const holder = new CjsTrinity();
   const r = resource("r");
-  holder.RegisterResource(r);
-  holder.RegisterResource(r);
+  TriDevice.RegisterResource(r);
+  TriDevice.RegisterResource(r);
   assert.equal(holder.device, null);
-  assert.deepEqual(holder.GetResourcesRegistered(), [ r ]);
+  assert.deepEqual(TriDevice.GetResourcesRegistered(), [ r ]);
   assert.equal(Object.hasOwn(holder, "_resourcesRegistered"), false);
   assert.deepEqual(TriDevice.GetResourcesRegistered(), [ r ]);
   const active = new TriDevice();
   assert.deepEqual(active.GetResourcesRegistered(), [ r ]);
   active.UnregisterResource(r);
-  assert.deepEqual(holder.GetResourcesRegistered(), []);
+  assert.deepEqual(TriDevice.GetResourcesRegistered(), []);
 });
 
 test("SetDevice: the same device again does nothing", () =>
@@ -128,12 +128,12 @@ test("CjsLibrary builds the device for the host's abstraction layer and starts t
     assert.equal(trinity.device, built);
     assert.ok(trinity.fontManager);
     assert.ok(trinity.variableStore.FindVariable("Time"), "the renderer's globals are registered");
-    const rule = trinity.resourceIdleRule, interval = trinity.resourceSweepInterval;
+    const rule = TriDevice.resourceIdleRule, interval = TriDevice.resourceSweepInterval;
     library.SetConfiguration({ deviceResources: { idleRule: 5, sweepInterval: 20 } });
-    assert.deepEqual([ trinity.resourceIdleRule, trinity.resourceSweepInterval ], [ 5, 20 ], "deviceResources configures the sweep");
+    assert.deepEqual([ TriDevice.resourceIdleRule, TriDevice.resourceSweepInterval ], [ 5, 20 ], "deviceResources configures the sweep");
     assert.throws(() => library.SetConfiguration({ deviceResources: { idleRule: -1 } }), /Invalid configuration entry/);
-    trinity.resourceIdleRule = rule;
-    trinity.resourceSweepInterval = interval;
+    TriDevice.resourceIdleRule = rule;
+    TriDevice.resourceSweepInterval = interval;
   }
   finally
   {

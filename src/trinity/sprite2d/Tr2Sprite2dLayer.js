@@ -340,7 +340,7 @@ export class Tr2Sprite2dLayer extends Tr2Sprite2dContainer
   {
     this._FreeRenderTarget();
     if (this._textureSecondary) this._textureSecondary.UnregisterForChangeNotification(this);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
     super.Destruct();
   }
 

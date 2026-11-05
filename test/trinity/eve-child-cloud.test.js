@@ -22,7 +22,7 @@ function setup(t)
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext();
   const prior = context.GetRenderContextAL();
-  const registered = new Set(trinity.GetResourcesRegistered());
+  const registered = new Set(TriDevice.GetResourcesRegistered());
   const oldWidth = trinity.device.width, oldHeight = trinity.device.height;
   const al = new Tr2RenderContextALStub();
   context.SetRenderContextAL(al);
@@ -50,7 +50,7 @@ function setup(t)
   const effect = { GetShaderStateInterface: () => shader, IsGood: () => true, CompatibleWithGdr: () => false, ApplyMaterialDataForPass() {} };
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
       if (!registered.has(resource) && resource.constructor === EveChildCloud) resource.Destruct();
     }
@@ -106,7 +106,7 @@ test("notified tessellation edits and device release rebuild owned storage", t =
   assert.equal(cloud._indexBuffers.length, 1);
   cloud.Destruct();
   assert.equal(vertex.IsValid(), false);
-  assert.ok(!trinity.GetResourcesRegistered().includes(cloud));
+  assert.ok(!TriDevice.GetResourcesRegistered().includes(cloud));
 });
 
 test("failed native buffer creation is reported and can be prepared again", t =>

@@ -8,7 +8,6 @@
 // which installs methods without running this constructor or copying fields.
 import { CjsSchema, meta } from "#schema";
 import { blue } from "#blue";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResourceState } from "./deviceResourceState.js";
 
 
@@ -30,7 +29,19 @@ export class Tr2DeviceResource
    */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
+  }
+
+  /**
+   * Carbon destructor (Tr2DeviceResource.cpp:15-18): unregisters this owner.
+   * @adapted Explicit teardown marks the object dead so later use cannot re-register it.
+   */
+  Destruct()
+  {
+    this._state = Tr2DeviceResourceState.DESTRUCTED;
+    // CPU-only deep imports can be destroyed before a device class is loaded.
+    if (this._registeredGeneration === undefined || this._registeredGeneration < 0) return;
+    CjsSchema.getConstructor("TriDevice").UnregisterResource(this);
   }
 
   /**

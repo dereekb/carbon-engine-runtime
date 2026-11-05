@@ -201,7 +201,7 @@ test("allocation resize, empty groups, mapping failures and teardown obey owners
   value.Destruct();
   assert.equal(value._shipInstanceBuffer.IsValid(), false);
   assert.equal(value._boosterInstanceBuffer.IsValid(), false);
-  assert.equal(trinity.GetResourcesRegistered().includes(value), false);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(value), false);
   assert.equal(a._changeBufferVertexCount, null);
 });
 

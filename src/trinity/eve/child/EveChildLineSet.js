@@ -224,7 +224,7 @@ export class EveChildLineSet extends EveChildTransform
     }
     this._retiredLineSets.clear();
     this._ownedLineSet = null;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

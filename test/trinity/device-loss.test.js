@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -110,7 +111,7 @@ test("a lost device is released, notified, replaced over ticks and prepared agai
     PrepareResources: () => events.push("prepare"),
     ReleaseResources: storage => events.push([ "release", storage ])
   };
-  trinity.RegisterResource(resource, Infinity);
+  TriDevice.RegisterResource(resource, Infinity);
 
   try
   {
@@ -175,7 +176,7 @@ test("a lost device is released, notified, replaced over ticks and prepared agai
   }
   finally
   {
-    trinity.UnregisterResource(resource);
+    Tr2DeviceResource.prototype.Destruct.call(resource);
   }
 });
 

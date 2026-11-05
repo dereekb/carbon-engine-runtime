@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import { prepareResourceFixture } from "../support/resourceFixtures.js";
 import { removeChild, addChild } from "../../npm/dist/blue/children.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
@@ -82,7 +83,7 @@ async function assets(t, slots = [1, 2, 8])
   t.after(() =>
   {
     ship.UnRegister(ship.GetComponentRegistry());
-    for (const set of sets) { set.ReleaseResources(); trinity.UnregisterResource(set); }
+    for (const set of sets) { set.ReleaseResources(); Tr2DeviceResource.prototype.Destruct.call(set); }
     ship.animationUpdater.SetSharedGeometryRes(null);
   });
   ship.Initialize();

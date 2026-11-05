@@ -4,7 +4,6 @@ import { CjsSchema, type } from "#schema";
 import { Tr2TextureAL, Tr2BitmapDimensions, Tr2TextureSubresource, Failed, ALResult } from "#trinityal";
 import { PixelFormat, Tr2GpuUsage, Tr2CpuUsage } from "#consts/render-context";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { exposure as be } from "#be";
 
@@ -39,7 +38,7 @@ export class Tr2PickBuffer
   {
     this._format = format;
     this._size = size;
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -195,7 +194,7 @@ export class Tr2PickBuffer
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 }
 

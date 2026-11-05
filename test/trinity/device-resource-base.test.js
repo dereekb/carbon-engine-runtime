@@ -27,7 +27,7 @@ test("Tr2DeviceResource registers on construction and gates preparation on resou
   }
 
   const resource = new Resource();
-  assert.ok(trinity.GetResourcesRegistered().includes(resource), "the constructor registers");
+  assert.ok(TriDevice.GetResourcesRegistered().includes(resource), "the constructor registers");
   assert.equal(resource.GetDescription(), "<Unknown>");
 
   t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => false);
@@ -38,7 +38,7 @@ test("Tr2DeviceResource registers on construction and gates preparation on resou
   assert.equal(resource.PrepareResources(), false, "a failed _OnPrepareResources fails the prepare");
   assert.deepEqual(calls, [ "prepare" ]);
 
-  trinity.UnregisterResource(resource);
+  Tr2DeviceResource.prototype.Destruct.call(resource);
 });
 
 test("Tr2DeviceResource's two obligations are abstract", () =>
@@ -46,7 +46,7 @@ test("Tr2DeviceResource's two obligations are abstract", () =>
   const resource = new Tr2DeviceResource();
   assert.throws(() => resource.ReleaseResources(0), /ReleaseResources/u);
   assert.throws(() => resource._OnPrepareResources(), /_OnPrepareResources/u);
-  trinity.UnregisterResource(resource);
+  Tr2DeviceResource.prototype.Destruct.call(resource);
 });
 
 test("the classes Carbon derives from Tr2DeviceResource take its PrepareResources", () =>

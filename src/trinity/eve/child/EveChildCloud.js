@@ -214,7 +214,7 @@ export class EveChildCloud extends EveSpaceObjectChild
   {
     this.ReleaseResources();
     this._vertexBuffer.Destroy();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

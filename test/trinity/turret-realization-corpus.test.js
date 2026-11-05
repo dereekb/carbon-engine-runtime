@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import { prepareResourceFixture, purgeResourceFixture } from "../support/resourceFixtures.js";
 import { CjsCmfFormat } from "../../npm/dist/resource/formats/cmf/index.js";
 import { CjsGr2Format } from "../../npm/dist/resource/formats/gr2/index.js";
@@ -93,7 +94,7 @@ async function assets(t)
   const makeResource=(prepared=true)=>{const value=new TriGeometryRes();value.ReadGrannyFile(bytes);if(prepared)prepareResourceFixture(value);return value;};
   const resource=makeResource();resources.set(geometryPath,resource);
   const set=CjsSchema.from("EveTurretSet", CjsBlackFormat.readPayload(turretBytes).object);set.geometryResPath=geometryPath;set.lodLevel=EveTurretSet.LOD.LOD_HIGHEST;set.slotNumber=1;
-  t.after(()=>{set.ReleaseResources();trinity.UnregisterResource(set);});
+  t.after(()=>{set.ReleaseResources();Tr2DeviceResource.prototype.Destruct.call(set);});
   const ship=new EveShip2();// The catalog entry is an EveSOFDataHullLocator (_type); the ship locator takes its name and transform, as SOF builds it.
   ship.locators=hull.locatorTurrets.map(value=>CjsSchema.from("EveLocator2", { name:value.name, transform:value.transform }));ship.turretSets.push(set);
   return {set,ship,resource,makeResource,resources,requests,hull};
@@ -450,7 +451,7 @@ test("real packed turret shader receives native instance IDs and final opaque/sh
   t.after(()=>{shared.ReleaseResources();context.SetRenderContextAL(prior);});
   const {set,ship,resource}=await assets(t);ship.RebuildTurretPositions();set.Initialize();
   assert.deepEqual(instanceUploads[0],Array.from({length:24},(_,i)=>i),"native cpp:296 IDs0..23");
-  assert.ok(trinity.GetResourcesRegistered().includes(set),"native Tr2DeviceResource base registration");
+  assert.ok(TriDevice.GetResourcesRegistered().includes(set),"native Tr2DeviceResource base registration");
   const bytes=await client.Read("res:/graphics/effect.dx11/managed/space/turret/v5/quadv5.sm_depth");
   assert.equal(createHash("md5").update(bytes).digest("hex"),"352fc276516262e229648fa98310bb17");
   const metadata=CjsCarbonEffectFormat.read(bytes,{emit:"metadata",source:"quadv5.sm_depth",permutation:[{name:"SPACE_OBJECT_CLIPPING",value:"SOC_DISABLED"},{name:"V5_DEBUG",value:"OFF"}]});
@@ -498,7 +499,7 @@ test("real packed turret shader receives native instance IDs and final opaque/sh
   assert.equal(set.PrepareResources(),true,"native _OnPrepareResources returns true after void InitializeInstanceBuffer");assert.equal(set._instanceBuffer.IsValid(),false);assert.equal(set.GetShadowBatches(accumulator,pod,100),false);shared.Allocate=allocating;
   assert.equal(set.PrepareResources(),true);assert.equal(instanceUploads.length,firstCount+1);assert.equal(set.GetShadowBatches(accumulator,pod,100),true);
   purgeResourceFixture(resource);assert.equal(set.GetShadowBatches(accumulator,pod,100),false);
-  set.Destruct();set.Destruct();assert.equal(trinity.GetResourcesRegistered().includes(set),false);assert.equal(set._instanceBuffer.IsValid(),false);
+  set.Destruct();set.Destruct();assert.equal(TriDevice.GetResourcesRegistered().includes(set),false);assert.equal(set._instanceBuffer.IsValid(),false);
   assert.equal(set.GetBatches(accumulator,TriBatchType.TRIBATCHTYPE_OPAQUE,pod),false);
 });
 
@@ -604,7 +605,7 @@ test("native ambient instances copy controlled source, isolate controller state 
   let ambientLod;source.UpdateVisibility=(_context,_parent,lod)=>{ambientLod=lod;};
   for(const [turretLod,childLod] of [[EveTurretSet.LOD.LOD_INVALID,Tr2Lod.TR2_LOD_UNSPECIFIED],[EveTurretSet.LOD.LOD_EMPTY,Tr2Lod.TR2_LOD_LOW],[EveTurretSet.LOD.LOD_HIGHEST,Tr2Lod.TR2_LOD_HIGH]]){set.lodLevel=turretLod;set.UpdateVisibility({GetFrustum:()=>({IsSphereVisible:()=>false})});assert.equal(ambientLod,childLod);}
   set.ambientEffectEditingMode=false;set.OnModified("ambientEffectEditingMode");set.SetAmbientEffect(null);assert.equal(set.GetAmbientEffectOrGeneratedEffect(),null);assert.equal(source.IsInRegistry(),false);
-  set.Destruct();prepareResourceFixture(resource);assert.equal(set.geometryResource,null);assert.equal(set.IsInRegistry(),false);assert.equal(trinity.GetResourcesRegistered().includes(set),false);
+  set.Destruct();prepareResourceFixture(resource);assert.equal(set.geometryResource,null);assert.equal(set.IsInRegistry(),false);assert.equal(TriDevice.GetResourcesRegistered().includes(set),false);
   ship.turretSets.length=0;assert.equal(ship.GetRenderables__Impostors([]).includes(set),false,"removed/destroyed turret is not collected");
 });
 

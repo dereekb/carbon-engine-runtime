@@ -1,9 +1,9 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Tr2ProceduralResources.h
 // Source: trinity/trinity/Tr2ProceduralResources.cpp
 import { meta } from "#schema";
 import { Tr2Renderer } from "./Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "./context/Tr2RenderContext.js";
-import { trinity } from "../CjsTrinity.js";
 
 
 /**
@@ -27,7 +27,7 @@ const s_buffers = {
   {
     if (!this.registered)
     {
-      trinity.RegisterResource(this);
+      CjsSchema.getConstructor("TriDevice").RegisterResource(this);
       this.registered = true;
     }
 

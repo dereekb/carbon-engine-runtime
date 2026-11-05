@@ -30,7 +30,6 @@ import { Tr2RenderBatch } from "../../core/batch/TriRenderBatch/index.js";
 import { CreateLodAllocations } from "../../core/mesh/TriGeometryResAllocations.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { ITr2DebugRenderable } from "#interfaces";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { Tr2DeviceResourceState } from "../../core/device/deviceResourceState.js";
 
@@ -164,7 +163,7 @@ export class EveChildBehaviorSystem extends EveChildTransform
     this._shipInstanceBuffer.Destroy();
     this._boosterInstanceBuffer.Destroy();
     for (const group of this.behaviorGroups) group.SetVertexFunctionReferance(null);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

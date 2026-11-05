@@ -53,7 +53,7 @@ test("renewed and exempt infrastructure resources survive idle collection", t =>
 });
 test("destroyed resources cannot register or prepare again", t => {
   const { device } = setup(t), r = resource(); r.KeepAlive();
-  trinity.UnregisterResource(r); assert.equal(r.IsGood(), false); device._PreparePendingResources();
+  Tr2DeviceResource.prototype.Destruct.call(r); assert.equal(r.IsGood(), false); device._PreparePendingResources();
   assert.equal(r.prepares, 0); assert.deepEqual(device.GetResourcesRegistered(), []);
 });
 test("trail destruction removes pending device registration immediately", t => {
@@ -76,7 +76,7 @@ test("resource creation gate and destruction during preparation are respected", 
   Tr2Renderer.IsResourceCreationAllowed.mock.mockImplementation(() => false);
   device._PreparePendingResources(); assert.equal(r.prepares, 0);
   Tr2Renderer.IsResourceCreationAllowed.mock.mockImplementation(() => true);
-  r.PrepareResources = () => { trinity.UnregisterResource(r); return true; };
+  r.PrepareResources = () => { Tr2DeviceResource.prototype.Destruct.call(r); return true; };
   device._PreparePendingResources(); assert.equal(r._state, 2); assert.equal(r.IsGood(), false);
 });
 test("release callback can renew without its new registration being removed", t => {

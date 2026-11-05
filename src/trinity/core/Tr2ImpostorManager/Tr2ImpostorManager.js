@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Tr2ImpostorManager.h
 // Source: trinity/trinity/Tr2ImpostorManager.cpp
 // Source: trinity/trinity/Tr2ImpostorManager_Blue.cpp
@@ -23,7 +24,6 @@ import { Tr2TextureSubresource } from "../../../trinityal/Tr2HalHelperStructures
 import { ImpostorAtlas } from "./ImpostorAtlas.js";
 import { Impostor } from "./Impostor.js";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 const emptyTexture = new Tr2TextureAL();
@@ -143,7 +143,7 @@ export class Tr2ImpostorManager
       Tr2ImpostorManager._definition = definition;
     }
     this._quadRenderer.RegisterEffect(this._effectKey, TriBatchType.TRIBATCHTYPE_OPAQUE, 36, 1, Tr2ImpostorManager._definition, this.effect);
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -506,7 +506,7 @@ export class Tr2ImpostorManager
     this._objects.clear();
     this._renderQueue.length = 0;
     this._atlas._free.length = 0;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** Native private nested record identities, with separate JS source files. */

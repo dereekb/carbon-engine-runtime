@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Particle/Tr2GpuParticleSystem.h
@@ -35,7 +36,6 @@ import { Tr2VariableStore } from "../core/variable/Tr2VariableStore.js";
 import { Tr2EffectStateManager } from "../shader/Tr2EffectStateManager.js";
 import { MAX_TURBULENCE_LENGTH, Tr2GpuParticleSystemEmitterParamsGpu } from "./Tr2GpuParticleSystemEmitterParamsGpu.js";
 import { TriVariableContentType } from "../generated/trinityCore/enums.js";
-import { trinity } from "../CjsTrinity.js";
 
 /** Carbon DEFAULT_MAX_PARTICLES (cpp:19). */
 const DEFAULT_MAX_PARTICLES = 1024 * 1024;
@@ -332,7 +332,7 @@ export class Tr2GpuParticleSystem
    */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
     this.InitializeBuffers();
     this.RegisterVariables();
     this.SetMaxParticles(this.maxParticles);
@@ -358,7 +358,7 @@ export class Tr2GpuParticleSystem
       this._variableStore = null;
       for (const slot of EFFECT_SLOTS) this.SetVariableStore(this[slot]);
     }
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

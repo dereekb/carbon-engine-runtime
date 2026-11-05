@@ -24,7 +24,6 @@ import { ITr2InstanceDataInstanceData, ITr2InstanceData } from "../core/mesh/ITr
 import { ITr2GenericEmitterUpdateArguments } from "./ITr2GenericEmitter/index.js";
 import { ITr2GpuBuffer } from "../core/ITr2GpuBuffer.js";
 import { box3 } from "#math/box3";
-import { trinity } from "../CjsTrinity.js";
 import { Tr2DeviceResourceState } from "../core/device/deviceResourceState.js";
 
 // RenderDebugInfo scratch (debug drawing is single-threaded).
@@ -97,7 +96,7 @@ export class Tr2ParticleSystem
     this.isValid = false;
     this._instanceData.buffer = null;
     this._instanceData.count = 0;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   _buffers = [null, null];

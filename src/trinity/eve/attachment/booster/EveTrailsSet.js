@@ -16,7 +16,6 @@ import { Tr2VertexUsageCode } from "../../../core/vertex/usageCode.js";
 import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js";
 import { TriGeometryRes } from "#trinity/resources/geometry";
 import { EveTrailsSetSingleTrailData } from "./EveTrailsSetSingleTrailData.js";
-import { trinity } from "../../../CjsTrinity.js";
 
 /** sizeof( InstanceVertex ): the booster's position and size as one float4. */
 const INSTANCE_VERTEX_SIZE = 16;
@@ -393,6 +392,6 @@ export class EveTrailsSet
     this._destroyed = true;
     this.Cleanup();
     this.geometryResource = null;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 }

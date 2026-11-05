@@ -29,7 +29,6 @@ import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js"
 import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
 import { Tr2SuballocatedBufferAllocation } from "../../../core/device/Tr2SuballocatedBuffer/index.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
-import { trinity } from "../../../CjsTrinity.js";
 import { Tr2DeviceResourceState } from "../../../core/device/deviceResourceState.js";
 
 // Carbon's function-local s_hazeVertexDecl (EveHazeSet.cpp:131-145), stream 0:
@@ -170,7 +169,7 @@ export class EveHazeSet extends IEveSpaceObjectAttachment
   Destruct()
   {
     if (this._vertexBuffer.IsValid()) this._vertexBuffer._parent.Free(this._vertexBuffer);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

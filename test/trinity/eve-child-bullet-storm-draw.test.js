@@ -12,7 +12,7 @@ function setup(t)
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext();
   const prior = context.GetRenderContextAL();
-  const registered = new Set(trinity.GetResourcesRegistered());
+  const registered = new Set(TriDevice.GetResourcesRegistered());
   const al = new Tr2RenderContextALStub();
   context.SetRenderContextAL(al);
   al.CreateDevice();
@@ -29,7 +29,7 @@ function setup(t)
   const effect = { GetShaderStateInterface: () => shader, IsGood: () => true, CompatibleWithGdr: () => false, ApplyMaterialDataForPass() {} };
   t.after(() =>
   {
-    for (const resource of trinity.GetResourcesRegistered())
+    for (const resource of TriDevice.GetResourcesRegistered())
     {
       if (!registered.has(resource) && resource.constructor === EveChildBulletStorm) resource.Destruct();
     }

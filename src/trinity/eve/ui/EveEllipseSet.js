@@ -218,7 +218,7 @@ export class EveEllipseSet extends EveChildTransform
     }
 
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

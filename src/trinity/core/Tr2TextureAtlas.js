@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Tr2TextureAtlas.h
 // Source: trinity/trinity/Tr2TextureAtlas.cpp
 // Source: trinity/trinity/Tr2TextureAtlas_Blue.cpp
@@ -403,7 +404,7 @@ export class Tr2TextureAtlas extends ITr2TextureProvider
   constructor()
   {
     super();
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /** How many textures are in the atlas texture? Counts live textures only. */

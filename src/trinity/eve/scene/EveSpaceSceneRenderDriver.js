@@ -1,3 +1,4 @@
+import { CjsSchema } from "#schema";
 // Source: trinity/trinity/Eve/EveSpaceSceneRenderDriver.{h,cpp}
 import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
@@ -126,7 +127,7 @@ export class EveSpaceSceneRenderDriver
    */
   constructor()
   {
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -662,7 +663,7 @@ export class EveSpaceSceneRenderDriver
     this._preparedContext = null;
     EveSpaceSceneRenderDriver.deleteUpscalingContext(this._upscalingContext);
     this._upscalingContext = null;
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** The provider "DepthMap" is registered with; it holds this frame's scene depth. */

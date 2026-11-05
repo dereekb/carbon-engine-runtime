@@ -15,7 +15,6 @@ import { TriStorageFlags } from "#consts/graphics";
 import { CjsSchema } from "#schema";
 import * as CcpLog from "../../../../global/logging/ccpLog.js";
 import { Failed } from "../../../../trinityal/ALResult.js";
-import { trinity } from "../../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../Tr2DeviceResource.js";
 import { exposure as be } from "#be";
 
@@ -65,7 +64,7 @@ export class Tr2SuballocatedBuffer
     this._blockSize = blockSize;
     this._maxSize = maxSize;
     // Carbon's Tr2DeviceResource base constructor registers every resource.
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**

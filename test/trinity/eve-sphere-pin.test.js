@@ -1,3 +1,4 @@
+import { Tr2DeviceResource } from "../../npm/dist/trinity/index.js";
 import { prepareResourceFixture } from "../support/resourceFixtures.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
 import assert from 'node:assert/strict';
@@ -28,12 +29,12 @@ function tree(g){const result=new EveSpherePinIndexTree(g);assert.equal(result.I
 function indices(index,p,r){const out={primitives:99,indices:[]};assert.equal(index.GetIndices(p,r,out),1);return out;}
 function setup(t) {
   const context=Tr2RenderContext_GetMainThreadRenderContext(),prior=context.GetRenderContextAL(),manager=blue.resMan;
-  const before=new Set(trinity.GetResourcesRegistered()),al=new Tr2RenderContextALStub();
+  const before=new Set(TriDevice.GetResourcesRegistered()),al=new Tr2RenderContextALStub();
   al.CreateDevice();al.BeginScene();context.SetRenderContextAL(al);Tr2Renderer.SetViewTransform(mat4.create());blue.resMan=new StubResMan();
   t.after(()=>{
-    for(const resource of trinity.GetResourcesRegistered().filter(x=>!before.has(x))) {
+    for(const resource of TriDevice.GetResourcesRegistered().filter(x=>!before.has(x))) {
       if(CjsSchema.cast(resource,EveSpherePin))resource.Destruct();
-      else {resource.ReleaseResources();trinity.UnregisterResource(resource);}
+      else {resource.ReleaseResources();Tr2DeviceResource.prototype.Destruct.call(resource);}
     }
     SharedGeometryBuffer(context).ReleaseResources();context.SetRenderContextAL(prior);blue.resMan=manager;al.Destroy();
   });
@@ -149,5 +150,5 @@ test('visibility places pins without frustum culling and bounds remain local',t=
 test('final pin destruction releases default effects and registration but preserves assigned effects',t=>{
   setup(t);const p=pin(),owned=[...p._ownedEffects],calls=owned.map(e=>t.mock.method(e,'Destruct'));
   const borrowed={Destruct(){throw Error('borrowed effect destroyed');}};p.pinEffect=borrowed;p.Destruct();p.Destruct();
-  calls.forEach(c=>assert.equal(c.mock.callCount(),1));assert.equal(p._indexBuffer.IsValid(),false);assert.equal(trinity.GetResourcesRegistered().includes(p),false);
+  calls.forEach(c=>assert.equal(c.mock.callCount(),1));assert.equal(p._indexBuffer.IsValid(),false);assert.equal(TriDevice.GetResourcesRegistered().includes(p),false);
 });

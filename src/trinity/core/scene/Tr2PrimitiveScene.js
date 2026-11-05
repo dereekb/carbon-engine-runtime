@@ -19,7 +19,6 @@ import { Tr2VariableStore } from "../variable/Tr2VariableStore.js";
 import { PROJECTION_TYPE } from "../../generated/shader/enums.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 
 /** Native primitive scene and tool handles. Text rendering is a separate port. */
@@ -61,7 +60,7 @@ export class Tr2PrimitiveScene extends ITr2PickableScene
   constructor()
   {
     super();
-    trinity.RegisterResource(this);
+    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
   }
 
   /**
@@ -190,7 +189,7 @@ export class Tr2PrimitiveScene extends ITr2PickableScene
     this._opaqueBatches.Clear();
     this._pickingBatches.Clear();
     this._allocator.Clear();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

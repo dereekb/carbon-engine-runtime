@@ -15,7 +15,6 @@ import { Tr2ParticleElementDeclaration } from "../../particle/element/Tr2Particl
 import { Tr2VertexUsageCode } from "../vertex/usageCode.js";
 import { ITr2InstanceDataInstanceData, ITr2InstanceData } from "./ITr2InstanceData/index.js";
 import { ITr2GpuBuffer } from "../ITr2GpuBuffer.js";
-import { trinity } from "../../CjsTrinity.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { Tr2DeviceResourceState } from "../device/deviceResourceState.js";
 
@@ -147,7 +146,7 @@ export class Tr2RuntimeInstanceData
   Destruct()
   {
     this.ReleaseResources();
-    trinity.UnregisterResource(this);
+    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

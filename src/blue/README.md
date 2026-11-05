@@ -45,8 +45,8 @@ manager's retry cap. `GetResourceStatus` inspects flags without renewing use.
 then returns the native good flag. Omit the owner to renew only the resource.
 Check every dependency independently so a bad first dependency does not prevent
 later dependencies from renewing. This timestamp renewal stands in for Carbon's
-reference lifetime; it does not imply success. `EnsureGood()` temporarily forwards
-to `IsGood()` while existing callers migrate.
+reference lifetime; it does not imply success. The former `EnsureGood()` alias
+is removed; callers use `IsGood()`.
 
 The manager provides `AddNotifyTarget(owner, resource, holder, key)` and
 `RemoveNotifyTarget(owner, resource)`. Registration immediately rebuilds prepared
@@ -74,7 +74,8 @@ reacquire expired path-owned resources unless destroyed. Granny primitive
 rebinding retains cached geometry until replacement completion; release callbacks
 clear it. The obsolete `ensureDependency` helper and resource/atlas revision
 counters have been removed; manager notifications drive owner updates. Resource-local
-`AddNotifyTarget` and `RemoveNotifyTarget` are retained temporarily and throw.
+`AddNotifyTarget` and `RemoveNotifyTarget` have been removed from resources;
+use the manager-owned methods above.
 
 The internal `CjsLoadingObject` retains decoded plain data or a cached builder
 through the manager. `LoadObject` constructs a fresh graph per caller and does

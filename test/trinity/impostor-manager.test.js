@@ -106,9 +106,9 @@ test('reset preserves the native pending queue until BeginUpdate, and release is
 
 test('retirement unregisters managers and effects, releases wrappers once and preserves another manager global binding',t=>{
   const {manager,quad}=setup(t),m=manager(),other=manager();m.Create(8,8,4,4);const surfaces=[m.atlas.GetRenderTarget(),m._itemRt.GetRenderTarget(),m._ds.GetDepthStencil()];
-  const destroys=surfaces.map(x=>t.mock.method(x,'Destroy')),effect=t.mock.method(m.effect,'Destruct');assert.ok(trinity.GetResourcesRegistered().includes(m));
+  const destroys=surfaces.map(x=>t.mock.method(x,'Destroy')),effect=t.mock.method(m.effect,'Destruct');assert.ok(TriDevice.GetResourcesRegistered().includes(m));
   m.Destruct();m.Destruct();assert.equal(effect.mock.callCount(),1);assert.ok(destroys.every(x=>x.mock.callCount()===1));assert.equal(quad.GetEffectRecords().has(m._effectKey),false);
-  assert.equal(trinity.GetResourcesRegistered().includes(m),false);assert.equal(Tr2VariableStore.globalStore().FindVariable('ImposterAtlasMap').GetValue(),other.atlas);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(m),false);assert.equal(Tr2VariableStore.globalStore().FindVariable('ImposterAtlasMap').GetValue(),other.atlas);
 });
 
 

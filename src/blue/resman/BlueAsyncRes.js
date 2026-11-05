@@ -203,31 +203,6 @@ export class BlueAsyncRes
   }
 
   /**
-   * Carbon: BlueAsyncRes::AddNotifyTarget (blue/src/BlueAsyncRes.cpp:261-290)
-   *
-   * @notUsed Owner links belong to resMan, which expires inactive registrations.
-   * @param {import("../interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
-   * @throws {Error} Always.
-   */
-  AddNotifyTarget(_target)
-  {
-    throw new Error("BlueAsyncRes.AddNotifyTarget is not used: use blue.resMan owner links.");
-  }
-
-  /**
-   * Carbon: BlueAsyncRes::RemoveNotifyTarget (blue/src/BlueAsyncRes.cpp:292-347)
-   *
-   * @notUsed Nothing registers (see `AddNotifyTarget`), so there is nothing
-   *   to remove. Calling it is an error.
-   * @param {import("../interfaces/IBlueAsyncResNotifyTarget.js").IBlueAsyncResNotifyTarget} _target The target.
-   * @throws {Error} Always.
-   */
-  RemoveNotifyTarget(_target)
-  {
-    throw new Error("BlueAsyncRes.RemoveNotifyTarget is not used: use blue.resMan owner links.");
-  }
-
-  /**
    * Carbon: BlueAsyncRes::Reload (blue/src/BlueAsyncRes.cpp:370-375)
    *
    * @implemented
