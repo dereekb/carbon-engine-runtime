@@ -1,4 +1,5 @@
 // Source: blueexposure/include/BlueTypes.h:321-375 (Be::VarEntry)
+import { VARTYPE } from "./BlueTypes.js";
 
 /**
  * One row of a class's member table: Carbon's `Be::VarEntry`, which
@@ -27,11 +28,12 @@ export class VarEntry
   name = "";
 
   /**
-   * `mType`: Carbon's `VARTYPE` name for the member's storage.
+   * `mType`: INVALID until populated. The existing ClassInfo adapter still
+   * supplies legacy type names; its numeric VARTYPE migration is separate.
    *
    * @implemented
    */
-  type = "";
+  type = VARTYPE.INVALID;
 
   /**
    * Ours: the JavaScript property key that holds the value, in place of `mOffset` and `mSize`.
