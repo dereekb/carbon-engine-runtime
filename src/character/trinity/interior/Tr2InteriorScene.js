@@ -1061,7 +1061,8 @@ export class Tr2InteriorScene extends ITr2PickableScene
     const vs = this._perFrameVSData.GetData(), ps = this._perFramePSData.GetData();
     Tr2RenderUtils.fillAndSetConstants(this._perFrameVSBuffer, vs, vs.byteLength, 1 << ShaderType.VERTEX_SHADER, PER_FRAME_VS, renderContext);
     Tr2RenderUtils.fillAndSetConstants(this._perFramePSBuffer, ps, ps.byteLength, 1 << ShaderType.PIXEL_SHADER, PER_FRAME_PS, renderContext);
-    if (this._renderBackgroundCubeMap && this.backgroundEffect)
+    // Renew the effect owner before reading its shader; an expired resource slot must be reacquired.
+    if (this._renderBackgroundCubeMap && this.backgroundEffect && this.backgroundEffect.IsGood())
       Tr2Renderer.drawCameraSpaceScreenQuad(renderContext, this.backgroundEffect.GetShaderStateInterface(), this.backgroundEffect);
     this._RenderGeometry(null, renderContext);
     this._primaryRenderBatches.Clear();

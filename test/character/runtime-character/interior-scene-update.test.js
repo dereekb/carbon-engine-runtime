@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { blue } from "../../../npm/dist/blue/index.js";
 import { Tr2InteriorScene, Tr2InteriorLightSource } from "../../../npm/dist/character/index.js";
-import { Tr2RenderContext_GetMainThreadRenderContext, Tr2VariableStore } from "../../../npm/dist/trinity/index.js";
+import { Tr2RenderContext_GetMainThreadRenderContext, Tr2VariableStore, Tr2Renderer, Tr2RenderUtils } from "../../../npm/dist/trinity/index.js";
 import { Tr2RenderContextALStub } from "../../../npm/dist/trinityal/index.js";
 import { StubResMan } from "../../support/stubResMan.js";
 
@@ -72,4 +72,38 @@ test("UpdateScene runs Update with one time, and lights get the simulation time 
     assert.deepEqual(read("Scene.AmbientColor"), [ .7, .7, .7, 1 ]);
     // Tr2InteriorLightSource.cpp:146-152: Blue ticks to seconds (TimeAsDouble) for each curve set.
     assert.deepEqual(times, [ 2 ]);
+});
+
+
+test("interior background renews its owner before reading a cleared shader slot", t =>
+{
+    const scene = setup(t)();
+    const context = Tr2RenderContext_GetMainThreadRenderContext();
+    for (const method of [ "_RenderShadows", "VisibilityQuery", "_GatherFullForwardBatches", "_PopulatePerFramePSData", "_PopulatePerFrameVSData", "_RenderGeometry" ])
+        t.mock.method(scene, method, () => {});
+    t.mock.method(Tr2RenderUtils, "fillAndSetConstants", () => {});
+    const shader = {}, calls = [];
+    let ready = false, slot = null;
+    const effect = {
+        IsGood() { calls.push("renew"); slot = ready ? shader : null; return ready; },
+        GetShaderStateInterface() { calls.push("shader"); return slot; }
+    };
+    t.mock.method(Tr2Renderer, "drawCameraSpaceScreenQuad", (_context, value, material) =>
+    {
+        calls.push("draw");
+        assert.equal(value, shader);
+        assert.equal(material, effect);
+    });
+    scene._renderBackgroundCubeMap = true;
+    scene.backgroundEffect = effect;
+    try
+    {
+        scene._RenderFullForward(context);
+        assert.deepEqual(calls, [ "renew" ]);
+        calls.length = 0;
+        ready = true;
+        scene._RenderFullForward(context);
+        assert.deepEqual(calls, [ "renew", "shader", "draw" ]);
+    }
+    finally { scene.backgroundEffect = null; }
 });
