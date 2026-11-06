@@ -46,9 +46,9 @@ export class CjsGraphTypeScalar
    * Copies through the destination conversion, returning whether it changed.
    * @cjs Change reporting.
    */
-  static copy(source, sourceKey, target, key)
+  static copy(source, sourceKey, target, key, options)
   {
-    return this.set(target, key, source[sourceKey]);
+    return this.set(target, key, source[sourceKey], options);
   }
 
   /**
@@ -91,36 +91,36 @@ export class CjsGraphTypeScalar
    * Instance shortcut to get.
    * @cjs
    */
-  Get(target, key)
+  Get(target, key, options)
   {
-    return this.constructor.get(target, key);
+    return this.constructor.get(target, key, options);
   }
 
   /**
    * Instance shortcut to set.
    * @cjs
    */
-  Set(target, key, value)
+  Set(target, key, value, options)
   {
-    return this.constructor.set(target, key, value);
+    return this.constructor.set(target, key, value, options);
   }
 
   /**
    * Instance shortcut to copy.
    * @cjs
    */
-  Copy(source, sourceKey, target, key)
+  Copy(source, sourceKey, target, key, options)
   {
-    return this.constructor.copy(source, sourceKey, target, key);
+    return this.constructor.copy(source, sourceKey, target, key, options);
   }
 
   /**
    * Instance shortcut to clone.
    * @cjs
    */
-  Clone(target, key)
+  Clone(target, key, options)
   {
-    return this.constructor.clone(target, key);
+    return this.constructor.clone(target, key, options);
   }
 
   /**
@@ -163,9 +163,9 @@ export class CjsGraphTypeScalar
    * Instance shortcut to isLike.
    * @cjs
    */
-  IsLike(a, b)
+  IsLike(a, b, options)
   {
-    return this.constructor.isLike(a, b);
+    return this.constructor.isLike(a, b, options);
   }
 
   /** Stable class identity. */

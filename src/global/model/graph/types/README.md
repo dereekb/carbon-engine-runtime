@@ -57,10 +57,11 @@ entry. With elementCount 0 the loop bound comes from the value. Named math defin
 reuse array conversion and comparison, without mathematical transforms, normalisation or
 colour conversion.
 
-Static operations are `get(target, key)`, `set(target, key, value)`,
-`copy(source, sourceKey, target, key)`, `clone(target, key)`, `is(value)`,
-`isExactEqual(a, b)` `isEqual(a, b)` and `isLike(a, b)`. Instance shortcuts capitalise the same
-names. Leaf handlers take no options and no operation state. There is no From, schema lookup, accessor resolution or destruction.
+All handlers share one call shape, options last: `get(target, key, options)`,
+`set(target, key, value, options)`, `copy(source, sourceKey, target, key, options)`,
+`clone(target, key, options)`, `isLike(a, b, options)`, plus `is(value)`, `isExactEqual(a, b)`
+and `isEqual(a, b)`. Instance shortcuts capitalise the same names and forward options.
+Leaf handlers do not read options and may leave it off their own signature. There is no From, schema lookup, accessor resolution or destruction.
 
 Set/Copy report an exact change after destination conversion. This is a JS
 convenience, unlike Carbon Copy's success result. IsEqual applies native
@@ -98,8 +99,9 @@ are supplied by the future Blue definition adapter, not stored or imported by th
 IsLike normalizes accepted forms with the same conversion as Set before comparing. The existing
 conversion behavior is retained during relocation; stricter format validation is not silently adopted.
 
-Object/list/struct handlers will take the graph operation as their one extra argument; leaf
-handlers take neither that nor options. Their implementations are still pending.
+Options are per call: one reused object for a whole operation, carrying what objects and lists
+need, including recursion state, and nothing per member. Object/list/struct implementations are
+still pending.
 Ownership edges and operation-owned creations must be recorded before destruction is implemented.
 No placeholder Destruct method promises cleanup today.
 
