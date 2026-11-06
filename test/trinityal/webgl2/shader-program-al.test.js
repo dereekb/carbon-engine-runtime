@@ -205,6 +205,34 @@ test("the program gives each sampler uniform a unit and records its paired sampl
     assert.ok(constants.every(c => c.location));
 });
 
+test("a stage over the sixteen texture-unit budget is refused by name, whatever the device offers", () =>
+{
+    const { gl } = FakeWebgl2();
+    const withTextures = count =>
+    {
+        const pixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL).shader;
+        const stage = pixel.GetStageBlock();
+        stage.bindings = Array.from({ length: count }, (_, registerIndex) =>
+            ({ kind: "resource", registerIndex, name: `s${registerIndex}`, dimensionName: "texture2d", pairedSamplerRegisters: [] }));
+        return pixel;
+    };
+    const create = pixel =>
+    {
+        const program = new Tr2ShaderProgramALWebgl2();
+        const result = program.Create(...link([ shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader, pixel ]), FakeRenderContext(gl));
+        return { program, result };
+    };
+
+    const atBudget = create(withTextures(16));
+    assert.equal(atBudget.result, ALResult.S_OK);
+    assert.equal(atBudget.program.GetTextures().length, 16);
+
+    const overBudget = create(withTextures(17));
+    assert.equal(overBudget.result, ALResult.E_INVALIDARG);
+    assert.equal(overBudget.program.IsValid(), false);
+    assert.match(overBudget.program.GetLinkLog(), /uses 17 texture units, over the budget of 16: s0, s1/u);
+});
+
 test("dx11's refusals: no stages, an invalid stage, two stages of one type", () =>
 {
     const { gl } = FakeWebgl2();

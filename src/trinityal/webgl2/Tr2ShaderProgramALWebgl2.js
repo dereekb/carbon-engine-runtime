@@ -37,6 +37,7 @@ import { CjsSchema, type } from "#schema";
 import { Tr2ALMemoryType } from "#consts/graphics";
 import { Tr2DeviceResourceAL } from "../Tr2DeviceResourceAL/index.js";
 import { ALResult } from "../ALResult.js";
+import * as CcpLog from "../../global/logging/ccpLog.js";
 import { RenderContextALOf } from "../renderContextAL.js";
 import { Tr2RegisterMapAL } from "../Tr2ResourceSetAL/Tr2RegisterMapAL.js";
 import { ShaderType } from "#consts/render-context";
@@ -54,6 +55,9 @@ void main()
 
 /** Binding kinds a shader samples through a texture unit. */
 const TEXTURE_KINDS = new Set([ "resource", "bufferTexture", "structuredTexture", "uavTexture" ]);
+
+/** The texture units WebGL2 guarantees each stage; a larger device limit is not relied on. */
+const TEXTURE_UNITS_PER_STAGE = 16;
 
 /** The uniform-block name the emitter's `std140` profile gives constant buffer `cbN`. */
 function BlockNameOf(name)
@@ -149,7 +153,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
    * array does, and each one's implementation is read as dx11 reads
    * `shaders[i].m_shader` (`:48-49`).
    *
-   * @adapted Links WebGL stages and verifies retained output locations against the linked program.
+   * @adapted Links WebGL stages, refuses a stage over its texture-unit budget, and verifies retained output locations.
    * @param {object[]} shaders The `Tr2ShaderAL` stages.
    * @param {number} count How many of them to link.
    * @param {object} renderContext The context to link against.
@@ -182,6 +186,8 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
       stages.set(type, shader);
       linked.push(shader);
     }
+
+    if (!this._FitsTextureUnits(stages)) return ALResult.E_INVALIDARG;
 
     const gl = al.GetWebgl2();
     const program = gl.createProgram();
@@ -244,6 +250,36 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._isValid = true;
 
     return ALResult.S_OK;
+  }
+
+  /**
+   * Whether every stage fits the texture-unit budget. The format's merges stop at
+   * their best result even when that is still over budget, so this is where such
+   * a shader is refused by name, not left to a link failure or a device that
+   * happens to offer more units. Each program logs this once: the effect state
+   * manager remembers a refused program.
+   *
+   * @cjs D3D11 has no such limit to enforce here.
+   * @param {Map<number, Tr2ShaderALWebgl2>} stages The stages, by `ShaderType`.
+   * @returns {boolean} Whether all of them fit.
+   */
+  _FitsTextureUnits(stages)
+  {
+    for (const [ type, shader ] of stages)
+    {
+      const block = shader.GetStageBlock();
+      if (!block) continue;
+
+      const textures = block.bindings.filter(binding => TEXTURE_KINDS.has(binding.kind));
+      if (textures.length <= TEXTURE_UNITS_PER_STAGE) continue;
+
+      const names = textures.map(binding => binding.name).join(", ");
+      this._log = `Stage ${type} uses ${textures.length} texture units, over the budget of ${TEXTURE_UNITS_PER_STAGE}: ${names}`;
+      CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "WebGL2 refused a shader program: %s", this._log);
+      return false;
+    }
+
+    return true;
   }
 
   /**

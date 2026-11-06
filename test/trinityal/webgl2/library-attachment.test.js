@@ -44,6 +44,7 @@ test("an explicitly selected WebGL2 AL attaches with its GLSL policy and survive
                 Tr2GpuUsage.DEPTH_STENCIL, al), ALResult.S_OK);
             assert.equal(al.SetDepthStencil(depth), ALResult.S_OK);
             assert.equal(al.Clear({ color: 0xff102030, depth: 1 }), ALResult.S_OK);
+            assert.equal(al.EndScene(), ALResult.S_OK);
             assert.equal(al.Present(), ALResult.S_OK);
             assert.deepEqual([gl.canvas.width, gl.canvas.height], [width, height]);
             assert.deepEqual(al.GetViewport(), { x: 0, y: 0, width, height, minZ: 0, maxZ: 1 });
