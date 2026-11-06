@@ -17,7 +17,7 @@ export class CjsGraphTypeFloat64 extends CjsGraphTypeNumber
    */
   static isEqual(a, b)
   {
-    if (!this.is(a) || !this.is(b)) return false;
+    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
 
     return Math.abs(a - b) < 1e-12;
   }

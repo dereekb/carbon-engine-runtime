@@ -48,9 +48,9 @@ test("scalar instance shortcuts preserve type conversion without From", () =>
   assert.equal(string.Copy(source, "value", target, "value"), false);
   assert.equal(boolean.Set(target, "value", 1), true);
   assert.equal(target.value, true);
-  assert.equal(boolean.Is(true), true);
-  assert.equal(boolean.Is(1), false);
-  assert.equal(string.Is("hello"), true);
+  assert.equal(boolean.IsValidValue(true), true);
+  assert.equal(boolean.IsValidValue(1), false);
+  assert.equal(string.IsValidValue("hello"), true);
   assert.equal("From" in string, false);
 });
 
@@ -64,7 +64,7 @@ test("array writes reuse storage and compare the Float32 result", () =>
   assert.equal(handler.Set(target, "value", new Float64Array([0.1, 4, 3])), true);
   assert.equal(target.value, storage);
   assert.deepEqual(handler.Get(target, "value"), [Math.fround(0.1), 4, 3]);
-  assert.equal(CjsGraphTypeVector3.is(new Float32Array(2)), false, "validation stays in Is");
+  assert.equal(CjsGraphTypeVector3.isValidValue(new Float32Array(2)), false, "validation stays in Is");
 });
 
 test("variable array resize and explicit clone own independent storage", () =>

@@ -27,7 +27,7 @@ export class CjsGraphTypeInteger extends CjsGraphTypeNumber
    * Tests integral values in the declared storage range.
    * @cjs Explicit representation query.
    */
-  static is(value)
+  static isValidValue(value)
   {
     return typeof value === "number" && Number.isInteger(value) && value === this.convert(value);
   }

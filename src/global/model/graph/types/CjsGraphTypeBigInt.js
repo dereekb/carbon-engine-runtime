@@ -32,7 +32,7 @@ export class CjsGraphTypeBigInt extends CjsGraphTypeNumber
    * Tests valid input: a BigInt or an integer string in the storage range, or a [high, low] pair.
    * @cjs Each word of a pair is a 32-bit pattern, so a pair is always in range.
    */
-  static is(value)
+  static isValidValue(value)
   {
     if (typeof value === "string") return /^-?\d+$/u.test(value) && this._isStored(BigInt(value));
     if (Array.isArray(value)) return value.length === 2 && this._isWord(value[0]) && this._isWord(value[1]);

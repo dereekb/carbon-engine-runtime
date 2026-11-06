@@ -61,7 +61,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects is because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static is(value)
+  static isValidValue(value)
   {
     throw new TypeError("Invalid type handler cannot test a value.");
   }

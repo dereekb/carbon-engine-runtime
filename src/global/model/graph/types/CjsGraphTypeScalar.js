@@ -3,7 +3,7 @@
  *
  * @cjs Owner/key access replaces native pointers. Set and Copy report an exact
  * stored-value change, not Carbon Copy's success result. No schema lookup or
- * input validation occurs during assignment; Is is a separate operation.
+ * input validation occurs during assignment; IsValidValue is a separate operation.
  */
 export class CjsGraphTypeScalar
 {
@@ -82,7 +82,7 @@ export class CjsGraphTypeScalar
    * Tests valid input: can this value be used to set this thing.
    * @cjs The unspecialised handler accepts nothing. The graph operation calls it; Set does not.
    */
-  static is(value)
+  static isValidValue(value)
   {
     return false;
   }
@@ -142,12 +142,12 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * Instance shortcut to is.
+   * Instance shortcut to isValidValue.
    * @cjs
    */
-  Is(value)
+  IsValidValue(value)
   {
-    return this.constructor.is(value);
+    return this.constructor.isValidValue(value);
   }
 
   /**

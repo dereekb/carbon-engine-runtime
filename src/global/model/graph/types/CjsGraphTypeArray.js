@@ -4,7 +4,7 @@ import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
  * Shared typed-array operations on caller-owned storage.
  * Modelled on: Be::FLOATARRAY/DOUBLEARRAY/INTARRAY Copy (blueexposure/BlueVariable.cpp:771-815).
  * @cjs JS constructors and element handlers replace native buffer types. A fixed size is its
- * own definition, and values are assumed valid here: Is and the conversion entry validate.
+ * own definition, and values are assumed valid here: IsValidValue and the conversion entry validate.
  * Fixed-size storage must exist; only variable-length resizing and explicit Clone allocate.
  */
 export class CjsGraphTypeArray extends CjsGraphTypeScalar
@@ -90,7 +90,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    * Tests valid input: a plain or typed array of the right count and valid elements.
    * @cjs Excludes DataView; variable-length definitions accept any count.
    */
-  static is(value)
+  static isValidValue(value)
   {
     if (!Array.isArray(value) && !(ArrayBuffer.isView(value) && value.length !== undefined)) return false;
     if (this.elementCount !== 0 && value.length !== this.elementCount) return false;
@@ -106,7 +106,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   /** Tests one input element. @cjs */
   static _isElement(value)
   {
-    return this.element.is(value);
+    return this.element.isValidValue(value);
   }
 
   /** Tests this definition's own storage across realms, with its fixed count. @cjs */

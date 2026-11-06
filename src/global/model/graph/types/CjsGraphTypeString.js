@@ -27,7 +27,7 @@ export class CjsGraphTypeString extends CjsGraphTypeScalar
    * Tests valid input.
    * @cjs The graph operation calls it; Set does not.
    */
-  static is(value)
+  static isValidValue(value)
   {
     return typeof value === "string";
   }
@@ -38,7 +38,7 @@ export class CjsGraphTypeString extends CjsGraphTypeScalar
    */
   static isEqual(a, b)
   {
-    if (!this.is(a) || !this.is(b)) return false;
+    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
 
     return a === b;
   }

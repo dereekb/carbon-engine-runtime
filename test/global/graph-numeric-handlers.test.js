@@ -25,24 +25,24 @@ test("integer scalar conversion matches native width without allocating typed sc
             const target = { value: expected };
             assert.equal(handler.convert(input), expected, `${ctor.name}: ${String(input)}`);
             assert.equal(instance.Set(target, "value", input), false);
-            assert.equal(instance.Is(expected), true);
+            assert.equal(instance.IsValidValue(expected), true);
             assert.equal(instance.IsEqual(expected, expected), true);
             assert.equal(instance.IsLike(input, expected), true);
             assert.equal(instance.Get(target, "value"), expected);
             assert.equal(instance.Clone(target, "value"), expected);
         }
-        assert.equal(instance.Is(0.5), false);
-        assert.equal(instance.Is("1"), false);
-        assert.equal(instance.Is(NaN), false);
-        assert.equal(instance.Is(Infinity), false);
+        assert.equal(instance.IsValidValue(0.5), false);
+        assert.equal(instance.IsValidValue("1"), false);
+        assert.equal(instance.IsValidValue(NaN), false);
+        assert.equal(instance.IsValidValue(Infinity), false);
         assert.equal(instance.IsEqual("1", 1), false);
     }
-    assert.equal(types.CjsGraphTypeInt8.is(128), false);
-    assert.equal(types.CjsGraphTypeUint8.is(-1), false);
-    assert.equal(types.CjsGraphTypeInt16.is(32768), false);
-    assert.equal(types.CjsGraphTypeUint16.is(65536), false);
-    assert.equal(types.CjsGraphTypeInt32.is(2 ** 31), false);
-    assert.equal(types.CjsGraphTypeUint32.is(2 ** 32), false);
+    assert.equal(types.CjsGraphTypeInt8.isValidValue(128), false);
+    assert.equal(types.CjsGraphTypeUint8.isValidValue(-1), false);
+    assert.equal(types.CjsGraphTypeInt16.isValidValue(32768), false);
+    assert.equal(types.CjsGraphTypeUint16.isValidValue(65536), false);
+    assert.equal(types.CjsGraphTypeInt32.isValidValue(2 ** 31), false);
+    assert.equal(types.CjsGraphTypeUint32.isValidValue(2 ** 32), false);
 });
 
 test("64-bit scalar handlers preserve BigInt precision, range and native input conversion", () =>
@@ -57,23 +57,23 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
             const target = { value: expected };
             assert.equal(handler.convert(input), expected);
             assert.equal(instance.Set(target, "value", input), false);
-            assert.equal(instance.Is(expected), true);
+            assert.equal(instance.IsValidValue(expected), true);
             assert.equal(instance.IsLike(input, expected), true);
         }
-        assert.equal(handler.is(1), false);
-        assert.equal(handler.is(2n ** 64n), false);
-        assert.equal(handler.is("1"), true, "JSON writes 64-bit values as strings");
-        assert.equal(handler.is("1.5"), false);
-        assert.equal(handler.is("0x10"), false);
-        assert.equal(handler.is(""), false);
-        assert.equal(handler.is(String(2n ** 64n)), false);
-        assert.equal(handler.is([ 1, 2 ]), true, "a [high, low] pair is valid input");
-        assert.equal(handler.is([ 1 ]), false);
-        assert.equal(handler.is([ 1, 2, 3 ]), false);
-        assert.equal(handler.is([ 1.5, 0 ]), false);
-        assert.equal(handler.is([ 2 ** 32, 0 ]), false);
-        assert.equal(handler.is([ -(2 ** 31) - 1, 0 ]), false);
-        assert.equal(handler.is([ "1", 2 ]), false);
+        assert.equal(handler.isValidValue(1), false);
+        assert.equal(handler.isValidValue(2n ** 64n), false);
+        assert.equal(handler.isValidValue("1"), true, "JSON writes 64-bit values as strings");
+        assert.equal(handler.isValidValue("1.5"), false);
+        assert.equal(handler.isValidValue("0x10"), false);
+        assert.equal(handler.isValidValue(""), false);
+        assert.equal(handler.isValidValue(String(2n ** 64n)), false);
+        assert.equal(handler.isValidValue([ 1, 2 ]), true, "a [high, low] pair is valid input");
+        assert.equal(handler.isValidValue([ 1 ]), false);
+        assert.equal(handler.isValidValue([ 1, 2, 3 ]), false);
+        assert.equal(handler.isValidValue([ 1.5, 0 ]), false);
+        assert.equal(handler.isValidValue([ 2 ** 32, 0 ]), false);
+        assert.equal(handler.isValidValue([ -(2 ** 31) - 1, 0 ]), false);
+        assert.equal(handler.isValidValue([ "1", 2 ]), false);
         assert.equal(handler.isEqual("1", "1"), false, "valid input is not a canonical value");
         assert.equal(handler.isEqual(1n, 1n), true);
         assert.equal(handler.isEqual(1, 1n), false);
@@ -84,8 +84,8 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
     const source = { value: 9007199254740993n }, target = { value: 0n };
     assert.equal(types.CjsGraphTypeInt64.copy(source, "value", target, "value"), true);
     assert.equal(target.value, 9007199254740993n);
-    assert.equal(types.CjsGraphTypeUint64.is(-1n), false);
-    assert.equal(types.CjsGraphTypeInt64.is(2n ** 63n), false);
+    assert.equal(types.CjsGraphTypeUint64.isValidValue(-1n), false);
+    assert.equal(types.CjsGraphTypeInt64.isValidValue(2n ** 63n), false);
 });
 
 test("Int64 and Uint64 store a [high, low] pair as the canonical BigInt", () =>
@@ -126,14 +126,14 @@ test("every array handler takes a plain array through Is and Set, keeping its st
         const name = handler.className;
         const storage = new handler.ctor(count), target = { value: storage };
 
-        assert.equal(handler.is(plain), true, name);
+        assert.equal(handler.isValidValue(plain), true, name);
         assert.equal(handler.set(target, "value", plain), true, name);
         assert.equal(target.value, storage, name);
         assert.deepEqual(Array.from(storage), plain, name);
         assert.equal(handler.set(target, "value", plain), false, name);
         assert.deepEqual(handler.get(target, "value"), plain, name);
         assert.equal(handler.isLike(plain, storage), handler.hasValueEquality, name);
-        assert.equal(handler.is(plain.slice(1)), handler.elementCount === 0, name);
+        assert.equal(handler.isValidValue(plain.slice(1)), handler.elementCount === 0, name);
     }
 });
 
@@ -146,7 +146,7 @@ for (const ctor of bigArrays)
         const plain = [ "5", [ 1, 2 ], 7n ];
         const expected = [ 5n, (1n << 32n) + 2n, 7n ];
 
-        assert.equal(handler.is(plain), true);
+        assert.equal(handler.isValidValue(plain), true);
         assert.equal(handler.set(target, "value", plain), true);
         assert.equal(target.value, storage);
         assert.deepEqual(Array.from(storage), expected);
@@ -156,7 +156,7 @@ for (const ctor of bigArrays)
         assert.equal(handler.set(target, "value", [ [ 0, 9 ] ]), true);
         assert.notEqual(target.value, storage);
         assert.deepEqual(Array.from(target.value), [ 9n ]);
-        assert.equal(handler.is([ 1, 2 ]), false, "number elements are not 64-bit input, and a pair is not a whole array");
+        assert.equal(handler.isValidValue([ 1, 2 ]), false, "number elements are not 64-bit input, and a pair is not a whole array");
     });
 }
 
@@ -192,13 +192,13 @@ for (const ctor of [...numericArrays, ...bigArrays])
         assert.equal(handler.set(target, "value", inputs), true);
         assert.deepEqual(target.value, expected);
 
-        assert.equal(instance.Is(storage), true);
-        assert.equal(instance.Is(Array.from(storage)), true, "a plain array is valid input");
-        assert.equal(instance.Is([ "not a number" ]), false);
-        assert.equal(instance.Is([ undefined ]), false);
-        assert.equal(instance.Is(new DataView(new ArrayBuffer(8))), false);
-        assert.equal(instance.Is(runInNewContext(`new ${ctor.name}(2)`)), true);
-        assert.equal(instance.Is(new (bigArrays.includes(ctor) ? Float32Array : BigInt64Array)(2)), false);
+        assert.equal(instance.IsValidValue(storage), true);
+        assert.equal(instance.IsValidValue(Array.from(storage)), true, "a plain array is valid input");
+        assert.equal(instance.IsValidValue([ "not a number" ]), false);
+        assert.equal(instance.IsValidValue([ undefined ]), false);
+        assert.equal(instance.IsValidValue(new DataView(new ArrayBuffer(8))), false);
+        assert.equal(instance.IsValidValue(runInNewContext(`new ${ctor.name}(2)`)), true);
+        assert.equal(instance.IsValidValue(new (bigArrays.includes(ctor) ? Float32Array : BigInt64Array)(2)), false);
     });
 
     test(`${ctor.name}: aliased copies preserve unread source elements`, () =>

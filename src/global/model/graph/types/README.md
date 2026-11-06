@@ -53,14 +53,14 @@ No temporary typed array is allocated to round or compare a value.
 The handler carries its size (operator, 2026-11-07). `static elementCount` is set
 explicitly on the Array base as 0, meaning any length, and a fixed size is its own
 definition: there is no per-property length. Shared statics read it and assume a valid
-value, so they make no per-call length checks; validation stays in Is and the conversion
+value, so they make no per-call length checks; validation stays in IsValidValue and the conversion
 entry. With elementCount 0 the loop bound comes from the value. Named math definitions
 reuse array conversion and comparison, without mathematical transforms, normalisation or
 colour conversion.
 
 All handlers share one call shape, options last: `get(target, key, options)`,
 `set(target, key, value, options)`, `copy(source, sourceKey, target, key, options)`,
-`clone(target, key, options)`, `isLike(a, b, options)`, plus `is(value)`, `isExactEqual(a, b)`
+`clone(target, key, options)`, `isLike(a, b, options)`, plus `isValidValue(value)`, `isExactEqual(a, b)`
 and `isEqual(a, b)`. Instance shortcuts capitalise the same names and forward options.
 Leaf handlers do not read options and may leave it off their own signature. There is no From, schema lookup, accessor resolution or destruction.
 
@@ -84,11 +84,11 @@ Numbers with BigInts; that codec is not changed or connected to these handlers.
 Get/Clone preserve BigInts, including within plain values arrays; JSON encoding
 is outside this layer.
 
-Is asks whether a value is valid input: can this value be used to set this thing
+IsValidValue asks whether a value is valid input: can this value be used to set this thing
 (operator, 2026-11-07). It does not ask whether the value is exactly the stored type,
 so a plain `[1, 2, 3]` passes for a Vector3 and an integer string passes for a 64-bit
-integer. Numeric Is still checks integer range. Handlers do not validate: the graph
-operation calls Is, and Set does not.
+integer. Numeric IsValidValue still checks integer range. Handlers do not validate: the graph
+operation calls IsValidValue, and Set does not.
 
 A 64-bit value also takes a plain `[high, low]` pair, in that order. Each word is a
 32-bit pattern, signed or unsigned, and Set stores the canonical BigInt, wrapped to the

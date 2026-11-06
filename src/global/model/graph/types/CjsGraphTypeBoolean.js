@@ -25,7 +25,7 @@ export class CjsGraphTypeBoolean extends CjsGraphTypeScalar
   /** Tests the JavaScript value representation.
    * @cjs Explicit query, not Set validation.
    */
-  static is(value)
+  static isValidValue(value)
   {
     return typeof value === "boolean";
   }
@@ -35,7 +35,7 @@ export class CjsGraphTypeBoolean extends CjsGraphTypeScalar
    */
   static isEqual(a, b)
   {
-    if (!this.is(a) || !this.is(b)) return false;
+    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
 
     return a === b;
   }

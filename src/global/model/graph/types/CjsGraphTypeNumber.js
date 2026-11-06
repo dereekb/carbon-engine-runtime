@@ -27,7 +27,7 @@ export class CjsGraphTypeNumber extends CjsGraphTypeScalar
    * Tests valid input.
    * @cjs Separate from assignment: the graph operation calls it.
    */
-  static is(value)
+  static isValidValue(value)
   {
     return typeof value === "number";
   }
@@ -38,7 +38,7 @@ export class CjsGraphTypeNumber extends CjsGraphTypeScalar
    */
   static isEqual(a, b)
   {
-    return this.is(a) && this.is(b) && a === b;
+    return this.isValidValue(a) && this.isValidValue(b) && a === b;
   }
 
   /** Canonical JavaScript primitive constructor. */

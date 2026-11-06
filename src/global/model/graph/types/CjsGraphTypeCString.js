@@ -49,7 +49,7 @@ export class CjsGraphTypeCString extends CjsGraphTypeString
    */
   static isEqual(a, b)
   {
-    return this.is(a) && this.is(b) && this.convert(a) === this.convert(b);
+    return this.isValidValue(a) && this.isValidValue(b) && this.convert(a) === this.convert(b);
   }
 
   /** Stable class identity. */
