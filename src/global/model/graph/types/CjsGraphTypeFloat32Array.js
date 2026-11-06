@@ -1,125 +1,31 @@
-import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
+import { CjsGraphTypeArray } from "./CjsGraphTypeArray.js";
+import { CjsGraphTypeFloat32 } from "./CjsGraphTypeFloat32.js";
 
 /**
- * Float-array operations on caller-owned storage.
- * Modelled on: Be::FLOATARRAY (blueexposure/BlueVariable.cpp:735-778)
- * @cjs JS-owned arrays replace native member buffers. A positive declared
- * length fixes storage size; -1 permits resizing. No implicit lazy allocation
- * for fixed-length members: their owner must provide the declared storage.
+ * Float32Array storage definition using shared typed-array operations.
+ * Modelled on: Be::FLOATARRAY (blueexposure/BlueVariable.cpp:735-775).
+ * @cjs JS buffers replace native storage; the native comparison policy is retained.
  */
-export class CjsGraphTypeFloat32Array extends CjsGraphTypeScalar
+export class CjsGraphTypeFloat32Array extends CjsGraphTypeArray
 {
 
   /** Definition name. */
   name = "Float32Array";
 
-  /** Storage constructor. */
-  ctor = Float32Array;
-
-  /** Variable length unless the property supplies a fixed count. */
-  length = -1;
-
-  /**
-   * Returns an independent plain values array.
-   * @cjs Values-bag representation.
-   */
-  static get(target, key, options)
-  {
-    return Array.from(target[key]);
-  }
-
-  /**
-   * Writes converted elements, retaining storage when its length matches.
-   * Exact comparison happens before writing, so overlapping views are safe.
-   * @cjs Changed storage is reported separately from tolerant Carbon equality.
-   */
-  static set(target, key, value, options)
-  {
-    const length = options?.length ?? -1;
-    const current = target[key];
-    if (length !== -1 && (value.length !== length || current.length !== length))
-    {
-      throw new RangeError("Fixed-length array assignment requires matching source and destination lengths.");
-    }
-
-    if (current.length !== value.length)
-    {
-      // Owned variable-length member allocation, never temporary scratch storage.
-      target[key] = new Float32Array(value); // alloc: replacement owned storage only when variable length changes.
-      return true;
-    }
-
-    let changed = false;
-    for (let i = 0; i < value.length; i++)
-    {
-      if (!Object.is(current[i], Math.fround(value[i]))) { changed = true; break; }
-    }
-    if (changed) current.set(value);
-    return changed;
-  }
-
-  /**
-   * Creates an independently owned copy, not a scratch buffer.
-   * @cjs Explicit cloning allocation.
-   */
-  static clone(target, key, options)
-  {
-    return new Float32Array(target[key]); // alloc: explicit independent copy owned by the caller.
-  }
-
-  /**
-   * Checks storage representation across realms.
-   * @cjs JavaScript representation query.
-   */
-  static is(value)
-  {
-    return Object.prototype.toString.call(value) === "[object Float32Array]";
-  }
-
-  /**
-   * Compares elements as JS values, distinguishing signed zero.
-   * @cjs Exact change comparison.
-   */
-  static isExactEqual(a, b)
-  {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return false;
-    return true;
-  }
-
   /**
    * Carbon: IsArrayEqual (blueexposure/BlueVariable.cpp:39-50).
-   * Preserves its NaN comparison quirk: a NaN difference does not reject a pair.
-   * @adapted JS length check replaces the native member's single declared count.
+   * @adapted Rejects differences >= epsilon, preserving the native NaN comparison quirk.
    */
-  static isEqual(a, b)
+  static equalElement(a, b)
   {
-    if (!this.is(a) || !this.is(b)) return false;
-
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++)
-    {
-      if (Math.abs(Math.fround(a[i] - b[i])) >= Math.fround(1e-6)) return false;
-    }
-    return true;
+    return !(Math.abs(Math.fround(a - b)) >= Math.fround(1e-6));
   }
 
-  /**
-   * Compares array representations after Float32 conversion without scratch arrays.
-   * @adapted Uses Carbon float-array comparison after converting each input element.
-   */
-  static isLike(a, b, options)
-  {
-    const length = options?.length ?? -1;
-    if (a.length !== b.length || (length !== -1 && a.length !== length)) return false;
+  /** Typed storage constructor. */
+  static ctor = Float32Array;
 
-    for (let i = 0; i < a.length; i++)
-    {
-      const difference = Math.fround(Math.fround(a[i]) - Math.fround(b[i]));
-      if (Math.abs(difference) >= Math.fround(1e-6)) return false;
-    }
-    return true;
-  }
+  /** Scalar conversion shared with the numeric handler. */
+  static element = CjsGraphTypeFloat32;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeFloat32Array";
