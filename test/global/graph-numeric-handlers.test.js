@@ -67,6 +67,13 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
         assert.equal(handler.is("0x10"), false);
         assert.equal(handler.is(""), false);
         assert.equal(handler.is(String(2n ** 64n)), false);
+        assert.equal(handler.is([ 1, 2 ]), true, "a [high, low] pair is valid input");
+        assert.equal(handler.is([ 1 ]), false);
+        assert.equal(handler.is([ 1, 2, 3 ]), false);
+        assert.equal(handler.is([ 1.5, 0 ]), false);
+        assert.equal(handler.is([ 2 ** 32, 0 ]), false);
+        assert.equal(handler.is([ -(2 ** 31) - 1, 0 ]), false);
+        assert.equal(handler.is([ "1", 2 ]), false);
         assert.equal(handler.isEqual("1", "1"), false, "valid input is not a canonical value");
         assert.equal(handler.isEqual(1n, 1n), true);
         assert.equal(handler.isEqual(1, 1n), false);
@@ -80,6 +87,78 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
     assert.equal(types.CjsGraphTypeUint64.is(-1n), false);
     assert.equal(types.CjsGraphTypeInt64.is(2n ** 63n), false);
 });
+
+test("Int64 and Uint64 store a [high, low] pair as the canonical BigInt", () =>
+{
+    const signed = { value: 0n }, unsigned = { value: 0n };
+
+    assert.equal(types.CjsGraphTypeInt64.set(signed, "value", [ 1, 2 ]), true);
+    assert.equal(signed.value, (1n << 32n) + 2n);
+    assert.equal(types.CjsGraphTypeInt64.set(signed, "value", [ 1, 2 ]), false, "an equal pair is no change");
+
+    assert.equal(types.CjsGraphTypeUint64.set(unsigned, "value", [ 0x80000000, 0 ]), true);
+    assert.equal(unsigned.value, 1n << 63n);
+
+    // The low word never borrows from the high word.
+    assert.equal(types.CjsGraphTypeUint64.convert([ 0, 0xFFFFFFFF ]), 0xFFFFFFFFn);
+    assert.equal(types.CjsGraphTypeUint64.convert([ 0, -1 ]), 0xFFFFFFFFn);
+
+    // The same bits read through each definition's signedness.
+    assert.equal(types.CjsGraphTypeInt64.convert([ 0xFFFFFFFF, 0xFFFFFFFF ]), -1n);
+    assert.equal(types.CjsGraphTypeInt64.convert([ -1, -1 ]), -1n);
+    assert.equal(types.CjsGraphTypeUint64.convert([ 0xFFFFFFFF, 0xFFFFFFFF ]), 2n ** 64n - 1n);
+
+    assert.equal(types.CjsGraphTypeInt64.get(signed, "value"), (1n << 32n) + 2n, "Get writes the canonical form");
+    assert.equal(types.CjsGraphTypeInt64.isLike([ 1, 2 ], (1n << 32n) + 2n), true);
+    assert.equal(types.CjsGraphTypeInt64.isEqual([ 1, 2 ], (1n << 32n) + 2n), false);
+});
+
+test("every array handler takes a plain array through Is and Set, keeping its storage", () =>
+{
+    const handlers = Object.values(types).filter(handler => handler.prototype instanceof types.CjsGraphTypeArray);
+    assert.equal(handlers.length, 21);
+
+    for (const handler of handlers)
+    {
+        const count = handler.elementCount || 3;
+        const big = handler.ctor === BigInt64Array || handler.ctor === BigUint64Array;
+        const plain = Array.from({ length: count }, (_, index) => big ? BigInt(index + 1) : index + 1);
+        const name = handler.className;
+        const storage = new handler.ctor(count), target = { value: storage };
+
+        assert.equal(handler.is(plain), true, name);
+        assert.equal(handler.set(target, "value", plain), true, name);
+        assert.equal(target.value, storage, name);
+        assert.deepEqual(Array.from(storage), plain, name);
+        assert.equal(handler.set(target, "value", plain), false, name);
+        assert.deepEqual(handler.get(target, "value"), plain, name);
+        assert.equal(handler.isLike(plain, storage), handler.hasValueEquality, name);
+        assert.equal(handler.is(plain.slice(1)), handler.elementCount === 0, name);
+    }
+});
+
+for (const ctor of bigArrays)
+{
+    test(`${ctor.name}: a plain array of strings and [high, low] pairs stores canonical values`, () =>
+    {
+        const handler = types[`CjsGraphType${ctor.name}`];
+        const storage = new ctor(3), target = { value: storage };
+        const plain = [ "5", [ 1, 2 ], 7n ];
+        const expected = [ 5n, (1n << 32n) + 2n, 7n ];
+
+        assert.equal(handler.is(plain), true);
+        assert.equal(handler.set(target, "value", plain), true);
+        assert.equal(target.value, storage);
+        assert.deepEqual(Array.from(storage), expected);
+        assert.equal(handler.set(target, "value", plain), false);
+
+        // A variable length change allocates replacement storage through the same path.
+        assert.equal(handler.set(target, "value", [ [ 0, 9 ] ]), true);
+        assert.notEqual(target.value, storage);
+        assert.deepEqual(Array.from(target.value), [ 9n ]);
+        assert.equal(handler.is([ 1, 2 ]), false, "number elements are not 64-bit input, and a pair is not a whole array");
+    });
+}
 
 for (const ctor of [...numericArrays, ...bigArrays])
 {

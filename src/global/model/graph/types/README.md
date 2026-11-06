@@ -87,8 +87,13 @@ is outside this layer.
 Is asks whether a value is valid input: can this value be used to set this thing
 (operator, 2026-11-07). It does not ask whether the value is exactly the stored type,
 so a plain `[1, 2, 3]` passes for a Vector3 and an integer string passes for a 64-bit
-integer. The `[high, low]` pair is not implemented. Numeric Is still checks integer
-range. Handlers do not validate: the graph operation calls Is, and Set does not.
+integer. Numeric Is still checks integer range. Handlers do not validate: the graph
+operation calls Is, and Set does not.
+
+A 64-bit value also takes a plain `[high, low]` pair, in that order. Each word is a
+32-bit pattern, signed or unsigned, and Set stores the canonical BigInt, wrapped to the
+definition's signedness. Typed-array Set accepts a plain array of any of these forms,
+and writes it through convert because native TypedArray.set refuses a pair.
 
 Array Get produces a plain values array. Clone explicitly allocates an owned
 independent typed array. Set retains existing typed storage when sizes match;

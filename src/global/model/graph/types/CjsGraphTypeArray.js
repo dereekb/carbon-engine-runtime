@@ -37,7 +37,8 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
 
   /**
    * Writes only when converted storage differs; preserves fixed storage and overlapping views.
-   * @cjs Native TypedArray.set performs the write. Concrete conversion must agree with it.
+   * @cjs Native TypedArray.set writes a typed source, which may overlap storage. A plain source
+   * cannot, and writes through convert, which also takes forms native set refuses.
    */
   static set(target, key, value)
   {
@@ -46,7 +47,9 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
 
     if (this.elementCount === 0 && current.length !== count)
     {
-      target[key] = new this.ctor(value); // alloc: replacement owned storage only when a variable length changes.
+      const storage = new this.ctor(count); // alloc: replacement owned storage only when a variable length changes.
+      this._write(storage, value, 0);
+      target[key] = storage;
       return true;
     }
 
@@ -54,12 +57,24 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
     {
       if (!Object.is(current[i], this.convert(value[i])))
       {
-        current.set(value);
+        this._write(current, value, i);
         return true;
       }
     }
 
     return false;
+  }
+
+  /** Writes a source into storage from start. @cjs */
+  static _write(storage, value, start)
+  {
+    if (!Array.isArray(value))
+    {
+      storage.set(value);
+      return;
+    }
+
+    for (let i = start; i < value.length; i++) storage[i] = this.convert(value[i]);
   }
 
   /**
