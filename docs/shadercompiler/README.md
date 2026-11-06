@@ -50,9 +50,13 @@ The Metal compiler is tested with Carbon's own MetalConversionTest sources
 passes. Carbon's other check, that Apple's `metal` accepts the output, cannot
 run here, so a Metal stage's program is its MSL text.
 
-Not yet ported: the DX11 and DX12 compilers (they call Microsoft's compilers),
-the Metal ray-tracing path, and the WebGPU and WebGL2 targets with their WGSL
-and GLSL writers.
+Not yet ported: the DX11 and DX12 compilers (they call Microsoft's compilers)
+and the Metal ray-tracing path.
+
+The browser targets are not Carbon's. `EffectCompilerWebGPU` prints WGSL, and
+`EffectCompilerWebGL2` runs the same passes and prints GLSL ES 3.00 with the
+pass block the WebGL2 backend binds from. The WebGL2 target has no compute stage,
+and does not take structured buffers yet.
 
 Every shader embedded in Carbon's own compiler tests parses. Four read-only
 reviews of the front end on 2026-10-07 (grammar actions; scanner and
@@ -243,9 +247,10 @@ one-bone skinning) and `mesh/Tangents.fxh` (Carbon's `UnpackTangentsLegacy`,
 checked on the GPU against `PackTangentsLegacy`).
 
 `scripts/shadercompiler/compile-library.mjs <out>` writes every library
-effect as `graphics/effect.webgpu/cjs/<dir>/<name>.sm_{hi,lo,depth}`, the tree
-a tools-core overlay imports to serve them; they are referenced as
-`res:/graphics/effect/cjs/<dir>/<name>.fx`.
+effect as `graphics/effect.webgpu/cjs/<dir>/<name>.sm_{hi,lo,depth}`, and again
+under `graphics/effect.webgl/`, the trees a tools-core overlay imports to serve
+them; they are referenced as `res:/graphics/effect/cjs/<dir>/<name>.fx`. An
+effect the WebGL2 target refuses is reported and left out of its tree.
 
 Not yet: bundling the library as one JSON map for the browser, and checking
 the layouts against the offsets the compiler computes.
