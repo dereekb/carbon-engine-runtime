@@ -250,18 +250,41 @@ test("a BC3 volume is always decompressed: no extension fills a TEXTURE_3D with 
     assert.equal(called(calls, "compressedTexSubImage3D").length, 0);
 });
 
-test("a BC texture whose base size is not a block multiple is decoded: WebGL2 refuses to store its blocks", () =>
+test("unaligned BC textures keep their compressed mips in block-rounded storage, as on WebGPU", () =>
 {
-    const blocks = new Uint8Array(8 * 4);
-    const { gl, calls, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_BC1_UNORM, 6, 6, 1),
-        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: [ data(blocks, 16, 32) ] },
-        { WEBGL_compressed_texture_s3tc: S3TC });
+    for (const size of [ 627, 125, 9 ])
+    {
+        for (const [ format, blockBytes ] of [ [ PixelFormat.PIXEL_FORMAT_BC1_UNORM, 8 ], [ PixelFormat.PIXEL_FORMAT_BC3_UNORM, 16 ] ])
+        {
+            const mipCount = Math.floor(Math.log2(size)) + 1;
+            const bitmap = new HostBitmap();
+            // DDS uses this creation path; ordinary HostBitmap.Create rejects odd BC sizes.
+            assert.ok(bitmap.CreateFromBitmapDimensions(Tr2BitmapDimensions.create__WidthHeightMipCountFormat(size, size, mipCount, format)));
+            const { desc, initialData } = DescribeBitmap(bitmap);
+            const { gl, calls, result, texture } = create(desc, { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData }, { WEBGL_compressed_texture_s3tc: S3TC });
+            assert.equal(result, ALResult.S_OK);
 
-    assert.equal(result, ALResult.S_OK);
-    assert.equal(called(calls, "texStorage2D")[0][3], gl.RGBA8);
-    assert.equal(called(calls, "compressedTexSubImage2D").length, 0);
-    const upload = called(calls, "texSubImage2D")[0];
-    assert.deepEqual([ upload[5], upload[6] ], [ 6, 6 ], "the logical size, not the padded blocks");
+            const rounded = Math.ceil(size / 4) * 4;
+            const storage = called(calls, "texStorage2D")[0];
+            assert.deepEqual([ storage[4], storage[5] ], [ rounded, rounded ], "padded allocation");
+            assert.equal(texture.GetWidth(), size, "the description keeps the source size");
+            assert.equal(called(calls, "texSubImage2D").length, 0, "nothing was decoded");
+
+            const uploads = called(calls, "compressedTexSubImage2D");
+            assert.equal(uploads.length, mipCount);
+            for (let mip = 0; mip < mipCount; ++mip)
+            {
+                const blocks = Math.ceil(Math.max(1, size >> mip) / 4);
+                const level = Math.max(1, rounded >> mip);
+                const [ , , , , , width, height, , bytes ] = uploads[mip];
+                assert.equal(bytes.byteLength, blocks * blocks * blockBytes, `mip ${mip} is the file's bytes`);
+                assert.equal(Math.ceil(width / 4), blocks, `mip ${mip} block count`);
+                assert.ok(width % 4 === 0 || width === level, `mip ${mip} width ${width} is whole blocks or the level edge ${level}`);
+                assert.ok(height % 4 === 0 || height === level, `mip ${mip} height`);
+            }
+            assert.ok(gl);
+        }
+    }
 });
 
 test("without its extension a BC format falls back to the spec decoder: RGBA8, or float for BC6H", () =>

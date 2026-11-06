@@ -25,8 +25,8 @@
 // - BC FORMATS. S3TC, RGTC and BPTC arrive as WebGL extensions, and no
 //   extension lets a compressed format fill a `TEXTURE_3D`. Where the device
 //   cannot take the blocks, they are decompressed on the CPU - Metal's rule for
-//   the same gap (`Tr2TextureALMetal.mm:166-186`), widened to a missing
-//   extension or a base size not in whole blocks. The DECODER is not Metal's, deliberately (operator, 2026-09-27):
+//   the same gap (`Tr2TextureALMetal.mm:221-236, :276`), widened to a missing
+//   extension. The DECODER is not Metal's, deliberately (operator, 2026-09-27):
 //   Carbon's `BcDecompress` is a CPU helper only its Mac client runs, and it
 //   carries CE-36 and CE-37. EVE on PC decodes BC in D3D11 hardware, to the
 //   specification, so this uses the BC codec's spec decoder
@@ -497,10 +497,8 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     {
       const compressed = COMPRESSED.get(format);
       const volume = desc.GetType() === TextureType.TEX_TYPE_3D;
-      // WebGL2 stores blocks only for a base size in whole blocks; Carbon's shipped textures need not be.
-      const wholeBlocks = desc.GetWidth() % 4 === 0 && desc.GetHeight() % 4 === 0;
 
-      if (compressed && !volume && wholeBlocks && gl.getExtension(compressed.extension))
+      if (compressed && !volume && gl.getExtension(compressed.extension))
       {
         return { ...compressed, compressed: true, decompressed: false, bgra: false };
       }
@@ -563,14 +561,21 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
+    // WebGL2 refuses block storage whose base is not in whole blocks. As in
+    // CjsWebgpuTextureAL, the allocation pads to Carbon's GetMipWidth/Height
+    // (Resources/TriTextureRes.cpp:82-89) and m_desc keeps the source size, so
+    // mip pitches stay the file's. Nothing is decoded or resampled.
+    const storageWidth = layout.compressed ? desc.GetMipWidth(0) : desc.GetWidth();
+    const storageHeight = layout.compressed ? desc.GetMipHeight(0) : desc.GetHeight();
+
     if (target === gl.TEXTURE_3D || target === gl.TEXTURE_2D_ARRAY)
     {
       const depth = target === gl.TEXTURE_3D ? desc.GetDepth() : desc.GetArraySize();
-      gl.texStorage3D(target, mips, layout.internalFormat, desc.GetWidth(), desc.GetHeight(), depth);
+      gl.texStorage3D(target, mips, layout.internalFormat, storageWidth, storageHeight, depth);
     }
     else
     {
-      gl.texStorage2D(target, mips, layout.internalFormat, desc.GetWidth(), desc.GetHeight());
+      gl.texStorage2D(target, mips, layout.internalFormat, storageWidth, storageHeight);
     }
 
     if (initialData)
@@ -673,8 +678,14 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
         bytes = packed;
       }
 
-      if (layered) gl.compressedTexSubImage3D(target, mip, x, y, zOffset, width, height, depth, layout.internalFormat, bytes);
-      else gl.compressedTexSubImage2D(faceTarget, mip, x, y, width, height, layout.internalFormat, bytes);
+      // A compressed upload must be whole blocks or reach the level's edge. On padded
+      // storage the file's mip can be neither, so it widens to its own blocks, clipped
+      // to the level; the block count, and so the bytes, do not change.
+      const uploadWidth = box ? width : Math.min(Math.ceil(width / 4) * 4, Math.max(desc.GetMipWidth(0) >>> mip, 1));
+      const uploadHeight = box ? height : Math.min(Math.ceil(height / 4) * 4, Math.max(desc.GetMipHeight(0) >>> mip, 1));
+
+      if (layered) gl.compressedTexSubImage3D(target, mip, x, y, zOffset, uploadWidth, uploadHeight, depth, layout.internalFormat, bytes);
+      else gl.compressedTexSubImage2D(faceTarget, mip, x, y, uploadWidth, uploadHeight, layout.internalFormat, bytes);
       return;
     }
 
