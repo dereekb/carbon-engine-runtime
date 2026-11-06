@@ -188,13 +188,14 @@ export class CjsGraph
    * Returns an object's values as a plain bag, written from its compiled members.
    * options: policy; refs (default true) writes a shared object once, then _ref, while false
    * writes it at every reference and a cycle never ends; typeTags writes _type where the class
-   * differs from the declared one; forceTypeTags writes it always.
+   * differs from the declared one; forceTypeTags writes it always; copyOverride(object) may
+   * return an object to hold in place of writing a held one, which set then keeps as a reference.
    * Modelled on: YamlWriter::WriteIRoot (blue/src/YamlWriter.cpp:322-376).
    * @cjs Plain values replace YAML events. A second sight anchors the first bag, as YamlWriter does.
    */
   static get(object, options = {})
   {
-    return this.getObject(object, null, this._beginGet(options));
+    return this._writeObject(object, null, this._beginGet(options));
   }
 
   /**
@@ -218,7 +219,9 @@ export class CjsGraph
    * record can be replayed through set. Returns that record, or false when nothing changed.
    * options: policy; validate (default true) runs each handler's IsValidValue on the incoming value;
    * idMap, a Map of id to object, is this set's _id table: its entries resolve _ref, and a record
-   * then holds _ref in place of a live object, with the map holding the object.
+   * then holds _ref in place of a live object, with the map holding the object; initializeHeld
+   * (default true) counts an object read into under a created owner as created, as Copier
+   * initialises every object it fills (Copier.cpp:141, :209).
    * A nested object completes as its own set would, so its owner is told only of its own members.
    * Nothing is completed until references resolve. A failure stops the operation with no
    * rollback of writes already made, and nothing is completed.
@@ -263,7 +266,9 @@ export class CjsGraph
 
   /**
    * Copies values between two objects: get then set. The target keeps its identity.
-   * @cjs A preset, not Carbon's Copier. Nothing outside the source is shared.
+   * Nothing outside the source is shared, as Carbon's Copier copies recursively and shares only
+   * within one copy (Copier.cpp:73-98). options.copyOverride shares more, as m_override does.
+   * @cjs A preset, not Carbon's Copier.
    */
   static copy(source, target, options = {})
   {
@@ -272,7 +277,8 @@ export class CjsGraph
 
   /**
    * Creates a separate graph with the same values and topology: get then from.
-   * @cjs A preset, not Carbon's Copier. Nothing outside the source is shared.
+   * Sharing follows copy.
+   * @cjs A preset, not Carbon's Copier.
    */
   static clone(source, options = {})
   {
@@ -284,8 +290,21 @@ export class CjsGraph
    * Object handlers re-enter here; options is the operation get began.
    * Modelled on: YamlWriter::WriteIRoot (blue/src/YamlWriter.cpp:349-376).
    * @cjs _id and _ref replace YAML anchors and aliases.
+   * The override is Copier::m_override (Copier.cpp:47-58): undefined continues, and a failure throws.
    */
   static getObject(object, type, options)
+  {
+    if (options.copyOverride !== null)
+    {
+      const held = options.copyOverride(object);
+      if (held !== undefined) return held;
+    }
+
+    return this._writeObject(object, type, options);
+  }
+
+  /** Writes an object's bag, or an alias to one already written. @cjs */
+  static _writeObject(object, type, options)
   {
     const info = this._getObjectInfo(object, type);
 
@@ -325,12 +344,18 @@ export class CjsGraph
     if (values._type !== undefined && !this.isType(object, values._type))
       throw new TypeError(`Expected ${info.declared.name} but got _type ${values._type}`);
 
-    return this._setMembers(object, info, values, options);
+    const creating = options.creating;
+    options.creating = creating && options.initializeHeld;
+    const changes = this._setMembers(object, info, values, options);
+    options.creating = creating;
+
+    return changes;
   }
 
   /**
    * Creates the object a bag describes inside a running set, and reads the bag into it.
-   * @cjs Objects read into under a creation count as created: nobody has initialised them.
+   * @cjs Objects read into under a creation count as created unless options.initializeHeld is
+   * false: nobody has initialised them.
    */
   static createObject(values, type, options)
   {
@@ -371,9 +396,30 @@ export class CjsGraph
    */
   static deferReference(holder, key, id, type, record, recordKey, options)
   {
-    const entry = { holder, key, id, type, record, recordKey };
+    const entry = { holder, key, id, type, record, recordKey, fill: null };
     options.pending.push(entry);
     return entry;
+  }
+
+  /**
+   * Records an embedded object to fill by value from an _id.
+   * @cjs A struct has no identity to alias, so the fixup copies once every source is read,
+   * even for a known _id: its object can still be waiting, or part read. The value's own
+   * _id names the held object, so another waiter can chain through it.
+   */
+  static deferValues(fill, value, type, options)
+  {
+    if (value._id !== undefined) this._setAnchor(value._id, fill, options);
+
+    const entry = { holder: null, key: null, id: value._ref, type, record: null, recordKey: null, fill };
+    options.pending.push(entry);
+    return entry;
+  }
+
+  /** Whether a value is a _ref. @cjs */
+  static isReference(value)
+  {
+    return this.isPlain(value) && value._ref !== undefined;
   }
 
   /**
@@ -425,18 +471,12 @@ export class CjsGraph
 
   /**
    * Returns the bag an embedded object is read from.
-   * @cjs Embedded storage keeps its identity, so a live object or a known _ref is copied by
-   * its values. A forward _ref cannot be: nothing holds its values yet.
+   * @cjs Embedded storage keeps its identity, so a live object is copied by its values.
+   * A _ref goes through deferValues instead.
    */
   static getEmbeddedValues(value, options)
   {
-    if (!this.isPlain(value)) return this.get(value, { policy: options.policy, refs: false });
-    if (value._ref === undefined) return value;
-
-    const object = options.anchors.get(value._ref);
-    if (object === undefined) throw new TypeError(`Embedded value cannot alias a forward _ref: ${value._ref}`);
-
-    return this.get(object, { policy: options.policy, refs: false });
+    return this.isPlain(value) ? value : this.get(value, { policy: options.policy, refs: false });
   }
 
   /** The operation record for one get. @cjs Nothing is allocated per member. */
@@ -447,6 +487,7 @@ export class CjsGraph
       refs: options.refs !== false,
       typeTags: options.typeTags === true,
       forceTypeTags: options.forceTypeTags === true,
+      copyOverride: options.copyOverride ?? null,
       written: new Map(),
       anchor: 1,
       member: null
@@ -473,6 +514,7 @@ export class CjsGraph
     return {
       policy: options.policy ?? this.policy,
       validate: options.validate !== false,
+      initializeHeld: options.initializeHeld !== false,
       anchors: options.idMap ?? new Map(),
       idMap: options.idMap ?? null,
       ids: null,
@@ -664,8 +706,16 @@ export class CjsGraph
       if (object === undefined) throw new TypeError(`Unresolved _ref: ${entry.id}`);
 
       this._getObjectInfo(object, entry.type);
+      if (entry.fill !== null) continue;
+
       entry.holder[entry.key] = object;
       entry.record[entry.recordKey] = object;
+    }
+
+    // Fills read references, so they run after every write above.
+    for (const entry of options.pending)
+    {
+      if (entry.fill !== null) this._fill(entry, options);
     }
 
     for (let i = 0; i < options.recorded.length; i += 2)
@@ -678,6 +728,28 @@ export class CjsGraph
       const own = this._getOwnChanges(entry.changes, entry.nested);
       if (own !== false || entry.created) options.policy.complete(entry.object, entry.info, own, entry.created);
     }
+  }
+
+  /**
+   * Copies a forward _ref's values into an embedded object.
+   * @cjs A source that is itself waiting fills first. The cleared fill ends a cycle.
+   */
+  static _fill(entry, options)
+  {
+    const target = entry.fill;
+    if (target === null) return;
+    entry.fill = null;
+
+    const source = options.anchors.get(entry.id);
+    for (const other of options.pending)
+    {
+      if (other.fill === source) this._fill(other, options);
+    }
+
+    if (source === target) return;
+
+    this._setMembers(target, this._getObjectInfo(target, entry.type), this.getEmbeddedValues(source, options), options);
+    if (entry.record !== null) entry.record[entry.recordKey] = target;
   }
 
   /** Applies the top-level values rule: a plain object, or null for no values. @cjs */

@@ -16,13 +16,21 @@ export class CjsGraphTypeIRoot extends CjsGraphTypeObject
    * Reads values into the embedded object. A null is no change; a member holding nothing
    * gets a new object.
    * Modelled on: Blue::DictReader::ReadIRoot.
-   * @cjs A live object or known _ref is copied by its values.
+   * @cjs A live object is copied by its values; a _ref fills once every source is read.
    */
   static set(target, key, value, options)
   {
     if (value === null) return false;
 
     const type = options.member.edge.type;
+
+    if (CjsGraph.isReference(value))
+    {
+      target[key] ??= CjsGraph.createObject({}, type, options);
+      options.deferred = CjsGraph.deferValues(target[key], value, type, options);
+      return true;
+    }
+
     const values = CjsGraph.getEmbeddedValues(value, options);
 
     if (target[key] !== null) return CjsGraph.setObject(target[key], values, type, options);

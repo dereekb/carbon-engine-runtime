@@ -324,6 +324,39 @@ test("a plain array replaces a list in place: objects stay, bags are new, the re
   assert.notEqual(changes.items, items, "the record does not alias the list");
 });
 
+test("order counts: the same objects in another order are a change, reordered in place", () =>
+{
+  const holder = new Holder();
+  const items = holder.items;
+  const a = leaf("a"), b = leaf("b"), c = leaf("c");
+  items.push(a, b, c);
+
+  assert.equal(CjsGraph.set(holder, { items: [ a, b, c ] }), false);
+
+  const changes = CjsGraph.set(holder, { items: [ b, c, a ] });
+  assert.notEqual(changes, false);
+  assert.deepEqual(changes.items, [ b, c, a ]);
+  assert.equal(holder.items, items);
+  assert.equal(items[0], b);
+  assert.equal(items[1], c);
+  assert.equal(items[2], a);
+});
+
+test("a null empties a list in place, and a member holding no list stays that way", () =>
+{
+  const holder = new Holder();
+  const items = holder.items;
+  items.push(leaf("a"));
+
+  assert.deepEqual(CjsGraph.set(holder, { items: null }), { items: [] });
+  assert.equal(holder.items, items);
+  assert.equal(items.length, 0);
+
+  holder.items = null;
+  assert.equal(CjsGraph.set(holder, { items: null }), false);
+  assert.equal(holder.items, null);
+});
+
 test("a list that already matches is no change, including bags and live items", () =>
 {
   const holder = new Holder();
@@ -414,6 +447,84 @@ test("an embedded object keeps its identity, ignores null and copies a live obje
   assert.equal(embed.empty.constructor, Row);
 
   assert.throws(() => CjsGraph.set(embed, { row: { _type: "GraphValueLeaf" } }), /Expected GraphValueRow/);
+});
+
+test("forward _refs fill rows by value, chain through waiting rows, and record the rows", () =>
+{
+  class Rows
+  {
+    source = null;
+    rows = [];
+    more = [];
+  }
+  CjsGraph.define(Rows, { name: "GraphValueRows", members: [
+    { name: "rows", handler: list, edge: { kind: "embed", collection: true, type: Row } },
+    { name: "more", handler: list, edge: { kind: "embed", collection: true, type: Row } },
+    { name: "source", handler: reference, edge: { kind: "ref", type: Row } }
+  ] });
+
+  const object = new Rows();
+  const held = new Row();
+  object.rows.push(held);
+
+  const changes = CjsGraph.set(object, {
+    rows: [ { _ref: 4 } ],
+    more: [ { _id: 9, value: 1 }, { _ref: 4 } ],
+    source: { _id: 4, value: 7 }
+  });
+
+  assert.equal(object.rows[0], held, "the held row is filled, not replaced");
+  assert.equal(held.value, 7);
+  assert.notEqual(object.rows[0], object.source, "a row is a value: it is copied, never aliased");
+  assert.equal(object.more[1].value, 7);
+  assert.equal(changes.rows[0], held);
+
+  // A row waiting on a row that is itself waiting fills after it.
+  const chained = new Rows();
+  CjsGraph.set(chained, {
+    rows: [ { _ref: 1 } ],
+    more: [ { _id: 1, _ref: 2 } ],
+    source: { _id: 2, value: 3 }
+  });
+  assert.equal(chained.more[0].value, 3);
+  assert.equal(chained.rows[0].value, 3, "the waiter on a waiter sees the final value");
+
+  // The same chain, the other way round in the pending order.
+  const reversed = new Rows();
+  CjsGraph.set(reversed, {
+    more: [ { _id: 1, _ref: 2 } ],
+    rows: [ { _ref: 1 } ],
+    source: { _id: 2, value: 3 }
+  });
+  assert.equal(reversed.rows[0].value, 3);
+
+  assert.throws(() => CjsGraph.set(new Rows(), { rows: [ { _ref: 8 } ] }), /Unresolved _ref: 8/);
+  assert.throws(() => CjsGraph.from(Rows, { rows: [ { _ref: 8 } ], source: { _id: 8, _type: "GraphValueLeaf" } }), /not assignable/);
+});
+
+test("a forward _ref on an embedded member fills it, keeping its identity", () =>
+{
+  class Embed
+  {
+    row = new Row();
+    empty = null;
+    source = null;
+  }
+  CjsGraph.define(Embed, { name: "GraphValueEmbedForward", members: [
+    { name: "row", handler: struct, edge: { kind: "embed", type: Row } },
+    { name: "empty", handler: struct, edge: { kind: "embed", type: Row } },
+    { name: "source", handler: reference, edge: { kind: "ref", type: Row } }
+  ] });
+
+  const embed = new Embed(), row = embed.row;
+  const changes = CjsGraph.set(embed, { row: { _ref: 6 }, empty: { _ref: 6 }, source: { _id: 6, value: 2 } });
+
+  assert.equal(embed.row, row);
+  assert.equal(row.value, 2);
+  assert.equal(embed.empty.value, 2);
+  assert.notEqual(embed.empty, embed.source);
+  assert.equal(changes.row, row);
+  assert.equal(changes.empty, embed.empty);
 });
 
 test("from creates declared and tagged classes; an unknown class is an error", () =>
@@ -523,6 +634,59 @@ test("a cycle completes each object once, and nothing completes on failure", () 
   policy.trace.length = 0;
   assert.throws(() => CjsGraph.from(Holder, { child: { name: "x" }, other: { _ref: 8 } }, { policy }), /Unresolved/);
   assert.deepEqual(policy.trace, []);
+});
+
+test("copyOverride shares what it returns, as Copier's m_override does, and the rest is copied", () =>
+{
+  const shared = leaf("shared");
+  const copied = leaf("copied");
+  const holder = new Holder();
+  holder.child = shared;
+  holder.items.push(shared, copied);
+
+  const asked = [];
+  const copyOverride = object =>
+  {
+    asked.push(object.name);
+    if (object === shared) return object;
+  };
+
+  const clone = CjsGraph.clone(holder, { copyOverride });
+  assert.equal(clone.child, shared, "held by reference, not copied");
+  assert.equal(clone.items[0], shared);
+  assert.notEqual(clone.items[1], copied);
+  assert.equal(clone.items[1].name, "copied");
+  assert.deepEqual(asked, [ "shared", "shared", "copied" ], "asked at every sight, as CopyTo does");
+
+  const target = new Holder();
+  assert.notEqual(CjsGraph.copy(holder, target, { copyOverride }), false);
+  assert.equal(target.child, shared);
+
+  const failing = () => { throw new Error("override failed"); };
+  assert.throws(() => CjsGraph.clone(holder, { copyOverride: failing }), /override failed/);
+
+  // Without the option nothing outside the source is shared.
+  assert.notEqual(CjsGraph.clone(holder).child, shared);
+});
+
+test("initializeHeld false leaves a default child under a created owner uncreated", () =>
+{
+  class Parent
+  {
+    name = "";
+    child = new Leaf();
+  }
+  CjsGraph.define(Parent, { name: "GraphValueHeldParent", members: [
+    { name: "name", handler: string },
+    { name: "child", handler: reference, edge: { kind: "ref", type: Leaf } }
+  ] });
+
+  const policy = tracing();
+  CjsGraph.from(Parent, { child: { name: "x" } }, { policy, initializeHeld: false });
+  assert.deepEqual(policy.trace.map(([ type, , created ]) => [ type, created ]), [
+    [ "GraphValueLeaf", false ],
+    [ "GraphValueHeldParent", true ]
+  ]);
 });
 
 test("a default child read under a created owner counts as created", () =>

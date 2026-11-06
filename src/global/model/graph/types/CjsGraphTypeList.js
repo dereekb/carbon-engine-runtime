@@ -35,13 +35,16 @@ export class CjsGraphTypeList
 
   /**
    * Replaces the list's contents in place: objects stay, bags are new, the rest are removed.
-   * A value that already matches the list is no change. A null empties the list.
+   * A value that already matches the list is no change, and order counts: the same objects
+   * in another order are a change. A null empties the list, keeping the list object.
    * Returns false, or the whole new contents as a plain array.
    * @cjs No positional matching of objects. Raw array writes bypass BlueList admission and
    * notification (BlueListUtil.h:206-210); the policy is told at completion.
    */
   static set(target, key, value, options)
   {
+    if (value === null && target[key] === null) return false;
+
     const source = value ?? [];
     const edge = options.member.edge;
     const list = target[key] ??= []; // alloc: a member holding no list gets one.
@@ -82,7 +85,8 @@ export class CjsGraphTypeList
   /**
    * Reads records into a structure list's rows.
    * Modelled on: Blue::DictReader::ReadStructureList.
-   * @cjs Rows are values with no identity, so they do reuse their position.
+   * @cjs Rows are values with no identity, so they do reuse their position. A _ref holds its
+   * row and fills it once every source is read, so it counts as a change.
    */
   static _setRows(list, source, type, options)
   {
@@ -90,9 +94,19 @@ export class CjsGraphTypeList
 
     for (let i = 0; i < source.length; i++)
     {
+      const held = i < list.length && list[i] !== null;
+
+      if (CjsGraph.isReference(source[i]))
+      {
+        if (!held) list[i] = CjsGraph.createObject({}, type, options);
+        CjsGraph.deferValues(list[i], source[i], type, options);
+        changed = true;
+        continue;
+      }
+
       const values = CjsGraph.getEmbeddedValues(source[i], options);
 
-      if (i < list.length && list[i] !== null)
+      if (held)
       {
         if (CjsGraph.setObject(list[i], values, type, options) !== false) changed = true;
       }
