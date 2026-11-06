@@ -42,9 +42,9 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    * Writes only when converted storage differs; preserves fixed storage and overlapping views.
    * @cjs Native TypedArray.set performs the write. Concrete conversion must agree with it.
    */
-  static set(target, key, value, options)
+  static set(target, key, value, options = {})
   {
-    const length = options?.length ?? this.defaultLength;
+    const length = options.length ?? this.defaultLength;
     const current = target[key];
     if (length !== -1 && (value.length !== length || current.length !== length))
     {
@@ -131,9 +131,9 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    * Compares converted representations without allocating scratch arrays.
    * @cjs Same conversion as storage.
    */
-  static isLike(a, b, options)
+  static isLike(a, b, options = {})
   {
-    const length = options?.length ?? this.defaultLength;
+    const length = options.length ?? this.defaultLength;
     if (!this.hasValueEquality || a.length !== b.length || (length !== -1 && a.length !== length)) return false;
     for (let i = 0; i < a.length; i++)
     {
