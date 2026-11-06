@@ -17,14 +17,18 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
  */
 export class CjsBlueResManNotify
 {
-  /** Stable identity for this internal, non-serializable helper. */
-  static className = "CjsBlueResManNotify";
 
   /** Owning manager supplies the activity clock and lease policy. */
   _resMan = null;
 
   /** Manager diagnostic channel, shared rather than registered again. */
   _channel = null;
+
+  /** @cjs Persistent owner/resource/holder/key links, compacted during Update. */
+  _targets = [];
+
+  /** @cjs Owner and resource index for allocation-free per-use link renewal. */
+  _targetsByOwner = new Map();
 
   /**
    * Retains the owning manager and its diagnostic channel.
@@ -37,12 +41,6 @@ export class CjsBlueResManNotify
     this._resMan = resMan;
     this._channel = channel;
   }
-
-  /** @cjs Persistent owner/resource/holder/key links, compacted during Update. */
-  _targets = [];
-
-  /** @cjs Owner and resource index for allocation-free per-use link renewal. */
-  _targetsByOwner = new Map();
 
   /**
    * Registers an owner's resource property and rebuilds immediately if prepared.
@@ -64,10 +62,21 @@ export class CjsBlueResManNotify
     {
       throw new TypeError("notify.Add requires the holder and key holding the resource.");
     }
+
     let resources = this._targetsByOwner.get(owner);
-    if (!resources) this._targetsByOwner.set(owner, resources = new Map());
+    if (!resources)
+    {
+      resources = new Map();
+      this._targetsByOwner.set(owner, resources);
+    }
+
     let entries = resources.get(resource);
-    if (!entries) resources.set(resource, entries = []);
+    if (!entries)
+    {
+      entries = [];
+      resources.set(resource, entries);
+    }
+
     const now = this._resMan.motherLode.GetActivityTime();
     for (let i = 0; i < entries.length; i++)
     {
@@ -77,12 +86,19 @@ export class CjsBlueResManNotify
         return;
       }
     }
-    for (let i = 0; i < entries.length; i++) entries[i].lastUsed = now;
+    for (let i = 0; i < entries.length; i++)
+    {
+      entries[i].lastUsed = now;
+    }
+
     const firstLink = entries.length === 0;
     const entry = { owner, resource, holder, key, isMap, lastUsed: now, active: true };
     entries.push(entry);
     this._targets.push(entry);
-    if (firstLink && resource.IsPrepared()) owner.RebuildCachedData(resource);
+    if (firstLink && resource.IsPrepared())
+    {
+      owner.RebuildCachedData(resource);
+    }
   }
 
   /**
@@ -98,8 +114,15 @@ export class CjsBlueResManNotify
   {
     const resources = this._targetsByOwner.get(owner);
     const entries = resources?.get(resource);
-    if (!entries) return;
-    while (entries.length) this._RemoveLink(entries[entries.length - 1]);
+    if (!entries)
+    {
+      return;
+    }
+
+    while (entries.length)
+    {
+      this._RemoveLink(entries[entries.length - 1]);
+    }
   }
 
   /**
@@ -113,16 +136,25 @@ export class CjsBlueResManNotify
   KeepAlive(owner, resource)
   {
     const entries = this._targetsByOwner.get(owner)?.get(resource);
-    if (!entries) return false;
+    if (!entries)
+    {
+      return false;
+    }
+
     const now = this._resMan.activityTime || this._resMan.motherLode.GetActivityTime();
     let renewed = false;
     for (let i = 0; i < entries.length; i++)
     {
       const entry = entries[i];
-      if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource) continue;
+      if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
+      {
+        continue;
+      }
+
       entry.lastUsed = now;
       renewed = true;
     }
+
     return renewed;
   }
 
@@ -161,12 +193,24 @@ export class CjsBlueResManNotify
    */
   _RemoveLink(entry)
   {
-    if (!entry.active) return;
+    if (!entry.active)
+    {
+      return;
+    }
+
     const resources = this._targetsByOwner.get(entry.owner);
     const entries = resources.get(entry.resource);
     entries.splice(entries.indexOf(entry), 1);
-    if (!entries.length) resources.delete(entry.resource);
-    if (!resources.size) this._targetsByOwner.delete(entry.owner);
+    if (!entries.length)
+    {
+      resources.delete(entry.resource);
+    }
+
+    if (!resources.size)
+    {
+      this._targetsByOwner.delete(entry.owner);
+    }
+
     entry.active = false;
     entry.owner = entry.resource = entry.holder = entry.key = null;
   }
@@ -192,27 +236,41 @@ export class CjsBlueResManNotify
       CcpLog.CCP_LOGWARN_CH(this._channel, "Resource owner replaced %s without notify.Remove (%s)", String(key), resource.GetPath());
       return;
     }
+
     const slots = this._targetsByOwner.get(owner).get(resource)
       .map(link => ({ holder: link.holder, key: link.key, isMap: link.isMap }));
     this.Remove(owner, resource);
     owner.ReleaseCachedData(resource);
+
     for (let i = 0; i < slots.length; i++)
     {
-      const { holder, key, isMap } = slots[i];
-      if (isMap)
+      const slot = slots[i];
+      const holder = slot.holder;
+      const key = slot.key;
+      if (slot.isMap)
       {
-        if (holder.get(key) === resource) holder.delete(key);
+        if (holder.get(key) === resource)
+        {
+          holder.delete(key);
+        }
       }
-      else if (holder[key] === resource) holder[key] = null;
+      else if (holder[key] === resource)
+      {
+        holder[key] = null;
+      }
     }
+
     // A setter can re-register another alias while the remaining slots are
     // still being cleared. Drop only those new links whose slot is now empty;
     // keep a callback's genuinely new resource slot intact.
     const remaining = this._targetsByOwner.get(owner)?.get(resource)?.slice() ?? [];
-    for (const link of remaining)
+    for (let i = 0; i < remaining.length; i++)
     {
+      const link = remaining[i];
       if ((link.isMap ? link.holder.get(link.key) : link.holder[link.key]) !== resource)
+      {
         this._RemoveLink(link);
+      }
     }
   }
 
@@ -228,19 +286,28 @@ export class CjsBlueResManNotify
     const time = now ?? this._resMan.motherLode.GetActivityTime();
     const seconds = this._resMan.leaseSeconds ?? (this._resMan._autoPurgePolicy?.maxIdleMilliseconds ?? 30000) / 1000;
     assertNonNegativeNumber(seconds, "BlueResMan leaseSeconds");
+
     const expiry = time - seconds * 1000;
     const entries = this._targets;
     const count = entries.length;
     for (let i = 0; i < count; i++)
     {
       const entry = entries[i];
-      if (entry.active && entry.lastUsed < expiry) this._ExpireLink(entry);
+      if (entry.active && entry.lastUsed < expiry)
+      {
+        this._ExpireLink(entry);
+      }
     }
+
     let kept = 0;
     for (let i = 0; i < entries.length; i++)
     {
-      if (entries[i].active) entries[kept++] = entries[i];
+      if (entries[i].active)
+      {
+        entries[kept++] = entries[i];
+      }
     }
+
     entries.length = kept;
   }
 
@@ -284,17 +351,31 @@ export class CjsBlueResManNotify
     for (let i = 0; i < entries.length; i++)
     {
       const entry = entries[i];
-      if (!entry.active) continue;
+      if (!entry.active)
+      {
+        continue;
+      }
+
       const owner = entry.owner;
       if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
       {
         this._ExpireLink(entry);
         continue;
       }
-      if (notified.has(owner)) continue;
+      if (notified.has(owner))
+      {
+        continue;
+      }
+
       notified.add(owner);
-      if (prepared) owner.RebuildCachedData(resource);
-      else owner.ReleaseCachedData(resource);
+      if (prepared)
+      {
+        owner.RebuildCachedData(resource);
+      }
+      else
+      {
+        owner.ReleaseCachedData(resource);
+      }
     }
   }
 
@@ -311,8 +392,19 @@ export class CjsBlueResManNotify
       : this._targets.filter(entry => entry.active && entry.resource === resource);
     for (let i = 0; i < links.length; i++)
     {
-      if (links[i].active) this._ExpireLink(links[i]);
+      if (links[i].active)
+      {
+        this._ExpireLink(links[i]);
+      }
     }
-    if (resource === null) this._targets.length = 0;
+
+    if (resource === null)
+    {
+      this._targets.length = 0;
+    }
   }
+
+  /** Stable identity for this internal, non-serializable helper. */
+  static className = "CjsBlueResManNotify";
+
 }
