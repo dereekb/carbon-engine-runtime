@@ -280,7 +280,7 @@ export class BlueAsyncRes
    * Renews this resource and the calling owner's registered links before
    * answering. A failed load stays failed until an explicit Reload.
    *
-   * @adapted Native references guarantee lifetime; manager leases require use
+   * @adapted Native references guarantee lifetime; manager links expire without use
    *   to renew both the resource and its owner links in JavaScript.
    * @param {object} [owner] Registered owner using derived resource data.
    * @returns {boolean}

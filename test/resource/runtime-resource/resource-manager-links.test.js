@@ -9,7 +9,7 @@ function fixture()
 {
   let time = 0;
   const manager = new BlueResMan({ motherLode: new MotherLode({ now: () => time }), autoPurgePolicy: false });
-  manager.leaseSeconds = 1;
+  manager.linkExpirySeconds = 1;
   const resource = new BlueAsyncRes();
   const calls = [];
   const owner = {
@@ -47,16 +47,16 @@ test("manager notification tracking is isolated and remains usable after Clear",
   second.manager.Clear();
 });
 
-test("notify.Update reads its owner's current clock and lease policy", () =>
+test("notify.Update reads its owner's current clock and link expiry", () =>
 {
   const { manager, resource, owner, advance } = fixture();
   manager.notify.Add(owner, resource, owner, "resource");
   advance(1100);
-  manager.leaseSeconds = 2;
+  manager.linkExpirySeconds = 2;
   manager.notify.Update();
   assert.equal(owner.resource, resource);
 
-  manager.leaseSeconds = null;
+  manager.linkExpirySeconds = null;
   manager.SetAutoPurgePolicy({ maxIdleMilliseconds: 1000 });
   manager.notify.Update();
   assert.equal(owner.resource, null);
@@ -97,7 +97,7 @@ test("waiting owners rebuild on completion and notification tolerates setter rem
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
 });
 
-test("lease renewal is per owner; expiry calls the accessor and preserves a busy peer", () =>
+test("link renewal is per owner; expiry calls the accessor and preserves a busy peer", () =>
 {
   const state = fixture();
   const { manager, resource, owner, calls } = state;
@@ -303,5 +303,84 @@ test("map links expire by key and preserve replacements installed before or duri
   manager.notify.Add(owner, resource, holder, "third");
   advance(2200);
   manager.PurgeInactive({ time: 2200 });
-  assert.equal(holder.has("third"), false);
+  assert.equal(holder.has("third"), true, "expiry never drops a path");
+  assert.equal(holder.get("third"), null);
+});
+
+test("a throwing owner still loses its slot, and the sweep finishes every other link", () =>
+{
+  const { manager, resource, owner, advance } = fixture();
+  const second = new BlueAsyncRes();
+  const other = {
+    resource: second,
+    RebuildCachedData() {},
+    ReleaseCachedData() { throw new Error("second failed"); }
+  };
+  const third = new BlueAsyncRes();
+  const last = { resource: third, RebuildCachedData() {}, ReleaseCachedData() {} };
+  owner.ReleaseCachedData = () => { throw new Error("first failed"); };
+  manager.notify.Add(owner, resource, owner, "resource");
+  manager.notify.Add(other, second, other, "resource");
+  manager.notify.Add(last, third, last, "resource");
+  advance(1100);
+
+  assert.throws(() => manager.notify.Update(1100), error =>
+  {
+    assert.ok(error instanceof AggregateError);
+    assert.deepEqual(error.errors.map(item => item.message), [ "first failed", "second failed" ]);
+    return true;
+  });
+
+  assert.equal(owner.resource, null);
+  assert.equal(other.resource, null);
+  assert.equal(last.resource, null);
+  assert.equal(manager.notify._targets.length, 0, "compaction still ran");
+  assert.equal(manager.notify._targetsByResource.size, 0);
+});
+
+test("a throwing owner does not stop Clear from clearing the others", () =>
+{
+  const { manager, resource, owner } = fixture();
+  const other = { resource, RebuildCachedData() {}, ReleaseCachedData() {} };
+  owner.ReleaseCachedData = () => { throw new Error("failed"); };
+  manager.notify.Add(owner, resource, owner, "resource");
+  manager.notify.Add(other, resource, other, "resource");
+
+  assert.throws(() => manager.notify.Clear(resource), AggregateError);
+  assert.equal(owner.resource, null);
+  assert.equal(other.resource, null);
+});
+
+test("the resource index follows Add and Remove, and dispatch reaches only that resource's owners", () =>
+{
+  const { manager, resource, owner, calls } = fixture();
+  const unrelated = new BlueAsyncRes();
+  const bystander = {
+    resource: unrelated,
+    RebuildCachedData() { throw new Error("wrong resource"); },
+    ReleaseCachedData() { throw new Error("wrong resource"); }
+  };
+  manager.notify.Add(owner, resource, owner, "resource");
+  manager.notify.Add(bystander, unrelated, bystander, "resource");
+  assert.equal(manager.notify._targetsByResource.get(resource).length, 1);
+
+  manager.notify.RebuildCachedData(resource);
+  manager.notify.ReleaseCachedData(resource);
+  assert.deepEqual(calls.map(call => call[0]), [ "rebuild", "release" ]);
+
+  manager.notify.Remove(owner, resource);
+  assert.equal(manager.notify._targetsByResource.has(resource), false);
+  assert.equal(manager.notify.GetByResource(resource).length, 0);
+  assert.equal(manager.notify.GetByResource(unrelated).length, 1);
+});
+
+test("link expiry falls back to the policy, then the default when sweeping is off", () =>
+{
+  const { manager } = fixture();
+  manager.linkExpirySeconds = null;
+  assert.equal(manager.GetLinkExpirySeconds(), BlueResMan.defaultAutoPurgePolicy.maxIdleMilliseconds / 1000);
+  manager.SetAutoPurgePolicy({ maxIdleMilliseconds: 2000 });
+  assert.equal(manager.GetLinkExpirySeconds(), 2);
+  manager.linkExpirySeconds = 5;
+  assert.equal(manager.GetLinkExpirySeconds(), 5);
 });

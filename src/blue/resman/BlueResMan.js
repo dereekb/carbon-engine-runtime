@@ -233,8 +233,8 @@ export class BlueResMan
    */
   static defaultAutoPurgePolicy = { intervalMilliseconds: 1000, maxIdleMilliseconds: 30000 };
 
-  /** @cjs Owner-link lease in seconds; null follows the resource inactivity policy. */
-  leaseSeconds = null;
+  /** @cjs Seconds an unrenewed owner link lives; null follows the resource inactivity policy. */
+  linkExpirySeconds = null;
 
   /** @cjs Browser owner-link tracking; native resource callbacks remain on BlueAsyncRes. */
   notify = new CjsBlueResManNotify(this, s_ch);
@@ -2174,7 +2174,7 @@ export class BlueResMan
    */
   PurgeInactive(options = {})
   {
-    this.notify.Update(options.time);
+    this.notify.Update(options.time ?? this.motherLode.GetActivityTime());
     const resources = this.motherLode.PurgeInactive(options);
     const objects = this.loadObjectCache.PurgeInactive(options);
     return Object.freeze({
@@ -2207,6 +2207,24 @@ export class BlueResMan
     this._autoPurgePolicy = normalizeAutoPurgePolicy(policy, () => this.motherLode.GetActivityTime());
     this._lastAutoPurgeTime = null;
     return this;
+  }
+
+  /**
+   * Seconds an unrenewed owner link lives: `linkExpirySeconds`, else the
+   * automatic policy's idle limit, else the default policy's when sweeping is
+   * off and a host runs explicit sweeps.
+   *
+   * @cjs JavaScript owner links expire because destructors are not guaranteed.
+   * @implemented
+   * @returns {number} Expiry in seconds.
+   */
+  GetLinkExpirySeconds()
+  {
+    if (this.linkExpirySeconds !== null) return this.linkExpirySeconds;
+
+    const idle = this._autoPurgePolicy?.maxIdleMilliseconds ?? BlueResMan.defaultAutoPurgePolicy.maxIdleMilliseconds;
+
+    return idle / 1000;
   }
 
   /**

@@ -48,15 +48,19 @@ later dependencies from renewing. This timestamp renewal stands in for Carbon's
 reference lifetime; it does not imply success. The former `EnsureGood()` alias
 is removed; callers use `IsGood()`.
 
-The manager provides `AddNotifyTarget(owner, resource, holder, key)` and
-`RemoveNotifyTarget(owner, resource)`. Registration immediately rebuilds prepared
+`resMan.notify` provides `Add(owner, resource, holder, key)` and
+`Remove(owner, resource)`. Registration immediately rebuilds prepared
 resources. Load/reload dispatches `RebuildCachedData(resource)`; reload and failure
 dispatch `ReleaseCachedData(resource)`. Unrenewed links expire in `PurgeInactive`:
-release cached data, clear the matching object property through its setter or
-delete the matching Map entry, and remove the link. A replacement is never cleared. Explicit destruction
-must still remove links. `GetNotifyTargetsByOwner` and `GetNotifyTargetsByResource`
-return diagnostic snapshots. This manager ownership is provisional until
-destruction can reliably unregister targets.
+release cached data, set the matching object property to null through its setter or
+set the matching Map value to null, and remove the link. Expiry drops resources,
+never paths: a Map slot keeps its key, and the owner reloads at use. A replacement
+is never cleared. A callback that throws does not stop the walk; failures are
+rethrown together as an `AggregateError`. Explicit destruction must still remove
+links. `GetByOwner` and `GetByResource` return diagnostic snapshots.
+`linkExpirySeconds` sets how long an unrenewed link lives, and otherwise it follows
+the inactivity policy. This manager ownership is provisional until destruction can
+reliably unregister targets.
 
 `Tr2Effect` registers through its resource property setter, removes links on
 replacement/destruction, and checks readiness before rendering. Expired internal

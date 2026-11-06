@@ -6,19 +6,24 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
  *
  * @cjs JavaScript has no deterministic destructor or last-reference notification.
  *   One helper belongs to each BlueResMan; the helper reads activity time and
- *   lease policy from its owning manager. It owns links, not resource loading or
+ *   link expiry from its owning manager. It owns links, not resource loading or
  *   eviction. Explicit owner teardown still unregisters immediately.
+ *
+ *   Expiry drops resources, never paths: a path is part of an object's values,
+ *   so an expired Map slot keeps its key with a null value (as Carbon's
+ *   m_secondaryGrannyRes holds a path with nullptr, Tr2GrannyAnimation.cpp:1274)
+ *   and an expired property is set to null. The owner reloads at use.
  *
  * Native review: BlueAsyncRes.h:23-56 and BlueAsyncRes.cpp:261-368 provide
  * per-resource callbacks; MotherLode.cpp:329-401 handles native last-reference
- * lifetime. BlueResMan.h and IBlueResMan.h have no owner/property lease registry.
+ * lifetime. BlueResMan.h and IBlueResMan.h have no owner/property link registry.
  * Native notification methods stay on BlueAsyncRes; this is the browser tracking
  * mechanism exposed as resMan.notify, not another native type.
  */
 export class CjsBlueResManNotify
 {
 
-  /** Owning manager supplies the activity clock and lease policy. */
+  /** Owning manager supplies the activity clock and link expiry. */
   _resMan = null;
 
   /** Manager diagnostic channel, shared rather than registered again. */
@@ -29,6 +34,9 @@ export class CjsBlueResManNotify
 
   /** @cjs Owner and resource index for allocation-free per-use link renewal. */
   _targetsByOwner = new Map();
+
+  /** @cjs Resource index, so dispatch and Clear(resource) never scan every link. */
+  _targetsByResource = new Map();
 
   /**
    * Retains the owning manager and its diagnostic channel.
@@ -77,7 +85,7 @@ export class CjsBlueResManNotify
       resources.set(resource, entries);
     }
 
-    const now = this._resMan.motherLode.GetActivityTime();
+    const now = this._Now();
     for (let i = 0; i < entries.length; i++)
     {
       if (entries[i].holder === holder && entries[i].key === key)
@@ -95,6 +103,17 @@ export class CjsBlueResManNotify
     const entry = { owner, resource, holder, key, isMap, lastUsed: now, active: true };
     entries.push(entry);
     this._targets.push(entry);
+
+    const byResource = this._targetsByResource.get(resource);
+    if (byResource)
+    {
+      byResource.push(entry);
+    }
+    else
+    {
+      this._targetsByResource.set(resource, [ entry ]);
+    }
+
     if (firstLink && resource.IsPrepared())
     {
       owner.RebuildCachedData(resource);
@@ -141,7 +160,7 @@ export class CjsBlueResManNotify
       return false;
     }
 
-    const now = this._resMan.activityTime || this._resMan.motherLode.GetActivityTime();
+    const now = this._Now();
     let renewed = false;
     for (let i = 0; i < entries.length; i++)
     {
@@ -180,7 +199,7 @@ export class CjsBlueResManNotify
    */
   GetByResource(resource)
   {
-    return this._targets.filter(entry => entry.active && entry.resource === resource)
+    return (this._targetsByResource.get(resource) ?? [])
       .map(entry => ({ owner: entry.owner, resource: entry.resource, holder: entry.holder, key: entry.key, lastUsed: entry.lastUsed }));
   }
 
@@ -211,21 +230,30 @@ export class CjsBlueResManNotify
       this._targetsByOwner.delete(entry.owner);
     }
 
+    const byResource = this._targetsByResource.get(entry.resource);
+    byResource.splice(byResource.indexOf(entry), 1);
+    if (!byResource.length)
+    {
+      this._targetsByResource.delete(entry.resource);
+    }
+
     entry.active = false;
     entry.owner = entry.resource = entry.holder = entry.key = null;
   }
 
   /**
-   * Releases an expired link and clears its still-matching owner property.
+   * Releases an expired link and clears its still-matching owner slot.
    * @cjs Revisit aliveness checks once Destruct exists. Explicit Destruct must
    *   remove links; expiry only bounds retention for owners that never clean up.
    *   Assignment deliberately invokes accessors. A callback that replaces the
-   *   property must not have its replacement cleared by this expiry.
+   *   property must not have its replacement cleared by this expiry. A failing
+   *   callback is collected, so the slot still clears and the walk continues.
    * @implemented
    * @param {object} entry Link to expire.
+   * @param {Error[]} failures Receives what the owner's callbacks threw.
    * @returns {void}
    */
-  _ExpireLink(entry)
+  _ExpireLink(entry, failures)
   {
     const owner = entry.owner;
     const resource = entry.resource;
@@ -240,23 +268,39 @@ export class CjsBlueResManNotify
     const slots = this._targetsByOwner.get(owner).get(resource)
       .map(link => ({ holder: link.holder, key: link.key, isMap: link.isMap }));
     this.Remove(owner, resource);
-    owner.ReleaseCachedData(resource);
+
+    try
+    {
+      owner.ReleaseCachedData(resource);
+    }
+    catch (error)
+    {
+      failures.push(error);
+    }
 
     for (let i = 0; i < slots.length; i++)
     {
       const slot = slots[i];
       const holder = slot.holder;
       const key = slot.key;
-      if (slot.isMap)
+
+      try
       {
-        if (holder.get(key) === resource)
+        if (slot.isMap)
         {
-          holder.delete(key);
+          if (holder.get(key) === resource)
+          {
+            holder.set(key, null);
+          }
+        }
+        else if (holder[key] === resource)
+        {
+          holder[key] = null;
         }
       }
-      else if (holder[key] === resource)
+      catch (error)
       {
-        holder[key] = null;
+        failures.push(error);
       }
     }
 
@@ -280,22 +324,24 @@ export class CjsBlueResManNotify
    * @implemented
    * @param {number|null} [now=null] Explicit sweep timestamp, otherwise the manager activity clock.
    * @returns {void}
+   * @throws {AggregateError} If owners' callbacks failed; every due link still expired.
    */
   Update(now = null)
   {
-    const time = now ?? this._resMan.motherLode.GetActivityTime();
-    const seconds = this._resMan.leaseSeconds ?? (this._resMan._autoPurgePolicy?.maxIdleMilliseconds ?? 30000) / 1000;
-    assertNonNegativeNumber(seconds, "BlueResMan leaseSeconds");
+    const time = now ?? this._Now();
+    const seconds = this._resMan.GetLinkExpirySeconds();
+    assertNonNegativeNumber(seconds, "BlueResMan linkExpirySeconds");
 
     const expiry = time - seconds * 1000;
     const entries = this._targets;
     const count = entries.length;
+    const failures = [];
     for (let i = 0; i < count; i++)
     {
       const entry = entries[i];
       if (entry.active && entry.lastUsed < expiry)
       {
-        this._ExpireLink(entry);
+        this._ExpireLink(entry, failures);
       }
     }
 
@@ -309,6 +355,8 @@ export class CjsBlueResManNotify
     }
 
     entries.length = kept;
+
+    this._ThrowFailures(failures, "expiry");
   }
 
   /**
@@ -338,16 +386,24 @@ export class CjsBlueResManNotify
   /**
    * Dispatches a stable notification walk, once per owner/resource pair.
    * @cjs Revisit aliveness checks once Destruct exists. Until explicit teardown
-   *   removes a dead owner's links, the manager retains it until lease expiry.
+   *   removes a dead owner's links, the manager retains it until the link expires.
    * @implemented
    * @param {BlueAsyncRes} resource Resource whose state changed.
    * @param {boolean} prepared True for rebuild, false for release.
    * @returns {void}
+   * @throws {AggregateError} If expiring a replaced slot's link failed.
    */
   _Notify(resource, prepared)
   {
-    const entries = this._targets.filter(entry => entry.active && entry.resource === resource);
+    const indexed = this._targetsByResource.get(resource);
+    if (!indexed)
+    {
+      return;
+    }
+
+    const entries = indexed.slice();
     const notified = new Set();
+    const failures = [];
     for (let i = 0; i < entries.length; i++)
     {
       const entry = entries[i];
@@ -359,7 +415,7 @@ export class CjsBlueResManNotify
       const owner = entry.owner;
       if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
       {
-        this._ExpireLink(entry);
+        this._ExpireLink(entry, failures);
         continue;
       }
       if (notified.has(owner))
@@ -377,6 +433,8 @@ export class CjsBlueResManNotify
         owner.ReleaseCachedData(resource);
       }
     }
+
+    this._ThrowFailures(failures, "notification");
   }
 
   /**
@@ -384,23 +442,57 @@ export class CjsBlueResManNotify
    * @implemented
    * @param {BlueAsyncRes|null} [resource=null] Resource to detach; null clears every link.
    * @returns {void}
+   * @throws {AggregateError} If owners' callbacks failed; every link still cleared.
    */
   Clear(resource = null)
   {
     const links = resource === null
       ? this._targets.slice()
-      : this._targets.filter(entry => entry.active && entry.resource === resource);
+      : (this._targetsByResource.get(resource) ?? []).slice();
+    const failures = [];
     for (let i = 0; i < links.length; i++)
     {
       if (links[i].active)
       {
-        this._ExpireLink(links[i]);
+        this._ExpireLink(links[i], failures);
       }
     }
 
     if (resource === null)
     {
       this._targets.length = 0;
+    }
+
+    this._ThrowFailures(failures, "clear");
+  }
+
+  /**
+   * The one clock for link times: the manager's per-tick time, or a direct read
+   * before its first tick.
+   * @cjs
+   * @implemented
+   * @returns {number} Current activity time in milliseconds.
+   */
+  _Now()
+  {
+    return this._resMan.activityTime || this._resMan.motherLode.GetActivityTime();
+  }
+
+  /**
+   * Rethrows what owners' callbacks threw once a walk has finished, as
+   * MotherLode reports cleanup failures.
+   * @cjs
+   * @implemented
+   * @param {Error[]} failures Collected errors.
+   * @param {string} operation Walk that collected them.
+   * @returns {void}
+   * @throws {AggregateError} If any were collected.
+   */
+  _ThrowFailures(failures, operation)
+  {
+    if (failures.length)
+    {
+      throw new AggregateError(failures, "BlueResMan notify " + operation + " failed.");
     }
   }
 
