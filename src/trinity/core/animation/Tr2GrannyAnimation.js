@@ -215,6 +215,12 @@ export class Tr2GrannyAnimation extends IRoot
    */
   _attachedPath = "";
 
+  /** @cjs Factory suffix of the attached resource, so its reload is the same handle. */
+  _attachedExt = "";
+
+  /** @cjs Factory suffix of each secondary, kept with its path across expiry. */
+  _secondaryExts = new Map();
+
 
   _morphAnimations = new Map();
 
@@ -376,6 +382,7 @@ export class Tr2GrannyAnimation extends IRoot
     this._grannyNeedsReload = false;
     const attached = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
     this._attachedPath = attached ? attached.GetPath() : "";
+    this._attachedExt = attached ? attached.GetExt() : "";
     return this.RebuildCachedData();
   }
 
@@ -405,6 +412,7 @@ export class Tr2GrannyAnimation extends IRoot
     this.resPath_ = "";
     this._resolvedPath = "";
     this._attachedPath = "";
+    this._attachedExt = "";
     this.grannyRes = resource ?? null;
     this._grannyNeedsReload = false;
     const initialized = this.RebuildCachedData();
@@ -909,7 +917,7 @@ export class Tr2GrannyAnimation extends IRoot
       const path = this.resPath_ || this._attachedPath;
       if (path)
       {
-        this.grannyRes = this._AcquireResource(path, this.resPath_ ? "raw" : "");
+        this.grannyRes = this._AcquireResource(path, this.resPath_ ? "raw" : this._attachedExt);
         this._resolvedPath = this.resPath_;
         if (!this._initialized) this.RebuildCachedData();
       }
@@ -949,13 +957,14 @@ export class Tr2GrannyAnimation extends IRoot
    * Carbon: Tr2GrannyAnimation::LoadSecondaryResPath (Tr2GrannyAnimation.cpp:346-360).
    *
    * @adapted Acquisition goes through _AcquireResource and notification links
-   *   through SetSecondaryGrannyResource.
+   *   through SetSecondaryGrannyResource. A path first attached as an ordinary
+   *   geometry reloads as one; any other takes Carbon's "raw" route.
    * @param {string} path Secondary clip path.
    * @returns {boolean} Whether the slot was set.
    */
   _LoadSecondaryResPath(path)
   {
-    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path, "raw"));
+    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path, this._secondaryExts.get(path) ?? "raw"));
   }
 
   /**
@@ -1243,7 +1252,11 @@ export class Tr2GrannyAnimation extends IRoot
           blue.resMan.notify.Add(this, oldResource, this._secondaryResources, otherPath);
     }
     const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
-    if (current) blue.resMan.notify.Add(this, current, this._secondaryResources, path);
+    if (current)
+    {
+      this._secondaryExts.set(path, current.GetExt());
+      blue.resMan.notify.Add(this, current, this._secondaryResources, path);
+    }
     return true;
   }
 
@@ -2467,9 +2480,11 @@ export class Tr2GrannyAnimation extends IRoot
   {
     for (const resource of this._secondaryResources.values()) blue.resMan.notify.Remove(this, resource);
     this._secondaryResources.clear();
+    this._secondaryExts.clear();
     this.grannyRes = null;
     this._grannyNeedsReload = false;
     this._attachedPath = "";
+    this._attachedExt = "";
     this._sharedGeometry = false;
     this.Cleanup();
   }

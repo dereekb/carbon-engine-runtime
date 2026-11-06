@@ -34,9 +34,10 @@ function grannyFile()
 }
 
 /** A prepared resource at a path, as MotherLode would hand it back. */
-function prepared(resource, path)
+function prepared(resource, path, ext = "")
 {
   resource._path = path;
+  resource._ext = ext;
   resource._SetPrepared(true);
   resource._SetGood(true);
   return resource;
@@ -269,6 +270,7 @@ test("Tr2GrannyAnimation reloads through resMan when the registry holds nothing"
 
   animation.Update(0.1);
   assert.deepEqual(run.acquired, [ PATH, CLIP ]);
+  assert.deepEqual(run.requests.slice(-2), [ [ PATH, "" ], [ CLIP, "" ] ], "the same ordinary handles Graphene holds");
   assert.equal(animation.grannyRes, rig);
   assert.equal(animation._secondaryResources.get(CLIP), clip);
   assert.equal(animation.IsInitialized(), true);
@@ -300,12 +302,35 @@ test("a secondary expiring alone rebuilds the primary's rig when it returns", t 
   animation.Destruct();
 });
 
+test("a raw attachment reloads raw, keeping its factory suffix across expiry", t =>
+{
+  const run = harness(t, () =>
+  {
+    const resource = new TriGrannyRes();
+    resource._grannyFile = grannyFile();
+    return resource;
+  });
+  const rig = prepared(new TriGrannyRes(), PATH, "raw");
+  rig._grannyFile = grannyFile();
+  run.handles.set(PATH, rig);
+
+  const animation = new Tr2GrannyAnimation();
+  animation.SetGrannyResource(rig);
+  run.stopPastExpiry();
+  animation.Update(0.1);
+
+  assert.deepEqual(run.requests, [ [ PATH, "raw" ] ]);
+  assert.equal(animation.grannyRes, rig);
+  animation.Destruct();
+});
+
 test("AddSecondaryResPath reloads a null slot and leaves a live one", t =>
 {
   const run = harness(t);
   const animation = new Tr2GrannyAnimation();
 
   assert.equal(animation.AddSecondaryResPath(CLIP), true);
+  assert.deepEqual(run.requests, [ [ CLIP, "raw" ] ], "Tr2GrannyAnimation.cpp:354");
   const clip = animation._secondaryResources.get(CLIP);
   assert.equal(animation.AddSecondaryResPath(CLIP), false, "a live slot is not reloaded");
 
