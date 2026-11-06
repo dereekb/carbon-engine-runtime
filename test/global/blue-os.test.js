@@ -42,8 +42,8 @@ test("the frame clock is cached and moves only when the pump runs", () =>
 
   // Busy-wait rather than sleep: the point is that real time passes while the
   // FRAME time does not.
-  const until = BlueOS.Monotonic() + 2;
-  while (BlueOS.Monotonic() < until) { /* spin */ }
+  const until = BlueOS.monotonic() + 2;
+  while (BlueOS.monotonic() < until) { /* spin */ }
 
   assert.ok(os.GetActualTime() > frame, "the wallclock moved");
   assert.equal(os.GetCurrentFrameTime(), frame, "the frame clock did not");

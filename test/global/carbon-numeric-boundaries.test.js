@@ -124,7 +124,7 @@ test("zero elapsed queue ticks do not enter native statistics", t =>
     const man = new BlueCallbackMan();
     // The queue stamps and measures with CcpGetTimestamp (CallbackMan.cpp:123, :408-411),
     // which reads Blue's monotonic clock here.
-    t.mock.method(BlueOS,"Monotonic",()=>1);
+    t.mock.method(BlueOS,"monotonic",()=>1);
     man.Add(()=>{});
     man.Update();
     assert.equal(man._entriesProcessed,0);

@@ -7,7 +7,6 @@
 // infrastructure survives until teardown. Secondary bases use @be.inherit,
 // which installs methods without running this constructor or copying fields.
 import { CjsSchema, meta } from "#schema";
-import { blue } from "#blue";
 import { Tr2DeviceResourceState } from "./deviceResourceState.js";
 
 
@@ -117,9 +116,10 @@ export class Tr2DeviceResource
   KeepAlive()
   {
     if (this._state === Tr2DeviceResourceState.DESTRUCTED) return;
-    const now = blue.os.GetCurrentFrameTime();
+    const deviceClass = CjsSchema.getConstructor("TriDevice");
+    const now = deviceClass.activeTime;
     if (!(this._stamp >= now)) this._stamp = now;
-    CjsSchema.getConstructor("TriDevice").RegisterResource(this);
+    deviceClass.RegisterResource(this);
   }
 
   /**
@@ -133,7 +133,7 @@ export class Tr2DeviceResource
   _state = Tr2DeviceResourceState.NONE;
 
   /**
-   * Blue frame time (ticks) of the last use.
+   * Accumulated active-frame time (Blue ticks) of the last use.
    *
    * @cjs
    * @type {number}
@@ -159,7 +159,7 @@ export class Tr2DeviceResource
   _registeredGeneration = -1;
 
   /**
-   * Blue frame time (ticks) before which a failed prepare is not tried again.
+   * Accumulated active-frame time (Blue ticks) before which a failed prepare is not tried again.
    *
    * @cjs
    * @type {number}

@@ -7,11 +7,13 @@ function setup(t) {
   const oldResources = TriDevice._resourcesRegistered, oldGenerations = TriDevice._registeredGenerations;
   TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
   let now = 1000 * SECOND;
-  t.mock.method(blue.os, "GetCurrentFrameTime", () => now);
+  const previousActiveTime = TriDevice.activeTime;
+  TriDevice.activeTime = now;
+  t.after(() => { TriDevice.activeTime = previousActiveTime; });
   t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
   const device = new TriDevice();
   t.after(() => { TriDevice._resourcesRegistered = oldResources; TriDevice._registeredGenerations = oldGenerations; });
-  return { device, at: seconds => { now = (1000 + seconds) * SECOND; } };
+  return { device, at: seconds => { now = (1000 + seconds) * SECOND; TriDevice.activeTime = now; } };
 }
 function resource(result = true) {
   const r = Object.create(Tr2DeviceResource.prototype);

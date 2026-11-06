@@ -687,7 +687,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
     }
 
     td.currentId = entry.id;
-    const started = BlueOS.Monotonic();
+    const started = BlueOS.monotonic();
     const threadName = this._isRunningOwnThreads ? td.name : BlueThreadMonitor.MAIN_THREAD;
     this._Report(entry.id, entry, "started",
       { kind, thread: threadName, waited: Number(BlueCallbackMan._timestampTicks() - entry.timeStamp) / 1e9 },
@@ -722,7 +722,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
    * @param {boolean} processedFenceEntry Whether the entry came from the fence queue.
    * @param {?string} thread The worker whose status to restore when the entry settles, or null for this thread.
    * @param {number} previousStatus That worker's status before the entry.
-   * @param {number} started When the entry started, in milliseconds (`BlueOS.Monotonic`).
+   * @param {number} started When the entry started, in milliseconds (`BlueOS.monotonic`).
    * @param {string} threadName The thread's name, for the entry's log lines.
    * @returns {boolean} True: an entry was started.
    */
@@ -739,7 +739,7 @@ export class BlueCallbackMan extends IBlueCallbackMan
 
     const finish = () =>
     {
-      const seconds = (BlueOS.Monotonic() - started) / 1000;
+      const seconds = (BlueOS.monotonic() - started) / 1000;
       this._Report(entry.id, entry, "done", { thread: threadName, seconds },
         "<<Processing callback done - %g seconds", seconds);
       if (thread !== null) BeThreadMonitor.SetThreadStatus__Thread(thread, previousStatus);
@@ -1196,12 +1196,12 @@ export class BlueCallbackMan extends IBlueCallbackMan
    * Carbon's `CcpGetTimestamp()` (core/CcpTime.cpp:11-23), the steady counter the
    * queue stamps and measures against (CallbackMan.cpp:123, :408-411), as uint64
    * nanosecond ticks; its frequency, `CcpGetTimestampFrequency()`, is 1e9 here.
-   * Adapted: the counter is Blue's host monotonic clock, `BlueOS.Monotonic()`
+   * Adapted: the counter is Blue's host monotonic clock, `BlueOS.monotonic()`
    * (milliseconds), which every steady-clock port reads (blue-clock-epoch).
    */
   static _timestampTicks()
   {
-    return BigInt.asUintN(64, BigInt(Math.trunc(BlueOS.Monotonic() * 1e6)));
+    return BigInt.asUintN(64, BigInt(Math.trunc(BlueOS.monotonic() * 1e6)));
   }
 
   /** The rejection a cancelled entry's promise gets. */

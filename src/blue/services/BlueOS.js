@@ -25,23 +25,34 @@ export class BlueOS extends IBlueOS
    */
   _startTime = 0;
 
+
   /** The host clock at construction, in milliseconds. */
   _originMs = 0;
+
 
   /** `m_pumpTicksTotal` - pump cycles since creation. */
   _pumpTicks = 0;
 
+
+  /** @cjs Last pump's host milliseconds; null until the first frame. */
+  _activeClockSample = null;
+
+
   /** `mRealTime`: the frame's real time, set at construction and by each pump. */
   _realTime = 0;
+
 
   /** `mSimTime`: the frame's simulation time, set at construction and by each pump. */
   _simTime = 0;
 
+
   /** Registrants of `RegisterForTicks`, each with the cookie it supplied. */
   _tickers = [];
 
+
   /** Registrants of `RegisterForSimTimeRebase`. */
   _rebaseListeners = [];
+
 
   /**
    * `mFrameClock` (BlueOS.h:56), Blue's READWRITE `frameClock` attribute
@@ -56,33 +67,23 @@ export class BlueOS extends IBlueOS
    */
   frameClock = null;
 
+
   /**
    * Anchors the host clock to the current wallclock, and starts real and
    * simulation time there, as Carbon's constructor does (BlueOS.cpp:255-256).
+   * @adapted Browser host time is anchored to the shared runtime epoch.
    */
   constructor()
   {
     super();
+
     const wallclock = Date.now();
-    this._originMs = BlueOS.Monotonic();
+    this._originMs = BlueOS.monotonic();
     this._startTime = Math.round((wallclock - CcpTime.BLUE_EPOCH_UNIX_MS) * TICKS_PER_MILLISECOND);
     this._realTime = this._startTime;
     this._simTime = this._realTime;
   }
 
-  /**
-   * Reads host milliseconds, preferring performance.now over Date.now.
-   *
-   * The Date.now fallback follows wallclock adjustments and is not monotonic.
-   * The performance global must be defined, even when its now method is absent.
-   *
-   * @returns {number} Host milliseconds; the origin depends on the clock used.
-   * @throws {ReferenceError} If the performance global is absent.
-   */
-  static Monotonic()
-  {
-    return typeof performance?.now === "function" ? performance.now() : Date.now();
-  }
 
   /**
    * Reads the current time in Blue ticks from the wallclock anchor and elapsed
@@ -101,27 +102,29 @@ export class BlueOS extends IBlueOS
    *   construction. The performance.now path avoids later wallclock
    *   adjustments; the Date.now fallback can move backwards.
    *
-   * @adapted
+   * @adapted Uses the shared runtime epoch rather than absolute FILETIME.
    * @returns {number} Blue ticks since the runtime epoch.
    */
   GetActualTime()
   {
-    const elapsedMs = BlueOS.Monotonic() - this._originMs;
+    const elapsedMs = BlueOS.monotonic() - this._originMs;
     return this._startTime + Math.round(elapsedMs * TICKS_PER_MILLISECOND);
   }
+
 
   /**
    * Returns the current frame's simulation time, `mSimTime` (BlueOS.h:51),
    * on the runtime epoch (see GetActualTime). It is set at construction and by
    * each PumpOS, so every reader in one frame sees the same value.
    *
-   * @adapted
+   * @adapted Uses the shared runtime epoch rather than absolute FILETIME.
    * @returns {number} Blue ticks since the runtime epoch.
    */
   GetCurrentFrameTime()
   {
     return this._simTime;
   }
+
 
   /**
    * Carbon's GetSmoothedTime (BlueOS.cpp:1109-1138): the installed frame
@@ -133,9 +136,14 @@ export class BlueOS extends IBlueOS
    */
   GetSmoothedTime()
   {
-    if (!this.frameClock) return this.GetActualTime();
+    if (!this.frameClock)
+    {
+      return this.GetActualTime();
+    }
+
     return this.frameClock.Sample()[0];
   }
+
 
   /**
    * Refreshes the frame clock and delivers a tick to a snapshot of registrants.
@@ -156,25 +164,43 @@ export class BlueOS extends IBlueOS
    *   Callback exceptions are caught so delivery continues. The retained failure
    *   is rethrown only if truthy; falsy thrown values may be swallowed. The method
    *   returns this service instead of Carbon's void return.
+   * @cjs The optional fourth OnTick argument is our accumulated active-frame
+   *   time in Blue ticks. Its per-realm origin survives OS replacement; only
+   *   pumping advances it, with deltas clamped to 0–100 ms. Real/sim clocks
+   *   and the registration cookie keep their existing meaning.
    * @returns {BlueOS} This service when no truthy failure remains.
    * @throws {*} The retained callback failure, when truthy.
    */
   PumpOS()
   {
+    const activeSample = BlueOS.monotonic();
+    if (this._activeClockSample !== null)
+    {
+      // Browser suspension is not resource disuse. A resumed frame contributes
+      // at most 100 ms, never the whole hidden/breakpoint/loading interval.
+      BlueOS.activeTime += Math.min(100, Math.max(0, activeSample - this._activeClockSample))
+        * TICKS_PER_MILLISECOND;
+    }
+    this._activeClockSample = activeSample;
+
     this._pumpTicks++;
     this._realTime = this.GetSmoothedTime();
     this._simTime = this._realTime;
 
     const realTime = this._realTime;
     const simTime = this._simTime;
+    const activeTime = BlueOS.activeTime;
     let failure = null;
 
     // Snapshot entries remain eligible even if removed during an earlier callback.
-    for (const { cb, cookie } of [ ...this._tickers ])
+    const tickers = this._tickers.slice();
+    for (let i = 0; i < tickers.length; i++)
     {
+      const entry = tickers[i];
+
       try
       {
-        cb.OnTick(realTime, simTime, cookie);
+        entry.cb.OnTick(realTime, simTime, entry.cookie, activeTime);
       }
       catch (error)
       {
@@ -182,16 +208,21 @@ export class BlueOS extends IBlueOS
       }
     }
 
-    if (failure) throw failure;
+    if (failure)
+    {
+      throw failure;
+    }
+
     return this;
   }
+
 
   /**
    * Returns the current frame's real time, `mRealTime`, on the runtime epoch:
    * the value OnTick received as realTime. Hosts that drive a scene pass this
    * and GetCurrentFrameTime as its real and simulation time.
    *
-   * Ours: Carbon exposes mRealTime to Python but declares no C++ accessor on
+   * @cjs Carbon exposes mRealTime to Python but declares no C++ accessor on
    * IBlueOS.
    *
    * @returns {number} Blue ticks since the runtime epoch.
@@ -200,6 +231,7 @@ export class BlueOS extends IBlueOS
   {
     return this._realTime;
   }
+
 
   /**
    * Returns a new BeInfo snapshot containing clocks and the pump count.
@@ -221,6 +253,7 @@ export class BlueOS extends IBlueOS
     return info;
   }
 
+
   /**
    * Registers a callback and cookie for pump ticks, ignoring duplicate pairs.
    *
@@ -238,12 +271,15 @@ export class BlueOS extends IBlueOS
     {
       throw new TypeError("BlueOS.RegisterForTicks expects an IBlueEvents.");
     }
+
     if (!this._tickers.some(entry => entry.cb === cb && entry.cookie === cookie))
     {
       this._tickers.push({ cb, cookie });
     }
+
     return this;
   }
+
 
   /**
    * Removes the registration matching both callback and cookie, if present.
@@ -256,14 +292,19 @@ export class BlueOS extends IBlueOS
   UnregisterForTicks(cb, cookie = null)
   {
     const index = this._tickers.findIndex(entry => entry.cb === cb && entry.cookie === cookie);
-    if (index >= 0) this._tickers.splice(index, 1);
+    if (index >= 0)
+    {
+      this._tickers.splice(index, 1);
+    }
+
     return this;
   }
+
 
   /**
    * Checks whether a callback is registered with any cookie.
    *
-   * Custom: Carbon exposes no registration query. This method checks callback
+   * @cjs Carbon exposes no registration query. This method checks callback
    * identity without delivering ticks.
    *
    * @param {object} cb An IBlueEvents object.
@@ -273,6 +314,7 @@ export class BlueOS extends IBlueOS
   {
     return this._tickers.some(entry => entry.cb === cb);
   }
+
 
   /**
    * Registers a simulation-clock rebase listener, ignoring duplicates.
@@ -290,9 +332,14 @@ export class BlueOS extends IBlueOS
     {
       throw new TypeError("BlueOS.RegisterForSimTimeRebase expects an ISimTimeRebaseNotify.");
     }
-    if (!this._rebaseListeners.includes(cb)) this._rebaseListeners.push(cb);
+    if (!this._rebaseListeners.includes(cb))
+    {
+      this._rebaseListeners.push(cb);
+    }
+
     return this;
   }
+
 
   /**
    * Removes a simulation-clock rebase listener, if present.
@@ -304,9 +351,14 @@ export class BlueOS extends IBlueOS
   UnregisterForSimTimeRebase(cb)
   {
     const index = this._rebaseListeners.indexOf(cb);
-    if (index >= 0) this._rebaseListeners.splice(index, 1);
+    if (index >= 0)
+    {
+      this._rebaseListeners.splice(index, 1);
+    }
+
     return this;
   }
+
 
   /**
    * Returns the fallback result for a runtime without Stackless Python.
@@ -320,6 +372,31 @@ export class BlueOS extends IBlueOS
   {
     return false;
   }
+
+
+  /**
+   * Reads host milliseconds, preferring performance.now over Date.now.
+   *
+   * The Date.now fallback follows wallclock adjustments and is not monotonic.
+   * The performance global must be defined, even when its now method is absent.
+   *
+   * @cjs Browser host-clock adapter for native timing consumers.
+   * @returns {number} Host milliseconds; the origin depends on the clock used.
+   * @throws {ReferenceError} If the performance global is absent.
+   */
+  static monotonic()
+  {
+    return typeof performance?.now === "function" ? performance.now() : Date.now();
+  }
+
+
+  /**
+   * Shared active-frame time, in Blue ticks, retained across OS replacements.
+   * @cjs Carbon has no resource-age clock; our lifetime emulation consumes the
+   *   optional fourth tick argument. This is independent of real/sim time.
+   * @type {number}
+   */
+  static activeTime = 0;
 }
 
 CjsSchema.exposure.mapInterface(IBlueOS)(BlueOS);

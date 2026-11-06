@@ -52,12 +52,12 @@ export class BlueCallbackManTicker extends IBlueEvents
   {
     if (this._manager.IsRunningOwnThreads()) return;
 
-    const started = BlueOS.Monotonic();
+    const started = BlueOS.monotonic();
     let timeInUpdate = 0;
     do
     {
       if (!this._manager.Update()) break;
-      timeInUpdate = (BlueOS.Monotonic() - started) / 1000;
+      timeInUpdate = (BlueOS.monotonic() - started) / 1000;
     }
     while (timeInUpdate < this.mainThreadTimeSlice);
   }

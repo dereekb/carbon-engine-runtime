@@ -291,12 +291,12 @@ export class EveCloudEditableVolume
   {
     this._timer = null;
     if (!this._thread) return;
-    const deadline = BlueOS.Monotonic() + 4;
+    const deadline = BlueOS.monotonic() + 4;
     do
     {
       if (this._thread.next().done) return;
     }
-    while (BlueOS.Monotonic() < deadline);
+    while (BlueOS.monotonic() < deadline);
     this._timer = setTimeout(() => this._RunRasterization(), 0);
   }
 

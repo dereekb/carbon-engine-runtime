@@ -132,7 +132,7 @@ let nextLocalValueIdentity = 1;
  * @property {boolean} [destroyAdapters=true] Whether identity cleanup destroys adapter allocations.
  * @property {boolean} [releasePayload=true] Whether sweeps may release CPU payloads.
  * @property {false|Function} [cleanup] `false` retains owned state; a function replaces default identity cleanup.
- * @property {() => number} [now=Date.now] Cadence clock. Use the MotherLode activity clock when supplying a custom clock.
+ * @property {() => number} [now] Cadence clock; defaults to this manager's MotherLode activity clock. Use the MotherLode activity clock when supplying a custom clock.
  */
 
 /**
@@ -255,7 +255,7 @@ export class BlueResMan
    * `GetResource` looks resources up in and inserts them into
    * (BlueResMan.cpp:183,242,288). Register may replace it.
    */
-  motherLode = new MotherLode();
+  motherLode = new MotherLode({ now: () => this._activeTime });
 
   /**
    * `m_loadObjectCache.SetCacheSize( 1*1024*1024 )` (BlueResMan.cpp:91): the
@@ -360,7 +360,7 @@ export class BlueResMan
   /** `m_urgentResourceLoads( false )` (BlueResMan.h:128, BlueResMan.cpp:73). */
   urgentResourceLoads = false;
 
-  _autoPurgePolicy = normalizeAutoPurgePolicy(BlueResMan.defaultAutoPurgePolicy);
+  _autoPurgePolicy = normalizeAutoPurgePolicy(BlueResMan.defaultAutoPurgePolicy, () => this.motherLode.GetActivityTime());
   _activeResourceOperations = 0;
 
   _lastAutoPurgeTime = null;
@@ -474,7 +474,7 @@ export class BlueResMan
     hasOwnThen(options, {
       motherLode: value =>
       {
-        const nextMotherLode = value || new MotherLode();
+        const nextMotherLode = value || new MotherLode({ now: () => this._activeTime });
         if (nextMotherLode !== this.motherLode)
         {
           if (this._activeResourceOperations > 0)
@@ -979,8 +979,16 @@ export class BlueResMan
    * @param {number} _realTime Real time.
    * @param {number} _simTime Simulation time.
    * @param {*} _cookie Registration cookie.
+   * @param {number} [activeTime] Our optional active-frame Blue ticks; omitted freezes retention.
+   * @cjs The fourth argument selects retention time without changing native clocks.
    */
-  OnTick(_realTime, _simTime, _cookie) {
+  OnTick(_realTime, _simTime, _cookie, activeTime = undefined)
+  {
+    if (activeTime !== undefined)
+    {
+      this._activeTime = activeTime / 10000;
+    }
+
     this.Update();
   }
 
@@ -2196,7 +2204,7 @@ export class BlueResMan
    */
   SetAutoPurgePolicy(policy = null)
   {
-    this._autoPurgePolicy = normalizeAutoPurgePolicy(policy);
+    this._autoPurgePolicy = normalizeAutoPurgePolicy(policy, () => this.motherLode.GetActivityTime());
     this._lastAutoPurgeTime = null;
     return this;
   }
@@ -2351,7 +2359,7 @@ export class BlueResMan
   UpdateWatched(options = {})
   {
     if (!this._watches.length) return 0;
-    const time = options.time === undefined ? BlueResMan._defaultAutoPurgeNow() : options.time;
+    const time = options.time === undefined ? BlueResMan._defaultQueueNow() : options.time;
     assertNonNegativeNumber(time, "BlueResMan.UpdateWatched time");
 
     let settled = 0;
@@ -2795,6 +2803,9 @@ export class BlueResMan
 
   /** Current MotherLode time, published once per manager tick for fast renewal. */
   activityTime = 0;
+
+  /** @cjs Latest active-frame tick, in milliseconds, for the default retention clock. */
+  _activeTime = BlueOS.activeTime / 10000;
 
   /** Maximum automatic revivals after purge; explicit Reload is never capped. */
   maxReloadAttempts = 3;
@@ -4171,17 +4182,6 @@ export class BlueResMan
    * @returns {boolean}
    */
   
-  /**
-   * Return the timestamp used by default automatic purge cadence: blue's host
-   * clock, which does not follow wallclock adjustments.
-   *
-   * @returns {number} Host milliseconds.
-   */
-  static _defaultAutoPurgeNow()
-  {
-    return BlueOS.Monotonic();
-  }
-
   static _defaultQueueYield()
   {
     return new Promise(resolve => setTimeout(resolve, 0));
@@ -4190,7 +4190,7 @@ export class BlueResMan
   /** BeTimer's role in `BlueResMan::Update` (BlueResMan.cpp:446): Blue's host milliseconds. */
   static _defaultQueueNow()
   {
-    return BlueOS.Monotonic();
+    return BlueOS.monotonic();
   }
 
   /**
@@ -4413,10 +4413,11 @@ export class BlueResMan
  * Normalize an opt-in time-based automatic purge policy into a fresh object.
  *
  * @param {CjsResManAutoPurgePolicy|false|null} policy Caller policy or disable marker.
+ * @param {() => number} now Default MotherLode activity clock, in milliseconds.
  * @returns {CjsResManAutoPurgePolicy|null} Normalized policy, or `null` when disabled.
  * @throws {TypeError} If fields, limits, cleanup controls, or the cadence clock are invalid.
  */
-function normalizeAutoPurgePolicy(policy)
+function normalizeAutoPurgePolicy(policy, now)
 {
   if (policy === null || policy === undefined || policy === false) return null;
   if (!policy || typeof policy !== "object" || Array.isArray(policy))
@@ -4477,7 +4478,7 @@ function normalizeAutoPurgePolicy(policy)
     destroyAdapters: policy.destroyAdapters ?? true,
     releasePayload: policy.releasePayload ?? true,
     ...(policy.cleanup === undefined ? {} : { cleanup: policy.cleanup }),
-    now: policy.now || BlueResMan._defaultAutoPurgeNow
+    now: policy.now || now
   };
 }
 

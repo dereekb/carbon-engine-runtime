@@ -7,7 +7,6 @@ import { assertNonNegativeInteger, assertNonNegativeNumber } from "#utils/valida
 // Source: blue/src/MotherLode.h
 // Source: blue/src/MotherLode.cpp
 import { normalizeResourcePath } from "#utils/path";
-import { BlueOS } from "../services/BlueOS.js";
 import { ICacheable } from "../interfaces/ICacheable.js";
 import { IBlueResource } from "../interfaces/IBlueResource.js";
 import { IRoot } from "../exposure/IRoot.js";
@@ -1547,10 +1546,10 @@ export function getMotherLodeKey(path, variant = "")
 /** Shared empty activity options for the canonical fast path; never mutated. */
 const EMPTY_ACTIVITY = {};
 
-/** Purge timers are ours (MotherLode.cpp has none); they read blue's host milliseconds. */
+/** Purge timers are ours (MotherLode.cpp has none); shared active-frame milliseconds exclude suspension. */
 function defaultNow()
 {
-  return BlueOS.Monotonic();
+  return blueService.resMan.activityTime;
 }
 
 CjsSchema.decorateMethod(MotherLode, "Insert", CjsSchema.be.method);

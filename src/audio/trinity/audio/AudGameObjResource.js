@@ -62,7 +62,7 @@ function GenerateEntityID()
 /** std::chrono::steady_clock::now() (AudGameObjResource.cpp:199), as blue's host milliseconds. */
 function NowMs()
 {
-  return BlueOS.Monotonic();
+  return BlueOS.monotonic();
 }
 
 /**

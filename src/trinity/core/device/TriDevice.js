@@ -471,13 +471,20 @@ export class TriDevice extends IRoot
    * @param {number} realTime Time since the client started, in 100ns ticks.
    * @param {number} simTime The same, slowed under load to manage it.
    * @param {*} [_cookie] The cookie this device registered with; unread.
+   * @param {number} [activeTime] Our optional active-frame ticks; omitted freezes retention.
+   * @cjs The fourth tick argument drives only our resource-lifetime adaptation.
    * @returns {TriDevice} This device.
    * Carbon declaration: TriDevice::OnTick (trinity/trinity/TriDevice.h:156).
    */
-  OnTick(realTime = 0, simTime = 0, _cookie = null)
+  OnTick(realTime = 0, simTime = 0, _cookie = null, activeTime = undefined)
   {
+    if (activeTime !== undefined)
+    {
+      TriDevice.activeTime = activeTime;
+    }
+
     this.frameCounter++;
-    const now = blue.os.GetCurrentFrameTime();
+    const now = TriDevice.activeTime;
     if (now - this._lastResourceSweep >= TriDevice.resourceSweepInterval * TICKS_PER_SECOND)
     {
       this._lastResourceSweep = now;
@@ -709,6 +716,9 @@ export class TriDevice extends IRoot
   /** @cjs Idle scene-content lifetime, in seconds of Blue frame time. */
   static resourceIdleRule = 30;
 
+  /** @cjs Latest optional active-frame tick; shared with the static device registry. */
+  static activeTime = 0;
+
   /** @cjs Seconds between idle sweeps. */
   static resourceSweepInterval = 60;
 
@@ -730,7 +740,7 @@ export class TriDevice extends IRoot
     if (!Tr2Renderer.IsResourceCreationAllowed()) return;
     const resources = TriDevice._resourcesRegistered;
     const generations = TriDevice._registeredGenerations;
-    const count = resources.length, now = blue.os.GetCurrentFrameTime();
+    const count = resources.length, now = TriDevice.activeTime;
     let attempts = 0;
     for (let visited = 0; visited < count && attempts < this.resourcePrepareBudget; visited++)
     {
@@ -760,7 +770,7 @@ export class TriDevice extends IRoot
    */
   static CollectResources()
   {
-    const expiry = blue.os.GetCurrentFrameTime() - TriDevice.resourceIdleRule * TICKS_PER_SECOND;
+    const expiry = TriDevice.activeTime - TriDevice.resourceIdleRule * TICKS_PER_SECOND;
     for (const resource of TriDevice.GetResourcesRegistered())
     {
       if (resource._neverPurge || resource._state === Tr2DeviceResourceState.DESTRUCTED || !(resource._stamp < expiry)) continue;
@@ -783,7 +793,7 @@ export class TriDevice extends IRoot
     if (resource._registeredGeneration === generation) return;
     resource._generation = generation;
     resource._registeredGeneration = generation;
-    if (resource._stamp === undefined) resource._stamp = blue.os.GetCurrentFrameTime();
+    if (resource._stamp === undefined) resource._stamp = TriDevice.activeTime;
     TriDevice._resourcesRegistered.push(resource);
     TriDevice._registeredGenerations.push(generation);
   }

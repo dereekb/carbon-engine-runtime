@@ -192,11 +192,12 @@ export class CjsTrinity extends IBlueEvents
    * @param {number} realTime Time since the client started, in 100ns ticks.
    * @param {number} simTime The same, slowed under load.
    * @param {*} [cookie] The registration cookie.
+   * @param {number} [activeTime] Our optional active-frame ticks, forwarded unchanged.
    * @returns {void}
    */
-  OnTick(realTime, simTime, cookie = null)
+  OnTick(realTime, simTime, cookie = null, activeTime = undefined)
   {
-    this.device.OnTick(realTime, simTime, cookie);
+    this.device.OnTick(realTime, simTime, cookie, activeTime);
   }
 
   static className = "CjsTrinity";

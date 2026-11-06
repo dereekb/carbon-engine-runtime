@@ -13,7 +13,7 @@ const DEFAULT_FADE_RATE = 1;
 /** std::chrono::steady_clock::now() (AudObstructionOcclusion.cpp:32), as blue's host seconds. */
 function NowSeconds()
 {
-  return BlueOS.Monotonic() / 1000;
+  return BlueOS.monotonic() / 1000;
 }
 
 

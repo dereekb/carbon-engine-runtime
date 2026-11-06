@@ -154,7 +154,7 @@ export class CjsAudioUpdateContext
     /** Reads the monotonic Blue clock in seconds. */
     static _defaultNowSeconds()
     {
-        return BlueOS.Monotonic() / 1000;
+        return BlueOS.monotonic() / 1000;
     }
 }
 

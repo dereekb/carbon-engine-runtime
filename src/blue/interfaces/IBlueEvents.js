@@ -22,12 +22,15 @@ export class IBlueEvents
   /**
    * `OnTick` - one pump cycle.
    *
+   * @cjs Optional fourth active-time argument is our resource-lifetime extension;
+   *   native Carbon declares only realTime, simTime and cookie.
    * @abstract
    * @param {number} _realTime Time since the client started, in 100ns ticks.
    * @param {number} _simTime The same, slowed under load to manage it.
    * @param {*} _cookie Whatever the registrant passed to RegisterForTicks.
+   * @param {number} [_activeTime] Accumulated active-frame time in 100ns ticks.
    */
-  OnTick(_realTime, _simTime, _cookie) {}
+  OnTick(_realTime, _simTime, _cookie, _activeTime = undefined) {}
 }
 
 CjsSchema.decorateMethod(IBlueEvents, "OnTick", meta.abstract);

@@ -269,7 +269,7 @@ test("MotherLode validates cache-size cleanup options before changing policy", (
 
 test("MotherLode caches only expired ICacheable entries that fit, and use takes them back out", () =>
 {
-  const motherLode = new MotherLode({ cacheSize: 30 });
+  const motherLode = new MotherLode({ cacheSize: 30, now: () => 10 });
   const plainKey = getMotherLodeKey("res:/data/plain.bin");
   const plain = cacheResource(plainKey, BlueAsyncRes);
   motherLode.Insert(plainKey, plain, { time: 0 });
