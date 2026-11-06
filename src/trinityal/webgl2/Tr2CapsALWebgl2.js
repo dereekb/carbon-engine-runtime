@@ -67,7 +67,7 @@ export class Tr2CapsALWebgl2
   }
 
   /**
-   * Bones ride a per-object uniform block: a data texture would cost a unit shipped shaders do not have.
+   * Bones ride a per-object uniform block, the output ccpwgl also reads; the emitter sizes it to this default.
    * @cjs Not a Carbon capability: every Carbon platform has vertex structured buffers.
    * @returns {number} Bones one uniform block carries, or 0 where structured buffers reach the vertex stage.
    */
