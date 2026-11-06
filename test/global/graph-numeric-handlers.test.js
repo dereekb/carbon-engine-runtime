@@ -62,6 +62,13 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
         }
         assert.equal(handler.is(1), false);
         assert.equal(handler.is(2n ** 64n), false);
+        assert.equal(handler.is("1"), true, "JSON writes 64-bit values as strings");
+        assert.equal(handler.is("1.5"), false);
+        assert.equal(handler.is("0x10"), false);
+        assert.equal(handler.is(""), false);
+        assert.equal(handler.is(String(2n ** 64n)), false);
+        assert.equal(handler.isEqual("1", "1"), false, "valid input is not a canonical value");
+        assert.equal(handler.isEqual(1n, 1n), true);
         assert.equal(handler.isEqual(1, 1n), false);
         assert.throws(() => handler.convert(1), TypeError);
         assert.throws(() => handler.convert(1.5), TypeError);
@@ -107,10 +114,12 @@ for (const ctor of [...numericArrays, ...bigArrays])
         assert.deepEqual(target.value, expected);
 
         assert.equal(instance.Is(storage), true);
-        assert.equal(instance.Is(Array.from(storage)), false);
+        assert.equal(instance.Is(Array.from(storage)), true, "a plain array is valid input");
+        assert.equal(instance.Is([ "not a number" ]), false);
+        assert.equal(instance.Is([ undefined ]), false);
         assert.equal(instance.Is(new DataView(new ArrayBuffer(8))), false);
         assert.equal(instance.Is(runInNewContext(`new ${ctor.name}(2)`)), true);
-        assert.equal(instance.Is(new (ctor === Float32Array ? Float64Array : Float32Array)(2)), false);
+        assert.equal(instance.Is(new (bigArrays.includes(ctor) ? Float32Array : BigInt64Array)(2)), false);
     });
 
     test(`${ctor.name}: aliased copies preserve unread source elements`, () =>

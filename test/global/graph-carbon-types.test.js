@@ -167,6 +167,8 @@ for (const [name, ctor, length] of mathDefinitions)
         assert.equal(target.value, storage);
         assert.deepEqual(instance.Get(target, "value"), values, "no normalization or mathematical transform");
         assert.equal(handler.is(new ctor(length - 1)), false, "validation stays in Is");
+        assert.equal(handler.is(values), true, "a plain array of the right count is valid input");
+        assert.equal(handler.is([ ...values, 1 ]), false);
         const clone = handler.clone(target, "value");
         assert.equal(clone.constructor, ctor);
         assert.notEqual(clone.buffer, storage.buffer);

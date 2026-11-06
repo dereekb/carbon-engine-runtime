@@ -72,10 +72,30 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   }
 
   /**
-   * Checks typed storage across realms and a named definition's fixed count.
-   * @cjs Excludes plain arrays and DataView; variable-length definitions accept any count.
+   * Tests valid input: a plain or typed array of the right count and valid elements.
+   * @cjs Excludes DataView; variable-length definitions accept any count.
    */
   static is(value)
+  {
+    if (!Array.isArray(value) && !(ArrayBuffer.isView(value) && value.length !== undefined)) return false;
+    if (this.elementCount !== 0 && value.length !== this.elementCount) return false;
+
+    for (let i = 0; i < value.length; i++)
+    {
+      if (!this._isElement(value[i])) return false;
+    }
+
+    return true;
+  }
+
+  /** Tests one input element. @cjs */
+  static _isElement(value)
+  {
+    return this.element.is(value);
+  }
+
+  /** Tests this definition's own storage across realms, with its fixed count. @cjs */
+  static _isStored(value)
   {
     return ArrayBuffer.isView(value)
       && Object.prototype.toString.call(value) === `[object ${this.ctor.name}]`
@@ -111,7 +131,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    */
   static isEqual(a, b)
   {
-    if (!this.hasValueEquality || !this.is(a) || !this.is(b) || a.length !== b.length) return false;
+    if (!this.hasValueEquality || !this._isStored(a) || !this._isStored(b) || a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++)
     {
       if (!this.equalElement(a[i], b[i])) return false;

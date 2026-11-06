@@ -27,6 +27,12 @@ export class CjsGraphTypeUint8ClampedArray extends CjsGraphTypeArray
     return fraction > 0.5 || (fraction === 0.5 && (lower & 1)) ? lower + 1 : lower;
   }
 
+  /** Any number is valid input, because storage clamps it. @cjs */
+  static _isElement(value)
+  {
+    return typeof value === "number";
+  }
+
   /** Typed storage constructor. */
   static ctor = Uint8ClampedArray;
 

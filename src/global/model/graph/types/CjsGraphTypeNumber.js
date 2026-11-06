@@ -24,8 +24,8 @@ export class CjsGraphTypeNumber extends CjsGraphTypeScalar
   }
 
   /**
-   * Tests the canonical primitive representation.
-   * @cjs Separate from assignment.
+   * Tests valid input.
+   * @cjs Separate from assignment: the graph operation calls it.
    */
   static is(value)
   {

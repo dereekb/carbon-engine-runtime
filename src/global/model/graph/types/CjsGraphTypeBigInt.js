@@ -23,10 +23,27 @@ export class CjsGraphTypeBigInt extends CjsGraphTypeNumber
   }
 
   /**
-   * Tests canonical BigInt values in the storage range.
-   * @cjs Explicit representation query.
+   * Tests valid input: a BigInt or an integer string, in the storage range.
+   * @cjs JSON writes 64-bit values as strings. The [high, low] pair is not implemented.
    */
   static is(value)
+  {
+    if (typeof value === "string") return /^-?\d+$/u.test(value) && this._isStored(BigInt(value));
+
+    return this._isStored(value);
+  }
+
+  /**
+   * Compares canonical BigInt values.
+   * @cjs Strings are valid input, not canonical values.
+   */
+  static isEqual(a, b)
+  {
+    return this._isStored(a) && this._isStored(b) && a === b;
+  }
+
+  /** Tests a canonical BigInt value in the storage range. @cjs */
+  static _isStored(value)
   {
     return typeof value === "bigint" && value === this.convert(value);
   }

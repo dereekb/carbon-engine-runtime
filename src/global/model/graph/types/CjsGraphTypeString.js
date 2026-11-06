@@ -24,8 +24,8 @@ export class CjsGraphTypeString extends CjsGraphTypeScalar
   }
 
   /**
-   * Tests the JavaScript value representation.
-   * @cjs Explicit query, not Set validation.
+   * Tests valid input.
+   * @cjs The graph operation calls it; Set does not.
    */
   static is(value)
   {

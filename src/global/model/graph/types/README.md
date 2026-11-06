@@ -82,8 +82,13 @@ conversion. Number inputs throw: callers must explicitly choose an exact BigInt
 conversion first. This differs from the legacy values codec, which mixes safe
 Numbers with BigInts; that codec is not changed or connected to these handlers.
 Get/Clone preserve BigInts, including within plain values arrays; JSON encoding
-is outside this layer. Numeric Is checks canonical representation and integer range;
-Set performs conversion rather than invoking Is.
+is outside this layer.
+
+Is asks whether a value is valid input: can this value be used to set this thing
+(operator, 2026-11-07). It does not ask whether the value is exactly the stored type,
+so a plain `[1, 2, 3]` passes for a Vector3 and an integer string passes for a 64-bit
+integer. The `[high, low]` pair is not implemented. Numeric Is still checks integer
+range. Handlers do not validate: the graph operation calls Is, and Set does not.
 
 Array Get produces a plain values array. Clone explicitly allocates an owned
 independent typed array. Set retains existing typed storage when sizes match;

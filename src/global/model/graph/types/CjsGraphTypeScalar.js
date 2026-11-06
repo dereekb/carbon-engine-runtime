@@ -79,8 +79,8 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * The unspecialised handler accepts no concrete type.
-   * @cjs Explicit type query.
+   * Tests valid input: can this value be used to set this thing.
+   * @cjs The unspecialised handler accepts nothing. The graph operation calls it; Set does not.
    */
   static is(value)
   {
