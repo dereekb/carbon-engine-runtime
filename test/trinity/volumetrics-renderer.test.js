@@ -408,6 +408,26 @@ test("a backend without compute loads no fog effects, reads fog as off and gets 
   }
 });
 
+test("a backend without compute has no dynamic exposure, whose histogram nothing could write", () =>
+{
+  const al = core.Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL();
+  const post = new trinity.Tr2PostProcess2();
+  post.dynamicExposure = new trinity.Tr2PPDynamicExposureEffect();
+
+  try
+  {
+    // Negative control: Carbon's path on a backend that has compute.
+    assert.equal(post.GetDynamicExposureIfAvailable(), post.dynamicExposure);
+
+    al.GetCaps = () => ({ SUPPORTS_COMPUTE: false });
+    assert.equal(post.GetDynamicExposureIfAvailable(), null);
+  }
+  finally
+  {
+    delete al.GetCaps;
+  }
+});
+
 test("a reflection probe's fog is scaled by the blended reflection intensity, clamped to 0..1", () =>
 {
   const renderer = new core.Tr2VolumetricsRenderer();

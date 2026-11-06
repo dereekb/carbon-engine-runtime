@@ -4,6 +4,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/PostProcess/Tr2PostProcess2.cpp
 import { type } from "#schema";
 import { Tr2PPDepthOfFieldEffect } from "./effect/Tr2PPDepthOfFieldEffect.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { Quality } from "../generated/postProcess/enums.js";
 
 
@@ -192,10 +193,16 @@ export class Tr2PostProcess2 extends IRoot
   /**
    * Returns the dynamic-exposure effect when it is active and the quality
    * setting meets DynamicExposureQualityRequirement, otherwise null.
+   *
+   * @adapted null on a backend without compute: the histogram passes are compute,
+   *   so nothing would write the exposure buffer, and the tonemap and TAA would
+   *   multiply the whole image by its zeros.
    */
 
   GetDynamicExposureIfAvailable(quality = Tr2PostProcess2.HIGH)
   {
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE === false) return null;
+
     return Tr2PostProcess2.GetIfAvailable(this.dynamicExposure, quality, Tr2PostProcess2.DynamicExposureQualityRequirement);
   }
 
