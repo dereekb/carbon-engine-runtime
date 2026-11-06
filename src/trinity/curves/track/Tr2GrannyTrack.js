@@ -52,7 +52,7 @@ export class Tr2GrannyTrack extends IRoot
   /**
    * Moves the notification link with the resource.
    * @adapted Tr2GrannyTrack.cpp:88-106 uses native targets; ours live on resMan.
-   *   A decoded source from the registry has no lifetime and stays unregistered.
+   *   A decoded source assigned directly has no lifetime and stays unregistered.
    */
   set grannyRes(resource)
   {
@@ -153,9 +153,7 @@ export class Tr2GrannyTrack extends IRoot
    * link's registration rebuilds a prepared resource at once, as AddNotifyTarget
    * does, and a resource still loading binds through RebuildCachedData.
    *
-   * @adapted Tracks reset first, because a rebind here can follow a bound
-   *   resource. The decoded registry answers before resMan for hosts that
-   *   registered a source, and such a source has no notification to wait for.
+   * @adapted Tracks reset first, because a rebind here can follow a bound resource.
    */
 
   SetGrannyResource()
@@ -171,8 +169,7 @@ export class Tr2GrannyTrack extends IRoot
       return;
     }
 
-    this.grannyRes = CjsGrannyCurves.resolveResource(this.grannyResPath) ?? blue.resMan.GetResource(this.grannyResPath, { ex: "raw" });
-    if (!this._grannyLink) this.SetCurves();
+    this.grannyRes = blue.resMan.GetResource(this.grannyResPath, { ex: "raw" });
   }
 
   /**

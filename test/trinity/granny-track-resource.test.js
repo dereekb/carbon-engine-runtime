@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { blue, BlueResMan, MotherLode } from "../../npm/dist/blue/index.js";
 import { TriGrannyRes } from "../../npm/dist/resource/index.js";
-import { CjsGrannyCurves } from "../../npm/dist/trinity/curves/track/CjsGrannyCurves.js";
 import { Tr2GrannyVectorTrack } from "../../npm/dist/trinity/curves/track/Tr2GrannyVectorTrack.js";
 
 const PATH = "res:/track/fixture.gr2";
@@ -44,7 +43,6 @@ function harness(t)
     return resource;
   };
 
-  CjsGrannyCurves.clearResources();
   t.after(() => { blue.resMan = previous; });
 
   return {

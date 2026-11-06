@@ -15,6 +15,10 @@ import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { vec4 } from "../../npm/dist/global/math/vec4.js";
 import { color } from "../../npm/dist/global/math/color.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
+import { blue as blueService } from "../../npm/dist/blue/index.js";
+import { TriGrannyRes } from "../../npm/dist/resource/index.js";
+import { prepareResourceFixture } from "../support/resourceFixtures.js";
+import { StubResMan } from "../support/stubResMan.js";
 import { MarkerTag } from "../support/markerTags.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
@@ -251,7 +255,7 @@ test("promoted curve families expose source-backed Carbon metadata", () =>
     assertEquals(CjsSchema.getMethod(ctor, methodName), null);
   }
 });
-test("Granny JSON tracks bind the first matching group and sample values", () =>
+test("Granny JSON tracks bind the first matching group and sample values", t =>
 {
   const source = {
     animations: [{
@@ -333,8 +337,14 @@ test("Granny JSON tracks bind the first matching group and sample values", () =>
   vector.cycle = true;
   vector.UpdateValue(5.5);
   assertEquals(vector.value, 20);
-  CjsGrannyCurves.clearResources();
-  CjsGrannyCurves.registerResource("res:/synthetic/test.gr2", source);
+  const previousResMan = blueService.resMan;
+  t.after(() => { blueService.resMan = previousResMan; });
+  const pathResource = new TriGrannyRes();
+  pathResource._path = "res:/synthetic/test.gr2";
+  pathResource._ext = "raw";
+  pathResource._grannyFile = source;
+  blueService.resMan = new StubResMan(() => pathResource);
+  prepareResourceFixture(pathResource);
   const pathBound = new Tr2GrannyVectorTrack();
   pathBound.grannyResPath = "res:/synthetic/test.gr2";
   pathBound.group = "root";
@@ -349,10 +359,8 @@ test("Granny JSON tracks bind the first matching group and sample values", () =>
   assertEquals(pathBound.Length(), 0);
   assertEquals(CjsSchema.getField(Tr2GrannyTrack, "grannyResPath")?.type.kind, "path");
   assertEquals(CjsSchema.getField(Tr2GrannyTrack, "duration")?.type.kind, "float32");
-  assertEquals(CjsGrannyCurves.resolveResource("res:/synthetic/test.gr2"), source);
-  CjsGrannyCurves.unregisterResource("res:/synthetic/test.gr2");
-  assertEquals(CjsGrannyCurves.resolveResource("res:/synthetic/test.gr2"), null);
-  CjsGrannyCurves.clearResources();
+  assertEquals(blueService.resMan.requests[0].path, "res:/synthetic/test.gr2");
+  assertEquals(blueService.resMan.requests[0].options.ex, "raw");
   const events = [];
   const eventTrack = new Tr2GrannyEventTrack();
   eventTrack.grannyRes = source;

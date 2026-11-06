@@ -360,7 +360,7 @@ export class Tr2GrannyAnimation extends IRoot
   {
     if (!this._sharedGeometry && (this.resPath_ || this._resolvedPath))
     {
-      this.grannyRes = this.resPath_ ? this._AcquireResource(this.resPath_, "raw") : null;
+      this.grannyRes = this.resPath_ ? blue.resMan.GetResource(this.resPath_, { ex: "raw" }) : null;
       this._resolvedPath = this.resPath_;
       this._grannyNeedsReload = false;
     }
@@ -917,7 +917,7 @@ export class Tr2GrannyAnimation extends IRoot
       const path = this.resPath_ || this._attachedPath;
       if (path)
       {
-        this.grannyRes = this._AcquireResource(path, this.resPath_ ? "raw" : this._attachedExt);
+        this.grannyRes = blue.resMan.GetResource(path, { ex: this.resPath_ ? "raw" : this._attachedExt });
         this._resolvedPath = this.resPath_;
         if (!this._initialized) this.RebuildCachedData();
       }
@@ -936,35 +936,20 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /**
-   * Acquires an animation resource for a kept path.
-   *
-   * @cjs
-   * @adapted The decoded registry answers first, for hosts that registered a
-   *   source; otherwise resMan, as Carbon (cpp:333, :354). _getSource reads a
-   *   TriGrannyRes and an ordinary geometry alike.
-   * @param {string} path Resource path.
-   * @param {string} ex Carbon factory suffix: "raw", or "" for ordinary geometry.
-   * @returns {TriGeometryRes|TriGrannyRes|object|null} The resource.
-   */
-  _AcquireResource(path, ex)
-  {
-    return CjsGrannyCurves.resolveResource(path) ?? blue.resMan.GetResource(path, { ex });
-  }
-
-  /**
    * Fills a secondary slot from its path.
    *
    * Carbon: Tr2GrannyAnimation::LoadSecondaryResPath (Tr2GrannyAnimation.cpp:346-360).
    *
-   * @adapted Acquisition goes through _AcquireResource and notification links
-   *   through SetSecondaryGrannyResource. A path first attached as an ordinary
-   *   geometry reloads as one; any other takes Carbon's "raw" route.
+   * @adapted Notification links go through SetSecondaryGrannyResource. A path
+   *   first attached as an ordinary geometry reloads as one; any other takes
+   *   Carbon's "raw" route (cpp:354). _getSource reads a TriGrannyRes and an
+   *   ordinary geometry alike.
    * @param {string} path Secondary clip path.
    * @returns {boolean} Whether the slot was set.
    */
   _LoadSecondaryResPath(path)
   {
-    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path, this._secondaryExts.get(path) ?? "raw"));
+    return this.SetSecondaryGrannyResource(path, blue.resMan.GetResource(path, { ex: this._secondaryExts.get(path) ?? "raw" }));
   }
 
   /**

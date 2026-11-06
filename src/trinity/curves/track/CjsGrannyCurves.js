@@ -82,7 +82,6 @@ const D4N_SCALE_TABLE_MULTIPLIER_8 = 0.0078740157;
  */
 export class CjsGrannyCurves
 {
-  static #resources = new Map();
 
   /**
    * Decode a GR2 JSON curve object into explicit knots and controls.
@@ -149,36 +148,6 @@ export class CjsGrannyCurves
       return CjsGrannyCurves.#sampleLinearCurve(out, curve, time, cycle, duration || knots[count - 1], knot);
     }
     return CjsGrannyCurves.#sampleQuadraticCurve(out, curve, time, cycle, duration || knots[count - 1], knot);
-  }
-
-  /**
-   * Registers a decoded Granny source under a resource path so tracks can
-   * resolve it later; the caller retains ownership of the source object.
-   */
-  static registerResource(path, source)
-  {
-    if (path)
-    {
-      CjsGrannyCurves.#resources.set(path, source);
-    }
-  }
-
-  /** Drops the registration for a resource path. */
-  static unregisterResource(path)
-  {
-    CjsGrannyCurves.#resources.delete(path);
-  }
-
-  /** Drops every registered Granny source. */
-  static clearResources()
-  {
-    CjsGrannyCurves.#resources.clear();
-  }
-
-  /** Gets the source registered for a resource path, or null. */
-  static resolveResource(path)
-  {
-    return CjsGrannyCurves.#resources.get(path) ?? null;
   }
 
   /**

@@ -10,7 +10,6 @@ import { Tr2Mesh } from "../../../npm/dist/trinity/core/mesh/Tr2Mesh.js";
 import { EveTrailsSet } from "../../../npm/dist/trinity/eve/attachment/booster/EveTrailsSet.js";
 import { EveTurretSet } from "../../../npm/dist/trinity/eve/attachment/turrets/EveTurretSet.js";
 import { Tr2Effect, Tr2EffectRes } from "../../../npm/dist/trinity/shader/index.js";
-import { CjsGrannyCurves } from "../../../npm/dist/trinity/curves/track/CjsGrannyCurves.js";
 
 const PATH = "res:/recovery/fixture.gr2";
 const CLIP = "res:/recovery/clip.gr2";
@@ -221,11 +220,13 @@ test("a pathless effect stays dropped, which is why every effect needs a path", 
 
 test("Tr2GrannyAnimation primary reloads its authored path and rebuilds the rig", t =>
 {
-  const run = harness(t);
-  const resource = prepared(new TriGrannyRes(), PATH);
-  resource._grannyFile = grannyFile();
-  CjsGrannyCurves.registerResource(PATH, resource);
-  t.after(() => CjsGrannyCurves.unregisterResource(PATH));
+  const run = harness(t, () =>
+  {
+    const resource = new TriGrannyRes();
+    resource._grannyFile = grannyFile();
+    return resource;
+  });
+  const resource = run.manager.GetResource(PATH);
 
   const animation = new Tr2GrannyAnimation();
   animation.resPath = PATH;
@@ -244,7 +245,7 @@ test("Tr2GrannyAnimation primary reloads its authored path and rebuilds the rig"
   animation.Destruct();
 });
 
-test("Tr2GrannyAnimation reloads through resMan when the registry holds nothing", t =>
+test("Tr2GrannyAnimation reloads an attached rig and clip through resMan", t =>
 {
   const run = harness(t, () =>
   {

@@ -1,8 +1,10 @@
 import { prepareResourceFixture } from "../support/resourceFixtures.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Tr2StateMachine, Tr2StateMachineState, Tr2StateMachineTransition, Tr2GrannyAnimation, Tr2TextureAnimationParameter, CjsGrannyCurves, CjsControllerExpressionProgram } from "../../npm/dist/trinity/index.js";
-import { TriGeometryRes } from "../../npm/dist/resource/index.js";
+import { Tr2StateMachine, Tr2StateMachineState, Tr2StateMachineTransition, Tr2GrannyAnimation, Tr2TextureAnimationParameter, CjsControllerExpressionProgram } from "../../npm/dist/trinity/index.js";
+import { blue } from "../../npm/dist/blue/index.js";
+import { TriGeometryRes, TriGrannyRes } from "../../npm/dist/resource/index.js";
+import { StubResMan } from "../support/stubResMan.js";
 
 test("blank transition conditions are invalid without changing other expression defaults", () =>
 {
@@ -58,10 +60,20 @@ test("owned Granny paths refresh while borrowed and explicit resources retain ow
 {
   const pathA = "res:/tests/animation-lifecycle/a.gr2";
   const pathB = "res:/tests/animation-lifecycle/b.gr2";
-  const first = { models: [] };
-  const second = { models: [] };
-  CjsGrannyCurves.registerResource(pathA, first);
-  CjsGrannyCurves.registerResource(pathB, second);
+  const decoded = path =>
+  {
+    const resource = new TriGrannyRes();
+    resource._path = path;
+    resource._ext = "raw";
+    resource._grannyFile = { models: [] };
+    return resource;
+  };
+  const first = decoded(pathA);
+  const second = decoded(pathB);
+  const previous = blue.resMan;
+  blue.resMan = new StubResMan(path => (path === pathA ? first : second));
+  prepareResourceFixture(first);
+  prepareResourceFixture(second);
   try
   {
     const animation = new Tr2GrannyAnimation();
@@ -78,7 +90,7 @@ test("owned Granny paths refresh while borrowed and explicit resources retain ow
     // answers its granny file through GetGrannyInfo. The revision marks the
     // payload as a decoded granny graph, as the gr2 reader's is.
     const borrowed = new TriGeometryRes();
-    borrowed.ReadGrannyFile({ ...first, grannyFileFormatRevision: 7 });
+    borrowed.ReadGrannyFile({ models: [], grannyFileFormatRevision: 7 });
     prepareResourceFixture(borrowed);
     animation.resPath = pathB;
     animation.SetSharedGeometryRes(borrowed);
@@ -91,8 +103,7 @@ test("owned Granny paths refresh while borrowed and explicit resources retain ow
   }
   finally
   {
-    CjsGrannyCurves.unregisterResource(pathA);
-    CjsGrannyCurves.unregisterResource(pathB);
+    blue.resMan = previous;
   }
 });
 
