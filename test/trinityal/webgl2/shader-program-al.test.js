@@ -233,6 +233,21 @@ test("a stage over the sixteen texture-unit budget is refused by name, whatever 
     assert.match(overBudget.program.GetLinkLog(), /uses 17 texture units, over the budget of 16: s0, s1/u);
 });
 
+test("a bone block takes a binding point, not a texture unit, so a stage at sixteen textures still links", () =>
+{
+    const { gl } = FakeWebgl2();
+    const vertex = shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader;
+    vertex.GetStageBlock().bindings.push({ kind: "structuredUbo", registerIndex: 0, name: "CjsSb0", strideBytes: 48, capacityElements: 69 });
+    const pixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL).shader;
+    pixel.GetStageBlock().bindings = Array.from({ length: 16 }, (_, registerIndex) =>
+        ({ kind: "resource", registerIndex, name: `s${registerIndex}`, dimensionName: "texture2d", pairedSamplerRegisters: [] }));
+
+    const program = new Tr2ShaderProgramALWebgl2();
+    assert.equal(program.Create(...link([ vertex, pixel ]), FakeRenderContext(gl)), ALResult.S_OK);
+    assert.equal(program.GetTextures().length, 16);
+    assert.deepEqual(program.GetBoneBlocks().map(block => [ block.name, block.byteLength ]), [ [ "CjsSb0", 69 * 48 ] ]);
+});
+
 test("dx11's refusals: no stages, an invalid stage, two stages of one type", () =>
 {
     const { gl } = FakeWebgl2();
