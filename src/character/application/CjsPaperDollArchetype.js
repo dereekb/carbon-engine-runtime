@@ -26,6 +26,19 @@ export class CjsPaperDollArchetype
 
     _sculpt = new Map();
 
+    /** This character's entry in `defaultMorphOverrides`. */
+    _defaultMorphs = {};
+
+    /**
+     * Our default morph weights by sex, under any sculpt. The eye-missing morphs at these weights
+     * seat the eyeball against the lids, which the shipped idle poses leave proud of them.
+     * @cjs Our setting; Carbon has no default morph weights.
+     */
+    static defaultMorphOverrides = {
+        female: { BothEyeMissingShape: .2 },
+        male: { LeftEyeMissingShape: .05, RightEyeMissingShape: .05 }
+    };
+
     /** The configured foundation resolver, or null when every option arrived prepared. */
     _resolve = null;
 
@@ -66,10 +79,12 @@ export class CjsPaperDollArchetype
      * @param {string} [settings.option] The initial option; it must be prepared.
      * @param {number} [settings.strength=1] The initial strength.
      * @param {?function(string): Promise<object>} [settings.resolve=null] Prepares one foundation record.
+     * @param {?string} [settings.sex=null] Selects the `defaultMorphOverrides` entry.
      * @returns {void}
      */
-    Configure(options, { option, strength = 1, resolve = null } = {})
+    Configure(options, { option, strength = 1, resolve = null, sex = null } = {})
     {
+        this._defaultMorphs = CjsPaperDollArchetype.defaultMorphOverrides[sex] ?? {};
         const prepared = new Map();
         for (const entry of options)
         {
@@ -120,26 +135,46 @@ export class CjsPaperDollArchetype
     }
 
     /**
-     * One morph's sculpted weight.
+     * One morph's weight: its sculpt, else its default.
      * @param {string} name The morph name.
-     * @returns {number} Its weight; 0 when unsculpted.
+     * @returns {number} Its weight; 0 when neither sets it.
      */
     GetSculpt(name)
     {
-        return this._sculpt.get(name) ?? 0;
+        return this._sculpt.get(name) ?? this._defaultMorphs[name] ?? 0;
     }
 
     /**
-     * Every sculpted morph and its weight.
-     * @returns {Object<string, number>} Weights by morph name; unsculpted morphs are absent.
+     * Every weighted morph, defaults included.
+     * @returns {Object<string, number>} Weights by morph name; unset morphs are absent.
      */
     GetSculpts()
+    {
+        return { ...this._defaultMorphs, ...Object.fromEntries(this._sculpt) };
+    }
+
+    /**
+     * The weights set on this character, without defaults; this is what a save keeps.
+     * @returns {Object<string, number>} Weights by morph name.
+     */
+    GetSculptEdits()
     {
         return Object.fromEntries(this._sculpt);
     }
 
     /**
-     * Sculpts one morph. A weight of 0 removes it.
+     * The defaults no sculpt has replaced. A worn item's morph request wins over these.
+     * @returns {Object<string, number>} Weights by morph name.
+     */
+    GetDefaultMorphs()
+    {
+        const defaults = { ...this._defaultMorphs };
+        for (const name of this._sculpt.keys()) delete defaults[name];
+        return defaults;
+    }
+
+    /**
+     * Sculpts one morph. A weight of 0 removes it, except that a defaulted morph keeps the 0.
      * @param {string} name The morph name.
      * @param {number} value Its weight.
      * @returns {void}
@@ -148,7 +183,7 @@ export class CjsPaperDollArchetype
     {
         const weight = Math.fround(value);
         if (weight === this.GetSculpt(name)) return;
-        if (weight === 0) this._sculpt.delete(name);
+        if (weight === 0 && !Object.hasOwn(this._defaultMorphs, name)) this._sculpt.delete(name);
         else this._sculpt.set(name, weight);
         this._dirty = true;
     }
@@ -170,7 +205,7 @@ export class CjsPaperDollArchetype
     Resolve()
     {
         if (this.option && !this._options.get(this.option).foundation) throw new Error("Foundation " + this.option + " is not prepared");
-        return this.option ? { ...structuredClone(this._options.get(this.option).foundation), strength: this.strength, sculpt: this.GetSculpts() } : null;
+        return this.option ? { ...structuredClone(this._options.get(this.option).foundation), strength: this.strength, sculpt: this.GetSculptEdits(), defaultMorphs: this.GetDefaultMorphs() } : null;
     }
 
     /** Restores the configured initial foundation without resetting modifier values. */

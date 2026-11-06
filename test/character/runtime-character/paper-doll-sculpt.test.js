@@ -84,3 +84,30 @@ test("a foundation listed by id is prepared through its resolver before it can b
     assert.equal((await doll.archetype.ResolveOption("archetype")).id, "archetype", "a prepared entry resolves without the resolver");
     assert.deepEqual(calls, [ "other" ]);
 });
+
+test("default morph overrides sit under sculpts, a 0 stays 0, and clearing returns to the default", () =>
+{
+    const { archetype } = new CjsPaperDollDefinition();
+    archetype.Configure([ Foundation() ], { option: "archetype", sex: "male" });
+    assert.equal(archetype.GetSculpt("LeftEyeMissingShape"), .05);
+    assert.deepEqual(archetype.GetSculptEdits(), {});
+    assert.equal(archetype.Resolve().sculpt.LeftEyeMissingShape, undefined);
+    assert.equal(archetype.Resolve().defaultMorphs.LeftEyeMissingShape, .05);
+
+    archetype.SetSculpt("LeftEyeMissingShape", 0);
+    assert.equal(archetype.GetSculpt("LeftEyeMissingShape"), 0);
+    assert.equal(archetype.Resolve().sculpt.LeftEyeMissingShape, 0);
+    assert.equal(archetype.GetDefaultMorphs().LeftEyeMissingShape, undefined);
+
+    archetype.ClearSculpts();
+    assert.equal(archetype.GetSculpt("LeftEyeMissingShape"), .05);
+});
+
+test("defaults follow the sex, and an unknown sex has none", () =>
+{
+    const { archetype } = new CjsPaperDollDefinition();
+    archetype.Configure([ Foundation() ], { option: "archetype", sex: "female" });
+    assert.deepEqual(Object.keys(archetype.GetSculpts()), [ "BothEyeMissingShape" ]);
+    archetype.Configure([ Foundation() ], { option: "archetype" });
+    assert.deepEqual(archetype.GetSculpts(), {});
+});
