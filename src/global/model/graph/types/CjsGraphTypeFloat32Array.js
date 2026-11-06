@@ -21,6 +21,20 @@ export class CjsGraphTypeFloat32Array extends CjsGraphTypeArray
     return !(Math.abs(Math.fround(a - b)) >= Math.fround(1e-6));
   }
 
+  /**
+   * A stored NaN is always overwritten, though Carbon's IsArrayEqual calls it equal (CE-202).
+   * @cjs Set's rule only; isEqual keeps the quirk.
+   */
+  static isUnchanged(stored, value)
+  {
+    for (let i = 0; i < stored.length; i++)
+    {
+      if (Number.isNaN(stored[i])) return false;
+    }
+
+    return super.isUnchanged(stored, value);
+  }
+
   /** Typed storage constructor. */
   static ctor = Float32Array;
 

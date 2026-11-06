@@ -64,10 +64,10 @@ All handlers share one call shape, options last: `get(target, key, options)`,
 Leaf handlers do not read options and may leave it off their own signature. There is no From, schema lookup, accessor resolution or destruction.
 
 Set/Copy report a change, a JS convenience unlike Carbon Copy's success result, and
-IsEqual decides it. Carbon's comparisons are kept, so two float quirks reach Set: a
-Float32 array element holding NaN equals anything, so Set cannot replace it, and a
-Float32 or Float64 scalar holding NaN or Infinity never equals itself, so Set writes
-and reports it every time.
+IsEqual decides it through isUnchanged. Carbon's comparisons are kept. isUnchanged adds
+Set's own rule: a stored null or NaN is always overwritten, though a Float32 array element
+holding NaN equals anything in IsEqual (CE-202). A Float32 or Float64 scalar holding NaN or
+Infinity never equals itself, so Set writes and reports it every time. NaN stays valid input.
 
 Carbon's DOUBLEARRAY and INTARRAY have no AreEqual specialisation, and that gap does not
 apply here: IsEqual works on every type, and those families compare as their elements do.

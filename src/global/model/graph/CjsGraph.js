@@ -239,6 +239,53 @@ export class CjsGraph
   }
 
   /**
+   * Tells the policy an object's members changed, for writes that went round set: a direct
+   * field or array write followed by this call. No names means every member, so this is the
+   * broad call; a name or an array of names narrows it. Keeps no baseline, so it compares
+   * nothing. Returns what it reported, or false for no members.
+   * A held object is reported by reference, and its own members are not walked.
+   * @cjs Our contract for direct writes (projects/graph-root-object.md section 6).
+   */
+  static updateValues(object, names = null, options = {})
+  {
+    const operation = this._beginSet(options);
+    const info = this._getObjectInfo(object, null);
+    const table = this._getMemberTable(info, operation.policy, GraphOperation.SET);
+    const members = names === null ? table.members : (typeof names === "string" ? [ names ] : names);
+
+    let changes = false;
+
+    for (let i = 0; i < members.length; i++)
+    {
+      const member = names === null ? members[i] : table.byName[members[i]];
+
+      if (!member)
+      {
+        if (info.compiled.byName[members[i]]) continue;
+        throw new TypeError(`Unknown graph member: ${info.declared.name}.${members[i]}`);
+      }
+
+      if (changes === false) changes = {}; // alloc: only once a member is reported.
+      changes[member.name] = this._getReported(object, member, operation);
+      if (member.edge !== null && operation.idMap !== null) operation.recorded.push(changes, member.name);
+    }
+
+    if (changes !== false) this._addCompletion(object, info, changes, null, operation);
+    this._finish(operation);
+
+    return changes;
+  }
+
+  /** One member as updateValues reports it: a leaf in Get form, a held object by reference. @cjs */
+  static _getReported(object, member, options)
+  {
+    if (member.edge === null) return this._getMember(object, member, options);
+
+    const stored = member.index === undefined ? object[member.key] : object[member.key][member.index];
+    return member.edge.collection && stored !== null ? Array.from(stored) : stored;
+  }
+
+  /**
    * Writes one member through set.
    * @cjs
    */
@@ -673,7 +720,7 @@ export class CjsGraph
     if (options.validate && !member.handler.IsValidValue(value))
       throw new TypeError(`Invalid value for graph member: ${member.owner.declared.name}.${member.name}`);
 
-    if (member.edge === null) return member.handler.IsEqual(stored, value);
+    if (member.edge === null) return member.handler.IsUnchanged(stored, value);
     if (member.edge.collection) return this.isListLike(stored, value, member.edge.type, options);
 
     return this.isObjectLike(stored, value, member.edge.type, options);

@@ -13,6 +13,15 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
   name = "Invalid";
 
   /**
+   * Rejects isUnchanged because no valid value type has been assigned.
+   * @cjs Fails before inspecting the supplied values.
+   */
+  static isUnchanged(stored, value)
+  {
+    throw new TypeError("Invalid type handler cannot compare values.");
+  }
+
+  /**
    * Rejects get because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */

@@ -788,6 +788,9 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
   assert.deepEqual(object.SetValues({ weight: 2 }), { weight: 2 });
   assert.deepEqual(object.SetValue("name", "b"), { name: "b" });
   assert.equal(object.SetValue("name", "b"), false);
+  assert.deepEqual(object.UpdateValues(), { name: "b", weight: 2 });
+  assert.deepEqual(object.UpdateValues("name"), { name: "b" });
+  assert.deepEqual(object.UpdateValues([ "weight" ]), { weight: 2 });
 
   const clone = object.Clone();
   assert.notEqual(clone, object);
@@ -796,6 +799,84 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
 
   const target = new Rooted();
   assert.deepEqual(target.Copy(object), { name: "b", weight: 2 });
+});
+
+test("a list holding a stored NaN is not called equal", () =>
+{
+  const holder = new Holder();
+  const first = leaf("a");
+  first.position[0] = NaN;
+  holder.items.push(first);
+
+  assert.notEqual(CjsGraph.set(holder, { items: [ { name: "a", position: [ 1, 2, 3 ] } ] }), false);
+  assert.equal(holder.items[0].position[0], 1);
+});
+
+test("UpdateValues with no names reports every member, and names narrow it", () =>
+{
+  const policy = tracing();
+  const object = leaf("a", 2);
+  object.position.set([ 1, 2, 3 ]);
+
+  assert.deepEqual(CjsGraph.updateValues(object, null, { policy }), { name: "a", weight: 2, position: [ 1, 2, 3 ] });
+  assert.deepEqual(policy.trace[0][3], { name: "a", weight: 2, position: [ 1, 2, 3 ] });
+  assert.equal(policy.trace[0][2], false, "not a creation");
+
+  policy.trace.length = 0;
+  assert.deepEqual(CjsGraph.updateValues(object, "weight", { policy }), { weight: 2 });
+  assert.deepEqual(CjsGraph.updateValues(object, [ "name", "weight" ], { policy }), { name: "a", weight: 2 });
+  assert.deepEqual(policy.trace.map(([ , , , changes ]) => changes), [ { weight: 2 }, { name: "a", weight: 2 } ]);
+
+  assert.equal(CjsGraph.updateValues(object, [], { policy }), false);
+  assert.equal(policy.trace.length, 2, "no members, nothing told");
+  assert.throws(() => CjsGraph.updateValues(object, "nothing"), /Unknown graph member/);
+});
+
+test("three routes to a nested change reach the child the same way", () =>
+{
+  const run = route =>
+  {
+    const policy = tracing();
+    const holder = new Holder();
+    holder.child = leaf("child");
+    route(holder, policy);
+    return { weight: holder.child.weight, told: policy.trace.map(([ type, , , changes ]) => [ type, changes.weight ]) };
+  };
+
+  const expected = { weight: 5, told: [ [ "GraphValueLeaf", 5 ] ] };
+  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder, { child: { weight: 5 } }, { policy })), expected);
+  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder.child, { weight: 5 }, { policy })), expected);
+  assert.deepEqual(run((holder, policy) =>
+  {
+    holder.child.weight = 5;
+    CjsGraph.updateValues(holder.child, null, { policy });
+  }), expected);
+  assert.deepEqual(run((holder, policy) =>
+  {
+    holder.child.weight = 5;
+    CjsGraph.updateValues(holder.child, "weight", { policy });
+  }), expected);
+});
+
+test("UpdateValues reports a held object by reference, a list as an array, and honours the policy and idMap", () =>
+{
+  const holder = new Holder();
+  const child = holder.child = leaf("child");
+  holder.items.push(child);
+
+  const changes = CjsGraph.updateValues(holder, [ "child", "items", "second" ]);
+  assert.equal(changes.child, child);
+  assert.deepEqual(changes.items, [ child ]);
+  assert.notEqual(changes.items, holder.items);
+  assert.equal(changes.second, null);
+
+  const refused = { acceptMember: member => member.name !== "name", complete() {} };
+  assert.equal(CjsGraph.updateValues(leaf("a"), "name", { policy: refused }), false);
+
+  const idMap = new Map();
+  const mapped = CjsGraph.updateValues(holder, [ "child", "items" ], { idMap });
+  assert.equal(idMap.get(mapped.child._ref), child);
+  assert.deepEqual(mapped.items, [ mapped.child ]);
 });
 
 test("a nested Set and a Set on the child complete the child alone, with its own members", () =>

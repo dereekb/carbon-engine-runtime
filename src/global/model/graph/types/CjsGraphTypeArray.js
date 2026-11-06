@@ -36,7 +36,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   }
 
   /**
-   * Writes unless IsEqual says the values are equal; preserves fixed storage and overlapping views.
+   * Writes unless the stored values are unchanged; preserves fixed storage and overlapping views.
    * @cjs Native TypedArray.set writes a typed source, which may overlap storage. A plain source
    * cannot, and writes through convert, which also takes forms native set refuses.
    */
@@ -45,15 +45,15 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
     const current = target[key];
     const count = this.elementCount || value.length;
 
-    if (this.elementCount === 0 && current.length !== count)
+    if (current === null || (this.elementCount === 0 && current.length !== count))
     {
-      const storage = new this.ctor(count); // alloc: replacement owned storage only when a variable length changes.
+      const storage = new this.ctor(count); // alloc: owned storage only when none is held or a variable length changes.
       this._write(storage, value);
       target[key] = storage;
       return true;
     }
 
-    if (this.isEqual(current, value)) return false;
+    if (this.isUnchanged(current, value)) return false;
 
     this._write(current, value);
     return true;

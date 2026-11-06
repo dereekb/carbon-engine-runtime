@@ -173,8 +173,8 @@ for (const ctor of [...numericArrays, ...bigArrays])
         const target = { value: new ctor(expected) }, storage = target.value;
         instance.length = inputs.length;
         assert.equal(instance.ctor, ctor);
-        // Carbon's scalar tolerance never calls NaN or Infinity equal, and Float64 elements use it.
-        assert.equal(instance.Set(target, "value", inputs), ctor === Float64Array, "change detection uses destination conversion");
+        // The inputs hold NaN: Set always overwrites one, and Float64 elements also never call Infinity equal.
+        assert.equal(instance.Set(target, "value", inputs), ctor === Float32Array || ctor === Float64Array, "change detection uses destination conversion");
         assert.equal(target.value, storage);
         assert.deepEqual(instance.Get(target, "value"), Array.from(expected));
         for (let i = 0; i < inputs.length; i++) assert.equal(handler.convert(inputs[i]), expected[i]);
@@ -260,12 +260,33 @@ test("every array family compares values in any accepted form", () =>
     }
 });
 
-test("Carbon's Float32 array NaN quirk means Set cannot replace a stored NaN (CE-202)", () =>
+test("Set overwrites a stored NaN, while IsEqual keeps Carbon's quirk (CE-202)", () =>
 {
-    const stored = { value: new Float32Array([NaN]) };
-    assert.equal(types.CjsGraphTypeFloat32Array.set(stored, "value", [3]), false);
-    assert.equal(Number.isNaN(stored.value[0]), true);
-    assert.equal(types.CjsGraphTypeFloat32Array.isExactEqual(stored.value, [3]), false);
+    const handler = types.CjsGraphTypeFloat32Array;
+    const stored = { value: new Float32Array([NaN, 1]) };
+    assert.equal(handler.isEqual(stored.value, [3, 1]), true, "Carbon's comparison is unchanged");
+    assert.equal(handler.set(stored, "value", [3, 1]), true);
+    assert.equal(stored.value[0], 3);
+    assert.equal(handler.set(stored, "value", [3, 1]), false);
+
+    const vector = { value: new Float32Array([NaN, NaN, NaN]) };
+    assert.equal(types.CjsGraphTypeVector3.set(vector, "value", [1, 2, 3]), true, "every Float32 family");
+    assert.equal(vector.value[0], 1);
+
+    const scalar = { value: NaN };
+    assert.equal(types.CjsGraphTypeFloat32.set(scalar, "value", 3), true);
+    assert.equal(scalar.value, 3);
+
+    assert.equal(handler.isValidValue([NaN]), true, "NaN stays valid input");
+    assert.equal(types.CjsGraphTypeFloat32.isValidValue(NaN), true);
+});
+
+test("an array member holding null gets owned storage", () =>
+{
+    const target = { value: null };
+    assert.equal(types.CjsGraphTypeVector3.set(target, "value", [1, 2, 3]), true);
+    assert.equal(target.value.constructor, Float32Array);
+    assert.deepEqual(Array.from(target.value), [1, 2, 3]);
 });
 
 test("Float64 arrays retain precision while Float32 array equality keeps Carbon's NaN quirk", () =>

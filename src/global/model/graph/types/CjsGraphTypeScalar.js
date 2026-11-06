@@ -31,16 +31,24 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * Assigns unless IsEqual says the values are equal, which is what "changed" means here.
-   * @cjs Change reporting. A null holds no value to compare, so anything replaces it.
+   * Assigns unless the stored value is unchanged by this input.
+   * @cjs Change reporting.
    */
   static set(target, key, value)
   {
-    const stored = target[key];
-    if (stored !== null && this.isEqual(stored, value)) return false;
+    if (this.isUnchanged(target[key], value)) return false;
 
     target[key] = this.convert(value);
     return true;
+  }
+
+  /**
+   * Whether Set has nothing to do: IsEqual, except that nothing stored as null or NaN is kept.
+   * @cjs Set's rule, not Carbon's comparison, which IsEqual keeps (CE-202).
+   */
+  static isUnchanged(stored, value)
+  {
+    return stored !== null && this.isEqual(stored, value);
   }
 
   /**
@@ -124,6 +132,15 @@ export class CjsGraphTypeScalar
   Clone(target, key, options)
   {
     return this.constructor.clone(target, key, options);
+  }
+
+  /**
+   * Instance shortcut to isUnchanged.
+   * @cjs
+   */
+  IsUnchanged(stored, value)
+  {
+    return this.constructor.isUnchanged(stored, value);
   }
 
   /**
