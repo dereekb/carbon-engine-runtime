@@ -28,7 +28,26 @@ Registration snapshots member containers, validates names before
 publication, and invalidates through one revision. Nested metadata/default values
 are borrowed declaration data and must not be mutated behind registration; replace
 the definition to change them. Compilation never constructs instances or reads their
-properties. Generic decorators and value-operation integration are still pending.
+properties. Generic decorators are still pending.
+
+`CjsGraph.get`, `set` and `from` are one engine, options last, and `copy` and `clone`
+are presets over them: get then set, get then from. Set returns a values bag of what
+changed, or false: a nested object read in place is a nested bag, a replaced reference
+is the live object, and a changed list is its whole new plain array, so the record can
+be replayed through set. The graph validates with each handler's IsValidValue and tracks
+changes; handlers do neither. One options record runs through a whole operation, and
+nothing is allocated per member.
+
+A policy decides and never walks: `acceptMember(member, info, operation)` picks members,
+cached once per class, policy and operation on the compiled record, and
+`complete(object, info, changes, created)` runs after references resolve, children first.
+`CjsGraph.policy` is the session policy, and `options.policy` overrides it per call. The
+default accepts everything and notifies nothing. `_type` names resolve through
+`CjsGraph.registerLibrary(library)`, newest first, ending in the graph's own definitions.
+A library has `Get(typeName)` and `Create(typeName)`. A failed operation completes
+nothing and rolls nothing back.
+
+CjsGraphRoot is the optional base class: thin forwards and `__cjs`. No Destruct yet.
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per
 object, depth-first in declaration/list order. A member's `edge` declares `kind`

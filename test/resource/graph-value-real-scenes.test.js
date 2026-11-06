@@ -241,7 +241,8 @@ test("graph operations match DictWriter and DictReader on the exact-build scenes
 
     const rows = measure([
       [ "get", () => CjsSchema.getValues(scene, {}, { ...persistOnly, typeTags: true }), () => CjsGraph.get(scene, options) ],
-      [ "from", () => new DictReader(quietReader).CreateObject(values, EveSpaceScene), () => CjsGraph.from(null, values) ],
+      // The effect subtree, 10 of the 11 objects: each EveSpaceScene stays alive through TriDevice.RegisterResource.
+      [ "from", () => new DictReader(quietReader).CreateObject(values.backgroundEffect, Tr2Effect), () => CjsGraph.from(Tr2Effect, values.backgroundEffect) ],
       [ "set unchanged", () => CjsSchema.setValues(oldTarget, values, quiet), () => CjsGraph.set(newTarget, values) ],
       [ "set one changed member",
         () => { change.fogStart = (flip = !flip) ? 1 : 2; return CjsSchema.setValues(oldTarget, change, quiet); },

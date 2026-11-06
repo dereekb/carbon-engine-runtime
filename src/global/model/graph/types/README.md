@@ -101,8 +101,7 @@ only variable-length size changes allocate replacement storage. Owners initialis
 storage; lazy construction is not introduced here. Overlapping typed views
 are copied safely through TypedArray.set after comparison completes.
 
-Specialised path/expression behaviour and graph-value
-handlers are still pending. No Float16Array definition is added: it is not in the
+Specialised path/expression behaviour is still pending. No Float16Array definition is added: it is not in the
 runtime's current supported typed-array family.
 
 This subtree imports only its own files and uses JavaScript built-ins. Blue exposure identifiers
@@ -111,8 +110,10 @@ IsLike normalizes accepted forms with the same conversion as Set before comparin
 conversion behavior is retained during relocation; stricter format validation is not silently adopted.
 
 Options are per call: one reused object for a whole operation, carrying what objects and lists
-need, including recursion state, and nothing per member. Object/list/struct implementations are
-still pending.
+need, including recursion state, and nothing per member. Object, list and struct handlers
+re-enter CjsGraph and return false, or what the change record holds for them; a leaf returns
+a boolean, and the graph reads its new value. Lists hold objects only: a list of leaf values
+is not implemented. A forward _ref inside a structure list is refused.
 Ownership edges and operation-owned creations must be recorded before destruction is implemented.
 No placeholder Destruct method promises cleanup today.
 
