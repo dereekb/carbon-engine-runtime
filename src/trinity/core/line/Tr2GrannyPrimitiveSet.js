@@ -59,9 +59,9 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   set grannyRes(resource)
   {
     if (this._grannyRes === resource) return;
-    if (this._grannyRes) blue.resMan.RemoveNotifyTarget(this, this._grannyRes);
+    if (this._grannyRes) blue.resMan.notify.Remove(this, this._grannyRes);
     this._grannyRes = resource;
-    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "grannyRes");
+    if (resource) blue.resMan.notify.Add(this, resource, this, "grannyRes");
   }
 
   /** Resource storage behind the notification-aware property. */

@@ -288,7 +288,7 @@ export class BlueAsyncRes
   IsGood(owner)
   {
     this.KeepAlive();
-    if (owner !== undefined) blue.resMan._KeepNotifyTargetAlive(owner, this);
+    if (owner !== undefined) blue.resMan.notify.KeepAlive(owner, this);
     return this._isGood;
   }
 
@@ -503,7 +503,7 @@ export class BlueAsyncRes
     this._isLoading = false;
     this._isGood = good;
     blue.resMan._FinishResourceLoad(this);
-    if (!good) blue.resMan._NotifyReleaseCachedData(this);
+    if (!good) blue.resMan.notify.ReleaseCachedData(this);
     else if (this._notify) this._NotifyRebuildCachedData();
   }
 
@@ -528,7 +528,7 @@ export class BlueAsyncRes
     resource._isGood = false;
     resource._CleanupLoadData();
     blue.resMan._FinishResourceLoad(resource);
-    blue.resMan._NotifyReleaseCachedData(resource);
+    blue.resMan.notify.ReleaseCachedData(resource);
   }
 
   /**
@@ -559,7 +559,7 @@ export class BlueAsyncRes
    */
   _NotifyRebuildCachedData()
   {
-    blue.resMan._NotifyRebuildCachedData(this);
+    blue.resMan.notify.RebuildCachedData(this);
   }
 
   /**
@@ -570,7 +570,7 @@ export class BlueAsyncRes
    */
   _NotifyReleaseCachedData()
   {
-    blue.resMan._NotifyReleaseCachedData(this);
+    blue.resMan.notify.ReleaseCachedData(this);
   }
 
   /**

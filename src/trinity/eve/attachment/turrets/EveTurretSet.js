@@ -301,10 +301,10 @@ export class EveTurretSet extends EveEntity
   set geometryResource(resource)
   {
     if (this._geometryResource === resource) return;
-    if (this._geometryResource) blue.resMan.RemoveNotifyTarget(this, this._geometryResource);
+    if (this._geometryResource) blue.resMan.notify.Remove(this, this._geometryResource);
     this.Cleanup();
     this._geometryResource = resource;
-    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "geometryResource");
+    if (resource) blue.resMan.notify.Add(this, resource, this, "geometryResource");
   }
 
   /** Geometry storage behind the notification-aware property. */

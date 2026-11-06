@@ -207,12 +207,12 @@ export class Tr2Effect extends Tr2Material
     if (previous === resource) return;
     if (previous)
     {
-      blue.resMan.RemoveNotifyTarget(this, previous);
+      blue.resMan.notify.Remove(this, previous);
       this.ReleaseCachedData(previous);
       this._ClearPassBindings();
     }
     this._effectResource = resource;
-    if (resource) blue.resMan.AddNotifyTarget(this, resource, this, "effectResource");
+    if (resource) blue.resMan.notify.Add(this, resource, this, "effectResource");
   }
 
   /** Backing storage for the resource property and its manager registration. */

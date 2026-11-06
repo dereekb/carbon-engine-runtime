@@ -5,39 +5,44 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
  * Tracks JavaScript resource-owner slots and dispatches their cached-data callbacks.
  *
  * @cjs JavaScript has no deterministic destructor or last-reference notification.
- *   One helper belongs to each BlueResMan; the manager supplies activity time and
- *   lease policy. This helper owns only links, not resource loading or eviction.
- *   Explicit owner teardown still unregisters immediately.
+ *   One helper belongs to each BlueResMan; the helper reads activity time and
+ *   lease policy from its owning manager. It owns links, not resource loading or
+ *   eviction. Explicit owner teardown still unregisters immediately.
  *
  * Native review: BlueAsyncRes.h:23-56 and BlueAsyncRes.cpp:261-368 provide
  * per-resource callbacks; MotherLode.cpp:329-401 handles native last-reference
  * lifetime. BlueResMan.h and IBlueResMan.h have no owner/property lease registry.
  * Native notification methods stay on BlueAsyncRes; this is the browser tracking
- * mechanism behind the manager's existing entry points, not another native type.
+ * mechanism exposed as resMan.notify, not another native type.
  */
 export class CjsBlueResManNotify
 {
   /** Stable identity for this internal, non-serializable helper. */
   static className = "CjsBlueResManNotify";
 
+  /** Owning manager supplies the activity clock and lease policy. */
+  _resMan = null;
+
   /** Manager diagnostic channel, shared rather than registered again. */
   _channel = null;
 
   /**
-   * Uses the owning manager's diagnostic channel.
+   * Retains the owning manager and its diagnostic channel.
    * @implemented
+   * @param {BlueResMan} resMan Owning resource manager.
    * @param {CcpLogChannel_t} channel Manager log channel.
    */
-  constructor(channel)
+  constructor(resMan, channel)
   {
+    this._resMan = resMan;
     this._channel = channel;
   }
 
-  /** @cjs Persistent owner/resource/holder/key links, compacted during PurgeInactive. */
-  _notifyTargets = [];
+  /** @cjs Persistent owner/resource/holder/key links, compacted during Update. */
+  _targets = [];
 
   /** @cjs Owner and resource index for allocation-free per-use link renewal. */
-  _notifyTargetsByOwner = new Map();
+  _targetsByOwner = new Map();
 
   /**
    * Registers an owner's resource property and rebuilds immediately if prepared.
@@ -50,20 +55,20 @@ export class CjsBlueResManNotify
    * @param {BlueAsyncRes} resource Resource held by the owner.
    * @param {object|Map} holder Object or map holding the resource.
    * @param {*} key Property name or map key; expiry clears only a matching value.
-   * @param {number} now Manager activity time in milliseconds.
    * @returns {void}
    */
-  AddNotifyTarget(owner, resource, holder, key, now)
+  Add(owner, resource, holder, key)
   {
     const isMap = holder instanceof Map;
     if (!holder || (isMap ? holder.get(key) : holder[key]) !== resource)
     {
-      throw new TypeError("AddNotifyTarget requires the holder and key holding the resource.");
+      throw new TypeError("notify.Add requires the holder and key holding the resource.");
     }
-    let resources = this._notifyTargetsByOwner.get(owner);
-    if (!resources) this._notifyTargetsByOwner.set(owner, resources = new Map());
+    let resources = this._targetsByOwner.get(owner);
+    if (!resources) this._targetsByOwner.set(owner, resources = new Map());
     let entries = resources.get(resource);
     if (!entries) resources.set(resource, entries = []);
+    const now = this._resMan.motherLode.GetActivityTime();
     for (let i = 0; i < entries.length; i++)
     {
       if (entries[i].holder === holder && entries[i].key === key)
@@ -76,7 +81,7 @@ export class CjsBlueResManNotify
     const firstLink = entries.length === 0;
     const entry = { owner, resource, holder, key, isMap, lastUsed: now, active: true };
     entries.push(entry);
-    this._notifyTargets.push(entry);
+    this._targets.push(entry);
     if (firstLink && resource.IsPrepared()) owner.RebuildCachedData(resource);
   }
 
@@ -89,12 +94,12 @@ export class CjsBlueResManNotify
    * @param {BlueAsyncRes} resource Previously held resource.
    * @returns {void}
    */
-  RemoveNotifyTarget(owner, resource)
+  Remove(owner, resource)
   {
-    const resources = this._notifyTargetsByOwner.get(owner);
+    const resources = this._targetsByOwner.get(owner);
     const entries = resources?.get(resource);
     if (!entries) return;
-    while (entries.length) this._RemoveNotifyLink(entries[entries.length - 1]);
+    while (entries.length) this._RemoveLink(entries[entries.length - 1]);
   }
 
   /**
@@ -103,13 +108,13 @@ export class CjsBlueResManNotify
    * @implemented
    * @param {object} owner Resource user.
    * @param {BlueAsyncRes} resource Resource being used.
-   * @param {number} now Manager activity time in milliseconds.
    * @returns {boolean} Whether a registered link was renewed.
    */
-  _KeepNotifyTargetAlive(owner, resource, now)
+  KeepAlive(owner, resource)
   {
-    const entries = this._notifyTargetsByOwner.get(owner)?.get(resource);
+    const entries = this._targetsByOwner.get(owner)?.get(resource);
     if (!entries) return false;
+    const now = this._resMan.activityTime || this._resMan.motherLode.GetActivityTime();
     let renewed = false;
     for (let i = 0; i < entries.length; i++)
     {
@@ -128,9 +133,9 @@ export class CjsBlueResManNotify
    * @param {object} owner Owner to inspect.
    * @returns {object[]} Its active resource/property links.
    */
-  GetNotifyTargetsByOwner(owner)
+  GetByOwner(owner)
   {
-    return this._notifyTargets.filter(entry => entry.active && entry.owner === owner)
+    return this._targets.filter(entry => entry.active && entry.owner === owner)
       .map(entry => ({ owner: entry.owner, resource: entry.resource, holder: entry.holder, key: entry.key, lastUsed: entry.lastUsed }));
   }
 
@@ -141,9 +146,9 @@ export class CjsBlueResManNotify
    * @param {BlueAsyncRes} resource Resource to inspect.
    * @returns {object[]} Its active owner/property links.
    */
-  GetNotifyTargetsByResource(resource)
+  GetByResource(resource)
   {
-    return this._notifyTargets.filter(entry => entry.active && entry.resource === resource)
+    return this._targets.filter(entry => entry.active && entry.resource === resource)
       .map(entry => ({ owner: entry.owner, resource: entry.resource, holder: entry.holder, key: entry.key, lastUsed: entry.lastUsed }));
   }
 
@@ -154,14 +159,14 @@ export class CjsBlueResManNotify
    * @param {object} entry Active link.
    * @returns {void}
    */
-  _RemoveNotifyLink(entry)
+  _RemoveLink(entry)
   {
     if (!entry.active) return;
-    const resources = this._notifyTargetsByOwner.get(entry.owner);
+    const resources = this._targetsByOwner.get(entry.owner);
     const entries = resources.get(entry.resource);
     entries.splice(entries.indexOf(entry), 1);
     if (!entries.length) resources.delete(entry.resource);
-    if (!resources.size) this._notifyTargetsByOwner.delete(entry.owner);
+    if (!resources.size) this._targetsByOwner.delete(entry.owner);
     entry.active = false;
     entry.owner = entry.resource = entry.holder = entry.key = null;
   }
@@ -176,20 +181,20 @@ export class CjsBlueResManNotify
    * @param {object} entry Link to expire.
    * @returns {void}
    */
-  _ExpireNotifyLink(entry)
+  _ExpireLink(entry)
   {
     const owner = entry.owner;
     const resource = entry.resource;
     if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
     {
       const key = entry.key;
-      this._RemoveNotifyLink(entry);
-      CcpLog.CCP_LOGWARN_CH(this._channel, "Resource owner replaced %s without RemoveNotifyTarget (%s)", String(key), resource.GetPath());
+      this._RemoveLink(entry);
+      CcpLog.CCP_LOGWARN_CH(this._channel, "Resource owner replaced %s without notify.Remove (%s)", String(key), resource.GetPath());
       return;
     }
-    const slots = this._notifyTargetsByOwner.get(owner).get(resource)
+    const slots = this._targetsByOwner.get(owner).get(resource)
       .map(link => ({ holder: link.holder, key: link.key, isMap: link.isMap }));
-    this.RemoveNotifyTarget(owner, resource);
+    this.Remove(owner, resource);
     owner.ReleaseCachedData(resource);
     for (let i = 0; i < slots.length; i++)
     {
@@ -203,11 +208,11 @@ export class CjsBlueResManNotify
     // A setter can re-register another alias while the remaining slots are
     // still being cleared. Drop only those new links whose slot is now empty;
     // keep a callback's genuinely new resource slot intact.
-    const remaining = this._notifyTargetsByOwner.get(owner)?.get(resource)?.slice() ?? [];
+    const remaining = this._targetsByOwner.get(owner)?.get(resource)?.slice() ?? [];
     for (const link of remaining)
     {
       if ((link.isMap ? link.holder.get(link.key) : link.holder[link.key]) !== resource)
-        this._RemoveNotifyLink(link);
+        this._RemoveLink(link);
     }
   }
 
@@ -215,20 +220,21 @@ export class CjsBlueResManNotify
    * Expires unrenewed owner links independently of whether their resource is busy.
    * @cjs JavaScript has no reliable native last-reference/destructor signal.
    * @implemented
-   * @param {number} now Registry activity time in milliseconds.
-   * @param {number} seconds Owner-link lifetime supplied by the manager policy.
+   * @param {number|null} [now=null] Explicit sweep timestamp, otherwise the manager activity clock.
    * @returns {void}
    */
-  _PurgeNotifyTargets(now, seconds)
+  Update(now = null)
   {
+    const time = now ?? this._resMan.motherLode.GetActivityTime();
+    const seconds = this._resMan.leaseSeconds ?? (this._resMan._autoPurgePolicy?.maxIdleMilliseconds ?? 30000) / 1000;
     assertNonNegativeNumber(seconds, "BlueResMan leaseSeconds");
-    const expiry = now - seconds * 1000;
-    const entries = this._notifyTargets;
+    const expiry = time - seconds * 1000;
+    const entries = this._targets;
     const count = entries.length;
     for (let i = 0; i < count; i++)
     {
       const entry = entries[i];
-      if (entry.active && entry.lastUsed < expiry) this._ExpireNotifyLink(entry);
+      if (entry.active && entry.lastUsed < expiry) this._ExpireLink(entry);
     }
     let kept = 0;
     for (let i = 0; i < entries.length; i++)
@@ -245,9 +251,9 @@ export class CjsBlueResManNotify
    * @param {BlueAsyncRes} resource Prepared resource.
    * @returns {void}
    */
-  _NotifyRebuildCachedData(resource)
+  RebuildCachedData(resource)
   {
-    this._NotifyTargets(resource, true);
+    this._Notify(resource, true);
   }
 
   /**
@@ -257,9 +263,9 @@ export class CjsBlueResManNotify
    * @param {BlueAsyncRes} resource Resource losing its prepared data.
    * @returns {void}
    */
-  _NotifyReleaseCachedData(resource)
+  ReleaseCachedData(resource)
   {
-    this._NotifyTargets(resource, false);
+    this._Notify(resource, false);
   }
 
   /**
@@ -271,9 +277,9 @@ export class CjsBlueResManNotify
    * @param {boolean} prepared True for rebuild, false for release.
    * @returns {void}
    */
-  _NotifyTargets(resource, prepared)
+  _Notify(resource, prepared)
   {
-    const entries = this._notifyTargets.filter(entry => entry.active && entry.resource === resource);
+    const entries = this._targets.filter(entry => entry.active && entry.resource === resource);
     const notified = new Set();
     for (let i = 0; i < entries.length; i++)
     {
@@ -282,7 +288,7 @@ export class CjsBlueResManNotify
       const owner = entry.owner;
       if ((entry.isMap ? entry.holder.get(entry.key) : entry.holder[entry.key]) !== resource)
       {
-        this._ExpireNotifyLink(entry);
+        this._ExpireLink(entry);
         continue;
       }
       if (notified.has(owner)) continue;
@@ -293,33 +299,20 @@ export class CjsBlueResManNotify
   }
 
   /**
-   * Detaches every owner slot before an idle resource is purged.
-   * @cjs Manager eviction cannot leave a surviving owner using stale derived data.
+   * Releases matching owner slots for one resource, or all slots during manager teardown.
    * @implemented
-   * @param {BlueAsyncRes} resource Resource being purged.
+   * @param {BlueAsyncRes|null} [resource=null] Resource to detach; null clears every link.
    * @returns {void}
    */
-  _ExpireResourceNotifyTargets(resource)
+  Clear(resource = null)
   {
-    const entries = this._notifyTargets.filter(entry => entry.active && entry.resource === resource);
-    for (let i = 0; i < entries.length; i++)
-    {
-      if (entries[i].active) this._ExpireNotifyLink(entries[i]);
-    }
-  }
-
-  /**
-   * Releases registered owners and clears their matching slots during manager teardown.
-   * @implemented
-   * @returns {void}
-   */
-  Clear()
-  {
-    const links = this._notifyTargets.slice();
+    const links = resource === null
+      ? this._targets.slice()
+      : this._targets.filter(entry => entry.active && entry.resource === resource);
     for (let i = 0; i < links.length; i++)
     {
-      if (links[i].active) this._ExpireNotifyLink(links[i]);
+      if (links[i].active) this._ExpireLink(links[i]);
     }
-    this._notifyTargets.length = 0;
+    if (resource === null) this._targets.length = 0;
   }
 }

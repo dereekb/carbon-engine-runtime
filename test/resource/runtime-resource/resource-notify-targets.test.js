@@ -55,13 +55,13 @@ test("mesh renews both geometry links when the primary is bad and retires the st
   {
     manager.activityTime = 1234;
     assert.equal(mesh.GetGeometryResource(), low);
-    assert.deepEqual(manager.GetNotifyTargetsByOwner(mesh).map(link => link.lastUsed), [1234, 1234]);
+    assert.deepEqual(manager.notify.GetByOwner(mesh).map(link => link.lastUsed), [1234, 1234]);
     finish(primary, true);
     assert.equal(mesh.lowResGeometry, null);
-    assert.equal(manager.GetNotifyTargetsByResource(low).length, 0);
+    assert.equal(manager.notify.GetByResource(low).length, 0);
   }
   finally { mesh.Destruct(); manager.activityTime = previousTime; }
-  assert.equal(manager.GetNotifyTargetsByOwner(mesh).length, 0);
+  assert.equal(manager.notify.GetByOwner(mesh).length, 0);
 });
 
 test("expired path-owned mesh and model resources reacquire on use but not after destruction", t =>
@@ -76,7 +76,7 @@ test("expired path-owned mesh and model resources reacquire on use but not after
   mesh.SetGeometryRes(resource);
   // Keep this test independent of source-file existence and load-fence logic.
   mesh.InitializeGeometryResource = () => mesh.SetGeometryRes(manager.GetResource(mesh.geometryResPath));
-  manager._ExpireResourceNotifyTargets(resource);
+  manager.notify.Clear(resource);
   assert.equal(mesh.geometry, null);
   mesh.GetGeometryResource();
   assert.equal(acquisitions, 1);
@@ -88,7 +88,7 @@ test("expired path-owned mesh and model resources reacquire on use but not after
   const model = new Tr2SkinnedModel();
   model.geometryResPath = "res:/model.gr2";
   model.Initialize();
-  manager._ExpireResourceNotifyTargets(resource);
+  manager.notify.Clear(resource);
   assert.equal(model.geometryRes, null);
   model.GetSkeleton();
   assert.equal(model.geometryRes, resource);
@@ -156,7 +156,7 @@ test("an effect receives manager callbacks without a readiness poll and unregist
 {
   const effect = new Tr2Effect(), resource = new BlueAsyncRes(), seen = recordCachedData(effect);
   effect.effectResource = resource;
-  assert.equal(blue.resMan.GetNotifyTargetsByOwner(effect).length, 1);
+  assert.equal(blue.resMan.notify.GetByOwner(effect).length, 1);
   assert.equal(effect.IsGood(), false);
   assert.deepEqual(seen, []);
 
@@ -181,7 +181,7 @@ test("an effect receives manager callbacks without a readiness poll and unregist
 
   effect.Destruct();
   effect.Destruct();
-  assert.equal(blue.resMan.GetNotifyTargetsByOwner(effect).length, 0);
+  assert.equal(blue.resMan.notify.GetByOwner(effect).length, 0);
 });
 
 test("effect replacement releases the previous resource and immediately rebuilds a prepared replacement", () =>
@@ -194,8 +194,8 @@ test("effect replacement releases the previous resource and immediately rebuilds
   effect.effectResource = second;
   effect.effectResource = second;
   assert.deepEqual(seen, [["rebuild", first], ["release", first], ["rebuild", second]]);
-  assert.equal(blue.resMan.GetNotifyTargetsByResource(first).length, 0);
-  assert.equal(blue.resMan.GetNotifyTargetsByResource(second).length, 1);
+  assert.equal(blue.resMan.notify.GetByResource(first).length, 0);
+  assert.equal(blue.resMan.notify.GetByResource(second).length, 1);
   effect.Destruct();
 });
 
@@ -233,13 +233,13 @@ test("Render reacquires an expired internal resource and draws only after its re
   finish(resource, true);
   effect.Render(callback, {});
   assert.equal(draws, 1);
-  manager._ExpireResourceNotifyTargets(resource);
+  manager.notify.Clear(resource);
   assert.equal(effect.effectResource, null);
   assert.equal(effect.shader, null);
   effect.Render(callback, {});
   assert.equal(acquisitions, 2);
   assert.equal(draws, 2);
-  assert.equal(manager.GetNotifyTargetsByOwner(effect).length, 1);
+  assert.equal(manager.notify.GetByOwner(effect).length, 1);
 });
 
 test("replacing an internal acquisition preserves the prepared manual replacement shader", t =>
@@ -263,12 +263,12 @@ test("trails move their notification link when rebound", () =>
 {
   const owner = new EveTrailsSet(), first = new TriGeometryRes(), second = new TriGeometryRes();
   owner.SetGeometryResource(first);
-  assert.equal(blue.resMan.GetNotifyTargetsByOwner(owner).length, 1);
+  assert.equal(blue.resMan.notify.GetByOwner(owner).length, 1);
   owner.SetGeometryResource(second);
-  assert.equal(blue.resMan.GetNotifyTargetsByResource(first).length, 0);
-  assert.equal(blue.resMan.GetNotifyTargetsByResource(second).length, 1);
+  assert.equal(blue.resMan.notify.GetByResource(first).length, 0);
+  assert.equal(blue.resMan.notify.GetByResource(second).length, 1);
   owner.Destruct();
-  assert.equal(blue.resMan.GetNotifyTargetsByOwner(owner).length, 0);
+  assert.equal(blue.resMan.notify.GetByOwner(owner).length, 0);
 });
 
 test("remaining geometry owners receive completion, expire and reacquire only while alive", t =>
@@ -290,16 +290,16 @@ test("remaining geometry owners receive completion, expire and reacquire only wh
     owner[slot] = resource;
     finish(resource, true);
     assert.deepEqual(seen, [["rebuild", resource]]);
-    manager._ExpireResourceNotifyTargets(resource);
+    manager.notify.Clear(resource);
     assert.equal(owner[slot], null);
-    assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+    assert.equal(manager.notify.GetByOwner(owner).length, 0);
     use(owner);
     assert.equal(owner[slot], resource);
     assert.equal(acquisitions, 1);
     owner.Destruct();
     use(owner);
     assert.equal(acquisitions, 1);
-    assert.equal(manager.GetNotifyTargetsByOwner(owner).length, 0);
+    assert.equal(manager.notify.GetByOwner(owner).length, 0);
   }
 });
 

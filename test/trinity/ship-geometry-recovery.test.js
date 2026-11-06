@@ -57,7 +57,7 @@ for (const scope of ["mesh and animation", "animation only"])
     // reacquisition must restore ownership of the same handle, not a new one.
     manager.activityTime = 32001;
     if (scope === "animation only") geometry.IsGood(mesh);
-    manager._PurgeNotifyTargets(manager.activityTime);
+    manager.notify.Update(manager.activityTime);
     assert.equal(updater.GetSharedGeometryRes(), null);
     assert.equal(updater.IsInitialized(), false);
     assert.equal(updater._meshBonePalette, null);
@@ -74,7 +74,7 @@ for (const scope of ["mesh and animation", "animation only"])
     assert.equal(updater.IsInitialized(), true);
     assert.equal(updater.GetMeshBoneCount(), 1);
     assert.deepEqual(Array.from(updater.GetMeshBoneMatrixList()), expectedPalette);
-    assert.equal(manager.GetNotifyTargetsByOwner(updater).filter(link => link.resource === geometry).length, 1);
+    assert.equal(manager.notify.GetByOwner(updater).filter(link => link.resource === geometry).length, 1);
 
     // Steady frames preserve the rig and palette rather than rebuilding them.
     const model = updater._runtimeModel;

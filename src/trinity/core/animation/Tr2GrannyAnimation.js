@@ -291,16 +291,16 @@ export class Tr2GrannyAnimation extends IRoot
   {
     if (resource === this._grannyRes) return;
     const previous = CjsSchema.cast(this._grannyRes, TriGeometryRes) ?? CjsSchema.cast(this._grannyRes, TriGrannyRes);
-    if (previous) blue.resMan.RemoveNotifyTarget(this, previous);
+    if (previous) blue.resMan.notify.Remove(this, previous);
     this.Cleanup();
     this._grannyRes = resource;
     if (previous)
     {
       for (const [path, secondary] of this._secondaryResources)
-        if (secondary === previous) blue.resMan.AddNotifyTarget(this, previous, this._secondaryResources, path);
+        if (secondary === previous) blue.resMan.notify.Add(this, previous, this._secondaryResources, path);
     }
     const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
-    if (current) blue.resMan.AddNotifyTarget(this, current, this, "grannyRes");
+    if (current) blue.resMan.notify.Add(this, current, this, "grannyRes");
   }
 
   /** Primary geometry/Granny resource or explicitly supplied decoded data. */
@@ -1133,20 +1133,20 @@ export class Tr2GrannyAnimation extends IRoot
     const oldResource = CjsSchema.cast(previous, TriGeometryRes) ?? CjsSchema.cast(previous, TriGrannyRes);
     if (oldResource)
     {
-      blue.resMan.RemoveNotifyTarget(this, oldResource);
+      blue.resMan.notify.Remove(this, oldResource);
       this.ReleaseCachedData(oldResource);
     }
     this._secondaryResources.set(path, resource ?? null);
-    // RemoveNotifyTarget removes a pair's links, including aliases in other slots.
+    // notify.Remove removes a pair's links, including aliases in other slots.
     if (oldResource)
     {
-      if (this.grannyRes === oldResource) blue.resMan.AddNotifyTarget(this, oldResource, this, "grannyRes");
+      if (this.grannyRes === oldResource) blue.resMan.notify.Add(this, oldResource, this, "grannyRes");
       for (const [otherPath, other] of this._secondaryResources)
         if (other === oldResource && otherPath !== path)
-          blue.resMan.AddNotifyTarget(this, oldResource, this._secondaryResources, otherPath);
+          blue.resMan.notify.Add(this, oldResource, this._secondaryResources, otherPath);
     }
     const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
-    if (current) blue.resMan.AddNotifyTarget(this, current, this._secondaryResources, path);
+    if (current) blue.resMan.notify.Add(this, current, this._secondaryResources, path);
     return true;
   }
 
@@ -2363,7 +2363,7 @@ export class Tr2GrannyAnimation extends IRoot
    */
   Destruct()
   {
-    for (const resource of this._secondaryResources.values()) blue.resMan.RemoveNotifyTarget(this, resource);
+    for (const resource of this._secondaryResources.values()) blue.resMan.notify.Remove(this, resource);
     this._secondaryResources.clear();
     this.grannyRes = null;
     this._sharedGeometry = false;

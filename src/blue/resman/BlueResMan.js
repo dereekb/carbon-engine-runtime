@@ -236,129 +236,8 @@ export class BlueResMan
   /** @cjs Owner-link lease in seconds; null follows the resource inactivity policy. */
   leaseSeconds = null;
 
-  /** @cjs Owns browser owner-link tracking; native resource callbacks remain on BlueAsyncRes. */
-  _notify = new CjsBlueResManNotify(s_ch);
-
-  /**
-   * Registers an owner's resource property and rebuilds immediately if prepared.
-   *
-   * Carbon: BlueAsyncRes::AddNotifyTarget (blue/src/BlueAsyncRes.cpp:261-290).
-   * @cjs Manager entry point delegates JavaScript owner tracking.
-   * @adapted Links live on the manager and expire because JavaScript cannot
-   *   guarantee native destructor unregistration. Explicit teardown must still
-   *   remove them. Revisit manager ownership once OnDestruct is guaranteed.
-   * @param {object} owner Owner implementing Carbon's two cached-data handlers.
-   * @param {BlueAsyncRes} resource Resource held by the owner.
-   * @param {object|Map} holder Object or map holding the resource.
-   * @param {*} key Property name or map key; expiry clears only a matching value.
-   * @returns {void}
-   */
-  AddNotifyTarget(owner, resource, holder, key)
-  {
-    return this._notify.AddNotifyTarget(owner, resource, holder, key, this.motherLode.GetActivityTime());
-  }
-
-  /**
-   * Removes every property link between an owner and resource.
-   *
-   * Carbon: BlueAsyncRes::RemoveNotifyTarget (blue/src/BlueAsyncRes.cpp:292-347).
-   * @cjs Manager entry point delegates JavaScript owner tracking.
-   * @adapted Manager ownership replaces the native per-resource target list.
-   * @param {object} owner Owner replacing or destroying its resource slot.
-   * @param {BlueAsyncRes} resource Previously held resource.
-   * @returns {void}
-   */
-  RemoveNotifyTarget(owner, resource)
-  {
-    return this._notify.RemoveNotifyTarget(owner, resource);
-  }
-
-  /**
-   * Renews all of an owner's links to a resource without allocating.
-   * @cjs Per-target activity replaces native destructor certainty.
-   * @implemented
-   * @param {object} owner Resource user.
-   * @param {BlueAsyncRes} resource Resource being used.
-   * @returns {boolean} Whether a registered link was renewed.
-   */
-  _KeepNotifyTargetAlive(owner, resource)
-  {
-    return this._notify._KeepNotifyTargetAlive(owner, resource, this.activityTime || this.motherLode.GetActivityTime());
-  }
-
-  /**
-   * Returns a detached diagnostic snapshot of links for an owner.
-   * @cjs Debugging manager-owned retention without exposing mutable link records.
-   * @implemented
-   * @param {object} owner Owner to inspect.
-   * @returns {object[]} Its active resource/property links.
-   */
-  GetNotifyTargetsByOwner(owner)
-  {
-    return this._notify.GetNotifyTargetsByOwner(owner);
-  }
-
-  /**
-   * Returns a detached diagnostic snapshot of links for a resource.
-   * @cjs Debugging manager-owned retention without exposing mutable link records.
-   * @implemented
-   * @param {BlueAsyncRes} resource Resource to inspect.
-   * @returns {object[]} Its active owner/property links.
-   */
-  GetNotifyTargetsByResource(resource)
-  {
-    return this._notify.GetNotifyTargetsByResource(resource);
-  }
-
-  /**
-   * Expires unrenewed owner links independently of whether their resource is busy.
-   * @cjs JavaScript has no reliable native last-reference/destructor signal.
-   * @implemented
-   * @param {number} now Registry activity time in milliseconds.
-   * @returns {void}
-   */
-  _PurgeNotifyTargets(now)
-  {
-    return this._notify._PurgeNotifyTargets(now, this.leaseSeconds ?? (this._autoPurgePolicy?.maxIdleMilliseconds ?? 30000) / 1000);
-  }
-
-  /**
-   * Rebuilds registered owners after a successful resource preparation.
-   * Carbon: BlueAsyncRes::NotifyRebuildCachedData (blue/src/BlueAsyncRes.cpp:354-360).
-   * @cjs Manager entry point delegates JavaScript owner tracking.
-   * @adapted The manager owns the links instead of the resource.
-   * @param {BlueAsyncRes} resource Prepared resource.
-   * @returns {void}
-   */
-  _NotifyRebuildCachedData(resource)
-  {
-    return this._notify._NotifyRebuildCachedData(resource);
-  }
-
-  /**
-   * Releases registered owners' derived data before reload or after failure.
-   * Carbon: BlueAsyncRes::NotifyReleaseCachedData (blue/src/BlueAsyncRes.cpp:362-368).
-   * @cjs Manager entry point delegates JavaScript owner tracking.
-   * @adapted Links remain registered for the next completed attempt.
-   * @param {BlueAsyncRes} resource Resource losing its prepared data.
-   * @returns {void}
-   */
-  _NotifyReleaseCachedData(resource)
-  {
-    return this._notify._NotifyReleaseCachedData(resource);
-  }
-
-  /**
-   * Detaches every owner slot before an idle resource is purged.
-   * @cjs Manager eviction cannot leave a surviving owner using stale derived data.
-   * @implemented
-   * @param {BlueAsyncRes} resource Resource being purged.
-   * @returns {void}
-   */
-  _ExpireResourceNotifyTargets(resource)
-  {
-    return this._notify._ExpireResourceNotifyTargets(resource);
-  }
+  /** @cjs Browser owner-link tracking; native resource callbacks remain on BlueAsyncRes. */
+  notify = new CjsBlueResManNotify(this, s_ch);
 
   // The manager is no longer reachable from itself. Carbon's process-wide
   // handle is an extern beside the interface it points at, not a static on
@@ -2287,7 +2166,7 @@ export class BlueResMan
    */
   PurgeInactive(options = {})
   {
-    this._PurgeNotifyTargets(options.time ?? this.motherLode.GetActivityTime());
+    this.notify.Update(options.time);
     const resources = this.motherLode.PurgeInactive(options);
     const objects = this.loadObjectCache.PurgeInactive(options);
     return Object.freeze({
@@ -2545,7 +2424,7 @@ export class BlueResMan
    */
   Clear()
   {
-    this._notify.Clear();
+    this.notify.Clear();
     for (const lode of [ this.motherLode, this.loadObjectCache ])
     {
       for (const [, resource] of lode.Entries())
@@ -3110,7 +2989,7 @@ export class BlueResMan
     resource._isPrepared = true;
     resource._isLoading = false;
     this._FinishResourceLoad(resource);
-    this._NotifyReleaseCachedData(resource);
+    this.notify.ReleaseCachedData(resource);
   }
 
   /**
@@ -3394,7 +3273,7 @@ export class BlueResMan
   _CleanupResource(resource, options = {})
   {
     resource.CancelPendingLoad();
-    this._ExpireResourceNotifyTargets(resource);
+    this.notify.Clear(resource);
     resource._OnShutdown(options);
     if (options.releasePayload !== false) this.ReleaseResourcePayload(resource);
     resource._isGood = resource._isPrepared = false;

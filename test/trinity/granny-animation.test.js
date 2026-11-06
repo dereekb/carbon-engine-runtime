@@ -44,9 +44,9 @@ test("secondary release clears layer and pose data; reload retains the slot and 
   secondary._NotifyRebuildCachedData();
   assert.equal(animation.Initialize(), true, "explicit initialization rebuilds the released rig");
   assert.ok(layer.boneMask);
-  manager._ExpireResourceNotifyTargets(secondary);
+  manager.notify.Clear(secondary);
   assert.equal(animation._secondaryResources.has("res:/secondary.gr2"), false);
-  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+  assert.equal(manager.notify.GetByOwner(animation).length, 0);
 });
 
 test("secondary resource replacement unregisters the old resource and destruction removes aliases", t =>
@@ -59,14 +59,14 @@ test("secondary resource replacement unregisters the old resource and destructio
   animation.SetSecondaryGrannyResource("first", first);
   animation.SetSecondaryGrannyResource("alias", first);
   animation.SetSecondaryGrannyResource("first", replacement);
-  assert.equal(manager.GetNotifyTargetsByResource(first).length, 1);
-  assert.equal(manager.GetNotifyTargetsByResource(replacement).length, 1);
-  manager._ExpireResourceNotifyTargets(first);
+  assert.equal(manager.notify.GetByResource(first).length, 1);
+  assert.equal(manager.notify.GetByResource(replacement).length, 1);
+  manager.notify.Clear(first);
   assert.equal(animation._secondaryResources.has("alias"), false);
   assert.equal(animation._secondaryResources.get("first"), replacement);
   animation.Destruct();
   assert.equal(animation._secondaryResources.size, 0);
-  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+  assert.equal(manager.notify.GetByOwner(animation).length, 0);
 });
 
 test("expiry clears a resource shared by the primary property and secondary map without stale links", t =>
@@ -77,10 +77,10 @@ test("expiry clears a resource shared by the primary property and secondary map 
   t.after(() => { animation.Destruct(); manager.Clear(); blue.resMan = previous; });
   animation.SetGrannyResource(resource);
   animation.SetSecondaryGrannyResource("alias", resource);
-  manager._ExpireResourceNotifyTargets(resource);
+  manager.notify.Clear(resource);
   assert.equal(animation.grannyRes, null);
   assert.equal(animation._secondaryResources.has("alias"), false);
-  assert.equal(manager.GetNotifyTargetsByOwner(animation).length, 0);
+  assert.equal(manager.notify.GetByOwner(animation).length, 0);
 });
 
 

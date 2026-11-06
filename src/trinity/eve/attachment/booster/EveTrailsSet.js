@@ -366,10 +366,10 @@ export class EveTrailsSet
   SetGeometryResource(resource)
   {
     if (this.geometryResource === resource) return;
-    if (this.geometryResource) blue.resMan.RemoveNotifyTarget(this, this.geometryResource);
+    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
     this.Cleanup();
     this._geometryResource = resource ?? null;
-    if (this.geometryResource) blue.resMan.AddNotifyTarget(this, this.geometryResource, this, "geometryResource");
+    if (this.geometryResource) blue.resMan.notify.Add(this, this.geometryResource, this, "geometryResource");
   }
 
   /** The trail placements as copies, for diagnostics. */

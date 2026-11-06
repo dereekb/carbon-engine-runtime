@@ -12,8 +12,6 @@ class QueueResMan extends BlueResMan
   queued = [];
   rebuilds = [];
   releases = [];
-  _NotifyReleaseCachedData(resource) { this.releases.push(resource); super._NotifyReleaseCachedData(resource); }
-  _NotifyRebuildCachedData(resource) { this.rebuilds.push(resource); super._NotifyRebuildCachedData(resource); }
   cancelled = [];
   reserved = [];
   released = [];
@@ -67,6 +65,19 @@ function setup(t)
 {
   const previous = { resMan: blue.resMan, paths: blue.paths };
   const resMan = new QueueResMan(), paths = new MapPaths();
+  const notify = resMan.notify;
+  const release = notify.ReleaseCachedData;
+  const rebuild = notify.RebuildCachedData;
+  t.mock.method(notify, "ReleaseCachedData", resource =>
+  {
+    resMan.releases.push(resource);
+    release.call(notify, resource);
+  });
+  t.mock.method(notify, "RebuildCachedData", resource =>
+  {
+    resMan.rebuilds.push(resource);
+    rebuild.call(notify, resource);
+  });
   blue.resMan = resMan;
   blue.paths = paths;
   t.after(() => { blue.resMan = previous.resMan; blue.paths = previous.paths; });
@@ -122,7 +133,7 @@ test("a successful load opens the file without its query, prepares and notifies"
   paths.files.set("res:/a.bin", { form: "bytes", data: new Uint8Array(12) });
   const res = new TestRes(), target = new Target();
   target.resource = res;
-  resMan.AddNotifyTarget(target, res, target, "resource");
+  resMan.notify.Add(target, res, target, "resource");
   res.Initialize("res:/a.bin?q=1", "");
 
   await resMan.Run(resMan.queued[0]);
@@ -218,10 +229,17 @@ test("Reload cancels and queues a fresh load; starting it is not a change", t =>
   assert.equal(res._loadCbId, resMan.queued[1].id);
 });
 
-test("Carbon's AddNotifyTarget and RemoveNotifyTarget are kept, unused: owners register with resMan", t =>
+test("owners register directly with resMan.notify without manager forwarding methods", t =>
 {
-  setup(t);
+  const { resMan } = setup(t);
   const res = new TestRes(), target = new Target();
-  assert.throws(() => res.AddNotifyTarget(target), /resMan/u);
-  assert.throws(() => res.RemoveNotifyTarget(target), /resMan/u);
+  target.resource = res;
+  resMan.notify.Add(target, res, target, "resource");
+  res._NotifyRebuildCachedData();
+  assert.deepEqual(target.calls, [["rebuild", res]]);
+  resMan.notify.Remove(target, res);
+  res._NotifyReleaseCachedData();
+  assert.equal(target.calls.length, 1);
+  assert.equal("AddNotifyTarget" in resMan, false);
+  assert.equal("_NotifyRebuildCachedData" in resMan, false);
 });

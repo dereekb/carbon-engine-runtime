@@ -101,5 +101,5 @@ test("hidden doll renewal updates the real skinned-model owner lease", t =>
   doll.front = { objects: [{ visualModel: model }] };
   manager.activityTime = 12345;
   assert.equal(doll.IsGood(), false, "pending geometry is still not ready");
-  assert.equal(manager.GetNotifyTargetsByOwner(model)[0].lastUsed, 12345);
+  assert.equal(manager.notify.GetByOwner(model)[0].lastUsed, 12345);
 });
