@@ -345,15 +345,27 @@ test("a list that already matches is no change, including bags and live items", 
   assert.equal(CjsGraph.set(holder, { items: null }), false);
 });
 
-test("change detection is exact: a change inside Float32 tolerance is not dropped", () =>
+test("IsEqual decides what changed: a difference inside Carbon's tolerance is no change", () =>
 {
   const holder = new Holder();
-  holder.items.push(leaf("a", 1));
+  const first = leaf("a", 1);
+  holder.items.push(first);
 
   const nudged = 1 + 1e-7;
-  assert.equal(float.IsLike(1, nudged), true, "the tolerance the comparison must not use");
-  assert.notEqual(CjsGraph.set(holder, { items: [ { weight: nudged } ] }), false);
-  assert.notEqual(CjsGraph.set(leaf("b", 1), { weight: nudged }), false);
+  assert.equal(float.IsEqual(1, nudged), true);
+  assert.equal(float.IsExactEqual(1, nudged), false);
+  assert.equal(CjsGraph.set(first, { weight: nudged }), false);
+  assert.equal(CjsGraph.set(holder, { items: [ { weight: nudged } ] }), false);
+  assert.equal(holder.items[0], first);
+  assert.notEqual(CjsGraph.set(first, { weight: 1.5 }), false);
+});
+
+test("a list comparison validates the values it reads", () =>
+{
+  const holder = new Holder();
+  holder.items.push(leaf("a"));
+
+  assert.throws(() => CjsGraph.set(holder, { items: [ { weight: "heavy" } ] }), /Invalid value for graph member: GraphValueLeaf.weight/);
 });
 
 test("structure list rows reuse their position, and record what changed", () =>

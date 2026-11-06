@@ -13,15 +13,6 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
   name = "Invalid";
 
   /**
-   * Rejects isExactLike because no valid value type has been assigned.
-   * @cjs Fails before inspecting the supplied values.
-   */
-  static isExactLike(stored, value)
-  {
-    throw new TypeError("Invalid type handler cannot compare values.");
-  }
-
-  /**
    * Rejects get because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
@@ -91,15 +82,6 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
   static isEqual(a, b)
   {
     throw new TypeError("Invalid type handler cannot compare values.");
-  }
-
-  /**
-   * Rejects isLike because no valid value type has been assigned.
-   * @cjs Fails before inspecting or changing the supplied values.
-   */
-  static isLike(a, b)
-  {
-    throw new TypeError("Invalid type handler cannot compare representations.");
   }
 
   /** Stable class identity. */

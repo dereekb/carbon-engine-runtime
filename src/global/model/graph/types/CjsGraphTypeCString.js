@@ -35,21 +35,13 @@ export class CjsGraphTypeCString extends CjsGraphTypeString
 
   /**
    * Copies the visible immutable text without preserving inaccessible trailing bytes.
+   * Comparison sees the same visible prefix through convert, as strcmp/wcscmp do
+   * (CompareStrings/CompareWStrings, blueexposure/BlueVariable.cpp:5-35).
    * @adapted JS strings need no independently allocated native character buffer.
    */
   static clone(target, key)
   {
     return this.get(target, key);
-  }
-
-  /**
-   * Compares visible prefixes, as strcmp/wcscmp do.
-   * Carbon: CompareStrings/CompareWStrings (blueexposure/BlueVariable.cpp:5-35).
-   * @adapted Only JS string representations are compared; native null pointers stay outside this storage type.
-   */
-  static isEqual(a, b)
-  {
-    return this.isValidValue(a) && this.isValidValue(b) && this.convert(a) === this.convert(b);
   }
 
   /** Stable class identity. */

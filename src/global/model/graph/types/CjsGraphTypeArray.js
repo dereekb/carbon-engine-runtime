@@ -36,7 +36,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   }
 
   /**
-   * Writes only when converted storage differs; preserves fixed storage and overlapping views.
+   * Writes unless IsEqual says the values are equal; preserves fixed storage and overlapping views.
    * @cjs Native TypedArray.set writes a typed source, which may overlap storage. A plain source
    * cannot, and writes through convert, which also takes forms native set refuses.
    */
@@ -48,25 +48,19 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
     if (this.elementCount === 0 && current.length !== count)
     {
       const storage = new this.ctor(count); // alloc: replacement owned storage only when a variable length changes.
-      this._write(storage, value, 0);
+      this._write(storage, value);
       target[key] = storage;
       return true;
     }
 
-    for (let i = 0; i < count; i++)
-    {
-      if (!Object.is(current[i], this.convert(value[i])))
-      {
-        this._write(current, value, i);
-        return true;
-      }
-    }
+    if (this.isEqual(current, value)) return false;
 
-    return false;
+    this._write(current, value);
+    return true;
   }
 
-  /** Writes a source into storage from start. @cjs */
-  static _write(storage, value, start)
+  /** Writes a source into storage. @cjs */
+  static _write(storage, value)
   {
     if (!Array.isArray(value))
     {
@@ -74,7 +68,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
       return;
     }
 
-    for (let i = start; i < value.length; i++) storage[i] = this.convert(value[i]);
+    for (let i = 0; i < value.length; i++) storage[i] = this.convert(value[i]);
   }
 
   /**
@@ -109,74 +103,41 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
     return this.element.isValidValue(value);
   }
 
-  /** Tests this definition's own storage across realms, with its fixed count. @cjs */
-  static _isStored(value)
-  {
-    return ArrayBuffer.isView(value)
-      && Object.prototype.toString.call(value) === `[object ${this.ctor.name}]`
-      && (this.elementCount === 0 || value.length === this.elementCount);
-  }
-
   /**
-   * Tests whether Set with this input would leave the stored elements unchanged.
-   * @cjs The comparison Set makes, for callers comparing without writing.
-   */
-  static isExactLike(stored, value)
-  {
-    if (stored.length !== value.length) return false;
-
-    for (let i = 0; i < value.length; i++)
-    {
-      if (!Object.is(stored[i], this.convert(value[i]))) return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Compares elements exactly, distinguishing signed zero and treating NaN as equal.
-   * @cjs
+   * Tests whether two arrays are exactly equal, with no tolerance, in any accepted form.
+   * NaN equals NaN, and signed zeros differ.
+   * @cjs JavaScript comparison after conversion.
    */
   static isExactEqual(a, b)
   {
     if (a.length !== b.length) return false;
+
     for (let i = 0; i < a.length; i++)
     {
-      if (!Object.is(a[i], b[i])) return false;
+      if (!Object.is(this.convert(a[i]), this.convert(b[i]))) return false;
     }
+
     return true;
   }
 
   /**
-   * Compares one stored element; Float32 arrays retain Carbon's separate tolerant rule.
-   * @cjs Exact comparison for JS-only array families.
+   * Compares one converted element; Float32 arrays keep Carbon's separate tolerant rule.
+   * @cjs Other families use their element's own comparison.
    */
   static equalElement(a, b)
   {
-    return Object.is(a, b);
+    return this.element.isEqual(a, b);
   }
 
   /**
-   * Compares canonical arrays using the family's equality policy.
-   * @cjs Native gaps stay explicit.
+   * Tests whether two arrays are equal in any accepted form, within Carbon's tolerance
+   * where Carbon has one. This decides whether Set has anything to do.
+   * @cjs Every family compares here. Carbon's DOUBLEARRAY and INTARRAY have no AreEqual, and
+   * that gap does not apply: they compare as their elements do.
    */
   static isEqual(a, b)
   {
-    if (!this.hasValueEquality || !this._isStored(a) || !this._isStored(b) || a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++)
-    {
-      if (!this.equalElement(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  /**
-   * Compares converted representations without allocating scratch arrays.
-   * @cjs Same conversion as storage.
-   */
-  static isLike(a, b)
-  {
-    if (!this.hasValueEquality || a.length !== b.length) return false;
+    if (a.length !== b.length) return false;
 
     for (let i = 0; i < a.length; i++)
     {
@@ -194,9 +155,6 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
 
   /** Fixed element count, set by each fixed definition; 0 means any length. */
   static elementCount = 0;
-
-  /** Carbon DOUBLEARRAY/INTARRAY lack AreEqual specialisations; their definitions disable it. */
-  static hasValueEquality = true;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeArray";

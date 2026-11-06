@@ -40,15 +40,6 @@ export class CjsGraphTypeBigInt extends CjsGraphTypeNumber
     return this._isStored(value);
   }
 
-  /**
-   * Compares canonical BigInt values.
-   * @cjs Strings are valid input, not canonical values.
-   */
-  static isEqual(a, b)
-  {
-    return this._isStored(a) && this._isStored(b) && a === b;
-  }
-
   /** Tests one word of a pair: any signed or unsigned 32-bit integer. @cjs */
   static _isWord(value)
   {

@@ -541,11 +541,18 @@ export class CjsGraph
     return true;
   }
 
-  /** Compares one stored value with incoming input, exactly, as set would. @cjs */
+  /**
+   * Compares one stored value with incoming input, as set would.
+   * @cjs Runs IsValidValue itself: this input has not been through _setMembers.
+   */
   static _isValueLike(stored, member, value, options)
   {
     if (stored === null || value === null) return stored === value;
-    if (member.edge === null) return member.handler.IsExactLike(stored, value);
+
+    if (options.validate && !member.handler.IsValidValue(value))
+      throw new TypeError(`Invalid value for graph member: ${member.owner.declared.name}.${member.name}`);
+
+    if (member.edge === null) return member.handler.IsEqual(stored, value);
     if (member.edge.collection) return this.isListLike(stored, value, member.edge.type, options);
 
     return this.isObjectLike(stored, value, member.edge.type, options);

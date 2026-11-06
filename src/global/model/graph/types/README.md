@@ -60,20 +60,18 @@ colour conversion.
 
 All handlers share one call shape, options last: `get(target, key, options)`,
 `set(target, key, value, options)`, `copy(source, sourceKey, target, key, options)`,
-`clone(target, key, options)`, `isLike(a, b, options)`, plus `isValidValue(value)`, `isExactEqual(a, b)`
-and `isEqual(a, b)`. Instance shortcuts capitalise the same names and forward options.
+`clone(target, key, options)`, plus `isValidValue(value)`, `isExactEqual(a, b)` and `isEqual(a, b)`. Instance shortcuts capitalise the same names and forward options.
 Leaf handlers do not read options and may leave it off their own signature. There is no From, schema lookup, accessor resolution or destruction.
 
-Set/Copy report an exact change after destination conversion. This is a JS
-convenience, unlike Carbon Copy's success result. IsEqual applies native
-comparison semantics; it does not decide whether to assign. In particular,
-Carbon's float-array NaN comparison quirk is retained.
+Set/Copy report a change, a JS convenience unlike Carbon Copy's success result, and
+IsEqual decides it. Carbon's comparisons are kept, so two float quirks reach Set: a
+Float32 array element holding NaN equals anything, so Set cannot replace it, and a
+Float32 or Float64 scalar holding NaN or Infinity never equals itself, so Set writes
+and reports it every time.
 
-Carbon's DOUBLEARRAY and INTARRAY have no AreEqual specialisation: their native
-default returns false, even for identical or empty arrays. Float64Array and
-Int32Array preserve that result in IsEqual/IsLike; IsExactEqual and Set/Copy's exact
-change reporting remain independent. Other additional JS array families compare
-elements exactly. This is not a claim that Carbon exposes those additional families.
+Carbon's DOUBLEARRAY and INTARRAY have no AreEqual specialisation, and that gap does not
+apply here: IsEqual works on every type, and those families compare as their elements do.
+This is not a claim that Carbon exposes the additional JS array families.
 
 Integer scalar conversion wraps to its width; 8/16/32-bit storage truncates and
 maps non-finite inputs to zero like native JS typed arrays. Int64/Uint64 use BigInt
@@ -106,8 +104,8 @@ runtime's current supported typed-array family.
 
 This subtree imports only its own files and uses JavaScript built-ins. Blue exposure identifiers
 are supplied by the future Blue definition adapter, not stored or imported by these handlers.
-IsLike normalizes accepted forms with the same conversion as Set before comparing. The existing
-conversion behavior is retained during relocation; stricter format validation is not silently adopted.
+The existing conversion behavior is retained during relocation; stricter format validation is not
+silently adopted.
 
 Options are per call: one reused object for a whole operation, carrying what objects and lists
 need, including recursion state, and nothing per member. Object, list and struct handlers
@@ -117,4 +115,6 @@ is not implemented. A forward _ref inside a structure list is refused.
 Ownership edges and operation-owned creations must be recorded before destruction is implemented.
 No placeholder Destruct method promises cleanup today.
 
-IsEqual requires canonical representations; IsLike accepts alternate representations.
+There are two comparisons, and both compare values in any accepted form, not storage (operator,
+2026-11-07). IsEqual is equal within Carbon's tolerances, such as 1e-6 on Float32, and decides whether
+Set has anything to do. IsExactEqual is exactly equal, with no tolerance. Both assume valid input.

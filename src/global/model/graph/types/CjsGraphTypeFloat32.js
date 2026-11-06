@@ -21,14 +21,13 @@ export class CjsGraphTypeFloat32 extends CjsGraphTypeNumber
   }
 
   /**
-   * Compares stored values. Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-220).
+   * Compares values within Carbon's tolerance, so NaN and Infinity never equal themselves.
+   * Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-220).
    * @adapted JavaScript values replace native union members.
    */
   static isEqual(a, b)
   {
-    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
-
-    return Math.abs(Math.fround(a - b)) < Math.fround(1e-6);
+    return Math.abs(Math.fround(this.convert(a) - this.convert(b))) < Math.fround(1e-6);
   }
 
   /** Stable class identity. */

@@ -32,15 +32,6 @@ export class CjsGraphTypeNumber extends CjsGraphTypeScalar
     return typeof value === "number";
   }
 
-  /**
-   * Compares canonical numbers; floating specialisations supply Carbon tolerances.
-   * @cjs
-   */
-  static isEqual(a, b)
-  {
-    return this.isValidValue(a) && this.isValidValue(b) && a === b;
-  }
-
   /** Canonical JavaScript primitive constructor. */
   static ctor = Number;
 

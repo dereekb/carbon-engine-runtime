@@ -84,8 +84,7 @@ test("standard narrow/wide strings preserve distinct definitions and full Unicod
         assert.equal(instance.IsEqual(text, "Tākahē 😀\0other"), false);
         assert.equal(instance.Copy({ value: "résumé" }, "value", target, "value"), true);
         assert.equal(target.value, "résumé");
-        assert.equal(instance.IsLike(12, "12"), true);
-        assert.equal(instance.IsEqual(12, "12"), false);
+        assert.equal(instance.IsEqual(12, "12"), true, "compared as Set would store them");
     }
 });
 
@@ -103,10 +102,10 @@ test("C, reference and shared string families reuse NUL-terminated operations wi
         assert.equal(target.value, "é😀");
         assert.equal(instance.Set(target, "value", "é😀\0other"), false);
         assert.equal(instance.IsEqual("é😀\0suffix", "é😀\0other"), true);
-        assert.equal(instance.IsExactEqual("é😀\0suffix", "é😀\0other"), false);
+        assert.equal(instance.IsExactEqual("é😀\0suffix", "é😀\0other"), true, "only the visible prefix is the value");
         assert.equal(instance.IsEqual("é😀", "é😁"), false);
         assert.equal(instance.IsEqual(null, ""), false);
-        assert.equal(instance.IsLike(12, "12\0tail"), true);
+        assert.equal(instance.IsEqual(12, "12\0tail"), true);
         assert.equal(instance.Get({ value: "head\0tail" }, "value"), "head");
         assert.equal(instance.Clone({ value: "head\0tail" }, "value"), "head");
         assert.equal(instance.Copy({ value: "copy\0tail" }, "value", target, "value"), true);
@@ -131,8 +130,7 @@ test("Invalid rejects every static and instance value operation without touching
         ["clone", "Clone", [target, "missing"]],
         ["isValidValue", "IsValidValue", [target]],
         ["isExactEqual", "IsExactEqual", [target, target]],
-        ["isEqual", "IsEqual", [target, target]],
-        ["isLike", "IsLike", [target, target]]
+        ["isEqual", "IsEqual", [target, target]]
     ];
     for (const [staticName, instanceName, args] of cases)
     {
@@ -175,7 +173,7 @@ for (const [name, ctor, length] of mathDefinitions)
         assert.equal(handler.isExactEqual(clone, storage), true);
         assert.equal(handler.isValidValue(storage), true);
         assert.equal(instance.IsValidValue(new ctor(length + 1)), false);
-        assert.equal(handler.isEqual(new ctor(length + 1), new ctor(length + 1)), false);
+        assert.equal(handler.isEqual(values, storage), true, "a plain array compares against stored values");
     });
 }
 
@@ -188,8 +186,8 @@ test("named math definitions retain their own precision and native comparison po
     assert.equal(single.value[0], 1);
     assert.equal(double.value[0], value);
     assert.equal(types.CjsGraphTypeVector2.isEqual(single.value, single.value), true);
-    assert.equal(types.CjsGraphTypeVector2d.isEqual(double.value, double.value), false);
-    assert.equal(types.CjsGraphTypeVector3i.isEqual(new Int32Array(3), new Int32Array(3)), false);
+    assert.equal(types.CjsGraphTypeVector2d.isEqual(double.value, double.value), true);
+    assert.equal(types.CjsGraphTypeVector3i.isEqual(new Int32Array(3), new Int32Array(3)), true);
     assert.notEqual(types.CjsGraphTypeColor, types.CjsGraphTypeVector4);
     assert.notEqual(types.CjsGraphTypeQuaternion, types.CjsGraphTypeVector4);
 });

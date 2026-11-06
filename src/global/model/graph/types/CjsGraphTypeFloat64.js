@@ -12,14 +12,13 @@ export class CjsGraphTypeFloat64 extends CjsGraphTypeNumber
   name = "Float64";
 
   /**
-   * Compares stored values. Modelled on: Be::DOUBLE (blueexposure/BlueVariable.cpp:224-244).
+   * Compares values within Carbon's tolerance, so NaN and Infinity never equal themselves.
+   * Modelled on: Be::DOUBLE (blueexposure/BlueVariable.cpp:224-244).
    * @adapted JavaScript values replace native union members.
    */
   static isEqual(a, b)
   {
-    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
-
-    return Math.abs(a - b) < 1e-12;
+    return Math.abs(this.convert(a) - this.convert(b)) < 1e-12;
   }
 
   /** Stable class identity. */

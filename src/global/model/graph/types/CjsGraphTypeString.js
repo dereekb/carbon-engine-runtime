@@ -32,17 +32,6 @@ export class CjsGraphTypeString extends CjsGraphTypeScalar
     return typeof value === "string";
   }
 
-  /**
-   * Compares stored values. Modelled on: Be::STDSTRING (blueexposure/BlueVariable.cpp:879-905).
-   * @adapted JavaScript values replace native union members.
-   */
-  static isEqual(a, b)
-  {
-    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
-
-    return a === b;
-  }
-
   /** Stable class identity. */
   static className = "CjsGraphTypeString";
 

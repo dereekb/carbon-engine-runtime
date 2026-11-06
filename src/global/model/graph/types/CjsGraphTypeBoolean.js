@@ -30,16 +30,6 @@ export class CjsGraphTypeBoolean extends CjsGraphTypeScalar
     return typeof value === "boolean";
   }
 
-  /** Compares stored values. Modelled on: Be::BOOL (blueexposure/BlueVariable.cpp:250-271).
-   * @adapted JavaScript values replace native union members.
-   */
-  static isEqual(a, b)
-  {
-    if (!this.isValidValue(a) || !this.isValidValue(b)) return false;
-
-    return a === b;
-  }
-
   /** Stable class identity. */
   static className = "CjsGraphTypeBoolean";
 

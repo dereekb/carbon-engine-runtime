@@ -1,9 +1,10 @@
 /**
  * Shared JavaScript scalar value operations for the standalone type handlers.
  *
- * @cjs Owner/key access replaces native pointers. Set and Copy report an exact
- * stored-value change, not Carbon Copy's success result. No schema lookup or
- * input validation occurs during assignment; IsValidValue is a separate operation.
+ * @cjs Owner/key access replaces native pointers. Set and Copy report a change, not
+ * Carbon Copy's success result. No schema lookup or input validation occurs during
+ * assignment; IsValidValue is a separate operation. IsEqual and IsExactEqual compare
+ * values in any accepted form, and assume both are valid.
  */
 export class CjsGraphTypeScalar
 {
@@ -30,15 +31,15 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * Assigns only when the converted value differs, including signed zero.
-   * @cjs Change reporting.
+   * Assigns unless IsEqual says the values are equal, which is what "changed" means here.
+   * @cjs Change reporting. A null holds no value to compare, so anything replaces it.
    */
   static set(target, key, value)
   {
-    const converted = this.convert(value);
-    if (this.isExactEqual(target[key], converted)) return false;
+    const stored = target[key];
+    if (stored !== null && this.isEqual(stored, value)) return false;
 
-    target[key] = converted;
+    target[key] = this.convert(value);
     return true;
   }
 
@@ -61,30 +62,23 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * Tests whether Set with this input would leave the stored value unchanged.
-   * @cjs The comparison Set makes, for callers comparing without writing.
-   */
-  static isExactLike(stored, value)
-  {
-    return this.isExactEqual(stored, this.convert(value));
-  }
-
-  /**
-   * Tests exact stored-value equality; NaN equals NaN, signed zeros differ.
-   * @cjs JavaScript storage comparison.
+   * Tests whether two values are exactly equal, with no tolerance, in any accepted form.
+   * NaN equals NaN, and signed zeros differ.
+   * @cjs JavaScript comparison after conversion.
    */
   static isExactEqual(a, b)
   {
-    return Object.is(a, b);
+    return Object.is(this.convert(a), this.convert(b));
   }
 
   /**
-   * Compares scalar values; numeric specialisations supply Carbon tolerances.
-   * @cjs Shared default.
+   * Tests whether two values are equal in any accepted form, within Carbon's tolerance
+   * where Carbon has one. This decides whether Set has anything to do.
+   * @cjs Exact by default; float specialisations supply Carbon's tolerance.
    */
   static isEqual(a, b)
   {
-    return a === b;
+    return this.isExactEqual(a, b);
   }
 
   /**
@@ -133,15 +127,6 @@ export class CjsGraphTypeScalar
   }
 
   /**
-   * Instance shortcut to isExactLike.
-   * @cjs
-   */
-  IsExactLike(stored, value)
-  {
-    return this.constructor.isExactLike(stored, value);
-  }
-
-  /**
    * Instance shortcut to isExactEqual.
    * @cjs
    */
@@ -166,24 +151,6 @@ export class CjsGraphTypeScalar
   IsValidValue(value)
   {
     return this.constructor.isValidValue(value);
-  }
-
-  /**
-   * Compares accepted representations after storage conversion.
-   * @cjs Same conversion as Set; no schema or format rules are consulted.
-   */
-  static isLike(a, b)
-  {
-    return this.isEqual(this.convert(a), this.convert(b));
-  }
-
-  /**
-   * Instance shortcut to isLike.
-   * @cjs
-   */
-  IsLike(a, b, options)
-  {
-    return this.constructor.isLike(a, b, options);
   }
 
   /** Stable class identity. */

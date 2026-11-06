@@ -27,7 +27,7 @@ test("integer scalar conversion matches native width without allocating typed sc
             assert.equal(instance.Set(target, "value", input), false);
             assert.equal(instance.IsValidValue(expected), true);
             assert.equal(instance.IsEqual(expected, expected), true);
-            assert.equal(instance.IsLike(input, expected), true);
+            assert.equal(instance.IsEqual(input, expected), true);
             assert.equal(instance.Get(target, "value"), expected);
             assert.equal(instance.Clone(target, "value"), expected);
         }
@@ -35,7 +35,7 @@ test("integer scalar conversion matches native width without allocating typed sc
         assert.equal(instance.IsValidValue("1"), false);
         assert.equal(instance.IsValidValue(NaN), false);
         assert.equal(instance.IsValidValue(Infinity), false);
-        assert.equal(instance.IsEqual("1", 1), false);
+        assert.equal(instance.IsEqual("1", 1), true);
     }
     assert.equal(types.CjsGraphTypeInt8.isValidValue(128), false);
     assert.equal(types.CjsGraphTypeUint8.isValidValue(-1), false);
@@ -58,7 +58,7 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
             assert.equal(handler.convert(input), expected);
             assert.equal(instance.Set(target, "value", input), false);
             assert.equal(instance.IsValidValue(expected), true);
-            assert.equal(instance.IsLike(input, expected), true);
+            assert.equal(instance.IsEqual(input, expected), true);
         }
         assert.equal(handler.isValidValue(1), false);
         assert.equal(handler.isValidValue(2n ** 64n), false);
@@ -74,9 +74,10 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
         assert.equal(handler.isValidValue([ 2 ** 32, 0 ]), false);
         assert.equal(handler.isValidValue([ -(2 ** 31) - 1, 0 ]), false);
         assert.equal(handler.isValidValue([ "1", 2 ]), false);
-        assert.equal(handler.isEqual("1", "1"), false, "valid input is not a canonical value");
+        assert.equal(handler.isEqual("1", 1n), true, "any accepted form, on either side");
         assert.equal(handler.isEqual(1n, 1n), true);
-        assert.equal(handler.isEqual(1, 1n), false);
+        assert.equal(handler.isEqual([ 0, 1 ], "1"), true);
+        assert.equal(handler.isEqual(1n, 2n), false);
         assert.throws(() => handler.convert(1), TypeError);
         assert.throws(() => handler.convert(1.5), TypeError);
         assert.throws(() => handler.convert("1.5"), SyntaxError);
@@ -109,8 +110,8 @@ test("Int64 and Uint64 store a [high, low] pair as the canonical BigInt", () =>
     assert.equal(types.CjsGraphTypeUint64.convert([ 0xFFFFFFFF, 0xFFFFFFFF ]), 2n ** 64n - 1n);
 
     assert.equal(types.CjsGraphTypeInt64.get(signed, "value"), (1n << 32n) + 2n, "Get writes the canonical form");
-    assert.equal(types.CjsGraphTypeInt64.isLike([ 1, 2 ], (1n << 32n) + 2n), true);
-    assert.equal(types.CjsGraphTypeInt64.isEqual([ 1, 2 ], (1n << 32n) + 2n), false);
+    assert.equal(types.CjsGraphTypeInt64.isEqual([ 1, 2 ], (1n << 32n) + 2n), true);
+    assert.equal(types.CjsGraphTypeInt64.isExactEqual([ 1, 2 ], (1n << 32n) + 2n), true);
 });
 
 test("every array handler takes a plain array through IsValidValue and Set, keeping its storage", () =>
@@ -132,7 +133,8 @@ test("every array handler takes a plain array through IsValidValue and Set, keep
         assert.deepEqual(Array.from(storage), plain, name);
         assert.equal(handler.set(target, "value", plain), false, name);
         assert.deepEqual(handler.get(target, "value"), plain, name);
-        assert.equal(handler.isLike(plain, storage), handler.hasValueEquality, name);
+        assert.equal(handler.isEqual(plain, storage), true, name);
+        assert.equal(handler.isExactEqual(storage, plain), true, name);
         assert.equal(handler.isValidValue(plain.slice(1)), handler.elementCount === 0, name);
     }
 });
@@ -171,7 +173,8 @@ for (const ctor of [...numericArrays, ...bigArrays])
         const target = { value: new ctor(expected) }, storage = target.value;
         instance.length = inputs.length;
         assert.equal(instance.ctor, ctor);
-        assert.equal(instance.Set(target, "value", inputs), false, "change detection uses destination conversion");
+        // Carbon's scalar tolerance never calls NaN or Infinity equal, and Float64 elements use it.
+        assert.equal(instance.Set(target, "value", inputs), ctor === Float64Array, "change detection uses destination conversion");
         assert.equal(target.value, storage);
         assert.deepEqual(instance.Get(target, "value"), Array.from(expected));
         for (let i = 0; i < inputs.length; i++) assert.equal(handler.convert(inputs[i]), expected[i]);
@@ -221,7 +224,7 @@ test("clamped bytes round halfway values to even instead of wrapping or rounding
     const input = [-1, 0.5, 1.5, 2.5, 3.5, 254.5, 255.5, Infinity, NaN];
     const output = [0, 0, 2, 2, 4, 254, 255, 255, 0];
     assert.deepEqual(input.map(value => handler.convert(value)), output);
-    assert.equal(handler.isLike(input, new Uint8ClampedArray(output)), true);
+    assert.equal(handler.isEqual(input, new Uint8ClampedArray(output)), true);
     assert.equal(types.CjsGraphTypeUint8Array.convert(-1), 255);
 });
 
@@ -237,28 +240,32 @@ test("array conversion rejects incompatible primitives consistently for same-siz
     }
 });
 
-test("native array equality gaps do not affect exact comparisons or unchanged writes", () =>
+test("every array family compares values in any accepted form", () =>
 {
-    for (const ctor of [Int32Array, Float64Array])
+    for (const ctor of [Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array,
+        Float32Array, Float64Array, ...bigArrays])
     {
         const handler = types[`CjsGraphType${ctor.name}`];
-        for (const values of [[], [1, 2]])
+        const big = bigArrays.includes(ctor);
+        for (const values of [[], big ? [1n, 2n] : [1, 2]])
         {
             const a = new ctor(values), b = new ctor(values);
-            assert.equal(handler.isEqual(a, b), false, "Carbon default AreEqual has no specialization");
-            assert.equal(handler.isLike(values, b), false);
-            assert.equal(handler.isExactEqual(a, b), true);
-            assert.equal(handler.set({ value: a }, "value", b), false);
+            assert.equal(handler.isEqual(a, b), true, ctor.name);
+            assert.equal(handler.isEqual(values, b), true, ctor.name);
+            assert.equal(handler.isEqual(b, values), true, ctor.name);
+            assert.equal(handler.isExactEqual(values, b), true, ctor.name);
+            assert.equal(handler.set({ value: a }, "value", b), false, ctor.name);
         }
+        assert.equal(handler.isEqual(new ctor(big ? [1n] : [1]), new ctor(big ? [2n] : [2])), false, ctor.name);
     }
-    for (const ctor of [Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Uint32Array, ...bigArrays])
-    {
-        const handler = types[`CjsGraphType${ctor.name}`];
-        const values = bigArrays.includes(ctor) ? [1n, 2n] : [1, 2];
-        assert.equal(handler.isEqual(new ctor(values), new ctor(values)), true);
-        assert.equal(handler.isLike(values, new ctor(values)), true);
-        assert.equal(handler.isEqual(values, new ctor(values)), false);
-    }
+});
+
+test("Carbon's Float32 array NaN quirk means Set cannot replace a stored NaN (CE-202)", () =>
+{
+    const stored = { value: new Float32Array([NaN]) };
+    assert.equal(types.CjsGraphTypeFloat32Array.set(stored, "value", [3]), false);
+    assert.equal(Number.isNaN(stored.value[0]), true);
+    assert.equal(types.CjsGraphTypeFloat32Array.isExactEqual(stored.value, [3]), false);
 });
 
 test("Float64 arrays retain precision while Float32 array equality keeps Carbon's NaN quirk", () =>
@@ -269,7 +276,8 @@ test("Float64 arrays retain precision while Float32 array equality keeps Carbon'
     assert.equal(target.value[0], value);
     assert.equal(Object.is(target.value[1], -0), true);
     assert.equal(types.CjsGraphTypeFloat64Array.set(target, "value", [value, -0]), false);
-    assert.equal(types.CjsGraphTypeFloat64Array.set(target, "value", [value, 0]), true);
+    assert.equal(types.CjsGraphTypeFloat64Array.set(target, "value", [value, 0]), false, "equal within tolerance");
+    assert.equal(types.CjsGraphTypeFloat64Array.isExactEqual(target.value, [value, 0]), false);
     assert.equal(types.CjsGraphTypeFloat32Array.convert(value), 1);
     assert.equal(types.CjsGraphTypeFloat32Array.isEqual(new Float32Array([Infinity]), new Float32Array([Infinity])), true);
     assert.equal(types.CjsGraphTypeFloat32.isEqual(Infinity, Infinity), false);

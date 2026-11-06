@@ -22,16 +22,23 @@ test("float Set compares after conversion and invokes ordinary accessors only on
   assert.equal(handler.Get(target, "value"), stored);
 });
 
-test("exact change detection differs from Carbon scalar tolerance", () =>
+test("Set writes only what IsEqual calls different; IsExactEqual has no tolerance", () =>
 {
   const target = { value: 0 };
   assert.equal(CjsGraphTypeFloat32.isEqual(0, Math.fround(1e-7)), true);
-  assert.equal(CjsGraphTypeFloat32.set(target, "value", 1e-7), true);
+  assert.equal(CjsGraphTypeFloat32.isExactEqual(0, Math.fround(1e-7)), false);
+  assert.equal(CjsGraphTypeFloat32.set(target, "value", 1e-7), false, "within Carbon's tolerance");
+  assert.equal(target.value, 0);
   assert.equal(CjsGraphTypeFloat32.isEqual(0, Math.fround(1e-6)), false);
+  assert.equal(CjsGraphTypeFloat32.set(target, "value", 1e-6), true);
   assert.equal(CjsGraphTypeFloat32.isEqual(NaN, NaN), false);
   assert.equal(CjsGraphTypeFloat32.isExactEqual(NaN, NaN), true);
-  assert.equal(CjsGraphTypeFloat32.set(target, "value", -0), true);
-  assert.equal(CjsGraphTypeFloat32.set(target, "value", 0), true);
+  assert.equal(CjsGraphTypeFloat32.isEqual(-0, 0), true);
+  assert.equal(CjsGraphTypeFloat32.isExactEqual(-0, 0), false);
+
+  const empty = { value: null };
+  assert.equal(CjsGraphTypeFloat32.set(empty, "value", 0), true, "a null holds no value to compare");
+  assert.equal(empty.value, 0);
 
   assert.equal(CjsGraphTypeFloat64.isEqual(0, 1e-13), true);
   assert.equal(CjsGraphTypeFloat64.isEqual(0, 1e-12), false);
@@ -46,8 +53,9 @@ test("scalar instance shortcuts preserve type conversion without From", () =>
   assert.equal(string.Copy(source, "value", target, "value"), true);
   assert.equal(string.Clone(target, "value"), "hello");
   assert.equal(string.Copy(source, "value", target, "value"), false);
-  assert.equal(boolean.Set(target, "value", 1), true);
-  assert.equal(target.value, true);
+  const flag = { value: false };
+  assert.equal(boolean.Set(flag, "value", 1), true);
+  assert.equal(flag.value, true);
   assert.equal(boolean.IsValidValue(true), true);
   assert.equal(boolean.IsValidValue(1), false);
   assert.equal(string.IsValidValue("hello"), true);
@@ -97,28 +105,21 @@ test("float-array tolerant comparison preserves Carbon's NaN quirk (CE-202)", ()
   assert.equal(CjsGraphTypeFloat32Array.isEqual([], [0]), false);
 });
 
-test("IsLike compares representations after storage conversion without changing them", () =>
+test("IsEqual and IsExactEqual compare values after storage conversion without changing them", () =>
 {
-  assert.equal(CjsGraphTypeFloat32.isLike("0.1", Math.fround(0.1)), true);
-  assert.equal(CjsGraphTypeBoolean.isLike(1, true), true);
+  assert.equal(CjsGraphTypeFloat32.isEqual("0.1", Math.fround(0.1)), true);
+  assert.equal(CjsGraphTypeFloat32.isExactEqual("0.1", Math.fround(0.1)), true);
+  assert.equal(CjsGraphTypeBoolean.isEqual(1, true), true);
   const handler = new CjsGraphTypeFloat32Array();
   const source = [16777217, 0.1];
   const stored = new Float32Array(source);
-  assert.equal(handler.IsLike(source, stored), true);
-  assert.equal(handler.IsEqual(source, stored), false);
+  assert.equal(handler.IsEqual(source, stored), true);
+  assert.equal(handler.IsEqual(stored, source), true);
+  assert.equal(handler.IsExactEqual(source, stored), true);
   assert.deepEqual(source, [16777217, 0.1]);
 });
 
-test("IsEqual rejects alternate representations that IsLike accepts", () =>
-{
-  assert.equal(CjsGraphTypeFloat32.isEqual("1", 1), false);
-  assert.equal(CjsGraphTypeFloat64.isEqual("1", 1), false);
-  assert.equal(CjsGraphTypeString.isEqual(1, 1), false);
-  assert.equal(CjsGraphTypeBoolean.isEqual(1, 1), false);
-  assert.equal(CjsGraphTypeFloat32Array.isEqual([1], new Float32Array([1])), false);
-});
-
-test("IsLike compares through the same conversion as Set", () =>
+test("IsEqual compares through the same conversion as Set", () =>
 {
   class DoubledFloat extends CjsGraphTypeFloat32
   {
@@ -127,5 +128,5 @@ test("IsLike compares through the same conversion as Set", () =>
   const target = { value: 0 };
   assert.equal(DoubledFloat.set(target, "value", "3"), true);
   assert.equal(target.value, 6);
-  assert.equal(DoubledFloat.isLike("3", 3), true);
+  assert.equal(DoubledFloat.isEqual("3", 3), true);
 });
