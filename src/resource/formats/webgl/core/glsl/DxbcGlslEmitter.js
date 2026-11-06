@@ -1664,8 +1664,8 @@ export class DxbcGlslEmitter
                 {
                     // Vertex-stage structured buffers (BoneTransforms) become dedicated
                     // std140 UBOs sized to the profile capacity (Carbon max 69 joints).
-                    // Never a data texture here: shipped shaders are already at the
-                    // 16-unit limit, and a data texture costs a unit where a block does not.
+                    // Keep this a block: ccpwgl reads this output, and a block uploads
+                    // per hull where a data texture would re-upload the whole ring.
                     const name = `CjsSb${register}`;
                     const capacity = this.profile.vertexStructuredCapacity;
                     const rows = capacity * Math.ceil(strideDwords / 4);
