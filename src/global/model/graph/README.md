@@ -89,6 +89,16 @@ compares texture parameters; a separate fixture attaches unloaded real resource
 objects to test nonempty handle selection and sharing. This does not qualify resource
 loading, GPU preparation, general Blue interface adaptation or populated scene graphs.
 
+`test/resource/graph-selection-populated-scene.test.js` adds assemblies of independently
+hydrated Rifter, Merlin and Omen ships plus explosion and missile effects in a real
+EveSpaceScene. Set `CJS_GRAPH_POPULATED_CORPUS` to the six hash-pinned external assets;
+the same benchmark flag enables timing. It independently inventories persisted storage
+before adapting it, preserves assigned particle instance providers, and compares
+full/cached identity and order with path-shared unloaded geometry, texture and effect
+handles. These are static assembled graphs, not running combat scenes. External child
+and controller references remain unexpanded; dynamically created runtime content and
+GPU preparation are not covered. Production schemas and resource enumeration are unchanged.
+
 GraphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
 The generic handlers are under types/. CjsGraphRoot will be added with working
 operation forwards; there are no speculative no-op graph methods here.
