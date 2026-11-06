@@ -352,14 +352,17 @@ export class TriTextureRes extends BlueAsyncRes
    *
    * Fires m_onTextureChange every time, as Carbon does (`:1175`, `:1194`).
    *
-   * @adapted Carbon also copies the texture's dimensions onto the resource and sets
-   *   prepared/good; the payload already carries the dimensions here, and the resource
-   *   manager owns the state.
+   * @adapted The borrowed payload carries dimensions and memory accounting here.
+   *   Prepared/good state follows Carbon even for textures not loaded by resMan.
    * @param {object|null} texture A `Tr2TextureAL`, or null to drop it.
    * @returns {TriTextureRes} This resource.
    */
-  SetTexture(texture) {
-    this.texture = texture ?? null;
+  SetTexture(texture)
+  {
+    const valid = !!texture && texture.IsValid();
+    this.texture = valid ? texture : null;
+    this._SetPrepared(valid);
+    this._SetGood(valid);
     this._onTextureChange.Broadcast();
     return this;
   }

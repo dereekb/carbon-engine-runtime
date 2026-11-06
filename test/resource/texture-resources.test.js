@@ -309,6 +309,8 @@ test("SetTextureFromRT wraps a render target as a live view (TriTextureRes.cpp:8
   assert.equal(texture.SetTextureFromRT(target), true, "Carbon always returns true");
   assert.equal(texture.wrappedRenderTarget, target);
   assert.equal(texture.texture, target.texture, "a valid render target supplies the texture");
+  assert.equal(texture.IsPrepared(), true);
+  assert.equal(texture.IsGood(), true, "borrowed render targets are ready without a resMan load");
 
   // The wrapped render target's change is this resource's change.
   changes.length = 0;
@@ -320,16 +322,22 @@ test("SetTextureFromRT wraps a render target as a live view (TriTextureRes.cpp:8
   texture.SetTextureFromRT(next);
   assert.equal(texture.wrappedRenderTarget, next);
   assert.equal(texture.texture, null, "an invalid render target supplies nothing yet");
+  assert.equal(texture.IsPrepared(), false);
+  assert.equal(texture.IsGood(), false);
   assert.equal(target.event.listeners.length, 0);
   assert.equal(next.event.listeners.length, 1);
 
   // GetTexture picks the texture up once the render target becomes valid (cpp:396-401).
   next.texture.valid = true;
   assert.equal(texture.GetTexture(), next.texture);
+  assert.equal(texture.IsPrepared(), true);
+  assert.equal(texture.IsGood(), true);
 
   // null unwraps.
   texture.SetTextureFromRT(null);
   assert.equal(texture.wrappedRenderTarget, null);
+  assert.equal(texture.IsPrepared(), false);
+  assert.equal(texture.IsGood(), false);
   assert.equal(next.event.listeners.length, 0);
 
   const row = CjsSchema.getMethod(TriTextureRes, "SetTextureFromRT");
