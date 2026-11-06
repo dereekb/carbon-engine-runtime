@@ -569,7 +569,7 @@ function normalizeSharedVertexSkin(vertex, vertexCount)
  *
  * @param {object} mesh Shared LOD source.
  * @returns {{ decl: Array<import("./helpers.js").CmfVertexElement>, targets: Array<import("./helpers.js").CmfMorphTarget>, lods: Array<import("./helpers.js").CmfLodMorphTarget> }} The morph target set.
- * @throws {Error} When targets lack a base position, repeat names, use absent channels or have invalid displacement.
+ * @throws {Error} When targets lack a base position, use absent channels or have invalid displacement.
  */
 function buildMorphTargets(mesh)
 {
@@ -581,11 +581,6 @@ function buildMorphTargets(mesh)
     if (!(mesh.vertex?.position ?? []).length)
     {
         throw new Error("CMF morph targets require a base position channel");
-    }
-    const targetNames = targets.map(target => target.name ?? "");
-    if (new Set(targetNames).size !== targetNames.length)
-    {
-        throw new Error("CMF morph target names must be unique within a mesh");
     }
     const channelSpecs = morphChannelSpecs(mesh.vertex ?? {}, targets);
     for (const target of targets)

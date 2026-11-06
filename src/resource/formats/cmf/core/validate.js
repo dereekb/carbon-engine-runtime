@@ -588,9 +588,10 @@ function validateMesh(mesh, meshIndex, graph, options)
 
     validateAudioOcclusionMesh(mesh.audioOcclusionMesh, label, options);
     validateBounds(mesh.bounds, `${label} bounds`, options);
-    uniqueNames(targets.map(target => target?.name), `${label} morph targets`, options, false);
+    // Carbon preserves morph targets by index, including repeated names (TriGeometryRes.cpp:2109-2130).
     targets.forEach((target, index) =>
     {
+        name(target?.name, `${label} morph target ${index}`, options, false);
         const maxDisplacement = target.maxDisplacement ?? 0;
         if (typeof maxDisplacement !== "number") invalid(`${label} morph target ${index} maxDisplacement must be a number`, options);
         if (maxDisplacement < 0) invalid(`${label} morph target ${index} has negative maxDisplacement`, options);

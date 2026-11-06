@@ -320,3 +320,34 @@ test("a write that names nothing does not throw away the geometry", async () =>
     stub.restore();
   }
 });
+
+
+test("shared CMF conversion preserves duplicate names and independent morph buffers", async () =>
+{
+  const { CjsCmfFormat } = await import("../../npm/dist/resource/formats/cmf/index.js");
+  const positions = new Float32Array([ 0, 0, 0, 1, 0, 0, 0, 1, 0 ]);
+  const first = positions.slice();
+  const last = positions.slice();
+  first[0] = 0.25;
+  last[0] = 0.75;
+  const shared = {
+    meshes: [ {
+      name: "jacket",
+      vertex: { position: positions },
+      indices: [ { name: "cloth", bytesPerIndex: 2, faces: new Uint16Array([ 0, 1, 2 ]) } ],
+      morphTargets: [
+        { name: "PushJacketHigh", vertex: { position: first } },
+        { name: "PushJacketHigh", vertex: { position: last } }
+      ]
+    } ],
+    skeletons: [],
+    animations: []
+  };
+  const bytes = CjsCmfFormat.writeShared(shared);
+  const decoded = CjsCmfFormat.read(bytes, { emit: "shared" });
+  const targets = decoded.meshes[0].morphTargets;
+  assert.deepEqual(targets.map(target => target.name), [ "PushJacketHigh", "PushJacketHigh" ]);
+  assert.equal(targets[0].vertex.position[0], 0.25);
+  assert.equal(targets[1].vertex.position[0], 0.75);
+  assert.doesNotThrow(() => CjsCmfFormat.loadShared(decoded));
+});
