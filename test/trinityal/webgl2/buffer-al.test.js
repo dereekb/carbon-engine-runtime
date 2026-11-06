@@ -264,7 +264,7 @@ test("a structured buffer is read four words to a texel, rows of the emitter's w
 
     buffer.GetShaderResourceTexture();
     const [ , , , , internalFormat, width, height ] = calls.find(call => call[0] === "texImage2D");
-    assert.deepEqual([ internalFormat, width, height ], [ gl.RGBA32F, DATA_TEXTURE_WIDTH, 2 ]);
+    assert.deepEqual([ internalFormat, width, height ], [ gl.RGBA32UI, DATA_TEXTURE_WIDTH, 2 ]);
 });
 
 test("a raw (non-structured) shader-resource buffer is viewed as R32_UINT, as dx11 views it", () =>

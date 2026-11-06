@@ -185,8 +185,7 @@ export class CjsWebglFormat extends CjsFormat
      * @param {object} [options] Combined ccpwgl-profile/emit options: `constantBufferStyle`
      *   (`"array"` (default) uniform `vec4[]` for ccpwgl's uniform4fv path, or `"std140"`),
      *   `pixelConstantBufferRemap` (default `{ 0: 7 }`, pixel-stage cb slot renames),
-     *   `samplerName(register, stageName)` (naming function), `vertexStructuredCapacity`
-     *   (default 69, bone-array element capacity), `dataTextureWidth` (default 2048),
+     *   `samplerName(register, stageName)` (naming function), `dataTextureWidth` (default 2048),
      *   `pairVaryings` (per-call varying zero-fill list), `source` (per-call error-detail name).
      * @returns {object} GLSL text plus the IO contract the packaging layer records.
      */

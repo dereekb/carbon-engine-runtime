@@ -27,9 +27,8 @@ import { buildAliasedStructuredLoadDxbc, buildStructuredBufferPixelDxbc } from "
 
 /**
  * A self-clobber: an assignment to `rN.c` that also reads `rN.c` as its
- * address. Deliberately independent of how the buffer lowers - a structured
- * buffer becomes a UBO (`.data[...]`) or a data texture (`texelFetch(...)`)
- * depending on the backend block, and the hazard is identical in both.
+ * address. Deliberately independent of how the buffer lowers, because the
+ * hazard does not depend on it.
  */
 const SELF_CLOBBER = /(r\d+)\.([xyzw])\s*=.*floatBitsToInt\(\1\.\2\)/;
 
@@ -53,6 +52,16 @@ test("a structured load whose destination aliases its address reads the address 
     // Each load lands in the temporary's integer companion first.
     const loads = source.split("\n").filter(line => /^\s*(?:r|cjsBitsR)\d+\.[xyzw]\s*=/.test(line) && /cjsSbAddr/.test(line));
     assert.equal(loads.length, 4, "every masked component is still loaded, from the hoisted address");
+});
+
+test("a vertex-stage structured buffer is a data texture, so bones reach any ring offset", () =>
+{
+    const { source, bindings } = CjsWebglFormat.emitGlsl(buildAliasedStructuredLoadDxbc(0, 48), { source: "synthetic" });
+
+    assert.match(source, /uniform highp usampler2D sb0;/u);
+    assert.match(source, /texelFetch\(sb0,/u);
+    assert.doesNotMatch(source, /CjsSb0|uniform CjsSb/u);
+    if (bindings) assert.equal(bindings.find(binding => binding.name === "sb0")?.kind, "structuredTexture");
 });
 
 test("a structured buffer that does not alias its address is emitted unchanged", () =>

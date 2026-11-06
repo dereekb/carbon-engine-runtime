@@ -101,7 +101,6 @@ const EMIT_GLSL_OPTION_KEYS = new Set([
     "constantBufferStyle",
     "pixelConstantBufferRemap",
     "samplerName",
-    "vertexStructuredCapacity",
     "dataTextureWidth",
     "stubResourceRegisters",
     "neutralResourceRegisters",
@@ -122,7 +121,6 @@ const EMIT_GLSL_PROFILE_KEYS = new Set([
     "constantBufferStyle",
     "pixelConstantBufferRemap",
     "samplerName",
-    "vertexStructuredCapacity",
     "dataTextureWidth",
     "stubResourceRegisters",
     "neutralResourceRegisters",
@@ -143,7 +141,7 @@ const EMIT_GLSL_PROFILE_KEYS = new Set([
  *
  * `options` is a flat bag combining the emitter's ccpwgl-profile constructor
  * bits (`constantBufferStyle`, `pixelConstantBufferRemap`, `samplerName`,
- * `vertexStructuredCapacity`, `dataTextureWidth`) with its per-call Emit
+ * `dataTextureWidth`) with its per-call Emit
  * options (`pairVaryings`, `source`); omitted keys keep the emitter's
  * existing defaults exactly.
  *

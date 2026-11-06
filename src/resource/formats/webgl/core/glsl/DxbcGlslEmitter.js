@@ -125,8 +125,6 @@ export class DxbcGlslEmitter
    *   cb slot renames (ccpwgl keeps PS effect constants at cb7).
    * @param {function(number,string):string} [options.profile.samplerName] Texture uniform
    *   naming per register and stage.
-   * @param {number} [options.profile.vertexStructuredCapacity] Element capacity for
-   *   vertex-stage structured-buffer UBOs (bones; Carbon max is 69 joints).
    */
     constructor(options = {})
     {
@@ -135,7 +133,6 @@ export class DxbcGlslEmitter
             constantBufferStyle: "array",
             pixelConstantBufferRemap: { 0: 7 },
             samplerName: (register, stageName) => (stageName === "vertex" ? `vs${register}` : `s${register}`),
-            vertexStructuredCapacity: 69,
             dataTextureWidth: 2048,
             // Resource (t#) registers to lower to a compile-time zero instead of
             // declaring a sampler / structured-buffer texture for them. Empty by
@@ -1644,43 +1641,20 @@ export class DxbcGlslEmitter
                     state.structuredBuffers.set(register, { kind: "stub", name: `sb${register}`, strideDwords });
                     break;
                 }
-                if (state.isPixel)
-                {
-                    // Pixel-stage structured buffers (light lists) become RGBA32UI data
-                    // textures: exact bits, no SSBO, resolution-scalable tile tables.
-                    const name = `sb${register}`;
-                    state.structuredBuffers.set(register, { kind: "texture", name, strideDwords });
-                    state.declarationLines.push(`uniform highp usampler2D ${name};`);
-                    state.bindings.push({
-                        kind: "structuredTexture",
-                        registerIndex: register,
-                        name,
-                        strideBytes,
-                        format: "RGBA32UI",
-                        width: this.profile.dataTextureWidth
-                    });
-                }
-                else
-                {
-                    // Vertex-stage structured buffers (BoneTransforms) become dedicated
-                    // std140 UBOs sized to the profile capacity (Carbon max 69 joints).
-                    const name = `CjsSb${register}`;
-                    const capacity = this.profile.vertexStructuredCapacity;
-                    const rows = capacity * Math.ceil(strideDwords / 4);
-                    state.structuredBuffers.set(register, { kind: "ubo", name, strideDwords });
-                    state.declarationLines.push(
-                        `layout(std140) uniform ${name}Block {`,
-                        `    vec4 data[${rows}];`,
-                        `} ${name};`
-                    );
-                    state.bindings.push({
-                        kind: "structuredUbo",
-                        registerIndex: register,
-                        name,
-                        strideBytes,
-                        capacityElements: capacity
-                    });
-                }
+                // Structured buffers become RGBA32UI data textures in every stage:
+                // exact bits, no SSBO, and any element reachable. Bones are read by
+                // ring offset into a shared buffer, so a fixed block could not hold them.
+                const name = `sb${register}`;
+                state.structuredBuffers.set(register, { kind: "texture", name, strideDwords });
+                state.declarationLines.push(`uniform highp usampler2D ${name};`);
+                state.bindings.push({
+                    kind: "structuredTexture",
+                    registerIndex: register,
+                    name,
+                    strideBytes,
+                    format: "RGBA32UI",
+                    width: this.profile.dataTextureWidth
+                });
                 break;
             }
             case "dcl_input":
@@ -3563,19 +3537,6 @@ DxbcGlslEmitter.prototype._ldStructured = function _ldStructured(state, instruct
                 });
             }
             value = `cjsLocalLightRow(${element}, ${offsetDwords / 4}).${channel}`;
-        }
-        else if (info.kind === "ubo")
-        {
-            if (aligned)
-            {
-                const row = `(${element}) * ${info.strideDwords / 4}${offsetDwords ? ` + ${offsetDwords / 4}` : ""}`;
-                value = `${info.name}.data[${row}].${channel}`;
-            }
-            else
-            {
-                const dword = `(${element}) * ${info.strideDwords} + ${offsetDwords + channelIndex}`;
-                value = `${info.name}.data[(${dword}) >> 2][(${dword}) & 3]`;
-            }
         }
         else if (aligned)
         {

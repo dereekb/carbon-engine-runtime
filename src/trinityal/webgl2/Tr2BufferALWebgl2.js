@@ -100,8 +100,9 @@ export function DataTextureLayout(gl, format, structured)
     case PixelFormat.PIXEL_FORMAT_R32G32B32A32_UINT:
       return { internalFormat: gl.RGBA32UI, format: gl.RGBA_INTEGER, type: gl.UNSIGNED_INT, bytes: 16 };
     case PixelFormat.PIXEL_FORMAT_UNKNOWN:
+      // A structured buffer is read as exact words: the emitter declares `usampler2D` / RGBA32UI.
       return structured
-        ? { internalFormat: gl.RGBA32F, format: gl.RGBA, type: gl.FLOAT, bytes: 16 }
+        ? { internalFormat: gl.RGBA32UI, format: gl.RGBA_INTEGER, type: gl.UNSIGNED_INT, bytes: 16 }
         : { internalFormat: gl.R32UI, format: gl.RED_INTEGER, type: gl.UNSIGNED_INT, bytes: 4 };
     default:
       return null;
