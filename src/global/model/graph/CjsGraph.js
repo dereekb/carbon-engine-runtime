@@ -1,9 +1,10 @@
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
+import { GraphOperation } from "./GraphTypes.js";
 import { CjsGraphTypeInvalid } from "./types/CjsGraphTypeInvalid.js";
 
 /**
  * Independent graph declarations and their compiled class records.
- * @cjs Independent registration and declared-edge traversal; value operations follow separately.
+ * @cjs Independent registration, declared-edge traversal and value operations.
  */
 export class CjsGraph
 {
@@ -28,6 +29,17 @@ export class CjsGraph
 
   /** Number of currently active synchronous traversals. */
   static _traversalDepth = 0;
+
+  /** The session policy, set at startup; options.policy overrides it per call. */
+  static policy = {
+    acceptMember(member, info, operation)
+    {
+      return true;
+    },
+    complete(object, info, changes, created)
+    {
+    }
+  };
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
@@ -141,6 +153,122 @@ export class CjsGraph
       stats.matched = output.length - start;
     }
     return output;
+  }
+
+  /**
+   * Returns an object's values as a plain bag, written from its compiled members.
+   * options: policy; refs (default true) writes a shared object once, then _ref, while false
+   * writes it at every reference and a cycle never ends; typeTags writes _type where the class
+   * differs from the declared one; forceTypeTags writes it always.
+   * Modelled on: YamlWriter::WriteIRoot (blue/src/YamlWriter.cpp:322-376).
+   * @cjs Plain values replace YAML events. A second sight anchors the first bag, as YamlWriter does.
+   */
+  static get(object, options = {})
+  {
+    return this.getObject(object, null, this._beginGet(options));
+  }
+
+  /**
+   * Returns one member's value in the same form get writes it.
+   * @cjs Resolves the name through the policy, so a member the policy refuses is unknown here.
+   */
+  static getValue(object, name, options = {})
+  {
+    const operation = this._beginGet(options);
+    const info = this._getObjectInfo(object, null);
+    const member = this._getMemberTable(info, operation.policy, GraphOperation.GET).byName[name];
+    if (!member) throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
+
+    return this._getMember(object, member, operation);
+  }
+
+  /**
+   * Writes one object, or an alias to one already written, inside a running get.
+   * Object handlers re-enter here; options is the operation get began.
+   * Modelled on: YamlWriter::WriteIRoot (blue/src/YamlWriter.cpp:349-376).
+   * @cjs _id and _ref replace YAML anchors and aliases.
+   */
+  static getObject(object, type, options)
+  {
+    const info = this._getObjectInfo(object, type);
+
+    if (options.refs)
+    {
+      const written = options.written.get(object);
+      if (written)
+      {
+        written._id ??= options.anchor++;
+        return { _ref: written._id };
+      }
+    }
+
+    const bag = {};
+    if (options.refs) options.written.set(object, bag);
+    if (options.forceTypeTags || (options.typeTags && (!type || this.getClassInfo(type) !== info))) bag._type = info.declared.name;
+
+    const members = this._getMemberTable(info, options.policy, GraphOperation.GET).members;
+    for (let i = 0; i < members.length; i++)
+    {
+      const member = members[i];
+      if (member.index !== undefined && object[member.key][member.index] === null) continue;
+      bag[member.name] = this._getMember(object, member, options);
+    }
+
+    return bag;
+  }
+
+  /** The operation record for one get. @cjs Nothing is allocated per member. */
+  static _beginGet(options)
+  {
+    return {
+      policy: options.policy ?? this.policy,
+      refs: options.refs !== false,
+      typeTags: options.typeTags === true,
+      forceTypeTags: options.forceTypeTags === true,
+      written: new Map(),
+      anchor: 1,
+      member: null
+    };
+  }
+
+  /**
+   * Reads one member through its handler; a null never reaches a handler.
+   * @cjs member.index selects a slot of the stored array.
+   */
+  static _getMember(object, member, options)
+  {
+    const holder = member.index === undefined ? object : object[member.key];
+    const key = member.index === undefined ? member.key : member.index;
+    if (holder[key] === null) return null;
+
+    options.member = member;
+    return member.handler.Get(holder, key, options);
+  }
+
+  /**
+   * The members a policy accepts for one operation, resolved once per class.
+   * @cjs Lives on the compiled record, so a registration change discards it with the rest.
+   * Resolves names after filtering, as _selectEdges does.
+   */
+  static _getMemberTable(info, policy, operation)
+  {
+    let tables = info.compiled.tables.get(policy);
+    if (!tables) info.compiled.tables.set(policy, tables = []);
+
+    let table = tables[operation];
+    if (table) return table;
+
+    const members = [], byName = Object.create(null);
+    for (const member of info.compiled.members)
+    {
+      if (byName[member.name] || !policy.acceptMember(member, info, operation)) continue;
+      byName[member.name] = member;
+      members.push(member);
+    }
+
+    table = { members, byName };
+    tables[operation] = table;
+    return table;
   }
 
   /** Executes both full enumeration and compiled selection with one iterative walk. @cjs */
@@ -461,7 +589,7 @@ export class CjsGraph
       }
     }
 
-    return { revision: this._revision, parent, members, byName };
+    return { revision: this._revision, parent, members, byName, tables: new WeakMap() };
   }
 
   /** Stable class identity. */

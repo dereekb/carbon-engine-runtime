@@ -1,19 +1,17 @@
+import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
+
 /**
- * Placeholder for the JavaScript struct value handler.
+ * Operations for a member that embeds a struct.
  *
- * This is a type handler, not a trait or a new Carbon VARTYPE. It is
- * disconnected from existing readers, writers and values operations.
+ * This is a type handler, not a trait or a new Carbon VARTYPE.
  *
- * @cjs No single Carbon donor: reserves the future shared value-handler boundary.
- * @notImplemented Embedded-struct population and value extraction; operation signatures remain under review.
+ * @cjs No single Carbon donor: a struct is written as an object, as IRootWriter writes it.
  */
-export class CjsGraphTypeStruct
+export class CjsGraphTypeStruct extends CjsGraphTypeObject
 {
 
-  // Future: take over the embedded-struct population and value extraction
-  // currently implemented by DictReader/DictWriter and the values service.
-  // Preserve their shared-reference and lifecycle contracts during migration;
-  // this placeholder does not delegate to them or replace them yet.
+  /** Distinct definition name. */
+  name = "Struct";
 
   /** Stable class identity. */
   static className = "CjsGraphTypeStruct";

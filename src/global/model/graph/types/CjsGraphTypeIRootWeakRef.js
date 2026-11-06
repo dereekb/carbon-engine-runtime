@@ -3,7 +3,7 @@ import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
 /**
  * Explicit IROOTWEAKREF definition without misleading value-operation fallbacks.
  * Carbon: Be::IROOTWEAKREF (blueexposure/BlueVariable.cpp:817-875).
- * @notImplemented Weak object references require the graph reference/ownership policy; no eager JS WeakRef substitution.
+ * @cjs A weak reference held as a plain reference; no eager JS WeakRef substitution.
  */
 export class CjsGraphTypeIRootWeakRef extends CjsGraphTypeObject
 {

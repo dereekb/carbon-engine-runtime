@@ -10,8 +10,8 @@ const nativeTypes = [
     ["FLOAT", "Float32", "implemented"],
     ["DOUBLE", "Float64", "implemented"],
     ["BOOL", "Boolean", "implemented"],
-    ["IROOT", "IRoot", "pending"],
-    ["IROOTPTR", "IRootPtr", "pending"],
+    ["IROOT", "IRoot", "object"],
+    ["IROOTPTR", "IRootPtr", "object"],
     ["CHARARRAY", "CharArray", "pending"],
     ["CSTRING", "CString", "implemented"],
     ["INT64", "Int64", "implemented"],
@@ -24,7 +24,7 @@ const nativeTypes = [
     ["DOUBLEARRAY", "Float64Array", "implemented"],
     ["INTARRAY", "Int32Array", "implemented"],
     ["ROTREFERENCE", "RotReference", "unsupported"],
-    ["IROOTWEAKREF", "IRootWeakRef", "pending"],
+    ["IROOTWEAKREF", "IRootWeakRef", "object"],
     ["_PYPROPERTY", "PyProperty", "unsupported"],
     ["STDSTRING", "String", "implemented"],
     ["STDWSTRING", "WString", "implemented"],
@@ -57,7 +57,8 @@ test("every distinct Carbon VARTYPE has its own definition, without collapsing s
         assert.equal(handler.className, `CjsGraphType${name}`);
         for (const operation of ["get", "set", "copy", "clone", "isEqual"])
         {
-            if (state === "implemented" || state === "throwing") assert.equal(typeof handler[operation], "function", `${nativeName}.${operation}`);
+            if (state === "object" && operation === "get") assert.equal(typeof handler.get, "function", nativeName);
+            else if (state === "implemented" || state === "throwing") assert.equal(typeof handler[operation], "function", `${nativeName}.${operation}`);
             else assert.equal(operation in handler, false, `${nativeName} must not inherit a misleading scalar ${operation}`);
         }
     }

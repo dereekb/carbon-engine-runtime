@@ -42,3 +42,16 @@ export const VARTYPE = Object.freeze({
   VARTYPE_MAX: 37,
   VARTYPE_FORCELONG: 0xFFFFFFFF
 });
+
+/**
+ * The operations a graph policy is asked about.
+ * @cjs Our graph operations; Carbon has no single equivalent.
+ */
+export const GraphOperation = Object.freeze({
+  GET: 0,
+  SET: 1,
+  CREATE: 2,
+  COPY: 3,
+  CLONE: 4,
+  DELETE: 5
+});

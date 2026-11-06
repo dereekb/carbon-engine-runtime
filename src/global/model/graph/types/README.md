@@ -1,17 +1,18 @@
 # Standalone value handlers
 
 These handlers are not registered with Blue or connected to the current readers,
-writers or schema. Object, list and struct classes remain placeholders.
+writers or schema. Object, list and struct handlers write through `CjsGraph.get`.
 
 All 31 distinct Carbon VARTYPE identities have separate definitions: 20 have
-value operations, Invalid explicitly throws, six are pending, and four are
-unsupported Python or stream-marker definitions.
+value operations, Invalid explicitly throws, three are object handlers, three are
+pending, and four are unsupported Python or stream-marker definitions.
 The exhaustive mapping is test-only in `test/global/graph-carbon-types.test.js`;
 there is no new runtime registry. VARTYPE_MAX is an alias and VARTYPE_FORCELONG
 is an enum-width sentinel, so neither creates another handler.
 
-Pending operations: IRoot, IRootPtr, IRootWeakRef, CharArray, BinaryBlock and
-ScriptCallback. Unsupported/non-value definitions: PyObject,
+Object handlers: IRoot, IRootPtr and IRootWeakRef, on CjsGraphTypeObject.
+Pending operations: CharArray, BinaryBlock and ScriptCallback.
+Unsupported/non-value definitions: PyObject,
 PyObjectPtr, PyProperty and RotReference. These definitions deliberately have
 no value methods: graph ownership, fixed byte buffers and custom persistence
 must not silently become scalar copying.
