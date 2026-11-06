@@ -64,7 +64,7 @@ test("array writes reuse storage and compare the Float32 result", () =>
   assert.equal(handler.Set(target, "value", new Float64Array([0.1, 4, 3])), true);
   assert.equal(target.value, storage);
   assert.deepEqual(handler.Get(target, "value"), [Math.fround(0.1), 4, 3]);
-  assert.equal(CjsGraphTypeVector3.isValidValue(new Float32Array(2)), false, "validation stays in Is");
+  assert.equal(CjsGraphTypeVector3.isValidValue(new Float32Array(2)), false, "validation stays in IsValidValue");
 });
 
 test("variable array resize and explicit clone own independent storage", () =>

@@ -113,7 +113,7 @@ test("Int64 and Uint64 store a [high, low] pair as the canonical BigInt", () =>
     assert.equal(types.CjsGraphTypeInt64.isEqual([ 1, 2 ], (1n << 32n) + 2n), false);
 });
 
-test("every array handler takes a plain array through Is and Set, keeping its storage", () =>
+test("every array handler takes a plain array through IsValidValue and Set, keeping its storage", () =>
 {
     const handlers = Object.values(types).filter(handler => handler.prototype instanceof types.CjsGraphTypeArray);
     assert.equal(handlers.length, 21);

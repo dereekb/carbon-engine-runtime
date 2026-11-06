@@ -129,7 +129,7 @@ test("Invalid rejects every static and instance value operation without touching
         ["set", "Set", [target, "missing", 42]],
         ["copy", "Copy", [target, "source", target, "missing"]],
         ["clone", "Clone", [target, "missing"]],
-        ["is", "Is", [target]],
+        ["isValidValue", "IsValidValue", [target]],
         ["isExactEqual", "IsExactEqual", [target, target]],
         ["isEqual", "IsEqual", [target, target]],
         ["isLike", "IsLike", [target, target]]
@@ -166,7 +166,7 @@ for (const [name, ctor, length] of mathDefinitions)
         assert.equal(instance.Set(target, "value", values), false);
         assert.equal(target.value, storage);
         assert.deepEqual(instance.Get(target, "value"), values, "no normalization or mathematical transform");
-        assert.equal(handler.isValidValue(new ctor(length - 1)), false, "validation stays in Is");
+        assert.equal(handler.isValidValue(new ctor(length - 1)), false, "validation stays in IsValidValue");
         assert.equal(handler.isValidValue(values), true, "a plain array of the right count is valid input");
         assert.equal(handler.isValidValue([ ...values, 1 ]), false);
         const clone = handler.clone(target, "value");
