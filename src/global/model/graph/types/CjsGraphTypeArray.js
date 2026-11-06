@@ -118,6 +118,22 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   }
 
   /**
+   * Tests whether Set with this input would leave the stored elements unchanged.
+   * @cjs The comparison Set makes, for callers comparing without writing.
+   */
+  static isExactLike(stored, value)
+  {
+    if (stored.length !== value.length) return false;
+
+    for (let i = 0; i < value.length; i++)
+    {
+      if (!Object.is(stored[i], this.convert(value[i]))) return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Compares elements exactly, distinguishing signed zero and treating NaN as equal.
    * @cjs
    */

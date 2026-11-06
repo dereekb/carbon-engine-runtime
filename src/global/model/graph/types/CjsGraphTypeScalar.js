@@ -61,6 +61,15 @@ export class CjsGraphTypeScalar
   }
 
   /**
+   * Tests whether Set with this input would leave the stored value unchanged.
+   * @cjs The comparison Set makes, for callers comparing without writing.
+   */
+  static isExactLike(stored, value)
+  {
+    return this.isExactEqual(stored, this.convert(value));
+  }
+
+  /**
    * Tests exact stored-value equality; NaN equals NaN, signed zeros differ.
    * @cjs JavaScript storage comparison.
    */
@@ -121,6 +130,15 @@ export class CjsGraphTypeScalar
   Clone(target, key, options)
   {
     return this.constructor.clone(target, key, options);
+  }
+
+  /**
+   * Instance shortcut to isExactLike.
+   * @cjs
+   */
+  IsExactLike(stored, value)
+  {
+    return this.constructor.isExactLike(stored, value);
   }
 
   /**

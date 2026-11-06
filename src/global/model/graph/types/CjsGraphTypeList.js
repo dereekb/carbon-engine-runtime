@@ -34,12 +34,113 @@ export class CjsGraphTypeList
   }
 
   /**
+   * Replaces the list's contents in place: objects stay, bags are new, the rest are removed.
+   * A value that already matches the list is no change. A null empties the list.
+   * Returns false, or the whole new contents as a plain array.
+   * @cjs No positional matching of objects. Raw array writes bypass BlueList admission and
+   * notification (BlueListUtil.h:206-210); the policy is told at completion.
+   */
+  static set(target, key, value, options)
+  {
+    const source = value ?? [];
+    const edge = options.member.edge;
+    const list = target[key] ??= []; // alloc: a member holding no list gets one.
+
+    if (source === list) return false;
+    if (edge.kind === "embed") return this._setRows(list, source, edge.type, options);
+    if (CjsGraph.isListLike(list, source, edge.type, options)) return false;
+
+    const items = new Array(source.length); // alloc: the change record, and the new contents.
+
+    for (let i = 0; i < source.length; i++)
+    {
+      items[i] = this._getItem(source[i], list, i, items, edge.type, options);
+    }
+
+    list.length = items.length;
+    for (let i = 0; i < items.length; i++) list[i] = items[i];
+
+    return items;
+  }
+
+  /**
+   * Resolves one incoming item; a forward reference holds its slot with null.
+   * @cjs
+   */
+  static _getItem(value, list, index, items, type, options)
+  {
+    if (value === null || !CjsGraph.isPlain(value)) return value;
+    if (value._ref === undefined) return CjsGraph.createObject(value, type, options);
+
+    const object = options.anchors.get(value._ref);
+    if (object !== undefined) return object;
+
+    CjsGraph.deferReference(list, index, value._ref, type, items, index, options);
+    return null;
+  }
+
+  /**
+   * Reads records into a structure list's rows.
+   * Modelled on: Blue::DictReader::ReadStructureList.
+   * @cjs Rows are values with no identity, so they do reuse their position.
+   */
+  static _setRows(list, source, type, options)
+  {
+    let changed = list.length !== source.length;
+
+    for (let i = 0; i < source.length; i++)
+    {
+      const values = CjsGraph.getEmbeddedValues(source[i], options);
+
+      if (i < list.length && list[i] !== null)
+      {
+        if (CjsGraph.setObject(list[i], values, type, options) !== false) changed = true;
+      }
+      else
+      {
+        list[i] = CjsGraph.createObject(values, type, options);
+        changed = true;
+      }
+    }
+
+    list.length = source.length;
+    return changed ? Array.from(list) : false;
+  }
+
+  /**
+   * Tests valid input.
+   * @cjs The graph operation calls it, and passes null around it.
+   */
+  static isValidValue(value)
+  {
+    return Array.isArray(value);
+  }
+
+  /**
    * Instance shortcut to get.
    * @cjs
    */
   Get(target, key, options)
   {
     return this.constructor.get(target, key, options);
+  }
+
+  /**
+   * Instance shortcut to set.
+   * @cjs
+   */
+  Set(target, key, value, options)
+  {
+    return this.constructor.set(target, key, value, options);
+  }
+
+  /**
+   * Instance shortcut to isValidValue.
+   * @cjs
+   */
+  IsValidValue(value)
+  {
+    return this.constructor.isValidValue(value);
   }
 
   /** Stable class identity. */

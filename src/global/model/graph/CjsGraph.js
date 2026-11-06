@@ -30,6 +30,24 @@ export class CjsGraph
   /** Number of currently active synchronous traversals. */
   static _traversalDepth = 0;
 
+  /**
+   * Class libraries, oldest first. The graph's own definitions are the oldest, so a
+   * registered library replaces them by name.
+   */
+  static _libraries = [ {
+    Get(typeName)
+    {
+      return CjsGraph._names.get(typeName)?.ctor;
+    },
+    Create(typeName)
+    {
+      return new (this.Get(typeName))();
+    }
+  } ];
+
+  /** Value keys that are not members. */
+  static _reserved = new Set([ "_type", "_id", "_ref" ]);
+
   /** The session policy, set at startup; options.policy overrides it per call. */
   static policy = {
     acceptMember(member, info, operation)
@@ -104,6 +122,17 @@ export class CjsGraph
   static traverse(root, visit, options = {})
   {
     return this._traverse(root, visit, options, null, null);
+  }
+
+  /**
+   * Registers a class library that defines _type names; the last registered wins.
+   * library.Get(typeName) returns the class, or nothing; library.Create(typeName) creates one.
+   * @cjs Blue's classes are one library, and our own classes can be another.
+   */
+  static registerLibrary(library)
+  {
+    this._libraries.push(library);
+    return library;
   }
 
   /**
@@ -183,6 +212,71 @@ export class CjsGraph
   }
 
   /**
+   * Writes values into an existing object: equal members are skipped, and each changed member
+   * is recorded. A nested object read in place records a nested bag, a replaced reference
+   * records the live object, and a changed list records its whole new plain array, so the
+   * record can be replayed through set. Returns that record, or false when nothing changed.
+   * options: policy; validate (default true) runs each handler's IsValidValue on the incoming value.
+   * Nothing is completed until references resolve. A failure stops the operation with no
+   * rollback of writes already made, and nothing is completed.
+   * Modelled on: Blue::DictReader::ReadMembers, without its notification during the walk.
+   * @cjs The door's rules (specifications/model-values-interchange.md), not Carbon's reader.
+   */
+  static set(object, values, options = {})
+  {
+    if (!this._isValues(values, "set")) return false;
+
+    const operation = this._beginSet(options);
+    const changes = this.setObject(object, values, null, operation);
+    this._finish(operation);
+    return changes;
+  }
+
+  /**
+   * Writes one member through set.
+   * @cjs
+   */
+  static setValue(object, name, value, options)
+  {
+    return this.set(object, { [name]: value }, options);
+  }
+
+  /**
+   * Creates an object and sets its values, then completes it once references resolve.
+   * type is a constructor, a registered name, or null when values names its own _type.
+   * options as set; valuesMode returns plain values instead, leaving _type as data.
+   * @cjs create + set + complete. An unknown class is an error, never a plain object.
+   */
+  static from(type, values, options = {})
+  {
+    if (!this._isValues(values, "from")) values = {};
+    if (options.valuesMode === true) return this._copyValues(values);
+
+    const operation = this._beginSet(options);
+    const object = this.createObject(values, type, operation);
+    this._finish(operation);
+    return object;
+  }
+
+  /**
+   * Copies values between two objects: get then set. The target keeps its identity.
+   * @cjs A preset, not Carbon's Copier. Nothing outside the source is shared.
+   */
+  static copy(source, target, options = {})
+  {
+    return this.set(target, this.get(source, { ...options, typeTags: true }), { ...options, validate: false });
+  }
+
+  /**
+   * Creates a separate graph with the same values and topology: get then from.
+   * @cjs A preset, not Carbon's Copier. Nothing outside the source is shared.
+   */
+  static clone(source, options = {})
+  {
+    return this.from(null, this.get(source, { ...options, typeTags: true }), { ...options, validate: false });
+  }
+
+  /**
    * Writes one object, or an alias to one already written, inside a running get.
    * Object handlers re-enter here; options is the operation get began.
    * Modelled on: YamlWriter::WriteIRoot (blue/src/YamlWriter.cpp:349-376).
@@ -217,6 +311,131 @@ export class CjsGraph
     return bag;
   }
 
+  /**
+   * Reads values into an existing object inside a running set.
+   * @cjs Object handlers re-enter here; options is the operation set began.
+   */
+  static setObject(object, values, type, options)
+  {
+    const info = this._getObjectInfo(object, type);
+
+    if (values._type !== undefined && !this.isType(object, values._type))
+      throw new TypeError(`Expected ${info.declared.name} but got _type ${values._type}`);
+
+    return this._setMembers(object, info, values, options);
+  }
+
+  /**
+   * Creates the object a bag describes inside a running set, and reads the bag into it.
+   * @cjs Objects read into under a creation count as created: nobody has initialised them.
+   */
+  static createObject(values, type, options)
+  {
+    const typeName = values._type ?? (typeof type === "function" ? this.getClassInfo(type).declared.name : type);
+    if (!typeName) throw new TypeError("Graph value names no class: it has no _type, and its member declares none.");
+
+    const object = this._create(typeName);
+    const info = this._getObjectInfo(object, type);
+    const creating = options.creating;
+
+    options.creating = true;
+    this._setMembers(object, info, values, options);
+    options.creating = creating;
+
+    return object;
+  }
+
+  /**
+   * Whether an object is an instance of a named class.
+   * @cjs Resolves through the class libraries; an unknown name is an error.
+   */
+  static isType(object, typeName)
+  {
+    return this._getClass(typeName).prototype.isPrototypeOf(object);
+  }
+
+  /** Whether a value is a plain object, a bag rather than a live object. @cjs */
+  static isPlain(value)
+  {
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+  }
+
+  /**
+   * Records a reference to an _id not seen yet, written once references resolve.
+   * @cjs JS forward aliases postpone the write. record and recordKey name where the
+   * change record keeps this object.
+   */
+  static deferReference(holder, key, id, type, record, recordKey, options)
+  {
+    const entry = { holder, key, id, type, record, recordKey };
+    options.pending.push(entry);
+    return entry;
+  }
+
+  /**
+   * Tests whether a value already describes an object, writing nothing.
+   * @cjs Compares only what the value names. An _id is recorded as it is read, because a
+   * later _ref in the same value names it; a _ref not yet known is no match.
+   */
+  static isObjectLike(object, value, type, options)
+  {
+    if (object === null || value === null) return object === value;
+    if (!this.isPlain(value)) return object === value;
+    if (value._ref !== undefined) return options.anchors.get(value._ref) === object;
+    if (value._type !== undefined && !this.isType(object, value._type)) return false;
+
+    const info = this._getObjectInfo(object, type);
+    if (value._id !== undefined) options.anchors.set(value._id, object);
+
+    const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
+    for (const name of Object.keys(value))
+    {
+      const member = members[name];
+
+      if (!member)
+      {
+        if (this._reserved.has(name) || info.compiled.byName[name]) continue;
+        return false;
+      }
+
+      const holder = member.index === undefined ? object : object[member.key];
+      const key = member.index === undefined ? member.key : member.index;
+      if (!this._isValueLike(holder[key], member, value[name], options)) return false;
+    }
+
+    return true;
+  }
+
+  /** Tests whether a list already holds what a plain array describes, writing nothing. @cjs */
+  static isListLike(list, values, type, options)
+  {
+    if (list.length !== values.length) return false;
+
+    for (let i = 0; i < list.length; i++)
+    {
+      if (!this.isObjectLike(list[i], values[i], type, options)) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Returns the bag an embedded object is read from.
+   * @cjs Embedded storage keeps its identity, so a live object or a known _ref is copied by
+   * its values. A forward _ref cannot be: nothing holds its values yet.
+   */
+  static getEmbeddedValues(value, options)
+  {
+    if (!this.isPlain(value)) return this.get(value, { policy: options.policy, refs: false });
+    if (value._ref === undefined) return value;
+
+    const object = options.anchors.get(value._ref);
+    if (object === undefined) throw new TypeError(`Embedded value cannot alias a forward _ref: ${value._ref}`);
+
+    return this.get(object, { policy: options.policy, refs: false });
+  }
+
   /** The operation record for one get. @cjs Nothing is allocated per member. */
   static _beginGet(options)
   {
@@ -243,6 +462,171 @@ export class CjsGraph
 
     options.member = member;
     return member.handler.Get(holder, key, options);
+  }
+
+  /** The operation record for one set or from. @cjs Nothing is allocated per member. */
+  static _beginSet(options)
+  {
+    return {
+      policy: options.policy ?? this.policy,
+      validate: options.validate !== false,
+      anchors: new Map(),
+      pending: [],
+      completions: new Map(),
+      creating: false,
+      member: null,
+      deferred: null
+    };
+  }
+
+  /**
+   * Writes each named member, recording what changed.
+   * @cjs A policy-refused member is skipped, as DictReader skips a member it may not write,
+   * and a name the class does not declare fails. A null bypasses a leaf handler.
+   */
+  static _setMembers(object, info, values, options)
+  {
+    if (values._id !== undefined) options.anchors.set(values._id, object);
+
+    const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
+    const names = Object.keys(values);
+    let changes = false;
+
+    for (let i = 0; i < names.length; i++)
+    {
+      const name = names[i];
+      const member = members[name];
+
+      if (!member)
+      {
+        if (this._reserved.has(name) || info.compiled.byName[name]) continue;
+        throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
+      }
+
+      const value = values[name];
+      if (options.validate && value !== null && !member.handler.IsValidValue(value))
+        throw new TypeError(`Invalid value for graph member: ${info.declared.name}.${name}`);
+
+      const holder = member.index === undefined ? object : object[member.key];
+      const key = member.index === undefined ? member.key : member.index;
+
+      options.member = member;
+      const result = value === null && member.edge === null
+        ? this._clear(holder, key)
+        : member.handler.Set(holder, key, value, options);
+
+      if (result === false) continue;
+      if (changes === false) changes = {}; // alloc: only once something changed.
+
+      if (options.deferred !== null)
+      {
+        options.deferred.record = changes;
+        options.deferred.recordKey = name;
+        options.deferred = null;
+        changes[name] = null;
+      }
+      else changes[name] = result === true ? this._getMember(object, member, options) : result;
+    }
+
+    if (changes !== false || options.creating) this._addCompletion(object, info, changes, options);
+    return changes;
+  }
+
+  /** Writes a null over a leaf value. @cjs */
+  static _clear(holder, key)
+  {
+    if (holder[key] === null) return false;
+
+    holder[key] = null;
+    return true;
+  }
+
+  /** Compares one stored value with incoming input, exactly, as set would. @cjs */
+  static _isValueLike(stored, member, value, options)
+  {
+    if (stored === null || value === null) return stored === value;
+    if (member.edge === null) return member.handler.IsExactLike(stored, value);
+    if (member.edge.collection) return this.isListLike(stored, value, member.edge.type, options);
+
+    return this.isObjectLike(stored, value, member.edge.type, options);
+  }
+
+  /** Records an object for completion, once, children before parents. @cjs */
+  static _addCompletion(object, info, changes, options)
+  {
+    const entry = options.completions.get(object);
+
+    if (!entry) options.completions.set(object, { object, info, changes, created: options.creating });
+    else if (changes !== false) entry.changes = entry.changes === false ? changes : Object.assign(entry.changes, changes);
+  }
+
+  /**
+   * Resolves forward references, then completes every changed or created object.
+   * @cjs Nothing is told before references resolve, so a failure here notifies nothing.
+   */
+  static _finish(options)
+  {
+    for (const entry of options.pending)
+    {
+      const object = options.anchors.get(entry.id);
+      if (object === undefined) throw new TypeError(`Unresolved _ref: ${entry.id}`);
+
+      this._getObjectInfo(object, entry.type);
+      entry.holder[entry.key] = object;
+      entry.record[entry.recordKey] = object;
+    }
+
+    for (const entry of options.completions.values())
+    {
+      options.policy.complete(entry.object, entry.info, entry.changes, entry.created);
+    }
+  }
+
+  /** Applies the top-level values rule: a plain object, or null for no values. @cjs */
+  static _isValues(values, operation)
+  {
+    if (values === null) return false;
+
+    if (typeof values !== "object" || Array.isArray(values) || !this.isPlain(values))
+      throw new TypeError(`Graph ${operation} requires plain values.`);
+
+    return true;
+  }
+
+  /** The newest library's class for a name. @cjs */
+  static _getClass(typeName)
+  {
+    for (let i = this._libraries.length - 1; i >= 0; i--)
+    {
+      const ctor = this._libraries[i].Get(typeName);
+      if (ctor) return ctor;
+    }
+
+    throw new TypeError(`Unknown graph class: ${typeName}`);
+  }
+
+  /** Creates an instance through the newest library that names the class. @cjs */
+  static _create(typeName)
+  {
+    for (let i = this._libraries.length - 1; i >= 0; i--)
+    {
+      if (this._libraries[i].Get(typeName)) return this._libraries[i].Create(typeName);
+    }
+
+    throw new TypeError(`Unknown graph class: ${typeName}`);
+  }
+
+  /** Copies plain values, leaving _type, _id and _ref as data. @cjs Values mode. */
+  static _copyValues(value)
+  {
+    if (value === null || typeof value !== "object") return value;
+    if (Array.isArray(value)) return value.map(item => this._copyValues(item));
+    if (ArrayBuffer.isView(value)) return Array.from(value);
+    if (!this.isPlain(value)) throw new TypeError("Graph values mode requires plain values.");
+
+    const copy = {};
+    for (const name of Object.keys(value)) copy[name] = this._copyValues(value[name]);
+    return copy;
   }
 
   /**

@@ -57,7 +57,7 @@ test("every distinct Carbon VARTYPE has its own definition, without collapsing s
         assert.equal(handler.className, `CjsGraphType${name}`);
         for (const operation of ["get", "set", "copy", "clone", "isEqual"])
         {
-            if (state === "object" && operation === "get") assert.equal(typeof handler.get, "function", nativeName);
+            if (state === "object" && (operation === "get" || operation === "set")) assert.equal(typeof handler[operation], "function", nativeName);
             else if (state === "implemented" || state === "throwing") assert.equal(typeof handler[operation], "function", `${nativeName}.${operation}`);
             else assert.equal(operation in handler, false, `${nativeName} must not inherit a misleading scalar ${operation}`);
         }
