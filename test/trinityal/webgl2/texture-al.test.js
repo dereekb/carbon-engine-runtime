@@ -250,6 +250,20 @@ test("a BC3 volume is always decompressed: no extension fills a TEXTURE_3D with 
     assert.equal(called(calls, "compressedTexSubImage3D").length, 0);
 });
 
+test("a BC texture whose base size is not a block multiple is decoded: WebGL2 refuses to store its blocks", () =>
+{
+    const blocks = new Uint8Array(8 * 4);
+    const { gl, calls, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_BC1_UNORM, 6, 6, 1),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: [ data(blocks, 16, 32) ] },
+        { WEBGL_compressed_texture_s3tc: S3TC });
+
+    assert.equal(result, ALResult.S_OK);
+    assert.equal(called(calls, "texStorage2D")[0][3], gl.RGBA8);
+    assert.equal(called(calls, "compressedTexSubImage2D").length, 0);
+    const upload = called(calls, "texSubImage2D")[0];
+    assert.deepEqual([ upload[5], upload[6] ], [ 6, 6 ], "the logical size, not the padded blocks");
+});
+
 test("without its extension a BC format falls back to the spec decoder: RGBA8, or float for BC6H", () =>
 {
     const bc1 = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_BC1_UNORM, 4, 4),

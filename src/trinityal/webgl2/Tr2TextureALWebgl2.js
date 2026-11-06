@@ -26,7 +26,7 @@
 //   extension lets a compressed format fill a `TEXTURE_3D`. Where the device
 //   cannot take the blocks, they are decompressed on the CPU - Metal's rule for
 //   the same gap (`Tr2TextureALMetal.mm:166-186`), widened to a missing
-//   extension. The DECODER is not Metal's, deliberately (operator, 2026-09-27):
+//   extension or a base size not in whole blocks. The DECODER is not Metal's, deliberately (operator, 2026-09-27):
 //   Carbon's `BcDecompress` is a CPU helper only its Mac client runs, and it
 //   carries CE-36 and CE-37. EVE on PC decodes BC in D3D11 hardware, to the
 //   specification, so this uses the BC codec's spec decoder
@@ -497,8 +497,10 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     {
       const compressed = COMPRESSED.get(format);
       const volume = desc.GetType() === TextureType.TEX_TYPE_3D;
+      // WebGL2 stores blocks only for a base size in whole blocks; Carbon's shipped textures need not be.
+      const wholeBlocks = desc.GetWidth() % 4 === 0 && desc.GetHeight() % 4 === 0;
 
-      if (compressed && !volume && gl.getExtension(compressed.extension))
+      if (compressed && !volume && wholeBlocks && gl.getExtension(compressed.extension))
       {
         return { ...compressed, compressed: true, decompressed: false, bgra: false };
       }
