@@ -52,9 +52,11 @@ function harness(t, make = () => new TriGeometryRes())
 
   const handles = new Map();
   const acquired = [];
-  manager.GetResource = path =>
+  const requests = [];
+  manager.GetResource = (path, options = {}) =>
   {
     acquired.push(path);
+    requests.push([ path, options.ex ?? "" ]);
     if (!handles.has(path)) handles.set(path, prepared(make(), path));
     return handles.get(path);
   };
@@ -64,6 +66,7 @@ function harness(t, make = () => new TriGeometryRes())
   return {
     manager,
     acquired,
+    requests,
     handles,
     /** Stops all use, then lets the sweep run past expiry. */
     stopPastExpiry()
@@ -313,14 +316,55 @@ test("AddSecondaryResPath reloads a null slot and leaves a live one", t =>
   animation.Destruct();
 });
 
-test("an authored path that never loaded is not loaded by Update", t =>
+test("Initialize asks resMan for the raw resource, and the rig builds when it arrives", t =>
 {
-  const run = harness(t);
+  const run = harness(t, () => new TriGrannyRes());
+  const pending = new TriGrannyRes();
+  pending._path = PATH;
+  run.handles.set(PATH, pending);
+
   const animation = new Tr2GrannyAnimation();
   animation.resPath = PATH;
-  animation.Update(0.1);
+  assert.deepEqual(run.requests, [ [ PATH, "raw" ] ], "Tr2GrannyAnimation.cpp:333");
+  assert.equal(animation.grannyRes, pending);
+  assert.equal(animation.IsInitialized(), false, "nothing to build from yet");
+  assert.equal(run.manager.notify.GetByOwner(animation).length, 1);
+
+  pending._grannyFile = grannyFile();
+  pending._SetPrepared(true);
+  pending._SetGood(true);
+  pending._NotifyRebuildCachedData();
+  assert.equal(animation.IsInitialized(), true, "the notification builds the rig");
+
+  animation.resPath = "";
   assert.equal(animation.grannyRes, null);
-  assert.deepEqual(run.acquired, [], "first loading stays Initialize's");
+  animation.Update(0.1);
+  assert.equal(run.acquired.length, 1, "an emptied path does not reload");
+  animation.Destruct();
+});
+
+test("an authored primary that expires reloads the same raw route", t =>
+{
+  const run = harness(t, () =>
+  {
+    const resource = new TriGrannyRes();
+    resource._grannyFile = grannyFile();
+    return resource;
+  });
+  const animation = new Tr2GrannyAnimation();
+  animation.resPath = PATH;
+  const resource = animation.grannyRes;
+  const before = values(animation, "grannyRes");
+
+  run.stopPastExpiry();
+  assert.equal(animation.grannyRes, null);
+  assert.equal(animation.resPath, PATH);
+
+  animation.Update(0.1);
+  assert.deepEqual(run.requests, [ [ PATH, "raw" ], [ PATH, "raw" ] ]);
+  assert.equal(animation.grannyRes, resource);
+  assert.equal(animation.IsInitialized(), true);
+  assert.deepEqual(values(animation, "grannyRes"), before);
   animation.Destruct();
 });
 

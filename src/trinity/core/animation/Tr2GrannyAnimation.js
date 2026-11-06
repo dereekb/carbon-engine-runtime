@@ -342,16 +342,19 @@ export class Tr2GrannyAnimation extends IRoot
   /**
    * Refreshes an owned resource from its authored path and rebuilds cached bones.
    *
-   * @adapted Resolves decoded resources synchronously through CjsGrannyCurves.
-   *   Explicit SetGrannyResource attachments survive a pathless Initialize; borrowed
-   *   geometry remains authoritative until detached, as in Carbon.
+   * Carbon: Tr2GrannyAnimation::Initialize (Tr2GrannyAnimation.cpp:321-343). The
+   * resource comes from resMan's "raw" route; a resource still loading builds the
+   * rig through RebuildCachedData when its notification arrives.
+   *
+   * @adapted Explicit SetGrannyResource attachments survive a pathless Initialize;
+   *   borrowed geometry remains authoritative until detached, as in Carbon.
    */
 
   Initialize()
   {
     if (!this._sharedGeometry && (this.resPath_ || this._resolvedPath))
     {
-      this.grannyRes = this.resPath_ ? CjsGrannyCurves.resolveResource(this.resPath_) : null;
+      this.grannyRes = this.resPath_ ? this._AcquireResource(this.resPath_, "raw") : null;
       this._resolvedPath = this.resPath_;
       this._grannyNeedsReload = false;
     }
@@ -891,9 +894,8 @@ export class Tr2GrannyAnimation extends IRoot
    *
    * @cjs
    * @adapted Ours: native references never expire, so Carbon reloads nothing at
-   *   use. Manager links can drop a resource while updates are stopped. Only an
-   *   expired primary reloads here; loading an authored resPath stays Initialize's.
-   *   A released secondary runs Cleanup as Carbon does (cpp:362-365), which drops
+   *   use. Manager links can drop a resource while updates are stopped. A released
+   *   secondary runs Cleanup as Carbon does (cpp:362-365), which drops
    *   the primary's rig, and Carbon's rebuild ignores secondaries (cpp:520-543),
    *   so the rig is rebuilt once a slot returns.
    * @returns {void}
@@ -907,7 +909,7 @@ export class Tr2GrannyAnimation extends IRoot
       const path = this.resPath_ || this._attachedPath;
       if (path)
       {
-        this.grannyRes = this._AcquireResource(path);
+        this.grannyRes = this._AcquireResource(path, this.resPath_ ? "raw" : "");
         this._resolvedPath = this.resPath_;
         if (!this._initialized) this.RebuildCachedData();
       }
@@ -929,15 +931,16 @@ export class Tr2GrannyAnimation extends IRoot
    * Acquires an animation resource for a kept path.
    *
    * @cjs
-   * @adapted Carbon asks for the "raw" TriGrannyRes (cpp:333, :354). This asks the
-   *   decoded registry, then resMan's ordinary geometry route as
-   *   Tr2GrannyPrimitiveSet does; _getSource reads both.
+   * @adapted The decoded registry answers first, for hosts that registered a
+   *   source; otherwise resMan, as Carbon (cpp:333, :354). _getSource reads a
+   *   TriGrannyRes and an ordinary geometry alike.
    * @param {string} path Resource path.
+   * @param {string} ex Carbon factory suffix: "raw", or "" for ordinary geometry.
    * @returns {TriGeometryRes|TriGrannyRes|object|null} The resource.
    */
-  _AcquireResource(path)
+  _AcquireResource(path, ex)
   {
-    return CjsGrannyCurves.resolveResource(path) ?? blue.resMan.GetResource(path);
+    return CjsGrannyCurves.resolveResource(path) ?? blue.resMan.GetResource(path, { ex });
   }
 
   /**
@@ -952,7 +955,7 @@ export class Tr2GrannyAnimation extends IRoot
    */
   _LoadSecondaryResPath(path)
   {
-    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path));
+    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path, "raw"));
   }
 
   /**
