@@ -166,7 +166,9 @@
       ]
     },
     "global/model/graph": {
-      "mayImport": [],
+      "mayImport": [
+        "global/consts"
+      ],
       "why": [
         "Independent graph definitions, operations and handlers import only themselves.",
         "Blue supplies its declarations and policy from outside; no schema or format imports."

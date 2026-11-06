@@ -34,7 +34,7 @@ test("Set writes only what IsEqual calls different; IsExactEqual has no toleranc
   assert.equal(CjsGraphTypeFloat32.isEqual(NaN, NaN), false);
   assert.equal(CjsGraphTypeFloat32.isExactEqual(NaN, NaN), true);
   assert.equal(CjsGraphTypeFloat32.isEqual(-0, 0), true);
-  assert.equal(CjsGraphTypeFloat32.isExactEqual(-0, 0), false);
+  assert.equal(CjsGraphTypeFloat32.isExactEqual(-0, 0), true, "the same value");
 
   const empty = { value: null };
   assert.equal(CjsGraphTypeFloat32.set(empty, "value", 0), true, "a null holds no value to compare");

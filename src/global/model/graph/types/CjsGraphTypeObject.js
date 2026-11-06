@@ -25,7 +25,8 @@ export class CjsGraphTypeObject
 
   /**
    * Writes a null, an _id reference or a live object, or reads a bag into the held object.
-   * A bag creates an object when nothing is held, or when its _type is another class.
+   * A bag creates an object when nothing is held, when its _type is another class, or in a
+   * copy, as Copy<IROOTPTR> always does (BlueVariable.cpp:430).
    * Returns false, true for a null, the live object, or the nested change record.
    * Modelled on: Blue::DictReader::ReadIRootPtr; a bag reads into the object held (door rule).
    * @cjs A non-plain value is a reference: the declared type decides, not the value.
@@ -49,7 +50,7 @@ export class CjsGraphTypeObject
     {
       if (value._ref === undefined)
       {
-        if (current !== null && (value._type === undefined || CjsGraph.isType(current, value._type)))
+        if (current !== null && CjsGraph.isReadingInto(options) && (value._type === undefined || CjsGraph.isType(current, value._type)))
           return CjsGraph.setObject(current, value, type, options);
 
         object = CjsGraph.createObject(value, type, options);

@@ -179,20 +179,20 @@ test("graph operations match DictWriter and DictReader on the exact-build scenes
     // from: the same graph as the Black reader's, and as DictReader's from the same values.
     const tagged = CjsSchema.getValues(scene, {}, { ...persistOnly, typeTags: true });
     assert.deepEqual(CjsGraph.get(scene, { typeTags: true }), tagged);
-    const built = CjsGraph.from(null, tagged);
+    const built = CjsGraph.from(null, tagged, { skipEvents: true });
     const old = new DictReader({ initialize: false }).CreateObject(tagged, EveSpaceScene);
     assert.equal(assertSameGraph(built, scene), 11);
     assert.equal(assertSameGraph(built, old), 11);
 
     // Set into a fresh object keeps its typed and list storage.
     const fresh = new EveSpaceScene(), fog = fresh.fogColor, lists = fresh.curveSets;
-    assert.notEqual(CjsGraph.set(fresh, tagged), false);
+    assert.notEqual(CjsGraph.set(fresh, tagged, { skipEvents: true }), false);
     assert.equal(fresh.fogColor, fog);
     assert.equal(fresh.curveSets, lists);
     assertSameGraph(fresh, scene);
 
     // An unchanged set changes nothing, and reports it, as the old path does.
-    assert.equal(CjsGraph.set(built, tagged), false);
+    assert.equal(CjsGraph.set(built, tagged, { skipEvents: true }), false);
     assert.equal(CjsSchema.setValues(old, tagged, quiet).size, 0);
     assertSameGraph(built, scene);
 
@@ -202,7 +202,7 @@ test("graph operations match DictWriter and DictReader on the exact-build scenes
       fogStart: built.fogStart + 1,
       ambientColor: [ 0.25, 0.5, 0.75, 1 ],
       backgroundEffect: { effectFilePath: "res:/changed.fx", resources: [ kept, { _type: "TriTextureParameter", name: "added" } ] }
-    });
+    }, { skipEvents: true });
     assert.deepEqual(Object.keys(changes).sort(), [ "ambientColor", "backgroundEffect", "fogStart" ]);
     assert.deepEqual(changes.ambientColor, [ 0.25, 0.5, 0.75, 1 ]);
     assert.equal(changes.backgroundEffect.effectFilePath, "res:/changed.fx");
@@ -211,15 +211,15 @@ test("graph operations match DictWriter and DictReader on the exact-build scenes
     assert.equal(built.backgroundEffect, effect);
     assert.equal(effect.resources, resources);
     assert.equal(effect.resources.length, 2);
-    assert.equal(CjsGraph.set(built, { backgroundEffect: { effectFilePath: "res:/changed.fx" } }), false);
+    assert.equal(CjsGraph.set(built, { backgroundEffect: { effectFilePath: "res:/changed.fx" } }, { skipEvents: true }), false);
 
     const oldChanged = CjsSchema.setValues(old, { fogStart: old.fogStart + 1, ambientColor: [ 0.25, 0.5, 0.75, 1 ] }, quiet);
     assert.deepEqual([ ...oldChanged ].sort(), [ "ambientColor", "fogStart" ]);
 
     // Presets.
-    assert.equal(assertSameGraph(CjsGraph.clone(scene), scene), 11);
+    assert.equal(assertSameGraph(CjsGraph.clone(scene, { skipEvents: true }), scene), 11);
     const target = new EveSpaceScene();
-    assert.notEqual(CjsGraph.copy(scene, target), false);
+    assert.notEqual(CjsGraph.copy(scene, target, { skipEvents: true }), false);
     assertSameGraph(target, scene);
 
     context.diagnostic(JSON.stringify({ scene: name, phase: "first get, compiling member tables", ms: +(compiled - first).toFixed(3) }));
@@ -235,18 +235,18 @@ test("graph operations match DictWriter and DictReader on the exact-build scenes
     const values = CjsSchema.getValues(scene, {}, { ...persistOnly, typeTags: true });
     const options = { typeTags: true };
     const quietReader = { initialize: false };
-    const newTarget = CjsGraph.from(null, values), oldTarget = new DictReader(quietReader).CreateObject(values, EveSpaceScene);
+    const newTarget = CjsGraph.from(null, values, { skipEvents: true }), oldTarget = new DictReader(quietReader).CreateObject(values, EveSpaceScene);
     let flip = false;
     const change = {};
 
     const rows = measure([
       [ "get", () => CjsSchema.getValues(scene, {}, { ...persistOnly, typeTags: true }), () => CjsGraph.get(scene, options) ],
       // The effect subtree, 10 of the 11 objects: each EveSpaceScene stays alive through TriDevice.RegisterResource.
-      [ "from", () => new DictReader(quietReader).CreateObject(values.backgroundEffect, Tr2Effect), () => CjsGraph.from(Tr2Effect, values.backgroundEffect) ],
-      [ "set unchanged", () => CjsSchema.setValues(oldTarget, values, quiet), () => CjsGraph.set(newTarget, values) ],
+      [ "from", () => new DictReader(quietReader).CreateObject(values.backgroundEffect, Tr2Effect), () => CjsGraph.from(Tr2Effect, values.backgroundEffect, { skipEvents: true }) ],
+      [ "set unchanged", () => CjsSchema.setValues(oldTarget, values, quiet), () => CjsGraph.set(newTarget, values, { skipEvents: true }) ],
       [ "set one changed member",
         () => { change.fogStart = (flip = !flip) ? 1 : 2; return CjsSchema.setValues(oldTarget, change, quiet); },
-        () => { change.fogStart = (flip = !flip) ? 1 : 2; return CjsGraph.set(newTarget, change); } ]
+        () => { change.fogStart = (flip = !flip) ? 1 : 2; return CjsGraph.set(newTarget, change, { skipEvents: true }); } ]
     ]);
     context.diagnostic(JSON.stringify({ scene: name, node: process.version, iterations: 200, batches: 30, objects: 11, rows }));
   }

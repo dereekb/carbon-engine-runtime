@@ -29,13 +29,13 @@ export class CjsGraphRoot
   }
 
   /**
-   * Tells the policy this object's members changed, after a direct write. No names means
-   * every member; a name or an array of names narrows it.
+   * Tells this object about its own members. Names fire OnModified for those NOTIFY members;
+   * no names runs the class's OnValueChanged hook.
    * @cjs
    */
-  UpdateValues(names, options)
+  UpdateValues(names)
   {
-    return CjsGraph.updateValues(this, names, options);
+    CjsGraph.updateValues(this, names);
   }
 
   /**

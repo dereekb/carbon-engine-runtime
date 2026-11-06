@@ -13,6 +13,15 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
   name = "Invalid";
 
   /**
+   * Rejects write because no valid value type has been assigned.
+   * @cjs Fails before inspecting or changing the supplied values.
+   */
+  static write(target, key, value)
+  {
+    throw new TypeError(`Invalid type handler cannot write property ${String(key)}.`);
+  }
+
+  /**
    * Rejects isUnchanged because no valid value type has been assigned.
    * @cjs Fails before inspecting the supplied values.
    */

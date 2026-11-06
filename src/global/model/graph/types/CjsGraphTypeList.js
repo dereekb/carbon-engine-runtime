@@ -38,26 +38,26 @@ export class CjsGraphTypeList
    * A value that already matches the list is no change, and order counts: the same objects
    * in another order are a change. A null empties the list, keeping the list object.
    * Returns false, or the whole new contents as a plain array.
-   * @cjs No positional matching of objects. Raw array writes bypass BlueList admission and
-   * notification (BlueListUtil.h:206-210). An existing owner's list goes through the policy's
-   * replaceList when it has one, which needs the old items still in place: the list is left
-   * alone here, and the items wait, with any forward reference, for the end of the operation.
+   * @cjs No positional matching of objects. A list that sends events waits for the end of the
+   * operation, because they need the old items still in place. A list with neither is
+   * written here, raw (BlueListUtil.h:206-210). A copy rebuilds unless both sides are empty.
    */
   static set(target, key, value, options)
   {
     if (value === null && target[key] === null) return false;
 
     const source = value ?? [];
-    const { member, owner } = options;
-    const edge = member.edge;
+    const { owner } = options;
+    const edge = options.member.edge;
     const list = target[key] ??= []; // alloc: a member holding no list gets one.
 
     if (source === list) return false;
     if (edge.kind === "embed") return this._setRows(list, source, edge.type, options);
-    if (CjsGraph.isListLike(list, source, edge.type, options)) return false;
+    if (list.length === 0 && source.length === 0) return false;
+    if (!CjsGraph.isWritingAll(options) && CjsGraph.isListLike(list, source, edge.type, options)) return false;
 
     const items = new Array(source.length); // alloc: the change record, and the new contents.
-    const staged = options.staged && !options.creating;
+    const staged = CjsGraph.isListStaged(list, owner, options);
 
     for (let i = 0; i < source.length; i++)
     {
@@ -66,7 +66,7 @@ export class CjsGraphTypeList
 
     if (staged)
     {
-      options.listEdits.push({ owner, member, list, items });
+      options.listEdits.push({ owner, list, items });
       return items;
     }
 

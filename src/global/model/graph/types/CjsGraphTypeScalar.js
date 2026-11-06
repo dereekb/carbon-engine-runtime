@@ -38,8 +38,17 @@ export class CjsGraphTypeScalar
   {
     if (this.isUnchanged(target[key], value)) return false;
 
-    target[key] = this.convert(value);
+    this.write(target, key, value);
     return true;
+  }
+
+  /**
+   * Stores a value with no comparison, for skipEquality, a creation or a copy.
+   * @cjs
+   */
+  static write(target, key, value)
+  {
+    target[key] = this.convert(value);
   }
 
   /**
@@ -71,12 +80,13 @@ export class CjsGraphTypeScalar
 
   /**
    * Tests whether two values are exactly equal, with no tolerance, in any accepted form.
-   * NaN equals NaN, and signed zeros differ.
+   * NaN equals NaN, and -0 and 0 are the same value.
    * @cjs JavaScript comparison after conversion.
    */
   static isExactEqual(a, b)
   {
-    return Object.is(this.convert(a), this.convert(b));
+    const x = this.convert(a), y = this.convert(b);
+    return x === y || (x !== x && y !== y);
   }
 
   /**
@@ -114,6 +124,15 @@ export class CjsGraphTypeScalar
   Set(target, key, value, options)
   {
     return this.constructor.set(target, key, value, options);
+  }
+
+  /**
+   * Instance shortcut to write.
+   * @cjs
+   */
+  Write(target, key, value, options)
+  {
+    this.constructor.write(target, key, value, options);
   }
 
   /**

@@ -1,3 +1,4 @@
+import { BLUELISTEVENT } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
 import { GraphOperation } from "./GraphTypes.js";
 import { CjsGraphTypeInvalid } from "./types/CjsGraphTypeInvalid.js";
@@ -48,22 +49,14 @@ export class CjsGraph
   /** Value keys that are not members. */
   static _reserved = new Set([ "_type", "_id", "_ref" ]);
 
-  /** The session policy, set at startup; options.policy overrides it per call. */
-  static policy = {
-    acceptMember(member, info, operation)
-    {
-      return true;
-    },
-    complete(object, info, changes, created)
-    {
-    }
-  };
-
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
    * Definition shape: { name, members: [{ name, key?, handler?, ...metadata }], interfaces? }.
    * interfaces names classes an instance also counts as without inheriting from them.
    * whole means members is the class's complete list, so no base definition adds to it.
+   * initialize, notify, listNotify and hook say instances take Initialize, OnModified,
+   * OnListModified and OnValueChanged. A member's flags are data: persist, writable, notify and
+   * hidden, where writable and persist default to true.
    * @cjs Snapshots declaration containers; handlers and authored default values are not cloned.
    */
   static define(ctor, definition)
@@ -197,7 +190,8 @@ export class CjsGraph
 
   /**
    * Returns an object's values as a plain bag, written from its compiled members.
-   * options: policy; refs (default true) writes a shared object once, then _ref, while false
+   * options: persistOnly writes PERSIST members; roundTrip writes only members a read takes
+   * back; refs (default true) writes a shared object once, then _ref, while false
    * writes it at every reference and a cycle never ends; typeTags writes _type where the class
    * differs from the declared one; forceTypeTags writes it always; copyOverride(object) may
    * return an object to hold in place of writing a held one, which set then keeps as a reference.
@@ -211,33 +205,31 @@ export class CjsGraph
 
   /**
    * Returns one member's value in the same form get writes it.
-   * @cjs Resolves the name through the policy, so a member the policy refuses is unknown here.
+   * @cjs A hidden member is unknown here.
    */
   static getValue(object, name, options = {})
   {
     const operation = this._beginGet(options);
     const info = this._getObjectInfo(object, null);
-    const member = this._getMemberTable(info, operation.policy, GraphOperation.GET).byName[name];
+    const member = this._getMemberTable(info, GraphOperation.GET, operation).byName[name];
     if (!member) throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
 
     return this._getMember(object, member, operation);
   }
 
   /**
-   * Writes values into an existing object: equal members are skipped, and each changed member
-   * is recorded. A nested object read in place records a nested bag, a replaced reference
+   * Writes values into an existing object: IsEqual skips what already matches, and each changed
+   * member is recorded. A nested object read in place records a nested bag, a replaced reference
    * records the live object, and a changed list records its whole new plain array, so the
    * record can be replayed through set. Returns that record, or false when nothing changed.
-   * options: policy; validate (default true) runs each handler's IsValidValue on the incoming value;
-   * idMap, a Map of id to object, is this set's _id table: its entries resolve _ref, and a record
-   * then holds _ref in place of a live object, with the map holding the object; initializeHeld
-   * (default true) counts an object read into under a created owner as created, as Copier
-   * initialises every object it fills (Copier.cpp:141, :209).
-   * A nested object completes as its own set would, so its owner is told only of its own members.
-   * A policy may also carry replaceList(owner, member, list, items): when it does, a changed
-   * list of an existing owner is written by it, once references resolve and before completion.
-   * Nothing is completed until references resolve. A failure stops the operation with no
-   * rollback of writes already made, and nothing is completed.
+   * Then, children first and once references resolve, each changed object is told
+   * updateValues(changedNames). Set never calls Initialize, unless initializeHeld is true.
+   * options: validate (default true) runs each handler's IsValidValue on the incoming value;
+   * skipEquality writes every value; skipEvents tells nothing and writes lists raw; idMap, a Map
+   * of id to object, is this set's _id table: its entries resolve _ref, and a record then holds
+   * _ref in place of a live object, with the map holding the object.
+   * A nested object is the child's own set, so its owner is told only of its own members.
+   * A failure rolls nothing back and tells nothing.
    * Modelled on: Blue::DictReader::ReadMembers, without its notification during the walk.
    * @cjs The door's rules (specifications/model-values-interchange.md), not Carbon's reader.
    */
@@ -245,59 +237,29 @@ export class CjsGraph
   {
     if (!this._isValues(values, "set")) return false;
 
-    const operation = this._beginSet(options);
+    const operation = this._beginSet(options, GraphOperation.SET);
     const changes = this.setObject(object, values, null, operation);
     this._finish(operation);
     return changes;
   }
 
   /**
-   * Tells the policy an object's members changed, for writes that went round set: a direct
-   * field or array write followed by this call. No names means every member, so this is the
-   * broad call; a name or an array of names narrows it. Keeps no baseline, so it compares
-   * nothing. Returns what it reported, or false for no members.
-   * A held object is reported by reference, and its own members are not walked.
-   * @cjs Our contract for direct writes (projects/graph-root-object.md section 6).
+   * Tells an object about its own members; it never reaches children. Names fire OnModified
+   * for those NOTIFY members. No names runs the class's OnValueChanged hook, such as cleaning
+   * a dirty matrix once after chained calls; a class with no hook does nothing.
+   * @cjs Our contract for direct writes. It keeps no baseline and compares nothing.
    */
-  static updateValues(object, names = null, options = {})
+  static updateValues(object, names = null)
   {
-    const operation = this._beginSet(options);
     const info = this._getObjectInfo(object, null);
-    const table = this._getMemberTable(info, operation.policy, GraphOperation.SET);
-    const members = names === null ? table.members : (typeof names === "string" ? [ names ] : names);
 
-    let changes = false;
-
-    for (let i = 0; i < members.length; i++)
+    if (names === null)
     {
-      const member = names === null ? members[i] : table.byName[members[i]];
-
-      if (!member)
-      {
-        if (info.compiled.byName[members[i]]) continue;
-        throw new TypeError(`Unknown graph member: ${info.declared.name}.${members[i]}`);
-      }
-
-      if (changes === false) changes = {}; // alloc: only once a member is reported.
-      changes[member.name] = this._getReported(object, member, operation);
-      if (member.edge !== null && operation.idMap !== null) this._addRecorded(changes, member.name, member, operation);
+      if (info.declared.hook) object.OnValueChanged();
+      return;
     }
 
-    if (changes !== false) this._addCompletion(object, info, changes, null, operation);
-    this._finish(operation);
-
-    return changes;
-  }
-
-  /** One member as updateValues reports it: a leaf in Get form, a held object by reference. @cjs */
-  static _getReported(object, member, options)
-  {
-    if (member.edge === null) return this._getMember(object, member, options);
-
-    const stored = member.index === undefined ? object[member.key] : object[member.key][member.index];
-    if (stored === null || !member.edge.collection) return stored;
-
-    return member.edge.map ? Object.fromEntries(stored) : Array.from(stored);
+    this._notify(object, info, typeof names === "string" ? [ names ] : names);
   }
 
   /**
@@ -310,7 +272,11 @@ export class CjsGraph
   }
 
   /**
-   * Creates an object and sets its values, then completes it once references resolve.
+   * Creates an object and writes every value, with no comparison and no change tracking, then
+   * returns it. Once references resolve each created object gets Initialize if it has one,
+   * and otherwise OnModified per NOTIFY member: Carbon's readers make it either or
+   * (DictReader.cpp:162-167, BlackReader.cpp:414-420, YamlReader.cpp:1347-1352). A mapped list
+   * still gets LOADFINISHED, as ReadList sends it on a fresh load (DictReader.cpp:472-475).
    * type is a constructor, a registered name, or null when values names its own _type.
    * options as set; valuesMode returns plain values instead, leaving _type as data.
    * @cjs create + set + complete. An unknown class is an error, never a plain object.
@@ -320,21 +286,28 @@ export class CjsGraph
     if (!this._isValues(values, "from")) values = {};
     if (options.valuesMode === true) return this._copyValues(values);
 
-    const operation = this._beginSet(options);
+    const operation = this._beginSet(options, GraphOperation.CREATE);
     const object = this.createObject(values, type, operation);
     this._finish(operation);
     return object;
   }
 
   /**
-   * Copies values between two objects: get then set. The target keeps its identity.
-   * Nothing outside the source is shared, as Carbon's Copier copies recursively and shares only
-   * within one copy (Copier.cpp:73-98). options.copyOverride shares more, as m_override does.
-   * @cjs A preset, not Carbon's Copier.
+   * Copies PERSIST members into an existing target, keeping its identity, as Carbon's Copier
+   * does. IsExactEqual skips what matches (Copier.cpp:170-180) and there is no skipEquality.
+   * An object reference gets a new object, and a list is rebuilt, as BlueVariable.cpp:430
+   * recurses. An object with Initialize gets it at the end, even an existing target, with no
+   * OnModified (Copier.cpp:141-145, :209); otherwise OnModified per changed member (:190).
+   * Nothing outside the source is shared; options.copyOverride shares more, as m_override does.
+   * @cjs Get then set, not a port of Copier's walk.
    */
   static copy(source, target, options = {})
   {
-    return this.set(target, this.get(source, { ...options, typeTags: true }), { ...options, validate: false });
+    const values = this.get(source, { persistOnly: true, ...options, typeTags: true });
+    const operation = this._beginSet({ ...options, validate: false }, GraphOperation.COPY);
+    const changes = this.setObject(target, values, null, operation);
+    this._finish(operation);
+    return changes;
   }
 
   /**
@@ -344,7 +317,7 @@ export class CjsGraph
    */
   static clone(source, options = {})
   {
-    return this.from(null, this.get(source, { ...options, typeTags: true }), { ...options, validate: false });
+    return this.from(null, this.get(source, { persistOnly: true, ...options, typeTags: true }), { ...options, validate: false });
   }
 
   /**
@@ -384,7 +357,7 @@ export class CjsGraph
     if (options.refs) options.written.set(object, bag);
     if (options.forceTypeTags || (options.typeTags && (!type || this.getClassInfo(type) !== info))) bag._type = info.declared.name;
 
-    const members = this._getMemberTable(info, options.policy, GraphOperation.GET).members;
+    const members = this._getMemberTable(info, GraphOperation.GET, options).members;
     for (let i = 0; i < members.length; i++)
     {
       const member = members[i];
@@ -406,18 +379,18 @@ export class CjsGraph
     if (values._type !== undefined && !this.isType(object, values._type))
       throw new TypeError(`Expected ${info.declared.name} but got _type ${values._type}`);
 
-    const creating = options.creating;
-    options.creating = creating && options.initializeHeld;
+    const initialize = options.initialize;
+    options.initialize = options.initializeHeld ?? (options.creating || options.operation === GraphOperation.COPY);
     const changes = this._setMembers(object, info, values, options);
-    options.creating = creating;
+    options.initialize = initialize;
 
     return changes;
   }
 
   /**
    * Creates the object a bag describes inside a running set, and reads the bag into it.
-   * @cjs Objects read into under a creation count as created unless options.initializeHeld is
-   * false: nobody has initialised them.
+   * @cjs An object read into under a creation gets Initialize too, as Copier gives one to every
+   * object it fills, unless options.initializeHeld is false. CREATE decides this, not Set.
    */
   static createObject(values, type, options)
   {
@@ -426,11 +399,12 @@ export class CjsGraph
 
     const object = this._create(typeName);
     const info = this._getObjectInfo(object, type);
-    const creating = options.creating;
+    const creating = options.creating, initialize = options.initialize;
 
-    options.creating = true;
+    options.creating = options.initialize = true;
     this._setMembers(object, info, values, options);
     options.creating = creating;
+    options.initialize = initialize;
 
     return object;
   }
@@ -478,6 +452,27 @@ export class CjsGraph
     return entry;
   }
 
+  /** Whether this write compares nothing: a creation, a copy, or skipEquality. @cjs */
+  static isWritingAll(options)
+  {
+    return options.skipEquality || options.creating || options.operation === GraphOperation.COPY;
+  }
+
+  /** Whether a bag on a held reference reads into that object; a copy makes a new one. @cjs */
+  static isReadingInto(options)
+  {
+    return options.operation !== GraphOperation.COPY;
+  }
+
+  /** Whether a changed list waits for the end of the operation, for its events. @cjs */
+  static isListStaged(list, owner, options)
+  {
+    if (options.skipEvents) return false;
+    if (Object.getPrototypeOf(list) !== Array.prototype) return true;
+
+    return !options.creating && this._getObjectInfo(owner, null).declared.listNotify;
+  }
+
   /** Whether a value is a _ref. @cjs */
   static isReference(value)
   {
@@ -499,7 +494,7 @@ export class CjsGraph
     const info = this._getObjectInfo(object, type);
     if (value._id !== undefined) this._setAnchor(value._id, object, options);
 
-    const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
+    const members = this._getMemberTable(info, GraphOperation.SET, options).byName;
     for (const name of Object.keys(value))
     {
       const member = members[name];
@@ -538,14 +533,15 @@ export class CjsGraph
    */
   static getEmbeddedValues(value, options)
   {
-    return this.isPlain(value) ? value : this.get(value, { policy: options.policy, refs: false });
+    return this.isPlain(value) ? value : this.get(value, { refs: false });
   }
 
   /** The operation record for one get. @cjs Nothing is allocated per member. */
   static _beginGet(options)
   {
     return {
-      policy: options.policy ?? this.policy,
+      persistOnly: options.persistOnly === true,
+      roundTrip: options.roundTrip === true,
       refs: options.refs !== false,
       typeTags: options.typeTags === true,
       forceTypeTags: options.forceTypeTags === true,
@@ -570,14 +566,15 @@ export class CjsGraph
     return member.handler.Get(holder, key, options);
   }
 
-  /** The operation record for one set or from. @cjs Nothing is allocated per member. */
-  static _beginSet(options)
+  /** The operation record for one set, from or copy. @cjs Nothing is allocated per member. */
+  static _beginSet(options, operation)
   {
     return {
-      policy: options.policy ?? this.policy,
+      operation,
       validate: options.validate !== false,
-      initializeHeld: options.initializeHeld !== false,
-      staged: (options.policy ?? this.policy).replaceList !== undefined,
+      skipEquality: options.skipEquality === true,
+      skipEvents: options.skipEvents === true,
+      initializeHeld: options.initializeHeld ?? null,
       listEdits: [],
       anchors: options.idMap ?? new Map(),
       idMap: options.idMap ?? null,
@@ -587,6 +584,7 @@ export class CjsGraph
       pending: [],
       completions: new Map(),
       creating: false,
+      initialize: false,
       owner: null,
       member: null,
       deferred: null
@@ -594,16 +592,17 @@ export class CjsGraph
   }
 
   /**
-   * Writes each named member, recording what changed.
-   * @cjs A policy-refused member is skipped, as DictReader skips a member it may not write,
-   * and a name the class does not declare fails. A null bypasses a leaf handler.
+   * Writes each named member, recording what changed unless the object is being created.
+   * @cjs A member the table leaves out is skipped, as DictReader skips a member it may not
+   * write, and a name the class does not declare fails. A null bypasses a leaf handler.
    */
   static _setMembers(object, info, values, options)
   {
     if (values._id !== undefined) this._setAnchor(values._id, object, options);
 
-    const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
+    const members = this._getMemberTable(info, GraphOperation.SET, options).byName;
     const names = Object.keys(values);
+    const tracking = !options.creating;
     let changes = false;
     let nested = null;
 
@@ -627,9 +626,13 @@ export class CjsGraph
 
       options.owner = object;
       options.member = member;
-      const result = value === null && member.edge === null
-        ? this._clear(holder, key)
-        : member.handler.Set(holder, key, value, options);
+      const result = this._setMember(holder, key, value, member, options);
+
+      if (!tracking)
+      {
+        options.deferred = null;
+        continue;
+      }
 
       if (result === false) continue;
       if (changes === false) changes = {}; // alloc: only once something changed.
@@ -646,13 +649,43 @@ export class CjsGraph
       if (member.edge === null) continue;
       if (options.idMap !== null) this._addRecorded(changes, name, member, options);
 
-      // A nested bag is the child's own change: only the child's completion tells of it.
+      // A nested bag is the child's own set: only the child's completion tells of it.
       if (!member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
     }
 
-    if (changes !== false || options.creating) this._addCompletion(object, info, changes, nested, options);
+    if (changes !== false || options.creating || options.initialize)
+      this._addCompletion(object, info, changes, nested, options.creating ? values : null, options);
 
     return changes;
+  }
+
+  /** Writes one member, comparing as the operation requires. @cjs Returns as a handler's Set does. */
+  static _setMember(holder, key, value, member, options)
+  {
+    if (member.edge !== null) return member.handler.Set(holder, key, value, options);
+    if (value === null) return this._clear(holder, key);
+
+    if (options.operation === GraphOperation.COPY)
+    {
+      if (holder[key] !== null && member.handler.IsExactEqual(holder[key], value)) return false;
+    }
+    else if (!this.isWritingAll(options)) return member.handler.Set(holder, key, value, options);
+
+    member.handler.Write(holder, key, value, options);
+    return true;
+  }
+
+  /** Fires OnModified for the NOTIFY members among names. @cjs Carbon's per-member INotify. */
+  static _notify(object, info, names)
+  {
+    if (!info.declared.notify) return;
+
+    for (let i = 0; i < names.length; i++)
+    {
+      const candidates = info.compiled.byName[names[i]];
+      if (!candidates) throw new TypeError(`Unknown graph member: ${info.declared.name}.${names[i]}`);
+      if (candidates[0].notify === true) object.OnModified(names[i]);
+    }
   }
 
   /** Notes where a record holds live objects, for _recordReferences. @cjs idMap only. */
@@ -668,7 +701,7 @@ export class CjsGraph
   }
 
   /**
-   * The members
+   * The members an object changed itself, without its nested bags, or false.
    * @cjs Runs once references resolve, so a forward reference is already in the record.
    */
   static _getOwnChanges(changes, nested)
@@ -760,13 +793,13 @@ export class CjsGraph
   }
 
   /** Records an object for completion, once, children before parents. @cjs */
-  static _addCompletion(object, info, changes, nested, options)
+  static _addCompletion(object, info, changes, nested, values, options)
   {
     const entry = options.completions.get(object);
 
     if (!entry)
     {
-      options.completions.set(object, { object, info, changes, nested, created: options.creating });
+      options.completions.set(object, { object, info, changes, nested, values, initialize: options.initialize });
       return;
     }
 
@@ -791,7 +824,7 @@ export class CjsGraph
       if (entry.holder instanceof Map) entry.holder.set(entry.key, object);
       else entry.holder[entry.key] = object;
 
-      entry.record[entry.recordKey] = object;
+      if (entry.record !== null) entry.record[entry.recordKey] = object;
     }
 
     // Fills read references, so they run after every write above.
@@ -800,20 +833,73 @@ export class CjsGraph
       if (entry.fill !== null) this._fill(entry, options);
     }
 
-    for (const edit of options.listEdits)
-    {
-      options.policy.replaceList(edit.owner, edit.member, edit.list, edit.items);
-    }
+    for (const edit of options.listEdits) this._replaceList(edit.owner, edit.list, edit.items);
 
     for (let i = 0; i < options.recorded.length; i += 2)
     {
       this._recordReferences(options.recorded[i], options.recorded[i + 1], options);
     }
 
-    for (const entry of options.completions.values())
+    if (options.skipEvents) return;
+
+    for (const entry of options.completions.values()) this._complete(entry);
+  }
+
+  /**
+   * Tells one object what happened: Initialize, or OnModified per member, never both.
+   * Carbon: "If IInitialize is provided, don't do individual notifications"
+   * (DictReader.cpp:162-167, Copier.cpp:141-145).
+   * @cjs On a live set, only members it changed are told.
+   */
+  static _complete(entry)
+  {
+    const { object, info } = entry;
+
+    if (entry.initialize && info.declared.initialize)
     {
-      const own = this._getOwnChanges(entry.changes, entry.nested);
-      if (own !== false || entry.created) options.policy.complete(entry.object, entry.info, own, entry.created);
+      object.Initialize();
+      return;
+    }
+
+    const changes = entry.values ?? this._getOwnChanges(entry.changes, entry.nested);
+    if (changes !== false) this._notify(object, info, this._getMemberNames(changes));
+  }
+
+  /** The member names in a bag, without _type, _id and _ref. @cjs */
+  static _getMemberNames(values)
+  {
+    const names = [];
+
+    for (const name of Object.keys(values))
+    {
+      if (!this._reserved.has(name)) names.push(name);
+    }
+
+    return names;
+  }
+
+  /**
+   * Writes a list that waited: a mapped list through its own ReplaceItems, and an ordinary array on
+   * a list-notified owner with the owner's events.
+   * Modelled on: DictReader::ReadList (blue/src/DictReader.cpp:427-476).
+   * @cjs UNLOADSTART runs with the old items still in the list.
+   */
+  static _replaceList(owner, list, items)
+  {
+    if (Object.getPrototypeOf(list) !== Array.prototype)
+    {
+      list.ReplaceItems(items);
+      return;
+    }
+
+    if (list.length) owner.OnListModified(BLUELISTEVENT.BELIST_UNLOADSTART, 0, 0, null, list);
+
+    list.length = 0;
+
+    for (let i = 0; i < items.length; i++)
+    {
+      list.push(items[i]);
+      if (items[i] !== null) owner.OnListModified(BLUELISTEVENT.BELIST_INSERTED, list.length, 0, items[i], list);
     }
   }
 
@@ -887,28 +973,32 @@ export class CjsGraph
   }
 
   /**
-   * The members a policy accepts for one operation, resolved once per class.
+   * The members one operation sees, resolved once per class and choice of flags.
    * @cjs Lives on the compiled record, so a registration change discards it with the rest.
    * Resolves names after filtering, as _selectEdges does.
    */
-  static _getMemberTable(info, policy, operation)
+  static _getMemberTable(info, operation, options)
   {
-    let tables = info.compiled.tables.get(policy);
-    if (!tables) info.compiled.tables.set(policy, tables = []);
+    const reading = operation === GraphOperation.GET;
+    const persistOnly = reading && options.persistOnly, roundTrip = reading && options.roundTrip;
+    const index = reading ? (persistOnly ? 1 : 0) + (roundTrip ? 2 : 0) : 4;
 
-    let table = tables[operation];
+    let table = info.compiled.tables[index];
     if (table) return table;
 
     const members = [], byName = Object.create(null);
     for (const member of info.compiled.members)
     {
-      if (byName[member.name] || !policy.acceptMember(member, info, operation)) continue;
+      if (byName[member.name] || member.hidden === true) continue;
+      if ((!reading || roundTrip) && member.writable === false) continue;
+      if (persistOnly && member.persist === false) continue;
+
       byName[member.name] = member;
       members.push(member);
     }
 
     table = { members, byName };
-    tables[operation] = table;
+    info.compiled.tables[index] = table;
     return table;
   }
 
@@ -1209,7 +1299,7 @@ export class CjsGraph
   /**
    * Resolves inherited members without reading or constructing any instance.
    * Modelled on: BlueRttiType::Init (blueexposure/BlueClasses.cpp:82-125).
-   * @adapted JS keys replace native offsets; policy flags are retained, not interpreted here.
+   * @adapted JS keys replace native offsets; flags are retained, and read by _getMemberTable.
    */
   static _compile(info)
   {
@@ -1217,7 +1307,7 @@ export class CjsGraph
     const byName = Object.create(null);
     let parent = null;
 
-    // Preserve candidates in derived-first order. Policy filters BEFORE resolving a name;
+    // Preserve candidates in derived-first order. Flags filter BEFORE resolving a name;
     // e.g. a hidden derived declaration must not erase a visible base declaration.
     // The instance prototype chain, the same relation traversal and selection use.
     for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
@@ -1236,7 +1326,7 @@ export class CjsGraph
       }
     }
 
-    return { revision: this._revision, parent, members, byName, tables: new WeakMap() };
+    return { revision: this._revision, parent, members, byName, tables: [] };
   }
 
   /** Stable class identity. */

@@ -64,7 +64,9 @@ All handlers share one call shape, options last: `get(target, key, options)`,
 Leaf handlers do not read options and may leave it off their own signature. There is no From, schema lookup, accessor resolution or destruction.
 
 Set/Copy report a change, a JS convenience unlike Carbon Copy's success result, and
-IsEqual decides it through isUnchanged. Carbon's comparisons are kept. isUnchanged adds
+IsEqual decides it through isUnchanged. write stores with no comparison, for skipEquality, a
+creation or a copy. -0 and 0 are the same value in both comparisons. Carbon's comparisons are
+kept. isUnchanged adds
 Set's own rule: a stored null or NaN is always overwritten, though a Float32 array element
 holding NaN equals anything in IsEqual (CE-202). A Float32 or Float64 scalar holding NaN or
 Infinity never equals itself, so Set writes and reports it every time. NaN stays valid input.
@@ -76,7 +78,8 @@ This is not a claim that Carbon exposes the additional JS array families.
 Integer scalar conversion wraps to its width; 8/16/32-bit storage truncates and
 maps non-finite inputs to zero like native JS typed arrays. Int64/Uint64 use BigInt
 and accept BigInt, integer strings and booleans through native BigInt storage
-conversion. Number inputs throw: callers must explicitly choose an exact BigInt
+conversion. A safe-integer Number is stored as given, matching the Black reader; any other
+Number throws, and BigInt array elements take no Number: callers must explicitly choose an exact BigInt
 conversion first. This differs from the legacy values codec, which mixes safe
 Numbers with BigInts; that codec is not changed or connected to these handlers.
 Get/Clone preserve BigInts, including within plain values arrays; JSON encoding

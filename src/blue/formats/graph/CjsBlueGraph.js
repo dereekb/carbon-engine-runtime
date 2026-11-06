@@ -1,9 +1,13 @@
-// Blue's side of the independent graph (global/model/graph), which imports nothing of ours.
-// Blue supplies its classes, as definitions and as a class library, and its rules, as a policy.
+// Blue's side of the independent graph (global/model/graph), which imports nothing of Blue.
+// Blue supplies its classes, as definitions with their flags as data, and as a class library.
 // Disconnected: DictReader and DictWriter stay the live path until the one reviewed cutover.
 import * as graph from "../../../global/model/graph/index.js";
 import { CjsSchema } from "#schema";
 import { mappedInterfaces } from "../../compose/interface.js";
+import { isWritableField } from "../../compose/values.js";
+import { IInitialize } from "../../exposure/IInitialize.js";
+import { IListNotify } from "../../exposure/IListNotify.js";
+import { INotify } from "../../exposure/INotify.js";
 import { getClassRegistrations, getRegisteredConstructor } from "../../exposure/classes/registry.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { DeclaredClassName } from "../../format/IRootWriter.js";
@@ -71,11 +75,15 @@ export class CjsBlueGraph
   static define(ctor, name)
   {
     const { fields } = IRootReaderBase.getDictionaryDeclarations(ctor);
+    const mapped = mappedInterfaces(ctor);
 
     return CjsGraph.define(ctor, {
       name,
       whole: true,
-      interfaces: [ ...Array.from(mappedInterfaces(ctor), mapped => CjsSchema.getClassName(mapped)), ...HELD_AS[name] ?? [] ],
+      initialize: mapped.has(IInitialize),
+      notify: mapped.has(INotify),
+      listNotify: mapped.has(IListNotify),
+      interfaces: [ ...Array.from(mapped, item => CjsSchema.getClassName(item)), ...HELD_AS[name] ?? [] ],
       members: fields.map(field => this._getMember(field))
     });
   }
@@ -97,13 +105,30 @@ export class CjsBlueGraph
     const declared = edge ? DeclaredClassName(field.type) : null;
 
     return {
-      name: field.name, key: field.key, index: field.index, field,
+      ...this._getFlags(field),
       handler: values ?? KIND_HANDLERS[kind],
       edge: edge ? {
         kind: edge,
         collection: kind === "list" || kind === "structList",
         type: declared && getRegisteredConstructor(declared) ? declared : null
       } : null
+    };
+  }
+
+  /**
+   * A member's identity and Carbon's flags, as data. A values bag carries no binary block, and a
+   * runtime-only member claims its name unread.
+   * @param {object} field Schema declaration.
+   * @returns {object} Member fields.
+   */
+  static _getFlags(field)
+  {
+    return {
+      name: field.name, key: field.key, index: field.index,
+      persist: field.edit?.persist === true || field.edit?.persistOnly === true,
+      writable: isWritableField(field),
+      notify: field.edit?.notify === true,
+      hidden: field.type?.binary === true || field.type?.runtimeOnly === true
     };
   }
 
@@ -133,7 +158,7 @@ export class CjsBlueGraph
   static _getMapMember(field, type)
   {
     return {
-      name: field.name, key: field.key, index: field.index, field,
+      ...this._getFlags(field),
       handler: MAP_HANDLER,
       edge: { kind: "ref", collection: true, map: true, type }
     };

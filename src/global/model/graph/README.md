@@ -20,7 +20,7 @@ lookup when they need current compiled data; a retained compiled snapshot can be
 out of date. Neither snapshot may be mutated (immutability.md: nothing but enums is frozen). Replacing a definition retains class-info identity.
 
 Compiled members preserve derived-first order, including same-name alternatives.
-`byName[name]` contains those alternatives in that order. Policy filtering must
+`byName[name]` contains those alternatives in that order. Filtering by flags must
 precede choosing one: Carbon's HIDDEN derived member can leave a base member visible.
 No Blue flags are interpreted by the compiler itself.
 
@@ -38,13 +38,25 @@ be replayed through set. The graph validates with each handler's IsValidValue an
 changes; handlers do neither. One options record runs through a whole operation, and
 nothing is allocated per member.
 
-A policy decides and never walks: `acceptMember(member, info, operation)` picks members,
-cached once per class, policy and operation on the compiled record, and
-`complete(object, info, changes, created)` runs after references resolve, children first.
-`CjsGraph.policy` is the session policy, and `options.policy` overrides it per call. The
-default accepts everything and notifies nothing. A policy may also carry
-`replaceList(owner, member, list, items)`, which then writes a changed list of an existing
-owner, once references resolve and before completion; without it the list is simply written. `_type` names resolve through
+There is no policy class or option: Blue's rules are the graph's own behaviour, and variations
+are plain options (`persistOnly`, `roundTrip`, `skipEquality`, `skipEvents`, `validate`, `idMap`,
+`initializeHeld`, `copyOverride`). The graph imports nothing from Blue: `Initialize`, `OnModified`
+and `OnListModified` are methods on objects, and flags are data. A member carries `persist`,
+`writable`, `notify` and `hidden`; a definition says `initialize`, `notify`, `listNotify` and `hook`.
+Member tables are cached per class and choice of flags on the compiled record.
+
+- **Set on a live object:** IsEqual, then updateValues(changedNames), children first and once
+  references resolve. It never calls Initialize unless `initializeHeld` is true.
+- **from:** writes every value with no comparison and no change tracking, then Initialize once
+  if the class has it, otherwise OnModified per NOTIFY member. Never both.
+- **copy:** Carbon's Copier. IsExactEqual skips what matches, a reference gets a new object, and a
+  list is rebuilt. Initialize at the end if the target has it, even an existing one, with no
+  OnModified; otherwise OnModified per changed member.
+- **Lists:** a mapped list goes through its ReplaceItems, even on a fresh load, because ReadList
+  sends LOADFINISHED (`DictReader.cpp:472-475`). An ordinary array on a live list-notified owner
+  gets UNLOADSTART and INSERTED from the owner, with the old items still in place. Structure lists
+  are silent. `skipEvents` writes everything raw.
+`_type` names resolve through
 `CjsGraph.registerLibrary(library)`, newest first, ending in the graph's own definitions.
 A library has `Get(typeName)` and `Create(typeName)`. A failed operation completes
 nothing and rolls nothing back.
@@ -53,11 +65,12 @@ A definition may name `interfaces`, the classes an instance also counts as witho
 inheriting from them, and set `whole`, when its members are the class's complete list and
 no base definition may add to them.
 
-`CjsGraph.updateValues(object, names, options)` tells the policy members changed after a
-direct write. No names means every member, and it keeps no baseline.
+`CjsGraph.updateValues(object, names)` only touches its own object. Names fire OnModified for
+those NOTIFY members. No names runs the class's OnValueChanged hook, and a class with no hook
+does nothing. It keeps no baseline and compares nothing.
 
 CjsGraphRoot is the optional base class: thin forwards and `__cjs`. No Destruct yet.
-Blue's side is `blue/formats/graph/CjsBlueGraph.js` and `CjsBlueGraphPolicy.js`.
+Blue's side is `blue/formats/graph/CjsBlueGraph.js`, which supplies definitions and flags.
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per
 object, depth-first in declaration/list order. A member's `edge` declares `kind`

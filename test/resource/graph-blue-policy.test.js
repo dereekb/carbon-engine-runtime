@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { blue } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlueGraph, CjsBlueGraphPolicy } from "../../npm/dist/blue/formats/graph/index.js";
+import { CjsBlueGraph } from "../../npm/dist/blue/formats/graph/index.js";
 import { CjsGraph } from "../../npm/dist/global/model/graph/index.js";
 import { ImportAllDistModules } from "../support/allDistClasses.js";
 
@@ -11,7 +11,6 @@ await ImportAllDistModules();
 CjsBlueGraph.register(blue.classes);
 
 const create = name => new (blue.classes.Get(name))();
-const policy = new CjsBlueGraphPolicy();
 const quiet = { notify: false, markDirty: false, reuseObjects: true };
 
 /** Records what an instance is told, without running its hooks. */
@@ -20,15 +19,10 @@ function spy(object)
   const told = [];
   object.OnModified = name => { told.push([ "OnModified", name ]); return true; };
   object.Initialize = () => { told.push([ "Initialize" ]); return true; };
-  object.OnListModified = (event, key, key2, value) =>
-  {
-    told.push([ "OnListModified", event & BLUELISTEVENT.BELIST_EVENTMASK, key, value?.name ?? null ]);
-    return true;
-  };
   return told;
 }
 
-/** Runs one operation with the class's own hooks recorded for every instance it creates. */
+/** Runs one operation with a class's own hooks recorded for every instance it creates. */
 function withPrototypeSpy(ctor, names, run)
 {
   const told = [], saved = {};
@@ -62,107 +56,106 @@ test("blue.classes Get and Create are thin wrappers over its real methods", () =
 
 test("_type names resolve through Blue's class library, and an unknown name is an error", () =>
 {
-  const area = CjsGraph.from(null, { _type: "Tr2MeshArea", name: "a" }, { policy });
+  const area = CjsGraph.from(null, { _type: "Tr2MeshArea", name: "a" }, { skipEvents: true });
   assert.equal(area.constructor, blue.classes.Get("Tr2MeshArea"));
   assert.equal(area.name, "a");
-  assert.throws(() => CjsGraph.from(null, { _type: "NoSuchGraphClass" }, { policy }), /Unknown graph class/);
+  assert.throws(() => CjsGraph.from(null, { _type: "NoSuchGraphClass" }), /Unknown graph class/);
 });
 
 test("a mapped interface counts as assignable, and a legacy material sits in an effect member", () =>
 {
   const area = create("Tr2MeshArea");
   area.effect = create("Tr2ShaderMaterial");
-  assert.equal(CjsGraph.get(area, { policy: new CjsBlueGraphPolicy({ persistOnly: true }), typeTags: true }).effect._type, "Tr2ShaderMaterial");
+  assert.equal(CjsGraph.get(area, { persistOnly: true, typeTags: true }).effect._type, "Tr2ShaderMaterial");
 });
 
 test("a Map of objects reads and writes as a bag keyed by name", () =>
 {
-  const persisted = new CjsBlueGraphPolicy({ persistOnly: true, notify: false });
   const material = create("Tr2ShaderMaterial");
   const parameter = create("Tr2FloatParameter");
   parameter.name = "x";
   material.parameters.set("x", parameter);
 
-  const values = CjsGraph.get(material, { policy: persisted, typeTags: true });
+  const values = CjsGraph.get(material, { persistOnly: true, typeTags: true });
   assert.deepEqual(values, CjsSchema.getValues(material, {}, { persistOnly: true, typeTags: true }));
 
-  const built = CjsGraph.from(null, values, { policy: persisted });
+  const built = CjsGraph.from(null, values, { skipEvents: true });
   assert.equal(built.parameters.get("x").constructor, parameter.constructor);
-  assert.equal(CjsGraph.set(built, values, { policy: persisted }), false);
+  assert.equal(CjsGraph.set(built, values, { skipEvents: true }), false);
   assert.deepEqual(CjsGraph.traverse(material, () => {}), 2);
 });
 
-test("the policy picks members as the values path does", () =>
+test("flags on members pick what the values path picks", () =>
 {
   const area = create("Tr2MeshArea");
   area.name = "a";
-
-  const persisted = new CjsBlueGraphPolicy({ persistOnly: true });
-  assert.deepEqual(CjsGraph.get(area, { policy: persisted }), CjsSchema.getValues(area, {}, { persistOnly: true }));
+  assert.deepEqual(CjsGraph.get(area, { persistOnly: true }), CjsSchema.getValues(area, {}, { persistOnly: true }));
 });
 
 test("a member the class's own declaration dropped stays dropped, though a JS base declares it", () =>
 {
   const light = create("EveSOFDataHullLightSetTexturedPointLight");
-  const values = CjsGraph.get(light, { policy: new CjsBlueGraphPolicy({ persistOnly: true }) });
+  const values = CjsGraph.get(light, { persistOnly: true });
   assert.deepEqual(values, CjsSchema.getValues(light, {}, { persistOnly: true }));
   assert.equal(Object.hasOwn(values, "lightColor"), false);
 });
 
-test("an existing object is told OnModified once per changed NOTIFY member, in order", () =>
+test("a live object is told OnModified once per changed NOTIFY member, in order", () =>
 {
   const transition = create("Tr2StateMachineTransition");
   const told = spy(transition);
 
-  CjsGraph.set(transition, { condition: "1", name: "first" }, { policy });
+  CjsGraph.set(transition, { condition: "1", name: "first" });
   assert.deepEqual(told, [ [ "OnModified", "condition" ], [ "OnModified", "name" ] ]);
 
   told.length = 0;
-  assert.equal(CjsGraph.set(transition, { condition: "1", name: "first" }, { policy }), false);
+  assert.equal(CjsGraph.set(transition, { condition: "1", name: "first" }), false);
   assert.deepEqual(told, [], "an equal member is not told");
 
-  CjsGraph.set(transition, { name: "second" }, { policy });
+  CjsGraph.set(transition, { name: "second" });
   assert.deepEqual(told, [ [ "OnModified", "name" ] ], "one change, one call");
 });
 
-test("an existing IInitialize object is told OnModified and never initialised", () =>
+test("a live IInitialize object is told OnModified and never initialised", () =>
 {
   const parameter = create("TriFloatArrayParameter");
   const told = spy(parameter);
 
-  CjsGraph.set(parameter, { name: "x" }, { policy });
+  CjsGraph.set(parameter, { name: "x" });
   assert.deepEqual(told, [ [ "OnModified", "name" ] ]);
 });
 
 test("a created IInitialize object is initialised once and not told of its members", () =>
 {
   const ctor = blue.classes.Get("Tr2FloatParameter");
-  const told = withPrototypeSpy(ctor, [ "Initialize", "OnModified" ], () =>
-  {
-    CjsGraph.from(ctor, { name: "x" }, { policy });
-  });
+  const told = withPrototypeSpy(ctor, [ "Initialize", "OnModified" ], () => CjsGraph.from(ctor, { name: "x" }));
 
   assert.deepEqual(told, [ [ "Initialize", "x" ] ]);
 });
 
-test("UpdateValues tells the same OnModified as Set, through the policy", () =>
+test("a class that only happens to have a method is not called: flags say what it maps", () =>
+{
+  const ctor = blue.classes.Get("Tr2StateMachineTransition");
+  assert.equal(CjsGraph.getClassInfo(ctor).declared.initialize, false);
+});
+
+test("UpdateValues with a name tells the same OnModified as Set", () =>
 {
   const transition = create("Tr2StateMachineTransition");
   const told = spy(transition);
 
   transition.name = "direct";
-  CjsGraph.updateValues(transition, "name", { policy });
+  CjsGraph.updateValues(transition, "name");
   assert.deepEqual(told, [ [ "OnModified", "name" ] ]);
 });
 
-test("notify false tells nothing and still writes lists", () =>
+test("skipEvents tells nothing and still writes lists", () =>
 {
-  const silent = new CjsBlueGraphPolicy({ notify: false });
   const mesh = create("Tr2Mesh");
   const told = spy(mesh);
   const list = mesh.opaqueAreas;
 
-  CjsGraph.set(mesh, { name: "x", opaqueAreas: [ { _type: "Tr2MeshArea", name: "a" } ] }, { policy: silent });
+  CjsGraph.set(mesh, { name: "x", opaqueAreas: [ { _type: "Tr2MeshArea", name: "a" } ] }, { skipEvents: true });
   assert.deepEqual(told, []);
   assert.equal(mesh.opaqueAreas, list);
   assert.equal(list.length, 1);
@@ -191,7 +184,7 @@ test("a mapped list sends the same events as DictReader, with the old items pres
   };
 
   const values = { opaqueAreas: [ { _type: "Tr2MeshArea", name: "a" }, { _type: "Tr2MeshArea", name: "b" } ] };
-  const graph = run(mesh => CjsGraph.set(mesh, values, { policy }));
+  const graph = run(mesh => CjsGraph.set(mesh, values));
   const old = run(mesh => CjsSchema.setValues(mesh, values, quiet));
 
   assert.deepEqual(graph, old);
@@ -200,13 +193,23 @@ test("a mapped list sends the same events as DictReader, with the old items pres
   assert.deepEqual(graph.names, [ "a", "b" ]);
 });
 
-test("a created owner fills its list raw, with no list events", () =>
+test("a fresh load still sends LOADFINISHED, which is how a mesh attaches its areas", () =>
 {
-  const ctor = blue.classes.Get("Tr2Mesh");
-  const told = withPrototypeSpy(ctor, [ "OnListModified" ], () =>
-  {
-    CjsGraph.from(ctor, { opaqueAreas: [ { _type: "Tr2MeshArea", name: "a" } ] }, { policy: new CjsBlueGraphPolicy({ notify: false }) });
-  });
+  const Mesh = blue.classes.Get("Tr2Mesh");
+  const events = [];
+  const original = Mesh.prototype.OnListModified;
 
-  assert.deepEqual(told, []);
+  Mesh.prototype.OnListModified = function(event, key, key2, value, list)
+  {
+    events.push(event & BLUELISTEVENT.BELIST_EVENTMASK);
+    return original.call(this, event, key, key2, value, list);
+  };
+
+  try
+  {
+    const mesh = CjsGraph.from(Mesh, { opaqueAreas: [ { _type: "Tr2MeshArea", name: "a" } ] }, { initializeHeld: false });
+    assert.deepEqual(events, [ BLUELISTEVENT.BELIST_LOADFINISHED ], "DictReader.cpp:472-475");
+    assert.equal(mesh.opaqueAreas.length, 1);
+  }
+  finally { Mesh.prototype.OnListModified = original; }
 });

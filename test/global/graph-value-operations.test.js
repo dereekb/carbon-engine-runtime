@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   CjsGraph, CjsGraphRoot, CjsGraphTypeFloat32, CjsGraphTypeIRootPtr, CjsGraphTypeList, CjsGraphTypeString, CjsGraphTypeStruct,
-  CjsGraphTypeMap, CjsGraphTypeValues, CjsGraphTypeVector3, GraphOperation
+  CjsGraphTypeMap, CjsGraphTypeValues, CjsGraphTypeVector3
 } from "../../src/global/model/graph/index.js";
 
 const string = new CjsGraphTypeString();
@@ -145,50 +145,6 @@ test("get omits an empty indexed slot and reads a filled one", () =>
   assert.equal(CjsGraph.getValue(holder, "first"), null);
 });
 
-test("get asks the policy once per class, and the answer follows a registration change", () =>
-{
-  class Late
-  {
-    a = 1;
-    b = 2;
-  }
-  CjsGraph.define(Late, { name: "GraphValueLate", members: [ { name: "a", handler: float }, { name: "b", handler: float } ] });
-
-  const asked = [];
-  const policy = {
-    acceptMember(member, info, operation)
-    {
-      asked.push([ member.name, operation ]);
-      return member.name !== "b";
-    }
-  };
-
-  const late = new Late();
-  assert.deepEqual(CjsGraph.get(late, { policy }), { a: 1 });
-  assert.deepEqual(CjsGraph.get(late, { policy }), { a: 1 });
-  assert.deepEqual(asked, [ [ "a", GraphOperation.GET ], [ "b", GraphOperation.GET ] ]);
-
-  CjsGraph.define(Late, { name: "GraphValueLate", members: [ { name: "b", handler: float } ] });
-  assert.deepEqual(CjsGraph.get(late), { b: 2 });
-  assert.deepEqual(CjsGraph.get(late, { policy }), {});
-  assert.throws(() => CjsGraph.getValue(late, "a"), /Unknown graph member/);
-});
-
-test("get resolves a policy-hidden derived declaration to the visible base declaration", () =>
-{
-  class Base
-  {
-    value = 1;
-    hidden = 2;
-  }
-  class Derived extends Base {}
-  CjsGraph.define(Base, { name: "GraphValueBase", members: [ { name: "value", handler: float } ] });
-  CjsGraph.define(Derived, { name: "GraphValueDerived", members: [ { name: "value", key: "hidden", handler: float, secret: true } ] });
-
-  assert.deepEqual(CjsGraph.get(new Derived()), { value: 2 });
-  assert.deepEqual(CjsGraph.get(new Derived(), { policy: { acceptMember: member => !member.secret } }), { value: 1 });
-});
-
 test("get refuses an unregistered object rather than dropping it", () =>
 {
   class Unknown {}
@@ -206,17 +162,6 @@ test("struct handler writes an embedded object", () =>
   CjsGraph.define(Embed, { name: "GraphValueEmbed", members: [ { name: "row", handler: struct, edge: { kind: "embed", type: Row } } ] });
   assert.deepEqual(CjsGraph.get(new Embed()), { row: { value: 0 } });
 });
-
-/** A policy that records each completion, for lifecycle order. */
-function tracing()
-{
-  const trace = [];
-  return {
-    trace,
-    acceptMember() { return true; },
-    complete(object, info, changes, created) { trace.push([ info.declared.name, object.name ?? null, created, changes ]); }
-  };
-}
 
 test("set skips equal members, records changed ones and returns false when nothing changed", () =>
 {
@@ -247,24 +192,6 @@ test("set refuses what is not valid input, leaving the handler unasked", () =>
   assert.throws(() => CjsGraph.set(object, { nothing: 1 }), /Unknown graph member/);
 
   assert.deepEqual(CjsGraph.set(object, { name: 12 }, { validate: false }), { name: "12" });
-});
-
-test("set skips a member the policy refuses, and writes a null past a leaf handler", () =>
-{
-  const policy = { acceptMember: member => member.name !== "name", complete() {} };
-  const object = leaf("kept");
-
-  assert.equal(CjsGraph.set(object, { name: "ignored" }, { policy }), false);
-  assert.equal(object.name, "kept");
-
-  assert.deepEqual(CjsGraph.set(object, { name: null }), { name: null });
-  assert.equal(object.name, null);
-  assert.equal(CjsGraph.set(object, { name: null }), false);
-  assert.equal(CjsGraph.get(object).name, null);
-
-  object.position = null;
-  assert.equal(CjsGraph.get(object).position, null);
-  assert.equal(CjsGraph.set(object, { position: null }), false);
 });
 
 test("set reads a bag into the held object, recording a nested bag", () =>
@@ -598,44 +525,6 @@ test("a forward reference is in the change record, nested through its parents", 
   assert.equal(changes.other, holder.other);
 });
 
-test("completion runs after references resolve, children first, created once, borrowed not created", () =>
-{
-  const policy = tracing();
-  const borrowed = leaf("borrowed");
-  const holder = new Holder();
-  holder.name = "holder";
-  holder.child = borrowed;
-
-  CjsGraph.set(holder, { child: { name: "changed" }, items: [ { name: "made" } ], other: { _ref: 7 }, first: { _id: 7, name: "slot" } }, { policy });
-
-  assert.deepEqual(policy.trace.map(([ type, name, created ]) => [ type, name, created ]), [
-    [ "GraphValueLeaf", "changed", false ],
-    [ "GraphValueLeaf", "made", true ],
-    [ "GraphValueLeaf", "slot", true ],
-    [ "GraphValueHolder", "holder", false ]
-  ]);
-
-  // The parent's record already holds the resolved forward reference when it completes.
-  assert.equal(policy.trace[3][3].other, holder.other);
-  assert.equal(holder.other, holder.slots[0]);
-
-  policy.trace.length = 0;
-  assert.equal(CjsGraph.set(holder, { name: "holder" }, { policy }), false);
-  assert.deepEqual(policy.trace, [], "an unchanged object is not told");
-});
-
-test("a cycle completes each object once, and nothing completes on failure", () =>
-{
-  const policy = tracing();
-
-  CjsGraph.from(Holder, { _id: 1, name: "a", other: { _type: "GraphValueHolder", name: "b", other: { _ref: 1 } } }, { policy });
-  assert.deepEqual(policy.trace.map(([ , name, created ]) => [ name, created ]), [ [ "b", true ], [ "a", true ] ]);
-
-  policy.trace.length = 0;
-  assert.throws(() => CjsGraph.from(Holder, { child: { name: "x" }, other: { _ref: 8 } }, { policy }), /Unresolved/);
-  assert.deepEqual(policy.trace, []);
-});
-
 test("copyOverride shares what it returns, as Copier's m_override does, and the rest is copied", () =>
 {
   const shared = leaf("shared");
@@ -667,43 +556,6 @@ test("copyOverride shares what it returns, as Copier's m_override does, and the 
 
   // Without the option nothing outside the source is shared.
   assert.notEqual(CjsGraph.clone(holder).child, shared);
-});
-
-test("initializeHeld false leaves a default child under a created owner uncreated", () =>
-{
-  class Parent
-  {
-    name = "";
-    child = new Leaf();
-  }
-  CjsGraph.define(Parent, { name: "GraphValueHeldParent", members: [
-    { name: "name", handler: string },
-    { name: "child", handler: reference, edge: { kind: "ref", type: Leaf } }
-  ] });
-
-  const policy = tracing();
-  CjsGraph.from(Parent, { child: { name: "x" } }, { policy, initializeHeld: false });
-  assert.deepEqual(policy.trace.map(([ type, , created ]) => [ type, created ]), [
-    [ "GraphValueLeaf", false ],
-    [ "GraphValueHeldParent", true ]
-  ]);
-});
-
-test("a default child read under a created owner counts as created", () =>
-{
-  class Parent
-  {
-    name = "";
-    child = new Leaf();
-  }
-  CjsGraph.define(Parent, { name: "GraphValueParent", members: [
-    { name: "name", handler: string },
-    { name: "child", handler: reference, edge: { kind: "ref", type: Leaf } }
-  ] });
-
-  const policy = tracing();
-  CjsGraph.from(Parent, { child: { name: "x" } }, { policy });
-  assert.deepEqual(policy.trace.map(([ , , created ]) => created), [ true, true ]);
 });
 
 test("a registered library names _type: the last registered wins, and Create makes the instance", () =>
@@ -788,9 +640,8 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
   assert.deepEqual(object.SetValues({ weight: 2 }), { weight: 2 });
   assert.deepEqual(object.SetValue("name", "b"), { name: "b" });
   assert.equal(object.SetValue("name", "b"), false);
-  assert.deepEqual(object.UpdateValues(), { name: "b", weight: 2 });
-  assert.deepEqual(object.UpdateValues("name"), { name: "b" });
-  assert.deepEqual(object.UpdateValues([ "weight" ]), { weight: 2 });
+  assert.equal(object.UpdateValues(), undefined);
+  assert.equal(object.UpdateValues("name"), undefined);
 
   const clone = object.Clone();
   assert.notEqual(clone, object);
@@ -799,77 +650,6 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
 
   const target = new Rooted();
   assert.deepEqual(target.Copy(object), { name: "b", weight: 2 });
-});
-
-test("a policy's replaceList writes an existing owner's changed list, after references and before completion", () =>
-{
-  const order = [];
-  const policy = {
-    acceptMember() { return true; },
-    replaceList(owner, member, list, items)
-    {
-      order.push([ "replace", owner, member.name, list.length, items.slice() ]);
-      list.length = 0;
-      for (const item of items) list.push(item);
-    },
-    complete(object) { order.push([ "complete", object ]); }
-  };
-
-  const holder = new Holder();
-  const items = holder.items, old = leaf("old");
-  items.push(old);
-
-  CjsGraph.set(holder, { items: [ { _ref: 3 } ], other: { _id: 3, _type: "GraphValueLeaf", name: "later" } }, { policy });
-
-  const [ kind, owner, name, oldLength, staged ] = order[0];
-  assert.equal(kind, "replace");
-  assert.equal(owner, holder);
-  assert.equal(name, "items");
-  assert.equal(oldLength, 1, "the old items are still in the list");
-  assert.equal(staged[0], holder.other, "the forward reference resolved first");
-  assert.equal(items[0], holder.other);
-  assert.equal(holder.items, items);
-  assert.equal(order.at(-1)[0], "complete");
-  assert.equal(order.at(-1)[1], holder);
-
-  order.length = 0;
-  assert.equal(CjsGraph.set(holder, { items: [ holder.other ] }, { policy }), false);
-  assert.deepEqual(order, [], "an unchanged list is not replaced");
-});
-
-test("replaceList is not asked about a created owner, a structure list, or a policy without it", () =>
-{
-  const asked = [];
-  const policy = {
-    acceptMember() { return true; },
-    replaceList(owner, member) { asked.push(member.name); },
-    complete() {}
-  };
-
-  const built = CjsGraph.from(Holder, { items: [ { name: "a" } ] }, { policy });
-  assert.equal(built.items[0].name, "a", "a created owner fills raw");
-
-  const holder = new Holder();
-  CjsGraph.set(holder, { rows: [ { value: 1 } ] }, { policy });
-  assert.equal(holder.rows.length, 1);
-  assert.deepEqual(asked, []);
-});
-
-test("an idMap record still holds _ref when replaceList stages the list", () =>
-{
-  const idMap = new Map();
-  const policy = {
-    acceptMember() { return true; },
-    replaceList(owner, member, list, items) { list.push(...items); },
-    complete() {}
-  };
-
-  const holder = new Holder();
-  const live = leaf("live");
-  const changes = CjsGraph.set(holder, { items: [ live ] }, { policy, idMap });
-
-  assert.equal(holder.items[0], live, "the list holds the object");
-  assert.equal(idMap.get(changes.items[0]._ref), live);
 });
 
 test("a definition marked whole takes nothing from its base", () =>
@@ -1018,115 +798,6 @@ test("a list holding a stored NaN is not called equal", () =>
   assert.equal(holder.items[0].position[0], 1);
 });
 
-test("UpdateValues with no names reports every member, and names narrow it", () =>
-{
-  const policy = tracing();
-  const object = leaf("a", 2);
-  object.position.set([ 1, 2, 3 ]);
-
-  assert.deepEqual(CjsGraph.updateValues(object, null, { policy }), { name: "a", weight: 2, position: [ 1, 2, 3 ] });
-  assert.deepEqual(policy.trace[0][3], { name: "a", weight: 2, position: [ 1, 2, 3 ] });
-  assert.equal(policy.trace[0][2], false, "not a creation");
-
-  policy.trace.length = 0;
-  assert.deepEqual(CjsGraph.updateValues(object, "weight", { policy }), { weight: 2 });
-  assert.deepEqual(CjsGraph.updateValues(object, [ "name", "weight" ], { policy }), { name: "a", weight: 2 });
-  assert.deepEqual(policy.trace.map(([ , , , changes ]) => changes), [ { weight: 2 }, { name: "a", weight: 2 } ]);
-
-  assert.equal(CjsGraph.updateValues(object, [], { policy }), false);
-  assert.equal(policy.trace.length, 2, "no members, nothing told");
-  assert.throws(() => CjsGraph.updateValues(object, "nothing"), /Unknown graph member/);
-});
-
-test("three routes to a nested change reach the child the same way", () =>
-{
-  const run = route =>
-  {
-    const policy = tracing();
-    const holder = new Holder();
-    holder.child = leaf("child");
-    route(holder, policy);
-    return { weight: holder.child.weight, told: policy.trace.map(([ type, , , changes ]) => [ type, changes.weight ]) };
-  };
-
-  const expected = { weight: 5, told: [ [ "GraphValueLeaf", 5 ] ] };
-  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder, { child: { weight: 5 } }, { policy })), expected);
-  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder.child, { weight: 5 }, { policy })), expected);
-  assert.deepEqual(run((holder, policy) =>
-  {
-    holder.child.weight = 5;
-    CjsGraph.updateValues(holder.child, null, { policy });
-  }), expected);
-  assert.deepEqual(run((holder, policy) =>
-  {
-    holder.child.weight = 5;
-    CjsGraph.updateValues(holder.child, "weight", { policy });
-  }), expected);
-});
-
-test("UpdateValues reports a held object by reference, a list as an array, and honours the policy and idMap", () =>
-{
-  const holder = new Holder();
-  const child = holder.child = leaf("child");
-  holder.items.push(child);
-
-  const changes = CjsGraph.updateValues(holder, [ "child", "items", "second" ]);
-  assert.equal(changes.child, child);
-  assert.deepEqual(changes.items, [ child ]);
-  assert.notEqual(changes.items, holder.items);
-  assert.equal(changes.second, null);
-
-  const refused = { acceptMember: member => member.name !== "name", complete() {} };
-  assert.equal(CjsGraph.updateValues(leaf("a"), "name", { policy: refused }), false);
-
-  const idMap = new Map();
-  const mapped = CjsGraph.updateValues(holder, [ "child", "items" ], { idMap });
-  assert.equal(idMap.get(mapped.child._ref), child);
-  assert.deepEqual(mapped.items, [ mapped.child ]);
-});
-
-test("a nested Set and a Set on the child complete the child alone, with its own members", () =>
-{
-  const run = route =>
-  {
-    const policy = tracing();
-    const holder = new Holder();
-    holder.name = "holder";
-    holder.child = leaf("child");
-    route(holder, policy);
-    return policy.trace.map(([ type, , created, changes ]) => [ type, created, changes ]);
-  };
-
-  const expected = [ [ "GraphValueLeaf", false, { weight: 5 } ] ];
-  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder, { child: { weight: 5 } }, { policy })), expected);
-  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder.child, { weight: 5 }, { policy })), expected);
-});
-
-test("the returned record keeps a nested bag, and the owner is told only of its own members", () =>
-{
-  const policy = tracing();
-  const holder = new Holder();
-  holder.child = leaf("child");
-
-  const changes = CjsGraph.set(holder, { name: "renamed", child: { weight: 5 } }, { policy });
-
-  assert.deepEqual(changes, { name: "renamed", child: { weight: 5 } });
-  assert.deepEqual(policy.trace.map(([ type, , , told ]) => [ type, told ]), [
-    [ "GraphValueLeaf", { weight: 5 } ],
-    [ "GraphValueHolder", { name: "renamed" } ]
-  ]);
-});
-
-test("a replaced reference still tells its owner", () =>
-{
-  const policy = tracing();
-  const holder = new Holder();
-  const live = leaf("live");
-
-  CjsGraph.set(holder, { child: live }, { policy });
-  assert.deepEqual(policy.trace.map(([ type, , , told ]) => [ type, told ]), [ [ "GraphValueHolder", { child: live } ] ]);
-});
-
 test("with an idMap the record holds _ref, the map holds the objects, and the record replays", () =>
 {
   const live = leaf("live");
@@ -1173,26 +844,446 @@ test("an idMap is the _id table: its entries resolve _ref, and new ids avoid eve
   assert.notEqual(changes.child._ref, 2);
 });
 
-test("a policy told of changes sees the same _ref record", () =>
-{
-  const policy = tracing();
-  const idMap = new Map();
-  const holder = new Holder();
-  const live = leaf("live");
+// Objects that record what they are told, in one shared order.
+const log = [];
 
-  CjsGraph.set(holder, { child: live }, { policy, idMap });
-  assert.equal(idMap.get(policy.trace[0][3].child._ref), live);
+class Watched
+{
+  name = "";
+  weight = 1;
+  quiet = 0;
+  child = null;
+  items = [];
+
+  OnModified(member) { log.push([ "OnModified", this.name, member ]); }
+}
+
+class Started extends Watched
+{
+  Initialize() { log.push([ "Initialize", this.name ]); }
+}
+
+class Hooked
+{
+  dirty = true;
+  cleaned = 0;
+
+  OnValueChanged() { this.dirty = false; this.cleaned++; }
+}
+
+class Bare
+{
+  value = 0;
+}
+
+const watchedMembers = [
+  { name: "name", handler: string, notify: true },
+  { name: "weight", handler: float, notify: true },
+  { name: "quiet", handler: float },
+  { name: "child", handler: reference, notify: true, edge: { kind: "ref", type: Watched } },
+  { name: "items", handler: list, notify: true, edge: { kind: "ref", collection: true, type: Watched } }
+];
+
+CjsGraph.define(Watched, { name: "GraphWatched", notify: true, members: watchedMembers });
+CjsGraph.define(Started, { name: "GraphStarted", initialize: true, notify: true, members: [] });
+CjsGraph.define(Hooked, { name: "GraphHooked", hook: true, members: [] });
+CjsGraph.define(Bare, { name: "GraphBare", members: [ { name: "value", handler: float } ] });
+
+function watched(name)
+{
+  const object = new Watched();
+  object.name = name;
+  return object;
+}
+
+function started(name)
+{
+  const object = new Started();
+  object.name = name;
+  return object;
+}
+
+function told(run)
+{
+  log.length = 0;
+  run();
+  return log.slice();
+}
+
+test("set fires OnModified per changed NOTIFY member, and an equal or quiet member is not told", () =>
+{
+  const object = watched("a");
+
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 2, quiet: 3 })), [ [ "OnModified", "a", "weight" ] ]);
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 2, quiet: 3 })), []);
+  assert.deepEqual(told(() => CjsGraph.set(object, { name: "b", weight: 4 })), [ [ "OnModified", "b", "name" ], [ "OnModified", "b", "weight" ] ]);
 });
 
-test("a nested operation inside completion runs on its own state", () =>
+test("set never calls Initialize, even on a class that has one", () =>
 {
-  const inner = leaf("inner");
-  const policy = {
-    acceptMember() { return true; },
-    complete(object) { if (object !== inner) CjsGraph.set(inner, { name: "touched" }); }
+  const object = started("a");
+
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 2 })), [ [ "OnModified", "a", "weight" ] ]);
+});
+
+test("initializeHeld true overrides that for a live set", () =>
+{
+  const object = started("a");
+
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 2 }, { initializeHeld: true })), [ [ "Initialize", "a" ] ]);
+});
+
+test("IsEqual decides what changed on a live set: inside Carbon's tolerance is no change", () =>
+{
+  const object = watched("a");
+
+  assert.equal(CjsGraph.set(object, { weight: 1 + 1e-7 }), false);
+  assert.equal(object.weight, 1);
+  assert.notEqual(CjsGraph.set(object, { weight: 1.5 }), false);
+});
+
+test("skipEquality writes and records every value, and skipEvents tells nothing", () =>
+{
+  const object = watched("a");
+
+  assert.deepEqual(CjsGraph.set(object, { weight: 1 }, { skipEquality: true, skipEvents: true }), { weight: 1 });
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 1 + 1e-7 }, { skipEquality: true })), [ [ "OnModified", "a", "weight" ] ]);
+  assert.equal(object.weight, Math.fround(1 + 1e-7));
+
+  assert.deepEqual(told(() => CjsGraph.set(object, { weight: 5 }, { skipEvents: true })), []);
+  assert.equal(object.weight, 5);
+});
+
+test("a nested set is the child's own: the owner hears only of its own members", () =>
+{
+  const owner = watched("owner"), child = owner.child = watched("child");
+
+  const changes = CjsGraph.set(owner, { name: "renamed", child: { weight: 5 } });
+  assert.deepEqual(changes, { name: "renamed", child: { weight: 5 } });
+
+  owner.name = "owner";
+  child.weight = 1;
+  assert.deepEqual(told(() => CjsGraph.set(owner, { child: { weight: 5 } })), [ [ "OnModified", "child", "weight" ] ]);
+
+  child.weight = 1;
+  assert.deepEqual(told(() => CjsGraph.set(owner, { name: "x", child: { weight: 5 } })), [
+    [ "OnModified", "child", "weight" ],
+    [ "OnModified", "x", "name" ]
+  ]);
+
+  const live = watched("live");
+  assert.deepEqual(told(() => CjsGraph.set(owner, { child: live })), [ [ "OnModified", "x", "child" ] ]);
+});
+
+test("nothing is told before references resolve, and a failure tells nothing", () =>
+{
+  const object = watched("a");
+
+  let seen = "unset";
+  object.OnModified = () => { seen = object.child; };
+  CjsGraph.set(object, { child: { _ref: 3 }, items: [ { _id: 3, name: "later" } ] });
+  assert.equal(seen, object.items[0], "the forward reference is in place when it is told");
+
+  assert.deepEqual(told(() =>
+  {
+    assert.throws(() => CjsGraph.set(watched("b"), { weight: 2, child: { _ref: 9 } }), /Unresolved _ref: 9/);
+  }), []);
+});
+
+test("from writes every value with no comparison, including a value inside tolerance", () =>
+{
+  const object = CjsGraph.from(Watched, { weight: 1 + 1e-7, quiet: 1e-7 }, { skipEvents: true });
+
+  assert.equal(object.weight, Math.fround(1 + 1e-7));
+  assert.equal(object.quiet, Math.fround(1e-7));
+
+  const zero = CjsGraph.from(Bare, { value: -0 }, { skipEvents: true });
+  assert.equal(Object.is(zero.value, -0), true, "the authored value is kept");
+});
+
+test("from gives Initialize once if the class has it, otherwise OnModified per NOTIFY member", () =>
+{
+  assert.deepEqual(told(() => CjsGraph.from(Started, { name: "a", weight: 2 })), [ [ "Initialize", "a" ] ]);
+  assert.deepEqual(told(() => CjsGraph.from(Watched, { name: "a", quiet: 2, weight: 2 })), [
+    [ "OnModified", "a", "name" ],
+    [ "OnModified", "a", "weight" ]
+  ]);
+  assert.deepEqual(told(() => CjsGraph.from(Started, { name: "a" }, { skipEvents: true })), []);
+});
+
+test("from completes children first, and a cycle completes each object once", () =>
+{
+  const order = told(() => CjsGraph.from(Started, {
+    _id: 1, name: "owner", child: { _type: "GraphStarted", name: "child", child: { _ref: 1 } }
+  }));
+
+  assert.deepEqual(order, [ [ "Initialize", "child" ], [ "Initialize", "owner" ] ]);
+});
+
+test("a default child under a created owner gets Initialize, unless initializeHeld is false", () =>
+{
+  class Owner extends Started
+  {
+    child = started("held");
+  }
+  CjsGraph.define(Owner, { name: "GraphOwner", initialize: true, notify: true, members: [] });
+
+  assert.deepEqual(told(() => CjsGraph.from(Owner, { name: "owner", child: { quiet: 1 } })), [
+    [ "Initialize", "held" ],
+    [ "Initialize", "owner" ]
+  ]);
+
+  assert.deepEqual(told(() => CjsGraph.from(Owner, { name: "owner", child: { name: "held", weight: 3 } }, { initializeHeld: false })), [
+    [ "OnModified", "held", "name" ],
+    [ "OnModified", "held", "weight" ],
+    [ "Initialize", "owner" ]
+  ]);
+});
+
+test("copy compares exactly, skips what matches and writes a difference inside tolerance", () =>
+{
+  const source = watched("a"), target = watched("a");
+
+  source.weight = 1 + 1e-7;
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), [ [ "OnModified", "a", "weight" ] ]);
+  assert.equal(target.weight, Math.fround(1 + 1e-7));
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), []);
+});
+
+test("copy gives Initialize at the end on a target that has it, even an existing one, with no OnModified", () =>
+{
+  const source = started("a"), target = started("b");
+
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), [ [ "Initialize", "a" ] ]);
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), [ [ "Initialize", "a" ] ], "Copier always initialises");
+});
+
+test("copy makes a new object for a reference and rebuilds a list, as Copier does", () =>
+{
+  const source = watched("a"), target = watched("a");
+  const held = target.child = watched("held"), items = target.items;
+  source.child = watched("held");
+  source.items.push(watched("item"));
+  target.items.push(watched("item"));
+
+  const inList = target.items[0];
+  CjsGraph.copy(source, target, { skipEvents: true });
+
+  assert.notEqual(target.child, held);
+  assert.notEqual(target.child, source.child);
+  assert.equal(target.items, items);
+  assert.notEqual(target.items[0], inList);
+  assert.notEqual(target.items[0], source.items[0]);
+});
+
+test("copy and clone write PERSIST members only, and clone creates", () =>
+{
+  class Persisted
+  {
+    kept = 1;
+    runtime = 2;
+  }
+  CjsGraph.define(Persisted, { name: "GraphPersisted", members: [
+    { name: "kept", handler: float },
+    { name: "runtime", handler: float, persist: false }
+  ] });
+
+  const source = new Persisted();
+  source.kept = 5;
+  source.runtime = 6;
+
+  assert.equal(CjsGraph.clone(source).runtime, 2);
+  const target = new Persisted();
+  CjsGraph.copy(source, target);
+  assert.equal(target.kept, 5);
+  assert.equal(target.runtime, 2);
+});
+
+test("UpdateValues with names fires OnModified for those NOTIFY members on that object only", () =>
+{
+  const owner = watched("owner"), child = owner.child = watched("child");
+
+  assert.deepEqual(told(() => CjsGraph.updateValues(owner, "weight")), [ [ "OnModified", "owner", "weight" ] ]);
+  assert.deepEqual(told(() => CjsGraph.updateValues(owner, [ "name", "quiet" ])), [ [ "OnModified", "owner", "name" ] ]);
+  assert.deepEqual(told(() => CjsGraph.updateValues(child, "weight")), [ [ "OnModified", "child", "weight" ] ]);
+  assert.throws(() => CjsGraph.updateValues(owner, "nothing"), /Unknown graph member/);
+});
+
+test("UpdateValues with no names runs the class's own hook, and a class with none does nothing", () =>
+{
+  const hooked = new Hooked();
+
+  CjsGraph.updateValues(hooked);
+  assert.equal(hooked.dirty, false);
+  assert.equal(hooked.cleaned, 1);
+
+  assert.deepEqual(told(() => CjsGraph.updateValues(watched("a"))), [], "no brute force");
+  assert.deepEqual(told(() => CjsGraph.updateValues(new Bare())), []);
+});
+
+test("the three routes agree for the object changed", () =>
+{
+  const run = route =>
+  {
+    const owner = watched("owner");
+    owner.child = watched("child");
+    return { told: told(() => route(owner)), weight: owner.child.weight };
   };
 
-  const holder = new Holder();
-  CjsGraph.set(holder, { name: "x" }, { policy });
-  assert.equal(inner.name, "touched");
+  const expected = { told: [ [ "OnModified", "child", "weight" ] ], weight: 5 };
+
+  assert.deepEqual(run(owner => CjsGraph.set(owner, { child: { weight: 5 } })), expected);
+  assert.deepEqual(run(owner => CjsGraph.set(owner.child, { weight: 5 })), expected);
+  assert.deepEqual(run(owner =>
+  {
+    owner.child.weight = 5;
+    CjsGraph.updateValues(owner.child, "weight");
+  }), expected);
+});
+
+test("get filters by flags, and a hidden derived declaration leaves the visible base one", () =>
+{
+  class Base
+  {
+    value = 1;
+    hidden = 2;
+  }
+  class Derived extends Base {}
+  class Flags
+  {
+    shown = 1;
+    transient = 2;
+    readOnly = 3;
+    secret = 4;
+  }
+  CjsGraph.define(Base, { name: "GraphFlagBase", members: [ { name: "value", handler: float } ] });
+  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", handler: float, persist: false } ] });
+  CjsGraph.define(Flags, { name: "GraphFlags", members: [
+    { name: "shown", handler: float },
+    { name: "transient", handler: float, persist: false },
+    { name: "readOnly", handler: float, writable: false },
+    { name: "secret", handler: float, hidden: true }
+  ] });
+
+  assert.deepEqual(CjsGraph.get(new Derived()), { value: 2 });
+  assert.deepEqual(CjsGraph.get(new Derived(), { persistOnly: true }), { value: 1 });
+
+  const flags = new Flags();
+  assert.deepEqual(CjsGraph.get(flags), { shown: 1, transient: 2, readOnly: 3 });
+  assert.deepEqual(CjsGraph.get(flags, { persistOnly: true }), { shown: 1, readOnly: 3 });
+  assert.deepEqual(CjsGraph.get(flags, { roundTrip: true }), { shown: 1, transient: 2 });
+
+  assert.equal(CjsGraph.set(flags, { readOnly: 9, secret: 9 }), false, "skipped, as DictReader skips what it may not write");
+  assert.equal(flags.readOnly, 3);
+  assert.throws(() => CjsGraph.set(flags, { nothing: 1 }), /Unknown graph member/);
+  assert.throws(() => CjsGraph.getValue(flags, "secret"), /Unknown graph member/);
+});
+
+test("a registration change rebuilds the member tables", () =>
+{
+  class Late
+  {
+    a = 1;
+    b = 2;
+  }
+  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "a", handler: float } ] });
+  assert.deepEqual(CjsGraph.get(new Late()), { a: 1 });
+
+  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "b", handler: float } ] });
+  assert.deepEqual(CjsGraph.get(new Late()), { b: 2 });
+});
+
+/** A list with its own operations, recording what is asked of it. */
+class MappedList extends Array
+{
+  calls = [];
+
+  ReplaceItems(items)
+  {
+    this.calls.push(this.length);
+    this.length = 0;
+    for (const item of items) this.push(item);
+  }
+}
+
+class Listed
+{
+  name = "";
+  mapped = new MappedList();
+  plain = [];
+  events = [];
+
+  OnListModified(event, key, key2, value, target) { this.events.push([ event, key, value?.name ?? null, target.length ]); }
+}
+
+CjsGraph.define(Listed, { name: "GraphListed", listNotify: true, members: [
+  { name: "name", handler: string },
+  { name: "mapped", handler: list, edge: { kind: "ref", collection: true, type: Leaf } },
+  { name: "plain", handler: list, edge: { kind: "ref", collection: true, type: Leaf } }
+] });
+
+const UNLOADSTART = 0x100000, INSERTED = 0x2;
+
+test("a mapped list goes through its own ReplaceItems with the old items in place, once references resolve", () =>
+{
+  const object = new Listed(), mapped = object.mapped, old = leaf("old");
+  mapped.push(old);
+
+  CjsGraph.set(object, { mapped: [ { _ref: 3 } ], name: "x", plain: [ { _id: 3, name: "later" } ] });
+
+  assert.deepEqual(mapped.calls, [ 1 ]);
+  assert.equal(object.mapped, mapped);
+  assert.equal(mapped[0].name, "later");
+  assert.equal(mapped[0], object.plain[0]);
+});
+
+test("a mapped list is replaced on a fresh load too, and skipEvents writes it raw", () =>
+{
+  const built = CjsGraph.from(Listed, { mapped: [ { name: "a" } ] });
+  assert.deepEqual(built.mapped.calls, [ 0 ], "ReadList sends LOADFINISHED on a fresh load");
+  assert.equal(built.mapped[0].name, "a");
+
+  const raw = CjsGraph.from(Listed, { mapped: [ { name: "a" } ] }, { skipEvents: true });
+  assert.deepEqual(raw.mapped.calls, []);
+  assert.equal(raw.mapped.length, 1);
+});
+
+test("an ordinary array on a live list-notified owner sends the owner's events; a created owner fills raw", () =>
+{
+  const object = new Listed();
+  object.plain.push(leaf("old"));
+
+  CjsGraph.set(object, { plain: [ { name: "a" }, null, { name: "b" } ] });
+
+  assert.equal(object.events.length, 3);
+  assert.equal(object.events[0][3], 1, "UNLOADSTART sees the old items");
+  assert.deepEqual(object.events.slice(1).map(([ , key, name ]) => [ key, name ]), [ [ 1, "a" ], [ 3, "b" ] ]);
+  assert.equal(object.plain.length, 3);
+
+  const built = CjsGraph.from(Listed, { plain: [ { name: "a" } ] });
+  assert.deepEqual(built.events, []);
+  assert.equal(built.plain.length, 1);
+  assert.equal(UNLOADSTART > INSERTED, true);
+});
+
+test("an unchanged list sends nothing, and an idMap record survives a staged list", () =>
+{
+  const object = new Listed(), item = leaf("a");
+  object.plain.push(item);
+
+  assert.equal(CjsGraph.set(object, { plain: [ item ] }), false);
+  assert.deepEqual(object.events, []);
+
+  const idMap = new Map();
+  const changes = CjsGraph.set(object, { plain: [ leaf("b") ] }, { idMap });
+  assert.equal(object.plain[0].name, "b");
+  assert.equal(idMap.get(changes.plain[0]._ref), object.plain[0]);
+});
+
+test("-0 and 0 are the same value in both comparisons", () =>
+{
+  assert.equal(float.IsEqual(-0, 0), true);
+  assert.equal(float.IsExactEqual(-0, 0), true);
+  assert.equal(float.IsExactEqual(NaN, NaN), true);
+  assert.equal(float.IsExactEqual(1, 1 + 1e-6), false);
 });

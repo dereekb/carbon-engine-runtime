@@ -129,6 +129,7 @@ test("Invalid rejects every static and instance value operation without touching
         ["copy", "Copy", [target, "source", target, "missing"]],
         ["clone", "Clone", [target, "missing"]],
         ["isValidValue", "IsValidValue", [target]],
+        ["write", "Write", [target, "value", 1]],
         ["isUnchanged", "IsUnchanged", [target, target]],
         ["isExactEqual", "IsExactEqual", [target, target]],
         ["isEqual", "IsEqual", [target, target]]

@@ -78,6 +78,31 @@ export class BlueList extends Array
   }
 
   /**
+   * Replaces all the contents as ReadList does: Remove(-1), a quiet fill, then LOADFINISHED.
+   * Modelled on: DictReader::ReadList (blue/src/DictReader.cpp:427-476).
+   *
+   * @cjs The graph's list write. Null items are skipped, as ReadList skips them.
+   * @param {Array} items The new contents.
+   * @returns {void}
+   */
+  ReplaceItems(items)
+  {
+    const info = {};
+
+    this.Remove(-1);
+    this.GetInfo(info);
+    this.SetNotify(null);
+
+    for (const item of items)
+    {
+      if (item !== null) this.Append(item);
+    }
+
+    this.SetNotify(info.notify);
+    if (info.notify) info.notify.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, this);
+  }
+
+  /**
    * Inserts a typed item, then notifies with its actual index.
    *
    * @adapted exact mapped identities replace native QI pointer conversion.

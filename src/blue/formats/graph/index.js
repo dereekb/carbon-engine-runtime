@@ -2,4 +2,3 @@
 export { CjsGraphFormat } from "./CjsGraphFormat.js";
 export { opaqueBytes } from "./core/text.js";
 export { CjsBlueGraph } from "./CjsBlueGraph.js";
-export { CjsBlueGraphPolicy } from "./CjsBlueGraphPolicy.js";

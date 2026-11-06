@@ -32,6 +32,8 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    */
   static convert(value)
   {
+    if (this.element.ctor === BigInt && typeof value === "number") throw new TypeError("BigInt array storage takes no Number.");
+
     return this.element.convert(this.element.ctor === Number ? +value : value);
   }
 
@@ -44,19 +46,32 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   {
     const current = target[key];
     const count = this.elementCount || value.length;
+    const reallocates = current === null || (this.elementCount === 0 && current.length !== count);
 
-    if (current === null || (this.elementCount === 0 && current.length !== count))
+    if (!reallocates && this.isUnchanged(current, value)) return false;
+
+    this.write(target, key, value);
+    return true;
+  }
+
+  /**
+   * Stores a value with no comparison, for skipEquality, a creation or a copy.
+   * @cjs Keeps fixed storage; allocates only when none is held or a variable length changes.
+   */
+  static write(target, key, value)
+  {
+    const current = target[key];
+    const count = this.elementCount || value.length;
+
+    if (current !== null && (this.elementCount !== 0 || current.length === count))
     {
-      const storage = new this.ctor(count); // alloc: owned storage only when none is held or a variable length changes.
-      this._write(storage, value);
-      target[key] = storage;
-      return true;
+      this._write(current, value);
+      return;
     }
 
-    if (this.isUnchanged(current, value)) return false;
-
-    this._write(current, value);
-    return true;
+    const storage = new this.ctor(count); // alloc: owned storage only when none is held or a variable length changes.
+    this._write(storage, value);
+    target[key] = storage;
   }
 
   /** Writes a source into storage. @cjs */
@@ -97,15 +112,17 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
     return true;
   }
 
-  /** Tests one input element. @cjs */
+  /** Tests one input element. @cjs BigInt storage takes no Number, whatever its scalar does. */
   static _isElement(value)
   {
+    if (this.element.ctor === BigInt && typeof value === "number") return false;
+
     return this.element.isValidValue(value);
   }
 
   /**
    * Tests whether two arrays are exactly equal, with no tolerance, in any accepted form.
-   * NaN equals NaN, and signed zeros differ.
+   * NaN equals NaN, and -0 and 0 are the same value.
    * @cjs JavaScript comparison after conversion.
    */
   static isExactEqual(a, b)
@@ -114,7 +131,8 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
 
     for (let i = 0; i < a.length; i++)
     {
-      if (!Object.is(this.convert(a[i]), this.convert(b[i]))) return false;
+      const x = this.convert(a[i]), y = this.convert(b[i]);
+      if (x !== y && (x === x || y === y)) return false;
     }
 
     return true;

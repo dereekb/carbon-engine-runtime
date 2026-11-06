@@ -66,6 +66,43 @@ export class CjsGraphTypeValues
   }
 
   /**
+   * Writes every element with no comparison.
+   * @cjs
+   */
+  Write(target, key, value, options)
+  {
+    const list = target[key] ??= []; // alloc: a member holding no array gets one.
+
+    for (let i = 0; i < value.length; i++)
+    {
+      if (i >= list.length || value[i] === null) list[i] = null;
+      if (value[i] !== null) this.item.Write(list, i, value[i], options);
+    }
+
+    list.length = value.length;
+  }
+
+  /**
+   * Tests exact equality with no tolerance, element by element.
+   * @cjs
+   */
+  IsExactEqual(stored, value)
+  {
+    if (stored.length !== value.length) return false;
+
+    for (let i = 0; i < value.length; i++)
+    {
+      if (stored[i] === null || value[i] === null)
+      {
+        if (stored[i] !== value[i]) return false;
+      }
+      else if (!this.item.IsExactEqual(stored[i], value[i])) return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Tests valid input: a plain array of null or valid elements.
    * @cjs
    */

@@ -60,7 +60,12 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
             assert.equal(instance.IsValidValue(expected), true);
             assert.equal(instance.IsEqual(input, expected), true);
         }
-        assert.equal(handler.isValidValue(1), false);
+        assert.equal(handler.isValidValue(1), true, "a safe integer is valid, as the Black reader stores it");
+        assert.equal(handler.isValidValue(1.5), false);
+        assert.equal(handler.isValidValue(2 ** 53), false);
+        assert.equal(handler.convert(1), 1, "stored as given");
+        assert.equal(handler.isEqual(1, 1n), true);
+        assert.equal(handler.isValidValue(-1), handler.signed);
         assert.equal(handler.isValidValue(2n ** 64n), false);
         assert.equal(handler.isValidValue("1"), true, "JSON writes 64-bit values as strings");
         assert.equal(handler.isValidValue("1.5"), false);
@@ -78,7 +83,6 @@ test("64-bit scalar handlers preserve BigInt precision, range and native input c
         assert.equal(handler.isEqual(1n, 1n), true);
         assert.equal(handler.isEqual([ 0, 1 ], "1"), true);
         assert.equal(handler.isEqual(1n, 2n), false);
-        assert.throws(() => handler.convert(1), TypeError);
         assert.throws(() => handler.convert(1.5), TypeError);
         assert.throws(() => handler.convert("1.5"), SyntaxError);
     }
@@ -298,7 +302,7 @@ test("Float64 arrays retain precision while Float32 array equality keeps Carbon'
     assert.equal(Object.is(target.value[1], -0), true);
     assert.equal(types.CjsGraphTypeFloat64Array.set(target, "value", [value, -0]), false);
     assert.equal(types.CjsGraphTypeFloat64Array.set(target, "value", [value, 0]), false, "equal within tolerance");
-    assert.equal(types.CjsGraphTypeFloat64Array.isExactEqual(target.value, [value, 0]), false);
+    assert.equal(types.CjsGraphTypeFloat64Array.isExactEqual(target.value, [value, 0]), true, "-0 and 0 are the same value");
     assert.equal(types.CjsGraphTypeFloat32Array.convert(value), 1);
     assert.equal(types.CjsGraphTypeFloat32Array.isEqual(new Float32Array([Infinity]), new Float32Array([Infinity])), true);
     assert.equal(types.CjsGraphTypeFloat32.isEqual(Infinity, Infinity), false);

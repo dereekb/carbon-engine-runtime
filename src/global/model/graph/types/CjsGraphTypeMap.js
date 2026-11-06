@@ -46,7 +46,8 @@ export class CjsGraphTypeMap
     const map = target[key] ??= new Map(); // alloc: a member holding no Map gets one.
     const entries = this._getEntries(value);
 
-    if (this._isEntriesLike(map, entries, type, options)) return false;
+    if (map.size === 0 && entries.length === 0) return false;
+    if (!CjsGraph.isWritingAll(options) && this._isEntriesLike(map, entries, type, options)) return false;
 
     const record = {}; // alloc: the change record.
     map.clear();
