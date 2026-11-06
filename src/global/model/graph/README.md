@@ -24,7 +24,7 @@ Compiled members preserve derived-first order, including same-name alternatives.
 precede choosing one: Carbon's HIDDEN derived member can leave a base member visible.
 No Blue flags are interpreted by the compiler itself.
 
-Registration snapshots member containers and options, validates names before
+Registration snapshots member containers, validates names before
 publication, and invalidates through one revision. Nested metadata/default values
 are borrowed declaration data and must not be mutated behind registration; replace
 the definition to change them. Compilation never constructs instances or reads their

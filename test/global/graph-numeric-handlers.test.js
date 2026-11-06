@@ -95,9 +95,6 @@ for (const ctor of [...numericArrays, ...bigArrays])
         assert.equal(target.value, storage);
         assert.equal(instance.Copy({ value: expected }, "value", target, "value"), true);
         assert.deepEqual(target.value, expected);
-        assert.throws(() => instance.Set(target, "value", []), RangeError);
-        assert.equal(target.value, storage);
-
         const clone = instance.Clone(target, "value");
         assert.equal(clone.constructor, ctor);
         assert.notEqual(clone.buffer, storage.buffer);
@@ -173,7 +170,6 @@ test("native array equality gaps do not affect exact comparisons or unchanged wr
         assert.equal(handler.isEqual(new ctor(values), new ctor(values)), true);
         assert.equal(handler.isLike(values, new ctor(values)), true);
         assert.equal(handler.isEqual(values, new ctor(values)), false);
-        assert.equal(handler.isLike(values, values, { length: 3 }), false);
     }
 });
 

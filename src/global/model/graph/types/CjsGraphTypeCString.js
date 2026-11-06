@@ -17,18 +17,18 @@ export class CjsGraphTypeCString extends CjsGraphTypeString
    * Returns the visible C-string prefix.
    * @adapted Decoded JS text replaces pointer-based string access.
    */
-  static get(target, key, options)
+  static get(target, key)
   {
-    return this.convert(target[key], options);
+    return this.convert(target[key]);
   }
 
   /**
    * Converts to text, retaining only the NUL-terminated prefix.
    * @adapted String conversion replaces native caller-language extraction and strdup.
    */
-  static convert(value, options)
+  static convert(value)
   {
-    const text = super.convert(value, options);
+    const text = super.convert(value);
     const end = text.indexOf("\0");
     return end < 0 ? text : text.slice(0, end);
   }
@@ -37,9 +37,9 @@ export class CjsGraphTypeCString extends CjsGraphTypeString
    * Copies the visible immutable text without preserving inaccessible trailing bytes.
    * @adapted JS strings need no independently allocated native character buffer.
    */
-  static clone(target, key, options)
+  static clone(target, key)
   {
-    return this.get(target, key, options);
+    return this.get(target, key);
   }
 
   /**

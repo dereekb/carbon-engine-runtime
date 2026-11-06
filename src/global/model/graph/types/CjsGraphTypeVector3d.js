@@ -13,7 +13,7 @@ export class CjsGraphTypeVector3d extends CjsGraphTypeFloat64Array
   name = "Vector3d";
 
   /** Default declared count used by both static and instance operations. */
-  static defaultLength = 3;
+  static elementCount = 3;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeVector3d";

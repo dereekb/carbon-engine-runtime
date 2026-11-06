@@ -13,21 +13,18 @@ test("source declarations and compiled members share one stable class record", (
     constructor() { constructions++; }
     get value() { reads++; return 3; }
   }
-  const options = { length: 3 };
   const declaration = { name: "GraphInfoExample", members: [
-    { name: "value", key: "storedValue", handler, options, flags: 7 }
+    { name: "value", key: "storedValue", handler, flags: 7 }
   ] };
   const info = CjsGraph.define(Example, declaration);
   assert.equal(info.constructor, CjsGraphClassInfo);
   assert.equal(info.compiled, null);
   assert.equal(info.declared.members[0].key, "storedValue");
 
-  options.length = 8;
   declaration.members[0].key = "changedExternally";
   const resolved = CjsGraph.getClassInfo("GraphInfoExample");
   assert.equal(resolved, info);
   assert.equal(resolved.compiled.byName.value[0].key, "storedValue");
-  assert.equal(resolved.compiled.byName.value[0].options.length, 3);
   assert.equal(resolved.compiled.byName.value[0].handler, handler);
   assert.equal(CjsGraph.getClassInfo(Example).compiled, resolved.compiled);
   assert.equal(constructions, 0);

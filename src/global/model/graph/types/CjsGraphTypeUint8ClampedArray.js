@@ -16,7 +16,7 @@ export class CjsGraphTypeUint8ClampedArray extends CjsGraphTypeArray
    * Clamps and rounds ties to even, exactly as Uint8ClampedArray assignment.
    * @cjs ECMAScript storage.
    */
-  static convert(value, options)
+  static convert(value)
   {
     const number = +value;
     if (!(number > 0)) return 0;

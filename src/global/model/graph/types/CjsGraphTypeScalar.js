@@ -11,14 +11,11 @@ export class CjsGraphTypeScalar
   /** Definition name. */
   name = "Scalar";
 
-  /** Scalar values have no declared array length. */
-  length = null;
-
   /**
    * Returns the stored value.
    * @cjs JavaScript property access.
    */
-  static get(target, key, options)
+  static get(target, key)
   {
     return target[key];
   }
@@ -36,9 +33,9 @@ export class CjsGraphTypeScalar
    * Assigns only when the converted value differs, including signed zero.
    * @cjs Change reporting.
    */
-  static set(target, key, value, options)
+  static set(target, key, value)
   {
-    const converted = this.convert(value, options);
+    const converted = this.convert(value);
     if (this.isExactEqual(target[key], converted)) return false;
 
     target[key] = converted;
@@ -49,16 +46,16 @@ export class CjsGraphTypeScalar
    * Copies through the destination conversion, returning whether it changed.
    * @cjs Change reporting.
    */
-  static copy(source, sourceKey, target, key, options)
+  static copy(source, sourceKey, target, key)
   {
-    return this.set(target, key, source[sourceKey], options);
+    return this.set(target, key, source[sourceKey]);
   }
 
   /**
    * Returns the immutable scalar value.
    * @cjs No storage allocation is required.
    */
-  static clone(target, key, options)
+  static clone(target, key)
   {
     return target[key];
   }
@@ -94,36 +91,36 @@ export class CjsGraphTypeScalar
    * Instance shortcut to get.
    * @cjs
    */
-  Get(target, key, options = this)
+  Get(target, key)
   {
-    return this.constructor.get(target, key, options);
+    return this.constructor.get(target, key);
   }
 
   /**
-   * Instance shortcut to set; instance metadata supplies default options.
+   * Instance shortcut to set.
    * @cjs
    */
-  Set(target, key, value, options = this)
+  Set(target, key, value)
   {
-    return this.constructor.set(target, key, value, options);
+    return this.constructor.set(target, key, value);
   }
 
   /**
    * Instance shortcut to copy.
    * @cjs
    */
-  Copy(source, sourceKey, target, key, options = this)
+  Copy(source, sourceKey, target, key)
   {
-    return this.constructor.copy(source, sourceKey, target, key, options);
+    return this.constructor.copy(source, sourceKey, target, key);
   }
 
   /**
    * Instance shortcut to clone.
    * @cjs
    */
-  Clone(target, key, options = this)
+  Clone(target, key)
   {
-    return this.constructor.clone(target, key, options);
+    return this.constructor.clone(target, key);
   }
 
   /**
@@ -157,18 +154,18 @@ export class CjsGraphTypeScalar
    * Compares accepted representations after storage conversion.
    * @cjs Same conversion as Set; no schema or format rules are consulted.
    */
-  static isLike(a, b, options)
+  static isLike(a, b)
   {
-    return this.isEqual(this.convert(a, options), this.convert(b, options));
+    return this.isEqual(this.convert(a), this.convert(b));
   }
 
   /**
    * Instance shortcut to isLike.
-   * @cjs Property options are supplied directly.
+   * @cjs
    */
-  IsLike(a, b, options = this)
+  IsLike(a, b)
   {
-    return this.constructor.isLike(a, b, options);
+    return this.constructor.isLike(a, b);
   }
 
   /** Stable class identity. */

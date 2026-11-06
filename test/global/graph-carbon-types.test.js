@@ -158,16 +158,14 @@ for (const [name, ctor, length] of mathDefinitions)
         const instance = new handler();
         assert.equal(instance.name, name);
         assert.equal(instance.ctor, ctor);
-        assert.equal(instance.length, length);
+        assert.equal(handler.elementCount, length, "the handler carries its size");
         const values = Array.from({ length }, (_, index) => index + 1);
         const storage = new ctor(length), target = { value: storage };
         assert.equal(handler.set(target, "value", values), true);
         assert.equal(instance.Set(target, "value", values), false);
         assert.equal(target.value, storage);
         assert.deepEqual(instance.Get(target, "value"), values, "no normalization or mathematical transform");
-        assert.throws(() => handler.set(target, "value", values.slice(1)), RangeError);
-        assert.throws(() => instance.Set(target, "value", values.slice(1)), RangeError);
-        assert.throws(() => handler.set({ value: new ctor(length - 1) }, "value", values), RangeError);
+        assert.equal(handler.is(new ctor(length - 1)), false, "validation stays in Is");
         const clone = handler.clone(target, "value");
         assert.equal(clone.constructor, ctor);
         assert.notEqual(clone.buffer, storage.buffer);
@@ -175,7 +173,6 @@ for (const [name, ctor, length] of mathDefinitions)
         assert.equal(handler.is(storage), true);
         assert.equal(instance.Is(new ctor(length + 1)), false);
         assert.equal(handler.isEqual(new ctor(length + 1), new ctor(length + 1)), false);
-        assert.equal(handler.isLike(values.slice(1), values.slice(1)), false);
     });
 }
 

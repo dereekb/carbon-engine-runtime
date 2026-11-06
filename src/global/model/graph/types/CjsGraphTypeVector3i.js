@@ -13,7 +13,7 @@ export class CjsGraphTypeVector3i extends CjsGraphTypeInt32Array
   name = "Vector3i";
 
   /** Default declared count used by both static and instance operations. */
-  static defaultLength = 3;
+  static elementCount = 3;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeVector3i";

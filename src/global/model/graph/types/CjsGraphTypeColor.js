@@ -13,7 +13,7 @@ export class CjsGraphTypeColor extends CjsGraphTypeFloat32Array
   name = "Color";
 
   /** Default declared count used by both static and instance operations. */
-  static defaultLength = 4;
+  static elementCount = 4;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeColor";

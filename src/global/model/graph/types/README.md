@@ -49,16 +49,18 @@ own saturating, ties-to-even conversion. Conversion must match the selected
 constructor because writes use native TypedArray.set, including its overlap safety.
 No temporary typed array is allocated to round or compare a value.
 
-Arrays accept a property options record with `length` (`-1` for variable length);
-an instance's fields are its default options. No handler is allocated per property.
-Named math definitions supply fixed default counts for both static and instance
-writes; Is also checks that count. They reuse array conversion and comparison,
-without performing mathematical transforms, normalisation or colour conversion.
+The handler carries its size (operator, 2026-11-07). `static elementCount` is set
+explicitly on the Array base as 0, meaning any length, and a fixed size is its own
+definition: there is no per-property length. Shared statics read it and assume a valid
+value, so they make no per-call length checks; validation stays in Is and the conversion
+entry. With elementCount 0 the loop bound comes from the value. Named math definitions
+reuse array conversion and comparison, without mathematical transforms, normalisation or
+colour conversion.
 
-Static operations are `get(target, key, options)`, `set(target, key, value, options)`,
-`copy(source, sourceKey, target, key, options)`, `clone(target, key, options)`, `is(value)`,
-`isExactEqual(a, b)` `isEqual(a, b)` and `isLike(a, b, options)`. Instance shortcuts capitalise the same
-names. There is no From, schema lookup, accessor resolution or destruction.
+Static operations are `get(target, key)`, `set(target, key, value)`,
+`copy(source, sourceKey, target, key)`, `clone(target, key)`, `is(value)`,
+`isExactEqual(a, b)` `isEqual(a, b)` and `isLike(a, b)`. Instance shortcuts capitalise the same
+names. Leaf handlers take no options and no operation state. There is no From, schema lookup, accessor resolution or destruction.
 
 Set/Copy report an exact change after destination conversion. This is a JS
 convenience, unlike Carbon Copy's success result. IsEqual applies native
@@ -83,8 +85,7 @@ Set performs conversion rather than invoking Is.
 
 Array Get produces a plain values array. Clone explicitly allocates an owned
 independent typed array. Set retains existing typed storage when sizes match;
-only variable-length size changes allocate replacement storage. Fixed-length
-sources and destinations must match the declared count. Owners initialise
+only variable-length size changes allocate replacement storage. Owners initialise
 storage; lazy construction is not introduced here. Overlapping typed views
 are copied safely through TypedArray.set after comparison completes.
 
@@ -97,12 +98,9 @@ are supplied by the future Blue definition adapter, not stored or imported by th
 IsLike normalizes accepted forms with the same conversion as Set before comparing. The existing
 conversion behavior is retained during relocation; stricter format validation is not silently adopted.
 
-All Get/Set/Copy/Clone operations accept options last. Object/list/struct operations will use that
-same interface with the graph operation context; their implementations are still pending.
+Object/list/struct handlers will take the graph operation as their one extra argument; leaf
+handlers take neither that nor options. Their implementations are still pending.
 Ownership edges and operation-owned creations must be recorded before destruction is implemented.
 No placeholder Destruct method promises cleanup today.
 
 IsEqual requires canonical representations; IsLike accepts alternate representations.
-Instance shortcuts currently expect a complete property options record when explicitly supplied.
-Graph integration must keep compiled property settings separate from operation state so passing
-a context cannot discard a fixed length. That integration is not implemented yet.

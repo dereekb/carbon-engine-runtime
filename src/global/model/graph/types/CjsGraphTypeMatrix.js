@@ -13,7 +13,7 @@ export class CjsGraphTypeMatrix extends CjsGraphTypeFloat32Array
   name = "Matrix";
 
   /** Default declared count used by both static and instance operations. */
-  static defaultLength = 16;
+  static elementCount = 16;
 
   /** Stable class identity. */
   static className = "CjsGraphTypeMatrix";

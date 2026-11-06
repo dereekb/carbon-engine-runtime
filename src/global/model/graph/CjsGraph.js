@@ -31,7 +31,7 @@ export class CjsGraph
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
-   * Definition shape: { name, members: [{ name, key?, handler?, options?, ...metadata }] }.
+   * Definition shape: { name, members: [{ name, key?, handler?, ...metadata }] }.
    * @cjs Snapshots declaration containers; handlers and authored default values are not cloned.
    */
   static define(ctor, definition)
@@ -53,9 +53,8 @@ export class CjsGraph
         throw new TypeError(`Graph member index must be a non-negative integer: ${name}.${member.name}`);
       names.add(member.name);
 
-      const options = { ...member.options };
       const edge = member.edge ? this._compileEdge(member.edge) : null;
-      members.push({ ...member, handler: member.handler ?? this._invalidHandler, options, edge });
+      members.push({ ...member, handler: member.handler ?? this._invalidHandler, edge });
     }
     const declared = { ...definition, members };
 

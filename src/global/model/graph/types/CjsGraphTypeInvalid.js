@@ -16,7 +16,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects get because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static get(target, key, options)
+  static get(target, key)
   {
     throw new TypeError(`Invalid type handler cannot get property ${String(key)}.`);
   }
@@ -25,7 +25,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects set because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static set(target, key, value, options)
+  static set(target, key, value)
   {
     throw new TypeError(`Invalid type handler cannot set property ${String(key)}.`);
   }
@@ -34,7 +34,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects copy because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static copy(source, sourceKey, target, key, options)
+  static copy(source, sourceKey, target, key)
   {
     throw new TypeError(`Invalid type handler cannot copy property ${String(sourceKey)} to ${String(key)}.`);
   }
@@ -43,7 +43,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects clone because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static clone(target, key, options)
+  static clone(target, key)
   {
     throw new TypeError(`Invalid type handler cannot clone property ${String(key)}.`);
   }
@@ -52,7 +52,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects convert because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static convert(value, options)
+  static convert(value)
   {
     throw new TypeError("Invalid type handler cannot convert a value.");
   }
@@ -88,7 +88,7 @@ export class CjsGraphTypeInvalid extends CjsGraphTypeScalar
    * Rejects isLike because no valid value type has been assigned.
    * @cjs Fails before inspecting or changing the supplied values.
    */
-  static isLike(a, b, options)
+  static isLike(a, b)
   {
     throw new TypeError("Invalid type handler cannot compare representations.");
   }

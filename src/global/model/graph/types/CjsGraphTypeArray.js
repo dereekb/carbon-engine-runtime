@@ -3,9 +3,9 @@ import { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
 /**
  * Shared typed-array operations on caller-owned storage.
  * Modelled on: Be::FLOATARRAY/DOUBLEARRAY/INTARRAY Copy (blueexposure/BlueVariable.cpp:771-815).
- * @cjs JS constructors and element handlers replace native buffer types. Fixed-size storage
- * must exist; only variable-length resizing and explicit Clone allocate typed arrays.
- * No metadata lookup, per-call scratch array or per-property handler allocation is needed.
+ * @cjs JS constructors and element handlers replace native buffer types. A fixed size is its
+ * own definition, and values are assumed valid here: Is and the conversion entry validate.
+ * Fixed-size storage must exist; only variable-length resizing and explicit Clone allocate.
  */
 export class CjsGraphTypeArray extends CjsGraphTypeScalar
 {
@@ -16,14 +16,11 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   /** Storage constructor supplied by the concrete handler. */
   ctor = this.constructor.ctor;
 
-  /** Variable length unless the property supplies a fixed count. */
-  length = this.constructor.defaultLength;
-
   /**
    * Returns an independent plain values array.
    * @cjs BigInt elements remain BigInt, not JSON strings.
    */
-  static get(target, key, options)
+  static get(target, key)
   {
     return Array.from(target[key]);
   }
@@ -33,48 +30,43 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    * @cjs Unary plus enforces Number-array conversion (including rejection of BigInt).
    * BigInt elements retain their native input conversion; Float64 scalar conversion alone accepts BigInt.
    */
-  static convert(value, options)
+  static convert(value)
   {
-    return this.element.convert(this.element.ctor === Number ? +value : value, options);
+    return this.element.convert(this.element.ctor === Number ? +value : value);
   }
 
   /**
    * Writes only when converted storage differs; preserves fixed storage and overlapping views.
    * @cjs Native TypedArray.set performs the write. Concrete conversion must agree with it.
    */
-  static set(target, key, value, options = {})
+  static set(target, key, value)
   {
-    const length = options.length ?? this.defaultLength;
     const current = target[key];
-    if (length !== -1 && (value.length !== length || current.length !== length))
-    {
-      throw new RangeError("Fixed-length array assignment requires matching source and destination lengths.");
-    }
+    const count = this.elementCount || value.length;
 
-    if (current.length !== value.length)
+    if (this.elementCount === 0 && current.length !== count)
     {
-      target[key] = new this.ctor(value); // alloc: replacement owned storage only when variable length changes.
+      target[key] = new this.ctor(value); // alloc: replacement owned storage only when a variable length changes.
       return true;
     }
 
-    let changed = false;
-    for (let i = 0; i < value.length; i++)
+    for (let i = 0; i < count; i++)
     {
-      if (!Object.is(current[i], this.convert(value[i], options)))
+      if (!Object.is(current[i], this.convert(value[i])))
       {
-        changed = true;
-        break;
+        current.set(value);
+        return true;
       }
     }
-    if (changed) current.set(value);
-    return changed;
+
+    return false;
   }
 
   /**
    * Creates an independently owned typed copy.
    * @cjs Explicit cloning allocation.
    */
-  static clone(target, key, options)
+  static clone(target, key)
   {
     return new this.ctor(target[key]); // alloc: explicit independent copy owned by the caller.
   }
@@ -87,7 +79,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   {
     return ArrayBuffer.isView(value)
       && Object.prototype.toString.call(value) === `[object ${this.ctor.name}]`
-      && (this.defaultLength === -1 || value.length === this.defaultLength);
+      && (this.elementCount === 0 || value.length === this.elementCount);
   }
 
   /**
@@ -131,14 +123,15 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    * Compares converted representations without allocating scratch arrays.
    * @cjs Same conversion as storage.
    */
-  static isLike(a, b, options = {})
+  static isLike(a, b)
   {
-    const length = options.length ?? this.defaultLength;
-    if (!this.hasValueEquality || a.length !== b.length || (length !== -1 && a.length !== length)) return false;
+    if (!this.hasValueEquality || a.length !== b.length) return false;
+
     for (let i = 0; i < a.length; i++)
     {
-      if (!this.equalElement(this.convert(a[i], options), this.convert(b[i], options))) return false;
+      if (!this.equalElement(this.convert(a[i]), this.convert(b[i]))) return false;
     }
+
     return true;
   }
 
@@ -148,8 +141,8 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   /** Concrete scalar element handler. */
   static element = null;
 
-  /** Default declared count; semantic math definitions override it. */
-  static defaultLength = -1;
+  /** Fixed element count, set by each fixed definition; 0 means any length. */
+  static elementCount = 0;
 
   /** Carbon DOUBLEARRAY/INTARRAY lack AreEqual specialisations; their definitions disable it. */
   static hasValueEquality = true;
