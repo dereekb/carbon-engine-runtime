@@ -11,7 +11,7 @@ import { TriGrannyRes } from "../../npm/dist/resource/index.js";
 const identity3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 const identity4 = [0, 0, 0, 1];
 
-test("secondary release clears layer and pose data; reload retains the slot and expiry removes it", t =>
+test("secondary release clears layer and pose data; reload retains the slot and expiry keeps its path", t =>
 {
   const previous = blue.resMan;
   const manager = blue.resMan = new BlueResMan({ autoPurgePolicy: false });
@@ -45,8 +45,9 @@ test("secondary release clears layer and pose data; reload retains the slot and 
   assert.equal(animation.Initialize(), true, "explicit initialization rebuilds the released rig");
   assert.ok(layer.boneMask);
   manager.notify.Clear(secondary);
-  assert.equal(animation._secondaryResources.has("res:/secondary.gr2"), false);
-  assert.equal(manager.notify.GetByOwner(animation).length, 0);
+  assert.equal(animation._secondaryResources.has("res:/secondary.gr2"), true, "expiry keeps the path");
+  assert.equal(animation._secondaryResources.get("res:/secondary.gr2"), null);
+  assert.equal(manager.notify.GetByResource(secondary).length, 0);
 });
 
 test("secondary resource replacement unregisters the old resource and destruction removes aliases", t =>
@@ -62,7 +63,8 @@ test("secondary resource replacement unregisters the old resource and destructio
   assert.equal(manager.notify.GetByResource(first).length, 1);
   assert.equal(manager.notify.GetByResource(replacement).length, 1);
   manager.notify.Clear(first);
-  assert.equal(animation._secondaryResources.has("alias"), false);
+  assert.equal(animation._secondaryResources.has("alias"), true, "expiry keeps the path");
+  assert.equal(animation._secondaryResources.get("alias"), null);
   assert.equal(animation._secondaryResources.get("first"), replacement);
   animation.Destruct();
   assert.equal(animation._secondaryResources.size, 0);
@@ -79,7 +81,8 @@ test("expiry clears a resource shared by the primary property and secondary map 
   animation.SetSecondaryGrannyResource("alias", resource);
   manager.notify.Clear(resource);
   assert.equal(animation.grannyRes, null);
-  assert.equal(animation._secondaryResources.has("alias"), false);
+  assert.equal(animation._secondaryResources.has("alias"), true, "expiry keeps the path");
+  assert.equal(animation._secondaryResources.get("alias"), null);
   assert.equal(manager.notify.GetByOwner(animation).length, 0);
 });
 

@@ -206,6 +206,15 @@ export class Tr2GrannyAnimation extends IRoot
   /** Whether grannyRes was borrowed from the mesh rather than resolved here. */
   _sharedGeometry = false;
 
+  /** @cjs The primary slot lost its resource to expiry and reloads at use. */
+  _grannyNeedsReload = false;
+
+  /**
+   * @cjs Path of a resource given to SetGrannyResource, so it can reload after
+   *   expiry. Not resPath_: an attachment does not change the object's values.
+   */
+  _attachedPath = "";
+
 
   _morphAnimations = new Map();
 
@@ -294,6 +303,7 @@ export class Tr2GrannyAnimation extends IRoot
     if (previous) blue.resMan.notify.Remove(this, previous);
     this.Cleanup();
     this._grannyRes = resource;
+    this._grannyNeedsReload = !!previous && !resource && !this._sharedGeometry;
     if (previous)
     {
       for (const [path, secondary] of this._secondaryResources)
@@ -343,6 +353,7 @@ export class Tr2GrannyAnimation extends IRoot
     {
       this.grannyRes = this.resPath_ ? CjsGrannyCurves.resolveResource(this.resPath_) : null;
       this._resolvedPath = this.resPath_;
+      this._grannyNeedsReload = false;
     }
     return this.RebuildCachedData();
   }
@@ -359,6 +370,9 @@ export class Tr2GrannyAnimation extends IRoot
     this._sharedGeometry = false;
     this._resolvedPath = "";
     this.grannyRes = resource ?? null;
+    this._grannyNeedsReload = false;
+    const attached = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
+    this._attachedPath = attached ? attached.GetPath() : "";
     return this.RebuildCachedData();
   }
 
@@ -387,7 +401,9 @@ export class Tr2GrannyAnimation extends IRoot
     this._sharedGeometry = !!resource;
     this.resPath_ = "";
     this._resolvedPath = "";
+    this._attachedPath = "";
     this.grannyRes = resource ?? null;
+    this._grannyNeedsReload = false;
     const initialized = this.RebuildCachedData();
     return initialized;
   }
@@ -800,7 +816,7 @@ export class Tr2GrannyAnimation extends IRoot
    */
   Update(dt = 0)
   {
-    this._RenewResources();
+    if (this._RenewResources() || this._grannyNeedsReload) this._ReloadResources();
     if (!this._initialized || !this.animationEnabled)
     {
       return false;
@@ -854,11 +870,89 @@ export class Tr2GrannyAnimation extends IRoot
    *   use renews (BlueResMan's automatic purge), so a controller renews what it
    *   reads: without it a character's skeleton was purged 30 s in and dropped
    *   to its bind pose.
+   * @returns {boolean} Whether a secondary slot holds a path with no resource.
    */
   _RenewResources()
   {
     RenewAnimationResource(this.grannyRes, this);
-    for (const resource of this._secondaryResources.values()) RenewAnimationResource(resource, this);
+
+    let missing = false;
+    for (const resource of this._secondaryResources.values())
+    {
+      if (resource === null) missing = true;
+      else RenewAnimationResource(resource, this);
+    }
+
+    return missing;
+  }
+
+  /**
+   * Reloads the slots expiry emptied, from the paths it kept.
+   *
+   * @cjs
+   * @adapted Ours: native references never expire, so Carbon reloads nothing at
+   *   use. Manager links can drop a resource while updates are stopped. Only an
+   *   expired primary reloads here; loading an authored resPath stays Initialize's.
+   *   A released secondary runs Cleanup as Carbon does (cpp:362-365), which drops
+   *   the primary's rig, and Carbon's rebuild ignores secondaries (cpp:520-543),
+   *   so the rig is rebuilt once a slot returns.
+   * @returns {void}
+   */
+  _ReloadResources()
+  {
+    if (this._grannyNeedsReload)
+    {
+      this._grannyNeedsReload = false;
+
+      const path = this.resPath_ || this._attachedPath;
+      if (path)
+      {
+        this.grannyRes = this._AcquireResource(path);
+        this._resolvedPath = this.resPath_;
+        if (!this._initialized) this.RebuildCachedData();
+      }
+    }
+
+    let reloaded = false;
+    for (const [ path, resource ] of this._secondaryResources)
+    {
+      if (resource !== null) continue;
+
+      this._LoadSecondaryResPath(path);
+      if (this._secondaryResources.get(path) !== null) reloaded = true;
+    }
+
+    if (reloaded && !this._initialized && this.grannyRes) this.RebuildCachedData();
+  }
+
+  /**
+   * Acquires an animation resource for a kept path.
+   *
+   * @cjs
+   * @adapted Carbon asks for the "raw" TriGrannyRes (cpp:333, :354). This asks the
+   *   decoded registry, then resMan's ordinary geometry route as
+   *   Tr2GrannyPrimitiveSet does; _getSource reads both.
+   * @param {string} path Resource path.
+   * @returns {TriGeometryRes|TriGrannyRes|object|null} The resource.
+   */
+  _AcquireResource(path)
+  {
+    return CjsGrannyCurves.resolveResource(path) ?? blue.resMan.GetResource(path);
+  }
+
+  /**
+   * Fills a secondary slot from its path.
+   *
+   * Carbon: Tr2GrannyAnimation::LoadSecondaryResPath (Tr2GrannyAnimation.cpp:346-360).
+   *
+   * @adapted Acquisition goes through _AcquireResource and notification links
+   *   through SetSecondaryGrannyResource.
+   * @param {string} path Secondary clip path.
+   * @returns {boolean} Whether the slot was set.
+   */
+  _LoadSecondaryResPath(path)
+  {
+    return this.SetSecondaryGrannyResource(path, this._AcquireResource(path));
   }
 
   /**
@@ -1109,11 +1203,11 @@ export class Tr2GrannyAnimation extends IRoot
   AddSecondaryResPath(resPath)
   {
     const path = String(resPath ?? "");
-    if (!path || this._secondaryResources.has(path))
+    if (!path || this._secondaryResources.get(path))
     {
       return false;
     }
-    return this.SetSecondaryGrannyResource(path, CjsGrannyCurves.resolveResource(path));
+    return this._LoadSecondaryResPath(path);
   }
 
   /**
@@ -1332,6 +1426,8 @@ export class Tr2GrannyAnimation extends IRoot
   GetSecondaryAnimationName(resPath, index)
   {
     const source = this._getSource(this._secondaryResources.get(String(resPath ?? "")));
+    if (!source) return "";
+
     return getName(CjsGrannyCurves.getAnimations(source)[Number(index) || 0]);
   }
 
@@ -1397,7 +1493,10 @@ export class Tr2GrannyAnimation extends IRoot
     const names = [];
     const append = resource =>
     {
+      // A null slot is a path waiting to reload; Carbon skips it (cpp:188-192).
       const source = this._getSource(resource);
+      if (!source) return;
+
       for (const animation of CjsGrannyCurves.getAnimations(source))
       {
         names.push(getName(animation));
@@ -2366,6 +2465,8 @@ export class Tr2GrannyAnimation extends IRoot
     for (const resource of this._secondaryResources.values()) blue.resMan.notify.Remove(this, resource);
     this._secondaryResources.clear();
     this.grannyRes = null;
+    this._grannyNeedsReload = false;
+    this._attachedPath = "";
     this._sharedGeometry = false;
     this.Cleanup();
   }
