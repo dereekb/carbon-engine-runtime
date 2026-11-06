@@ -80,11 +80,26 @@ test("failed registration does not mutate published definitions", () =>
   assert.throws(() => CjsGraph.define(Good, { name: "GraphValidation", members: [
     { name: "x", handler }, { name: "x", handler }
   ] }), TypeError);
-  assert.throws(() => CjsGraph.define(Other, { name: "GraphMissingHandler", members: [{ name: "x" }] }), TypeError);
   assert.equal(CjsGraph.getClassInfo(Good).compiled, before);
   assert.equal(info.declared.members.length, 1);
   assert.throws(() => CjsGraph.getClassInfo(Other), TypeError);
   assert.throws(() => CjsGraph.define({}, { name: "GraphInvalidCtor" }), TypeError);
+});
+
+test("untyped members share the throwing Invalid handler until explicitly defined", () =>
+{
+  class Untyped {}
+  const info = CjsGraph.define(Untyped, { name: "GraphDefaultHandler", members: [
+    { name: "first" }, { name: "second", handler: null }
+  ] });
+  const members = CjsGraph.getClassInfo(Untyped).compiled.members;
+  assert.equal(members[0].handler.name, "Invalid");
+  assert.equal(members[0].handler, members[1].handler);
+  assert.equal(info.declared.members[0].handler, members[0].handler);
+  assert.throws(() => members[0].handler.Get({}, "first"), /Invalid type handler.*first/);
+  CjsGraph.define(Untyped, { name: "GraphDefaultHandler", members: [{ name: "first", handler }] });
+  assert.equal(CjsGraph.getClassInfo(Untyped), info);
+  assert.equal(info.compiled.members[0].handler, handler);
 });
 
 test("compiled lookup accepts object-prototype names without collision", () =>

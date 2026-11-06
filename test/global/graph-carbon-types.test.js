@@ -5,7 +5,7 @@ import * as types from "../../src/global/model/graph/types/index.js";
 
 // Coverage oracle, not a runtime registry or a new Blue dispatch path.
 const nativeTypes = [
-    ["INVALID", "Invalid", "unsupported"],
+    ["INVALID", "Invalid", "throwing"],
     ["LONG", "Int32", "implemented"],
     ["FLOAT", "Float32", "implemented"],
     ["DOUBLE", "Float64", "implemented"],
@@ -57,7 +57,7 @@ test("every distinct Carbon VARTYPE has its own definition, without collapsing s
         assert.equal(handler.className, `CjsGraphType${name}`);
         for (const operation of ["get", "set", "copy", "clone", "isEqual"])
         {
-            if (state === "implemented") assert.equal(typeof handler[operation], "function", `${nativeName}.${operation}`);
+            if (state === "implemented" || state === "throwing") assert.equal(typeof handler[operation], "function", `${nativeName}.${operation}`);
             else assert.equal(operation in handler, false, `${nativeName} must not inherit a misleading scalar ${operation}`);
         }
     }
@@ -112,6 +112,35 @@ test("C, reference and shared string families reuse NUL-terminated operations wi
         assert.equal(target.value, "copy");
         assert.equal(handler.convert("\0tail"), "");
     }
+});
+
+test("Invalid rejects every static and instance value operation without touching values", () =>
+{
+    const handler = types.CjsGraphTypeInvalid;
+    const instance = new handler();
+    let accesses = 0;
+    const target = new Proxy({}, {
+        get() { accesses++; throw new Error("Unexpected read"); },
+        set() { accesses++; throw new Error("Unexpected write"); }
+    });
+    const cases = [
+        ["get", "Get", [target, "missing"]],
+        ["set", "Set", [target, "missing", 42]],
+        ["copy", "Copy", [target, "source", target, "missing"]],
+        ["clone", "Clone", [target, "missing"]],
+        ["is", "Is", [target]],
+        ["isExactEqual", "IsExactEqual", [target, target]],
+        ["isEqual", "IsEqual", [target, target]],
+        ["isLike", "IsLike", [target, target]]
+    ];
+    for (const [staticName, instanceName, args] of cases)
+    {
+        assert.throws(() => handler[staticName](...args), { name: "TypeError", message: /Invalid type handler/ });
+        assert.throws(() => instance[instanceName](...args), { name: "TypeError", message: /Invalid type handler/ });
+    }
+    assert.throws(() => handler.convert(target), { name: "TypeError", message: /Invalid type handler/ });
+    assert.throws(() => instance.Get(target, "missing"), /missing/);
+    assert.equal(accesses, 0);
 });
 
 const mathDefinitions = [

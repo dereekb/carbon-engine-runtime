@@ -9,6 +9,11 @@ member declarations. CjsGraphClassInfo retains a shallow, frozen snapshot in
 references are retained, not cloned or instantiated. Defaults must not later be
 assigned as shared mutable instance storage.
 
+Omitted or null member handlers use one shared CjsGraphTypeInvalid instance.
+Registration and traversal can describe untyped members; attempting any value
+operation through that handler throws. Assign the actual handler by replacing
+the definition through CjsGraph.define.
+
 CjsGraph.getClassInfo(ConstructorOrName) returns that same class-info record and
 refreshes its compiled snapshot if registration changed. Consumers must use this
 lookup when they need current compiled data; a retained compiled snapshot is

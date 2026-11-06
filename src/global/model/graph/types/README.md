@@ -4,16 +4,24 @@ These handlers are not registered with Blue or connected to the current readers,
 writers or schema. Object, list and struct classes remain placeholders.
 
 All 31 distinct Carbon VARTYPE identities have separate definitions: 20 have
-value operations, six are pending, and five are unsupported or non-value markers.
+value operations, Invalid explicitly throws, six are pending, and four are
+unsupported Python or stream-marker definitions.
 The exhaustive mapping is test-only in `test/global/graph-carbon-types.test.js`;
 there is no new runtime registry. VARTYPE_MAX is an alias and VARTYPE_FORCELONG
 is an enum-width sentinel, so neither creates another handler.
 
 Pending operations: IRoot, IRootPtr, IRootWeakRef, CharArray, BinaryBlock and
-ScriptCallback. Unsupported/non-value definitions: Invalid, PyObject,
+ScriptCallback. Unsupported/non-value definitions: PyObject,
 PyObjectPtr, PyProperty and RotReference. These definitions deliberately have
 no value methods: graph ownership, fixed byte buffers and custom persistence
 must not silently become scalar copying.
+
+Invalid implements the same static and instance operation interface as the value
+handlers, but every operation throws TypeError before accessing its inputs.
+Graph members without an assigned handler share this default; assigning a real
+handler through a replacement definition removes the default. It does not infer a
+type from the value. The remaining Python/stream-marker shells are retained only
+as Carbon identities, not enabled for JS value handling.
 
 String and WString retain full JS string contents, including embedded NULs.
 CString, WCString, Reference, WReference, SharedString and SharedStringW retain

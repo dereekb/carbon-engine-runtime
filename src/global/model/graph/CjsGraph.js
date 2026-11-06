@@ -1,4 +1,5 @@
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
+import { CjsGraphTypeInvalid } from "./types/CjsGraphTypeInvalid.js";
 
 /**
  * Independent graph declarations and their compiled class records.
@@ -12,6 +13,9 @@ export class CjsGraph
 
   /** Stable declared names, never inferred from Function.name. */
   static _names = new Map();
+
+  /** Shared throwing default for members without an assigned value handler. */
+  static _invalidHandler = new CjsGraphTypeInvalid();
 
   /** Invalidates derived descriptions after registration changes, including late parents. */
   static _revision = 0;
@@ -27,7 +31,7 @@ export class CjsGraph
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
-   * Definition shape: { name, members: [{ name, key?, handler, options?, ...metadata }] }.
+   * Definition shape: { name, members: [{ name, key?, handler?, options?, ...metadata }] }.
    * @cjs Snapshots declaration containers; handlers and authored default values are not cloned.
    */
   static define(ctor, definition)
@@ -45,14 +49,13 @@ export class CjsGraph
     {
       if (typeof member.name !== "string" || !member.name) throw new TypeError("Graph member requires a name.");
       if (names.has(member.name)) throw new TypeError(`Duplicate graph member: ${name}.${member.name}`);
-      if (!member.handler) throw new TypeError(`Graph member requires a handler: ${name}.${member.name}`);
       if (member.index !== undefined && (!Number.isSafeInteger(member.index) || member.index < 0))
         throw new TypeError(`Graph member index must be a non-negative integer: ${name}.${member.name}`);
       names.add(member.name);
 
       const options = Object.freeze({ ...member.options });
       const edge = member.edge ? this._compileEdge(member.edge) : null;
-      members.push(Object.freeze({ ...member, options, edge }));
+      members.push(Object.freeze({ ...member, handler: member.handler ?? this._invalidHandler, options, edge }));
     }
     const declared = Object.freeze({ ...definition, members: Object.freeze(members) });
 
