@@ -81,6 +81,14 @@ Pruning deliberately does not read excluded branches, so it is not a graph valid
 Use full traversal when validating declared edge storage. Neither path permits topology or
 declaration mutation during a walk. There is no global traversal policy yet.
 
+The optional `test/resource/graph-selection-real-scenes.test.js` qualifies four
+hash-pinned authored environment graphs through an external, traversal-only schema
+adapter. Set `CJS_GRAPH_SCENE_CORPUS` to the service-fetched corpus directory;
+`CJS_GRAPH_SELECTION_BENCH=1` enables warmed timing batches. Untouched hydration
+compares texture parameters; a separate fixture attaches unloaded real resource
+objects to test nonempty handle selection and sharing. This does not qualify resource
+loading, GPU preparation, general Blue interface adaptation or populated scene graphs.
+
 GraphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
 The generic handlers are under types/. CjsGraphRoot will be added with working
 operation forwards; there are no speculative no-op graph methods here.

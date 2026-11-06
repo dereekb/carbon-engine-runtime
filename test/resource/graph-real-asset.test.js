@@ -6,6 +6,8 @@ import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 import { CjsGraphFormat } from "../../npm/dist/blue/formats/graph/index.js";
 import { CjsGraphBinaryFormat } from "../../npm/dist/blue/formats/graphbinary/index.js";
+// Scene-owned managers register with the device class even when Initialize is disabled.
+import "../../npm/dist/trinity/core/device/TriDevice.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
 import "../../npm/dist/trinity/shader/Tr2Effect.js";
 import "../../npm/dist/trinity/shader/parameter/TriTextureParameter.js";
