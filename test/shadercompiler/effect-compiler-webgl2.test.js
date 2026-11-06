@@ -45,23 +45,29 @@ test("one effect is written to both trees at every shader model", () =>
     }
 });
 
-test("an effect the printer refuses is reported and left out of the WebGL tree only", () =>
+test("the whole library compiles for WebGL2", () =>
 {
     const out = mkdtempSync(join(tmpdir(), "cjs-webgl2-"));
     try
     {
         const skipped = [];
-        // Reads BoneTransforms, a structured buffer the printer does not take yet.
-        const effect = "selection/skinned_selectionmask.fx";
-        const written = compileLibrary(out, [ effect ], (tree, name) => skipped.push([ tree, name ])).map(file => file.path);
-        assert.deepEqual(skipped, [ [ "effect.webgl", effect ] ]);
-        assert.equal(written.length, 3);
-        assert.ok(written.every(path => path.startsWith("graphics/effect.webgpu/")));
+        compileLibrary(out, undefined, (tree, name, reason) => skipped.push([ tree, name, reason ]));
+        assert.deepEqual(skipped, []);
     }
     finally
     {
         rmSync(out, { recursive: true, force: true });
     }
+});
+
+test("a vertex-stage structured buffer is the bone block the AL fills", () =>
+{
+    const { block, vertex } = compileWebgl2("selection/skinned_selectionmask.fx");
+    const binding = block.stages.vertex.bindings.find(item => item.kind === "structuredUbo");
+    assert.deepEqual([ binding.registerIndex, binding.name, binding.strideBytes, binding.capacityElements ], [ 0, "CjsSb0", 48, 69 ]);
+    assert.ok(vertex.includes("uniform CjsSb0Block"));
+    assert.ok(vertex.includes("vec4 data[207];"));
+    assert.ok(vertex.indexOf("struct BoneTransform") < vertex.indexOf("cjs_read_CjsSb0"));
 });
 
 test("the WebGL2 pass carries the GLSL block the AL binds from", () =>

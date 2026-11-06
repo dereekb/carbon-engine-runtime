@@ -56,7 +56,7 @@ and the Metal ray-tracing path.
 The browser targets are not Carbon's. `EffectCompilerWebGPU` prints WGSL, and
 `EffectCompilerWebGL2` runs the same passes and prints GLSL ES 3.00 with the
 pass block the WebGL2 backend binds from. The WebGL2 target has no compute stage,
-and does not take structured buffers yet.
+and takes structured buffers only in the vertex stage, as bone blocks.
 
 Every shader embedded in Carbon's own compiler tests parses. Four read-only
 reviews of the front end on 2026-10-07 (grammar actions; scanner and

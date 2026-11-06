@@ -11,6 +11,8 @@
 //   program and is recorded instead, per texture, as `pairedSamplerRegisters`;
 // - vertex inputs are `in_<SEMANTIC><index>`, and the AL binds each to the
 //   location of its register before linking;
+// - a vertex-stage structured buffer is the `CjsSb<r>Block` uniform block the AL
+//   fills from the object's bone palette, `vec4 data[]` by register;
 // - pixel outputs are `layout(location = N)`;
 // - every vertex stage ends in the clip tail below.
 //
@@ -68,6 +70,9 @@ const SAMPLER_TYPES = [
 /** Vertex semantics, by the `name` RemapVertexInputSemanticsDXToMetal records (EffectCompilerMetal.js VS_SEMANTICS). */
 const VERTEX_SEMANTICS = ["POSITION", "COLOR", "NORMAL", "TANGENT", "BINORMAL", "TEXCOORD", "BLENDINDICES", "BLENDWEIGHT"];
 
+/** Elements of a vertex-stage structured buffer: Carbon's most joints, the AL's `BONE_BLOCK_CAPACITY`. */
+const VERTEX_STRUCTURED_CAPACITY = 69;
+
 /** The vertex stage's tail, after the source's clip position. See Tr2RenderContextALWebgl2's `ssyf`. */
 const CLIP_TAIL = [
     "    gl_Position.xy += ssyf.xy * gl_Position.w;",
@@ -122,6 +127,12 @@ export class CjsFxOutputGLSL
     /** The sampler registers by the sampler's name. @type {Map<string, number>} */
     _samplers = new Map();
 
+    /** Generated structured-buffer readers by the element's struct symbol. @type {Map<object, string>} */
+    _structReaders = new Map();
+
+    /** Structured buffers by name: their block and the element's registers. @type {Map<string, { block: string, rows: number }>} */
+    _structured = new Map();
+
     /** The stage's vertex inputs for the backend block. @type {object[]} */
     _stageInputs = [];
 
@@ -168,6 +179,7 @@ export class CjsFxOutputGLSL
         const uniforms = this._writeBindings();
         const entry = this._writeMainCall();
         const body = [];
+        const structs = new Map();
         const root = this._state.GetTree();
         for (const node of root.GetChildren())
         {
@@ -178,6 +190,7 @@ export class CjsFxOutputGLSL
             switch (node.GetNodeType())
             {
                 case N.NT_STRUCT:
+                    structs.set(node.GetSymbol(), body.length);
                     body.push(this._writeStruct(node));
                     break;
                 case N.NT_VAR_DECLARATION_LIST:
@@ -189,6 +202,11 @@ export class CjsFxOutputGLSL
                 default:
                     break;
             }
+        }
+        // GLSL declares before use, so an element reader follows its struct.
+        for (const [ structSymbol, reader ] of this._structReaders)
+        {
+            body[structs.get(structSymbol)] += `\n\n${reader}`;
         }
         const head = ["#version 300 es", "precision highp float;", "precision highp int;", ...SAMPLER_TYPES.map(type => `precision highp ${type};`)];
         return [head.join("\n"), [...uniforms, ...this._ioDeclarations].join("\n"), ...this._helpers.values(), ...body, entry].filter(text => text !== "").join("\n\n") + "\n";
@@ -244,6 +262,11 @@ export class CjsFxOutputGLSL
                 }
                 case "t":
                 {
+                    if (type.builtInType === T.OP_STRUCTUREDBUFFER)
+                    {
+                        lines.push(this._writeStructuredBlock(symbol, reg.registerNumber));
+                        break;
+                    }
                     const texture = type.IsTexture() ? CjsFxGlslTypes.glslTexture(type) : null;
                     if (texture === null)
                     {
@@ -273,6 +296,28 @@ export class CjsFxOutputGLSL
             lines.push("uniform vec3 ssyf;");
         }
         return lines;
+    }
+
+    /**
+     * The uniform block of a vertex-stage structured buffer. A pixel stage's
+     * would be a data texture, and is refused for now.
+     *
+     * @param {object} symbol The buffer's symbol.
+     * @param {number} register Its `t` register.
+     * @returns {string} The declaration.
+     */
+    _writeStructuredBlock(symbol, register)
+    {
+        if (this._stage !== "vertex")
+        {
+            throw new Error(`CjsFxOutputGLSL: pixel-stage structured buffer ${symbol.name.ToString()} is not supported yet`);
+        }
+        const rows = elementRows(symbol.type.templateParameter);
+        const block = `CjsSb${register}`;
+        this._bindings.push({ kind: "structuredUbo", registerIndex: register, name: block, strideBytes: rows * CjsFxHlslPacking.registerBytes, capacityElements: VERTEX_STRUCTURED_CAPACITY });
+        this._structured.set(this._nameOf(symbol), { block, rows });
+        this._moduleScopeParams.add(symbol);
+        return `layout(std140) uniform ${block}Block\n{\n    vec4 data[${rows * VERTEX_STRUCTURED_CAPACITY}];\n} ${block};`;
     }
 
     /**
@@ -594,8 +639,8 @@ export class CjsFxOutputGLSL
         {
             return true;
         }
-        // AddUsedGlobalsAsFunctionParams threads a texture under its global's name.
-        if (symbol.type.IsTexture() && this._textures.has(this._nameOf(symbol)))
+        // AddUsedGlobalsAsFunctionParams threads a resource under its global's name.
+        if ((symbol.type.IsTexture() && this._textures.has(this._nameOf(symbol))) || this._structured.has(this._nameOf(symbol)))
         {
             return true;
         }
@@ -1200,6 +1245,10 @@ export class CjsFxOutputGLSL
                 const index = node.GetChild(1);
                 const indexType = typeOf(index);
                 const integer = indexType.builtInType === T.OP_INT || indexType.builtInType === T.OP_UINT ? indexType : withComponent(indexType, T.OP_INT);
+                if (typeOf(object).builtInType === T.OP_STRUCTUREDBUFFER)
+                {
+                    return this._readStructured(object, this._coerced(index, withComponent(scalarOf(indexType), T.OP_INT)));
+                }
                 return `${this._expression(object)}[${this._coerced(index, integer)}]`;
             }
             case T.OP_DOT:
@@ -1350,6 +1399,29 @@ export class CjsFxOutputGLSL
                     ? `(floatBitsToUint(${vector}) != 0u)`
                     : `notEqual(floatBitsToUint(${vector}), ${CjsFxGlslTypes.glslVector("uint", type.width)}(0u))`;
         }
+    }
+
+    /**
+     * An element of a structured buffer, through a generated helper that
+     * builds it from the block's registers.
+     *
+     * @param {import("../ASTNode/ASTNode.js").ASTNode} object The buffer.
+     * @param {string} index The element, an int.
+     * @returns {string} The call.
+     */
+    _readStructured(object, index)
+    {
+        const objectType = typeOf(object);
+        const { block, rows } = this._structured.get(this._nameOf(object.GetSymbol()));
+        const type = objectType.templateParameter;
+        const name = `cjs_read_${block}`;
+        if (!this._structReaders.has(type.symbol))
+        {
+            const glsl = CjsFxGlslTypes.glslType(type, s => this._nameOf(s));
+            const lines = membersOf(type).map((member, row) => `    value.${this._nameOf(member)} = ${block}.data[index * ${rows} + ${row}];`);
+            this._structReaders.set(type.symbol, `${glsl} ${name}(int index)\n{\n    ${glsl} value;\n${lines.join("\n")}\n    return value;\n}`);
+        }
+        return `${name}(${index})`;
     }
 
     /**
@@ -1655,6 +1727,23 @@ function membersOf(type)
         }
     }
     return members;
+}
+
+/**
+ * The registers one structured-buffer element takes, a struct of `float4`s
+ * being the only layout HLSL's tight packing and std140 agree on here.
+ *
+ * @param {Type} type The element type.
+ * @returns {number} The vec4 count.
+ */
+function elementRows(type)
+{
+    const members = type.IsStruct() ? membersOf(type) : [];
+    if (members.length === 0 || members.some(member => !member.type.IsVector() || member.type.width !== 4 || member.type.builtInType !== T.OP_FLOAT || member.type.arrayDimensions > 0))
+    {
+        throw new Error(`CjsFxOutputGLSL: structured buffer element ${type.ToString()} is not a struct of float4, which is not supported yet`);
+    }
+    return members.length;
 }
 
 /**
