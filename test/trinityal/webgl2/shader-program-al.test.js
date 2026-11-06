@@ -236,7 +236,7 @@ test("a stage over the sixteen texture-unit budget is refused by name, whatever 
 test("a bone block takes a binding point, not a texture unit, so a stage at sixteen textures still links", () =>
 {
     const { gl } = FakeWebgl2();
-    const vertex = shader(gl, ShaderType.VERTEX_SHADER, VERTEX).shader;
+    const vertex = shader(gl, ShaderType.VERTEX_SHADER, `${VERTEX}layout(std140) uniform CjsSb0Block { vec4 data[207]; } CjsSb0;\n`).shader;
     vertex.GetStageBlock().bindings.push({ kind: "structuredUbo", registerIndex: 0, name: "CjsSb0", strideBytes: 48, capacityElements: 69 });
     const pixel = shader(gl, ShaderType.PIXEL_SHADER, PIXEL).shader;
     pixel.GetStageBlock().bindings = Array.from({ length: 16 }, (_, registerIndex) =>
