@@ -17,7 +17,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   ctor = this.constructor.ctor;
 
   /** Variable length unless the property supplies a fixed count. */
-  length = -1;
+  length = this.constructor.defaultLength;
 
   /**
    * Returns an independent plain values array.
@@ -44,7 +44,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    */
   static set(target, key, value, options)
   {
-    const length = options?.length ?? -1;
+    const length = options?.length ?? this.defaultLength;
     const current = target[key];
     if (length !== -1 && (value.length !== length || current.length !== length))
     {
@@ -80,12 +80,14 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
   }
 
   /**
-   * Checks typed storage across realms.
-   * @cjs Excludes plain arrays and DataView.
+   * Checks typed storage across realms and a named definition's fixed count.
+   * @cjs Excludes plain arrays and DataView; variable-length definitions accept any count.
    */
   static is(value)
   {
-    return ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === `[object ${this.ctor.name}]`;
+    return ArrayBuffer.isView(value)
+      && Object.prototype.toString.call(value) === `[object ${this.ctor.name}]`
+      && (this.defaultLength === -1 || value.length === this.defaultLength);
   }
 
   /**
@@ -131,7 +133,7 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
    */
   static isLike(a, b, options)
   {
-    const length = options?.length ?? -1;
+    const length = options?.length ?? this.defaultLength;
     if (!this.hasValueEquality || a.length !== b.length || (length !== -1 && a.length !== length)) return false;
     for (let i = 0; i < a.length; i++)
     {
@@ -145,6 +147,9 @@ export class CjsGraphTypeArray extends CjsGraphTypeScalar
 
   /** Concrete scalar element handler. */
   static element = null;
+
+  /** Default declared count; semantic math definitions override it. */
+  static defaultLength = -1;
 
   /** Carbon DOUBLEARRAY/INTARRAY lack AreEqual specialisations; their definitions disable it. */
   static hasValueEquality = true;

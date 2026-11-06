@@ -3,6 +3,24 @@
 These handlers are not registered with Blue or connected to the current readers,
 writers or schema. Object, list and struct classes remain placeholders.
 
+All 31 distinct Carbon VARTYPE identities have separate definitions: 20 have
+value operations, six are pending, and five are unsupported or non-value markers.
+The exhaustive mapping is test-only in `test/global/graph-carbon-types.test.js`;
+there is no new runtime registry. VARTYPE_MAX is an alias and VARTYPE_FORCELONG
+is an enum-width sentinel, so neither creates another handler.
+
+Pending operations: IRoot, IRootPtr, IRootWeakRef, CharArray, BinaryBlock and
+ScriptCallback. Unsupported/non-value definitions: Invalid, PyObject,
+PyObjectPtr, PyProperty and RotReference. These definitions deliberately have
+no value methods: graph ownership, fixed byte buffers and custom persistence
+must not silently become scalar copying.
+
+String and WString retain full JS string contents, including embedded NULs.
+CString, WCString, Reference, WReference, SharedString and SharedStringW retain
+their separate identities and share NUL-terminated prefix operations. Native
+shared-string interning is represented by immutable JS string value equality.
+These are storage operations, not Python conversion or character-encoding codecs.
+
 `CjsGraphTypeScalar` shares property access and instance shortcuts. Numeric types
 derive from `CjsGraphTypeNumber`, with shared width conversion in
 `CjsGraphTypeInteger` and `CjsGraphTypeBigInt`. Float32 and Float64 retain their
@@ -14,6 +32,7 @@ future path/expression handlers belong under the string family, not copied opera
 | Number scalars | Int8, Uint8, Int16, Uint16, Int32, Uint32, Float32, Float64 |
 | BigInt scalars | Int64, Uint64 |
 | Typed arrays | Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array |
+| Named math | Vector2, Vector2d, Vector3, Vector3d, Vector3i, Vector4, Vector4d, Matrix, Color, Quaternion |
 
 All typed-array definitions extend `CjsGraphTypeArray`. They select the storage
 constructor, scalar element conversion and comparison policy. The base owns the
@@ -24,6 +43,9 @@ No temporary typed array is allocated to round or compare a value.
 
 Arrays accept a property options record with `length` (`-1` for variable length);
 an instance's fields are its default options. No handler is allocated per property.
+Named math definitions supply fixed default counts for both static and instance
+writes; Is also checks that count. They reuse array conversion and comparison,
+without performing mathematical transforms, normalisation or colour conversion.
 
 Static operations are `get(target, key, options)`, `set(target, key, value, options)`,
 `copy(source, sourceKey, target, key, options)`, `clone(target, key, options)`, `is(value)`,
@@ -58,7 +80,7 @@ sources and destinations must match the declared count. Owners initialise
 storage; lazy construction is not introduced here. Overlapping typed views
 are copied safely through TypedArray.set after comparison completes.
 
-Named math definitions, specialised path/expression behaviour and graph-value
+Specialised path/expression behaviour and graph-value
 handlers are still pending. No Float16Array definition is added: it is not in the
 runtime's current supported typed-array family.
 
