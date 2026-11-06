@@ -261,3 +261,26 @@ test("an interrupted mask pass restores targets and clears pending frame state",
   assert.equal(outline._step.renderable, null);
   assert.equal(outline._step.effectOverride, null);
 });
+
+test("expired outline effects reacquire from their paths and stay drawable", async t =>
+{
+  const { outline, resMan } = await fixture(t);
+  const effects = Object.values(outline._effects);
+  assert.ok(effects.length > 0);
+
+  for (const effect of effects)
+  {
+    const path = effect.effectFilePath;
+    assert.ok(path, "a pathless effect could never reacquire");
+
+    resMan.notify.Clear(effect.effectResource);
+    assert.equal(effect.effectResource, null);
+    assert.equal(effect.shader, null);
+    assert.equal(effect.effectFilePath, path);
+
+    assert.equal(effect.IsGood(), true);
+    assert.ok(effect.shader);
+  }
+
+  assert.equal(outline._ready, true);
+});

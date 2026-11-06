@@ -117,12 +117,17 @@ export class TnyOutlineHelper extends ITr2RenderNode
   {
     await Promise.all(Object.entries(EFFECTS).map(async ([name, path]) =>
     {
-      const resource = blue.resMan.GetResource(Tr2Effect.convertEffectPath(path));
-      await blueService.resMan.Ready(resource);
-      if (this._destroyed) return;
+      // The path is what lets IsGood reacquire after the resource expires.
       const effect = new Tr2Effect();
+      effect.effectFilePath = path;
+      effect.Initialize();
+      await blueService.resMan.Ready(effect.effectResource);
+      if (this._destroyed)
+      {
+        effect.Destruct();
+        return;
+      }
       this._effects[name] = effect;
-      effect.effectResource = resource;
       effect.RebuildCachedData();
       Tr2EffectStateManager.registerShaderHandles(effect.shader);
     }));
