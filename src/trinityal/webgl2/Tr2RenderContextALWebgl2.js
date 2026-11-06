@@ -250,6 +250,21 @@ export class Tr2RenderContextALWebgl2
   /** The framebuffer `Present` reads the back buffer through. */
   _presentFramebuffer = null;
 
+  /** The uniform buffer bones are copied into, shared by every program. */
+  _boneBlockBuffer = null;
+
+  /** Its size in bytes. */
+  _boneBlockByteLength = 0;
+
+  /** The palette it holds this frame, or null. */
+  _boneBlockUploaded = null;
+
+  /** The current object's palette, or null. */
+  _boneTransforms = null;
+
+  /** How many bones that palette holds. */
+  _boneCount = 0;
+
   /** What `_framebuffer` has attached now, so a change detaches the stale points. */
   _attached = new Map();
 
@@ -976,6 +991,7 @@ export class Tr2RenderContextALWebgl2
   BeginScene()
   {
     this._shaderProgram = null;
+    this._boneBlockUploaded = null;
     if (this._resourceSet) this._resourceSet.Destroy();
     this._resourceSet = null;
     return ALResult.S_OK;
@@ -1686,6 +1702,7 @@ export class Tr2RenderContextALWebgl2
 
     this._ApplyDrawBuffers(program._fragmentOutputMask);
     this._ApplyConstants(program);
+    if (!this._ApplyBoneBlocks(program)) return false;
     this._ApplyTextureUnits();
     this._ApplyClipFlip(program, native);
     return this._ApplyVertexAttributes(baseVertex, startInstance);
@@ -1730,6 +1747,64 @@ export class Tr2RenderContextALWebgl2
         : PaddedFloats(bytes, available, floats);
       gl.uniform4fv(record.location, values);
     }
+  }
+
+  /**
+   * Records the bones the next draws read, as Carbon's per-object upload records
+   * their ring offset.
+   *
+   * @cjs Bones ride a uniform block here; see `BONE_BLOCK_CAPACITY`.
+   * @param {Float32Array|null} transforms The palette, or null where the object has none.
+   * @param {number} count How many bones.
+   * @returns {void}
+   */
+  SetBoneBlock(transforms, count)
+  {
+    this._boneTransforms = transforms;
+    this._boneCount = count;
+  }
+
+  /**
+   * Fills and binds the program's bone blocks from the object's palette. An object
+   * sharing the last upload's palette skips the copy; BeginScene clears that, since
+   * a palette is rewritten in place each frame. A draw with no palette cannot read
+   * its bones, so it does not happen.
+   *
+   * @cjs
+   * @param {Tr2ShaderProgramALWebgl2} program The bound program.
+   * @returns {boolean} Whether the draw can proceed.
+   */
+  _ApplyBoneBlocks(program)
+  {
+    const blocks = program.GetBoneBlocks();
+    if (blocks.length === 0) return true;
+    if (!this._boneTransforms) return false;
+
+    const gl = this._gl;
+    const byteLength = blocks[0].byteLength;
+    if (byteLength > this._boneBlockByteLength)
+    {
+      if (this._boneBlockBuffer) gl.deleteBuffer(this._boneBlockBuffer);
+      this._boneBlockBuffer = gl.createBuffer();
+      this._boneBlockByteLength = byteLength;
+      this._boneBlockUploaded = null;
+      gl.bindBuffer(gl.UNIFORM_BUFFER, this._boneBlockBuffer);
+      gl.bufferData(gl.UNIFORM_BUFFER, byteLength, gl.DYNAMIC_DRAW);
+    }
+
+    if (this._boneBlockUploaded !== this._boneTransforms)
+    {
+      gl.bindBuffer(gl.UNIFORM_BUFFER, this._boneBlockBuffer);
+      gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this._boneTransforms, 0, this._boneCount * 12);
+      this._boneBlockUploaded = this._boneTransforms;
+    }
+
+    for (let index = 0; index < blocks.length; ++index)
+    {
+      gl.bindBufferBase(gl.UNIFORM_BUFFER, blocks[index].bindingPoint, this._boneBlockBuffer);
+    }
+
+    return true;
   }
 
   /**
@@ -2720,6 +2795,7 @@ export class Tr2RenderContextALWebgl2
       for (const fence of this._frameFences) if (fence.sync) gl.deleteSync(fence.sync);
       if (this._framebuffer) gl.deleteFramebuffer(this._framebuffer);
       if (this._presentFramebuffer) gl.deleteFramebuffer(this._presentFramebuffer);
+      if (this._boneBlockBuffer) gl.deleteBuffer(this._boneBlockBuffer);
     }
 
     this._defaultBackBuffer.Destroy();
@@ -2733,6 +2809,11 @@ export class Tr2RenderContextALWebgl2
     this._framebuffer = null;
     this._drawBuffers = [];
     this._presentFramebuffer = null;
+    this._boneBlockBuffer = null;
+    this._boneBlockByteLength = 0;
+    this._boneBlockUploaded = null;
+    this._boneTransforms = null;
+    this._boneCount = 0;
     this._attached = new Map();
     this._boundRenderTargets = Array.from({ length: MAX_RENDER_TARGET }, () => ({ texture: null, slice: 0 }));
     this._renderTargetHighWaterMark = 0;

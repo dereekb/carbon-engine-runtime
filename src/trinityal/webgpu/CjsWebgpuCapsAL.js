@@ -70,7 +70,9 @@ export const CjsWebgpuPlatformCaps = Object.freeze({
   /** WebGPU's guaranteed `maxUniformBufferBindingSize`, 64 KiB. */
   MAX_CONSTANT_BUFFER_SIZE: 64 * 1024,
 
-  SUPPORTS_RAY_TRACING: false
+  SUPPORTS_RAY_TRACING: false,
+  /** Structured buffers reach the vertex stage, so bones read Carbon's ring. */
+  BONE_BLOCK_CAPACITY: 0
 });
 
 
@@ -89,6 +91,15 @@ export class CjsWebgpuCapsAL
   get SUPPORTS_COMPUTE()
   {
     return CjsWebgpuPlatformCaps.SUPPORTS_COMPUTE;
+  }
+
+  /**
+   * @cjs Not a Carbon capability; see `Tr2CapsALWebgl2`.
+   * @returns {number} Zero: this backend has vertex-stage structured buffers.
+   */
+  get BONE_BLOCK_CAPACITY()
+  {
+    return CjsWebgpuPlatformCaps.BONE_BLOCK_CAPACITY;
   }
 
   _webgpu = null;

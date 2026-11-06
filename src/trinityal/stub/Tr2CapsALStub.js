@@ -31,7 +31,9 @@ export const Tr2StubPlatformCaps = Object.freeze({
   SUPPORTS_RENDER_PASS_HINTS: false,
   IS_LOW_PERFORMANCE: true,
   MAX_CONSTANT_BUFFER_SIZE: 4 * 1024,
-  SUPPORTS_RAY_TRACING: false
+  SUPPORTS_RAY_TRACING: false,
+  /** Structured buffers reach the vertex stage, so bones read Carbon's ring. */
+  BONE_BLOCK_CAPACITY: 0
 });
 
 
@@ -50,6 +52,15 @@ export class Tr2CapsALStub
   get SUPPORTS_COMPUTE()
   {
     return Tr2StubPlatformCaps.SUPPORTS_COMPUTE;
+  }
+
+  /**
+   * @cjs Not a Carbon capability; see `Tr2CapsALWebgl2`.
+   * @returns {number} Zero: this backend has vertex-stage structured buffers.
+   */
+  get BONE_BLOCK_CAPACITY()
+  {
+    return Tr2StubPlatformCaps.BONE_BLOCK_CAPACITY;
   }
 
   /**

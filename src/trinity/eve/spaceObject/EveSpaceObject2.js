@@ -2574,13 +2574,19 @@ export class EveSpaceObject2 extends EveEntity
       const ring = Tr2RingBuffer.GetInstance("Float4x3", 48, Tr2RenderContext_GetMainThreadRenderContext());
       this._boneOffsets.UploadTransforms(ring, this.animationUpdater.GetMeshBoneMatrixList(), boneCount);
     }
-    this._vsData.SetIndex("boneOffsets", 0, [ this._boneOffsets.GetCurrentFrameOffset() ]);
-    this._vsData.SetIndex("boneOffsets", 1, [ this._boneOffsets.GetPreviousFrameOffset() ]);
+    // A bone block is per object, so both palettes read from its start.
+    const blockCapacity = Tr2RenderContext_GetMainThreadRenderContext().GetCaps().BONE_BLOCK_CAPACITY;
+    this._vsData.SetIndex("boneOffsets", 0, [ blockCapacity ? 0 : this._boneOffsets.GetCurrentFrameOffset() ]);
+    this._vsData.SetIndex("boneOffsets", 1, [ blockCapacity ? 0 : this._boneOffsets.GetPreviousFrameOffset() ]);
     this._vsData.Set("customData", this._psData.Get("customData"));
 
     const data = new Tr2PerObjectDataStandard();
     data.vs = this._vsData;
     data.ps = this._psData;
+    if (blockCapacity && this.animationUpdater.IsInitialized())
+    {
+      data.SetBoneBlock(this.animationUpdater.GetMeshBoneMatrixList(), this.animationUpdater.GetMeshBoneCount(), blockCapacity, "EveSpaceObject2");
+    }
     return data;
   }
 

@@ -97,6 +97,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
   /** Sampler uniforms: `{ stage, kind, registerIndex, name, unit, samplerRegister, samplerConflict }`. */
   _textures = [];
 
+  /** Bone uniform blocks: `{ name, bindingPoint, byteLength }`. A block is not a texture, so it costs no unit. */
+  _boneBlocks = [];
+
   /** Vertex inputs: `{ register, name, semanticName, semanticIndex, componentTypeName, mask }`. */
   _vertexInputs = [];
 
@@ -283,6 +286,17 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
   }
 
   /**
+   * The bone blocks this program reads.
+   *
+   * @cjs
+   * @returns {{name: string, bindingPoint: number, byteLength: number}[]} The blocks.
+   */
+  GetBoneBlocks()
+  {
+    return this._boneBlocks;
+  }
+
+  /**
    * Resolves the retained output declarations once at link time.
    *
    * @adapted D3D keeps output locations in bytecode; WebGL2 validates active draw buffers.
@@ -382,6 +396,18 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
           continue;
         }
 
+        if (binding.kind === "structuredUbo")
+        {
+          const index = gl.getUniformBlockIndex(program, `${binding.name}Block`);
+          if (index !== gl.INVALID_INDEX)
+          {
+            const bindingPoint = nextBindingPoint++;
+            gl.uniformBlockBinding(program, index, bindingPoint);
+            this._boneBlocks.push({ name: binding.name, bindingPoint, byteLength: binding.capacityElements * binding.strideBytes });
+          }
+          continue;
+        }
+
         if (!TEXTURE_KINDS.has(binding.kind)) continue;
 
         // One unit per uniform name: a uniform both stages declare is one uniform.
@@ -445,6 +471,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._fullScreenShader = null;
     this._constantBuffers = [];
     this._textures = [];
+    this._boneBlocks = [];
     this._vertexInputs = [];
     this._vertexAttributeTypes = new Map();
     this._fragmentOutputMask = 0;

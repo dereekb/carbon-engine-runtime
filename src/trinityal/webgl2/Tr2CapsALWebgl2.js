@@ -43,7 +43,9 @@ export const Tr2Webgl2PlatformCaps = Object.freeze({
    */
   MAX_CONSTANT_BUFFER_SIZE: 16 * 1024,
 
-  SUPPORTS_RAY_TRACING: false
+  SUPPORTS_RAY_TRACING: false,
+  /** Bones travel in a uniform block sized by the emitter: no vertex-stage structured buffers here. */
+  BONE_BLOCK_CAPACITY: 69
 });
 
 
@@ -62,6 +64,16 @@ export class Tr2CapsALWebgl2
   get SUPPORTS_COMPUTE()
   {
     return Tr2Webgl2PlatformCaps.SUPPORTS_COMPUTE;
+  }
+
+  /**
+   * Bones ride a per-object uniform block: a data texture would cost a unit shipped shaders do not have.
+   * @cjs Not a Carbon capability: every Carbon platform has vertex structured buffers.
+   * @returns {number} Bones one uniform block carries, or 0 where structured buffers reach the vertex stage.
+   */
+  get BONE_BLOCK_CAPACITY()
+  {
+    return Tr2Webgl2PlatformCaps.BONE_BLOCK_CAPACITY;
   }
 
   /** The context asked about optional features, or null. */

@@ -1208,6 +1208,7 @@ export class Tr2RenderContext
         const objectData = CjsSchema.cast(batch.objectData, Tr2PerObjectData);
         if (objectData) objectData.SetPerObjectDataToDevice(buffers, shaderMask, this);
         else Tr2PerObjectData.setPerObjectDataToDevice(batch.objectData, buffers, shaderMask, this);
+        this._ApplyBoneBlock(batch.objectData);
         currentObjectData = batch.objectData;
       }
 
@@ -1311,6 +1312,7 @@ export class Tr2RenderContext
         if (batch.objectData !== currentObjectData)
         {
           batch.objectData.SetPerObjectDataToDevice(buffers, batch.shader.GetShaderTypeMask(technique), this);
+          this._ApplyBoneBlock(batch.objectData);
           currentObjectData = batch.objectData;
         }
         objectId.SetValue(batch.objectData.GetUserData());
@@ -1354,6 +1356,7 @@ export class Tr2RenderContext
         if (batch.objectData !== currentObjectData)
         {
           batch.objectData.SetPerObjectDataToDevice(buffers, batch.shader.GetShaderTypeMask(technique), this);
+          this._ApplyBoneBlock(batch.objectData);
           currentObjectData = batch.objectData;
         }
         const pointer = batch.objectData.GetPickingPointer();
@@ -1377,6 +1380,20 @@ export class Tr2RenderContext
   ClearUav(buffer, value, clearWithFloat = false)
   {
     return this._requireAL("ClearUav").ClearUav(buffer, value, clearWithFloat);
+  }
+
+  /**
+   * Hands a draw's bones to a backend that carries them in a uniform block.
+   *
+   * @cjs Carbon's shaders read the ring; see `BONE_BLOCK_CAPACITY`.
+   * @param {object|null} objectData The draw's per-object data, a record or a `{ vs, ps }` pair.
+   * @returns {void}
+   */
+  _ApplyBoneBlock(objectData)
+  {
+    if (!this.GetCaps().BONE_BLOCK_CAPACITY) return;
+
+    this._al.SetBoneBlock(objectData?.boneBlock ?? null, objectData?.boneBlockCount ?? 0);
   }
 
   /**

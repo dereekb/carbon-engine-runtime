@@ -14,6 +14,7 @@
 import { exposure as be } from "#be";
 import { CjsConstantPayload } from "#interfaces";
 import { CjsSchema, meta } from "#schema";
+import * as CcpLog from "../../../../global/logging/ccpLog.js";
 import { ShaderType } from "#consts/render-context";
 import { Tr2RenderUtils } from "../../Tr2RenderUtils.js";
 import { PER_OBJECT_PS, PER_OBJECT_VS } from "../../Tr2Renderer.js";
@@ -39,6 +40,68 @@ export class Tr2PerObjectData
    * current header has no such member, so 0 is a neutral default.
    */
   userData = 0;
+
+  /**
+   * Over-capacity palettes already reported, so a frame loop reports each once.
+   * @cjs
+   */
+  static reportedBoneOverflows = new Set();
+
+  /**
+   * The bones a draw of this object reads, on a backend whose `BONE_BLOCK_CAPACITY`
+   * carries them in a uniform block; null where the shader reads Carbon's ring.
+   * @cjs
+   */
+  boneBlock = null;
+
+  /**
+   * How many bones `boneBlock` holds.
+   * @cjs
+   */
+  boneBlockCount = 0;
+
+  /**
+   * Records the object's palette for the draw's bone block. Bones past the block's
+   * capacity cannot reach the shader, so such an object says so once and does not
+   * draw, rather than drawing with some of its bones missing.
+   *
+   * @cjs Carbon's shaders read the ring through a structured buffer; see the capability.
+   * @param {Float32Array} transforms The palette, twelve floats a bone.
+   * @param {number} count How many bones.
+   * @param {number} capacity The backend's `BONE_BLOCK_CAPACITY`.
+   * @param {string} owner What the bones belong to, for the report.
+   * @returns {void}
+   */
+  SetBoneBlock(transforms, count, capacity, owner)
+  {
+    if (!Tr2PerObjectData.fitsBoneBlock(count, capacity, owner)) return;
+
+    this.boneBlock = transforms;
+    this.boneBlockCount = count;
+  }
+
+  /**
+   * Whether a palette fits the bone block, reporting once when it does not.
+   *
+   * @cjs
+   * @param {number} count How many bones.
+   * @param {number} capacity The backend's `BONE_BLOCK_CAPACITY`.
+   * @param {string} owner What the bones belong to, for the report.
+   * @returns {boolean} Whether they fit.
+   */
+  static fitsBoneBlock(count, capacity, owner)
+  {
+    if (count <= capacity) return true;
+
+    const report = `${owner}:${count}`;
+    if (!Tr2PerObjectData.reportedBoneOverflows.has(report))
+    {
+      Tr2PerObjectData.reportedBoneOverflows.add(report);
+      CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "%s has %s bones, past the %s a bone block carries; it will not draw.", owner, count, capacity);
+    }
+
+    return false;
+  }
 
   /**
    * Pre-92483097 Tr2PerObjectData.h: the uint32 collision-set index.

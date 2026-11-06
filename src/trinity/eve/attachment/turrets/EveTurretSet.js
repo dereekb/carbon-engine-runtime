@@ -2495,6 +2495,7 @@ export class EveTurretSet extends EveEntity
     const vs = accumulator.Alloc("EveTurretSetVSData");
     const ps = accumulator.Alloc("EveTurretSetPSData");
     const parent = this._parentData;
+    let blockPalette = null, blockCount = 0;
 
     // Carbon cpp:2305-2309.
     vs.SetAndTranspose("shipMatrix", parent.transform);
@@ -2555,8 +2556,15 @@ export class EveTurretSet extends EveEntity
         const ring = Tr2RingBuffer.GetInstance("Float4x3", 48, Tr2RenderContext_GetMainThreadRenderContext());
         this._boneOffsets.UploadTransforms(ring, this._boneTransforms.subarray(0, count * 12), count);
       }
-      vs.Set("currentBoneOffset", [ this._boneOffsets.GetCurrentFrameOffset() ]);
-      vs.Set("prevBoneOffset", [ this._boneOffsets.GetPreviousFrameOffset() ]);
+      // A bone block is per object, so both palettes read from its start.
+      const blockCapacity = Tr2RenderContext_GetMainThreadRenderContext().GetCaps().BONE_BLOCK_CAPACITY;
+      vs.Set("currentBoneOffset", [ blockCapacity ? 0 : this._boneOffsets.GetCurrentFrameOffset() ]);
+      vs.Set("prevBoneOffset", [ blockCapacity ? 0 : this._boneOffsets.GetPreviousFrameOffset() ]);
+      if (blockCapacity && turretIndex && Tr2PerObjectData.fitsBoneBlock(turretIndex * boneCount, blockCapacity, "EveTurretSet"))
+      {
+        blockPalette = this._boneTransforms;
+        blockCount = turretIndex * boneCount;
+      }
       vs.Set("turretSetData", [ boneCount, 0, 0, 0 ]);
 
       // ps data (cpp:2394-2404)
@@ -2575,7 +2583,7 @@ export class EveTurretSet extends EveEntity
       }
     }
 
-    return { vs, ps };
+    return blockPalette ? { vs, ps, boneBlock: blockPalette, boneBlockCount: blockCount } : { vs, ps };
   }
 
   /**
