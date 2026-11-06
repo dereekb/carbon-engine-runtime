@@ -1,12 +1,14 @@
+import { blue } from "#blue";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Curves/Tr2GrannyTrack.h
 // Source: trinity/trinity/Curves/Tr2GrannyTrack.cpp
 import { IsMatch } from "#blue";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
-import { meta, type } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { INotify, ITriFunction, ITriCurveLength } from "#blue";
 import { CjsGrannyCurves } from "./CjsGrannyCurves.js";
+import { TriGrannyRes } from "../../resources/geometry/granny/TriGrannyRes.js";
 
 
 /**
@@ -43,8 +45,36 @@ export class Tr2GrannyTrack extends IRoot
   @type.float32
   duration = 0;
 
+  /** m_grannyRes (TriGrannyResPtr) [READ] */
   @type.object.ref("TriGrannyRes")
-  grannyRes = null;
+  get grannyRes() { return this._grannyRes; }
+
+  /**
+   * Moves the notification link with the resource.
+   * @adapted Tr2GrannyTrack.cpp:88-106 uses native targets; ours live on resMan.
+   *   A decoded source from the registry has no lifetime and stays unregistered.
+   */
+  set grannyRes(resource)
+  {
+    if (resource === this._grannyRes) return;
+
+    const previous = this._grannyLink;
+    if (previous) blue.resMan.notify.Remove(this, previous);
+
+    this._grannyRes = resource;
+    this._grannyLink = CjsSchema.cast(resource, TriGrannyRes);
+    this._grannyNeedsReload = !!previous && !resource;
+    if (this._grannyLink) blue.resMan.notify.Add(this, this._grannyLink, this, "grannyRes");
+  }
+
+  /** Resource storage behind the notification-aware property. */
+  _grannyRes = null;
+
+  /** @cjs The TriGrannyRes this track is linked to, null for a decoded source. */
+  _grannyLink = null;
+
+  /** @cjs The resource expired while the path stands, so use reloads it. */
+  _grannyNeedsReload = false;
 
 
   @type.string
@@ -87,9 +117,45 @@ export class Tr2GrannyTrack extends IRoot
   }
 
   /**
+   * Carbon ReleaseCachedData (Tr2GrannyTrack.cpp:68-75): the tracks go with the
+   * resource.
+   *
+   * @implemented
+   * @param {TriGrannyRes|null} resource Resource losing its data.
+   */
+
+  ReleaseCachedData(resource)
+  {
+    if (resource === this.grannyRes)
+    {
+      this.duration = 0;
+      this.ResetTracks();
+    }
+  }
+
+  /**
+   * Carbon RebuildCachedData (Tr2GrannyTrack.cpp:78-84): binds the tracks once
+   * the resource is good.
+   *
+   * @implemented
+   * @param {TriGrannyRes} resource Resource that finished preparing.
+   */
+
+  RebuildCachedData(resource)
+  {
+    if (resource === this.grannyRes && resource.IsGood()) this.SetCurves();
+  }
+
+  /**
    * Relinks the authored Granny resource path.
    *
-   * @adapted
+   * Carbon: Tr2GrannyTrack::SetGrannyResource (Tr2GrannyTrack.cpp:86-107). The
+   * link's registration rebuilds a prepared resource at once, as AddNotifyTarget
+   * does, and a resource still loading binds through RebuildCachedData.
+   *
+   * @adapted Tracks reset first, because a rebind here can follow a bound
+   *   resource. The decoded registry answers before resMan for hosts that
+   *   registered a source, and such a source has no notification to wait for.
    */
 
   SetGrannyResource()
@@ -97,21 +163,30 @@ export class Tr2GrannyTrack extends IRoot
     this.ResetTracks();
     this.duration = 0;
     this.grannyRes = null;
-    if (this.grannyResPath)
+    this._grannyNeedsReload = false;
+
+    if (!this.grannyResPath)
     {
-      this.grannyRes = CjsGrannyCurves.resolveResource(this.grannyResPath);
+      this.ReleaseCachedData(this.grannyRes);
+      return;
     }
-    this.SetCurves();
+
+    this.grannyRes = CjsGrannyCurves.resolveResource(this.grannyResPath) ?? blue.resMan.GetResource(this.grannyResPath, { ex: "raw" });
+    if (!this._grannyLink) this.SetCurves();
   }
 
   /**
    * Updates the track value.
    *
-   * @adapted
+   * @adapted Ours: JavaScript links expire without use where Carbon's reference
+   *   keeps the resource, so use renews the link and reloads an expired resource.
    */
 
   UpdateValue(time)
   {
+    if (this._grannyNeedsReload) this.SetGrannyResource();
+    if (this._grannyLink) this._grannyLink.IsGood(this);
+
     if (!this.TracksReady())
     {
       return;
@@ -136,6 +211,17 @@ export class Tr2GrannyTrack extends IRoot
   }
 
   /**
+   * Carbon destructor (Tr2GrannyTrack.cpp:14-21): drops the notification link.
+   *
+   * @adapted JavaScript has no destructor, so owners call this.
+   */
+  Destruct()
+  {
+    this.grannyRes = null;
+    this._grannyNeedsReload = false;
+  }
+
+  /**
    * Locates resource curves.
    *
    * @adapted
@@ -147,7 +233,8 @@ export class Tr2GrannyTrack extends IRoot
     {
       return;
     }
-    const source = CjsGrannyCurves.getTrackSource(this.grannyRes);
+    // Carbon reads m_grannyRes->GetGrannyFile() (Tr2GrannyTrack.cpp:116).
+    const source = CjsGrannyCurves.getTrackSource(this._grannyLink ? this._grannyLink.GetGrannyFile() : this.grannyRes);
     if (!source)
     {
       return;
