@@ -1257,7 +1257,11 @@ export class TriGrannyRes extends BlueAsyncRes
    */
   BakeBlendshapeFromScript(meshIx, weights, geom)
   {
-    if (!geom.IsUsingCMF()) return this._BakeBlendshape__GrannyFile(meshIx, weights, geom);
+    if (!geom.IsUsingCMF())
+    {
+      if (this._morphOffsetOverrides.size) throw new Error("Morph offset overrides require CMF geometry");
+      return this._BakeBlendshape__GrannyFile(meshIx, weights, geom);
+    }
     const source = CanonicalMorphSource(this.GetGrannyFile()).meshes[meshIx];
     const destination = geom.GetMeshData(meshIx);
     const lod = geom.GetMeshLod__LodIndex(meshIx, 0);
@@ -1275,12 +1279,14 @@ export class TriGrannyRes extends BlueAsyncRes
       if (!Number.isFinite(weight)) throw new TypeError("Blendshape weights must be finite float32 values");
       if (weight < f(1e-4)) continue;
       const target = source.lods[0].morphTargets[index].vertex;
+      const override = this._morphOffsetOverrides.get(`${meshIx}:${index}`);
       for (const channel of ["position", "normal", "tangent", "binormal"])
       {
         if (!target[channel]) continue;
         if (!base[channel] || target[channel].length !== base[channel].length) throw new Error("Blendshape channel layout mismatch");
+        const offsets = override?.[channel] ?? null;
         for (let i = 0; i < vertex[channel].length; i++)
-          vertex[channel][i] = f(vertex[channel][i] + f(weight * f(target[channel][i] - base[channel][i])));
+          vertex[channel][i] = f(vertex[channel][i] + f(weight * (offsets ? offsets[i] : f(target[channel][i] - base[channel][i]))));
       }
     }
     const packed = TriGeometryRes.packLodGeometry({ ...source, lods: [{ ...source.lods[0], vertex }] }, 0);
@@ -1290,6 +1296,56 @@ export class TriGrannyRes extends BlueAsyncRes
       throw new Error("Blendshape vertex upload failed");
     }
     return true;
+  }
+
+  /**
+   * A morph target's base positions and offsets, read from the data the bake uses.
+   *
+   * @cjs Carbon bakes shipped morph data and has no way to replace it.
+   * @param {number} meshIx Mesh index.
+   * @param {number} morphIx Morph target index.
+   * @returns {{base: Float32Array, position: Float32Array, normal: ?Float32Array}} Fresh copies.
+   */
+  GetMorphTargetOffsets(meshIx, morphIx)
+  {
+    const lod = CanonicalMorphSource(this.GetGrannyFile()).meshes[meshIx].lods[0];
+    const target = lod.morphTargets[morphIx].vertex;
+    const offsets = channel => Float32Array.from(target[channel], (value, i) => f(value - lod.vertex[channel][i]));
+    return {
+      base: Float32Array.from(lod.vertex.position),
+      position: offsets("position"),
+      normal: target.normal && lod.vertex.normal ? offsets("normal") : null
+    };
+  }
+
+  /**
+   * Replaces one morph target's offsets for later bakes, in memory only.
+   *
+   * @cjs Registered in docs/architecture/non-carbon-extensions.md. The shipped data stays untouched.
+   * @param {number} meshIx Mesh index.
+   * @param {number} morphIx Morph target index.
+   * @param {Float32Array} position Replacement position offsets.
+   * @param {?Float32Array} [normal=null] Replacement normal offsets; null keeps the shipped ones.
+   * @returns {void}
+   */
+  SetMorphTargetOffsets(meshIx, morphIx, position, normal = null)
+  {
+    const lod = CanonicalMorphSource(this.GetGrannyFile()).meshes[meshIx].lods[0];
+    if (position.length !== lod.vertex.position.length) throw new RangeError("Morph offset override does not match the mesh");
+    this._morphOffsetOverrides.set(`${meshIx}:${morphIx}`, normal ? { position, normal } : { position });
+  }
+
+  /**
+   * Restores a morph target's shipped offsets for later bakes.
+   *
+   * @cjs Pair of `SetMorphTargetOffsets`.
+   * @param {number} meshIx Mesh index.
+   * @param {number} morphIx Morph target index.
+   * @returns {void}
+   */
+  ClearMorphTargetOffsets(meshIx, morphIx)
+  {
+    this._morphOffsetOverrides.delete(`${meshIx}:${morphIx}`);
   }
 
   /**
@@ -1350,6 +1406,9 @@ export class TriGrannyRes extends BlueAsyncRes
   /** m_grannyFile, represented by the decoded Granny graph in JS. */
   _grannyFile = null;
 
+  /** Morph offsets replaced in memory, by `meshIx:morphIx`. Ours; see `SetMorphTargetOffsets`. */
+  _morphOffsetOverrides = new Map();
+
   /**
    * Drop the graph owned by Carbon's resource destructor.
    *
@@ -1364,6 +1423,7 @@ export class TriGrannyRes extends BlueAsyncRes
   {
     if (options.releasePayload === false) return;
     this._grannyFile = null;
+    this._morphOffsetOverrides.clear();
     this._memoryUsage = 0;
   }
 }
