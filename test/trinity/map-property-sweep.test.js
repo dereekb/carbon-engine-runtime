@@ -244,6 +244,23 @@ test("EveShip2.audioSpeedParameter routes through the private Get/SetAudioParame
   AssertReadWrite(EveShip2, "audioSpeedParameter");
 });
 
+test("EveShip2.UpdateShipSpeedForAudio copies the booster intensity (EveShip2.cpp:362-380)", () =>
+{
+  const ship = new EveShip2();
+  const parameter = { value: -1 };
+  ship.audioSpeedParameter = parameter;
+  ship.maxSpeed = 1;
+  ship.boosters = { GetBoosterIntensity: () => 0.75 };
+
+  ship.UpdateShipSpeedForAudio();
+  assert.equal(parameter.value, 0.75);
+
+  parameter.value = -1;
+  ship.maxSpeed = 0;
+  ship.UpdateShipSpeedForAudio();
+  assert.equal(parameter.value, -1, "no max speed leaves the parameter alone");
+});
+
 test("EveSpaceObject2.audioGeometry routes through the protected Get/SetAudioGeometry (Blue.cpp:327)", t =>
 {
   const object = new EveSpaceObject2();
