@@ -33,7 +33,7 @@ const T = HLSLParserTokens;
 const N = ASTNode.ASTNodeType;
 
 /** HLSL binary operators WGSL spells the same. */
-const BINARY = new Map([
+export const BINARY = new Map([
     [T.OP_PLUS, "+"], [T.OP_DASH, "-"], [T.OP_STAR, "*"], [T.OP_SLASH, "/"], [T.OP_PERCENT, "%"],
     [T.OP_LESS, "<"], [T.OP_MORE, ">"], [T.OP_LE_OP, "<="], [T.OP_GE_OP, ">="], [T.OP_EQ_OP, "=="], [T.OP_NE_OP, "!="],
     [T.OP_AMPERSAND, "&"], [T.OP_VERTICAL_BAR, "|"], [T.OP_CARET, "^"], [T.OP_LEFT_OP, "<<"], [T.OP_RIGHT_OP, ">>"],
@@ -41,13 +41,13 @@ const BINARY = new Map([
 ]);
 
 /** HLSL assignment operators and the binary operator each applies. */
-const ASSIGNMENT = new Map([
+export const ASSIGNMENT = new Map([
     [T.OP_EQUAL, ""], [T.OP_ADD_ASSIGN, "+"], [T.OP_SUB_ASSIGN, "-"], [T.OP_MUL_ASSIGN, "*"], [T.OP_DIV_ASSIGN, "/"],
     [T.OP_MOD_ASSIGN, "%"], [T.OP_AND_ASSIGN, "&"], [T.OP_OR_ASSIGN, "|"], [T.OP_XOR_ASSIGN, "^"],
     [T.OP_LEFT_ASSIGN, "<<"], [T.OP_RIGHT_ASSIGN, ">>"]
 ]);
 
-const COMPARISONS = new Set([T.OP_LESS, T.OP_MORE, T.OP_LE_OP, T.OP_GE_OP, T.OP_EQ_OP, T.OP_NE_OP]);
+export const COMPARISONS = new Set([T.OP_LESS, T.OP_MORE, T.OP_LE_OP, T.OP_GE_OP, T.OP_EQ_OP, T.OP_NE_OP]);
 
 /**
  * HLSL intrinsics WGSL has under the same or another name, with the same
@@ -1629,7 +1629,7 @@ function withLeadingLines(block, lines)
  * @param {object} symbol The symbol.
  * @returns {{ registerType: string, registerNumber: number }|null} The first register specifier.
  */
-function registerOf(symbol)
+export function registerOf(symbol)
 {
     for (const [, reg] of symbol.registerSpecifier)
     {
@@ -1752,7 +1752,7 @@ function storageLayout(type)
  * @param {import("../ASTNode/ASTNode.js").ASTNode} param The `NT_FUNCTION_PARAMETER`.
  * @returns {boolean} True for `out` and `inout`.
  */
-function isReferenceParam(param)
+export function isReferenceParam(param)
 {
     const token = param.GetToken();
     return token !== null && (token.type === T.OP_OUT || token.type === T.OP_INOUT);
@@ -1820,7 +1820,7 @@ function systemAttribute(registerNumber)
  * @param {import("../ASTNode/ASTNode.js").ASTNode} node The expression.
  * @returns {Type} The type.
  */
-function typeOf(node)
+export function typeOf(node)
 {
     const type = node.GetType();
     if (type.builtInType === 0 && type.symbol === null && node.GetSymbol())
@@ -1836,7 +1836,7 @@ function typeOf(node)
  * @param {Type} type The type.
  * @returns {Type} A scalar of its component type.
  */
-function scalarOf(type)
+export function scalarOf(type)
 {
     const scalar = new Type();
     scalar.FromTokenType(type.builtInType);
@@ -1849,7 +1849,7 @@ function scalarOf(type)
  * @param {Type} type The type.
  * @returns {Type} A vector of its width and component type.
  */
-function shapeOf(type)
+export function shapeOf(type)
 {
     const shape = scalarOf(type);
     shape.width = type.width;
@@ -1863,7 +1863,7 @@ function shapeOf(type)
  * @param {number} builtInType The component token.
  * @returns {Type} The changed copy.
  */
-function withComponent(type, builtInType)
+export function withComponent(type, builtInType)
 {
     const copy = type.Copy();
     copy.builtInType = builtInType;
@@ -1897,7 +1897,7 @@ function swizzleOf(node)
  * @param {string} letter The letter.
  * @returns {string} Its `xyzw` letter.
  */
-function normaliseComponent(letter)
+export function normaliseComponent(letter)
 {
     const at = "rgba".indexOf(letter);
     return at >= 0 ? "xyzw"[at] : letter;
@@ -1909,7 +1909,7 @@ function normaliseComponent(letter)
  * @param {import("../ASTNode/ASTNode.js").ASTNode} node The `NT_CONSTANT`.
  * @returns {string} The literal.
  */
-function literal(node)
+export function literal(node)
 {
     const token = node.GetToken();
     const text = token.stringValue.ToString();
@@ -1939,7 +1939,7 @@ function literal(node)
  * @param {import("../ASTNode/ASTNode.js").ASTNode} node The node.
  * @returns {string} The name.
  */
-function nodeName(node)
+export function nodeName(node)
 {
     for (const [name, value] of Object.entries(N))
     {

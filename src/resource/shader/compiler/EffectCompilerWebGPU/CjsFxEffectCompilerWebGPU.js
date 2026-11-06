@@ -221,8 +221,7 @@ export class CjsFxEffectCompilerWebGPU
                     continue;
                 }
                 const outPass = new Pass();
-                const bindings = [];
-                const locations = new Map();
+                const passData = this._CreatePassData();
                 for (let stateIx = 0; stateIx < passNode.GetChildrenCount(); ++stateIx)
                 {
                     const stateNode = passNode.GetChild(stateIx);
@@ -235,17 +234,14 @@ export class CjsFxEffectCompilerWebGPU
                     {
                         continue;
                     }
-                    const stage = this._CompileStage(state, stateNode, result, globalsStructs, bindings, locations);
+                    const stage = this._CompileStage(state, stateNode, result, globalsStructs, passData);
                     if (stage === null)
                     {
                         return false;
                     }
                     outPass.stages.push(stage);
                 }
-                if (bindings.length !== 0)
-                {
-                    outPass.backendBlock = writeBackendBlock({ bindGroups: [{ group: 0, bindings }], transforms: [] });
-                }
+                outPass.backendBlock = this._WritePassBlock(passData);
                 technique.passes.push(outPass);
             }
 
@@ -264,11 +260,10 @@ export class CjsFxEffectCompilerWebGPU
      * @param {import("../ASTNode/ASTNode.js").ASTNode} shaderNode The pass's `NT_SHADER_ASSIGNMENT`.
      * @param {import("../EffectData/EffectData.js").EffectData} result Receives parameter annotations.
      * @param {Set<object>} globalsStructs The struct symbols laid out over used members.
-     * @param {object[]} bindings The pass's backend bindings, appended to.
-     * @param {Map<string, number>} locations The pass's varying locations by semantic.
+     * @param {object} passData What the pass's stages accumulate, from `_CreatePassData`.
      * @returns {StageInput|null} The stage, or null after an error.
      */
-    _CompileStage(state, shaderNode, result, globalsStructs, bindings, locations)
+    _CompileStage(state, shaderNode, result, globalsStructs, passData)
     {
         const stage = new StageInput();
         const stageType = { value: stage.type };
@@ -335,43 +330,9 @@ export class CjsFxEffectCompilerWebGPU
         state.ResetPragmaUsage();
         MarkUsedSymbols(callNode, state);
 
-        const printer = new CjsFxOutputWGSL({
-            state,
-            stage: kind,
-            threadGroupSize: stage.threadGroupSize,
-            entry: patchedShader,
-            globalsStructs,
-            bind: resource =>
-            {
-                const binding = bindings.length;
-                bindings.push({
-                    resourceKind: resource.kind,
-                    registerSpace: 0,
-                    binding,
-                    visibility: [kind],
-                    registerIndex: resource.registerIndex,
-                    structureStride: resource.structureStride ?? undefined,
-                    arrayLayerCount: 0,
-                    type: resource.type,
-                    ...(resource.type.startsWith("texture_depth_") ? { texture: { sampleType: "depth" } } : {}),
-                    generatedSymbol: resource.name,
-                    transformId: ""
-                });
-                return binding;
-            },
-            location: semantic =>
-            {
-                const key = /\d$/u.test(semantic) ? semantic : `${semantic}0`;
-                if (!locations.has(key))
-                {
-                    locations.set(key, locations.size);
-                }
-                return locations.get(key);
-            }
-        });
-        const wgsl = printer.Write();
-        stage.shaderData = wgsl;
-        stage.source = wgsl;
+        const text = this._PrintStage(state, stage, kind, patchedShader, globalsStructs, passData);
+        stage.shaderData = text;
+        stage.source = text;
 
         if (!CollectConstants(state, stage, result.annotations, globalsStructs))
         {
@@ -409,6 +370,79 @@ export class CjsFxEffectCompilerWebGPU
             }
         }
         return stage;
+    }
+
+    /**
+     * What a pass's stages accumulate while they print.
+     *
+     * @returns {{ bindings: object[], locations: Map<string, number> }} The pass's bindings and its varying locations by semantic.
+     */
+    _CreatePassData()
+    {
+        return { bindings: [], locations: new Map() };
+    }
+
+    /**
+     * The pass's backend block.
+     *
+     * @param {{ bindings: object[] }} passData From `_CreatePassData`, after the stages.
+     * @returns {Uint8Array|null} The block, or null with nothing to bind.
+     */
+    _WritePassBlock(passData)
+    {
+        const { bindings } = passData;
+        return bindings.length === 0 ? null : writeBackendBlock({ bindGroups: [{ group: 0, bindings }], transforms: [] });
+    }
+
+    /**
+     * One stage's program text.
+     *
+     * @param {ParserState} state The parse, with this stage's symbols marked used.
+     * @param {StageInput} stage The stage.
+     * @param {"vertex"|"fragment"|"compute"} kind Its kind.
+     * @param {import("../ASTNode/ASTNode.js").ASTNode} entry PatchShader's wrapper.
+     * @param {Set<object>} globalsStructs The struct symbols laid out over used members.
+     * @param {{ bindings: object[], locations: Map<string, number> }} passData From `_CreatePassData`.
+     * @returns {string} The program.
+     */
+    _PrintStage(state, stage, kind, entry, globalsStructs, passData)
+    {
+        const { bindings, locations } = passData;
+        const printer = new CjsFxOutputWGSL({
+            state,
+            stage: kind,
+            threadGroupSize: stage.threadGroupSize,
+            entry,
+            globalsStructs,
+            bind: resource =>
+            {
+                const binding = bindings.length;
+                bindings.push({
+                    resourceKind: resource.kind,
+                    registerSpace: 0,
+                    binding,
+                    visibility: [kind],
+                    registerIndex: resource.registerIndex,
+                    structureStride: resource.structureStride ?? undefined,
+                    arrayLayerCount: 0,
+                    type: resource.type,
+                    ...(resource.type.startsWith("texture_depth_") ? { texture: { sampleType: "depth" } } : {}),
+                    generatedSymbol: resource.name,
+                    transformId: ""
+                });
+                return binding;
+            },
+            location: semantic =>
+            {
+                const key = /\d$/u.test(semantic) ? semantic : `${semantic}0`;
+                if (!locations.has(key))
+                {
+                    locations.set(key, locations.size);
+                }
+                return locations.get(key);
+            }
+        });
+        return printer.Write();
     }
 }
 
