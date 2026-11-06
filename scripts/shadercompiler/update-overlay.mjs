@@ -36,7 +36,7 @@ const dirty = git("status", "--porcelain", "--", LIBRARY).split("\n").some(line 
 const out = mkdtempSync(join(tmpdir(), "cjs-shader-compiled-"));
 try
 {
-    const written = compileLibrary(out, effects);
+    const written = compileLibrary(out, effects, (tree, effect, reason) => console.log(`skipped ${tree} ${effect}: ${reason}`));
     console.log(`compiled ${effects.length} effects, ${written.length} files, at runtime ${commit}${dirty ? " with uncommitted library changes" : ""}`);
 
     const result = spawnSync(process.execPath, [
@@ -46,7 +46,7 @@ try
         "--dir", out,
         "--replace",
         "--data", join(toolsCore, "data.local"),
-        "--purpose", `Automatic: every tracked effect in runtime src/resource/shader/compiler/library, compiled for WebGPU by `
+        "--purpose", `Automatic: every tracked effect in runtime src/resource/shader/compiler/library, compiled for WebGPU and WebGL2 by `
             + `runtime scripts/shadercompiler/update-overlay.mjs (runtime ${commit}${dirty ? "+uncommitted" : ""}). `
             + "All of our own shaders live here; rebuild the whole library rather than importing single effects.",
         "--source-url", "https://github.com/carbonenginejs/runtime/tree/main/src/resource/shader/compiler/library"
