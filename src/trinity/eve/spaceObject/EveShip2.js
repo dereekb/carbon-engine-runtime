@@ -380,8 +380,8 @@ export class EveShip2 extends EveMobile
   }
 
   /**
-   * Returns the ship's maximum speed, the divisor that normalizes current speed
-   * into the bound audio speed parameter.
+   * Returns the ship's maximum speed, read by ShipMaxSpeed() and, when zero, it
+   * stops UpdateShipSpeedForAudio feeding the audio parameter.
    *
    * @implemented
    */
