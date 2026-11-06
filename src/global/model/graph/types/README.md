@@ -110,8 +110,9 @@ silently adopted.
 Options are per call: one reused object for a whole operation, carrying what objects and lists
 need, including recursion state, and nothing per member. Object, list and struct handlers
 re-enter CjsGraph and return false, or what the change record holds for them; a leaf returns
-a boolean, and the graph reads its new value. Lists hold objects only: a list of leaf values
-is not implemented. Order counts in a list. A _ref on a structure-list row or an embedded
+a boolean, and the graph reads its new value. CjsGraphTypeList holds objects,
+CjsGraphTypeValues holds leaf values through an item handler, and CjsGraphTypeMap holds a Map
+of names to objects; a Map of leaf values is not implemented. Order counts in a list. A _ref on a structure-list row or an embedded
 member holds its object and fills it by value once every source is read.
 Ownership edges and operation-owned creations must be recorded before destruction is implemented.
 No placeholder Destruct method promises cleanup today.

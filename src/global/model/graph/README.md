@@ -42,12 +42,22 @@ A policy decides and never walks: `acceptMember(member, info, operation)` picks 
 cached once per class, policy and operation on the compiled record, and
 `complete(object, info, changes, created)` runs after references resolve, children first.
 `CjsGraph.policy` is the session policy, and `options.policy` overrides it per call. The
-default accepts everything and notifies nothing. `_type` names resolve through
+default accepts everything and notifies nothing. A policy may also carry
+`replaceList(owner, member, list, items)`, which then writes a changed list of an existing
+owner, once references resolve and before completion; without it the list is simply written. `_type` names resolve through
 `CjsGraph.registerLibrary(library)`, newest first, ending in the graph's own definitions.
 A library has `Get(typeName)` and `Create(typeName)`. A failed operation completes
 nothing and rolls nothing back.
 
+A definition may name `interfaces`, the classes an instance also counts as without
+inheriting from them, and set `whole`, when its members are the class's complete list and
+no base definition may add to them.
+
+`CjsGraph.updateValues(object, names, options)` tells the policy members changed after a
+direct write. No names means every member, and it keeps no baseline.
+
 CjsGraphRoot is the optional base class: thin forwards and `__cjs`. No Destruct yet.
+Blue's side is `blue/formats/graph/CjsBlueGraph.js` and `CjsBlueGraphPolicy.js`.
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per
 object, depth-first in declaration/list order. A member's `edge` declares `kind`
