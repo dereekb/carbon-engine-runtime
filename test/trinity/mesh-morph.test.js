@@ -120,11 +120,39 @@ test("EveChildMesh merges exact animation morphs and prepares native indexed par
   assert.equal(child.GetMorphTargets("all").length, 3);
 });
 
-test("morph preparation rejects invalid values, duplicate names, and unsupported filters", () =>
+test("duplicate morph names retain indexed slots and use Carbon's last named entry after rebuild", () =>
+{
+  const names = [ "PushJacketHigh", "Smile", "PushJacketHigh" ];
+  const geometry = CreateGeometry(names, undefined, { loading: true });
+  const mesh = new Tr2Mesh();
+  mesh.serializedMorphAnimations = names.map((name, index) =>
+  {
+    const value = new Tr2SerializedMorphAnimation();
+    value.name = name;
+    value.weight = (index + 1) / 4;
+    return value;
+  });
+  mesh.SetGeometryRes(geometry);
+  prepareResourceFixture(geometry);
+  assert.doesNotThrow(() => geometry._NotifyRebuildCachedData());
+  assert.deepEqual(mesh.GetMorphTargetNames(), names);
+  assert.equal(mesh.serializedMorphAnimations.length, 3);
+  assert.deepEqual(mesh.GetMorphAnimations().get("PushJacketHigh"), { index: 2, weight: 0.75 });
+  assert.equal(mesh.SetMorphTargetWeight("PushJacketHigh", 0.5), true);
+  assert.deepEqual(mesh.serializedMorphAnimations.map(value => value.weight), [ 0.25, 0.5, 0.5 ]);
+  geometry._NotifyRebuildCachedData();
+  assert.deepEqual(mesh.GetMorphAnimations().get("PushJacketHigh"), { index: 2, weight: 0.5 });
+
+  const fresh = new Tr2Mesh();
+  assert.doesNotThrow(() => fresh.SetGeometryRes(geometry));
+  assert.deepEqual(fresh.serializedMorphAnimations.map(value => value.name), names);
+  assert.deepEqual(fresh.GetMorphAnimations().get("PushJacketHigh"), { index: 2, weight: 0 });
+});
+
+test("morph preparation rejects invalid values and unsupported filters", () =>
 {
   const mesh = new Tr2Mesh();
 
-  assert.throws(() => mesh.SetGeometryRes(CreateGeometry([ "Smile", "Smile" ])), /duplicate "Smile"/u);
   mesh.SetGeometryRes(CreateGeometry([ "Smile" ]));
   assert.throws(() => mesh.SetMorphTargetWeight("Smile", Number.NaN), /must be finite/u);
 

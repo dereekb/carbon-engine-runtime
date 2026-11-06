@@ -372,17 +372,6 @@ export class Tr2Mesh extends Tr2MeshBase
     }
 
     const names = this.GetMorphTargetNames();
-    const nameSet = new Set();
-
-    for (const name of names)
-    {
-      if (nameSet.has(name))
-      {
-        throw new Error(`Tr2Mesh morph target names contain duplicate "${name}"`);
-      }
-      nameSet.add(name);
-    }
-
     const serializedMatches = this.serializedMorphAnimations.length === names.length
       && names.every((name, index) => this.serializedMorphAnimations[index]?.name === name);
 
@@ -399,6 +388,8 @@ export class Tr2Mesh extends Tr2MeshBase
 
     this._morphAnimations.clear();
 
+    // Carbon Tr2Mesh.cpp:178-181 assigns by name in source order: the last duplicate wins.
+    // Keep every serialized slot and geometry index; authored names need not be unique.
     names.forEach((name, index) =>
     {
       const weight = Number(this.serializedMorphAnimations[index]?.weight);
