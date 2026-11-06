@@ -318,7 +318,8 @@ export class Tr2PostProcessRenderer extends IRoot
 
     const upscalingInfo = al.GetUpscalingInfo(upscalingContext ? upscalingContext.GetID() : INVALID_UPSCALING_CONTEXT_ID);
     const upscalingEnabled = upscalingInfo.technique !== UpscalingTechnique.NONE;
-    const sharpeningRequired = !upscalingInfo.hasSharpening;
+    // Adapted: CAS is a compute pass writing a UAV, so a backend without compute skips it.
+    const sharpeningRequired = !upscalingInfo.hasSharpening && al.GetCaps().SUPPORTS_COMPUTE !== false;
     // Carbon HEAD (2276880b, cpp:681): sharpening after tonemapping, by the
     // post process's strength and off at 0. Only under useSharpeningStrength.
     const sharpenAfterTonemapping = this.useSharpeningStrength && (postProcess ? sharpeningRequired && postProcess.sharpeningStrength > 0 : false);
