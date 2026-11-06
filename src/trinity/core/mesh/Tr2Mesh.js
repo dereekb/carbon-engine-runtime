@@ -66,7 +66,7 @@ export class Tr2Mesh extends Tr2MeshBase
   /** @cjs Prevents a destroyed mesh from reacquiring expired resources. */
   _destroyed = false;
 
-  /** @cjs A cleared path-backed slot can reacquire after manager lease expiry. */
+  /** @cjs A cleared path-backed slot can reacquire after its manager link expires. */
   _geometryNeedsReload = false;
 
   /**

@@ -199,7 +199,7 @@ export class Tr2Effect extends Tr2Material
   /**
    * Replaces the resource and registers Carbon's cached-data callbacks.
    * @adapted Tr2Effect.cpp:384-402 uses native resource notifications;
-   *   manager-owned leases allow expiry without guaranteed JS destructors.
+   *   manager-owned links expire without guaranteed JS destructors.
    */
   set effectResource(resource)
   {
@@ -1069,7 +1069,7 @@ export class Tr2Effect extends Tr2Material
    * shader finds none. Manager-owned links provide those callbacks here.
    *
    * @cjs
-   * @adapted Browser leases require renewal and reacquisition after expiry.
+   * @adapted Browser links require renewal and reacquisition after expiry.
    * @returns {boolean} Whether the effect can be drawn now.
    */
   IsGood()

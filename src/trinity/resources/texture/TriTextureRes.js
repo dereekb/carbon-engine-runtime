@@ -330,7 +330,7 @@ export class TriTextureRes extends BlueAsyncRes
    * until the load finishes and the parameter substitutes the fallback
    * (`TriTextureRes.cpp:394-405`).
    *
-   * @adapted obtaining the live texture renews the JS cache lease. Carbon's
+   * @adapted obtaining the live texture renews the JS cache entry. Carbon's
    *   caller holds a reference-counted resource; our time-based cache needs this
    *   use signal, including when a runtime parameter skips repeated realization.
    * @returns {object|null} A `Tr2TextureAL`.
