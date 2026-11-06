@@ -39,14 +39,17 @@ export class CjsGraphTypeList
    * in another order are a change. A null empties the list, keeping the list object.
    * Returns false, or the whole new contents as a plain array.
    * @cjs No positional matching of objects. Raw array writes bypass BlueList admission and
-   * notification (BlueListUtil.h:206-210); the policy is told at completion.
+   * notification (BlueListUtil.h:206-210). An existing owner's list goes through the policy's
+   * replaceList when it has one, which needs the old items still in place: the list is left
+   * alone here, and the items wait, with any forward reference, for the end of the operation.
    */
   static set(target, key, value, options)
   {
     if (value === null && target[key] === null) return false;
 
     const source = value ?? [];
-    const edge = options.member.edge;
+    const { member, owner } = options;
+    const edge = member.edge;
     const list = target[key] ??= []; // alloc: a member holding no list gets one.
 
     if (source === list) return false;
@@ -54,10 +57,17 @@ export class CjsGraphTypeList
     if (CjsGraph.isListLike(list, source, edge.type, options)) return false;
 
     const items = new Array(source.length); // alloc: the change record, and the new contents.
+    const staged = options.staged && !options.creating;
 
     for (let i = 0; i < source.length; i++)
     {
-      items[i] = this._getItem(source[i], list, i, items, edge.type, options);
+      items[i] = this._getItem(source[i], staged ? items : list, i, items, edge.type, options);
+    }
+
+    if (staged)
+    {
+      options.listEdits.push({ owner, member, list, items });
+      return items;
     }
 
     list.length = items.length;

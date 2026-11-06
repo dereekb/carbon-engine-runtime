@@ -236,6 +236,7 @@
     "blue": {
       "mayImport": [
         "global/consts",
+        "global/model/graph",
         "blue/enums",
         "blue/exposure/classes",
         "blue/compose",

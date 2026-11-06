@@ -33,6 +33,8 @@ export { CjsGraphTypeBigUint64Array } from "./CjsGraphTypeBigUint64Array.js";
 export { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
 export { CjsGraphTypeStruct } from "./CjsGraphTypeStruct.js";
 export { CjsGraphTypeList } from "./CjsGraphTypeList.js";
+export { CjsGraphTypeValues } from "./CjsGraphTypeValues.js";
+export { CjsGraphTypeMap } from "./CjsGraphTypeMap.js";
 
 export { CjsGraphTypeWString } from "./CjsGraphTypeWString.js";
 export { CjsGraphTypeWCString } from "./CjsGraphTypeWCString.js";

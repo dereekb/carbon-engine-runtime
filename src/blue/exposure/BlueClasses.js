@@ -193,6 +193,30 @@ export class BlueClasses extends IBlueClasses
   }
 
   /**
+   * The class registered under a name, or null: the graph's class-library interface.
+   *
+   * @cjs A thin wrapper over GetClassRegistration.
+   * @param {string} typeName Class name.
+   * @returns {Function|null} The class.
+   */
+  Get(typeName)
+  {
+    return this.GetClassRegistration(typeName)?.type ?? null;
+  }
+
+  /**
+   * A new instance of a named class: the graph's class-library interface.
+   *
+   * @cjs A thin wrapper over CreateInstanceFromName.
+   * @param {string} typeName Class name.
+   * @returns {object|null} New instance.
+   */
+  Create(typeName)
+  {
+    return this.CreateInstanceFromName(typeName);
+  }
+
+  /**
    * `QueryThisInterface( pThis, riid, ppv, type, options = BEQI_NONE )`: the
    * object when `type`'s exposure table maps the interface, otherwise null
    * (BlueClasses.cpp:376-415). The table is the class's own entries followed by

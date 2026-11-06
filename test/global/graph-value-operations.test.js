@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   CjsGraph, CjsGraphRoot, CjsGraphTypeFloat32, CjsGraphTypeIRootPtr, CjsGraphTypeList, CjsGraphTypeString, CjsGraphTypeStruct,
-  CjsGraphTypeVector3, GraphOperation
+  CjsGraphTypeMap, CjsGraphTypeValues, CjsGraphTypeVector3, GraphOperation
 } from "../../src/global/model/graph/index.js";
 
 const string = new CjsGraphTypeString();
@@ -799,6 +799,212 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
 
   const target = new Rooted();
   assert.deepEqual(target.Copy(object), { name: "b", weight: 2 });
+});
+
+test("a policy's replaceList writes an existing owner's changed list, after references and before completion", () =>
+{
+  const order = [];
+  const policy = {
+    acceptMember() { return true; },
+    replaceList(owner, member, list, items)
+    {
+      order.push([ "replace", owner, member.name, list.length, items.slice() ]);
+      list.length = 0;
+      for (const item of items) list.push(item);
+    },
+    complete(object) { order.push([ "complete", object ]); }
+  };
+
+  const holder = new Holder();
+  const items = holder.items, old = leaf("old");
+  items.push(old);
+
+  CjsGraph.set(holder, { items: [ { _ref: 3 } ], other: { _id: 3, _type: "GraphValueLeaf", name: "later" } }, { policy });
+
+  const [ kind, owner, name, oldLength, staged ] = order[0];
+  assert.equal(kind, "replace");
+  assert.equal(owner, holder);
+  assert.equal(name, "items");
+  assert.equal(oldLength, 1, "the old items are still in the list");
+  assert.equal(staged[0], holder.other, "the forward reference resolved first");
+  assert.equal(items[0], holder.other);
+  assert.equal(holder.items, items);
+  assert.equal(order.at(-1)[0], "complete");
+  assert.equal(order.at(-1)[1], holder);
+
+  order.length = 0;
+  assert.equal(CjsGraph.set(holder, { items: [ holder.other ] }, { policy }), false);
+  assert.deepEqual(order, [], "an unchanged list is not replaced");
+});
+
+test("replaceList is not asked about a created owner, a structure list, or a policy without it", () =>
+{
+  const asked = [];
+  const policy = {
+    acceptMember() { return true; },
+    replaceList(owner, member) { asked.push(member.name); },
+    complete() {}
+  };
+
+  const built = CjsGraph.from(Holder, { items: [ { name: "a" } ] }, { policy });
+  assert.equal(built.items[0].name, "a", "a created owner fills raw");
+
+  const holder = new Holder();
+  CjsGraph.set(holder, { rows: [ { value: 1 } ] }, { policy });
+  assert.equal(holder.rows.length, 1);
+  assert.deepEqual(asked, []);
+});
+
+test("an idMap record still holds _ref when replaceList stages the list", () =>
+{
+  const idMap = new Map();
+  const policy = {
+    acceptMember() { return true; },
+    replaceList(owner, member, list, items) { list.push(...items); },
+    complete() {}
+  };
+
+  const holder = new Holder();
+  const live = leaf("live");
+  const changes = CjsGraph.set(holder, { items: [ live ] }, { policy, idMap });
+
+  assert.equal(holder.items[0], live, "the list holds the object");
+  assert.equal(idMap.get(changes.items[0]._ref), live);
+});
+
+test("a definition marked whole takes nothing from its base", () =>
+{
+  class Base
+  {
+    shared = 1;
+    dropped = 2;
+  }
+  class Derived extends Base {}
+  CjsGraph.define(Base, { name: "GraphValueWholeBase", members: [ { name: "shared", handler: float }, { name: "dropped", handler: float } ] });
+  CjsGraph.define(Derived, { name: "GraphValueWholeDerived", whole: true, members: [ { name: "shared", handler: float } ] });
+
+  assert.deepEqual(CjsGraph.get(new Derived()), { shared: 1 });
+  assert.equal(CjsGraph.getClassInfo(Derived).compiled.parent, CjsGraph.getClassInfo(Base), "the base is still its parent");
+});
+
+test("an interface a definition names counts as assignable, without inheritance", () =>
+{
+  class Contract {}
+  class Mapped {}
+  class Unmapped {}
+  class Holds
+  {
+    held = null;
+  }
+  CjsGraph.define(Contract, { name: "GraphValueContract", members: [] });
+  CjsGraph.define(Mapped, { name: "GraphValueMapped", interfaces: [ "GraphValueContract" ], members: [] });
+  CjsGraph.define(Unmapped, { name: "GraphValueUnmapped", members: [] });
+  CjsGraph.define(Holds, { name: "GraphValueHolds", members: [ { name: "held", handler: reference, edge: { kind: "ref", type: Contract } } ] });
+
+  const holds = new Holds();
+  holds.held = new Mapped();
+  assert.deepEqual(CjsGraph.get(holds, { typeTags: true }).held, { _type: "GraphValueMapped" });
+
+  holds.held = new Unmapped();
+  assert.throws(() => CjsGraph.get(holds), /not assignable/);
+});
+
+test("a list of values reads, writes and compares through its item handler", () =>
+{
+  class Transforms
+  {
+    transforms = [ new Float32Array(3) ];
+    names = [];
+  }
+  CjsGraph.define(Transforms, { name: "GraphValueTransforms", members: [
+    { name: "transforms", handler: new CjsGraphTypeValues(vector) },
+    { name: "names", handler: new CjsGraphTypeValues(string) }
+  ] });
+
+  const object = new Transforms(), first = object.transforms[0];
+
+  assert.deepEqual(CjsGraph.get(object), { transforms: [ [ 0, 0, 0 ] ], names: [] });
+  assert.equal(CjsGraph.set(object, { transforms: [ [ 0, 0, 0 ] ], names: [] }), false);
+
+  const changes = CjsGraph.set(object, { transforms: [ [ 1, 2, 3 ], [ 4, 5, 6 ] ], names: [ "a" ] });
+  assert.deepEqual(changes, { transforms: [ [ 1, 2, 3 ], [ 4, 5, 6 ] ], names: [ "a" ] });
+  assert.equal(object.transforms[0], first, "element storage is kept");
+  assert.equal(object.transforms[1].constructor, Float32Array);
+
+  CjsGraph.set(object, { transforms: [ [ 1, 2, 3 ] ], names: [ null ] });
+  assert.equal(object.transforms.length, 1);
+  assert.equal(object.names[0], null);
+
+  assert.throws(() => CjsGraph.set(object, { names: [ 1 ] }), /Invalid value/);
+  assert.throws(() => CjsGraph.set(object, { names: "a" }), /Invalid value/);
+});
+
+test("a Map of objects behaves as a list keyed by name", () =>
+{
+  class Named
+  {
+    entries = new Map();
+    other = null;
+  }
+  CjsGraph.define(Named, { name: "GraphValueNamed", members: [
+    { name: "entries", handler: new CjsGraphTypeMap(), edge: { kind: "ref", collection: true, map: true, type: Leaf } },
+    { name: "other", handler: reference, edge: { kind: "ref", type: Leaf } }
+  ] });
+
+  const object = new Named(), entries = object.entries, stays = leaf("stays");
+  entries.set("a", stays);
+  entries.set("gone", leaf("gone"));
+
+  assert.deepEqual(CjsGraph.get(object).entries.a.name, "stays");
+  assert.equal(CjsGraph.traverse(object, () => {}), 3);
+
+  const changes = CjsGraph.set(object, { entries: { a: stays, b: { name: "new" } } });
+  assert.equal(object.entries, entries, "the Map keeps its identity");
+  assert.equal(entries.get("a"), stays);
+  assert.equal(entries.get("b").name, "new");
+  assert.equal(entries.has("gone"), false);
+  assert.equal(changes.entries.b, entries.get("b"));
+
+  assert.equal(CjsGraph.set(object, { entries: { a: stays, b: entries.get("b") } }), false);
+  assert.equal(CjsGraph.set(object, { entries: CjsGraph.get(object).entries }), false);
+
+  const forward = CjsGraph.set(object, { entries: { c: { _ref: 4 } }, other: { _id: 4, name: "later" } });
+  assert.equal(entries.get("c"), object.other);
+  assert.equal(forward.entries.c, object.other);
+
+  const idMap = new Map();
+  const mapped = CjsGraph.set(object, { entries: { d: leaf("d") } }, { idMap });
+  assert.equal(idMap.get(mapped.entries.d._ref), entries.get("d"));
+
+  assert.deepEqual(CjsGraph.set(object, { entries: null }), { entries: {} });
+  assert.equal(object.entries, entries);
+  assert.equal(entries.size, 0);
+  assert.throws(() => CjsGraph.set(object, { entries: [] }), /Invalid value/);
+});
+
+test("a comparison reaching a Map inside a list reads the Map's own declared type", () =>
+{
+  class Inner
+  {
+    entries = new Map();
+  }
+  class Outer
+  {
+    inners = [];
+  }
+  CjsGraph.define(Inner, { name: "GraphValueInner", members: [
+    { name: "entries", handler: new CjsGraphTypeMap(), edge: { kind: "ref", collection: true, map: true, type: Row } }
+  ] });
+  CjsGraph.define(Outer, { name: "GraphValueOuter", members: [
+    { name: "inners", handler: list, edge: { kind: "ref", collection: true, type: Inner } }
+  ] });
+
+  const outer = new Outer(), inner = new Inner();
+  inner.entries.set("a", new Row());
+  outer.inners.push(inner);
+
+  assert.equal(CjsGraph.set(outer, CjsGraph.get(outer)), false);
+  assert.equal(outer.inners[0], inner);
 });
 
 test("a list holding a stored NaN is not called equal", () =>

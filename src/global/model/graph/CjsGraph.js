@@ -61,7 +61,9 @@ export class CjsGraph
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
-   * Definition shape: { name, members: [{ name, key?, handler?, ...metadata }] }.
+   * Definition shape: { name, members: [{ name, key?, handler?, ...metadata }], interfaces? }.
+   * interfaces names classes an instance also counts as without inheriting from them.
+   * whole means members is the class's complete list, so no base definition adds to it.
    * @cjs Snapshots declaration containers; handlers and authored default values are not cloned.
    */
   static define(ctor, definition)
@@ -86,7 +88,7 @@ export class CjsGraph
       const edge = member.edge ? this._compileEdge(member.edge) : null;
       members.push({ ...member, handler: member.handler ?? this._invalidHandler, edge });
     }
-    const declared = { ...definition, members };
+    const declared = { ...definition, members, interfaces: definition.interfaces ?? [] };
 
     const info = existing ?? new CjsGraphClassInfo(ctor, declared);
     if (existing) this._names.delete(existing.declared.name);
@@ -96,6 +98,15 @@ export class CjsGraph
 
     this._revision++;
     return info;
+  }
+
+  /**
+   * Whether a constructor already has a definition.
+   * @cjs
+   */
+  static isDefined(ctor)
+  {
+    return this._classes.has(ctor);
   }
 
   /**
@@ -223,6 +234,8 @@ export class CjsGraph
    * (default true) counts an object read into under a created owner as created, as Copier
    * initialises every object it fills (Copier.cpp:141, :209).
    * A nested object completes as its own set would, so its owner is told only of its own members.
+   * A policy may also carry replaceList(owner, member, list, items): when it does, a changed
+   * list of an existing owner is written by it, once references resolve and before completion.
    * Nothing is completed until references resolve. A failure stops the operation with no
    * rollback of writes already made, and nothing is completed.
    * Modelled on: Blue::DictReader::ReadMembers, without its notification during the walk.
@@ -267,7 +280,7 @@ export class CjsGraph
 
       if (changes === false) changes = {}; // alloc: only once a member is reported.
       changes[member.name] = this._getReported(object, member, operation);
-      if (member.edge !== null && operation.idMap !== null) operation.recorded.push(changes, member.name);
+      if (member.edge !== null && operation.idMap !== null) this._addRecorded(changes, member.name, member, operation);
     }
 
     if (changes !== false) this._addCompletion(object, info, changes, null, operation);
@@ -282,7 +295,9 @@ export class CjsGraph
     if (member.edge === null) return this._getMember(object, member, options);
 
     const stored = member.index === undefined ? object[member.key] : object[member.key][member.index];
-    return member.edge.collection && stored !== null ? Array.from(stored) : stored;
+    if (stored === null || !member.edge.collection) return stored;
+
+    return member.edge.map ? Object.fromEntries(stored) : Array.from(stored);
   }
 
   /**
@@ -562,6 +577,8 @@ export class CjsGraph
       policy: options.policy ?? this.policy,
       validate: options.validate !== false,
       initializeHeld: options.initializeHeld !== false,
+      staged: (options.policy ?? this.policy).replaceList !== undefined,
+      listEdits: [],
       anchors: options.idMap ?? new Map(),
       idMap: options.idMap ?? null,
       ids: null,
@@ -570,6 +587,7 @@ export class CjsGraph
       pending: [],
       completions: new Map(),
       creating: false,
+      owner: null,
       member: null,
       deferred: null
     };
@@ -607,6 +625,7 @@ export class CjsGraph
       const holder = member.index === undefined ? object : object[member.key];
       const key = member.index === undefined ? member.key : member.index;
 
+      options.owner = object;
       options.member = member;
       const result = value === null && member.edge === null
         ? this._clear(holder, key)
@@ -625,7 +644,7 @@ export class CjsGraph
       else changes[name] = result === true ? this._getMember(object, member, options) : result;
 
       if (member.edge === null) continue;
-      if (options.idMap !== null) options.recorded.push(changes, name);
+      if (options.idMap !== null) this._addRecorded(changes, name, member, options);
 
       // A nested bag is the child's own change: only the child's completion tells of it.
       if (!member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
@@ -636,8 +655,20 @@ export class CjsGraph
     return changes;
   }
 
+  /** Notes where a record holds live objects, for _recordReferences. @cjs idMap only. */
+  static _addRecorded(record, name, member, options)
+  {
+    if (!member.edge.map || record[name] === null)
+    {
+      options.recorded.push(record, name);
+      return;
+    }
+
+    for (const key of Object.keys(record[name])) options.recorded.push(record[name], key);
+  }
+
   /**
-   * The members an object changed itself, without its nested bags, or false.
+   * The members
    * @cjs Runs once references resolve, so a forward reference is already in the record.
    */
   static _getOwnChanges(changes, nested)
@@ -721,6 +752,8 @@ export class CjsGraph
       throw new TypeError(`Invalid value for graph member: ${member.owner.declared.name}.${member.name}`);
 
     if (member.edge === null) return member.handler.IsUnchanged(stored, value);
+    options.member = member;
+    if (member.edge.map) return member.handler.IsUnchanged(stored, value, options);
     if (member.edge.collection) return this.isListLike(stored, value, member.edge.type, options);
 
     return this.isObjectLike(stored, value, member.edge.type, options);
@@ -755,7 +788,9 @@ export class CjsGraph
       this._getObjectInfo(object, entry.type);
       if (entry.fill !== null) continue;
 
-      entry.holder[entry.key] = object;
+      if (entry.holder instanceof Map) entry.holder.set(entry.key, object);
+      else entry.holder[entry.key] = object;
+
       entry.record[entry.recordKey] = object;
     }
 
@@ -763,6 +798,11 @@ export class CjsGraph
     for (const entry of options.pending)
     {
       if (entry.fill !== null) this._fill(entry, options);
+    }
+
+    for (const edit of options.listEdits)
+    {
+      options.policy.replaceList(edit.owner, edit.member, edit.list, edit.items);
     }
 
     for (let i = 0; i < options.recorded.length; i += 2)
@@ -970,8 +1010,9 @@ export class CjsGraph
         if (value === undefined) throw new TypeError(`Graph edge is undefined: ${member.name}`);
         if (member.edge.collection)
         {
-          if (!Array.isArray(value)) throw new TypeError(`Graph collection must be an array: ${member.name}`);
-          frame.items = value;
+          const items = member.edge.map && value !== null ? Array.from(value.values()) : value;
+          if (!Array.isArray(items)) throw new TypeError(`Graph collection must be an array: ${member.name}`);
+          frame.items = items;
           frame.itemIndex = 0;
           frame.type = member.edge.type;
         }
@@ -1005,7 +1046,7 @@ export class CjsGraph
     if (edge.collection !== undefined && typeof edge.collection !== "boolean")
       throw new TypeError("Graph edge collection must be boolean.");
 
-    return { kind: edge.kind, type: edge.type ?? null, collection: edge.collection ?? false };
+    return { kind: edge.kind, type: edge.type ?? null, collection: edge.collection ?? false, map: edge.map === true };
   }
 
   /** Resolves actual classes, using the declared type only for plain struct storage. @cjs */
@@ -1020,7 +1061,11 @@ export class CjsGraph
       if (plain) return declared;
       let current = prototype;
       while (current && current !== declared.ctor.prototype) current = Object.getPrototypeOf(current);
-      if (!current) throw new TypeError(`Graph edge is not assignable to ${declared.declared.name}.`);
+      if (current) return this.getClassInfo(prototype.constructor);
+
+      const info = this.getClassInfo(prototype.constructor);
+      if (info.declared.interfaces.includes(declared.declared.name)) return info;
+      throw new TypeError(`Graph edge is not assignable to ${declared.declared.name}: holds ${info.declared.name}.`);
     }
     if (plain) throw new TypeError("Graph edge has no declared type for a plain object.");
     return this.getClassInfo(prototype.constructor);
@@ -1180,6 +1225,7 @@ export class CjsGraph
       const owner = this._classes.get(prototype.constructor);
       if (!owner) continue;
       if (owner !== info && !parent) parent = owner;
+      if (owner !== info && info.declared.whole === true) continue;
 
       for (const member of owner.declared.members)
       {
