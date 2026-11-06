@@ -392,8 +392,8 @@ export class EveShip2 extends EveMobile
   }
 
   /**
-   * Carbon EveShip2::UpdateShipSpeedForAudio - normalizes speed/maxSpeed
-   * into the bound audio parameter (EveShip2.cpp:360-380).
+   * Carbon EveShip2::UpdateShipSpeedForAudio - copies the booster intensity
+   * into the bound audio parameter (EveShip2.cpp:362-380).
    *
    * @adapted Blue FindEntry member binding becomes a duck-typed value holder; the runtime
    *   audio layer owns the emitter side.
@@ -408,7 +408,7 @@ export class EveShip2 extends EveMobile
     const parameter = this._audioSpeedParameter;
     if (parameter && typeof parameter === "object" && "value" in parameter)
     {
-      parameter.value = (this.speed?.value ?? 0) / this.maxSpeed;
+      parameter.value = this.boosters.GetBoosterIntensity();
     }
   }
 
