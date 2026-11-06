@@ -131,5 +131,4 @@ test("policy can skip a hidden derived candidate without losing the visible base
   const candidates = CjsGraph.getClassInfo(Hidden).compiled.byName.x;
   assert.deepEqual(candidates.map(member => member.key), ["derived", "base"]);
   assert.equal(candidates.find(member => !(member.flags & HIDDEN)).key, "base");
-  assert.equal(Object.isFrozen(candidates), true);
 });

@@ -53,11 +53,11 @@ export class CjsGraph
         throw new TypeError(`Graph member index must be a non-negative integer: ${name}.${member.name}`);
       names.add(member.name);
 
-      const options = Object.freeze({ ...member.options });
+      const options = { ...member.options };
       const edge = member.edge ? this._compileEdge(member.edge) : null;
-      members.push(Object.freeze({ ...member, handler: member.handler ?? this._invalidHandler, options, edge }));
+      members.push({ ...member, handler: member.handler ?? this._invalidHandler, options, edge });
     }
-    const declared = Object.freeze({ ...definition, members: Object.freeze(members) });
+    const declared = { ...definition, members };
 
     const info = existing ?? new CjsGraphClassInfo(ctor, declared);
     if (existing) this._names.delete(existing.declared.name);
@@ -104,11 +104,11 @@ export class CjsGraph
   static compileSelection(definition, diagnostics = null)
   {
     if (typeof definition.matchClass !== "function") throw new TypeError("Selection requires matchClass.");
-    const selection = Object.freeze({
+    const selection = {
       matchClass: definition.matchClass,
       acceptMember: definition.acceptMember ?? null,
-      edges: Object.freeze(Array.from(definition.edges ?? ["embed", "ref"]))
-    });
+      edges: Array.from(definition.edges ?? ["embed", "ref"])
+    };
     this._selections.set(selection, this._compileSelection(selection, diagnostics));
     return selection;
   }
@@ -277,7 +277,7 @@ export class CjsGraph
     if (edge.collection !== undefined && typeof edge.collection !== "boolean")
       throw new TypeError("Graph edge collection must be boolean.");
 
-    return Object.freeze({ kind: edge.kind, type: edge.type ?? null, collection: edge.collection ?? false });
+    return { kind: edge.kind, type: edge.type ?? null, collection: edge.collection ?? false };
   }
 
   /** Resolves actual classes, using the declared type only for plain struct storage. @cjs */
@@ -285,15 +285,17 @@ export class CjsGraph
   {
     if (typeof object !== "object") throw new TypeError("Graph edge requires an object.");
     const prototype = Object.getPrototypeOf(object);
+    const plain = prototype === Object.prototype || prototype === null;
     if (type)
     {
       const declared = this.getClassInfo(type);
-      if (prototype === Object.prototype || prototype === null) return declared;
+      if (plain) return declared;
       let current = prototype;
       while (current && current !== declared.ctor.prototype) current = Object.getPrototypeOf(current);
       if (!current) throw new TypeError(`Graph edge is not assignable to ${declared.declared.name}.`);
     }
-    return this.getClassInfo(prototype?.constructor);
+    if (plain) throw new TypeError("Graph edge has no declared type for a plain object.");
+    return this.getClassInfo(prototype.constructor);
   }
 
   /**
@@ -444,29 +446,23 @@ export class CjsGraph
 
     // Preserve candidates in derived-first order. Policy filters BEFORE resolving a name;
     // e.g. a hidden derived declaration must not erase a visible base declaration.
-    for (let ctor = info.ctor; typeof ctor === "function"; ctor = Object.getPrototypeOf(ctor))
+    // The instance prototype chain, the same relation traversal and selection use.
+    for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
     {
-      const owner = this._classes.get(ctor);
+      const owner = this._classes.get(prototype.constructor);
       if (!owner) continue;
       if (owner !== info && !parent) parent = owner;
 
       for (const member of owner.declared.members)
       {
-        const compiled = Object.freeze({ ...member, key: member.key ?? member.name, owner });
+        const compiled = { ...member, key: member.key ?? member.name, owner };
         if (!Object.hasOwn(byName, member.name)) byName[member.name] = [];
         byName[member.name].push(compiled);
         members.push(compiled);
       }
     }
 
-    for (const name of Object.keys(byName)) Object.freeze(byName[name]);
-
-    return Object.freeze({
-      revision: this._revision,
-      parent,
-      members: Object.freeze(members),
-      byName: Object.freeze(byName)
-    });
+    return { revision: this._revision, parent, members, byName };
   }
 
   /** Stable class identity. */

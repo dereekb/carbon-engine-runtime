@@ -4,7 +4,7 @@ This subtree imports only its own modules. Blue may use it; it does not load Blu
 CjsSchema, formats, Trinity or the legacy model barrel.
 
 CjsGraph.define(Constructor, definition) registers a stable name and the class's own
-member declarations. CjsGraphClassInfo retains a shallow, frozen snapshot in
+member declarations. CjsGraphClassInfo retains a shallow snapshot in
 `declared` and the last derived snapshot in `compiled`. Handler and default value
 references are retained, not cloned or instantiated. Defaults must not later be
 assigned as shared mutable instance storage.
@@ -16,8 +16,8 @@ the definition through CjsGraph.define.
 
 CjsGraph.getClassInfo(ConstructorOrName) returns that same class-info record and
 refreshes its compiled snapshot if registration changed. Consumers must use this
-lookup when they need current compiled data; a retained compiled snapshot is
-immutable but can be out of date. Replacing a definition retains class-info identity.
+lookup when they need current compiled data; a retained compiled snapshot can be
+out of date. Neither snapshot may be mutated (immutability.md: nothing but enums is frozen). Replacing a definition retains class-info identity.
 
 Compiled members preserve derived-first order, including same-name alternatives.
 `byName[name]` contains those alternatives in that order. Policy filtering must
