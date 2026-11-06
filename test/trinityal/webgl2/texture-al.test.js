@@ -252,35 +252,36 @@ test("a BC3 volume is always decompressed: no extension fills a TEXTURE_3D with 
 
 test("unaligned BC textures keep their compressed mips in block-rounded storage, as on WebGPU", () =>
 {
-    for (const size of [ 627, 125, 9 ])
+    // Every shipped size in build 3670638, plus 9, whose second mip changes block count.
+    for (const [ sourceWidth, sourceHeight ] of [ [ 627, 627 ], [ 125, 125 ], [ 256, 34 ], [ 27, 368 ], [ 9, 9 ] ])
     {
         for (const [ format, blockBytes ] of [ [ PixelFormat.PIXEL_FORMAT_BC1_UNORM, 8 ], [ PixelFormat.PIXEL_FORMAT_BC3_UNORM, 16 ] ])
         {
-            const mipCount = Math.floor(Math.log2(size)) + 1;
+            const mipCount = Math.floor(Math.log2(Math.max(sourceWidth, sourceHeight))) + 1;
             const bitmap = new HostBitmap();
             // DDS uses this creation path; ordinary HostBitmap.Create rejects odd BC sizes.
-            assert.ok(bitmap.CreateFromBitmapDimensions(Tr2BitmapDimensions.create__WidthHeightMipCountFormat(size, size, mipCount, format)));
+            assert.ok(bitmap.CreateFromBitmapDimensions(Tr2BitmapDimensions.create__WidthHeightMipCountFormat(sourceWidth, sourceHeight, mipCount, format)));
             const { desc, initialData } = DescribeBitmap(bitmap);
             const { gl, calls, result, texture } = create(desc, { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData }, { WEBGL_compressed_texture_s3tc: S3TC });
             assert.equal(result, ALResult.S_OK);
 
-            const rounded = Math.ceil(size / 4) * 4;
+            const roundedWidth = Math.ceil(sourceWidth / 4) * 4, roundedHeight = Math.ceil(sourceHeight / 4) * 4;
             const storage = called(calls, "texStorage2D")[0];
-            assert.deepEqual([ storage[4], storage[5] ], [ rounded, rounded ], "padded allocation");
-            assert.equal(texture.GetWidth(), size, "the description keeps the source size");
+            assert.deepEqual([ storage[4], storage[5] ], [ roundedWidth, roundedHeight ], "padded allocation");
+            assert.equal(texture.GetWidth(), sourceWidth, "the description keeps the source size");
             assert.equal(called(calls, "texSubImage2D").length, 0, "nothing was decoded");
 
             const uploads = called(calls, "compressedTexSubImage2D");
             assert.equal(uploads.length, mipCount);
             for (let mip = 0; mip < mipCount; ++mip)
             {
-                const blocks = Math.ceil(Math.max(1, size >> mip) / 4);
-                const level = Math.max(1, rounded >> mip);
+                const across = Math.ceil(Math.max(1, sourceWidth >> mip) / 4), down = Math.ceil(Math.max(1, sourceHeight >> mip) / 4);
+                const levelWidth = Math.max(1, roundedWidth >> mip), levelHeight = Math.max(1, roundedHeight >> mip);
                 const [ , , , , , width, height, , bytes ] = uploads[mip];
-                assert.equal(bytes.byteLength, blocks * blocks * blockBytes, `mip ${mip} is the file's bytes`);
-                assert.equal(Math.ceil(width / 4), blocks, `mip ${mip} block count`);
-                assert.ok(width % 4 === 0 || width === level, `mip ${mip} width ${width} is whole blocks or the level edge ${level}`);
-                assert.ok(height % 4 === 0 || height === level, `mip ${mip} height`);
+                assert.equal(bytes.byteLength, across * down * blockBytes, `${sourceWidth}x${sourceHeight} mip ${mip} is the file's bytes`);
+                assert.deepEqual([ Math.ceil(width / 4), Math.ceil(height / 4) ], [ across, down ], `mip ${mip} block count`);
+                assert.ok(width % 4 === 0 || width === levelWidth, `mip ${mip} width ${width} is whole blocks or the level edge ${levelWidth}`);
+                assert.ok(height % 4 === 0 || height === levelHeight, `mip ${mip} height ${height} is whole blocks or the level edge ${levelHeight}`);
             }
             assert.ok(gl);
         }
