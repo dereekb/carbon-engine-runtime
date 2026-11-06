@@ -634,6 +634,105 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
   assert.deepEqual(target.Copy(object), { name: "b", weight: 2 });
 });
 
+test("a nested Set and a Set on the child complete the child alone, with its own members", () =>
+{
+  const run = route =>
+  {
+    const policy = tracing();
+    const holder = new Holder();
+    holder.name = "holder";
+    holder.child = leaf("child");
+    route(holder, policy);
+    return policy.trace.map(([ type, , created, changes ]) => [ type, created, changes ]);
+  };
+
+  const expected = [ [ "GraphValueLeaf", false, { weight: 5 } ] ];
+  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder, { child: { weight: 5 } }, { policy })), expected);
+  assert.deepEqual(run((holder, policy) => CjsGraph.set(holder.child, { weight: 5 }, { policy })), expected);
+});
+
+test("the returned record keeps a nested bag, and the owner is told only of its own members", () =>
+{
+  const policy = tracing();
+  const holder = new Holder();
+  holder.child = leaf("child");
+
+  const changes = CjsGraph.set(holder, { name: "renamed", child: { weight: 5 } }, { policy });
+
+  assert.deepEqual(changes, { name: "renamed", child: { weight: 5 } });
+  assert.deepEqual(policy.trace.map(([ type, , , told ]) => [ type, told ]), [
+    [ "GraphValueLeaf", { weight: 5 } ],
+    [ "GraphValueHolder", { name: "renamed" } ]
+  ]);
+});
+
+test("a replaced reference still tells its owner", () =>
+{
+  const policy = tracing();
+  const holder = new Holder();
+  const live = leaf("live");
+
+  CjsGraph.set(holder, { child: live }, { policy });
+  assert.deepEqual(policy.trace.map(([ type, , , told ]) => [ type, told ]), [ [ "GraphValueHolder", { child: live } ] ]);
+});
+
+test("with an idMap the record holds _ref, the map holds the objects, and the record replays", () =>
+{
+  const live = leaf("live");
+  const idMap = new Map();
+  const holder = new Holder();
+
+  const changes = CjsGraph.set(holder, { child: live, items: [ live, { name: "made" }, null ], rows: [ { value: 1 } ] }, { idMap });
+
+  const liveId = changes.child._ref;
+  assert.deepEqual(Object.keys(changes.child), [ "_ref" ]);
+  assert.equal(idMap.get(liveId), live);
+  assert.deepEqual(changes.items[0], { _ref: liveId }, "one object has one id");
+  assert.equal(idMap.get(changes.items[1]._ref), holder.items[1]);
+  assert.equal(changes.items[2], null);
+  assert.equal(idMap.get(changes.rows[0]._ref), holder.rows[0]);
+  assert.equal(holder.items[0], live, "the graph itself still holds objects");
+  assert.equal(JSON.stringify(changes).includes("position"), false, "the record is plain data");
+
+  const replay = new Holder();
+  assert.notEqual(CjsGraph.set(replay, { child: changes.child, items: changes.items.slice(0, 2) }, { idMap }), false);
+  assert.equal(replay.child, live);
+  assert.equal(replay.items[1], holder.items[1]);
+});
+
+test("an idMap is the _id table: its entries resolve _ref, and new ids avoid every known one", () =>
+{
+  const known = leaf("known");
+  const idMap = new Map([ [ 1, known ] ]);
+  const holder = new Holder();
+
+  // _ref 1 resolves from the map; the record reuses its id rather than adding one.
+  assert.deepEqual(CjsGraph.set(holder, { child: { _ref: 1 } }, { idMap }), { child: { _ref: 1 } });
+  assert.equal(holder.child, known);
+  assert.equal(idMap.size, 1);
+
+  // A forward reference and a value's own _id: the new id is taken after both are read.
+  const live = leaf("live");
+  const other = new Holder();
+  const changes = CjsGraph.set(other, { child: live, other: { _ref: 2 }, first: { _id: 2, name: "named" } }, { idMap });
+  assert.equal(idMap.get(2), other.slots[0]);
+  assert.deepEqual(changes.other, { _ref: 2 });
+  assert.equal(idMap.get(changes.child._ref), live);
+  assert.notEqual(changes.child._ref, 1);
+  assert.notEqual(changes.child._ref, 2);
+});
+
+test("a policy told of changes sees the same _ref record", () =>
+{
+  const policy = tracing();
+  const idMap = new Map();
+  const holder = new Holder();
+  const live = leaf("live");
+
+  CjsGraph.set(holder, { child: live }, { policy, idMap });
+  assert.equal(idMap.get(policy.trace[0][3].child._ref), live);
+});
+
 test("a nested operation inside completion runs on its own state", () =>
 {
   const inner = leaf("inner");

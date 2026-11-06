@@ -216,7 +216,10 @@ export class CjsGraph
    * is recorded. A nested object read in place records a nested bag, a replaced reference
    * records the live object, and a changed list records its whole new plain array, so the
    * record can be replayed through set. Returns that record, or false when nothing changed.
-   * options: policy; validate (default true) runs each handler's IsValidValue on the incoming value.
+   * options: policy; validate (default true) runs each handler's IsValidValue on the incoming value;
+   * idMap, a Map of id to object, is this set's _id table: its entries resolve _ref, and a record
+   * then holds _ref in place of a live object, with the map holding the object.
+   * A nested object completes as its own set would, so its owner is told only of its own members.
    * Nothing is completed until references resolve. A failure stops the operation with no
    * rollback of writes already made, and nothing is completed.
    * Modelled on: Blue::DictReader::ReadMembers, without its notification during the walk.
@@ -386,7 +389,7 @@ export class CjsGraph
     if (value._type !== undefined && !this.isType(object, value._type)) return false;
 
     const info = this._getObjectInfo(object, type);
-    if (value._id !== undefined) options.anchors.set(value._id, object);
+    if (value._id !== undefined) this._setAnchor(value._id, object, options);
 
     const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
     for (const name of Object.keys(value))
@@ -470,7 +473,11 @@ export class CjsGraph
     return {
       policy: options.policy ?? this.policy,
       validate: options.validate !== false,
-      anchors: new Map(),
+      anchors: options.idMap ?? new Map(),
+      idMap: options.idMap ?? null,
+      ids: null,
+      nextId: 1,
+      recorded: [],
       pending: [],
       completions: new Map(),
       creating: false,
@@ -486,11 +493,12 @@ export class CjsGraph
    */
   static _setMembers(object, info, values, options)
   {
-    if (values._id !== undefined) options.anchors.set(values._id, object);
+    if (values._id !== undefined) this._setAnchor(values._id, object, options);
 
     const members = this._getMemberTable(info, options.policy, GraphOperation.SET).byName;
     const names = Object.keys(values);
     let changes = false;
+    let nested = null;
 
     for (let i = 0; i < names.length; i++)
     {
@@ -526,10 +534,81 @@ export class CjsGraph
         changes[name] = null;
       }
       else changes[name] = result === true ? this._getMember(object, member, options) : result;
+
+      if (member.edge === null) continue;
+      if (options.idMap !== null) options.recorded.push(changes, name);
+
+      // A nested bag is the child's own change: only the child's completion tells of it.
+      if (!member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
     }
 
-    if (changes !== false || options.creating) this._addCompletion(object, info, changes, options);
+    if (changes !== false || options.creating) this._addCompletion(object, info, changes, nested, options);
+
     return changes;
+  }
+
+  /**
+   * The members an object changed itself, without its nested bags, or false.
+   * @cjs Runs once references resolve, so a forward reference is already in the record.
+   */
+  static _getOwnChanges(changes, nested)
+  {
+    if (nested === null || changes === false) return changes;
+
+    const names = Object.keys(changes);
+    if (names.length === nested.length) return false;
+
+    const own = {}; // alloc: only when an object changed both itself and a child.
+    for (const name of names)
+    {
+      if (!nested.includes(name)) own[name] = changes[name];
+    }
+
+    return own;
+  }
+
+  /** Records an _id, keeping the reverse table current once it exists. @cjs */
+  static _setAnchor(id, object, options)
+  {
+    options.anchors.set(id, object);
+    if (options.ids !== null) options.ids.set(object, id);
+  }
+
+  /**
+   * The id of an object in the _id table, adding it when it has none.
+   * @cjs Runs at the end of a set, so a new id cannot collide with one the values name.
+   */
+  static _getId(object, options)
+  {
+    if (options.ids === null)
+    {
+      options.ids = new Map(); // alloc: only an idMap caller builds the reverse table.
+      for (const [ id, known ] of options.anchors) options.ids.set(known, id);
+    }
+
+    let id = options.ids.get(object);
+    if (id !== undefined) return id;
+
+    do id = options.nextId++;
+    while (options.anchors.has(id));
+
+    this._setAnchor(id, object, options);
+    return id;
+  }
+
+  /** Replaces a record's live object, or those in its list, with _ref. @cjs idMap only. */
+  static _recordReferences(record, name, options)
+  {
+    const value = record[name];
+
+    if (Array.isArray(value))
+    {
+      for (let i = 0; i < value.length; i++)
+      {
+        if (value[i] !== null) value[i] = { _ref: this._getId(value[i], options) };
+      }
+    }
+    else if (value !== null && !this.isPlain(value)) record[name] = { _ref: this._getId(value, options) };
   }
 
   /** Writes a null over a leaf value. @cjs */
@@ -559,12 +638,18 @@ export class CjsGraph
   }
 
   /** Records an object for completion, once, children before parents. @cjs */
-  static _addCompletion(object, info, changes, options)
+  static _addCompletion(object, info, changes, nested, options)
   {
     const entry = options.completions.get(object);
 
-    if (!entry) options.completions.set(object, { object, info, changes, created: options.creating });
-    else if (changes !== false) entry.changes = entry.changes === false ? changes : Object.assign(entry.changes, changes);
+    if (!entry)
+    {
+      options.completions.set(object, { object, info, changes, nested, created: options.creating });
+      return;
+    }
+
+    if (changes !== false) entry.changes = entry.changes === false ? changes : Object.assign(entry.changes, changes);
+    if (nested !== null) entry.nested = entry.nested === null ? nested : entry.nested.concat(nested);
   }
 
   /**
@@ -583,9 +668,15 @@ export class CjsGraph
       entry.record[entry.recordKey] = object;
     }
 
+    for (let i = 0; i < options.recorded.length; i += 2)
+    {
+      this._recordReferences(options.recorded[i], options.recorded[i + 1], options);
+    }
+
     for (const entry of options.completions.values())
     {
-      options.policy.complete(entry.object, entry.info, entry.changes, entry.created);
+      const own = this._getOwnChanges(entry.changes, entry.nested);
+      if (own !== false || entry.created) options.policy.complete(entry.object, entry.info, own, entry.created);
     }
   }
 
