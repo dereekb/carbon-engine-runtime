@@ -17,9 +17,34 @@ export class CjsPaperDollBeard extends CjsPaperDollComponent
     @meta.ui.description("Style")
     option = "";
 
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.string
+    @meta.ui.description("Beard palette")
+    palette = "";
+
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.boolean
+    @meta.ui.description("Beard custom colours")
+    customColors = false;
+
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.color
+    @meta.ui.description("Colour")
+    color1 = Float32Array.of(.5, .5, .5, 1);
+
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.color
+    @meta.ui.description("Secondary colour")
+    color2 = Float32Array.of(.5, .5, .5, 1);
+
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.color
+    @meta.ui.description("Third colour")
+    color3 = Float32Array.of(.5, .5, .5, 1);
+
     static layer = PaperDollLayer.BEARD;
 
-    static passes = PaperDollPass.HEAD;
+    static passes = PaperDollPass.HEAD | PaperDollPass.SURFACE;
 
     static category = "beard";
 
