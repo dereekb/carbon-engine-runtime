@@ -705,10 +705,14 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
     const pixels = PixelsFor(gl, layout.type, bytes);
 
+    // Rows are packed tightly. WebGL's default alignment of 4 pads each row instead,
+    // which rejects a single-channel image of odd width as too short.
     gl.pixelStorei(gl.UNPACK_ROW_LENGTH, rowLength);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     if (layered) gl.texSubImage3D(target, mip, x, y, zOffset, width, height, depth, layout.format, layout.type, pixels);
     else gl.texSubImage2D(faceTarget, mip, x, y, width, height, layout.format, layout.type, pixels);
     gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
   }
 
   /**

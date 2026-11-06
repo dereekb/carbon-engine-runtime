@@ -86,6 +86,16 @@ test("RGBA16 UNORM uploads preserve unsigned16 words from a byte-offset source",
     assert.deepEqual(Array.from(upload[9]), [0, 1, 32768, 65535]);
 });
 
+test("a tightly packed upload sets byte alignment, as an odd-width single-channel image needs", () =>
+{
+    const { gl, calls, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_R8_UNORM, 5, 2),
+        { gpuUsage: Tr2GpuUsage.SHADER_RESOURCE, initialData: [data(new Uint8Array(10), 5)] });
+
+    assert.equal(result, ALResult.S_OK);
+    const sequence = calls.filter(call => call[0] === "texSubImage2D" || (call[0] === "pixelStorei" && call[1] === gl.UNPACK_ALIGNMENT));
+    assert.deepEqual(sequence.map(call => call[0] === "pixelStorei" ? call[2] : "upload"), [1, "upload", 4]);
+});
+
 test("RGBA16 UNORM without EXT_texture_norm16 refuses before allocating a substitute", () =>
 {
     const { calls, texture, result } = create(dims(TextureType.TEX_TYPE_2D, PixelFormat.PIXEL_FORMAT_R16G16B16A16_UNORM, 4, 4),
