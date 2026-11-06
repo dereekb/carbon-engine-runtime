@@ -5,6 +5,7 @@ import { CjsSchema, type } from "#schema";
 // name; Tr2VolumetricsRenderer.FogViewDependentResources is this type.
 import { vec3 } from "#math/vec3";
 import { Tr2Effect } from "../../shader/Tr2Effect.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 
 const FOG_PATH = "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/";
 
@@ -25,10 +26,16 @@ export class Tr2VolumetricsRendererFogViewDependentResources
   raymarchFroxels = new Tr2Effect();
   applyFroxels = new Tr2Effect();
 
-  /** @param {boolean} temporalFroxels Whether this view filters its froxels against the previous frame's. */
+  /**
+   * @adapted a backend without compute leaves the effects unloaded: every froxel pass needs it, and Carbon has no
+   *   such platform (TRINITY_PLATFORM_SUPPORTS_COMPUTE is 1 on all four, Tr2CapsALDx11.h:12).
+   * @param {boolean} temporalFroxels Whether this view filters its froxels against the previous frame's.
+   */
   constructor(temporalFroxels)
   {
     this.useTemporalFroxels = temporalFroxels;
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE === false) return;
+
     this.calculateFroxels.SetEffectPathName(FOG_PATH + "CalculateFroxels.fx");
     this.rtCalculateFroxels.SetEffectPathName(FOG_PATH + "RtCalculateFroxels.fx");
     this.filterFroxels.SetEffectPathName(FOG_PATH + "FilterFroxels.fx");

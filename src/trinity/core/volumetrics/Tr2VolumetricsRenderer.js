@@ -243,7 +243,11 @@ export class Tr2VolumetricsRenderer
     [ new Tr2SubresourceData(new Uint8Array(noiseData.buffer), noiseResolution, noiseResolution * noiseResolution) ], // alloc: byte view of the one-time noise upload
     Tr2RenderContext_GetMainThreadRenderContext());
 
-    this._updateMieEnvironmentMap.SetEffectPathName("res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx");
+    // The environment map's update is a compute dispatch: see the fog resources' constructor.
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE !== false)
+    {
+      this._updateMieEnvironmentMap.SetEffectPathName("res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx");
+    }
   }
 
   /**
@@ -256,7 +260,9 @@ export class Tr2VolumetricsRenderer
    * log space and converted back (cpp:341-395).
    *
    * @adapted each attribute is selected by an accessor function where Carbon's
-   *   FROXEL_ACCUMULATE macro passes a member pointer.
+   *   FROXEL_ACCUMULATE macro passes a member pointer. A backend without compute
+   *   ends with thickness 0: froxels are compute-only, so HasFog, the fog passes,
+   *   the environment map and the fog constants all read the fog as off.
    */
 
   UpdateFogSettings(registry, updateContext)
@@ -291,6 +297,8 @@ export class Tr2VolumetricsRenderer
       const logThickness = PriorityBlend.accumulate(settings, value => value.logThickness);
       this.thickness = Math.expm1(logThickness) / smoothness;
     }
+
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE === false) this.thickness = 0;
 
     const delta = updateContext.GetDeltaT();
     this._godRayNoiseAnimation += this.godRayNoiseAnimationSpeed * (delta / this._froxel3DNoise.GetDepth());
@@ -798,7 +806,7 @@ export class Tr2VolumetricsRenderer
    * that settles as the directionality holds steady. Otherwise it is a black 1² cube. A size change recreates the map
    * and restarts the blend.
    *
-   * @implemented
+   * @adapted the black cube drops unordered access on a backend without compute, which refuses that usage.
    * @param {object} renderContext The frame's Tr2RenderContext.
    */
 
@@ -822,7 +830,11 @@ export class Tr2VolumetricsRenderer
       else
       {
         const initialData = Array.from({ length: 6 }, () => new Tr2SubresourceData(EMPTY_VOLUME_TEXEL, 4, 4));
-        mieEnvironmentMap.Create__GpuUsageInitialData(Tr2BitmapDimensions.create__AllFields(TextureType.TEX_TYPE_CUBE, PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1, 6), Tr2GpuUsage.UNORDERED_ACCESS | Tr2GpuUsage.SHADER_RESOURCE, initialData, mainThreadRenderContext);
+        // Nothing writes this black map, and a backend without compute refuses the unordered-access usage.
+        const usage = mainThreadRenderContext.GetCaps().SUPPORTS_COMPUTE === false
+          ? Tr2GpuUsage.SHADER_RESOURCE
+          : Tr2GpuUsage.UNORDERED_ACCESS | Tr2GpuUsage.SHADER_RESOURCE;
+        mieEnvironmentMap.Create__GpuUsageInitialData(Tr2BitmapDimensions.create__AllFields(TextureType.TEX_TYPE_CUBE, PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1, 6), usage, initialData, mainThreadRenderContext);
       }
       if (!mieEnvironmentMap.IsValid())
       {

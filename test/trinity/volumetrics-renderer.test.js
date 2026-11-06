@@ -109,7 +109,7 @@ test("Tr2VolumetricsRenderer is maintained with Carbon defaults and scene owners
     [ "RenderFogIntoReflectionMap", "implemented" ],
     [ "_RenderFog_Resources", "adapted" ],
     [ "getEmptyFogTexture", "implemented" ],
-    [ "UpdateFogEnvironmentMap", "implemented" ],
+    [ "UpdateFogEnvironmentMap", "adapted" ],
     [ "SetIsReflectionProbe", "implemented" ],
     [ "UpdateVariableStore", "implemented" ],
     [ "SetPlanets", "adapted" ],
@@ -354,6 +354,58 @@ test("the Mie environment map is a black 1² cube without environment lighting a
   // The blend restarts at the resize, then counts this frame: weight 1 / 1, with G clamped to -0.5.
   assert.equal(renderer._environmentBlendCounter, 1);
   assert.equal(renderer._previousEnvironmentG, -0.5);
+});
+
+test("a backend without compute loads no fog effects, reads fog as off and gets a usable black cube", () =>
+{
+  const { context, close } = volumeFixture();
+  const al = core.Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL();
+  al.CreateDevice({ mode: { width: 64, height: 64 } });
+
+  const fogged = () =>
+  {
+    const scene = new eve.EveSpaceScene();
+    addFog(scene, { priority: 1, intensity: 1, thickness: 4, fogColor: [ 1, 1, 1, 1 ] });
+    scene.UpdateFogSettings();
+    return scene.volumetricsRenderer;
+  };
+
+  try
+  {
+    // Negative control: Carbon's path on a backend that has compute.
+    const compute = fogged();
+    assert.ok(compute._fogResources.raymarchFroxels.effectFilePath);
+    assert.ok(compute._updateMieEnvironmentMap.effectFilePath);
+    assert.ok(compute.HasFog());
+    const blackCube = new core.Tr2VolumetricsRenderer();
+    blackCube.UpdateFogEnvironmentMap(context);
+    assert.ok(blackCube.mieEnvironmentMap.GetTexture().GetGpuUsage() & Tr2GpuUsage.UNORDERED_ACCESS);
+
+    al.GetCaps = () => ({ SUPPORTS_COMPUTE: false });
+    const noCompute = fogged();
+    for (const resources of [ noCompute._fogResources, noCompute._fogReflectionResources ])
+    {
+      for (const effect of [ resources.calculateFroxels, resources.rtCalculateFroxels, resources.filterFroxels,
+        resources.raymarchFroxels, resources.applyFroxels ])
+      {
+        assert.equal(effect.effectFilePath, "");
+      }
+    }
+    assert.equal(noCompute._updateMieEnvironmentMap.effectFilePath, "");
+    assert.equal(noCompute.thickness, 0);
+    assert.equal(noCompute.HasFog(), false);
+
+    noCompute.environmentIntensity = 1;
+    noCompute.UpdateFogEnvironmentMap(context);
+    assert.equal(noCompute.mieEnvironmentMap.GetWidth(), 1, "the 1² black cube, not the compute-written 128² map");
+    assert.equal(noCompute.mieEnvironmentMap.GetTexture().GetGpuUsage(), Tr2GpuUsage.SHADER_RESOURCE);
+    assert.ok(noCompute.mieEnvironmentMap.GetTexture().IsValid());
+  }
+  finally
+  {
+    delete al.GetCaps;
+    close();
+  }
 });
 
 test("a reflection probe's fog is scaled by the blended reflection intensity, clamped to 0..1", () =>
