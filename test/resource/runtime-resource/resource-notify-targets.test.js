@@ -9,7 +9,7 @@ import { BlueAsyncRes, blue, BlueResMan } from "../../../npm/dist/blue/index.js"
 import { TriGeometryRes } from "../../../npm/dist/resource/index.js";
 import { Tr2Mesh } from "../../../npm/dist/trinity/core/mesh/Tr2Mesh.js";
 import { Tr2GrannyAnimation } from "../../../npm/dist/trinity/core/animation/Tr2GrannyAnimation.js";
-import { Tr2Effect } from "../../../npm/dist/trinity/shader/index.js";
+import { Tr2Effect, Tr2EffectRes } from "../../../npm/dist/trinity/shader/index.js";
 
 /**
  * Mark a resource finished, good or failed, as preparing does.
@@ -156,6 +156,7 @@ test("an effect receives manager callbacks without a readiness poll and unregist
 {
   const effect = new Tr2Effect(), resource = new BlueAsyncRes(), seen = recordCachedData(effect);
   effect.effectResource = resource;
+  blue.resMan.notify.Add(effect, resource, effect, "effectResource");
   assert.equal(blue.resMan.notify.GetByOwner(effect).length, 1);
   assert.equal(effect.IsGood(), false);
   assert.deepEqual(seen, []);
@@ -184,15 +185,18 @@ test("an effect receives manager callbacks without a readiness poll and unregist
   assert.equal(blue.resMan.notify.GetByOwner(effect).length, 0);
 });
 
-test("effect replacement releases the previous resource and immediately rebuilds a prepared replacement", () =>
+test("a new path releases the previous resource and immediately rebuilds a prepared replacement", t =>
 {
-  const effect = new Tr2Effect(), first = new BlueAsyncRes(), second = new BlueAsyncRes();
+  const manager = blue.resMan, original = manager.GetResource;
+  const effect = new Tr2Effect(), first = new Tr2EffectRes(), second = new Tr2EffectRes();
+  first.GetShader = second.GetShader = () => null;
+  manager.GetResource = path => path.includes("first") ? first : second;
+  t.after(() => { manager.GetResource = original; });
   const seen = recordCachedData(effect);
   first._SetPrepared(true);
   second._SetPrepared(true);
-  effect.effectResource = first;
-  effect.effectResource = second;
-  effect.effectResource = second;
+  effect.SetEffectPathName("res:/first.sm_depth");
+  effect.SetEffectPathName("res:/second.sm_depth");
   assert.deepEqual(seen, [["rebuild", first], ["release", first], ["rebuild", second]]);
   assert.equal(blue.resMan.notify.GetByResource(first).length, 0);
   assert.equal(blue.resMan.notify.GetByResource(second).length, 1);
@@ -240,23 +244,6 @@ test("Render reacquires an expired internal resource and draws only after its re
   assert.equal(acquisitions, 2);
   assert.equal(draws, 2);
   assert.equal(manager.notify.GetByOwner(effect).length, 1);
-});
-
-test("replacing an internal acquisition preserves the prepared manual replacement shader", t =>
-{
-  const manager = blue.resMan, original = manager.GetResource;
-  const effect = new Tr2Effect(), first = new BlueAsyncRes(), manual = new BlueAsyncRes();
-  manager.GetResource = () => first;
-  t.after(() => { effect.Destruct(); manager.GetResource = original; });
-  effect.RebuildCachedData = resource => { effect.shader = resource; };
-  effect.actualEffectFilePath = "res:/effect.fx";
-  effect.IsGood();
-  manual._SetPrepared(true);
-  manual._SetGood(true);
-  effect.effectResource = manual;
-  assert.equal(effect.IsGood(), true);
-  assert.equal(effect.shader, manual);
-  assert.equal(effect._acquiredEffectResource, null);
 });
 
 test("trails move their notification link when rebound", () =>

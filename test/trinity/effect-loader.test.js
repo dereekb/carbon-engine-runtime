@@ -85,20 +85,6 @@ test("effect path edits replace internal acquisitions and clearing releases the 
   });
 });
 
-test("external resource replacement drops the earlier acquisition and keeps the caller's resource", async () =>
-{
-  await withGlobalManager(() =>
-  {
-    const effect = new Tr2Effect();
-    effect.SetEffectPathName("res:/a.sm_depth");
-    const first = effect.effectResource, manual = new Tr2EffectRes();
-    effect.effectResource = manual;
-    effect.SetEffectPathName("res:/b.sm_depth");
-    assert.equal(effect.effectResource, manual);
-    assert.equal(effect._acquiredEffectResource, null);
-  });
-});
-
 test("every compiled shader extension routes to Tr2EffectRes", async () =>
 {
   const resourceManager = await configureResourceManager(new BlueResMan());
@@ -178,56 +164,6 @@ test("an unresolvable path acquires nothing rather than throwing", async () =>
 
     assert.equal(effect.actualEffectFilePath, "");
     assert.equal(effect.effectResource, null);
-  });
-});
-
-test("a hand-assigned resource is not replaced, and is not fetched for", async () =>
-{
-  // This test used to prove that an effect with NO manager installed resolved
-  // its path and left effectResource null. That only held because the old
-  // global slot was never filled, so the acquisition silently did not happen -
-  // it was asserting the port was broken.
-  //
-  // The intent it was reaching for is real and survives: a caller who assigns
-  // the resource owns it, and Tr2Effect must not go looking. So assign one,
-  // make acquisition throw while allowing ordinary manager link registration.
-  const previous = blue.resMan;
-  blue.resMan = new BlueResMan();
-  blue.resMan.GetResource = () => { throw new Error("manual resource must not be fetched"); };
-  SetEffectPathDefaults({ platformName: "webgpu" });
-
-  try
-  {
-    const effect = new Tr2Effect();
-    const mine = new Tr2EffectRes();
-    effect.effectResource = mine;
-    effect.effectFilePath = "res:/graphics/effect/ship/main.fx";
-    effect.Initialize();
-
-    assert.equal(effect.actualEffectFilePath, "res:/graphics/effect.webgpu/ship/main.sm_depth");
-    assert.equal(effect.effectResource, mine, "the caller's resource is kept");
-  }
-  finally
-  {
-    blue.resMan.Clear();
-    blue.resMan = previous;
-    SetEffectPathDefaults(null);
-  }
-});
-
-test("a hand-assigned resource is never replaced", async () =>
-{
-  await withGlobalManager(() =>
-  {
-    SetEffectPathDefaults({ platformName: "webgpu" });
-
-    const assigned = new Tr2EffectRes();
-    const effect = new Tr2Effect();
-    effect.effectResource = assigned;
-    effect.effectFilePath = "res:/graphics/effect/ship/main.fx";
-    effect.Initialize();
-
-    assert.equal(effect.effectResource, assigned);
   });
 });
 

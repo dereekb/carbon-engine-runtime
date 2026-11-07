@@ -1,3 +1,4 @@
+import { blue } from "../../npm/dist/blue/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Tr2Effect, EveStretch2, EveStarfield, EveChildBulletStorm, EveChildBehaviorSystem } from "../../npm/dist/trinity/index.js";
@@ -11,6 +12,7 @@ function lateEffect(t)
   const effect = new Tr2Effect();
   effect.RebuildCachedData = () => { effect.shader = {}; };
   effect.effectResource = resource;
+  blue.resMan.notify.Add(effect, resource, effect, "effectResource");
   resource._SetPrepared(true);
   resource._SetGood(true);
   resource._NotifyRebuildCachedData();

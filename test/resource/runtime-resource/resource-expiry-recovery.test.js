@@ -211,6 +211,7 @@ test("a pathless effect stays dropped, which is why every effect needs a path", 
   const run = harness(t);
   const effect = new Tr2Effect();
   effect.effectResource = prepared(new Tr2EffectRes(), "res:/recovery/manual.fx");
+  blue.resMan.notify.Add(effect, effect.effectResource, effect, "effectResource");
 
   run.stopPastExpiry();
   assert.equal(effect.IsGood(), false);

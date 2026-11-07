@@ -191,38 +191,7 @@ export class Tr2Effect extends Tr2Material
    */
   @be.mapAttribute(be.READ)
   @type.object.ref("Tr2EffectRes")
-  get effectResource()
-  {
-    return this._effectResource;
-  }
-
-  /**
-   * Replaces the resource and registers Carbon's cached-data callbacks.
-   * @adapted Tr2Effect.cpp:384-402 uses native resource notifications;
-   *   manager-owned links expire without guaranteed JS destructors.
-   */
-  set effectResource(resource)
-  {
-    const previous = this._effectResource;
-    if (previous === resource) return;
-    if (previous)
-    {
-      blue.resMan.notify.Remove(this, previous);
-      this.ReleaseCachedData(previous);
-      this._ClearPassBindings();
-    }
-    this._effectResource = resource;
-    if (resource) blue.resMan.notify.Add(this, resource, this, "effectResource");
-  }
-
-  /** Backing storage for the resource property and its manager registration. */
-  _effectResource = null;
-
-  /** JS acquisition ownership, separate from a resource assigned by the caller. */
-  _acquiredEffectResource = null;
-
-  /** Resolved path used for the internally acquired resource. */
-  _acquiredEffectPath = "";
+  effectResource = null;
 
   /**
    * m_actualEffectFilePath (std::string) [READ]
@@ -324,14 +293,12 @@ export class Tr2Effect extends Tr2Material
   {
     if (this._destroyed) return;
     this._destroyed = true;
-    this._acquiredEffectResource = null;
-    this._acquiredEffectPath = "";
     for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
     for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
     this._ClearPassBindings();
     this.resources.Clear();
     this.ReleaseCachedData();
-    this.effectResource = null;
+    this._DetachEffectResource();
   }
 
   /**
@@ -621,6 +588,8 @@ export class Tr2Effect extends Tr2Material
       // lacking the hook would silently do nothing instead of saying so.
       resource.OnAddedToMaterial(this);
     }
+
+    this._DetachEffectResource();
     this.actualEffectFilePath = this.effectFilePath ? Tr2Effect.convertEffectPath(this.effectFilePath) : "";
     this.#AcquireEffectResource();
     this.RebuildCachedDataInternal();
@@ -930,42 +899,38 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
-   * Acquires the resolved path and releases a prior acquisition when it changes
-   * (Tr2Effect.cpp:374-409). JS keeps explicit acquisition ownership because
-   * callers may supply a resource directly; those resources are not replaced.
+   * Carbon Tr2Effect.cpp:275-278 and :383-387, the one sequence at both sites:
+   * release what the resource built, stop listening, let it go.
    *
-   * Carbon fetches through the process-wide manager and registers this effect
-   * as a notify target (`BeResMan->GetResource(...)` then `AddNotifyTarget(this)`,
-   * Tr2Effect.cpp:397-402). Assignment registers through the resource setter.
+   * @adapted the link is removed from the manager's expiring links rather than a
+   *   native target list, and the WebGPU pass bindings go with the cached data.
+   * @returns {void}
+   */
+  _DetachEffectResource()
+  {
+    const resource = this.effectResource;
+    if (!resource) return;
+
+    this.ReleaseCachedData(resource);
+    blue.resMan.notify.Remove(this, resource);
+    this._ClearPassBindings();
+    this.effectResource = null;
+  }
+
+  /**
+   * Carbon Tr2Effect.cpp:397-402: fetches the resolved path and, when the manager
+   * answers, listens to it.
    *
-   * An unresolved path releases the prior internal acquisition without fetching.
-   *
-   * @cjs
-   * @adapted JavaScript uses manager-owned expiring links instead of a native
-   *   target list. A purged internal acquisition is reacquired on use.
+   * @adapted the manager holds an expiring link instead of a native target list:
+   *   JavaScript has no destructor to remove one.
    * @returns {void}
    */
   #AcquireEffectResource()
   {
-    const acquired = this._acquiredEffectResource;
-    if (acquired && (acquired !== this.effectResource || this._acquiredEffectPath !== this.actualEffectFilePath))
-    {
-      if (this.effectResource === acquired) this.effectResource = null;
-      this._acquiredEffectResource = null;
-      this._acquiredEffectPath = "";
-    }
     if (!this.actualEffectFilePath) return;
-    // A caller that assigned a resource by hand owns it; do not replace it.
-    if (this.effectResource !== null) return;
 
-    const resource = blue.resMan.GetResource(this.actualEffectFilePath);
-
-    this.effectResource = resource;
-    // Carbon (Tr2Effect.cpp:397-402): GetResource can answer nothing, and only
-    // a resource it did return is subscribed.
-    if (!resource) return;
-    this._acquiredEffectResource = resource;
-    this._acquiredEffectPath = this.actualEffectFilePath;
+    this.effectResource = blue.resMan.GetResource(this.actualEffectFilePath);
+    if (this.effectResource) blue.resMan.notify.Add(this, this.effectResource, this, "effectResource");
   }
 
   /** Re-runs Initialize after notified fields change; always returns true. */
@@ -1084,7 +1049,7 @@ export class Tr2Effect extends Tr2Material
   {
     if (this._destroyed) return false;
     for (const parameter of this.resources) parameter.KeepAlive();
-    this.#AcquireEffectResource();
+    if (this.effectResource === null) this.#AcquireEffectResource();
     const resource = this.effectResource;
     if (resource !== null && !resource.IsGood(this)) return false;
     return this.shader !== null;

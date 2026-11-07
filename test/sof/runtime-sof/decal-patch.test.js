@@ -105,7 +105,6 @@ test("decal shader-path patch keeps the effect and replaces its acquired resourc
   assert.equal(decal.decalEffect, effect);
   assert.notEqual(effect.effectResource, old);
   assert.equal(effect.effectResource.GetPath(), "res:/decal/b.sm_depth");
-  assert.equal(effect._acquiredEffectResource, effect.effectResource);
   assert.equal(ship.decals[1].decalEffect.effectResource, old);
   assert.equal(SetShipValues(ship, values, patch), false);
   checkVfx();

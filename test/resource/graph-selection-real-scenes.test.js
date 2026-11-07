@@ -68,7 +68,7 @@ function registerFamily()
         members.push({ name, type: "rootRef", edge: { kind: "ref" } });
     }
     if (ctor === Tr2Effect)
-      members.push({ name: "effectResource", key: "_effectResource", type: "rootRef", edge: { kind: "ref", type: Tr2EffectRes } });
+      members.push({ name: "effectResource", key: "effectResource", type: "rootRef", edge: { kind: "ref", type: Tr2EffectRes } });
     if (ctor === TriTextureParameter)
     {
       for (const name of ["resource", "_lowResResource"])
@@ -140,7 +140,7 @@ function attachHandles(scene, handles)
     return handle;
   };
   const effect = scene.backgroundEffect;
-  effect._effectResource = get(Tr2EffectRes, effect.effectFilePath);
+  effect.effectResource = get(Tr2EffectRes, effect.effectFilePath);
   for (const parameter of effect.resources) parameter.resource = get(TriTextureRes, parameter.resourcePath);
   for (const index of [1, 2, 3]) scene[`envMap${index}`] = get(TriTextureRes, scene[`envMap${index}ResPath`]);
   scene._staticEnvMapTextureRes = get(TriTextureRes, scene.envMapResPath);

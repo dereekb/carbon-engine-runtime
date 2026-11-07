@@ -73,6 +73,7 @@ test("a pending effect resource is not good; preparation rebuilds without waitin
   const resource = new Tr2EffectRes();
   pendingResourceFixture(resource);
   effect.effectResource = resource;
+  blue.resMan.notify.Add(effect, resource, effect, "effectResource");
   effect.shader = new Tr2Shader();      // stale: from before a purge, say
 
   assert.equal(effect.IsGood(), false, "the resource answers, not a leftover shader");

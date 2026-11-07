@@ -73,6 +73,8 @@ test("an unsupported permutation stays local to its effect during manager notifi
     ready.options = [{ name: "SKINNED", value: "1" }, { name: "DETAIL", value: "off" }];
     failed.effectResource = res;
     ready.effectResource = res;
+    blue.resMan.notify.Add(failed, res, failed, "effectResource");
+    blue.resMan.notify.Add(ready, res, ready, "effectResource");
     res._SetPrepared(true);
     res._SetGood(true);
     assert.doesNotThrow(() => res._NotifyRebuildCachedData());

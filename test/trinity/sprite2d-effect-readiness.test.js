@@ -1,3 +1,4 @@
+import { blue } from "../../npm/dist/blue/index.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Tr2Sprite2dScene, Tr2Effect, Tr2Sprite2d, Tr2Sprite2dArc, Tr2Sprite2dTexture, Tr2AtlasTexture } from "../../npm/dist/trinity/index.js";
@@ -18,6 +19,7 @@ for (const is2dRender of [true, false])
       ReleaseCachedData() { this.shader = null; }
     });
     effect.effectResource = resource;
+    blue.resMan.notify.Add(effect, resource, effect, "effectResource");
     t.after(() => effect.Destruct());
     const scene = Object.assign(Object.create(Tr2Sprite2dScene.prototype), {
       is2dRender, ubershader2d: is2dRender ? effect : null,
