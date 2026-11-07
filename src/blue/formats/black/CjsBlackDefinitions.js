@@ -42,7 +42,7 @@ export const BLACK_DESTINATION = Object.freeze({
  * @property {boolean} isProperty Whether a setter takes the value.
  * @property {boolean} signed The sign of a BYTE or SHORT, which Carbon's member type gives.
  * @property {number} floatArraySize Carbon's `GetFloatArraySize`.
- * @property {Function|null} iid `mIID`, as the declared class, or null when it is not registered.
+ * @property {Function[]} iids `mIID`, as the accepted classes that are registered; empty means any object.
  * @property {number} destination What an IROOT member is: a BLACK_DESTINATION.
  * @property {boolean} keepsNulls Whether a list of this kind keeps null items.
  * @property {object|null} structure A structure list's layout.
@@ -182,7 +182,7 @@ export class CjsBlackDefinitions
             isProperty: declaration.role === "property",
             signed: black?.signed === true,
             floatArraySize: black?.length ?? 0,
-            iid: null,
+            iids: [],
             destination: BLACK_DESTINATION.OBJECT,
             keepsNulls: type?.kind === "array",
             structure: null,
@@ -193,8 +193,11 @@ export class CjsBlackDefinitions
 
         if (black === null) return entry;
 
-        if (typeof type?.className === "function") entry.iid = type.className;
-        else if (typeof type?.className === "string") entry.iid = CjsSchema.getConstructor(type.className) ?? null;
+        for (const accepted of type?.accepts ?? (type?.className ? [ type.className ] : []))
+        {
+            const Class = typeof accepted === "function" ? accepted : CjsSchema.getConstructor(accepted);
+            if (Class) entry.iids.push(Class);
+        }
 
         if (black.wrapped)
         {

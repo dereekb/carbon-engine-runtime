@@ -534,8 +534,12 @@ export class CjsGraphFormat extends CjsFormat
     static _checkClass(instance, type)
     {
                     if (!type.className) return;
-                    const Constructor = typeof type.className === "function" ? type.className : CjsSchema.getConstructor(type.className);
-                    if (!Constructor || !CjsSchema.cast(instance, Constructor)) throw new TypeError(`Class does not satisfy '${typeof type.className === "string" ? type.className : CjsSchema.getClassName(Constructor)}'`);
+                    const accepted = (type.accepts ?? [ type.className ]).some(entry =>
+                    {
+                                    const Constructor = typeof entry === "function" ? entry : CjsSchema.getConstructor(entry);
+                                    return Constructor && CjsSchema.cast(instance, Constructor);
+                    });
+                    if (!accepted) throw new TypeError(`Class does not satisfy '${typeof type.className === "string" ? type.className : CjsSchema.getClassName(Constructor)}'`);
     }
 
     /**

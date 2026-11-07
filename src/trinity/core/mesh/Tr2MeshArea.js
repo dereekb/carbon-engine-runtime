@@ -49,7 +49,8 @@ export class Tr2MeshArea extends IRoot
   @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
 
-  @type.object.ref("Tr2Effect")
+  // Carbon declares Tr2EffectPtr (Tr2MeshArea.h:77). Incarna content holds its retired Tr2ShaderMaterial here.
+  @type.object.ref([ "Tr2Effect", "Tr2ShaderMaterial" ])
   effect = null;
 
   // DIVERGENCE (deliberate, precedent: EvePlaneSetItem.blinkData): Carbon

@@ -704,6 +704,8 @@ export class CjsSchema
      *   member keeps its target alive without owning it (`owned: false`, the graph's
      *   `refWeak` edge), so Destruct stops there. `object.weak` is a different thing, Carbon's real
      *   weak reference;
+     * - each takes one class or a list of accepted classes. The first in a list is
+     *   `className`, the class Carbon declares, and `accepts` holds them all;
      * - `object.embed(className)` is Carbon's IROOT, an object embedded in its owner:
      *   the owner creates it, and readers and SetValues populate it in place,
      *   keeping its identity. It is not a binary struct; those are described by
@@ -797,7 +799,7 @@ export class CjsSchema
         object: {
             embed: className => objectTypeDecorator("root", className),
             ref: Object.assign(className => objectTypeDecorator("rootRef", className), {
-                weak: className => fieldDecorator("type", { kind: "rootRef", className, owned: false })
+                weak: className => fieldDecorator("type", { kind: "rootRef", ...objectTypeTarget(className), owned: false })
             }),
             weak: className => objectTypeDecorator("rootWeak", className)
         },
@@ -1119,7 +1121,31 @@ export class CjsSchema
 /** Both ownership vocabularies describe the same storage kind; no lifecycle policy is inferred. */
 function objectTypeDecorator(kind, className)
 {
-    return fieldDecorator("type", { kind, className });
+    return fieldDecorator("type", { kind, ...objectTypeTarget(className) });
+}
+
+/**
+ * What an object type holds: one class, or a list of accepted classes. Consumers
+ * that name one class read `className`, the first; a check reads `accepts`.
+ *
+ * @param {string|Function|Array<string|Function>} [className] The class or classes.
+ * @returns {{className: *, accepts?: Array<string|Function>}} The type's fields.
+ * @throws {TypeError} When a list is empty or holds something that is not a class.
+ */
+function objectTypeTarget(className)
+{
+    if (!Array.isArray(className)) return { className };
+    if (!className.length) throw new TypeError("type.object accepts at least one class.");
+    const accepts = [];
+    for (const entry of className)
+    {
+        if (typeof entry !== "string" && typeof entry !== "function")
+        {
+            throw new TypeError(`type.object accepts a class or its name, not ${JSON.stringify(entry)}`);
+        }
+        if (!accepts.includes(entry)) accepts.push(entry);
+    }
+    return { className: accepts[0], accepts };
 }
 
 /** Collection layouts are owned by the registered item class. */

@@ -43,6 +43,24 @@ function storedInt64(value)
 }
 
 /**
+ * Carbon's QueryInterface against `mIID`, for a member that accepts several classes.
+ *
+ * @param {object} obj The object read.
+ * @param {object} entry The member's compiled entry.
+ * @returns {boolean} True when the member may hold it.
+ */
+function isAccepted(obj, entry)
+{
+    const { iids } = entry;
+    if (iids.length === 0) return true;
+    for (let i = 0; i < iids.length; i++)
+    {
+        if (CjsSchema.cast(obj, iids[i]) !== null) return true;
+    }
+    return false;
+}
+
+/**
  * Carbon's `IRootReaderBase`: members found by name, values read by VARTYPE.
  *
  * Carbon: IRootReaderBase (blue/src/IRootReader.h:55-155)
@@ -318,7 +336,7 @@ export class IRootReaderBase
     {
         const obj = this.ReadIRootClass();
 
-        if (obj !== null && entry.iid !== null && CjsSchema.cast(obj, entry.iid) === null)
+        if (obj !== null && !isAccepted(obj, entry))
         {
             throw new IRootReaderException("Incorrect type for member");
         }
@@ -340,7 +358,7 @@ export class IRootReaderBase
     {
         const obj = this.ReadIRootClass();
 
-        if (obj !== null && entry.iid !== null && CjsSchema.cast(obj, entry.iid) === null)
+        if (obj !== null && !isAccepted(obj, entry))
         {
             throw new IRootReaderException("Incorrect type for member");
         }

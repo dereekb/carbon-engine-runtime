@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
+import { CjsSchema, type } from "../../src/blue/schema/index.js";
+import { exposure as be } from "../../src/blue/exposure/be.js";
 import { BlueList } from "../../src/blue/exposure/BlueList.js";
 import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
 import { IListNotify } from "../../src/blue/exposure/IListNotify.js";
@@ -400,4 +401,47 @@ test("a record is the file's values: names, new storage, markers, and nothing co
     assert.equal(Object.hasOwn(object.named, "__proto__"), true);
     assert.deepEqual(object.records, [ { position: [ 7, 8, 9 ], weight: .75 } ]);
     assert.equal(before.initialized, 0);
+});
+
+class Either
+{
+    held = null;
+    weakHeld = null;
+    spare = null;
+    inner = null;
+}
+for (const [ name, decorator ] of [
+    [ "held", type.object.ref([ "BlackPortLeaf", "BlackPortInner" ]) ],
+    [ "weakHeld", type.object.weak([ "BlackPortLeaf", "BlackPortInner" ]) ],
+    [ "spare", type.object.ref.weak([ "BlackPortLeaf", "BlackPortInner", "BlackPortLeaf" ]) ],
+    [ "inner", type.object.embed([ "BlackPortInner", "BlackPortLeaf" ]) ]
+]) CjsSchema.decorateField(Either, name, be.mapAttribute(be.READWRITE | be.PERSIST), decorator);
+be.define("BlackPortEither")(Either);
+
+test("every object kind takes a list of accepted classes: the first is className, and accepts holds them all", () =>
+{
+    const types = new Map(CjsSchema.getSchema(Either).members.map(member => [ member.name, member.type ]));
+    for (const name of [ "held", "weakHeld", "spare" ])
+    {
+        assert.equal(types.get(name).className, "BlackPortLeaf");
+        assert.deepEqual(types.get(name).accepts, [ "BlackPortLeaf", "BlackPortInner" ]);
+    }
+    assert.equal(types.get("spare").owned, false);
+    assert.equal(types.get("inner").className, "BlackPortInner");
+    assert.throws(() => type.object.ref([]), /at least one class/);
+    assert.throws(() => type.object.ref([ 1 ]), /a class or its name/);
+});
+
+test("Carbon's type check accepts any listed class and still refuses the rest", () =>
+{
+    for (const member of [ "held", "weakHeld" ])
+    {
+        for (const className of [ "BlackPortLeaf", "BlackPortInner" ])
+        {
+            const f = new Fixture();
+            assert.equal(CjsSchema.getClassName(read(f.Finish(f.Object(1, "BlackPortEither", [ [ member, f.Object(2, className) ] ])))[member].constructor), className);
+        }
+        const f = new Fixture();
+        assert.equal(failure(f.Finish(f.Object(1, "BlackPortEither", [ [ member, f.Object(2, "BlackPortOther") ] ]))), `${member}: Incorrect type for member`);
+    }
 });
