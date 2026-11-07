@@ -26,7 +26,7 @@ const libraryLoads = new WeakMap();
  * neither.
  *
  * It is read, then converted: `CreateEffect` gives the Tr2Effect it becomes, and
- * the owner drops the material (operator, 2026-10-25). Until then it sits in
+ * the owner drops the material. Until then it sits in
  * `Tr2MeshArea.effect`, which accepts this class beside Carbon's Tr2Effect.
  *
  * @adapted converted to a Tr2Effect, not bound as a device resource
@@ -155,7 +155,7 @@ export class Tr2ShaderMaterial extends IRoot
    * name lowercased and the source's folder dropped. Holds for every one of
    * build 1142708's 75 shaders, including the visualizers, whose sources sit
    * in `graphics/shaders/visualizers/`. The dx11 container is named because a
-   * translation made in memory keeps its source path (operator, 2026-10-25).
+   * translation made in memory keeps its source path.
    *
    * @implemented
    * @param {string} shaderPath A Tr2HighLevelShader's `shaderPath`.

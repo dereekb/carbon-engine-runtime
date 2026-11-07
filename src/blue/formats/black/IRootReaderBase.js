@@ -104,7 +104,7 @@ export class IRootReaderBase
      * The value that replaces a non-finite number read from a file, logged once per file.
      * `value - value` is 0 for every finite number and NaN otherwise, so callers test it before calling this.
      *
-     * @cjs Not Carbon: these are authoring errors, 19 values in 4 client files (operator, 2026-11-08)
+     * @cjs Not Carbon: these are authoring errors, 19 values in 4 client files
      * @param {string} memberName The member that held it.
      * @returns {number} 0.
      */

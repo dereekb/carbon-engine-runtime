@@ -471,7 +471,7 @@ const nonFinite = f => f.Object(1, "BlackPortNumbers", [
     [ "records", concat([ i32(1), u16(16), floats([ NaN, 8, 9 ]), f32(Infinity) ]) ]
 ]);
 
-test("a non-finite number in a file reads as 0, wherever a float is read (operator, 2026-11-08)", () =>
+test("a non-finite number in a file reads as 0, wherever a float is read", () =>
 {
     const f = new Fixture();
     const reader = new BlackReader();
