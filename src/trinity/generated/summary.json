@@ -2,7 +2,7 @@
   "outRoot": "src/trinity/generated",
   "classes": {
     "written": 8,
-    "skipped": 720
+    "skipped": 728
   },
   "enums": {
     "written": 15,
@@ -341,11 +341,6 @@
     },
     {
       "family": "curves",
-      "className": "Tr2Key",
-      "reason": "hand-maintained source exists"
-    },
-    {
-      "family": "curves",
       "className": "Tr2MatrixKey",
       "reason": "hand-maintained source exists"
     },
@@ -672,11 +667,6 @@
     {
       "family": "eve",
       "className": "EveChildPartData",
-      "reason": "hand-maintained source exists"
-    },
-    {
-      "family": "eve",
-      "className": "EveChildPartData::PartData",
       "reason": "hand-maintained source exists"
     },
     {
@@ -1766,7 +1756,17 @@
     },
     {
       "family": "eve",
+      "className": "ITr2PostProcessOwner",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "eve",
       "className": "ITr2SoundEmitterOwner",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "eve",
+      "className": "ITr2VolumetricRenderable",
       "reason": "hand-maintained source exists"
     },
     {
@@ -1886,6 +1886,11 @@
     },
     {
       "family": "include",
+      "className": "ITr2AnimationUpdater",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "include",
       "className": "ITr2GpuBuffer",
       "reason": "hand-maintained source exists"
     },
@@ -1946,11 +1951,6 @@
     },
     {
       "family": "include",
-      "className": "ITriMatrix",
-      "reason": "hand-maintained source exists"
-    },
-    {
-      "family": "include",
       "className": "ITriQuaternion",
       "reason": "hand-maintained source exists"
     },
@@ -1976,6 +1976,11 @@
     },
     {
       "family": "include",
+      "className": "Tr2Key",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "include",
       "className": "Tr2Rect",
       "reason": "hand-maintained source exists"
     },
@@ -1987,6 +1992,11 @@
     {
       "family": "lights",
       "className": "ITr2LightOwner",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "lights",
+      "className": "LightData",
       "reason": "hand-maintained source exists"
     },
     {
@@ -2187,6 +2197,11 @@
     {
       "family": "postProcess",
       "className": "GaussianData",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "postProcess",
+      "className": "ITr2PostProcessOwner",
       "reason": "hand-maintained source exists"
     },
     {
@@ -2545,6 +2560,11 @@
       "reason": "hand-maintained source exists"
     },
     {
+      "family": "resources",
+      "className": "Tr2RaycastGeometryRes",
+      "reason": "hand-maintained source exists"
+    },
+    {
       "family": "shader",
       "className": "IShaderConfigurer",
       "reason": "hand-maintained source exists"
@@ -2687,6 +2707,11 @@
     {
       "family": "shader",
       "className": "TriVector4",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "spatialAudioClustering",
+      "className": "Point",
       "reason": "hand-maintained source exists"
     },
     {
@@ -2967,6 +2992,11 @@
     {
       "family": "trinityCore",
       "className": "ITr2VisualizationModeRenderer",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "trinityCore",
+      "className": "ITr2VolumetricRenderable",
       "reason": "hand-maintained source exists"
     },
     {
@@ -3371,6 +3401,11 @@
     },
     {
       "family": "trinityCore",
+      "className": "Tr2TextureLodManager",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "trinityCore",
       "className": "Tr2TextureReference",
       "reason": "hand-maintained source exists"
     },
@@ -3472,6 +3507,11 @@
     {
       "family": "trinityCore",
       "className": "TriPerlinCurve",
+      "reason": "hand-maintained source exists"
+    },
+    {
+      "family": "trinityCore",
+      "className": "TriPerlinNoise",
       "reason": "hand-maintained source exists"
     },
     {

@@ -995,7 +995,7 @@ test("dropped Blue and native scanner shapes stay quarantined", () =>
 {
   const droppedByFamily = {
     trinityCore: ["TriVector", "TriQuaternion", "TriColor"],
-    include: ["ITriVector", "ITriMatrix", "ITriQuaternion", "ITriColor", "ITriDevice", "Point", "Tr2CurveBase", "Tr2Rect", "TriPerlinNoise"],
+    include: ["ITriVector", "ITriQuaternion", "ITriColor", "ITriDevice", "Point", "Tr2CurveBase", "Tr2Rect", "TriPerlinNoise"],
     curves: ["Tr2CurveRasterizeDestination", "Tr2CurveScalarDefinition", "Tr2Key"],
     particle: ["Tr2ParticleStreamIterator"],
     postProcess: ["CASConstants"],

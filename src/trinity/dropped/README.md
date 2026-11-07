@@ -20,7 +20,6 @@ Every quarantined file has an explicit disposition:
 | `CASConstants.js` | Native AMD sharpening constant struct nested in the post-process renderer; it is not Blue-exposed or independently persisted. | Plain pair of four-lane numeric/bit-pattern arrays produced by the renderer's CAS parameter builder. |
 | `ITriColor.js` | Pure interface for the retired Blue/Python color wrapper; it has no independent graph state. | `@carbonenginejs/runtime/vec4` and schema `color` fields. |
 | `ITriDevice.js` | Pure device interface; the emitted `adapter` member was nested creation data, not interface state. | Maintained `TriDevice` graph. Its device methods are not ported yet. |
-| `ITriMatrix.js` | Pure interface for the Blue/Python matrix wrapper; it has no independent graph state. | `@carbonenginejs/runtime/math/mat4`; the concrete `TriMatrix` quarantine is owned by `src/character`. |
 | `ITriQuaternion.js` | Pure interface for the retired Blue/Python quaternion wrapper. | `@carbonenginejs/runtime/math/quat` and schema `quat` fields. |
 | `ITriVector.js` | Pure interface for the retired Blue/Python vector wrapper. | `@carbonenginejs/runtime/math/vec3` and schema vector fields. |
 | `MeshBoundsInfo.js` | Packed native Granny extended-data layout containing pointers and counts; it is reader implementation data, not a persisted Trinity object. | A detached plain record produced by the GR2/geometry reader, with arrays replacing native pointers/counts. |
@@ -93,8 +92,7 @@ investigated on 2026-07-17 during the trinity CPU-completion pass:
   canonical stored representation; an engine uploads those lanes unchanged.
 - The concrete `TriMatrix` wrapper is referenced only by the character layer's
   interior/skinned-object schemas. Its quarantine and full disposition moved
-  to `src/character/dropped`; only the unused `ITriMatrix` interface
-  artifact remains here.
+  to `src/character/dropped`.
 - The full TQ 3430261 `data.black` corpus (2,551 hulls) builds and hydrates
   with zero reports without any of these classes registered.
 
