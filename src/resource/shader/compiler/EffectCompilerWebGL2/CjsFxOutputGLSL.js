@@ -73,6 +73,9 @@ const VERTEX_SEMANTICS = ["POSITION", "COLOR", "NORMAL", "TANGENT", "BINORMAL", 
 /** Elements of a vertex-stage structured buffer: Carbon's most joints, the AL's `BONE_BLOCK_CAPACITY`. */
 const VERTEX_STRUCTURED_CAPACITY = 69;
 
+/** Texels to a data texture's row: the AL's `DATA_TEXTURE_WIDTH` and the emitter's `dataTextureWidth`. */
+const DATA_TEXTURE_WIDTH = 2048;
+
 /** The vertex stage's tail, after the source's clip position. See Tr2RenderContextALWebgl2's `ssyf`. */
 const CLIP_TAIL = [
     "    gl_Position.xy += ssyf.xy * gl_Position.w;",
@@ -299,8 +302,8 @@ export class CjsFxOutputGLSL
     }
 
     /**
-     * The uniform block of a vertex-stage structured buffer. A pixel stage's
-     * would be a data texture, and is refused for now.
+     * A structured buffer's declaration: a uniform block in the vertex stage, an
+     * RGBA32UI data texture in the pixel stage, as the DXBC emitter lowers them.
      *
      * @param {object} symbol The buffer's symbol.
      * @param {number} register Its `t` register.
@@ -308,11 +311,15 @@ export class CjsFxOutputGLSL
      */
     _writeStructuredBlock(symbol, register)
     {
+        const rows = elementRows(symbol.type.templateParameter);
         if (this._stage !== "vertex")
         {
-            throw new Error(`CjsFxOutputGLSL: pixel-stage structured buffer ${symbol.name.ToString()} is not supported yet`);
+            const name = `sb${register}`;
+            this._bindings.push({ kind: "structuredTexture", registerIndex: register, name, strideBytes: rows * 16, format: "RGBA32UI", width: DATA_TEXTURE_WIDTH });
+            this._structured.set(this._nameOf(symbol), { block: name, rows, texture: true });
+            this._moduleScopeParams.add(symbol);
+            return `uniform highp usampler2D ${name};`;
         }
-        const rows = elementRows(symbol.type.templateParameter);
         const block = `CjsSb${register}`;
         this._bindings.push({ kind: "structuredUbo", registerIndex: register, name: block, strideBytes: rows * CjsFxHlslPacking.registerBytes, capacityElements: VERTEX_STRUCTURED_CAPACITY });
         this._structured.set(this._nameOf(symbol), { block, rows });
@@ -1412,13 +1419,18 @@ export class CjsFxOutputGLSL
     _readStructured(object, index)
     {
         const objectType = typeOf(object);
-        const { block, rows } = this._structured.get(this._nameOf(object.GetSymbol()));
+        const { block, rows, texture } = this._structured.get(this._nameOf(object.GetSymbol()));
         const type = objectType.templateParameter;
         const name = `cjs_read_${block}`;
         if (!this._structReaders.has(type.symbol))
         {
             const glsl = CjsFxGlslTypes.glslType(type, s => this._nameOf(s));
-            const lines = membersOf(type).map((member, row) => `    value.${this._nameOf(member)} = ${block}.data[index * ${rows} + ${row}];`);
+            const read = row =>
+            {
+                const at = `index * ${rows} + ${row}`;
+                return texture ? `uintBitsToFloat(texelFetch(${block}, ivec2((${at}) & ${DATA_TEXTURE_WIDTH - 1}, (${at}) >> ${Math.log2(DATA_TEXTURE_WIDTH)}), 0))` : `${block}.data[${at}]`;
+            };
+            const lines = membersOf(type).map((member, row) => `    value.${this._nameOf(member)} = ${read(row)};`);
             this._structReaders.set(type.symbol, `${glsl} ${name}(int index)\n{\n    ${glsl} value;\n${lines.join("\n")}\n    return value;\n}`);
         }
         return `${name}(${index})`;
