@@ -1206,15 +1206,18 @@ function expressionFor(program, instruction, write, inputs, bindings, context = 
             const components = rawSelectedComponents(uav, mask, count);
             return count === 4 && components.join("") === "xyzw" ? loaded : `${loaded}.${components.join("")}`;
         }
-        if (binding?.storageTexture?.access !== "read-write" || binding.storageTexture.viewDimension !== "2d")
+        const dimension = binding?.storageTexture?.viewDimension;
+        if (binding?.storageTexture?.access !== "read-write" || (dimension !== "2d" && dimension !== "3d"))
         {
-            throw new Error(`WGSL ld_uav_typed instruction ${instruction.index} requires a read-write 2d storage texture`);
+            throw new Error(`WGSL ld_uav_typed instruction ${instruction.index} requires a read-write 2d or 3d storage texture`);
         }
-        const element = TYPED_VIEW_FORMATS[binding.typedView].element;
-        const address = source(1, 2);
+        // A storage texture with no named Carbon view is float (lowerBindingLayout).
+        const element = binding.typedView ? TYPED_VIEW_FORMATS[binding.typedView].element : "f32";
+        const size = dimension === "3d" ? 3 : 2;
+        const address = source(1, size);
         const symbol = binding.generatedSymbol;
         const dimensions = `textureDimensions(${symbol})`;
-        const loaded = `select(vec4<${element}>(), textureLoad(${symbol}, min(${address}, ${dimensions} - vec2<u32>(1u))), all(${address} < ${dimensions}))`;
+        const loaded = `select(vec4<${element}>(), textureLoad(${symbol}, min(${address}, ${dimensions} - vec${size}<u32>(1u))), all(${address} < ${dimensions}))`;
         const components = rawSelectedComponents(uav, mask, count);
         return count === 4 && components.join("") === "xyzw" ? loaded : `${loaded}.${components.join("")}`;
     }

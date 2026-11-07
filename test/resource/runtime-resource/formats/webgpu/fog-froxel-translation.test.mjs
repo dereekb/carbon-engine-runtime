@@ -27,12 +27,25 @@ test("RaymarchFroxels with a temporal input loads its 3D froxels: ld on a Textur
   assert.match(wgsl, /\.w < textureNumLevels\(t0\) && all\(vec4<u32>\([^)]*\)\.xyz < textureDimensions\(t0, /u);
 });
 
-test("RaymarchFroxels without a temporal input reads back its own output UAV, which core WebGPU cannot store read-write", { skip }, async () =>
+test("RaymarchFroxels without a temporal input reads back its own output UAV, which needs texture-formats-tier2", { skip }, async () =>
 {
   // The reflection map's set raymarches its output texture in place; read-write storage of a four-channel float
-  // format is not available on core WebGPU, so this permutation is refused, not mistranslated.
-  await assert.rejects(build("raymarchfroxels", [ { name: "INPUT_SOURCE", value: "INPUT_SOURCE_OUTPUT_TEXTURE" } ]),
-    /ld_uav_typed instruction \d+ requires a read-write/u);
+  // format is not available on core WebGPU, so without the feature this permutation is refused, not mistranslated.
+  const permutation = [ { name: "INPUT_SOURCE", value: "INPUT_SOURCE_OUTPUT_TEXTURE" } ];
+  await assert.rejects(build("raymarchfroxels", permutation), error =>
+    error.code === "WGSL_FEATURE_UNAVAILABLE" && /texture-formats-tier2/u.test(error.message));
+
+  CjsWebgpuFormat.setDeviceFeatures([ "texture-formats-tier2" ]);
+  try
+  {
+    const result = await build("raymarchfroxels", permutation);
+    assert.equal(result.qualification.packageValid, true);
+    const wgsl = JSON.stringify(result.wgsl);
+    assert.match(wgsl, /texture_storage_3d<rgba16float, read_write>/u);
+    // D3D11 reads 0 out of bounds: a clamped xyz load, selected by the bounds test.
+    assert.match(wgsl, /select\(vec4<f32>\(\), textureLoad\(u\d+, min\([^;]*vec3<u32>\(1u\)\)\), all\(/u);
+  }
+  finally { CjsWebgpuFormat.setDeviceFeatures([]); }
 });
 
 test("FilterFroxels samples its 3D neighbours with immediate offsets: u, v and w become a vec3<i32> offset", { skip }, async () =>

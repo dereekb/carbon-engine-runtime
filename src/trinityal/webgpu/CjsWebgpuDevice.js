@@ -1,5 +1,6 @@
 const DEVICE_BUFFERS = new WeakMap();
 import { CjsSchema, meta } from "#schema";
+import { setWgslDeviceFeatures } from "../../resource/formats/webgpu/core/wgsl/wgslDeviceFeatures.js";
 
 function fail(message)
 {
@@ -197,6 +198,7 @@ export class CjsWebgpuDevice
     this._gpu = options.gpu || null;
     this._adapter = options.adapter || null;
     this._device = options.device;
+    if (this._device) setWgslDeviceFeatures(this._device.features ?? []);
     this._adapterOptions = options.adapterOptions ?? null;
     this._deviceDescriptor = options.deviceDescriptor ?? null;
     this._bufferUsage = options.bufferUsage || globalThis.GPUBufferUsage || null;
@@ -400,6 +402,7 @@ export class CjsWebgpuDevice
     this._gpu = gpu;
     this._adapter = adapter;
     this._device = device;
+    setWgslDeviceFeatures(device.features ?? []);
     this._adapterOptions = adapterOptions ?? null;
     this._deviceDescriptor = deviceDescriptor ?? null;
     this._generation += 1;

@@ -591,9 +591,15 @@ export class Tr2VolumetricsRenderer
    * @implemented
    * @returns {object} The froxel texture, or the empty fog texture.
    * Carbon declaration: Tr2VolumetricsRenderer::RenderFogIntoReflectionMap (trinity/trinity/Tr2VolumetricsRenderer.h:99).
+   *
+   * @adapted a WebGPU device without texture-formats-tier2 has no raymarch shader for this set, whose froxels would
+   *   be returned unmarched, so reflections take the empty fog texture instead.
    */
   RenderFogIntoReflectionMap(renderContext, gpuResourcePool, width, height, sunDirection, sunColor, origin, view, projection)
   {
+    const raymarch = this._fogReflectionResources.raymarchFroxels;
+    if (!raymarch.IsGood() || !raymarch.GetShaderStateInterface()) return Tr2VolumetricsRenderer.getEmptyFogTexture(gpuResourcePool);
+
     const fog = this._RenderFog_Resources(this._fogReflectionResources, renderContext, gpuResourcePool, width, height,
       null, null, ShadowQuality.SHADOW_DISABLED, sunDirection, sunColor, origin, Tr2VolumetricsRenderer._zeroOrigin, view,
       projection, view, projection);

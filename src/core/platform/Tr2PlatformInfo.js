@@ -177,6 +177,10 @@ export class Tr2PlatformInfo
     @meta.setting("webgpuTextureCompressionBCSliced3D", { applies: meta.setting.CREATE })
     static webgpuTextureCompressionBCSliced3D = true;
 
+    /** WebGPU-only preference for read-write float storage textures, which reflection fog reads back; next WebGPU device. */
+    @meta.setting("webgpuTextureFormatsTier2", { applies: meta.setting.CREATE })
+    static webgpuTextureFormatsTier2 = true;
+
     /** WebGPU-only preference for partial edge BC blocks on the next WebGPU device. */
     @meta.setting("webgpuTextureCompressionUnaligned", { applies: meta.setting.CREATE })
     static webgpuTextureCompressionUnaligned = true;
@@ -383,10 +387,12 @@ export class Tr2PlatformInfo
             webgpuTextureCompressionBC: Tr2PlatformInfo.webgpuTextureCompressionBC,
             webgpuTextureCompressionBCSliced3D: Tr2PlatformInfo.webgpuTextureCompressionBCSliced3D,
             webgpuTextureCompressionUnaligned: Tr2PlatformInfo.webgpuTextureCompressionUnaligned,
-            webgpuFloat32Filterable: Tr2PlatformInfo.webgpuFloat32Filterable
+            webgpuFloat32Filterable: Tr2PlatformInfo.webgpuFloat32Filterable,
+            webgpuTextureFormatsTier2: Tr2PlatformInfo.webgpuTextureFormatsTier2
         };
         const features = [];
         if (requestedSettings.webgpuFloat32Filterable) features.push("float32-filterable");
+        if (requestedSettings.webgpuTextureFormatsTier2) features.push("texture-formats-tier2");
         if (requestedSettings.webgpuTextureCompressionUnaligned) features.push("texture-compression-unaligned");
         if (requestedSettings.webgpuTextureCompressionBC)
         {

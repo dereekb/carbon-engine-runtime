@@ -5,6 +5,7 @@ import { buildWgsl } from "./core/wgsl/emitWgsl.js";
 import { buildWgslBindingPlan } from "./core/wgsl/buildWgslBindingPlan.js";
 import { buildWgslSet } from "./core/wgsl/buildWgslSet.js";
 import { buildEffectPackage } from "./core/packageEffect.js";
+import { setWgslDeviceFeatures } from "./core/wgsl/wgslDeviceFeatures.js";
 import { FORMAT_WEBGPU_PACKAGE_VERSION } from "./core/packageMetadata.js";
 import {
     CARBON_WEBGPU_ANALYSIS_FORMAT,
@@ -345,6 +346,19 @@ export class CjsWebgpuFormat extends CjsFormat
     static buildEffect(input, options = {})
     {
         return buildEffectPackage(input, options);
+    }
+
+    /**
+     * Records the features of the device effects are translated for. A permutation
+     * that needs one the device lacks is refused with code `WGSL_FEATURE_UNAVAILABLE`.
+     *
+     * @cjs Translation runs in the browser, so it can know its device.
+     * @param {Iterable<string>} features The device's `GPUSupportedFeatures`.
+     * @returns {void}
+     */
+    static setDeviceFeatures(features)
+    {
+        setWgslDeviceFeatures(features);
     }
 
     /**

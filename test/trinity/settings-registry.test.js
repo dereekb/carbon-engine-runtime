@@ -106,7 +106,7 @@ test("the registry records when a change applies, and a setting's enum", () =>
 
 test("only approved extension names are exempt from Carbon setting-name checks", () =>
 {
-  const approved = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable" ];
+  const approved = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable", "webgpuTextureFormatsTier2" ];
   const ours = settings.GetNames().filter(name => !settings.FindSetting(name).carbon);
   assert.deepEqual(ours.slice().sort(), [...approved, "characterTextureQuality", "compressUncompressedTextures", "eveSpacePickingFramework", "postprocessDofCarryForegroundBlur"].sort());
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
@@ -142,7 +142,7 @@ test("a setting keeps the type it was registered with", () =>
 
 test("WebGPU settings write through and apply only to the next resolved device", () =>
 {
-  const names = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable" ];
+  const names = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable", "webgpuTextureFormatsTier2" ];
   const original = names.map(name => settings.GetValue(name));
   const platform = new Tr2PlatformInfo({ backend: "webgpu", adapter: { limits: { maxBufferSize: 2147483648 }, features: [ "texture-compression-bc", "texture-compression-bc-sliced-3d" ] } });
   const first = platform.ResolveDeviceRequirements();

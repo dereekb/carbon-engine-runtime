@@ -1,6 +1,7 @@
 import { normalizeResourceTransformPlan } from "./buildResourceTransformPlan.js";
 import { TYPED_VIEW_FORMATS } from "./wgslTypedViews.js";
 import { ADDRESS_MODES_SYMBOL } from "./emulatedAddressing.js";
+import { requireWgslFeature } from "./wgslDeviceFeatures.js";
 
 const KIND_ORDER = Object.freeze({
     "uniform-buffer": 0,
@@ -500,10 +501,7 @@ function namedStorageTextureLayout(program, binding, dimension, returns, format)
     {
         throw new Error(`WGSL storage texture ${binding.id} is declared ${returns.join(",") || "untyped"}, which does not match its bound ${format} view`);
     }
-    const register = bindingRegister(binding);
-    const loaded = program.instructions.some((instruction) => !instruction.isDeclaration
-        && instruction.opcodeName === "ld_uav_typed"
-        && instruction.operands?.some((operand) => operand?.typeName === "uav" && operand.registerIndex === register));
+    const loaded = isLoadedUav(program, binding);
     if (loaded && view.writeOnly)
     {
         throw new Error(`WGSL storage texture ${binding.id} is loaded, and its bound ${format} view is write-only in WebGPU`);
@@ -521,6 +519,15 @@ function namedStorageTextureLayout(program, binding, dimension, returns, format)
     };
 }
 
+/** Whether the program reads this UAV back with `ld_uav_typed`. */
+function isLoadedUav(program, binding)
+{
+    const register = bindingRegister(binding);
+    return program.instructions.some((instruction) => !instruction.isDeclaration
+        && instruction.opcodeName === "ld_uav_typed"
+        && instruction.operands?.some((operand) => operand?.typeName === "uav" && operand.registerIndex === register));
+}
+
 function storageTextureLayout(program, binding, dimension, returns, format)
 {
     if (format) return namedStorageTextureLayout(program, binding, dimension, returns, format);
@@ -532,11 +539,14 @@ function storageTextureLayout(program, binding, dimension, returns, format)
     {
         throw new Error(`WGSL storage texture ${binding.id} requires a float4 return type`);
     }
+    // Core WebGPU reads back only single-channel 32-bit storage formats.
+    const loaded = isLoadedUav(program, binding);
+    if (loaded) requireWgslFeature("texture-formats-tier2", `WGSL storage texture ${binding.id}, read back as ${STORAGE_TEXTURE_FORMAT},`);
     return {
         declaration: "var",
-        type: `${dimension.type}<${STORAGE_TEXTURE_FORMAT}, write>`,
+        type: `${dimension.type}<${STORAGE_TEXTURE_FORMAT}, ${loaded ? "read_write" : "write"}>`,
         storageTexture: {
-            access: "write-only",
+            access: loaded ? "read-write" : "write-only",
             format: STORAGE_TEXTURE_FORMAT,
             viewDimension: dimension.viewDimension
         }

@@ -202,6 +202,9 @@ export class Tr2EffectRes extends BlueAsyncRes
     }
     catch (error)
     {
+      // A permutation this device cannot run is not selected, and is not a failure.
+      if (error.code === "WGSL_FEATURE_UNAVAILABLE") return null;
+
       CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"),
         "Failed shader permutation %s in %s: %s", index, this.GetPath(), error.message);
       return null;
