@@ -1,4 +1,4 @@
-// Incarna: reconstructed from Black records; no Carbon donor. See ../README.md.
+// Incarna: reconstructed from Black records. Retired from Carbon: its donor is at trinity 24d033fa~1, Interior/, not yet reconciled. See ../README.md.
 import { exposure as be } from "#be";
 import { IInitialize } from "#blue";
 import { IRoot } from "#exposure/IRoot";
@@ -22,9 +22,9 @@ import { Tr2ShaderMaterial } from "../shader/Tr2ShaderMaterial.js";
  * One fixed piece of an Incarna interior, such as a section of a captain's
  * quarters walkway.
  *
- * Carbon names the class only in a comment
- * (`trinity/trinity/Interior/Tr2InteriorPlaceable.h:39`), and no header
- * declares it. The three members, and their order, are those of build
+ * Carbon removed the class in trinity 24d033fa (2017-06-28), and current Carbon
+ * names it only in a comment (`trinity/trinity/Interior/Tr2InteriorPlaceable.h:39`).
+ * The class there persisted more members than this one reads. The three members, and their order, are those of build
  * 1142708's Black records: every
  * `res:/graphics/interior/<race>/modular_<kit>/<piece>.black` and
  * `res:/graphics/interior/charactercreation/raceselection/exports/wodinteriorstatic1.black`
