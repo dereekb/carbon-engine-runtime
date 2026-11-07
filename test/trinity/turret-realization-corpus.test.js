@@ -448,7 +448,7 @@ test("real packed turret shader receives native instance IDs and final opaque/sh
   const allocate=shared.Allocate.bind(shared),instanceUploads=[];
   shared.Allocate=(stride,count,data,ctx)=>{if(stride===4&&count===24)instanceUploads.push(Array.from(data));return allocate(stride,count,data,ctx);};
   t.after(()=>{shared.ReleaseResources();context.SetRenderContextAL(prior);});
-  const {set,ship,resource}=await assets(t);ship.RebuildTurretPositions();set.Initialize();
+  const {set,ship,resource}=await assets(t);ship.RebuildTurretPositions();set.Initialize();set.IsGood();set.PrepareResources();
   assert.deepEqual(instanceUploads[0],Array.from({length:24},(_,i)=>i),"native cpp:296 IDs0..23");
   assert.ok(TriDevice.GetResourcesRegistered().includes(set),"native Tr2DeviceResource base registration");
   const bytes=await client.Read("res:/graphics/effect.dx11/managed/space/turret/v5/quadv5.sm_depth");
