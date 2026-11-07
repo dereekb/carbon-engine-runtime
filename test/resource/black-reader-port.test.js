@@ -84,7 +84,7 @@ class Leaf
     Initialize() { this.initialized++; return true; }
 }
 CjsSchema.define(Leaf, { className: "BlackPortLeaf", fields: { value: field({ kind: "uint32" }) } });
-blue.interface(IInitialize)(Leaf);
+blue.interface(Leaf, IInitialize)(Leaf);
 
 class Other {}
 CjsSchema.define(Other, { className: "BlackPortOther" });
@@ -107,6 +107,7 @@ class Inner
     OnModified() {}
 }
 CjsSchema.define(Inner, { className: "BlackPortInner", fields: { value: field({ kind: "uint32" }) } });
+blue.interface()(Inner);
 
 class Owner
 {

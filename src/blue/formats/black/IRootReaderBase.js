@@ -22,7 +22,7 @@
 import { CjsSchema } from "#schema";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
-import { ICustomPersist } from "../../exposure/ICustomPersist.js";
+import { mappedInterfaces } from "../../compose/interface.js";
 import { IList } from "../../exposure/IList.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
@@ -44,7 +44,8 @@ function storedInt64(value)
 }
 
 /**
- * Carbon's QueryInterface against `mIID`, for a member that accepts several classes.
+ * Carbon's QueryInterface against `mIID`, for a member that accepts several classes: the
+ * exposed interface table decides, not JavaScript inheritance, so a class must map itself.
  *
  * @param {object} obj The object read.
  * @param {object} entry The member's compiled entry.
@@ -54,9 +55,10 @@ function isAccepted(obj, entry)
 {
     const { iids } = entry;
     if (iids.length === 0) return true;
+    const interfaces = mappedInterfaces(obj.constructor);
     for (let i = 0; i < iids.length; i++)
     {
-        if (CjsSchema.cast(obj, iids[i]) !== null) return true;
+        if (interfaces.has(iids[i])) return true;
     }
     return false;
 }
@@ -168,10 +170,9 @@ export class IRootReaderBase
         {
             // Quirk, reproduced: a class without ICustomPersist does not consume the
             // block, so the stream is left at its size field (IRootReader.cpp:83-87).
-            const customPersist = CjsSchema.cast(instance, ICustomPersist);
-            if (customPersist !== null)
+            if (definition.isCustomPersist)
             {
-                this.ReadBinaryBlock(customPersist, attributeName);
+                this.ReadBinaryBlock(instance, attributeName);
             }
         }
         else
@@ -330,13 +331,12 @@ export class IRootReaderBase
         {
             case BLACK_DESTINATION.LIST:
             {
-                const list = CjsSchema.cast(value, IList);
-                if (list === null)
+                if (value === null || value === undefined || !mappedInterfaces(value.constructor).has(IList))
                 {
                     this.ReadArray(holder, key, entry);
                     return;
                 }
-                this.ReadList(list);
+                this.ReadList(value);
                 break;
             }
 
@@ -377,8 +377,7 @@ export class IRootReaderBase
     /**
      * Reads a reference member, checked against the class it declares.
      *
-     * @adapted a holder and key stand in for `Be::Var*`; `CjsSchema.cast` stands in for QueryInterface, and there
-     * is no reference count to release
+     * @adapted a holder and key stand in for `Be::Var*`, and there is no reference count to release
      * @param {object} holder The object or array holding the member.
      * @param {string|number} key The member's place in the holder.
      * @param {object} entry The member's compiled entry.
@@ -399,8 +398,7 @@ export class IRootReaderBase
     /**
      * Reads a weak reference member, checked against the class it declares.
      *
-     * @adapted a holder and key stand in for `Be::Var*`; `CjsSchema.cast` stands in for QueryInterface, and a weak
-     * member is a plain reference
+     * @adapted a holder and key stand in for `Be::Var*`, and a weak member is a plain reference
      * @param {object} holder The object or array holding the member.
      * @param {string|number} key The member's place in the holder.
      * @param {object} entry The member's compiled entry.

@@ -12,7 +12,6 @@
 // Black file".
 import { CjsSchema } from "#schema";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
-import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { BlackReader } from "./BlackReader.js";
@@ -112,7 +111,7 @@ export class CjsBlackRecordReader extends BlackReader
     _ReadBinaryBlockValue(definition, entry)
     {
         const instance = new definition.Constructor();
-        this.ReadBinaryBlock(CjsSchema.cast(instance, ICustomPersist), entry.name);
+        this.ReadBinaryBlock(instance, entry.name);
         return instance[entry.key];
     }
 

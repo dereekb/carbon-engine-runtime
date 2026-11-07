@@ -8,6 +8,7 @@
 import { CjsSchema } from "#schema";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
 import { mappedInterfaces } from "../../compose/interface.js";
+import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
 import { INotify } from "../../exposure/INotify.js";
 import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
@@ -59,6 +60,7 @@ export const BLACK_DESTINATION = Object.freeze({
  * @property {boolean} isInitialize Whether it maps IInitialize.
  * @property {boolean} isNotify Whether it maps INotify.
  * @property {boolean} isProxy Whether it is an IBlueObjectProxy.
+ * @property {boolean} isCustomPersist Whether it maps ICustomPersist.
  */
 
 /** Compiled classes by constructor. */
@@ -150,7 +152,8 @@ export class CjsBlackDefinitions
             entries,
             isInitialize: provides(mapped, Constructor, IInitialize),
             isNotify: provides(mapped, Constructor, INotify),
-            isProxy: provides(mapped, Constructor, IBlueObjectProxy)
+            isProxy: provides(mapped, Constructor, IBlueObjectProxy),
+            isCustomPersist: provides(mapped, Constructor, ICustomPersist)
         };
     }
 

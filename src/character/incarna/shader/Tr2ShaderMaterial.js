@@ -23,7 +23,7 @@ const libraryLoads = new WeakMap();
  * persisted members and their flags are those of
  * `Shader/Tr2ShaderMaterial_Blue.cpp` at a198e5da~1. Carbon's class also mapped
  * IInitialize, to bind device shaders, and INotify; ours binds none, so it maps
- * neither.
+ * neither. It maps itself, as `MAP_INTERFACE( Tr2ShaderMaterial )` did, so a member's type check can find it.
  *
  * It is read, then converted: `CreateEffect` gives the Tr2Effect it becomes, and
  * the owner drops the material. Until then it sits in
@@ -198,3 +198,5 @@ export class Tr2ShaderMaterial extends IRoot
   }
 
 }
+
+CjsSchema.be.interface()(Tr2ShaderMaterial, { kind: "class" });
