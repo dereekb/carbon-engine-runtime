@@ -15,7 +15,7 @@ export class EveInstancedMeshManagerMeshData
 {
 
   /** meshGroups (std::vector<MeshGroup>). */
-  @type.list("EveInstancedMeshManager::MeshGroup")
+  @type.array("EveInstancedMeshManager::MeshGroup")
   meshGroups = [];
 
   /** material (Tr2Effect*). Carbon initializes it to nullptr. */

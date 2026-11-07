@@ -32,5 +32,5 @@ export class TriGeometryResSkeletonData
 }
 
 CjsSchema.decorateField(TriGeometryResSkeletonData, "name", type.string);
-CjsSchema.decorateField(TriGeometryResSkeletonData, "joints", type.list("TriGeometryResJointData"));
+CjsSchema.decorateField(TriGeometryResSkeletonData, "joints", type.array("TriGeometryResJointData"));
 CjsSchema.meta.carbon("TriGeometryResSkeletonData")(TriGeometryResSkeletonData);

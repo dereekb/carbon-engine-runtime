@@ -34,15 +34,15 @@ export class EveInstancedMeshManagerInstanceBuffer
   _buffer = null;
 
   /** regions (std::vector<Region>, private). */
-  @type.list("EveInstancedMeshManager::InstanceBuffer::Region")
+  @type.array("EveInstancedMeshManager::InstanceBuffer::Region")
   _regions = [];
 
   /** retiredBuffers (std::vector<std::unique_ptr<Tr2BufferAL>>, private): replaced buffers kept alive until the next trim. */
-  @type.list("Tr2BufferAL")
+  @type.array("Tr2BufferAL")
   _retiredBuffers = [];
 
   /** mappedRetiredBuffers (std::vector<Tr2BufferAL*>, private): retired buffers still mapped, unmapped by DoneCopying. */
-  @type.list("Tr2BufferAL")
+  @type.array("Tr2BufferAL")
   _mappedRetiredBuffers = [];
 
   /** mappedData (uint8_t*, private): the current buffer's mapping, null when unmapped. */

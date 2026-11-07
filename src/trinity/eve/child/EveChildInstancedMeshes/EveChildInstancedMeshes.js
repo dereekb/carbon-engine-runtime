@@ -86,7 +86,7 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
   hasUpdated = false;
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveChildInstancedMeshes::Mesh")
+  @type.array("EveChildInstancedMeshes::Mesh")
   meshes = [];
 
   _revision = 0;

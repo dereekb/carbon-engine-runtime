@@ -144,7 +144,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
   planes = new BlueList(EvePlaneSetItem, { className: "EvePlaneSetItem" });
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EvePlaneLight")
+  @type.array("EvePlaneLight")
   lights = [];
 
   // SOF-authored shared texture parameters; persisted so the values

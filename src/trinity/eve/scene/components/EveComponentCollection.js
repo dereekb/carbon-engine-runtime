@@ -18,7 +18,7 @@ export class EveComponentCollection
   bit = 0;
 
   /** m_collection (std::vector<T*>) */
-  @type.list("T")
+  @type.array("T")
   collection = [];
 
   /**

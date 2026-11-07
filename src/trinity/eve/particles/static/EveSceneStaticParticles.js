@@ -54,7 +54,7 @@ export class EveSceneStaticParticles extends IRoot
 {
 
   /** Carbon ClusterData records retained on the CPU. */
-  @type.list("ClusterData")
+  @type.array("ClusterData")
   clusters = [];
 
   /** Double-precision aggregate origin used for camera-relative placement. */

@@ -56,15 +56,15 @@ export class EveKDdroneManagementTree extends IRoot
   timeBetweenUpdate = 1;
 
   /** m_agentRefs (std::vector<AgentRef>) */
-  @type.list("Agent")
+  @type.array("Agent")
   agentRefs = [];
 
   /** m_groupSearchReturnInfoBlock (std::vector<std::vector<std::vector<DroneAgent*>>>) */
-  @type.list("std::vector<std::vector<DroneAgent>>")
+  @type.array("std::vector<std::vector<DroneAgent>>")
   groupSearchReturnInfoBlock = [];
 
   /** agents (std::vector<DroneAgent> &) */
-  @type.list("DroneAgent")
+  @type.array("DroneAgent")
   agents = [];
 
   /** behaviorNbr (int) */

@@ -397,7 +397,7 @@ test("EveSpriteSet builds the authored SOF sprite graph without renderer buffers
   assertEquals(set.skinned, false);
   assertEquals(set.intensity, 1);
   assertEquals(CjsSchema.getField(EveSpriteSet, "sprites")?.type.kind, "list");
-  assertEquals(CjsSchema.getField(EveSpriteSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EveSpriteSet, "lights")?.type.kind, "array");
 
   const existing = new EveSpriteSetItem();
   assertEquals(set.Add(existing), existing);
@@ -441,7 +441,7 @@ test("EveBannerSet preserves the authored physical attachment graph", () =>
   assertEquals(set.isPickable, false);
   assertEquals(set.key, 0);
   assertEquals(CjsSchema.getField(EveBannerSet, "banners")?.type.kind, "structList");
-  assertEquals(CjsSchema.getField(EveBannerSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EveBannerSet, "lights")?.type.kind, "array");
   assertEquals(CjsSchema.getField(EveBannerSet, "primaryTextureParameter")?.type.kind, "rootRef");
   assertEquals(CjsSchema.getField(EveBannerSet, "primaryTextureParameter")?.edit?.persist, true);
   assertEquals(CjsSchema.getField(EveBannerItem, "reference")?.type.kind, "int32");
@@ -520,7 +520,7 @@ test("EvePlaneSet preserves authored quad and SOF-light intent without GPU state
   assertEquals(planeLight.fadeType, 4);
   assertEquals(EvePlaneLight.FadeType.FT_BLINK, 1);
   assertEquals(CjsSchema.getField(EvePlaneLight, "lightProfilePath")?.type.kind, "wpath");
-  assertEquals(CjsSchema.getField(EvePlaneSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EvePlaneSet, "lights")?.type.kind, "array");
   assertEquals(CjsSchema.getField(EvePlaneSet, "imageMapParameter")?.type.kind, "rootRef");
   assertEquals(CjsSchema.getField(EvePlaneSet, "maskMapParameter")?.edit?.persist, true);
   assertEquals(set.Initialize(), true);
@@ -568,7 +568,7 @@ test("EveSpotlightSet preserves authored cone, glow, and SOF-light intent", () =
   assertEquals(CjsSchema.getField(EveSpotlightLight, "lightProfilePath")?.type.kind, "wpath");
   set.AddLightFromSOF(rawLight);
   assert(set.lights[0] instanceof EveSpotlightLight);
-  assertEquals(CjsSchema.getField(EveSpotlightSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EveSpotlightSet, "lights")?.type.kind, "array");
   assertEquals(CjsSchema.getField(EveSpotlightSet, "spotlightItems")?.type.kind, "list");
   assertEquals(set.Initialize(), true);
 });
@@ -630,7 +630,7 @@ test("EveSpriteLineSet expands Carbon line and circle positions and packs them a
   assertEquals(CjsSchema.getField(EveSpriteLight, "lightProfilePath")?.type.kind, "wpath");
   set.AddLightFromSOF(rawLight);
   assert(set.lights[0] instanceof EveSpriteLight);
-  assertEquals(CjsSchema.getField(EveSpriteLineSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EveSpriteLineSet, "lights")?.type.kind, "array");
   assertEquals(set.display, true);
   assertEquals(set.Initialize(), true);
 
@@ -655,7 +655,7 @@ test("EveHazeSet exposes authored SOF lights through its public graph", () =>
   assert(set.lights[0] instanceof EveHazeSetLight);
   assertVec3(set.lights[0].lightData.position, [7, 8, 9]);
   assertEquals(set.lights[0].lightProfilePath, "res:/haze-profile.lp");
-  assertEquals(CjsSchema.getField(EveHazeSet, "lights")?.type.kind, "list");
+  assertEquals(CjsSchema.getField(EveHazeSet, "lights")?.type.kind, "array");
   assertEquals(CjsSchema.getField(EveHazeSetLight, "lightProfilePath")?.type.kind, "wpath");
 });
 

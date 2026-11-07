@@ -36,5 +36,5 @@ export class MeshDecalData
 CjsSchema.decorateField(MeshDecalData, "inverseDecalMatrix", type.mat4);
 CjsSchema.decorateField(MeshDecalData, "indexBuffer", type.rawStruct("Tr2SuballocatedBuffer::Allocation"));
 CjsSchema.decorateField(MeshDecalData, "lodMask", type.uint32);
-CjsSchema.decorateField(MeshDecalData, "lods", type.list("MeshDecalLodData"));
+CjsSchema.decorateField(MeshDecalData, "lods", type.array("MeshDecalLodData"));
 CjsSchema.meta.carbon("MeshDecalData")(MeshDecalData);

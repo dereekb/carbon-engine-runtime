@@ -26,7 +26,7 @@ export class Tr2RenderNodeEffect extends IRoot
 {
 
   /** Carbon's grouped source/parameter bindings. */
-  @type.list("Tr2RenderNodeEffectSource")
+  @type.array("Tr2RenderNodeEffectSource")
   sources = [];
 
   /**

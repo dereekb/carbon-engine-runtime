@@ -232,7 +232,7 @@ export class EveChildBoosterSet extends EveSpaceObjectChild
    * max size from it.
    */
   @meta.mapAttribute(meta.PERSISTONLY)
-  @type.list("EveChildBoosterSet::SingleBoosterData")
+  @type.array("EveChildBoosterSet::SingleBoosterData")
   _singleBoosters = [];
 
   /**

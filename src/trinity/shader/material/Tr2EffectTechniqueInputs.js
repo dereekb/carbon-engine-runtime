@@ -9,11 +9,11 @@ export class Tr2EffectTechniqueInputs
 {
 
   /** passes (std::vector<std::unique_ptr<Tr2EffectPassParameters>>) */
-  @type.list("Tr2EffectPassParameters")
+  @type.array("Tr2EffectPassParameters")
   passes = [];
 
   /** libraries (std::vector<std::unique_ptr<Tr2EffectLibraryParameters>>) */
-  @type.list("Tr2EffectLibraryParameters")
+  @type.array("Tr2EffectLibraryParameters")
   libraries = [];
 
 }

@@ -92,7 +92,7 @@ export class EveSpriteSet extends IEveSpaceObjectAttachment
   display = true;
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveSpriteLight")
+  @type.array("EveSpriteLight")
   lights = [];
 
   _rebuildRevision = 0;

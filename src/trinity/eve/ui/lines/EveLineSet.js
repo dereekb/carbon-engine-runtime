@@ -63,7 +63,7 @@ export class EveLineSet
 {
 
   /** Carbon's pending CPU line records (m_lines). */
-  @type.list("EveLineData")
+  @type.array("EveLineData")
   lines = [];
 
   @type.uint32

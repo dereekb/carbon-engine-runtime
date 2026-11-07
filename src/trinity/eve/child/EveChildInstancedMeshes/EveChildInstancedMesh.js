@@ -35,11 +35,11 @@ export class EveChildInstancedMesh
   meshIndex = 0;
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveChildInstancedMeshes::MeshArea")
+  @type.array("EveChildInstancedMeshes::MeshArea")
   areas = [];
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveInstancedMeshManager::StaticPerInstanceData")
+  @type.array("EveInstancedMeshManager::StaticPerInstanceData")
   instances = [];
 
   /** Carbon's one-to-one modular ownership tag array for instances. */
@@ -59,7 +59,7 @@ export class EveChildInstancedMesh
   // (EveChildInstancedMeshes.h:163-164), set by SOF BuildChild through AddMesh;
   // CarbonEngineJS delivers built objects as documents, so both persist.
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveLocatorSets")
+  @type.array("EveLocatorSets")
   ownedLocatorSets = [];
 
   @meta.mapAttribute(meta.PERSIST)
@@ -77,7 +77,7 @@ export class EveChildInstancedMesh
   inheritOverlayEffects = true;
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.list("EveMeshOverlayEffect")
+  @type.array("EveMeshOverlayEffect")
   ownOverlayEffects = [];
 
   overlayAreaBlocks = [ [], [] ];

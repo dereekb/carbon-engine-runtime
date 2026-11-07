@@ -81,7 +81,7 @@ export class EveTrailsSet
    * map it; it persists here so values carry which boosters have trails.
    */
   @meta.persistOnly
-  @type.list("EveTrailsSet::SingleTrailData")
+  @type.array("EveTrailsSet::SingleTrailData")
   _trailData = [];
 
   /** m_trailVertexDecl: the trail mesh's elements plus the instance float4. */

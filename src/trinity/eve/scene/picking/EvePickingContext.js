@@ -17,7 +17,7 @@ import { type } from "#schema";
 })
 export class EvePickingContext extends IRoot
 {
-  @type.list("EvePendingPickingReadback")
+  @type.array("EvePendingPickingReadback")
   readbacks = [];
 
   @type.uint32
