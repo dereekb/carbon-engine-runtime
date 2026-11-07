@@ -46,14 +46,20 @@ technique Main
 }
 `;
 
-/** Compiles the fixture for WebGL2 and reads its pixel stage back. */
-function compile()
+/** Compiles a source for WebGL2. */
+function build(source)
 {
-    const compiled = CompileEffectFile("/fixture.fx", {
-        read: path => path === "/fixture.fx" ? SOURCE : null,
+    return CompileEffectFile("/fixture.fx", {
+        read: path => path === "/fixture.fx" ? source : null,
         compilers: new Map([ [ Platform.PLATFORM_WEBGL2, session => new CjsFxEffectCompilerWebGL2(session) ] ]),
         defines: [ new Macro("PLATFORM", "webgl2") ]
     });
+}
+
+/** Compiles the fixture for WebGL2 and reads its pixel stage back. */
+function compile()
+{
+    const compiled = build(SOURCE);
     assert.ok(compiled.bytes, compiled.messages.join("\n"));
     const pass = new CjsCarbonEffectReader(new Uint8Array(compiled.bytes), { source: "/fixture.fx" }).readDescription(0).techniques[0].passes[0];
     return {
@@ -75,4 +81,17 @@ test("each element row is one texel, addressed as the emitter and the AL address
     const { pixel } = compile();
     assert.ok(pixel.includes("uintBitsToFloat(texelFetch(sb3, ivec2((index * 2 + 0) & 2047, (index * 2 + 0) >> 11), 0))"));
     assert.ok(pixel.includes("uintBitsToFloat(texelFetch(sb3, ivec2((index * 2 + 1) & 2047, (index * 2 + 1) >> 11), 0))"));
+});
+
+test("structured data textures count against the stage's 16 texture units", () =>
+{
+    const source = count =>
+    {
+        const indices = Array.from({ length: count }, (_, index) => index);
+        return SOURCE
+            .replace("StructuredBuffer<Emitter> Emitters : register( t3 );", indices.map(index => `StructuredBuffer<Emitter> Buffer${index} : register( t${index} );`).join("\n"))
+            .replace("Emitter emitter = Emitters[(int)input.texCoord.x];", `Emitter emitter = Buffer0[0];${indices.slice(1).map(index => ` emitter.colour += Buffer${index}[0].colour;`).join("")}`);
+    };
+    assert.ok(build(source(16)).bytes, "sixteen fit");
+    assert.throws(() => build(source(17)), /over WebGL2's 16/u);
 });

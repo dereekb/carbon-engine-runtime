@@ -73,6 +73,9 @@ const VERTEX_SEMANTICS = ["POSITION", "COLOR", "NORMAL", "TANGENT", "BINORMAL", 
 /** Elements of a vertex-stage structured buffer: Carbon's most joints, the AL's `BONE_BLOCK_CAPACITY`. */
 const VERTEX_STRUCTURED_CAPACITY = 69;
 
+/** The texture units WebGL2 guarantees a stage, which the AL refuses a program over (docs: specifications/texture-limits.md). */
+const TEXTURE_UNITS_PER_STAGE = 16;
+
 /** Texels to a data texture's row: the AL's `DATA_TEXTURE_WIDTH` and the emitter's `dataTextureWidth`. */
 const DATA_TEXTURE_WIDTH = 2048;
 
@@ -293,6 +296,11 @@ export class CjsFxOutputGLSL
                 default:
                     throw new Error(`CjsFxOutputGLSL: ${symbol.name.ToString()} has a register GLSL does not bind yet (${reg.registerType})`);
             }
+        }
+        const textures = this._bindings.filter(binding => binding.kind === "resource" || binding.kind === "structuredTexture");
+        if (textures.length > TEXTURE_UNITS_PER_STAGE)
+        {
+            throw new Error(`CjsFxOutputGLSL: the ${this._stage} stage uses ${textures.length} texture units, over WebGL2's ${TEXTURE_UNITS_PER_STAGE}: ${textures.map(binding => binding.name).join(", ")}`);
         }
         if (this._stage === "vertex")
         {
