@@ -54,7 +54,7 @@ export class EveSocketParameterBindingBase extends IEveSocketParameter
 
   ClearBindings()
   {
-    this.bindings.length = 0;
+    this.bindings.Clear();
   }
 
   /**

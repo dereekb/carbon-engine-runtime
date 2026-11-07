@@ -89,7 +89,7 @@ export class EveSocketParameterString extends IEveSocketParameter
 
   ClearBindings()
   {
-    this.externalParameters.length = 0;
+    this.externalParameters.Clear();
   }
 
   /**

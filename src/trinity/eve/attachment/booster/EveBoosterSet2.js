@@ -531,7 +531,7 @@ export class EveBoosterSet2 extends EveEntity
     const target = Number.isFinite(requested) ? Math.max(1, requested) : 1;
     if (this.instances.length > target)
     {
-      this.instances.length = target;
+      this.instances.splice(target);
     }
     while (this.instances.length < target)
     {

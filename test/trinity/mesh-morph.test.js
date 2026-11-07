@@ -45,7 +45,7 @@ test("Tr2Mesh initializes indexed morph state and preserves exact serialized wei
   smile.weight = 0.25;
   blink.name = "Blink";
   blink.weight = 0.5;
-  mesh.serializedMorphAnimations = [ smile, blink ];
+  mesh.serializedMorphAnimations.push(smile, blink);
   mesh.Initialize();
 
   mesh.SetGeometryRes(geometry);
@@ -125,13 +125,14 @@ test("duplicate morph names retain indexed slots and use Carbon's last named ent
   const names = [ "PushJacketHigh", "Smile", "PushJacketHigh" ];
   const geometry = CreateGeometry(names, undefined, { loading: true });
   const mesh = new Tr2Mesh();
-  mesh.serializedMorphAnimations = names.map((name, index) =>
+  mesh.serializedMorphAnimations.Clear();
+  mesh.serializedMorphAnimations.push(...names.map((name, index) =>
   {
     const value = new Tr2SerializedMorphAnimation();
     value.name = name;
     value.weight = (index + 1) / 4;
     return value;
-  });
+  }));
   mesh.SetGeometryRes(geometry);
   prepareResourceFixture(geometry);
   assert.doesNotThrow(() => geometry._NotifyRebuildCachedData());

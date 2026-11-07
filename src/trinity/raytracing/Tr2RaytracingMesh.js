@@ -21,7 +21,7 @@ export class Tr2RaytracingMesh
   meshIndex = 0;
 
   /** m_transforms (std::vector<float>) */
-  @type.list("float")
+  @type.array("float")
   transforms = new Float32Array(0); // alloc: variable-length packed transform snapshot
 
   /** m_boneOffset (uint32_t) */
@@ -33,7 +33,7 @@ export class Tr2RaytracingMesh
   skinnedVertexOffset = 0;
 
   /** m_morphAnimationDatas (std::vector<uint8_t>) */
-  @type.list("uint8_t")
+  @type.array("uint8_t")
   morphAnimationDatas = new Uint8Array(0); // alloc: variable-length packed morph snapshot
 
   /** m_morphAnimationDataOffset (uint32_t) */

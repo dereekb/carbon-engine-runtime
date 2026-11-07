@@ -73,7 +73,7 @@ export class EveTacticalTrails
   _egoBallPosition = new Float64Array(3); // alloc: Carbon Vector3d; no double-precision math type
 
   /** m_trackedObjects: { ball: WeakRef (Carbon's BlueWeakRef) or null, positions: [ { position, time } ] }. */
-  @type.list("EveTacticalTrailTrackedObject")
+  @type.array("EveTacticalTrailTrackedObject")
   trackedObjects = [];
 
   /** m_segmentCount (uint32_t) [READ] */

@@ -60,7 +60,7 @@ export class EveSOFDNA extends IRoot
   @type.object.ref.weak("EveSOFDataMgr")
   dataMgr = null;
 
-  @type.list("EveSOFDataMgr::HullData")
+  @type.array("EveSOFDataMgr::HullData")
   hullDatas = [];
 
   @type.object.weak("EveSOFDataMgr::FactionData")
@@ -75,13 +75,13 @@ export class EveSOFDNA extends IRoot
   @type.object.weak("EveSOFDataMgr::PatternData")
   patternData = null;
 
-  @type.list("EveSOFDataMgr::LayoutData")
+  @type.array("EveSOFDataMgr::LayoutData")
   layoutData = [];
 
-  @type.list("EveSOFDataMgr::HullData")
+  @type.array("EveSOFDataMgr::HullData")
   customHullData = [];
 
-  @type.list("std::string")
+  @type.array("std::string")
   hullNames = [];
 
   @type.string

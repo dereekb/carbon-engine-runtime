@@ -235,12 +235,12 @@ test("Update advances playing curve sets and drops the finished ones", () =>
     IsPlaying: () => false
   };
 
-  device.curveSets = [ playing, finished ];
+  device.curveSets.push(playing, finished);
   device.Update(5, 7);
 
   // Both are updated, because Carbon updates before it prunes.
   assert.deepEqual(updated, [ [ "playing", 5, 7 ], [ "finished" ] ]);
-  assert.deepEqual(device.curveSets, [ playing ], "and only the playing one survives");
+  assert.deepEqual([ ...device.curveSets ], [ playing ], "and only the playing one survives");
 });
 
 test("device registry snapshots cannot mutate membership and retain their original contents", () =>

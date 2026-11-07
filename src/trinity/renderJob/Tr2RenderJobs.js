@@ -65,7 +65,7 @@ export class Tr2RenderJobs extends IRoot
         const status = Tr2RenderJobs.#runJob(job, realTime, simTime, context);
         if (status === TriRenderJob.Status.RJ_IN_PROGRESS) continuedOnce.push(job);
       }
-      this.once.length = 0;
+      this.once.Clear();
       for (const job of continuedOnce) this.once.push(job);
 
       const chained = this.chained.slice();
@@ -80,7 +80,7 @@ export class Tr2RenderJobs extends IRoot
           break;
         }
       }
-      this.chained.length = 0;
+      this.chained.Clear();
       for (const job of continuedChained) this.chained.push(job);
     }
     finally

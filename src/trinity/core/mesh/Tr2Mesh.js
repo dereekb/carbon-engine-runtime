@@ -3,7 +3,7 @@
 // Source: trinity/trinity/Tr2Mesh_Blue.cpp
 import { exposure as be } from "#be";
 import { type } from "#schema";
-import { IsMatch, blue, IInitialize, INotify } from "#blue";
+import { IsMatch, blue, BlueList, IInitialize, INotify } from "#blue";
 import { Tr2MeshBase } from "./Tr2MeshBase.js";
 import { Tr2SerializedMorphAnimation } from "./Tr2SerializedMorphAnimation.js";
 
@@ -31,7 +31,7 @@ export class Tr2Mesh extends Tr2MeshBase
 
   @be.mapAttribute(be.PERSISTONLY)
   @type.list("Tr2SerializedMorphAnimation")
-  serializedMorphAnimations = [];
+  serializedMorphAnimations = new BlueList(Tr2SerializedMorphAnimation, { className: "Tr2SerializedMorphAnimation" });
 
   @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)
 
@@ -377,13 +377,14 @@ export class Tr2Mesh extends Tr2MeshBase
 
     if (!serializedMatches)
     {
-      this.serializedMorphAnimations = names.map(name =>
+      this.serializedMorphAnimations.Clear();
+      for (const name of names)
       {
         const value = new Tr2SerializedMorphAnimation();
         value.name = name;
         value.weight = 0;
-        return value;
-      });
+        this.serializedMorphAnimations.Append(value);
+      }
     }
 
     this._morphAnimations.clear();

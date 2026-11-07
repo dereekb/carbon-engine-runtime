@@ -447,7 +447,7 @@ export class Tr2ManipulationTool extends IRoot
       primitive.Destruct();
     }
     for (const effect of effects) effect.Destruct();
-    this.primitives.length = 0;
+    this.primitives.Clear();
     this.moveCallback = null;
     this.captured = false;
   }

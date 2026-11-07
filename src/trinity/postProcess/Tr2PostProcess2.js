@@ -159,7 +159,7 @@ export class Tr2PostProcess2 extends IRoot
 
   ClearLuts()
   {
-    this.luts.length = 0;
+    this.luts.Clear();
   }
 
   /**

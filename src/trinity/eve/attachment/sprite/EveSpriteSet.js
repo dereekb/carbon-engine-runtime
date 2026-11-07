@@ -132,7 +132,7 @@ export class EveSpriteSet extends IEveSpaceObjectAttachment
 
   Clear()
   {
-    this.sprites.length = 0;
+    this.sprites.Clear();
     this.lights.length = 0;
   }
 

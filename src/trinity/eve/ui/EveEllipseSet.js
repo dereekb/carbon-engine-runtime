@@ -169,7 +169,7 @@ export class EveEllipseSet extends EveChildTransform
    * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted registers and prepares on first use, not here.
    */
   constructor()
   {

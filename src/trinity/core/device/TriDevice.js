@@ -1197,7 +1197,7 @@ export class TriDevice extends IRoot
     }
 
     const remaining = this.curveSets.filter(curveSet => curveSet.IsPlaying());
-    this.curveSets.length = 0;
+    this.curveSets.Clear();
     for (const curveSet of remaining) this.curveSets.push(curveSet);
     return this;
   }

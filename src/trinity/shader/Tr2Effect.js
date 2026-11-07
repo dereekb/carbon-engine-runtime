@@ -329,7 +329,7 @@ export class Tr2Effect extends Tr2Material
     for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
     for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
     this._ClearPassBindings();
-    this.resources.length = 0;
+    this.resources.Clear();
     this.ReleaseCachedData();
     this.effectResource = null;
   }
