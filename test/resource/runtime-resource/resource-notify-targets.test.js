@@ -203,14 +203,14 @@ test("Render renews every texture parameter even when the effect resource is bad
 {
   const effect = new Tr2Effect(), resource = new BlueAsyncRes();
   const renewed = [];
-  effect.resources = [
+  Array.prototype.push.call(effect.resources,
     { KeepAlive() { renewed.push(1); return false; } },
     { KeepAlive() { renewed.push(2); return true; } }
-  ];
+  );
   effect.effectResource = resource;
   effect.Render({ SubmitGeometry() { assert.fail("bad effect must not draw"); } }, {});
   assert.deepEqual(renewed, [1, 2]);
-  effect.resources = [];
+  effect.resources.length = 0;
   effect.Destruct();
 });
 

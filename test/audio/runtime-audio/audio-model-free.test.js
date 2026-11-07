@@ -33,7 +33,7 @@ test("real pillar audio curve initializes after its typed observer and emitter",
   list.Insert(-1, parameter);
   assert.equal(parameter._gameObjID, emitter.ID);
   const unbound = new AudParameter();
-  list.push(unbound);
+  Array.prototype.push.call(list, unbound);
   assert.equal(unbound._gameObjID, 0, "negative control: raw array writes do not bind parameters");
 });
 
