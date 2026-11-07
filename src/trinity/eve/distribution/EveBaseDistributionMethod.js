@@ -4,8 +4,12 @@ import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/EveBaseDistributionMethod.h
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
+import { BlueList } from "#blue";
 import { type } from "#schema";
 import { IEveDistributionMethod } from "./IEveDistributionMethod.js";
+import { IEveDistributionModifier } from "./attributeModifiers/IEveDistributionModifier.js";
+import { IEveDistributionPlacementGenerators } from "./placement/IEveDistributionPlacementGenerators.js";
+import { IEveDistributionSpawner } from "./spawners/IEveDistributionSpawner.js";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { EveChildUpdateParams } from "../EveChildUpdateParams.js";
@@ -37,7 +41,7 @@ export class EveBaseDistributionMethod extends IEveDistributionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveDistributionModifier")
-  lifetimeModifiers = [];
+  lifetimeModifiers = new BlueList(IEveDistributionModifier);
 
   /** m_locationsCanReTrigger (bool) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -71,7 +75,7 @@ export class EveBaseDistributionMethod extends IEveDistributionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveDistributionPlacementGenerators")
-  placementGenerators = [];
+  placementGenerators = new BlueList(IEveDistributionPlacementGenerators);
 
   /** m_placementData (PPlacementDataWithIdentifierStructureList) [READ] */
   @be.mapAttribute(be.READ)
@@ -88,7 +92,20 @@ export class EveBaseDistributionMethod extends IEveDistributionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveDistributionSpawner")
-  spawnTriggers = [];
+  spawnTriggers = new BlueList(IEveDistributionSpawner);
+
+  /**
+   * Carbon EveBaseDistributionMethod constructor (cpp:42-44).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.placementGenerators.SetNotify(this);
+    this.spawnTriggers.SetNotify(this);
+    this.lifetimeModifiers.SetNotify(this);
+  }
 
   /**
    * Carbon method AddEntity -> AddEntities (MAP_METHOD_AND_WRAP).

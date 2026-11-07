@@ -6,8 +6,11 @@ import { EveProceduralMethodCycling } from "../../npm/dist/trinity/eve/child/pro
 import { EveProceduralMethodRandom } from "../../npm/dist/trinity/eve/child/procedural/selection/EveProceduralMethodRandom.js";
 import { EveProceduralMethodThresholds } from "../../npm/dist/trinity/eve/child/procedural/selection/EveProceduralMethodThresholds.js";
 
+import { EveBaseDistributionMethod } from "../../npm/dist/trinity/eve/distribution/EveBaseDistributionMethod.js";
+
 // Carbon calls SetNotify per member, in each owner's constructor. Keep one row per member.
 const WIRED = [
+  [ EveBaseDistributionMethod, [ "placementGenerators", "spawnTriggers", "lifetimeModifiers" ] ],
   [ EveProceduralMethodCycling, [ "parameters" ] ],
   [ EveProceduralMethodRandom, [ "parameters" ] ],
   [ EveProceduralMethodThresholds, [ "parameters" ] ]
