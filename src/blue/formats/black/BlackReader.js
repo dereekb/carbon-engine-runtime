@@ -58,9 +58,6 @@ export class BlackReader extends IRootReaderBase
     /** Registered name; `constructor.name` does not survive minification. */
     static className = "BlackReader";
 
-    /** `m_filename`: used for error reporting. */
-    _filename = "";
-
     /** `m_errorMessage`: the last error. */
     _errorMessage = "";
 
@@ -1002,6 +999,7 @@ export class BlackReader extends IRootReaderBase
         this._dataSize = 0;
 
         this._curData = 0;
+        this._loggedNonFinite = false;
         this._objectMarkers.length = 0;
         this._referenceMap.clear();
     }

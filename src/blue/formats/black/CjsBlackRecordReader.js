@@ -188,6 +188,7 @@ export class CjsBlackRecordReader extends BlackReader
         {
             value[i] = this.ReadValue__Float();
         }
+        this._ReplaceNonFiniteElements(value, entry.floatArraySize, entry.name);
         holder[key] = value;
     }
 
@@ -257,6 +258,7 @@ export class CjsBlackRecordReader extends BlackReader
             {
                 const value = entry.wrapperDefaults.slice();
                 this._ReadWrapperElements(value, entry);
+                this._ReplaceNonFiniteElements(value, value.length, entry.name);
                 holder[key] = value;
                 return;
             }

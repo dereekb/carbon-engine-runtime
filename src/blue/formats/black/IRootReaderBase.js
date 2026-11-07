@@ -20,6 +20,7 @@
 // may hold plain JavaScript storage, so the compiled entry says what it is and
 // the cast decides only between a mapped IList and a plain array.
 import { CjsSchema } from "#schema";
+import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
 import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { IList } from "../../exposure/IList.js";
@@ -86,6 +87,53 @@ export class IRootReaderBase
      * @type {Array<Function|null>}
      */
     _propertyHandlers = IRootReaderBase.propertyHandlers;
+
+    /**
+     * `m_filename`: used for error reporting.
+     */
+    _filename = "";
+
+    /**
+     * Whether this file has already logged a non-finite number.
+     *
+     * @cjs
+     */
+    _loggedNonFinite = false;
+
+    /**
+     * The value that replaces a non-finite number read from a file, logged once per file.
+     * `value - value` is 0 for every finite number and NaN otherwise, so callers test it before calling this.
+     *
+     * @cjs Not Carbon: these are authoring errors, 19 values in 4 client files (operator, 2026-11-08)
+     * @param {string} memberName The member that held it.
+     * @returns {number} 0.
+     */
+    _ReplaceNonFinite(memberName)
+    {
+        if (!this._loggedNonFinite)
+        {
+            this._loggedNonFinite = true;
+            CcpLog.CCP_LOGWARN("%s", `${this._filename || "Object file"}: non-finite number in ${memberName}, read as 0`);
+        }
+        return 0;
+    }
+
+    /**
+     * Replaces any non-finite number in a member's array.
+     *
+     * @cjs Not Carbon: see `_ReplaceNonFinite`
+     * @param {Float32Array|number[]} value The array.
+     * @param {number} count Elements to check.
+     * @param {string} memberName The member.
+     */
+    _ReplaceNonFiniteElements(value, count, memberName)
+    {
+        for (let i = 0; i < count; i++)
+        {
+            const element = value[i];
+            if (element - element !== 0) value[i] = this._ReplaceNonFinite(memberName);
+        }
+    }
 
     /**
      * Handles one attribute of an object: finds its member, reads its value, and notifies.
@@ -209,21 +257,22 @@ export class IRootReaderBase
     /**
      * Reads a float member.
      *
-     * @adapted a holder and key stand in for `Be::Var*`
+     * @adapted a holder and key stand in for `Be::Var*`; a non-finite number reads as 0, because those in client files are authoring errors
      * @param {object} holder The object or array holding the member.
      * @param {string|number} key The member's place in the holder.
      * @param {object} entry The member's compiled entry.
      */
     HandlePropertyFloat(holder, key, entry)
     {
-        holder[key] = this.ReadValue__Float();
+        const value = this.ReadValue__Float();
+        holder[key] = value - value === 0 ? value : this._ReplaceNonFinite(entry.name);
     }
 
     /**
      * Fills a float array member in place.
      *
      * @adapted a holder and key stand in for `Be::Var*`; the member's array is its storage, and a property gets it
-     * back through its setter
+     * back through its setter; a non-finite number reads as 0, because those in client files are authoring errors
      * @param {object} holder The object or array holding the member.
      * @param {string|number} key The member's place in the holder.
      * @param {object} entry The member's compiled entry.
@@ -232,20 +281,22 @@ export class IRootReaderBase
     {
         const value = holder[key];
         this.ReadFloatArray(value, entry.floatArraySize);
+        this._ReplaceNonFiniteElements(value, entry.floatArraySize, entry.name);
         if (entry.isProperty) holder[key] = value;
     }
 
     /**
      * Reads a double member.
      *
-     * @adapted a holder and key stand in for `Be::Var*`
+     * @adapted a holder and key stand in for `Be::Var*`; a non-finite number reads as 0, because those in client files are authoring errors
      * @param {object} holder The object or array holding the member.
      * @param {string|number} key The member's place in the holder.
      * @param {object} entry The member's compiled entry.
      */
     HandlePropertyDouble(holder, key, entry)
     {
-        holder[key] = this.ReadValue__Double();
+        const value = this.ReadValue__Double();
+        holder[key] = value - value === 0 ? value : this._ReplaceNonFinite(entry.name);
     }
 
     /**
@@ -307,6 +358,7 @@ export class IRootReaderBase
 
             case BLACK_DESTINATION.WRAPPER:
                 this.ReadWrapper(value, entry);
+                this._ReplaceNonFiniteElements(value, entry.wrapperElements.length, entry.name);
                 break;
 
             default:

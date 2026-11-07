@@ -445,3 +445,66 @@ test("Carbon's type check accepts any listed class and still refuses the rest", 
         assert.equal(failure(f.Finish(f.Object(1, "BlackPortEither", [ [ member, f.Object(2, "BlackPortOther") ] ]))), `${member}: Incorrect type for member`);
     }
 });
+
+class Numbers
+{
+    single = 0;
+    wide = 0;
+    position = new Float32Array(3);
+    transform = new Float32Array(16);
+    records = [];
+}
+CjsSchema.define(Numbers, { className: "BlackPortNumbers", fields: {
+    single: field({ kind: "float32" }),
+    wide: field({ kind: "float64" }),
+    position: field({ kind: "vec3" }),
+    transform: field({ kind: "mat4", wrapped: "TriMatrix" }),
+    records: field({ kind: "structList", className: "BlackPortRecord" })
+} });
+
+const f64 = value => bytesOf(8, view => view.setFloat64(0, value, true));
+const nonFinite = f => f.Object(1, "BlackPortNumbers", [
+    [ "single", f32(NaN) ],
+    [ "wide", f64(Infinity) ],
+    [ "position", floats([ 1, -Infinity, 3 ]) ],
+    [ "transform", f.Embedded("TriMatrix", [ [ "_12", f32(NaN) ] ]) ],
+    [ "records", concat([ i32(1), u16(16), floats([ NaN, 8, 9 ]), f32(Infinity) ]) ]
+]);
+
+test("a non-finite number in a file reads as 0, wherever a float is read (operator, 2026-11-08)", () =>
+{
+    const f = new Fixture();
+    const reader = new BlackReader();
+    reader.SetFileName("res:/numbers.black");
+    const root = reader.ReadFromStream(f.Finish(nonFinite(f)));
+    assert.equal(root.single, 0);
+    assert.equal(root.wide, 0);
+    assert.deepEqual(Array.from(root.position), [ 1, 0, 3 ]);
+    assert.equal(root.transform[1], 0);
+    assert.equal(root.records[0].position[0], 0);
+    assert.equal(root.records[0].weight, 0);
+    assert.equal(reader._loggedNonFinite, true);
+});
+
+test("a plain record gets the same 0s", () =>
+{
+    const f = new Fixture();
+    const { object } = new CjsBlackRecordReader().ReadRecord(f.Finish(nonFinite(f)));
+    assert.equal(object.single, 0);
+    assert.equal(object.wide, 0);
+    assert.deepEqual(object.position, [ 1, 0, 3 ]);
+    assert.equal(object.transform[1], 0);
+    assert.deepEqual(object.records, [ { position: [ 0, 8, 9 ], weight: 0 } ]);
+});
+
+test("the first non-finite number marks the file as logged, and a finite file is never marked", () =>
+{
+    const reader = new BlackReader();
+    assert.equal(reader._ReplaceNonFinite("a"), 0);
+    assert.equal(reader._loggedNonFinite, true);
+
+    const f = new Fixture();
+    const clean = new BlackReader();
+    clean.ReadFromStream(f.Finish(f.Object(1, "BlackPortNumbers", [ [ "single", f32(-0) ], [ "wide", f64(1.5) ] ])));
+    assert.equal(clean._loggedNonFinite, false);
+});
