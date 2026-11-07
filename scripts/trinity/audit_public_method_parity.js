@@ -35,9 +35,12 @@ const classes = await ReadJavaScriptClasses(sourceRoot);
 // the shared interfaces' placeholder bodies must not credit Trinity classes
 // that inherit them.
 const interfaceClasses = await ReadJavaScriptClasses(path.join(root, "src", "global", "interfaces"));
+// Trinity classes that moved to the character layer are parity subjects too.
+const characterClasses = await ReadJavaScriptClasses(path.join(root, "src", "character"));
 for (const entry of promoted)
 {
   if (!classes.has(entry.className) && interfaceClasses.has(entry.className)) classes.set(entry.className, interfaceClasses.get(entry.className));
+  if (!classes.has(entry.className) && characterClasses.has(entry.className)) classes.set(entry.className, characterClasses.get(entry.className));
 }
 // Promoted classes remain Trinity-owned; their native bases may live in Blue.
 // Use the real shared declarations for both primary and composed-base lookup.
