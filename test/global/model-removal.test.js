@@ -73,6 +73,7 @@ const tables = {
   ],
   "FollowASpline": [
     "FollowASpline",
+    "IBehavior",
     "INotify"
   ],
   "Tr2Denoiser": [

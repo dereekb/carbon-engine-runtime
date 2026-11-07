@@ -33,7 +33,7 @@ test("the public decorator surface has one namespace per vocabulary and preserve
     // Ruling 2026-10-15: meta (generic), type (vocabulary), blue (Carbon-stamped).
     assert.equal(schemaExports.type, CjsSchema.type);
     for (const name of ["blue", "type"]) assert.equal(Object.hasOwn(meta, name), false, "alias dropped: meta." + name);
-    assert.equal(schemaExports.blue, CjsSchema.be);
+    assert.equal(Object.hasOwn(schemaExports, "blue"), false, "be comes from #be; blue is the service");
     for (const name of ["read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly"])
     {
         assert.equal(typeof meta[name], "function", "generic flag: " + name);

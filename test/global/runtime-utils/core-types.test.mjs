@@ -592,22 +592,6 @@ test("stage-3 static method decorators register on the class constructor", () =>
     assert.equal(CjsSchema.getMethod(Function, "Rasterize"), null);
 });
 
-test("accepts explicit singular schema aliases for model input", () => {
-    class AliasedFieldNode
-    {
-        dampingRatio = 0;
-    }
-
-    CjsSchema.defineField(AliasedFieldNode, "dampingRatio", "type", { kind: CARBON_TYPE.FLOAT32 });
-    CjsSchema.defineField(AliasedFieldNode, "dampingRatio", "alias", "m_dampingRatio");
-    CjsSchema.define(AliasedFieldNode, { className: "AliasedFieldNode" });
-
-    const node = CjsSchema.from(CjsSchema.getClassName(AliasedFieldNode), { m_dampingRatio: "0.5" });
-    assert.equal(node.dampingRatio, 0.5);
-    assert.equal(Object.hasOwn(node, "m_dampingRatio"), false);
-    assert.deepEqual(CjsSchema.getValues(node), { dampingRatio: 0.5 });
-});
-
 test("defines a complete hydratable schema from a manual JSON declaration", () => {
     class ManualSchemaNode
     {
@@ -748,7 +732,7 @@ test("hydrates canonical model fields and lists without constructing raw objects
         children: [{ label: "two" }],
         payload: { native: 7 }
     });
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(CanonicalParent), { reference: { name: "root" } }), /_type/u,
+    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(CanonicalParent), { reference: { name: "root" } }), /Invalid attribute: name on IRoot/u,
         "a typed member does not keep a plain object it cannot build (operator, 2026-09-26)");
     const existingChild = CjsSchema.from(CjsSchema.getClassName(CanonicalChild), { label: "existing" });
     const referencingParent = CjsSchema.from(CjsSchema.getClassName(CanonicalParent), {

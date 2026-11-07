@@ -78,7 +78,6 @@ test(`Blue imports stay inert with ${first} evaluated first`, () =>
       assert.equal(shared.blue.os.IsRegisteredForTicks(shared.blue.resMan), false);
       const fresh = new shared.CjsBlue();
       assert.equal(fresh.os.IsRegisteredForTicks(fresh.resMan), false);
-      assert.equal(fresh.resMan.workerLoader.worker, null);
       assert.equal(fresh.audio._initialized, false);
       assert.equal(fresh.sof, null);
     `

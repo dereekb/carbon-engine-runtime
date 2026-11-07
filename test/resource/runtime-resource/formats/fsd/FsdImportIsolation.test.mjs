@@ -16,6 +16,8 @@ const SHARED_FORMAT_MODULES = new Set([
     "blue/exposure/classes/registry.js",
     "blue/compose/interface.js",
     "global/consts/ccpLog.js",
+    "resource/format/workerOptions.js",
+    "global/model/graph/GraphTypes.js",
     "global/logging/CcpLogChannel_t.js",
     "global/logging/ccpLog.js",
     "resource/format/CjsFormat.js",

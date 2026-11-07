@@ -39,11 +39,12 @@ test("headless audio adoption/release reaches a declared non-model graph with cy
     try
     {
         assert.equal(root.__state, undefined);
-        assert.deepEqual(system.AdoptGraph(root), [first, second, driver]);
-        assert.deepEqual(system.AdoptGraph(root), [first, second, driver]);
+        // The walk's order is not part of the interface.
+        assert.deepEqual(new Set(system.AdoptGraph(root)), new Set([first, second, driver]));
+        assert.deepEqual(new Set(system.AdoptGraph(root)), new Set([first, second, driver]));
         assert.equal(system.manager.GetAudioEmitter(first.ID), first);
         assert.equal(system.manager.GetAudioEmitter(second.ID), second);
-        assert.deepEqual(system.ReleaseGraph(root), [first, second, driver]);
+        assert.deepEqual(new Set(system.ReleaseGraph(root)), new Set([first, second, driver]));
         assert.deepEqual(system.ReleaseGraph(root), []);
         assert.equal(system.manager.GetAudioEmitter(first.ID), null);
         assert.equal(contexts, 0);
