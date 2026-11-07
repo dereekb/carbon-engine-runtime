@@ -10,7 +10,7 @@ import { type } from "#schema";
 import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
 import { TriBatchType, TriStorageFlags } from "#consts/graphics";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
-import { Tr2BufferDescriptionAL } from "#trinityal";
+import { Failed, Tr2BufferDescriptionAL } from "#trinityal";
 import { Tr2RingVertexBuffer } from "../device/Tr2RingVertexBuffer.js";
 import { Tr2Renderer } from "../Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
@@ -203,7 +203,7 @@ export class Tr2QuadRenderer
     }
 
     const { result, offset } = this._vertexBuffer.PutData(this._buffer, this.bufferSize, this.bufferAlignment, renderContext);
-    if (result < 0)
+    if (Failed(result))
     {
       this.vertexBufferOffset = -1;
       return;
