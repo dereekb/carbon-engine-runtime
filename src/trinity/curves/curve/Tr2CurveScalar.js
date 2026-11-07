@@ -65,6 +65,7 @@ export class Tr2CurveScalar extends ITriScalarFunction
     {
       right = (nextValue - value) / (nextTime - time);
     }
+    // Carbon bug, kept (CE-233, Tr2CurveScalar.cpp:41): no guard when the neighbours share a time.
     const x = (time - prevTime) / (nextTime - prevTime);
     return left * (1 - x) + right * x;
   }
@@ -96,6 +97,7 @@ export class Tr2CurveScalar extends ITriScalarFunction
     }
     let keyDistance = Math.abs(value - prevValue) / valueDiff;
     keyDistance = num.min(1, num.min(keyDistance, 1 - keyDistance) * 6);
+    // Carbon bug, kept (CE-233, Tr2CurveScalar.cpp:63-65): neighbours at one time give Infinity, then NaN at distance 0.
     return (nextValue - prevValue) / (nextTime - prevTime) * keyDistance;
   }
 
