@@ -804,6 +804,7 @@ export class CjsGraph
     if (member.edgeKind === null)
     {
       if (Array.isArray(stored)) return stored.slice();
+      if (stored instanceof Map) return new Map(stored); // alloc: a load refills the Map it finds.
       return ArrayBuffer.isView(stored) ? stored.slice() : stored;
     }
 

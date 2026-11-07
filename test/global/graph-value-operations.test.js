@@ -1323,3 +1323,14 @@ test("copy sends what AssignTo does: LOADFINISHED for items on an ordinary list,
   CjsGraph.copy(new Listed(), emptied);
   assert.deepEqual(emptied.events, []);
 });
+
+test("a load leaves a class's captured Map default empty", () =>
+{
+  class Weights { values = new Map(); }
+  CjsGraph.define(Weights, { name: "GraphDefaultMap", members: [ { name: "values", type: "valuesMap", item: "float64" } ] });
+
+  const first = CjsGraph.from(null, { _type: "GraphDefaultMap", values: { a: 1 } });
+
+  assert.deepEqual(CjsGraph.get(first), { values: { a: 1 } });
+  assert.deepEqual(CjsGraph.get(new Weights()), {});
+});

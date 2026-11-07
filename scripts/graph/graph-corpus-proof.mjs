@@ -149,6 +149,7 @@ function scan(value, path, cls)
   for (const key of Object.keys(value))
   {
     if (key === "_id" || key === "_ref" || key === "_type") continue;
+    if (key === "__bluemetadata__") stats.metadata = (stats.metadata ?? 0) + 1;
     scan(value[key], key, own);
   }
 }
