@@ -50,7 +50,10 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
 
   /** The ordinary geometry factory supplies TriGeometryRes, replacing the raw SDK handle. */
   @type.object.ref("TriGeometryRes")
-  get grannyRes() { return this._grannyRes; }
+  get grannyRes()
+  {
+    return this._grannyRes;
+  }
 
   /**
    * Moves the resource notification, retaining geometry until replacement completes.
@@ -93,7 +96,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Acquires the authored resource after reader population (cpp:38-44). Carbon prepares here (Tr2GrannyPrimitiveSet::Initialize); here nothing prepares during a build: the fi
    */
 
   Initialize()
@@ -158,7 +161,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * being drawn; one rebuilt and never drawn is still released by the sweep
    * (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Rebuilds only a successfully prepared current resource (cpp:194-202). Prepares now, as Carbon does, rather than on first use: CreatePrimitive replaced the points and inde
    */
 
   RebuildCachedData(resource)
@@ -173,7 +176,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Clears cached geometry and GPU storage, retaining the native last bound (cpp:205-212).
    *
-   * @adapted
+   * @adapted Clears cached geometry and GPU storage, retaining the native last bound (cpp:205-212)
    */
 
   CleanUp()
@@ -201,7 +204,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Decoded CPU channels replace native CMF streams; exact picking name is preserved.
    *
-   * @adapted
+   * @adapted Decoded CPU channels replace native CMF streams; exact picking name is preserved
    */
 
   CreatePrimitiveFromCMF()
@@ -214,7 +217,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * is preserved. The shared projection retains the complete topology stream,
    * including triangles outside material groups, as the native SDK does.
    *
-   * @adapted
+   * @adapted Decoded CPU channels replace the Granny SDK; native picking-prefix matching is preserved. The shared projection retains the complete topology stream, including triangles
    */
 
   CreatePrimitiveFromGranny()
@@ -291,7 +294,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * as in use, since a recolour is for display; one recoloured and never drawn
    * is still released by the sweep (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Updates cached vertex colors, without reassigning the authored color field (cpp:519-526). Prepares now, as Carbon does, rather than on first use: preparing is the only pa
    */
 
   SetCurrentColor(color)
@@ -304,7 +307,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Explicit destruction replaces native empty-handle assignment (cpp:47-53).
    *
-   * @adapted
+   * @adapted Explicit destruction replaces native empty-handle assignment (cpp:47-53)
    */
 
   ReleaseResources()
@@ -318,7 +321,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Creates and uploads native buffers through existing AL descriptions (cpp:54-133).
    *
-   * @adapted
+   * @adapted Creates and uploads native buffers through existing AL descriptions (cpp:54-133)
    */
 
   _OnPrepareResources()
@@ -395,7 +398,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   /**
    * Native development resource description, returned instead of an output string.
    *
-   * @adapted
+   * @adapted Native development resource description, returned instead of an output string
    */
 
   GetDescription()
@@ -410,7 +413,7 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
-   * @adapted
+   * @adapted Explicit owner teardown replaces the C++ destructor and notify-target lifetime. Temporary destructor stand-in: exists because teardown is required before the lifecycle (D
    */
   Destruct()
   {

@@ -15,7 +15,9 @@ export class ITr2AnimationUpdater extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  PrePhysicsAnimation(_time, _modelTransform) {}
+  PrePhysicsAnimation(_time, _modelTransform)
+  {
+  }
 
   /**
    * Updates the pose after physics at the supplied time and model transform.
@@ -26,7 +28,9 @@ export class ITr2AnimationUpdater extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  PostPhysicsAnimation(_time, _modelTransform) {}
+  PostPhysicsAnimation(_time, _modelTransform)
+  {
+  }
 
   /**
    * Returns the animation's bone transforms.
@@ -36,7 +40,9 @@ export class ITr2AnimationUpdater extends IRoot
    * @returns {Array<ArrayLike<number>>} Bone transforms supplied by the provider.
    */
   @meta.abstract
-  GetAnimationTransforms() {}
+  GetAnimationTransforms()
+  {
+  }
 
   /**
    * Returns the names corresponding to the animation's bone transforms.
@@ -46,7 +52,9 @@ export class ITr2AnimationUpdater extends IRoot
    * @returns {Array<string>} Bone names supplied by the provider.
    */
   @meta.abstract
-  GetAnimationBoneList() {}
+  GetAnimationBoneList()
+  {
+  }
 }
 
 CjsSchema.exposure.interface("ITr2AnimationUpdater")(ITr2AnimationUpdater);

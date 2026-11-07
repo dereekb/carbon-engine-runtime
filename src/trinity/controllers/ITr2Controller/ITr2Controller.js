@@ -74,7 +74,9 @@ export class ITr2Controller extends IRoot
    * @returns {boolean} Whether Link has run without a matching Unlink.
    */
   @meta.abstract
-  IsLinked() {}
+  IsLinked()
+  {
+  }
 
   /**
    * Begins controlling the owner.

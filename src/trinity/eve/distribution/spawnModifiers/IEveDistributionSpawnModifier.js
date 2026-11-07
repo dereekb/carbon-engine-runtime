@@ -15,6 +15,8 @@ export class IEveDistributionSpawnModifier extends IRoot
    * @abstract
    */
   @be.abstract
-  ProcessSpawnModifier(_placement, _context) {}
+  ProcessSpawnModifier(_placement, _context)
+  {
+  }
 
 }

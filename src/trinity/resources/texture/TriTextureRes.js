@@ -335,7 +335,8 @@ export class TriTextureRes extends BlueAsyncRes
    *   use signal, including when a runtime parameter skips repeated realization.
    * @returns {object|null} A `Tr2TextureAL`.
    */
-  GetTexture() {
+  GetTexture()
+  {
     this.KeepAlive();
 
     // Carbon (cpp:396-401): a wrapped render target that became valid after it was wrapped supplies the texture now.
@@ -375,7 +376,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {Tr2Event} m_onTextureChange.
    */
-  OnTextureChange() {
+  OnTextureChange()
+  {
     return this._onTextureChange;
   }
 
@@ -390,7 +392,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {string} [ex="raw"] Input image factory suffix.
    * @returns {Promise<boolean>} Whether execution produced a bitmap.
    */
-  async LoadPipeline(pipeline, resourceManager, ex = "raw") {
+  async LoadPipeline(pipeline, resourceManager, ex = "raw")
+  {
     this._pipeline = pipeline;
     this._pipelineEx = ex;
     this._isLoading = true;
@@ -462,7 +465,8 @@ export class TriTextureRes extends BlueAsyncRes
    *
    * @returns {import("#imageio").HostBitmap|null} The bitmap.
    */
-  GetBitmap() {
+  GetBitmap()
+  {
     return this.loadedBitmap;
   }
 
@@ -473,7 +477,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {boolean} Whether the resource loaded.
    */
-  IsValid() {
+  IsValid()
+  {
     return this.IsGood();
   }
 
@@ -484,7 +489,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {number} Width of mip zero, or 0 before load.
    */
-  GetWidth() {
+  GetWidth()
+  {
     return this.loadedBitmap ? this.loadedBitmap.GetWidth() : this.width;
   }
 
@@ -494,7 +500,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {number} Height of mip zero, or 0 before load.
    */
-  GetHeight() {
+  GetHeight()
+  {
     return this.loadedBitmap ? this.loadedBitmap.GetHeight() : this.height;
   }
 
@@ -504,7 +511,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {number} Mip count, or 0 before load.
    */
-  GetMipLevelCount() {
+  GetMipLevelCount()
+  {
     return this.loadedBitmap ? this.loadedBitmap.GetMipCount() : this.cpuMip;
   }
 
@@ -566,7 +574,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {number}
    */
-  GetMipCount() {
+  GetMipCount()
+  {
     return this.GetBitmap()?.mipCount || this.cpuMip || 0;
   }
 
@@ -578,7 +587,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {number[]} `[r, g, b, a]`, zero until something sets it.
    */
-  GetAverageColor() {
+  GetAverageColor()
+  {
     return this.averageColor;
   }
 
@@ -588,7 +598,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {number}
    */
-  GetMsaaType() {
+  GetMsaaType()
+  {
     // Carbon: m_texture ? m_texture->GetMsaaDesc().samples : 1 (cpp:1214-1216).
     const texture = this.GetTexture();
     return texture ? texture.GetMsaaDesc().samples : 1;
@@ -600,7 +611,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {number}
    */
-  GetMsaaQuality() {
+  GetMsaaQuality()
+  {
     // Carbon: m_texture ? m_texture->GetMsaaDesc().quality : 0 (cpp:1219-1222).
     const texture = this.GetTexture();
     return texture ? texture.GetMsaaDesc().quality : 0;
@@ -612,7 +624,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  HadLodRequests() {
+  HadLodRequests()
+  {
     return this.hadLodRequests;
   }
 
@@ -624,7 +637,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {number} requestedLod Requested mip level.
    * @returns {void}
    */
-  RequestResolution(requestedLod) {
+  RequestResolution(requestedLod)
+  {
     if (this.requestedMip === requestedLod || this.originalResolution === 0) return;
     this.hadLodRequests = true;
     // AtomicMinUpdate (cpp:119-125); JS has one thread, so a plain min.
@@ -636,7 +650,8 @@ export class TriTextureRes extends BlueAsyncRes
    *
    * @returns {number} The original resolution.
    */
-  GetOriginalResolutionAsFloat() {
+  GetOriginalResolutionAsFloat()
+  {
     return this.originalResolution;
   }
 
@@ -646,7 +661,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @notSupported
    * @returns {number}
    */
-  GetSrvIndexInHeap() {
+  GetSrvIndexInHeap()
+  {
     throw resourceBoundaryError("TriTextureRes", "GetSrvIndexInHeap", "Runtime-resource does not own descriptor heaps.");
   }
 
@@ -657,7 +673,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {string} path
    * @returns {boolean}
    */
-  SaveAsync(path = "") {
+  SaveAsync(path = "")
+  {
     throw resourceBoundaryError(
       "TriTextureRes",
       "SaveAsync",
@@ -672,7 +689,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {string} path
    * @returns {boolean}
    */
-  Save(path = "") {
+  Save(path = "")
+  {
     throw resourceBoundaryError(
       "TriTextureRes",
       "Save",
@@ -686,7 +704,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  IsSaving() {
+  IsSaving()
+  {
     return false;
   }
 
@@ -696,7 +715,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  IsSaveCompleted() {
+  IsSaveCompleted()
+  {
     return true;
   }
 
@@ -706,7 +726,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  IsSaveSucceeded() {
+  IsSaveSucceeded()
+  {
     return false;
   }
 
@@ -716,7 +737,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  WaitForSave() {
+  WaitForSave()
+  {
     return this.IsSaveCompleted();
   }
 
@@ -726,7 +748,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @notSupported
    * @throws {Error}
    */
-  CreateEmptyTexture() {
+  CreateEmptyTexture()
+  {
     throw resourceBoundaryError("TriTextureRes", "CreateEmptyTexture", "Use engine-gpu to allocate device textures.");
   }
 
@@ -747,7 +770,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {Tr2RenderTarget|null} renderTarget The render target to view, or null to unwrap.
    * @returns {boolean} Always true, as Carbon returns.
    */
-  SetTextureFromRT(renderTarget) {
+  SetTextureFromRT(renderTarget)
+  {
     this._DestroyOwnTexture();
 
     if (this.wrappedRenderTarget)
@@ -784,7 +808,8 @@ export class TriTextureRes extends BlueAsyncRes
    *
    * @notImplemented
    */
-  _DestroyOwnTexture() {
+  _DestroyOwnTexture()
+  {
     if (this.lodEnabled)
     {
       throw new Error("TriTextureRes.DestroyOwnTexture: Tr2TextureLodManager GpuTextureDestroyed and CpuTextureDestroyed are not ported.");
@@ -800,7 +825,8 @@ export class TriTextureRes extends BlueAsyncRes
    *
    * @implemented
    */
-  _OnWrappedRenderTargetChanged() {
+  _OnWrappedRenderTargetChanged()
+  {
     this._onTextureChange.Broadcast();
   }
 
@@ -810,7 +836,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @notSupported
    * @throws {Error}
    */
-  CreateAndCopyFromRenderTarget() {
+  CreateAndCopyFromRenderTarget()
+  {
     throw resourceBoundaryError("TriTextureRes", "CreateAndCopyFromRenderTarget", "Runtime-resource does not own render targets.");
   }
 
@@ -820,7 +847,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @notSupported
    * @throws {Error}
    */
-  CreateFromTexture() {
+  CreateFromTexture()
+  {
     throw resourceBoundaryError("TriTextureRes", "CreateFromTexture", "Use engine-gpu to copy device textures.");
   }
 
@@ -832,7 +860,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {string|number} object
    * @returns {boolean}
    */
-  HasALObject(type, object) {
+  HasALObject(type, object)
+  {
     return this.HasAdapterResource(`${type}:${object}`);
   }
 
@@ -842,7 +871,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {*}
    */
-  GetPipeline() {
+  GetPipeline()
+  {
     return this.GetAdapterResource("pipeline");
   }
 
@@ -852,7 +882,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {number}
    */
-  GetOriginalMemoryUsage() {
+  GetOriginalMemoryUsage()
+  {
     return this.originalMemoryUsage || getPayloadMemoryUsage(this.GetBitmap());
   }
 
@@ -868,7 +899,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {number} alpha
    * @returns {TriTextureRes}
    */
-  SetAverageColor(red = 0, green = 0, blue = 0, alpha = 0) {
+  SetAverageColor(red = 0, green = 0, blue = 0, alpha = 0)
+  {
     this.averageColor = [red, green, blue, alpha];
     return this;
   }
@@ -879,7 +911,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @notSupported
    * @throws {Error}
    */
-  UpdateSubresource() {
+  UpdateSubresource()
+  {
     throw resourceBoundaryError("TriTextureRes", "UpdateSubresource", "Use engine-gpu to upload texture bytes.");
   }
 
@@ -889,7 +922,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @adapted
    * @returns {boolean}
    */
-  PrepareResources() {
+  PrepareResources()
+  {
     return this.IsPrepared();
   }
 
@@ -962,7 +996,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {boolean}
    */
-  IsMemoryUsageKnown() {
+  IsMemoryUsageKnown()
+  {
     return !this.IsLoading();
   }
 
@@ -972,7 +1007,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @implemented
    * @returns {number} Bytes.
    */
-  GetMemoryUsage() {
+  GetMemoryUsage()
+  {
     return this._memoryUse;
   }
 
@@ -986,7 +1022,8 @@ export class TriTextureRes extends BlueAsyncRes
    * @param {import("#imageio").HostBitmap} bitmap The adopted bitmap.
    * @returns {number} Bytes.
    */
-  static EstimateMemoryUse(bitmap) {
+  static EstimateMemoryUse(bitmap)
+  {
     let bytes = 0;
     const mipCount = bitmap.GetTrueMipCount();
     for (let i = 0; i < mipCount; ++i) bytes += bitmap.GetMipSize(i);

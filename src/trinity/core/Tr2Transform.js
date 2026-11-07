@@ -245,7 +245,9 @@ export class Tr2Transform extends IRoot
    * @returns {Tr2PerObjectData|null} The object's per-object data.
    */
   @be.abstract
-  GetPerObjectData(_accumulator) {}
+  GetPerObjectData(_accumulator)
+  {
+  }
 
   /**
    * Returns whether the displayed mesh has transparent areas.

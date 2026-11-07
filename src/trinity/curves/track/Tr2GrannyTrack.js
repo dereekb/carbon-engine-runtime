@@ -47,7 +47,10 @@ export class Tr2GrannyTrack extends IRoot
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
   @type.object.ref("TriGrannyRes")
-  get grannyRes() { return this._grannyRes; }
+  get grannyRes()
+  {
+    return this._grannyRes;
+  }
 
   /**
    * Moves the notification link with the resource.
@@ -258,7 +261,9 @@ export class Tr2GrannyTrack extends IRoot
    * @param {number} _time Local time in seconds.
    */
   @meta.abstract
-  UpdateValueImpl(_time) {}
+  UpdateValueImpl(_time)
+  {
+  }
 
   /**
    * Carbon's pure virtual `ResetTracks( void )` (Tr2GrannyTrack.h:87): the
@@ -267,7 +272,9 @@ export class Tr2GrannyTrack extends IRoot
    * @abstract
    */
   @meta.abstract
-  ResetTracks() {}
+  ResetTracks()
+  {
+  }
 
   /**
    * Carbon's pure virtual `ApplyTracks( granny_track_group* group, float
@@ -280,7 +287,9 @@ export class Tr2GrannyTrack extends IRoot
    * @param {number} _timeStep Animation time step in seconds.
    */
   @meta.abstract
-  ApplyTracks(_group, _duration, _timeStep) {}
+  ApplyTracks(_group, _duration, _timeStep)
+  {
+  }
 
   /**
    * Carbon's pure virtual `TracksReady( void )` (Tr2GrannyTrack.h:89).
@@ -289,5 +298,7 @@ export class Tr2GrannyTrack extends IRoot
    * @returns {boolean} Whether the subclass's track handles are bound.
    */
   @meta.abstract
-  TracksReady() {}
+  TracksReady()
+  {
+  }
 }

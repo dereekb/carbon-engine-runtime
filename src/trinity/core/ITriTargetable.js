@@ -23,7 +23,9 @@ export class ITriTargetable extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetDamageLocatorCount() {}
+  GetDamageLocatorCount()
+  {
+  }
 
   /**
    * Index of the damage locator closest to a world position. @param {Float32Array} _position @returns {number}
@@ -31,7 +33,9 @@ export class ITriTargetable extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetClosestDamageLocatorIndex(_position) {}
+  GetClosestDamageLocatorIndex(_position)
+  {
+  }
 
   /**
    * Writes a damage locator's position.
@@ -43,7 +47,9 @@ export class ITriTargetable extends IRoot
    * @returns {boolean} Whether the index named a locator.
    */
   @meta.abstract
-  GetDamageLocatorPosition(_index, _inWorldSpace, _out) {}
+  GetDamageLocatorPosition(_index, _inWorldSpace, _out)
+  {
+  }
 
   /**
    * Writes a damage locator's direction.
@@ -55,7 +61,9 @@ export class ITriTargetable extends IRoot
    * @returns {boolean} Whether the index named a locator.
    */
   @meta.abstract
-  GetDamageLocatorDirection(_index, _inWorldSpace, _out) {}
+  GetDamageLocatorDirection(_index, _inWorldSpace, _out)
+  {
+  }
 
   /**
    * Writes where a shot from source aimed at hit lands when it misses.
@@ -66,7 +74,9 @@ export class ITriTargetable extends IRoot
    * @param {Float32Array} _out Output miss position.
    */
   @meta.abstract
-  GetMissPosition(_hit, _source, _out) {}
+  GetMissPosition(_hit, _source, _out)
+  {
+  }
 
   /**
    * A randomized well-facing damage locator for a world position. @param {Float32Array} _position @returns {number}
@@ -74,7 +84,9 @@ export class ITriTargetable extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetGoodDamageLocatorIndex(_position) {}
+  GetGoodDamageLocatorIndex(_position)
+  {
+  }
 
   /**
    * Target radius. @returns {number}
@@ -82,7 +94,9 @@ export class ITriTargetable extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetRadius() {}
+  GetRadius()
+  {
+  }
 
   /**
    * Creates an impact effect at a damage locator.
@@ -95,7 +109,9 @@ export class ITriTargetable extends IRoot
    * @returns {number} Impact index, or -1.
    */
   @meta.abstract
-  CreateImpact(_damageLocatorIndex, _direction, _lifeTime, _size) {}
+  CreateImpact(_damageLocatorIndex, _direction, _lifeTime, _size)
+  {
+  }
 
   /**
    * Updates a live impact's position.
@@ -107,7 +123,9 @@ export class ITriTargetable extends IRoot
    * @returns {boolean} Whether the impact is still live.
    */
   @meta.abstract
-  UpdateImpact(_out, _direction, _impactIndex) {}
+  UpdateImpact(_out, _direction, _impactIndex)
+  {
+  }
 
   /**
    * Carbon's default (ITriTargetable.h:23-26): no impact configuration. @returns {number}
@@ -132,7 +150,9 @@ export class ITriTargetable extends IRoot
    * @returns {boolean} Whether the projectile hit.
    */
   @meta.abstract
-  GetImpactPosition(_locator, _posPrev, _posNow, _epsilon, _out) {}
+  GetImpactPosition(_locator, _posPrev, _posNow, _epsilon, _out)
+  {
+  }
 
   /**
    * Whether impacts use the shield ellipsoid. @returns {boolean}
@@ -140,7 +160,9 @@ export class ITriTargetable extends IRoot
    * @abstract
    */
   @meta.abstract
-  HasImpactConfigurationShield() {}
+  HasImpactConfigurationShield()
+  {
+  }
 
   /**
    * Carbon's default (ITriTargetable.h:32-34) ignores the locator. @param {number} _locator

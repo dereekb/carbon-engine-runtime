@@ -42,10 +42,16 @@ export class Tr2Mesh extends Tr2MeshBase
   /** The primary geometry resource. @implemented */
   @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
-  get geometry() { return this._geometry; }
+  get geometry()
+  {
+    return this._geometry;
+  }
 
   /** @implemented Assign through Carbon's resource setter. */
-  set geometry(resource) { this.SetGeometryRes(resource); }
+  set geometry(resource)
+  {
+    this.SetGeometryRes(resource);
+  }
 
   /** Geometry storage behind the notification-aware property. */
   _geometry = null;
@@ -55,10 +61,16 @@ export class Tr2Mesh extends Tr2MeshBase
   /** Carbon: m_lowResGeometryResource (trinity/trinity/Tr2Mesh.h:93).
    */
   @type.object.ref("TriGeometryRes")
-  get lowResGeometry() { return this._lowResGeometry; }
+  get lowResGeometry()
+  {
+    return this._lowResGeometry;
+  }
 
   /** @implemented Assign through Carbon's low-detail resource setter. */
-  set lowResGeometry(resource) { this.SetLowResGeometryRes(resource); }
+  set lowResGeometry(resource)
+  {
+    this.SetLowResGeometryRes(resource);
+  }
 
   /** Low-detail storage behind the notification-aware property. */
   _lowResGeometry = null;

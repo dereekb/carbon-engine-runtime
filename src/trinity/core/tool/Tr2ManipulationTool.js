@@ -146,7 +146,9 @@ export class Tr2ManipulationTool extends IRoot
    * @param {object} _context The frame context.
    */
   @meta.abstract
-  Update(_context) {}
+  Update(_context)
+  {
+  }
 
   /**
    * Required guide-geometry construction contract (Tr2ManipulationTool.h:38).
@@ -154,7 +156,9 @@ export class Tr2ManipulationTool extends IRoot
    * @abstract
    */
   @meta.abstract
-  GenLineSets() {}
+  GenLineSets()
+  {
+  }
 
   /**
    * Required primitive-colour reset contract (Tr2ManipulationTool.h:39).
@@ -162,7 +166,9 @@ export class Tr2ManipulationTool extends IRoot
    * @abstract
    */
   @meta.abstract
-  ResetPrimitiveColors() {}
+  ResetPrimitiveColors()
+  {
+  }
 
   /**
    * Required visible-primitive collection contract (Tr2ManipulationTool.h:40).
@@ -170,7 +176,9 @@ export class Tr2ManipulationTool extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetPrimitivesToRender() {}
+  GetPrimitivesToRender()
+  {
+  }
 
   /**
    * Carbon's pure-virtual `Move( int mouseX, int mouseY, int mouseXDelta, int
@@ -188,7 +196,9 @@ export class Tr2ManipulationTool extends IRoot
    */
   @be.mapMethodAndWrap()
   @be.abstract
-  Move(_mouseX, _mouseY, _mouseXDelta, _mouseYDelta, _viewport, _viewMatrix, _projectionMatrix) {}
+  Move(_mouseX, _mouseY, _mouseXDelta, _mouseYDelta, _viewport, _viewMatrix, _projectionMatrix)
+  {
+  }
 
   /**
    * Invokes Carbon's move veto callback with current and proposed transforms.

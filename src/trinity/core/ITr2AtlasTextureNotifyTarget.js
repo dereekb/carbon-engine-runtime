@@ -32,5 +32,7 @@ export class ITr2AtlasTextureNotifyTarget
    * @returns {void}
    */
   @meta.abstract
-  AtlasTextureChanged(_texture) {}
+  AtlasTextureChanged(_texture)
+  {
+  }
 }

@@ -31,5 +31,7 @@ export class ITr2Sprite2dTextureNotifyTarget
    * @returns {void}
    */
   @meta.abstract
-  Sprite2dTextureChanged(_texture) {}
+  Sprite2dTextureChanged(_texture)
+  {
+  }
 }

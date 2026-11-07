@@ -14,7 +14,9 @@ export class ITr2GpuBuffer extends IRoot
    * @returns {object|null} The Tr2BufferAL, or null.
    */
   @meta.abstract
-  GetGpuBuffer(_index) {}
+  GetGpuBuffer(_index)
+  {
+  }
 }
 
 CjsSchema.exposure.interface("ITr2GpuBuffer")(ITr2GpuBuffer);

@@ -12,7 +12,9 @@ export class ITr2TextureProvider extends IRoot
    * @returns {object|null} Texture value supplied by the implementation.
    */
   @meta.abstract
-  GetTexture() {}
+  GetTexture()
+  {
+  }
 
   /**
    * Returns the provider's texture-change event (ITr2TextureProvider.h:16),
@@ -22,7 +24,9 @@ export class ITr2TextureProvider extends IRoot
    * @returns {import("./Tr2Event.js").Tr2Event} The provider's m_onTextureChange.
    */
   @meta.abstract
-  OnTextureChange() {}
+  OnTextureChange()
+  {
+  }
 }
 
 CjsSchema.exposure.interface("ITr2TextureProvider")(ITr2TextureProvider);

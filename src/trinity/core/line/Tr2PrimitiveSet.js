@@ -140,7 +140,9 @@ export class Tr2PrimitiveSet extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetBatchesImpl(_accumulator, _perObjectData, _effect, _reason) {}
+  GetBatchesImpl(_accumulator, _perObjectData, _effect, _reason)
+  {
+  }
 
   /**
    * Native primitive sets participate in transparent sorting (cpp:47).

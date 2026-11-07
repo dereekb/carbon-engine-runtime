@@ -83,7 +83,7 @@ export class BlueCallbackManWorker
   // runs a module's callbacks never loads it. Once installed, the host reports
   // "ready", so the manager can tell a worker that never loaded from one that
   // failed later.
-  
+
   /**
    * Buffers in a result, moved rather than copied back to the manager.
    *

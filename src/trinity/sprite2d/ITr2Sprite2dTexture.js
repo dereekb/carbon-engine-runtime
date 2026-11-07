@@ -19,7 +19,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  Apply(_renderer, _index) {}
+  Apply(_renderer, _index)
+  {
+  }
 
   /**
    * Returns texture width.
@@ -27,7 +29,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetWidth() {}
+  GetWidth()
+  {
+  }
 
   /**
    * Returns texture height.
@@ -35,7 +39,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetHeight() {}
+  GetHeight()
+  {
+  }
 
   /**
    * Returns the source window width.
@@ -43,7 +49,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetSrcWidth() {}
+  GetSrcWidth()
+  {
+  }
 
   /**
    * Returns the source window height.
@@ -51,7 +59,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  GetSrcHeight() {}
+  GetSrcHeight()
+  {
+  }
 
   /**
    * Reports asynchronous texture loading.
@@ -59,7 +69,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  IsLoading() {}
+  IsLoading()
+  {
+  }
 
   /**
    * Reports whether the texture is ready.
@@ -67,7 +79,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  IsGood() {}
+  IsGood()
+  {
+  }
 
   /**
    * Registers a change listener.
@@ -75,7 +89,9 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  RegisterForChangeNotification(_target) {}
+  RegisterForChangeNotification(_target)
+  {
+  }
 
   /**
    * Removes a change listener.
@@ -83,6 +99,8 @@ export class ITr2Sprite2dTexture extends IRoot
    * @abstract
    */
   @meta.abstract
-  UnregisterForChangeNotification(_target) {}
+  UnregisterForChangeNotification(_target)
+  {
+  }
 
 }

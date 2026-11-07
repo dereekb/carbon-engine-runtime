@@ -13,7 +13,9 @@ export class ITr2DynamicBindingOwner extends IRoot
    * @returns {Object<string, object>} The owner's parameter map.
    */
 
-  GetParameterMap() {}
+  GetParameterMap()
+  {
+  }
 }
 
 CjsSchema.decorateMethod(ITr2DynamicBindingOwner, "GetParameterMap", meta.abstract);

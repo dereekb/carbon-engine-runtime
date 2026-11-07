@@ -15,7 +15,9 @@ export class ITr2MultiPassScene extends IRoot
    * @returns {number} Native RenderPassResult value.
    */
   @meta.abstract
-  RenderPass(_pass, _renderContext) {}
+  RenderPass(_pass, _renderContext)
+  {
+  }
 
   static PassType = PassType;
   static RenderPassResult = RenderPassResult;

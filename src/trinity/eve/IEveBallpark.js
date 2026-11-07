@@ -14,7 +14,9 @@ export class IEveBallpark extends IEveReferencePoint
    * @abstract
    */
   @be.abstract
-  Delta(_time, _referencePoint, _smoothedReferencePoint) {}
+  Delta(_time, _referencePoint, _smoothedReferencePoint)
+  {
+  }
 
   /**
    * Writes the reference-point velocity delta for a time.
@@ -22,7 +24,9 @@ export class IEveBallpark extends IEveReferencePoint
    * @abstract
    */
   @be.abstract
-  DeltaVel(_time, _velocity) {}
+  DeltaVel(_time, _velocity)
+  {
+  }
 
   /**
    * Returns the ballpark unit scale.
@@ -30,7 +34,9 @@ export class IEveBallpark extends IEveReferencePoint
    * @abstract
    */
   @be.abstract
-  GetUnitBase() {}
+  GetUnitBase()
+  {
+  }
 
   /**
    * Sets the ballpark unit scale.
@@ -38,6 +44,8 @@ export class IEveBallpark extends IEveReferencePoint
    * @abstract
    */
   @be.abstract
-  SetUnitBase(_unit) {}
+  SetUnitBase(_unit)
+  {
+  }
 
 }

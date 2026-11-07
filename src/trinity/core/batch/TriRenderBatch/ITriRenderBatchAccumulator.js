@@ -129,7 +129,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
   */
   @meta.abstract
-  Clear() {}
+  Clear()
+  {
+  }
 
   /**
    * Abstract: concrete accumulators take ownership of a batch and file it for
@@ -138,7 +140,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
   */
   @meta.abstract
-  Commit(_batch) {}
+  Commit(_batch)
+  {
+  }
 
   /**
    * Abstract: the GDPR-eligible batch vector.
@@ -146,7 +150,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
    */
   @meta.abstract
-  GetGdprBatches() {}
+  GetGdprBatches()
+  {
+  }
 
   /**
    * Abstract: the plain batch vector.
@@ -154,7 +160,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
    */
   @meta.abstract
-  GetBatches() {}
+  GetBatches()
+  {
+  }
 
   /**
    * Abstract: concrete accumulators sort and group-count the collected batches.
@@ -162,7 +170,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
    */
   @meta.abstract
-  Finalize() {}
+  Finalize()
+  {
+  }
 
   /**
    * Abstract: total number of collected batches.
@@ -170,7 +180,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
    */
   @meta.abstract
-  GetBatchCount() {}
+  GetBatchCount()
+  {
+  }
 
   /**
    * Abstract: whether the collected batches are effect-sorted rather than
@@ -179,7 +191,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
   */
   @meta.abstract
-  IsChainedByEffect() {}
+  IsChainedByEffect()
+  {
+  }
 
   /**
    * Abstract: folds another accumulator's batches into this one.
@@ -187,7 +201,9 @@ export class ITriRenderBatchAccumulator
    * @abstract
    */
   @meta.abstract
-  TransferFrom(_source) {}
+  TransferFrom(_source)
+  {
+  }
 }
 
 // States: SetUserData, SetRenderingMode and GetRenderingMode are TriRenderBatch.h:273-287. Allocate is adapted: Carbon pool-allocates from the

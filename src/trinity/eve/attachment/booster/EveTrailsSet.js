@@ -42,10 +42,16 @@ export class EveTrailsSet
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
   @type.object.ref("TriGeometryRes")
-  get geometryResource() { return this._geometryResource; }
+  get geometryResource()
+  {
+    return this._geometryResource;
+  }
 
   /** @implemented Routes property assignment through the resource binding. */
-  set geometryResource(resource) { this.SetGeometryResource(resource); }
+  set geometryResource(resource)
+  {
+    this.SetGeometryResource(resource);
+  }
 
   /** Resource storage behind the notification-aware property. */
   _geometryResource = null;

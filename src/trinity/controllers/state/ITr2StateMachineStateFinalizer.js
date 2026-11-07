@@ -47,7 +47,9 @@ export class ITr2StateMachineStateFinalizer extends IRoot
    * @returns {boolean} Whether the state machine may leave the current state.
    */
   @meta.abstract
-  CanTransition(_controller) {}
+  CanTransition(_controller)
+  {
+  }
 }
 
 

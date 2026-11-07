@@ -21,6 +21,8 @@ export class ITr2FroxelFogSettings extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  GetFroxelFogSettings() {}
+  GetFroxelFogSettings()
+  {
+  }
 
 }

@@ -121,7 +121,7 @@ export class EveStarfield
    * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Initializes device storage when creation is allowed (cpp:98-102). Carbon prepares here (cpp:98-102); here nothing prepares during a build: the first use (IsGood) does, so
    */
 
   Initialize()
@@ -132,7 +132,7 @@ export class EveStarfield
   /**
    * Explicit AL destruction replaces native assignment to an empty buffer.
    *
-   * @adapted
+   * @adapted Explicit AL destruction replaces native assignment to an empty buffer
    */
 
   ReleaseResources()
@@ -146,7 +146,7 @@ export class EveStarfield
    * The AL description replaces the C++ stride/count overload. The local
    * TriRand sequence preserves seeded stars without reseeding unrelated JS code.
    *
-   * @adapted
+   * @adapted Generates the native packed sprite stream and uploads it (cpp:110-174). The AL description replaces the C++ stride/count overload. The local TriRand sequence preserves se
    */
 
   _OnPrepareResources()
@@ -223,7 +223,7 @@ export class EveStarfield
   /**
    * Submits the sprite quads through the existing shared index allocation (cpp:62-95).
    *
-   * @adapted
+   * @adapted Submits the sprite quads through the existing shared index allocation (cpp:62-95)
    */
 
   GetBatches(accumulator, perObjectData)

@@ -411,7 +411,9 @@ export class Tr2MeshBase
    * @returns {object} The geometry resource.
    */
   @be.abstract
-  GetGeometryResource() {}
+  GetGeometryResource()
+  {
+  }
 
   /**
    * The live area list for a TriBatchType, or null for a non-integer or unmapped

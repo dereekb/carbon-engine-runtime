@@ -195,6 +195,7 @@ export function readGr2Sections(buf)
  * pointer identity for repeated references in the resulting object graph.
  *
  * @param {Uint8Array|Buffer} buf Raw `.gr2` file bytes.
+ * @param {object} [options] Read options.
  * @returns {RawGr2ReadResult} Parsed Granny file metadata and object graph.
  * @throws {Error} If the file magic, compression format, or reflected graph is
  * unsupported or malformed.

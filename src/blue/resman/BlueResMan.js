@@ -4199,7 +4199,7 @@ export class BlueResMan
    * @param {string|number|symbol} property Property key.
    * @returns {boolean}
    */
-  
+
   static _defaultQueueYield()
   {
     return new Promise(resolve => setTimeout(resolve, 0));

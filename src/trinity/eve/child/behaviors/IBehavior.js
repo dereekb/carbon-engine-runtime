@@ -73,7 +73,9 @@ export class IBehavior extends IRoot
    * @param {Array} _dronesInSearchRadius - per-agent neighbours within the search radius
    * @returns {Array}
    */
-  CalculateBehavior(_agents, _scratchData, _deltaTime, _group, _system, _dronesInSearchRadius) {}
+  CalculateBehavior(_agents, _scratchData, _deltaTime, _group, _system, _dronesInSearchRadius)
+  {
+  }
 
   /**
    * Debug-renderer options; none by default (h:57-59).

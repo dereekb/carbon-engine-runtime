@@ -21,7 +21,9 @@ export class ITr2SpriteObject extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  GatherSprites(_renderer) {}
+  GatherSprites(_renderer)
+  {
+  }
 
   /**
    * Required native PickPoint contract.
@@ -33,7 +35,9 @@ export class ITr2SpriteObject extends IRoot
    * @returns {ITr2SpriteObject|null}
    */
   @meta.abstract
-  PickPoint(_x, _y, _renderer) {}
+  PickPoint(_x, _y, _renderer)
+  {
+  }
 
   /**
    * Required native SetParent contract.
@@ -43,7 +47,9 @@ export class ITr2SpriteObject extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  SetParent(_parent) {}
+  SetParent(_parent)
+  {
+  }
 
   /**
    * Required native SetDirty contract.
@@ -52,7 +58,9 @@ export class ITr2SpriteObject extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  SetDirty() {}
+  SetDirty()
+  {
+  }
 
   /**
    * Required native SetChildDirty contract.
@@ -62,7 +70,9 @@ export class ITr2SpriteObject extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  SetChildDirty(_child) {}
+  SetChildDirty(_child)
+  {
+  }
 
   /**
    * Required native IsAuxMouseover contract.
@@ -71,6 +81,8 @@ export class ITr2SpriteObject extends IRoot
    * @returns {boolean}
    */
   @meta.abstract
-  IsAuxMouseover() {}
+  IsAuxMouseover()
+  {
+  }
 
 }

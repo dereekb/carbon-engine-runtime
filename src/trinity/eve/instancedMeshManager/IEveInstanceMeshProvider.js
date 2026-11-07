@@ -19,6 +19,8 @@ export class IEveInstanceMeshProvider
    * @param {EveInstancedMeshManager} _manager The manager collecting this frame.
    */
   @meta.abstract
-  AddMeshesToManager(_manager) {}
+  AddMeshesToManager(_manager)
+  {
+  }
 
 }

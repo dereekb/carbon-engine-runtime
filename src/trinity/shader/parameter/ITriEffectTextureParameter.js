@@ -31,7 +31,9 @@ export class ITriEffectTextureParameter extends ITriEffectResourceParameter
    * @abstract
    */
   @meta.abstract
-  UsedWithScreenSize(_screenSize, _worldRadius, _uvDensities) {}
+  UsedWithScreenSize(_screenSize, _worldRadius, _uvDensities)
+  {
+  }
 
   /**
    * Turns mip selection on, against one density scale per UV set.
@@ -39,7 +41,9 @@ export class ITriEffectTextureParameter extends ITriEffectResourceParameter
    * @abstract
    */
   @meta.abstract
-  EnableTextureLoding(_uvDensityScale) {}
+  EnableTextureLoding(_uvDensityScale)
+  {
+  }
 
   /**
    * Turns mip selection off.
@@ -47,7 +51,9 @@ export class ITriEffectTextureParameter extends ITriEffectResourceParameter
    * @abstract
    */
   @meta.abstract
-  DisableTextureLoding() {}
+  DisableTextureLoding()
+  {
+  }
 }
 
 

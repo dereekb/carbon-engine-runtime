@@ -132,7 +132,7 @@ export class EveLineSet
    * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Carbon Initialize (cpp:35-42): seeds the line capacity at 100 and prepares the resources. Carbon also reserves the line vector; a JavaScript array needs no reserve. Carbo
    */
 
   Initialize()
@@ -144,7 +144,7 @@ export class EveLineSet
   /**
    * Carbon ReleaseResources (cpp:45-50). Adapted: the buffer is destroyed explicitly.
    *
-   * @adapted
+   * @adapted Carbon ReleaseResources (cpp:45-50). Adapted: the buffer is destroyed explicitly
    */
 
   ReleaseResources(_storage)

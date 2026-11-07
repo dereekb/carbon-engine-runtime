@@ -14,7 +14,9 @@ export class CjsTrinityStepExecutor
    * @abstract
    */
   @meta.abstract
-  BeginStep(_step, _realTime, _simTime, _job, _context) {}
+  BeginStep(_step, _realTime, _simTime, _job, _context)
+  {
+  }
 
   /**
    * Executes one canonical render step.
@@ -22,7 +24,9 @@ export class CjsTrinityStepExecutor
    * @abstract
    */
   @meta.abstract
-  ExecuteStep(_step, _realTime, _simTime, _job, _context) {}
+  ExecuteStep(_step, _realTime, _simTime, _job, _context)
+  {
+  }
 
   /**
    * Ends one canonical render step.
@@ -30,7 +34,9 @@ export class CjsTrinityStepExecutor
    * @abstract
    */
   @meta.abstract
-  EndStep(_step, _realTime, _simTime, _job, _context) {}
+  EndStep(_step, _realTime, _simTime, _job, _context)
+  {
+  }
 
   // THERE WAS A SCENE BRACKET HERE, AND IT IS GONE (2026-09-18). BeginScene
   // and EndScene are the BACKEND's, inherited by Carbon's render context from
@@ -45,7 +51,9 @@ export class CjsTrinityStepExecutor
    * @abstract
    */
   @meta.abstract
-  BeginBatch(_owner, _context) {}
+  BeginBatch(_owner, _context)
+  {
+  }
 
   /**
    * Closes a render-target and depth-stencil batch bracket.
@@ -53,6 +61,8 @@ export class CjsTrinityStepExecutor
    * @abstract
    */
   @meta.abstract
-  EndBatch(_owner, _context) {}
+  EndBatch(_owner, _context)
+  {
+  }
 
 }

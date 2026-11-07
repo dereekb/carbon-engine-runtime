@@ -604,7 +604,7 @@ export class CjsGrannyCurves
    * (GrannyEvaluateCurveAtT and GrannySampleModelAnimations;
    * Tr2GrannyAnimationLayer.cpp:561,749, Tr2GrannyTransformTrack.cpp:48).
    * Carbon's own keyframe read is getKeyFrameAtT, which does not clamp.
-   * Unverified: the Granny SDK is not in e:\carbonengine, so whether Granny
+   * Unverified: the Granny SDK is not in Carbon's source, so whether Granny
    * clamps here cannot be checked from source.
    */
   static #sampleKeyframedCurve(count, time, duration)

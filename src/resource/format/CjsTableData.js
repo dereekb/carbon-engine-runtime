@@ -7,7 +7,12 @@ import { CARBON_TYPE } from "../../blue/schema/types/carbonTypes.js";
  */
 export class CjsTableData
 {
-    /** Validate a shared table header without acquiring records. Descriptions are nonoperational. */
+    /**
+     * Validates a shared table header without acquiring records. Descriptions are nonoperational.
+     *
+     * @param {object} definition The table definition.
+     * @returns {object} The validated copy.
+     */
     static defineTable(definition)
     {
         const table = structuredClone(definition);
@@ -27,7 +32,14 @@ export class CjsTableData
         return table;
     }
 
-    /** Emit the column-oriented revision using the same header accepted by TnyDatabase. */
+    /**
+     * Emits the column-oriented revision using the same header accepted by TnyDatabase.
+     *
+     * @param {object} definition The table definition.
+     * @param {object[]} records The rows.
+     * @param {object} [metadata] Metadata kept with the revision.
+     * @returns {object} The revision document.
+     */
     static writeRows(definition, records, metadata = {})
     {
         const table = this.defineTable(definition);
@@ -41,7 +53,13 @@ export class CjsTableData
         return structuredClone({ format: "cjstables", version: 2, metadata, tables: [{ ...table, entries }] });
     }
 
-    /** Decode one column-oriented table to ordinary records without class hydration. */
+    /**
+     * Decodes one column-oriented table to ordinary records without class hydration.
+     *
+     * @param {object} document The revision document.
+     * @param {string} name The table's name.
+     * @returns {object[]} The rows.
+     */
     static readRows(document, name)
     {
         if (document?.format !== "cjstables" || document.version !== 2 || !Array.isArray(document.tables))

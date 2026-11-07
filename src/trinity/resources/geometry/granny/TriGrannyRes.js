@@ -1321,7 +1321,7 @@ export class TriGrannyRes extends BlueAsyncRes
   /**
    * Replaces one morph target's offsets for later bakes, in memory only.
    *
-   * @cjs Registered in docs/architecture/non-carbon-extensions.md. The shipped data stays untouched.
+   * @cjs The shipped data stays untouched.
    * @param {number} meshIx Mesh index.
    * @param {number} morphIx Morph target index.
    * @param {Float32Array} position Replacement position offsets.

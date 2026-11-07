@@ -15,7 +15,9 @@ export class IEveDistributionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  RegeneratePlacementData() {}
+  RegeneratePlacementData()
+  {
+  }
 
   /**
    * Returns the number of available placements.
@@ -23,7 +25,9 @@ export class IEveDistributionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetNumberOfPlacements() {}
+  GetNumberOfPlacements()
+  {
+  }
 
   /**
    * Returns placement data for the requested entry.
@@ -31,7 +35,9 @@ export class IEveDistributionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetPlacementData(_index) {}
+  GetPlacementData(_index)
+  {
+  }
 
   /**
    * Writes the center of the requested placement data.
@@ -39,7 +45,9 @@ export class IEveDistributionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetPlacementDataCenter(_index, _out) {}
+  GetPlacementDataCenter(_index, _out)
+  {
+  }
 
   /**
    * Reports whether the distribution produces dynamic movement.
@@ -47,7 +55,9 @@ export class IEveDistributionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetHasDynamicMovement() {}
+  GetHasDynamicMovement()
+  {
+  }
 
   /**
    * Runs the optional synchronous distribution update hook.

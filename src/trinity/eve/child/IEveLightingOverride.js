@@ -12,7 +12,9 @@ export class IEveLightingOverride extends IRoot
    *
    * @abstract
    */
-  GetOverrides() {}
+  GetOverrides()
+  {
+  }
 }
 
 CjsSchema.decorateMethod(IEveLightingOverride, "GetOverrides", meta.abstract);

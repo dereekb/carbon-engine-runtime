@@ -15,7 +15,9 @@ export class CjsTrinityBatchDispatcher
    * @abstract
    */
   @meta.abstract
-  PrepareBatchMap(_batchMap) {}
+  PrepareBatchMap(_batchMap)
+  {
+  }
 
   /**
    * Encodes one canonical batch type from a prepared map into a render pass.
@@ -23,7 +25,9 @@ export class CjsTrinityBatchDispatcher
    * @abstract
    */
   @meta.abstract
-  EncodeBatchType(_pass, _preparedBatchMap, _batchType) {}
+  EncodeBatchType(_pass, _preparedBatchMap, _batchType)
+  {
+  }
 
   /**
    * Releases renderer-owned state associated with a prepared batch map.
@@ -31,6 +35,8 @@ export class CjsTrinityBatchDispatcher
    * @abstract
    */
   @meta.abstract
-  DestroyBatchMap(_preparedBatchMap) {}
+  DestroyBatchMap(_preparedBatchMap)
+  {
+  }
 
 }

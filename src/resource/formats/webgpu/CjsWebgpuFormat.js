@@ -352,7 +352,8 @@ export class CjsWebgpuFormat extends CjsFormat
      * Records the features of the device effects are translated for. A permutation
      * that needs one the device lacks is refused with code `WGSL_FEATURE_UNAVAILABLE`.
      *
-     * @cjs Translation runs in the browser, so it can know its device.
+     * Not Carbon: translation runs in the browser, so it can know its device.
+     *
      * @param {Iterable<string>} features The device's `GPUSupportedFeatures`.
      * @returns {void}
      */

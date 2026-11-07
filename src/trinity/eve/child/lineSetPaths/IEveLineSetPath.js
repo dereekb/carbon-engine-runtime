@@ -16,7 +16,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  Update(_updateContext, _params) {}
+  Update(_updateContext, _params)
+  {
+  }
 
   /**
    * Writes instance transforms to a mutable { view: DataView, offset: bytes }
@@ -25,7 +27,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  UpdateBuffer(_renderContext, _cursor, _transform, _stride) {}
+  UpdateBuffer(_renderContext, _cursor, _transform, _stride)
+  {
+  }
 
   /**
    * Regenerates the path points beneath the supplied transform.
@@ -33,7 +37,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  GeneratePoints(_transform) {}
+  GeneratePoints(_transform)
+  {
+  }
 
   /**
    * Returns the number of generated points in the path.
@@ -41,7 +47,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  GetPointCount() {}
+  GetPointCount()
+  {
+  }
 
   /**
    * Adds this path's lines to a maintained curve-line set.
@@ -49,7 +57,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  AddLinesToSet(_lineSet, _color, _animationColor, _scrollSpeed) {}
+  AddLinesToSet(_lineSet, _color, _animationColor, _scrollSpeed)
+  {
+  }
 
   /**
    * Recalculates the path's bounding sphere.
@@ -57,7 +67,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  CalculateBoundingSphere(_radius = 0, _updateLines = true) {}
+  CalculateBoundingSphere(_radius = 0, _updateLines = true)
+  {
+  }
 
   /**
    * Writes the path's current bounding sphere.
@@ -65,7 +77,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  GetBoundingSphere(_out) {}
+  GetBoundingSphere(_out)
+  {
+  }
 
   /**
    * Updates path visibility for the current frustum and LOD.
@@ -73,7 +87,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  UpdateVisibility(_frustum, _lod, _parentTransform) {}
+  UpdateVisibility(_frustum, _lod, _parentTransform)
+  {
+  }
 
   /**
    * Adds line-path debug controls.
@@ -81,7 +97,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  GetDebugOptions(_options) {}
+  GetDebugOptions(_options)
+  {
+  }
 
   /**
    * Renders line-path debug information.
@@ -89,7 +107,9 @@ export class IEveLineSetPath extends EveChildTransform
    * @abstract
    */
   @be.abstract
-  RenderDebugInfo(_renderer, _parentTransform) {}
+  RenderDebugInfo(_renderer, _parentTransform)
+  {
+  }
 
   static scratch = { vec3_0: vec3.create(), vec4_0: vec4.create() };
 

@@ -15,7 +15,9 @@ export class IEveDistributionPlacementGenerators extends IRoot
    * @abstract
    */
   @be.abstract
-  GetInitialPlacements(_out) {}
+  GetInitialPlacements(_out)
+  {
+  }
 
   /**
    * Reports whether this generator requests placement regeneration.
@@ -23,7 +25,9 @@ export class IEveDistributionPlacementGenerators extends IRoot
    * @abstract
    */
   @be.abstract
-  IsRequestingRegeneration() {}
+  IsRequestingRegeneration()
+  {
+  }
 
   /**
    * Runs the optional synchronous placement-generator update hook.

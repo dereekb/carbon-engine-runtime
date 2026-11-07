@@ -14,7 +14,9 @@ export class IEveSmartLightGroupAttributeModifier extends EveSmartLightBaseAttri
    * @abstract
    */
   @be.abstract
-  UpdateSyncronous(_updateContext, _params, _activationMultiplier) {}
+  UpdateSyncronous(_updateContext, _params, _activationMultiplier)
+  {
+  }
 
   /**
    * Applies this modifier to one smart-light attribute.
@@ -22,7 +24,9 @@ export class IEveSmartLightGroupAttributeModifier extends EveSmartLightBaseAttri
    * @abstract
    */
   @be.abstract
-  ProcessAttributeModifier(_attribute, _placement, _entityPosition, _entityDirection, _modifierStrength) {}
+  ProcessAttributeModifier(_attribute, _placement, _entityPosition, _entityDirection, _modifierStrength)
+  {
+  }
 
   /**
    * Accepts an optional controller variable.

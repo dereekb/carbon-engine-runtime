@@ -15,7 +15,9 @@ export class CjsTrinityBatchResolver
    * @abstract
    */
   @meta.abstract
-  ResolveMaterial(_material, _batch, _context) {}
+  ResolveMaterial(_material, _batch, _context)
+  {
+  }
 
   /**
    * Resolves a canonical batch's geometry source into renderer-owned geometry.
@@ -23,7 +25,9 @@ export class CjsTrinityBatchResolver
    * @abstract
    */
   @meta.abstract
-  ResolveGeometry(_geometrySource, _batch, _context) {}
+  ResolveGeometry(_geometrySource, _batch, _context)
+  {
+  }
 
   /**
    * Resolves a canonical batch's object data into renderer-owned bindings.
@@ -31,6 +35,8 @@ export class CjsTrinityBatchResolver
    * @abstract
    */
   @meta.abstract
-  ResolveBindings(_batch, _objectData, _context) {}
+  ResolveBindings(_batch, _objectData, _context)
+  {
+  }
 
 }

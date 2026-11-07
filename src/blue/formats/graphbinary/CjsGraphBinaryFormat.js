@@ -160,7 +160,7 @@ export class CjsGraphBinaryFormat extends CjsFormat
      * @property {function(ArrayBufferView, string): number} write Appends a payload of the named type.
      * @property {function(object, string): Uint8Array} finish Encodes the file around the wire root.
      */
-    
+
     /**
      * An opened CJSB file: the wire root and a reader for its bufferViews.
      *
@@ -168,7 +168,7 @@ export class CjsGraphBinaryFormat extends CjsFormat
      * @property {object} root Wire root from the JSON section.
      * @property {function(number, (string|null)=): ArrayBufferView} read Copies one bufferView into an owned typed array.
      */
-    
+
     /**
      * Build a binary section without per-element typed-array decoding.
      *

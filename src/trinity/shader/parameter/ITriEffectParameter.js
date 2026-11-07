@@ -32,21 +32,27 @@ export class ITriEffectParameter extends IRoot
    *
    * @abstract
    */
-  GetParameterName() {}
+  GetParameterName()
+  {
+  }
 
   /**
    * Re-resolves this parameter's handles against a shader's reflection.
    *
    * @abstract
    */
-  RebuildEffectHandles(_effectRes) {}
+  RebuildEffectHandles(_effectRes)
+  {
+  }
 
   /**
    * Folds this parameter's content into a running FNV1 hash.
    *
    * @abstract
    */
-  GetHashValue(_startingHash) {}
+  GetHashValue(_startingHash)
+  {
+  }
 
   /**
    * Whether writes to this parameter notify their destination.

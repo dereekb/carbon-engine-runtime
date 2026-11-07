@@ -16,7 +16,9 @@ export class ITr2CurveSetOwner extends IRoot
    * @param {string} _rangeName The range name.
    * @returns {void}
    */
-  PlayCurveSet(_name, _rangeName) {}
+  PlayCurveSet(_name, _rangeName)
+  {
+  }
 
   /**
    * Stops a named curve set.
@@ -25,7 +27,9 @@ export class ITr2CurveSetOwner extends IRoot
    * @param {string} _name The curve set name.
    * @returns {void}
    */
-  StopCurveSet(_name) {}
+  StopCurveSet(_name)
+  {
+  }
 
   /**
    * Leaves explicit curve-set updates to owners that override this native default.
@@ -46,7 +50,9 @@ export class ITr2CurveSetOwner extends IRoot
    * @param {string} _name The curve set name.
    * @returns {number} The duration reported by the owner.
    */
-  GetCurveSetDuration(_name) {}
+  GetCurveSetDuration(_name)
+  {
+  }
 
   /**
    * Returns the duration of a named range in a curve set.
@@ -56,7 +62,9 @@ export class ITr2CurveSetOwner extends IRoot
    * @param {string} _rangeName The range name.
    * @returns {number} The range duration reported by the owner.
    */
-  GetRangeDuration(_name, _rangeName) {}
+  GetRangeDuration(_name, _rangeName)
+  {
+  }
 
   /**
    * Leaves starting all curve sets to owners that override this native default.

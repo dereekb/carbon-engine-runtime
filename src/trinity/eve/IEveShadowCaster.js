@@ -41,7 +41,9 @@ export class IEveShadowCaster extends IRoot
    * @returns {boolean}
    */
 
-  IsCastingShadow__ShadowFrustum(_cameraFrustum, _shadowFrustum, _renderReason, _sizeInShadow) {}
+  IsCastingShadow__ShadowFrustum(_cameraFrustum, _shadowFrustum, _renderReason, _sizeInShadow)
+  {
+  }
 
   /**
    * Carbon's IsCastingShadow( cameraFrustum, position, radius, renderReason )
@@ -62,7 +64,9 @@ export class IEveShadowCaster extends IRoot
    * @abstract
    */
 
-  GetShadowBatches(_batches, _perObjectData, _shadowPixelSize) {}
+  GetShadowBatches(_batches, _perObjectData, _shadowPixelSize)
+  {
+  }
 
   /**
    * Carbon's GetShadowPerObjectData (h:150). Pure virtual.
@@ -70,7 +74,9 @@ export class IEveShadowCaster extends IRoot
    * @abstract
    */
 
-  GetShadowPerObjectData(_accumulator) {}
+  GetShadowPerObjectData(_accumulator)
+  {
+  }
 
   /**
    * Carbon's PushRtGeometry (h:152): raytraced shadows; empty by default.

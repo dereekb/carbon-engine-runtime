@@ -292,7 +292,10 @@ export class EveTurretSet extends EveEntity
 
   /** m_geometryResource (TriGeometryResPtr) [READ] */
   @type.resource("TriGeometryRes")
-  get geometryResource() { return this._geometryResource; }
+  get geometryResource()
+  {
+    return this._geometryResource;
+  }
 
   /**
    * Moves the geometry notification link and releases the old cached data.

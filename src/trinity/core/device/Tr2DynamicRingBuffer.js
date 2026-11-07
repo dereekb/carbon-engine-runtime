@@ -323,7 +323,9 @@ export class Tr2DynamicRingBuffer
    * @returns {number} An `ALResult`.
    */
   @meta.abstract
-  CreateBuffer(_size) {}
+  CreateBuffer(_size)
+  {
+  }
 
   /**
    * Carbon UpdateBuffer (cpp:368-382): map, copy, unmap.

@@ -14,7 +14,9 @@ export class IShaderConfigurer extends IRoot
    * @param {string} _value The option value.
    * @returns {void}
    */
-  SetShaderOption(_name, _value) {}
+  SetShaderOption(_name, _value)
+  {
+  }
 }
 
 CjsSchema.decorateMethod(IShaderConfigurer, "SetShaderOption", meta.abstract);

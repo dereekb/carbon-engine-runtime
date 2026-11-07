@@ -21,6 +21,8 @@ export class ITr2PoseModifier
    * @param {Object} _pose - the sampled pose to modify in place
    */
   @meta.abstract
-  ModifyPose(_skeleton, _pose) {}
+  ModifyPose(_skeleton, _pose)
+  {
+  }
 
 }

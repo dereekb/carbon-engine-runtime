@@ -783,7 +783,10 @@ export class TriDevice extends IRoot
   }
 
   /** @cjs Active-device entry point for the idle sweep. */
-  CollectResources() { TriDevice.CollectResources(); }
+  CollectResources()
+  {
+    TriDevice.CollectResources();
+  }
 
   /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static RegisterResource(resource)
@@ -800,7 +803,10 @@ export class TriDevice extends IRoot
   }
 
   /** @adapted Exposes the native static registry through the active device. */
-  RegisterResource(resource) { return TriDevice.RegisterResource(resource); }
+  RegisterResource(resource)
+  {
+    return TriDevice.RegisterResource(resource);
+  }
 
   /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static UnregisterResource(resource)
@@ -810,7 +816,10 @@ export class TriDevice extends IRoot
   }
 
   /** @adapted Exposes the native static registry through the active device. */
-  UnregisterResource(resource) { return TriDevice.UnregisterResource(resource); }
+  UnregisterResource(resource)
+  {
+    return TriDevice.UnregisterResource(resource);
+  }
 
   /** @adapted Carbon TriDevice registry API (TriDevice.h:135-136,266). */
   static GetResourcesRegistered()
@@ -832,7 +841,10 @@ export class TriDevice extends IRoot
   }
 
   /** @adapted Exposes the native static registry through the active device. */
-  GetResourcesRegistered() { return TriDevice.GetResourcesRegistered(); }
+  GetResourcesRegistered()
+  {
+    return TriDevice.GetResourcesRegistered();
+  }
 
   /**
    * Hands the present parameters to the ambient render context

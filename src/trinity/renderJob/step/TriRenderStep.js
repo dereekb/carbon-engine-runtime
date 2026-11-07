@@ -68,7 +68,9 @@ export class TriRenderStep extends IRoot
    * @abstract
   */
   @meta.abstract
-  Execute(_realTime, _simTime, _context) {}
+  Execute(_realTime, _simTime, _context)
+  {
+  }
 
   /**
    * Carbon: TriRenderStep::GetCaptureGpuTime (TriRenderStep.cpp:60-63; declared TriRenderStep.h:35), protected.

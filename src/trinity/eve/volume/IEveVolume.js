@@ -18,7 +18,9 @@ export class IEveVolume extends IRoot
    * @returns {number} The intensity.
    */
   @be.abstract
-  GetIntensity(_position) {}
+  GetIntensity(_position)
+  {
+  }
 
   /**
    * Carbon `RegisterForChanges( const std::function<void()>& callBack )`
@@ -29,7 +31,9 @@ export class IEveVolume extends IRoot
    * @returns {number} The callback ID.
    */
   @be.abstract
-  RegisterForChanges(_callBack) {}
+  RegisterForChanges(_callBack)
+  {
+  }
 
   /**
    * Carbon `UnregisterForChanges( uint32_t callbackID )` (IEveVolume.h:15).
@@ -38,7 +42,9 @@ export class IEveVolume extends IRoot
    * @param {number} _callbackID An ID `RegisterForChanges` returned.
    */
   @be.abstract
-  UnregisterForChanges(_callbackID) {}
+  UnregisterForChanges(_callbackID)
+  {
+  }
 
   /**
    * Carbon `GeneratePointsInVolume( std::vector<Vector3>& points, size_t
@@ -53,7 +59,9 @@ export class IEveVolume extends IRoot
    * @param {number} _fallOffFactor Falloff weighting.
    */
   @be.abstract
-  GeneratePointsInVolume(_points, _howManyToAdd, _excludeInnerVolume, _fallOffFactor) {}
+  GeneratePointsInVolume(_points, _howManyToAdd, _excludeInnerVolume, _fallOffFactor)
+  {
+  }
 
   /**
    * Carbon `RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix&
@@ -65,7 +73,9 @@ export class IEveVolume extends IRoot
    * @param {vec4} [_baseColor] Base colour, Carbon's `const Color&`; defaults to Color( 0xFFFFFFFF ).
    */
   @be.abstract
-  RenderDebugInfo(_renderer, _parentTransform, _baseColor) {}
+  RenderDebugInfo(_renderer, _parentTransform, _baseColor)
+  {
+  }
 
   /**
    * Carbon `const CcpMath::Sphere GetBoundingSphere() const`
@@ -75,6 +85,8 @@ export class IEveVolume extends IRoot
    * @returns {{center: vec3, radius: number}} The volume's bounding sphere.
    */
   @be.abstract
-  GetBoundingSphere() {}
+  GetBoundingSphere()
+  {
+  }
 
 }

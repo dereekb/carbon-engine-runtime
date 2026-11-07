@@ -24,6 +24,8 @@ export class IEveChildTransformModifier extends IRoot
    * @returns {mat4} `out`.
    */
   @be.abstract
-  ApplyTransform(_transform, _boneCount, _bones, _out) {}
+  ApplyTransform(_transform, _boneCount, _bones, _out)
+  {
+  }
 
 }

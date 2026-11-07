@@ -84,7 +84,9 @@ export class EveSocketParameterBindingBase extends IEveSocketParameter
    * @abstract
    */
   @meta.abstract
-  ExtractDefault(_externalParameter) {}
+  ExtractDefault(_externalParameter)
+  {
+  }
 
   /**
    * Reports whether anything is bound to this parameter.

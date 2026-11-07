@@ -28,7 +28,9 @@ export class ITr2Renderable extends IRoot
    * @abstract
    */
   @be.abstract
-  GetBatches(batches, batchType, perObjectData, reason) {}
+  GetBatches(batches, batchType, perObjectData, reason)
+  {
+  }
 
   /**
    * Reports whether a transparent pass is required.
@@ -36,7 +38,9 @@ export class ITr2Renderable extends IRoot
    * @abstract
    */
   @be.abstract
-  HasTransparentBatches() {}
+  HasTransparentBatches()
+  {
+  }
 
   /**
    * Returns the current transparent-sort value.
@@ -44,7 +48,9 @@ export class ITr2Renderable extends IRoot
    * @abstract
    */
   @be.abstract
-  GetSortValue() {}
+  GetSortValue()
+  {
+  }
 
   /**
    * Returns or allocates the renderable's per-object data.
@@ -52,5 +58,7 @@ export class ITr2Renderable extends IRoot
    * @abstract
    */
   @be.abstract
-  GetPerObjectData(accumulator) {}
+  GetPerObjectData(accumulator)
+  {
+  }
 }

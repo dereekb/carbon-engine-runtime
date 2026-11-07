@@ -14,7 +14,9 @@ export class ITr2SoundEmitterOwner extends IRoot
    * @returns {object|null} The named ITr2AudEmitter, or null when absent.
    */
 
-  FindSoundEmitter(_name) {}
+  FindSoundEmitter(_name)
+  {
+  }
 
   /**
    * Leaves observer attachment to owners that override this native default.

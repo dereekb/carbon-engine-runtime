@@ -15,7 +15,9 @@ export class IEveEffectChildrenOwner extends IRoot
    * @returns {object|null} The EveSpaceObjectChild, or null when absent.
    */
   @be.abstract
-  GetEffectChildByName(name) {}
+  GetEffectChildByName(name)
+  {
+  }
 
   /**
    * Adds a child to the effect children list.
@@ -25,7 +27,9 @@ export class IEveEffectChildrenOwner extends IRoot
    * @returns {void}
    */
   @be.abstract
-  AddToEffectChildrenList(child) {}
+  AddToEffectChildrenList(child)
+  {
+  }
 
   /**
    * Removes a child from the effect children list.
@@ -35,5 +39,7 @@ export class IEveEffectChildrenOwner extends IRoot
    * @returns {void}
    */
   @be.abstract
-  RemoveFromEffectChildrenList(child) {}
+  RemoveFromEffectChildrenList(child)
+  {
+  }
 }

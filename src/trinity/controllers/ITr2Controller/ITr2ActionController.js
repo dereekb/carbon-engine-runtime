@@ -42,7 +42,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {object} The owner.
    */
   @meta.abstract
-  GetOwner() {}
+  GetOwner()
+  {
+  }
 
   /**
    * Delivers a named callback to the controller.
@@ -51,7 +53,9 @@ export class ITr2ActionController extends ITr2Controller
    * @param {string} _callbackName The callback's name.
    */
   @meta.abstract
-  Callback(_callbackName) {}
+  Callback(_callbackName)
+  {
+  }
 
   /**
    * Registers an object to be updated whenever this controller updates.
@@ -60,7 +64,9 @@ export class ITr2ActionController extends ITr2Controller
    * @param {object} _updateable The object to update.
    */
   @meta.abstract
-  RegisterUpdateable(_updateable) {}
+  RegisterUpdateable(_updateable)
+  {
+  }
 
   /**
    * Stops updating a previously registered object.
@@ -69,7 +75,9 @@ export class ITr2ActionController extends ITr2Controller
    * @param {object} _updateable The object to stop updating.
    */
   @meta.abstract
-  UnRegisterUpdateable(_updateable) {}
+  UnRegisterUpdateable(_updateable)
+  {
+  }
 
   /**
    * The named root objects a dynamic binding path may start from.
@@ -78,7 +86,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {Array} Name and root pairs.
    */
   @meta.abstract
-  GetBindingPathRoots() {}
+  GetBindingPathRoots()
+  {
+  }
 
   /**
    * One float variable by name.
@@ -91,7 +101,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {number|null} Its value, or null when there is no such variable.
    */
   @meta.abstract
-  GetFloatVariableByName(_name) {}
+  GetFloatVariableByName(_name)
+  {
+  }
 
   /**
    * Adds the functions and variables this controller offers to expressions.
@@ -100,7 +112,9 @@ export class ITr2ActionController extends ITr2Controller
    * @param {Array} _out Term info collected from every contributor.
    */
   @meta.abstract
-  GetExpressionTermInfo(_out) {}
+  GetExpressionTermInfo(_out)
+  {
+  }
 
   /**
    * The layout of this controller's variable buffer.
@@ -109,7 +123,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {Array} The variable view.
    */
   @meta.abstract
-  GetVariableView() {}
+  GetVariableView()
+  {
+  }
 
   /**
    * The buffer the variable view describes.
@@ -118,7 +134,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {object} The variable buffer.
    */
   @meta.abstract
-  GetVariableBuffer() {}
+  GetVariableBuffer()
+  {
+  }
 
   /**
    * Grows the scratch arena expressions evaluate into.
@@ -127,7 +145,9 @@ export class ITr2ActionController extends ITr2Controller
    * @param {number} _size Bytes required.
    */
   @meta.abstract
-  EnsureTempArenaSize(_size) {}
+  EnsureTempArenaSize(_size)
+  {
+  }
 
   /**
    * The scratch arena expressions evaluate into.
@@ -136,7 +156,9 @@ export class ITr2ActionController extends ITr2Controller
    * @returns {object} The arena.
    */
   @meta.abstract
-  GetTempArena() {}
+  GetTempArena()
+  {
+  }
 }
 
 

@@ -14,7 +14,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  SetDestObjectScale(_scale) {}
+  SetDestObjectScale(_scale)
+  {
+  }
 
   /**
    * Starts movement owned by this firing element.
@@ -22,7 +24,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  StartMoving() {}
+  StartMoving()
+  {
+  }
 
   /**
    * Returns the duration of the firing element's authored curves.
@@ -30,7 +34,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  GetCurveDuration() {}
+  GetCurveDuration()
+  {
+  }
 
   /**
    * Starts firing after the supplied delay.
@@ -38,7 +44,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  StartFiring(_delay) {}
+  StartFiring(_delay)
+  {
+  }
 
   /**
    * Stops the active firing sequence.
@@ -46,7 +54,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  StopFiring() {}
+  StopFiring()
+  {
+  }
 
   /**
    * Sets the firing source transform and destination position.
@@ -54,7 +64,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  SetFiringTransform(_source, _destination) {}
+  SetFiringTransform(_source, _destination)
+  {
+  }
 
   /**
    * Sets whether the source and destination endpoints are displayed.
@@ -62,7 +74,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  DisplayEndPoints(_displaySource, _displayDestination) {}
+  DisplayEndPoints(_displaySource, _displayDestination)
+  {
+  }
 
   /**
    * Performs the asynchronous firing-effect update phase.
@@ -70,7 +84,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  UpdateEffectAsync(_updateContext) {}
+  UpdateEffectAsync(_updateContext)
+  {
+  }
 
   /**
    * Performs the synchronous firing-effect update phase.
@@ -78,7 +94,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  UpdateEffectSync(_updateContext) {}
+  UpdateEffectSync(_updateContext)
+  {
+  }
 
   /**
    * Updates visibility beneath the supplied parent transform.
@@ -86,7 +104,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  UpdateVisibility(_updateContext, _parentTransform) {}
+  UpdateVisibility(_updateContext, _parentTransform)
+  {
+  }
 
   /**
    * Appends this element's renderer-neutral renderables.
@@ -94,7 +114,9 @@ export class IEveFiringEffectElement extends EveEntity
    * @abstract
    */
   @be.abstract
-  GetRenderables(_renderables) {}
+  GetRenderables(_renderables)
+  {
+  }
 
   /**
    * Runs the optional general update hook.

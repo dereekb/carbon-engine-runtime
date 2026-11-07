@@ -17,21 +17,27 @@ export class IEveSmartLightGroup extends IRoot
    *
    * @adapted
    */
-  SetColor(_color) {}
+  SetColor(_color)
+  {
+  }
 
   /**
    * Carbon's empty default (h:12).
    *
    * @adapted
    */
-  AddQuadsToQuadRenderer(_placements, _size, _frustum, _quadRenderer) {}
+  AddQuadsToQuadRenderer(_placements, _size, _frustum, _quadRenderer)
+  {
+  }
 
   /**
    * Carbon's empty default (h:13). @param {Array} _renderables
    *
    * @adapted
    */
-  GetRenderables(_renderables) {}
+  GetRenderables(_renderables)
+  {
+  }
 
   /**
    * Carbon's empty default (h:14). The distribution overload of
@@ -39,47 +45,61 @@ export class IEveSmartLightGroup extends IRoot
    *
    * @adapted
    */
-  UpdateSyncronous__Distribution(_updateContext, _params, _distribution) {}
+  UpdateSyncronous__Distribution(_updateContext, _params, _distribution)
+  {
+  }
 
   /**
    * Carbon's empty default (h:15); the distribution overload (rule 11).
    *
    * @adapted
    */
-  UpdateAsyncronous__Distribution(_updateContext, _params, _distribution) {}
+  UpdateAsyncronous__Distribution(_updateContext, _params, _distribution)
+  {
+  }
 
   /**
    * Carbon's empty default (h:16).
    *
    * @adapted
    */
-  SetControllerVariable(_name, _value) {}
+  SetControllerVariable(_name, _value)
+  {
+  }
 
   /**
    * Carbon's empty default (h:17).
    *
    * @adapted
    */
-  SetInheritProperties(_colorSet) {}
+  SetInheritProperties(_colorSet)
+  {
+  }
 
   /**
    * Carbon's empty default (h:18).
    *
    * @adapted
    */
-  UpdateVisibility(_updateContext, _parentTransform, _parentLod) {}
+  UpdateVisibility(_updateContext, _parentTransform, _parentLod)
+  {
+  }
 
   /**
    * Carbon's empty default (h:19).
    *
    * @adapted
    */
-  RegisterWithQuadRenderer(_quadRenderer) {}
+  RegisterWithQuadRenderer(_quadRenderer)
+  {
+  }
 
   /**
    * Carbon's empty default (h:20).
    *
    * @adapted
    */
-  RenderDebugInfo(_renderer, _placements, _size) {}
+  RenderDebugInfo(_renderer, _placements, _size)
+  {
+  }
 }

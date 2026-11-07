@@ -15,7 +15,9 @@ export class IEveDistributionModifier extends IRoot
    * @abstract
    */
   @be.abstract
-  ProcessDistributionModifier(_placement, _context) {}
+  ProcessDistributionModifier(_placement, _context)
+  {
+  }
 
   /**
    * Reports whether this modifier changes placement transforms.

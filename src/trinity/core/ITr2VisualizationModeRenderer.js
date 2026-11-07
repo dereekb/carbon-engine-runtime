@@ -14,7 +14,9 @@ export class ITr2VisualizationModeRenderer extends IRoot
    * @returns {void}
    */
   @meta.abstract
-  SetVisualizationMode(_visualizationMode) {}
+  SetVisualizationMode(_visualizationMode)
+  {
+  }
 }
 
 CjsSchema.exposure.interface("ITr2VisualizationModeRenderer")(ITr2VisualizationModeRenderer);

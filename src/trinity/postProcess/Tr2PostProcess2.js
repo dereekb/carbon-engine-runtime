@@ -98,8 +98,8 @@ export class Tr2PostProcess2 extends IRoot
   /**
    * `m_sharpeningStrength`: the CAS sharpening strength, 0 to 1. A member of
    * Carbon HEAD (2276880b, Tr2PostProcess2.h:89, exposed at
-   * Tr2PostProcess2_Blue.cpp:31), not of v7.0.1, which this port follows
-   * (docs/research/carbon-version-drift.md). The renderer reads it only while
+   * Tr2PostProcess2_Blue.cpp:31), not of v7.0.1, which this port follows.
+   * The renderer reads it only while
    * `Tr2PostProcessRenderer.useSharpeningStrength` is on.
    */
 

@@ -16,6 +16,8 @@ export class IEveReferencePoint extends IRoot
    * @abstract
    */
   @be.abstract
-  GetReferencePoint(_time, _out) {}
+  GetReferencePoint(_time, _out)
+  {
+  }
 
 }

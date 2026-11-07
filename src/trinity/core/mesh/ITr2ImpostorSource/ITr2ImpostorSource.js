@@ -13,7 +13,9 @@ export class ITr2ImpostorSource
    * @abstract
    */
   @be.abstract
-  GetLocalToWorldTransform(transform) {}
+  GetLocalToWorldTransform(transform)
+  {
+  }
 
   /**
    * Collects the batches used to capture this source into an impostor.
@@ -21,7 +23,9 @@ export class ITr2ImpostorSource
    * @abstract
    */
   @be.abstract
-  GetImpostorBatches(frustum, TriBatchType, batches) {}
+  GetImpostorBatches(frustum, TriBatchType, batches)
+  {
+  }
 
   /**
    * Scores how urgently a changed view hash should be recaptured.
@@ -29,7 +33,9 @@ export class ITr2ImpostorSource
    * @abstract
    */
   @be.abstract
-  GetRenderPriority(oldHash, newHash) {}
+  GetRenderPriority(oldHash, newHash)
+  {
+  }
 
   /**
    * Writes the source's current impostor bounding sphere into `out`.
@@ -37,7 +43,9 @@ export class ITr2ImpostorSource
    * @abstract
    */
   @be.abstract
-  GetImpostorBoundingSphere(sphere) {}
+  GetImpostorBoundingSphere(sphere)
+  {
+  }
 
   /**
    * Writes the bounding sphere used for the previous impostor capture.
@@ -45,5 +53,7 @@ export class ITr2ImpostorSource
    * @abstract
    */
   @be.abstract
-  GetLastImpostorBoundingSphere(sphere) {}
+  GetLastImpostorBoundingSphere(sphere)
+  {
+  }
 }

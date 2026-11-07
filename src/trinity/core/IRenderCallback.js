@@ -19,6 +19,8 @@ export class IRenderCallback
    * @returns {void}
    */
   @meta.abstract
-  SubmitGeometry(_renderContext) {}
+  SubmitGeometry(_renderContext)
+  {
+  }
 
 }

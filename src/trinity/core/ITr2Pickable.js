@@ -13,7 +13,9 @@ export class ITr2Pickable extends IRoot
    * @param {number} _areaId The picked area.
    * @returns {object|null} The represented object.
    */
-  GetID(_areaId) {}
+  GetID(_areaId)
+  {
+  }
 
   /**
    * Carbon's pure virtual `GetPickingBatches( ITriRenderBatchAccumulator*
@@ -25,7 +27,9 @@ export class ITr2Pickable extends IRoot
    * @param {number} _pickTypes Requested pick types.
    * @param {object} _perObjectData The object's per-object data.
    */
-  GetPickingBatches(_batches, _pickTypes, _perObjectData) {}
+  GetPickingBatches(_batches, _pickTypes, _perObjectData)
+  {
+  }
 }
 
 CjsSchema.decorateMethod(ITr2Pickable, "GetID", meta.abstract);

@@ -12,28 +12,36 @@ export class ITr2InstanceData extends IRoot
    *
    * @abstract
    */
-  IsInstanceDataReady() {}
+  IsInstanceDataReady()
+  {
+  }
 
   /**
    * Returns one realized instance-buffer slice for a screen-size selection.
    *
    * @abstract
    */
-  GetInstanceData(_bufferIndex, _screenSize) {}
+  GetInstanceData(_bufferIndex, _screenSize)
+  {
+  }
 
   /**
    * Returns the vertex declaration for one instance buffer.
    *
    * @abstract
    */
-  GetInstanceBufferVertexDeclaration(_bufferIndex) {}
+  GetInstanceBufferVertexDeclaration(_bufferIndex)
+  {
+  }
 
   /**
    * Returns the local bounding box represented by one instance buffer.
    *
    * @abstract
    */
-  GetInstanceBufferBoundingBox(_bufferIndex) {}
+  GetInstanceBufferBoundingBox(_bufferIndex)
+  {
+  }
 }
 
 for (const method of [

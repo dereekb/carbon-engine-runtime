@@ -27,7 +27,9 @@ export class IEveTransform extends IRoot
    * @param {object} _updateContext The frame's EveUpdateContext.
    */
   @meta.abstract
-  Update__UpdateContext(_updateContext) {}
+  Update__UpdateContext(_updateContext)
+  {
+  }
 
   /**
    * Decides frame visibility against the frustum.

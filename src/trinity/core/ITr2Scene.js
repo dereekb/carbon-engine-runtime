@@ -18,7 +18,9 @@ export class ITr2Scene extends ITr2Updateable
    * @abstract
    */
   @meta.abstract
-  Render(_renderContext) {}
+  Render(_renderContext)
+  {
+  }
 
   /**
    * Renders scene debugging geometry. @param {Tr2RenderContext} _renderContext Active context. @returns {void}
@@ -26,5 +28,7 @@ export class ITr2Scene extends ITr2Updateable
    * @abstract
    */
   @meta.abstract
-  RenderDebugInfo(_renderContext) {}
+  RenderDebugInfo(_renderContext)
+  {
+  }
 }

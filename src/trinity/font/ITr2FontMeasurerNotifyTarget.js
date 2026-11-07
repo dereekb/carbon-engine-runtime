@@ -33,5 +33,7 @@ export class ITr2FontMeasurerNotifyTarget
    * @returns {void}
    */
   @meta.abstract
-  FontMeasurerChanged(_measurer) {}
+  FontMeasurerChanged(_measurer)
+  {
+  }
 }

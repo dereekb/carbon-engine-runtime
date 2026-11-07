@@ -34,7 +34,9 @@ export class Tr2SpriteObjectBase extends ITr2SpriteObject
    * @param {Tr2Sprite2dScene} _renderer The scene gathering sprites.
    */
   @be.abstract
-  GatherSprites(_renderer) {}
+  GatherSprites(_renderer)
+  {
+  }
 
   /**
    * Required ITr2SpriteObject picking contract, Carbon's pure virtual
@@ -48,7 +50,9 @@ export class Tr2SpriteObjectBase extends ITr2SpriteObject
    * @returns {ITr2SpriteObject|null} The picked object.
    */
   @be.abstract
-  PickPoint(_x, _y, _renderer) {}
+  PickPoint(_x, _y, _renderer)
+  {
+  }
 
   /**
    * Carbon method GetDisplay.

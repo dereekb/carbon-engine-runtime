@@ -146,7 +146,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    * first use (IsGood) does, so a build that fails or is never drawn holds no
    * device objects (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Carbon Initialize (cpp:96-100): prepares the device half. Carbon prepares here (cpp:96-100); here nothing prepares during a build: the first use (IsGood) does, so a build
    */
 
   Initialize()
@@ -165,7 +165,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    * the stretch as in use, since a quad-count edit is made to one being shown;
    * one edited and never drawn is still released by the sweep (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
    *
-   * @adapted
+   * @adapted Carbon OnModified (cpp:102-111): a new quad count re-prepares. Carbon's CCP_ASSERT on more than MAX_QUAD_COUNT quads (cpp:106) is compiled out of shipping builds, so noth
    */
 
   OnModified(propertyName)
@@ -219,7 +219,7 @@ export class EveStretch2 extends IEveFiringEffectElement
   /**
    * IEveFiringEffectElement move hook; EveStretch2 has no travelling child.
    *
-   * @adapted
+   * @adapted IEveFiringEffectElement move hook; EveStretch2 has no travelling child
    */
 
   StartMoving()
@@ -245,7 +245,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    *
    * Uses the shared CRT rand()/RAND_MAX stream (EveStretch2.cpp:137-152).
    *
-   * @adapted
+   * @adapted Begins a shot: reseeds the per-shot random value carried in the effect data, plays the start and loop sets from -delay and stops the end set. Uses the shared CRT rand()/R
    * @param {Number} [delay] - seconds the curve sets wait before reaching time zero
    */
 
@@ -330,7 +330,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    * IEveFiringEffectElement synchronous hook; EveStretch2 does all of its work
    * in the asynchronous phase.
    *
-   * @adapted
+   * @adapted IEveFiringEffectElement synchronous hook; EveStretch2 does all of its work in the asynchronous phase
    */
 
   UpdateEffectSync(_context)
@@ -415,7 +415,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    * a beam stays visible while any of it is in view. A hidden or zero-intensity stretch fails without testing; the
    * result gates GetRenderables.
    *
-   * @adapted
+   * @adapted Frustum-tests the beam's box (EveStretch2.cpp:303-315): boundingRadius sideways and the endpoint distance plus boundingRadius forwards in the source basis, transformed by
    * @param {EveUpdateContext} context Update context carrying the frustum.
    * @returns {boolean} Whether the stretch is in the frustum.
    */
@@ -528,7 +528,7 @@ export class EveStretch2 extends IEveFiringEffectElement
    * vertices and the renderer's quad-list index buffer, 6 indices a quad,
    * based at the allocation's first vertex.
    *
-   * @adapted
+   * @adapted Carbon GetBatches (cpp:339-360): one additive batch over the shared quad vertices and the renderer's quad-list index buffer, 6 indices a quad, based at the allocation's f
    * @returns {Boolean} whether the batch was committed
    */
 

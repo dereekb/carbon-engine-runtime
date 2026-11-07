@@ -34,7 +34,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @returns {number} The sort value.
    */
   @be.abstract
-  GetSortValue__Frustum(_frustum) {}
+  GetSortValue__Frustum(_frustum)
+  {
+  }
 
   /**
    * Carbon's pure virtual `void GetVolumetricBatches( const TriFrustum&
@@ -45,7 +47,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @param {ITriRenderBatchAccumulator} _batches Receives the batches.
    */
   @be.abstract
-  GetVolumetricBatches(_frustum, _batches) {}
+  GetVolumetricBatches(_frustum, _batches)
+  {
+  }
 
   /**
    * Carbon's pure virtual `bool UpdateVolumetricLightmap( Tr2RenderContext&
@@ -56,7 +60,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @returns {boolean} Whether the lightmap is up to date.
    */
   @be.abstract
-  UpdateVolumetricLightmap(_renderContext) {}
+  UpdateVolumetricLightmap(_renderContext)
+  {
+  }
 
   /**
    * Carbon's pure virtual `void SetSceneInformation( const SceneInformation&
@@ -66,7 +72,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @param {object} _sceneInformation A SceneInformation record (h:26-36).
    */
   @be.abstract
-  SetSceneInformation(_sceneInformation) {}
+  SetSceneInformation(_sceneInformation)
+  {
+  }
 
   /**
    * Carbon's pure virtual `void GetVolumetricShadowBatches(
@@ -76,7 +84,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @param {ITriRenderBatchAccumulator} _batches Receives the batches.
    */
   @be.abstract
-  GetVolumetricShadowBatches(_batches) {}
+  GetVolumetricShadowBatches(_batches)
+  {
+  }
 
   /**
    * Carbon's pure virtual `void GetVolumetricShadowInfo( ShadowInfo&
@@ -87,7 +97,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @param {vec3} _sunDir The sun direction.
    */
   @be.abstract
-  GetVolumetricShadowInfo(_shadowInfo, _sunDir) {}
+  GetVolumetricShadowInfo(_shadowInfo, _sunDir)
+  {
+  }
 
   /**
    * Carbon's pure virtual `bool PrepareCloudShadowMap( Tr2RenderContext&
@@ -98,7 +110,9 @@ export class ITr2VolumetricRenderable extends IRoot
    * @returns {boolean} Whether the shadow map is ready.
    */
   @be.abstract
-  PrepareCloudShadowMap(_renderContext) {}
+  PrepareCloudShadowMap(_renderContext)
+  {
+  }
 
   /**
    * Carbon's pure virtual `void SetCloudShadowMapHandle()` (h:52).
@@ -106,5 +120,7 @@ export class ITr2VolumetricRenderable extends IRoot
    * @abstract
    */
   @be.abstract
-  SetCloudShadowMapHandle() {}
+  SetCloudShadowMapHandle()
+  {
+  }
 }

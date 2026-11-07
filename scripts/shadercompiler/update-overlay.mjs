@@ -3,8 +3,7 @@
 //   node scripts/shadercompiler/update-overlay.mjs [--tools-core <dir>]
 //
 // All of our own shaders live in ONE overlay, `cjs-shader-compiled`, rebuilt
-// whole from the library and never imported effect by effect (operator,
-// 2026-10-25; /docs/architecture/effect-read-path.md). Only the library files
+// whole from the library and never imported effect by effect. Only the library files
 // git tracks are compiled, so local experiments left in the library folder are
 // never published.
 //

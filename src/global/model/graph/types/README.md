@@ -5,7 +5,7 @@ One handler per storage kind. What differs between types is data, in `GRAPH_TYPE
 and sign, its array class. So `vec3`, `color` and `mat4` are entries on `CjsGraphTypeFloatArray`,
 and `int8` and `uint32` are entries on `CjsGraphTypeLong`. A new type name exists only if it
 changes a default, a widget or a meaning. Measured on real files, this is twice as fast as a
-class per type (`docs/projects/type-system.md`, step 2).
+class per type.
 
 | Handler | Storage kinds |
 | --- | --- |

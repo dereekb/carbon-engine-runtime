@@ -195,7 +195,8 @@ export class Tr2DeviceResource
    */
 
 
-  SetAdapterResource(key, value) {
+  SetAdapterResource(key, value)
+  {
     if (!key) throw new TypeError("Tr2DeviceResource.SetAdapterResource requires a key.");
     (this.__adapterResources ??= Object.create(null))[String(key)] = value;
     return this;
@@ -211,7 +212,8 @@ export class Tr2DeviceResource
    */
 
 
-  GetAdapterResource(key) {
+  GetAdapterResource(key)
+  {
     return this.__adapterResources?.[String(key)] ?? null;
   }
 
@@ -225,7 +227,8 @@ export class Tr2DeviceResource
    */
 
 
-  HasAdapterResource(key) {
+  HasAdapterResource(key)
+  {
     return this.__adapterResources !== null && Object.prototype.hasOwnProperty.call(this.__adapterResources, String(key));
   }
 
@@ -240,7 +243,8 @@ export class Tr2DeviceResource
    */
 
 
-  DestroyAdapterResource(key, options = {}) {
+  DestroyAdapterResource(key, options = {})
+  {
     const name = String(key);
     if (!this.__adapterResources) return this;
     const value = this.__adapterResources[name];
@@ -273,7 +277,8 @@ export class Tr2DeviceResource
    */
 
 
-  DestroyAdapterResources(options = {}) {
+  DestroyAdapterResources(options = {})
+  {
     for (const key of Object.keys(this.__adapterResources || {})) {
       this.DestroyAdapterResource(key, options);
     }

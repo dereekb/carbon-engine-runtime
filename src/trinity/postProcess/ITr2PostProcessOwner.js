@@ -25,5 +25,7 @@ export class ITr2PostProcessOwner extends IRoot
    * @returns {Tr2PostProcessAttributes|null} The owner's attributes.
    */
   @be.abstract
-  GetPostProcessAttributes() {}
+  GetPostProcessAttributes()
+  {
+  }
 }

@@ -12,6 +12,8 @@ export class CjsEveChildResourceLoader
    * @abstract
    */
   @meta.abstract
-  LoadChild(_resourcePath, _owner) {}
+  LoadChild(_resourcePath, _owner)
+  {
+  }
 
 }

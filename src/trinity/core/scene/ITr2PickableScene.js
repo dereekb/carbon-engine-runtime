@@ -187,56 +187,72 @@ export class ITr2PickableScene
    * @abstract
    */
   @meta.abstract
-  SetPerFrameDataForPicking(_context) {}
+  SetPerFrameDataForPicking(_context)
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  GetPickingObjectsToRender(_direction, _context) {}
+  GetPickingObjectsToRender(_direction, _context)
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  GetOpaquePickingBatchAccumulator() {}
+  GetOpaquePickingBatchAccumulator()
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  GetPickingBatchAccumulator() {}
+  GetPickingBatchAccumulator()
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  GetRequiredPasses(_components) {}
+  GetRequiredPasses(_components)
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  RenderPickingAreasForComponents(_pass) {}
+  RenderPickingAreasForComponents(_pass)
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  DecodeBufferPixel(_data, _pass, _results) {}
+  DecodeBufferPixel(_data, _pass, _results)
+  {
+  }
   /**
    * Native virtual scene hook.
    *
    * @abstract
    */
   @meta.abstract
-  GetPickBuffer() {}
+  GetPickBuffer()
+  {
+  }
 }
 
 CjsSchema.meta.carbon("ITr2PickableScene")(ITr2PickableScene);

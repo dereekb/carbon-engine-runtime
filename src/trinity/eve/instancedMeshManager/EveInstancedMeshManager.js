@@ -530,7 +530,7 @@ export class EveInstancedMeshManager
    * apart, is invisible to JavaScript, so this name throws rather than
    * guessing from how many arguments a caller passed.
    *
-   * @notSupported
+   * @notSupported Carbon's bare AddMeshGroup (h:113-145). Its two overloads differ in the C++ type of the instance array - `DynamicPerInstanceData*` against `StaticPerInstanceData*` - and 
    * @throws {TypeError} Always.
    */
   AddMeshGroup()
@@ -847,7 +847,7 @@ export class EveInstancedMeshManager
    * so there is nothing to port; picking resolves through the readback
    * framework (GetPickingBatches).
    *
-   * @notSupported
+   * @notSupported Carbon GetPickedObject (h:101). Current Carbon declares it with no body, so there is nothing to port; picking resolves through the readback framework (GetPickingBatches)
    * @throws {TypeError} Always.
    */
   GetPickedObject()
@@ -863,7 +863,7 @@ export class EveInstancedMeshManager
    * manager's reference stays valid and there is nothing to replace
    * (EveInstancedMeshManagerDataHandle head).
    *
-   * @notSupported
+   * @notSupported Carbon ReplaceHandle, its three overloads (h:106, :111, :147; cpp:160-167, :222-229, :385-395). Carbon re-points the manager's stored `DataHandle*` when a provider's vect
    * @throws {TypeError} Always.
    */
   ReplaceHandle()
@@ -1073,7 +1073,7 @@ export class EveInstancedMeshManager
    * parameter type and count; JavaScript cannot tell them apart, so this
    * name throws and the manager calls the named variants.
    *
-   * @notSupported
+   * @notSupported Carbon's three private BinVisibleInstances overloads (h:274-276) differ in parameter type and count; JavaScript cannot tell them apart, so this name throws and the manage
    * @throws {TypeError} Always.
    */
   _BinVisibleInstances()

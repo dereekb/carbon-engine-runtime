@@ -15,7 +15,9 @@ export class IEveProceduralSelectionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  UpdateAsyncronous(_updateContext) {}
+  UpdateAsyncronous(_updateContext)
+  {
+  }
 
   /**
    * Reports whether the selected child changed.
@@ -23,7 +25,9 @@ export class IEveProceduralSelectionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  IsSelectedChildModified() {}
+  IsSelectedChildModified()
+  {
+  }
 
   /**
    * Returns the volumes used to visualize this selection method.
@@ -31,7 +35,9 @@ export class IEveProceduralSelectionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetDebugVolumes(_out) {}
+  GetDebugVolumes(_out)
+  {
+  }
 
   /**
    * Returns the currently selected child reference.
@@ -39,7 +45,9 @@ export class IEveProceduralSelectionMethod extends IRoot
    * @abstract
    */
   @be.abstract
-  GetSelectedChild() {}
+  GetSelectedChild()
+  {
+  }
 
   /**
    * Accepts an optional procedural-selection variable.

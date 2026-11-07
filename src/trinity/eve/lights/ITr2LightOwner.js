@@ -17,7 +17,9 @@ export class ITr2LightOwner extends IRoot
    * @param {object} _lightManager The Tr2LightManager collecting lights.
    * @returns {void}
    */
-  GetLights(_lightManager) {}
+  GetLights(_lightManager)
+  {
+  }
 
   /**
    * Leaves adding a light to owners that override this native default.

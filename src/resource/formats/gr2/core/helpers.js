@@ -931,6 +931,14 @@ export function readFileInfoData(input, values)
     return { grannyFileInfo: raw.fileInfo, version: raw.version };
 }
 
+/**
+ * Reads the data a file's meshes share.
+ *
+ * @param {object} reader The reader.
+ * @param {*} input The file, or a raw read of it.
+ * @param {Gr2Values} values Effective read values.
+ * @returns {object} The shared data.
+ */
 export function readSharedData(reader, input, values)
 {
     if (values.lodIndex !== null) throw new TypeError("GR2 shared data keeps each LOD as its own mesh.");

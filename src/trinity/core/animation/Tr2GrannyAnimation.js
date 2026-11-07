@@ -295,7 +295,10 @@ export class Tr2GrannyAnimation extends IRoot
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
   @type.object.ref("TriGrannyRes")
-  get grannyRes() { return this._grannyRes; }
+  get grannyRes()
+  {
+    return this._grannyRes;
+  }
 
   /**
    * Moves the primary resource's notification link.

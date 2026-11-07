@@ -15,6 +15,8 @@ export class IEveFxAttribute extends IRoot
    * @abstract
    */
   @be.abstract
-  UpdateAsyncronous(_updateContext) {}
+  UpdateAsyncronous(_updateContext)
+  {
+  }
 
 }

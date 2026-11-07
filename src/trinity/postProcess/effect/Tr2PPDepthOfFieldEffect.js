@@ -75,6 +75,20 @@ export class Tr2PPDepthOfFieldEffect extends Tr2PPEffect
   }
 
   /**
+   * Ours (named after ccpwgl's `depthOfFieldTransparentDepth`): draws the
+   * transparent and additive batches as their own depth-of-field layers, each
+   * blurred by the depth of its nearest visible surface rather than the
+   * opaque depth behind it, then composited over the opaque result. Off is
+   * exactly Carbon's depth of field. Not persisted, so Carbon's .black and
+   * .red are untouched.
+   *
+   * @cjs
+   */
+  @meta.mapAttribute(meta.READWRITE)
+  @type.boolean
+  transparentDepth = false;
+
+  /**
    * `g_postprocessDofEnabled` (Tr2PPDepthOfFieldEffect.cpp:7-8), registered as
    * the `postprocessDofEnabled` setting: depth of field for every post process.
    * Off, as in Carbon; the client turns it on.
@@ -88,28 +102,12 @@ export class Tr2PPDepthOfFieldEffect extends Tr2PPEffect
    * copies it and the attribute is not exposed, so Carbon's merged depth of
    * field never blurs the foreground (CE-230;
    * Tr2PostProcessAttributes.cpp:438-444). Off keeps Carbon's behaviour.
-   * ccpwgl reads the flag straight off the effect. Registered in
-   * docs/architecture/non-carbon-extensions.md.
+   * ccpwgl reads the flag straight off the effect.
    *
    * @cjs
    */
   @meta.setting("postprocessDofCarryForegroundBlur")
   static postprocessDofCarryForegroundBlur = false;
-
-  /**
-   * Ours (named after ccpwgl's `depthOfFieldTransparentDepth`): draws the
-   * transparent and additive batches as their own depth-of-field layers, each
-   * blurred by the depth of its nearest visible surface rather than the
-   * opaque depth behind it, then composited over the opaque result. Off is
-   * exactly Carbon's depth of field. Not persisted, so Carbon's .black and
-   * .red are untouched. Registered in docs/architecture/non-carbon-extensions.md
-   * ("Separated depth-of-field layers").
-   *
-   * @cjs
-   */
-  @meta.mapAttribute(meta.READWRITE)
-  @type.boolean
-  transparentDepth = false;
 
   static Shape = { Disk: 0, Triangle: 1, Rectangle: 2, Pentagon: 3, Hexagon: 4, Heart: 5 };
 
