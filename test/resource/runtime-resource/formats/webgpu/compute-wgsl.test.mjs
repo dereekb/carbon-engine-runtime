@@ -5955,6 +5955,9 @@ test("genuine SM5.0 particle emit lowers with guarded signed atomic and complete
     assert.match(result.code, /var<workgroup> g0: array<u32, 28>;/u);
     assert.match(result.code, /array<vec4<f32>, 4096>/u);
     assert.match(result.code, /array<atomic<i32>>/u);
+    // A source reads by the destination mask's component, not by lane order.
+    assert.match(result.code, /bitcast<vec3<f32>>\(r1\.yzw\)\)\) \+ bitcast<vec3<f32>>\(r2\.yzw\)/u);
+    assert.match(result.code, /bitcast<vec3<f32>>\(r10\.www\) \* bitcast<vec3<f32>>\(r12\.xyz\)/u);
     assert.match(
         result.code,
         /bitcast<u32>\(atomicAdd\(&u1\[0u\], -1i\)\)/u

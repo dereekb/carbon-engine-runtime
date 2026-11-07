@@ -488,6 +488,24 @@ function vector(type, width, values)
     return `vec${width}<${type}>(${values.join(", ")})`;
 }
 
+/** The destination mask of the instruction being lowered. */
+let activeMask = "";
+
+/**
+ * The position in a four-letter selector that a source's lane reads. DXBC
+ * selects by the destination mask's component, not by the lane's order:
+ * `add r2.yzw, r1.yyzw, ...` reads y, z and w, where the first three letters
+ * would read y, y and z.
+ *
+ * @param {number} index The lane.
+ * @param {number} width The lanes being read.
+ * @returns {number} The position.
+ */
+function maskedPosition(index, width)
+{
+    return activeMask.length === width ? "xyzw".indexOf(activeMask[index]) : index;
+}
+
 function rawSource(operand, requestedWidth)
 {
     const width = valueWidth(operand, requestedWidth);
@@ -496,7 +514,9 @@ function rawSource(operand, requestedWidth)
         const selector = operand.selected || operand.swizzle;
         const components = selector
             ? Array.from({ length: width }, (_, index) =>
-                selector[Math.min(index, selector.length - 1)])
+                selector.length === 4
+                    ? selector[maskedPosition(index, width)]
+                    : selector[Math.min(index, selector.length - 1)])
             : [ "x", "y", "z", "w" ].slice(0, width);
         if (width === 1) return `r${operand.registerIndex}.${components[0]}`;
         return `r${operand.registerIndex}.${components.join("")}`;
@@ -506,7 +526,9 @@ function rawSource(operand, requestedWidth)
         const bits = operand.immediateValues.map((entry) =>
             immediate(entry.uint32));
         const values = Array.from({ length: width }, (_, index) =>
-            bits[Math.min(index, bits.length - 1)]);
+            bits.length === 4
+                ? bits[maskedPosition(index, width)]
+                : bits[Math.min(index, bits.length - 1)]);
         return vector("u32", width, values);
     }
     if (operand.typeName === "input_thread_id_in_group_flattened")
@@ -703,6 +725,7 @@ function translateRawLoad(instruction)
 function translateInstruction(program, index, bindings)
 {
     const instruction = program.instructions[index];
+    activeMask = instruction.operands?.[0]?.mask ?? "";
     if (instruction.opcodeName === "ld_raw")
     {
         return translateRawLoad(instruction);
