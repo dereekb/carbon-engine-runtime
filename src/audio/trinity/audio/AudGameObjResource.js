@@ -130,7 +130,7 @@ export class AudGameObjResource
   additionalCullingWeight = 0;
 
   /** m_ID (AkGameObjectID) [READ] */
-  @type.rawStruct("AkGameObjectID")
+  @type.uint64
   ID = null;
 
   /** m_parameters (PAudParameterVector) [READ, PERSIST] */
