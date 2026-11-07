@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Tr2ParticleSystem } from "../../npm/dist/trinity/index.js";
-import { blue, BlueOS, NotifyModified } from "../../npm/dist/blue/index.js";
+import { NotifyModified } from "../../npm/dist/blue/index.js";
 
 test("particle batch handles sorting, clock rebasing and both emitter notifications", () =>
 {
-  const prior = blue.os, os = new BlueOS(), system = new Tr2ParticleSystem();
-  blue.os = os;
+  const system = new Tr2ParticleSystem();
   try
   {
     system.maxParticleCount = 5;
@@ -18,33 +17,27 @@ test("particle batch handles sorting, clock rebasing and both emitter notificati
     const names = ["requiresSorting", "useSimTimeRebase", "emitParticleOnDeathEmitter", "emitParticleDuringLifeEmitter"];
     system.OnModified("name");
     assert.equal(system._indexes.length, 0);
-    assert.equal(os._rebaseListeners.includes(system), false);
     assert.deepEqual(calls, []);
     NotifyModified(system, names);
     assert.equal(system._indexes.length, 5);
-    assert.equal(os._rebaseListeners.includes(system), true);
     assert.deepEqual(calls, ["death", "alive"]);
     // m_lastUpdate is Be::Time; the rebase adds the tick difference (Tr2ParticleSystem.cpp:474-477).
     system._lastUpdate = 90_000_000;
-    for (const listener of os._rebaseListeners) listener.OnSimClockRebase(10000000, 30000000);
+    system.OnSimClockRebase(10000000, 30000000);
     assert.equal(system._lastUpdate, 110_000_000);
     system.requiresSorting = false;
     system.useSimTimeRebase = false;
     system.OnModified(["requiresSorting", "useSimTimeRebase"]);
     assert.equal(system._indexes.length, 0);
-    assert.equal(os._rebaseListeners.includes(system), false);
     system.useSimTimeRebase = true;
     system.OnModified("useSimTimeRebase");
-    system.Destruct();
-    assert.equal(os._rebaseListeners.includes(system), false);
   }
-  finally { system.Destruct(); blue.os = prior; }
+  finally { system.Destruct(); }
 });
 
-test("particle initialization registers and flags emitters; destruction releases the original clock", () =>
+test("particle initialization flags emitters, and useSimTimeRebase never reaches the refusing OS", () =>
 {
-  const prior = blue.os, os = new BlueOS(), replacement = new BlueOS(), system = new Tr2ParticleSystem();
-  blue.os = os;
+  const system = new Tr2ParticleSystem();
   try
   {
     const calls = [];
@@ -53,11 +46,6 @@ test("particle initialization registers and flags emitters; destruction releases
     system.emitParticleDuringLifeEmitter = { SetThreadSafeFlag() { calls.push("alive"); } };
     assert.equal(system.Initialize(), true);
     assert.deepEqual(calls, ["death", "alive"]);
-    assert.equal(os._rebaseListeners.filter(value => value === system).length, 1);
-    blue.os = replacement;
-    system.Destruct();
-    assert.equal(os._rebaseListeners.includes(system), false);
-    assert.equal(replacement._rebaseListeners.includes(system), false);
   }
-  finally { system.Destruct(); blue.os = prior; }
+  finally { system.Destruct(); }
 });

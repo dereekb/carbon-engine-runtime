@@ -131,7 +131,13 @@ test("registering something without an OnTick is refused at the door", () =>
   // The point of the identity check: owning the method is not being the
   // interface, which is exactly what Carbon's signature enforces.
   assert.throws(() => os.RegisterForTicks({ OnTick() {} }), /IBlueEvents/u);
-  assert.throws(() => os.RegisterForSimTimeRebase({}), /ISimTimeRebaseNotify/u);
+});
+
+test("sim-time rebasing refuses: no TiDi sync reaches the browser", () =>
+{
+  const os = new BlueOS();
+  assert.throws(() => os.RegisterForSimTimeRebase({}), /RegisterForSimTimeRebase: no TiDi sync/u);
+  assert.throws(() => os.UnregisterForSimTimeRebase({}), /UnregisterForSimTimeRebase: no TiDi sync/u);
 });
 
 

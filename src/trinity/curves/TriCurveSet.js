@@ -111,9 +111,6 @@ export class TriCurveSet extends IInitialize
 
   _isUsingSimTimeRebase = false;
 
-  /** OS that owns this instance's rebase subscription; released explicitly. */
-  _rebaseOS = null;
-
   _hasTimeRange = false;
 
   _loopedTimeRange = true;
@@ -247,7 +244,7 @@ export class TriCurveSet extends IInitialize
   /**
    * Starts playback on load when configured.
    *
-   * @adapted repeated reader/copy initialization acquires at most one OS subscription; Dispose releases that owner because JavaScript has no deterministic destructor. The current OS retains listeners but does not dispatch rebases.
+   * @adapted does not register for sim-time rebases: no TiDi sync reaches the browser (BlueOS.RegisterForSimTimeRebase). m_isUsingSimTimeRebase still records the request.
    * @returns {boolean} True after playback initialization.
    */
 
@@ -257,11 +254,9 @@ export class TriCurveSet extends IInitialize
     {
       this.Play();
     }
-    if (this.useSimTimeRebase && !this._isUsingSimTimeRebase)
+    if (this.useSimTimeRebase)
     {
-      const os = blue.os;
-      os.RegisterForSimTimeRebase(this);
-      this._rebaseOS = os;
+      // blue.os.RegisterForSimTimeRebase(this); // cpp:182; no TiDi sync reaches the browser.
       this._isUsingSimTimeRebase = true;
     }
     return true;
@@ -696,7 +691,7 @@ export class TriCurveSet extends IInitialize
   }
 
   /**
-   * Releases the rebase subscription through the OS that acquired it.
+   * Ends the set's lifetime, as Carbon's destructor does (TriCurveSet.cpp:44-50).
    * Custom: JavaScript has no deterministic destructor. The graph owner must
    * dispose an abandoned set; Stop and removal from one playback list do not
    * end its lifetime because the set may be shared or played again.
@@ -704,12 +699,8 @@ export class TriCurveSet extends IInitialize
    */
   Dispose()
   {
-    if (this._isUsingSimTimeRebase)
-    {
-      this._rebaseOS.UnregisterForSimTimeRebase(this);
-      this._isUsingSimTimeRebase = false;
-      this._rebaseOS = null;
-    }
+    // if (this._isUsingSimTimeRebase) blue.os.UnregisterForSimTimeRebase(this); // cpp:47; no TiDi sync reaches the browser.
+    this._isUsingSimTimeRebase = false;
     this.DestroyStopCallback();
   }
 

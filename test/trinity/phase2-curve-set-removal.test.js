@@ -189,14 +189,8 @@ test("rebase converts the tick difference once and preserves pending relative st
   assert.equal(set._endTime, -2);
 });
 
-test("initialization acquires once and explicit disposal releases the acquired OS after replacement", t =>
+test("useSimTimeRebase is recorded without reaching the refusing OS; disposal clears it", () =>
 {
-  const previous = blue.os, calls = [], owner = {
-    RegisterForSimTimeRebase(value) { calls.push(["register", value]); },
-    UnregisterForSimTimeRebase(value) { calls.push(["unregister", value]); }
-  };
-  blue.os = owner;
-  t.after(() => { blue.os = previous; });
   const set = new TriCurveSet();
   set.playOnLoad = false;
   set.useSimTimeRebase = true;
@@ -206,13 +200,9 @@ test("initialization acquires once and explicit disposal releases the acquired O
   set.Initialize();
   assert.equal(set.IsUsingSimTimeRebase(), true, "native false reinitialization does not clear an acquired subscription");
   set.Stop();
-  assert.deepEqual(calls, [["register", set]]);
-  blue.os = { UnregisterForSimTimeRebase() { assert.fail("wrong OS owner"); } };
   set.Dispose();
   set.Dispose();
-  assert.deepEqual(calls, [["register", set], ["unregister", set]]);
   assert.equal(set.IsUsingSimTimeRebase(), false);
-  assert.equal(set._rebaseOS, null);
 });
 
 test("declared construction initializes only after list population and preserves typed containers", () =>
@@ -248,7 +238,6 @@ test("Copier clones shared plain ranges and typed lists with class-owned runtime
   assert.equal(copy.ranges.GetSize(), 2);
   assert.equal(copy.name, "copy");
   assert.equal(copy.isPlaying, false);
-  assert.equal(copy._rebaseOS, null);
 });
 
 test("real TriValueBinding exposes native admission and copies through a model-free set", () =>

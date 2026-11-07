@@ -4,7 +4,6 @@ import { CjsSchema } from "#schema";
 import { BeInfo } from "./BeInfo.js";
 import { IBlueEvents } from "../interfaces/IBlueEvents.js";
 import { IBlueOS } from "../interfaces/IBlueOS.js";
-import { ISimTimeRebaseNotify } from "../interfaces/ISimTimeRebaseNotify.js";
 import { CcpTime } from "../CcpTime.js";
 
 /** 100ns ticks in a millisecond. */
@@ -48,10 +47,6 @@ export class BlueOS extends IBlueOS
 
   /** Registrants of `RegisterForTicks`, each with the cookie it supplied. */
   _tickers = [];
-
-
-  /** Registrants of `RegisterForSimTimeRebase`. */
-  _rebaseListeners = [];
 
 
   /**
@@ -317,46 +312,31 @@ export class BlueOS extends IBlueOS
 
 
   /**
-   * Registers a simulation-clock rebase listener, ignoring duplicates.
+   * `RegisterForSimTimeRebase` (BlueOS.cpp:1752-1760).
    *
-   * @adapted Schema identity enforces ISimTimeRebaseNotify at runtime. Carbon
-   *   accepts a typed pointer and returns void; this method returns the service.
-   *   The listener is retained, but this service does not perform clock rebasing.
-   * @param {object} cb An object implementing ISimTimeRebaseNotify.
-   * @returns {BlueOS} This service.
-   * @throws {TypeError} If cb does not declare ISimTimeRebaseNotify.
+   * @notSupported Carbon rebases only on a server TiDi sync packet
+   *   (BNT_SIMCLOCK_SYNC_INIT, BlueOS.cpp:1788-1809), which cannot reach the browser.
+   *   Call sites are commented out where Carbon has them.
+   * @returns {never}
+   * @throws {Error} Always.
    */
-  RegisterForSimTimeRebase(cb)
+  RegisterForSimTimeRebase(_cb)
   {
-    if (!CjsSchema.cast(cb, ISimTimeRebaseNotify))
-    {
-      throw new TypeError("BlueOS.RegisterForSimTimeRebase expects an ISimTimeRebaseNotify.");
-    }
-    if (!this._rebaseListeners.includes(cb))
-    {
-      this._rebaseListeners.push(cb);
-    }
-
-    return this;
+    throw new Error("RegisterForSimTimeRebase: no TiDi sync reaches the browser, so the simulation clock is never rebased.");
   }
 
 
   /**
-   * Removes a simulation-clock rebase listener, if present.
+   * `UnregisterForSimTimeRebase` (BlueOS.cpp:1762-1768).
    *
-   * @adapted Returns this service instead of Carbon's void return.
-   * @param {object} cb The registered ISimTimeRebaseNotify object.
-   * @returns {BlueOS} This service.
+   * @notSupported Nothing can register (RegisterForSimTimeRebase), because no TiDi
+   *   sync reaches the browser.
+   * @returns {never}
+   * @throws {Error} Always.
    */
-  UnregisterForSimTimeRebase(cb)
+  UnregisterForSimTimeRebase(_cb)
   {
-    const index = this._rebaseListeners.indexOf(cb);
-    if (index >= 0)
-    {
-      this._rebaseListeners.splice(index, 1);
-    }
-
-    return this;
+    throw new Error("UnregisterForSimTimeRebase: no TiDi sync reaches the browser, so nothing is registered for a rebase.");
   }
 
 

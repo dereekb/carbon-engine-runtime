@@ -4,7 +4,7 @@ import { BlueList, IListNotify } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2GenericParticleConstraint } from "./constraint/ITr2GenericParticleConstraint.js";
 // Source: trinity/trinity/Particle/Tr2ParticleSystem.h
-import { IInitialize, INotify, IsMatch, ISimTimeRebaseNotify, blue, CcpTime } from "#blue";
+import { IInitialize, INotify, IsMatch, ISimTimeRebaseNotify, CcpTime } from "#blue";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { CjsSchema, meta, type } from "#schema";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
@@ -95,8 +95,7 @@ export class Tr2ParticleSystem
   {
     Tr2ParticleSystem.getAllSystems().delete(this);
     this._DestroyBuffers();
-    if (this._rebaseOS) this._rebaseOS.UnregisterForSimTimeRebase(this);
-    this._rebaseOS = null;
+    // if (this.useSimTimeRebase) blue.os.UnregisterForSimTimeRebase(this); // cpp:96; no TiDi sync reaches the browser.
     this.ReleaseResources();
     for (const element of this._runtimeElements) element.buffer = null;
     this._buffers.fill(null);
@@ -134,9 +133,6 @@ export class Tr2ParticleSystem
 
   /** m_lastUpdate (Be::Time, Blue 100ns ticks): the update-arguments time of the last simulated frame. */
   _lastUpdate = 0;
-
-  /** Retains the installed clock owner so replacement/teardown unregisters correctly. */
-  _rebaseOS = null;
 
   _updateArguments = new ITr2GenericEmitterUpdateArguments();
 
@@ -1065,18 +1061,19 @@ export class Tr2ParticleSystem
 
   /**
    * Builds particle storage. Carbon always returns true; validity is queried
-   * separately. Registers clock rebasing and tells child emitters to use their
-   * thread-safe insertion contract.
+   * separately. Tells child emitters to use their thread-safe insertion contract.
    *
    * @adapted Carbon also prepares the AL resources here (cpp:1250); here only a
    *   prepared system prepares again, and one not yet used is prepared by its
    *   first use (docs internal/decisions/device-resource-registration.md, Revised lifecycle § 2).
+   *   It does not register for sim-time rebases: no TiDi sync reaches the browser
+   *   (BlueOS.RegisterForSimTimeRebase).
    */
   Initialize()
   {
     this.UpdateElementDeclaration();
     if (this._state === Tr2DeviceResourceState.PREPARED) this.PrepareResources();
-    if (this.useSimTimeRebase) this.#UpdateRebaseRegistration();
+    // if (this.useSimTimeRebase) blue.os.RegisterForSimTimeRebase(this); // cpp:114; no TiDi sync reaches the browser.
     if (this.emitParticleOnDeathEmitter) this.emitParticleOnDeathEmitter.SetThreadSafeFlag();
     if (this.emitParticleDuringLifeEmitter) this.emitParticleDuringLifeEmitter.SetThreadSafeFlag();
     this.originalMaxParticles = this._maxParticleCount;
@@ -1086,13 +1083,14 @@ export class Tr2ParticleSystem
   /**
    * Carbon Tr2ParticleSystem.cpp:141; batched edits apply each independent branch.
    *
-   * @implemented
+   * @adapted the useSimTimeRebase branch does not register: no TiDi sync reaches
+   *   the browser (BlueOS.RegisterForSimTimeRebase).
    */
   OnModified(names)
   {
     if (IsMatch(names, "requiresSorting"))
       this._indexes = this.requiresSorting && this._maxParticleCount ? new Array(this._maxParticleCount) : [];
-    if (IsMatch(names, "useSimTimeRebase")) this.#UpdateRebaseRegistration();
+    // if (IsMatch(names, "useSimTimeRebase")) register or unregister with blue.os; // cpp:155-166; no TiDi sync reaches the browser.
     if (IsMatch(names, "emitParticleOnDeathEmitter") && this.emitParticleOnDeathEmitter)
       this.emitParticleOnDeathEmitter.SetThreadSafeFlag();
     if (IsMatch(names, "emitParticleDuringLifeEmitter") && this.emitParticleDuringLifeEmitter)
@@ -1108,20 +1106,6 @@ export class Tr2ParticleSystem
   OnSimClockRebase(oldTime, newTime)
   {
     this._lastUpdate += newTime - oldTime;
-  }
-
-  /** Registers with the active clock and releases any previous installed owner. */
-  #UpdateRebaseRegistration()
-  {
-    const os = this.useSimTimeRebase ? blue.os : null;
-    if (this._rebaseOS === os) return;
-    if (this._rebaseOS) this._rebaseOS.UnregisterForSimTimeRebase(this);
-    this._rebaseOS = null;
-    if (os)
-    {
-      os.RegisterForSimTimeRebase(this);
-      this._rebaseOS = os;
-    }
   }
 
   /**

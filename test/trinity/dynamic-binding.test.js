@@ -499,13 +499,12 @@ test("TriValueBinding live endpoint edits rebuild and detach reroutes", () =>
 });
 
 
-test("Tr2DynamicBinding registers for sim-time rebases from construction until Destruct", t =>
+test("Tr2DynamicBinding does not register for sim-time rebases, and a rebase still moves its due time", t =>
 {
   // Carbon's constructor registers and its destructor unregisters (Tr2DynamicBinding.cpp:172-190);
-  // a rebase moves the pending tick time (:206-209).
+  // here neither does, and BlueOS would throw if they did. A rebase moves the pending tick time (:206-209).
   t.mock.method(blue.os, "GetCurrentFrameTime", () => 100_000_000);
   const binding = new Tr2DynamicBinding();
-  assert.equal(blue.os._rebaseListeners.includes(binding), true, "registered by the constructor");
   binding.sourceObjectPath = "Source";
   binding.sourceObjectAttribute = "value";
   binding.destinationObjectPath = "Destination";
@@ -514,14 +513,10 @@ test("Tr2DynamicBinding registers for sim-time rebases from construction until D
   const destination = { value: 0 };
   binding.SetOwner({ GetParameterMap: () => ({ Source: { value: 7 }, Destination: destination }) });
   assert.equal(binding.Link(), true);
-  for (const listener of blue.os._rebaseListeners)
-  {
-    if (listener === binding) listener.OnSimClockRebase(100_000_000, 150_000_000);
-  }
+  binding.OnSimClockRebase(100_000_000, 150_000_000);
   assert.equal(binding.Update(101_000_000), false, "the due time moved with the rebase");
   assert.equal(binding.Update(151_000_000), true);
   assert.equal(destination.value, 7);
   binding.Destruct();
-  assert.equal(blue.os._rebaseListeners.includes(binding), false, "Destruct unregisters");
   assert.equal(binding.binding, null);
 });

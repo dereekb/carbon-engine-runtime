@@ -154,44 +154,33 @@ export class Tr2DynamicBinding extends INotify
   /** Portable validity cache refreshed from the weak endpoint. */
   _isSourceValid = false;
 
-  /** The OS the constructor registered with, so Destruct unregisters from that same one. */
-  _rebaseOS = null;
-
   /**
-   * Carbon's constructor (Tr2DynamicBinding.cpp:172-183): defaults on the fields,
-   * then `BeOS->RegisterForSimTimeRebase( this )`, so the pending binding time
-   * follows a sim-clock rebase.
+   * Carbon's constructor (Tr2DynamicBinding.cpp:172-183): defaults on the fields.
+   *
+   * @adapted does not register for sim-time rebases: no TiDi sync reaches the
+   *   browser (BlueOS.RegisterForSimTimeRebase).
    */
   constructor()
   {
     super();
-    this._rebaseOS = blue.os;
-    this._rebaseOS.RegisterForSimTimeRebase(this);
+    // blue.os.RegisterForSimTimeRebase(this); // cpp:182; no TiDi sync reaches the browser.
   }
 
   /**
-   * Carbon's destructor (Tr2DynamicBinding.cpp:185-190): unregisters from sim-time
-   * rebasing, drops the owner and unlinks.
+   * Carbon's destructor (Tr2DynamicBinding.cpp:185-190): drops the owner and unlinks.
    *
    * Temporary destructor stand-in: exists because teardown is required before
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted JavaScript has no deterministic destructor, so the holder that
-   *   abandons a binding calls this; until then the OS keeps it registered.
-   *   Carbon's registry is a non-owning std::vector<ISimTimeRebaseNotify*>
-   *   (BlueOS.h:169) while BlueOS holds a strong array, the same shape as
-   *   TriDevice's resource registry; which owners call Destruct is pending the
-   *   open teardown ruling (operator, with TriDevice's registry and plan Q4).
+   *   abandons a binding calls this; which owners do is pending the open teardown
+   *   ruling (operator, with TriDevice's registry and plan Q4).
    * @returns {void}
    */
   Destruct()
   {
-    if (this._rebaseOS)
-    {
-      this._rebaseOS.UnregisterForSimTimeRebase(this);
-      this._rebaseOS = null;
-    }
+    // blue.os.UnregisterForSimTimeRebase(this); // cpp:187; no TiDi sync reaches the browser.
     this._owner = null;
     this.Unlink();
   }
