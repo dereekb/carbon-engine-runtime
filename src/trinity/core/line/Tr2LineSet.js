@@ -315,4 +315,15 @@ export class Tr2LineSet extends Tr2PrimitiveSet
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
+
+  /**
+   * The development description (Tr2LineSet.h:45-48).
+   *
+   * @adapted a C++ output reference becomes the return value
+   * @returns {string} The description.
+   */
+  GetDescription()
+  {
+    return "<Tr2LineSet>";
+  }
 }

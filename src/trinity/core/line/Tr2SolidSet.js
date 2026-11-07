@@ -258,6 +258,17 @@ export class Tr2SolidSet extends Tr2PrimitiveSet
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
+
+  /**
+   * The development description (Tr2SolidSet.h:49-52).
+   *
+   * @adapted a C++ output reference becomes the return value
+   * @returns {string} The description.
+   */
+  GetDescription()
+  {
+    return "<Tr2SolidSet>";
+  }
 }
 
 CjsSchema.decorateMethod(Tr2SolidSet, "SetCurrentColor");

@@ -694,6 +694,17 @@ export class Tr2InstancedMesh extends Tr2Mesh
     DYNAMIC: 1,
     DYNAMIC_SCALED: 2
   };
+
+  /**
+   * The development description (Tr2InstancedMesh.h:51-54).
+   *
+   * @adapted a C++ output reference becomes the return value
+   * @returns {string} The description.
+   */
+  GetDescription()
+  {
+    return "Tr2InstancedMesh";
+  }
 }
 
 // Registered as Carbon registers it (trinity/trinity/Tr2InstancedMesh_Blue.cpp:21).

@@ -293,4 +293,15 @@ export class Tr2DataTextureManager
     return this._dataTextureOffsets.get(Number(blockID) | 0) ?? -1;
   }
 
+
+  /**
+   * The development description (Shader/Utils/Tr2DataTextureManager.cpp:52-55).
+   *
+   * @adapted a C++ output reference becomes the return value
+   * @returns {string} The description.
+   */
+  GetDescription()
+  {
+    return "Tr2DataTextureManager";
+  }
 }
