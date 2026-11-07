@@ -37,7 +37,7 @@ test("EveLineContainer is maintained with Carbon graph defaults", () =>
     existsSync(new URL("../../src/trinity/generated/eve/ui/EveLineContainer.js", import.meta.url)),
     false
   );
-  assert.deepEqual(container.connectors, []);
+  assert.deepEqual(Array.from(container.connectors), []);
   assert.equal(container.name, "");
   assert.equal(container.lineSet, null);
   assert.equal(container.display, true);

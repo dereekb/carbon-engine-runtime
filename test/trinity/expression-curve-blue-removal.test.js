@@ -116,7 +116,7 @@ test("declared readers bypass live setters until initialization sees all persist
 test("Copier clones owned input graphs and initializes compiled state after backing-member copy", t =>
 {
   const input = new Scalar(); input.expression="time + 2";
-  const source = new Vector(); source.expressionX="input(0)"; source.expressionY="input1"; source.input1=6; source.inputs=[input];
+  const source = new Vector(); source.expressionX="input(0)"; source.expressionY="input1"; source.input1=6; source.inputs.push(input);
   const initialize = Vector.prototype.Initialize;
   const scalarInitialize = Scalar.prototype.Initialize;
   let count=0, scalarCount=0;

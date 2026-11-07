@@ -30,7 +30,7 @@ test("EveHazeSet maintains Carbon haze setup without renderer resources", () => 
   });
 
   assert.equal(set.effect, effect);
-  assert.deepEqual(set.hazes, [item]);
+  assert.deepEqual(Array.from(set.hazes), [item]);
   assert.equal(set.lights.length, 1);
   assert.ok(set.lights[0] instanceof EveHazeSetLight);
   assert.equal(effect.GetOption("SPACE_OBJECT_INSTANCED_ATTACHMENT"), "SOIA_ENABLED");
@@ -43,7 +43,7 @@ test("EveHazeSet exposes authored haze and light state as persisted graph fields
   assert.equal(set.effect, null);
   assert.equal(set.display, true);
   assert.equal(set.name, "");
-  assert.deepEqual(set.hazes, []);
+  assert.deepEqual(Array.from(set.hazes), []);
   assert.deepEqual(set.lights, []);
   for (const name of ["effect", "display", "name", "hazes", "lights"])
   {
