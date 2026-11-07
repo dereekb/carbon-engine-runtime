@@ -1,4 +1,4 @@
-// Incarna: reconstructed from Black records; no Carbon donor. See ../README.md.
+// Incarna: retired from Carbon. Donor: trinity a198e5da~1, Shader/Tr2ShaderMaterial.h and _Blue.cpp. See ../README.md.
 import { exposure as be } from "#be";
 import { blue } from "#blue";
 import { IRoot } from "#exposure/IRoot";
@@ -18,29 +18,30 @@ const libraryLoads = new WeakMap();
  * The material an Incarna mesh area holds in place of a Tr2Effect: a high-level
  * shader name and its parameters.
  *
- * Carbon names the class only in comments (`trinity/trinity/Tr2Blitter.cpp:77`;
- * `trinity/trinity/Shader/Tr2Effect.cpp:1239` names its interface,
- * ITr2ShaderMaterial), and no header declares it. The three members, and their
- * order, are those of build 1142708's Black records: every
- * `res:/graphics/interior/<race>/modular_<kit>/<piece>.black` writes
- * `highLevelShaderName`, `parameters`, then `defaultSituation` when present.
- * The exposure flags are guessed; the records show only that the members
- * persist.
+ * Carbon removed the class in trinity a198e5da (2017-06-30), and current
+ * Carbon names it only in comments (`trinity/trinity/Tr2Blitter.cpp:77`). Its
+ * persisted members and their flags are those of
+ * `Shader/Tr2ShaderMaterial_Blue.cpp` at a198e5da~1. Carbon's class also mapped
+ * IInitialize, to bind device shaders, and INotify; ours binds none, so it maps
+ * neither.
  *
  * It is read, then converted: `CreateEffect` gives the Tr2Effect it becomes, and
  * the owner drops the material (operator, 2026-10-25). Until then it sits in
- * `Tr2MeshArea.effect`, which current Carbon declares as `Tr2EffectPtr`
- * (`trinity/trinity/Tr2MeshArea.h:77`); the Black reader assigns the class the
- * file names.
+ * `Tr2MeshArea.effect`, which accepts this class beside Carbon's Tr2Effect.
  *
- * @adapted
+ * @adapted converted to a Tr2Effect, not bound as a device resource
  */
 @meta.define("Tr2ShaderMaterial")
 export class Tr2ShaderMaterial extends IRoot
 {
 
-  /** The shader library's shader this material uses, such as "IncarnaDetailed". Flags guessed. */
+  /** `m_materialName`: the material's name. */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
+  @type.string
+  name = "";
+
+  /** `m_highLevelShaderName`: the shader library's shader this material uses, such as "IncarnaDetailed". */
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
   @type.string
   highLevelShaderName = "";
 
@@ -48,18 +49,16 @@ export class Tr2ShaderMaterial extends IRoot
    * The shader's parameters, keyed by parameter name. The records store a
    * dictionary of the ordinary parameter classes (TriTextureParameter,
    * Tr2FloatParameter, Tr2Vector2/3/4Parameter), each carrying its own name.
-   * Flags guessed, as Carbon maps Tr2MaterialParameterStore's dictionary
-   * (READ | PERSIST).
    */
-  @be.mapAttribute(be.READ | be.PERSIST)
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
   @type.map("ITriEffectParameter")
   parameters = new Map();
 
   /**
    * Space-separated situation names, such as "TwoSided SHLighting FlatNormal".
-   * Absent from most records. Flags guessed.
+   * Absent from most records.
    */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
   @type.string
   defaultSituation = "";
 

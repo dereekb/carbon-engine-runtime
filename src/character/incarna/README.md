@@ -5,7 +5,11 @@ declares. Its content still names them: a captain's quarters walkway piece is a
 `Tr2InteriorStatic` whose mesh areas hold `Tr2ShaderMaterial`s. The classes
 here let that content load.
 
-Each class is reconstructed from Black records, not ported from source:
+Carbon's git history still holds some of them: `Tr2ShaderMaterial` to trinity
+a198e5da~1, and `Tr2InteriorFlare`, `Tr2InteriorFlareData` and
+`Tr2InteriorParticleObject` to 71329945~1. Those take their members and flags
+from that source, and each says so at its head; a class found there no longer
+needs guessing. The rest are reconstructed from Black records:
 
 - Its members, and their order, are those the records write. Its JSDoc names
   the records.
@@ -19,6 +23,8 @@ Each class is reconstructed from Black records, not ported from source:
 | Class | Records | Behaviour |
 |---|---|---|
 | `Tr2InteriorStatic` | interior kit pieces | Draws its `detailMeshes` in a `Tr2InteriorScene`, modelled on `Tr2InteriorPlaceable`. Its `transform` is ours; the records carry no placement. On `Initialize` it replaces each area's `Tr2ShaderMaterial` with the `Tr2Effect` it becomes. |
+| `Tr2InteriorFlare`, `Tr2InteriorFlareData` | interior flares | Data only: nothing draws them yet. |
+| `Tr2InteriorParticleObject` | interior particles | Data only: nothing draws it yet. |
 | `Tr2ShaderMaterial` | the effect of an Incarna mesh area | Read, then converted: `CreateEffect` moves its parameters into a `Tr2Effect` whose path comes from the shader library, `res:/graphics/shaders/compiled/dx11/<source>.fxt`. The material itself never draws (`IsGood()` false). |
 | `Tr2ShaderManager` | `res:/graphics/shaders/shaderdescriptions.black` | Data only: the shader library, every `Tr2HighLevelShader`. |
 | `Tr2HighLevelShader` | the library and `shaderdescriptions/*.black` | Data only: a shader's source path, permutation tags and parameter descriptions. |

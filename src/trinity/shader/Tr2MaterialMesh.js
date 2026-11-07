@@ -13,8 +13,8 @@ import { IRoot } from "#blue";
 export class Tr2MaterialMesh
 {
 
-  /** Persisted dictionary of material areas. */
-  areas = null;
+  /** `m_areas` (Tr2MaterialRes.h): persisted dictionary of material areas. */
+  areas = new Map();
 
 }
 
@@ -25,5 +25,5 @@ export class Tr2MaterialMesh
 // would register a static as an instance field.
 CjsSchema.exposure.inherit(IRoot)(Tr2MaterialMesh);
 
-CjsSchema.decorateField(Tr2MaterialMesh, "areas", be.mapAttribute(be.READ | be.PERSIST), type.rootRef("Tr2MaterialAreaDict"));
+CjsSchema.decorateField(Tr2MaterialMesh, "areas", be.mapAttribute(be.READ | be.PERSIST), type.map("Tr2MaterialArea"));
 CjsSchema.exposure.define("Tr2MaterialMesh")(Tr2MaterialMesh);
