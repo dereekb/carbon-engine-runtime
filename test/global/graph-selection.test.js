@@ -1,3 +1,4 @@
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsGraph } from "../../src/global/model/graph/index.js";
@@ -167,7 +168,7 @@ test("selection retains hidden-derived fallback order, weak-edge policy and matc
     { name: "x", key: "baseX", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "SelectPolicyRoot", resource: true, members: [
-    { name: "x", key: "hiddenX", hidden: true, type: "rootRef", edge: { kind: "ref", type: Resource } },
+    { name: "x", key: "hiddenX", flags: EDITFLAGS.HIDDEN, type: "rootRef", edge: { kind: "ref", type: Resource } },
     { name: "y", type: "rootRef", edge: { kind: "ref", type: Resource } },
     { name: "weak", type: "rootRef", edge: { kind: "weak", type: Resource } }
   ] });
@@ -176,7 +177,7 @@ test("selection retains hidden-derived fallback order, weak-edge policy and matc
   root.baseX = new Resource();
   root.weak = new Resource();
   const edges = ["ref", "weak"];
-  const selection = CjsGraph.compileSelection({ matchClass, edges, acceptMember: member => !member.hidden });
+  const selection = CjsGraph.compileSelection({ matchClass, edges, acceptMember: member => (member.flags & EDITFLAGS.HIDDEN) === 0 });
   edges.length = 0;
   const expected = [root, root.y, root.weak, root.baseX];
   sameIdentities(CjsGraph.select(root, selection, []), expected);

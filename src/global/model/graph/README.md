@@ -8,12 +8,16 @@ member declarations. Each member compiles once to one flat object: a `GRAPH_TYPE
 then name, flags, edge and a slot for anything rare. Every walk, reader and writer reads that one
 shape. CjsGraphClassInfo retains the compiled members in `declared` and the last derived record in
 `compiled`: the members, `byName`, `persistByName` (derived first, PERSIST only) and the class's
-facts. Default values are not cloned or instantiated, and must not later be assigned as shared
+facts, among them `bases`, its C++ base list, and `chainTo`, the class its exposure table continues
+into. Lookup still walks `extends`: see `docs/projects/decorator-upgrade.md`. Default values are not cloned or instantiated, and must not later be assigned as shared
 mutable instance storage.
 
 A compiled member holds: `name`, `key`, `index`, `role`, `type`, `vartype`, `handler`, `direct`,
-`length`, `bits`, `signed`, `ctor`, `item`, `persist`, `writable`, `notify`, `hidden`, `binary`,
-`runtimeOnly`, `wrapped`, `options`, `edgeKind`, `edgeType`, `collection`, `destination` and `owner`.
+`length`, `bits`, `signed`, `ctor`, `item`, `flags`, `wrapped`, `options`, `edgeKind`, `edgeType`,
+`collection`, `destination` and `owner`. `flags` is one integer: Carbon's `EDITFLAGS` from
+`global/consts`, and above `EDMASK` `GraphMemberFlags.BINARY` and `RUNTIMEONLY`, which are ours and which
+no value operation reads. A member takes a value through WRITE, PERSIST or RPERSIST, or when it has no
+access flags; READ alone refuses one.
 `edgeType` is always a list, the declared class first; empty is dynamic. `destination` says where a
 reader puts the value: `list`, `dict`, `structureList`, `embedded`, `wrapper`, or null.
 

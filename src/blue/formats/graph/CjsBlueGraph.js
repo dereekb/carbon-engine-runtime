@@ -3,8 +3,8 @@
 // Disconnected: DictReader and DictWriter stay the live path until the one reviewed cutover.
 import * as graph from "../../../global/model/graph/index.js";
 import { CjsSchema } from "#schema";
-import { mappedInterfaces } from "../../compose/interface.js";
-import { isWritableField } from "../../compose/values.js";
+import { baseList, exposureChainTo, mappedInterfaces } from "../../compose/interface.js";
+import { getDeclaredEditFlags } from "../../exposure/ClassInfo.js";
 import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
 import { IList } from "../../exposure/IList.js";
@@ -16,7 +16,7 @@ import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { DeclaredClassName } from "../../format/IRootWriter.js";
 
-const { CjsGraph, GRAPH_TYPES } = graph;
+const { CjsGraph, GRAPH_TYPES, GraphMemberFlags } = graph;
 
 /** The element class of a typed array, as its name in the graph's type table. */
 const arrayType = name => name.charAt(0).toLowerCase() + name.slice(1);
@@ -71,6 +71,8 @@ export class CjsBlueGraph
       ui: () => this._getUI(ctor),
       ownValues: ctor.ownValues === true,
       interfaces: Array.from(mapped, item => CjsSchema.getClassName(item)),
+      bases: this._getBases(ctor),
+      chainTo: this._getChainTo(ctor),
       members: fields.map(field => this._getMember(field))
     });
   }
@@ -190,12 +192,9 @@ export class CjsBlueGraph
   {
     return {
       name: field.name, key: field.key, index: field.index, role: field.role,
-      persist: field.edit?.persist === true || field.edit?.persistOnly === true,
-      writable: isWritableField(field),
-      notify: field.edit?.notify === true,
-      hidden: field.type?.binary === true || field.type?.runtimeOnly === true,
-      binary: field.type?.binary === true,
-      runtimeOnly: field.type?.runtimeOnly === true
+      flags: getDeclaredEditFlags(field)
+        | (field.type?.binary === true ? GraphMemberFlags.BINARY : 0)
+        | (field.type?.runtimeOnly === true ? GraphMemberFlags.RUNTIMEONLY : 0)
     };
   }
 
@@ -229,6 +228,31 @@ export class CjsBlueGraph
       type: "map",
       edge: { kind: "ref", collection: "map", type }
     };
+  }
+
+  /**
+   * A class's C++ base list by name: what it extends, then its own `@be.inherit`. A platform class
+   * such as Error has no name of ours and is left out.
+   * @param {Function} ctor A class.
+   * @returns {string[]} Class names, in base order.
+   */
+  static _getBases(ctor)
+  {
+    const parent = Object.getPrototypeOf(ctor);
+    const bases = parent === Function.prototype ? baseList(ctor) : [ parent, ...baseList(ctor) ];
+
+    return bases.map(base => CjsSchema.getClassName(base)).filter(name => name !== undefined);
+  }
+
+  /**
+   * The class a class's `@be.exposureChainTo` names, or null where its table ends.
+   * @param {Function} ctor A class.
+   * @returns {string|null} A class name.
+   */
+  static _getChainTo(ctor)
+  {
+    const chained = exposureChainTo(ctor);
+    return chained === null ? null : CjsSchema.getClassName(chained);
   }
 
   /**

@@ -1,3 +1,4 @@
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsGraph } from "../../src/global/model/graph/index.js";
@@ -42,7 +43,7 @@ test("filtering precedes inherited name and edge selection without grouping orde
     { name: "shadow", key: "baseShadow", type: "rootRef", edge: { kind: "embed" } }
   ] });
   CjsGraph.define(Derived, { name: "WalkDerived", members: [
-    { name: "x", key: "hiddenX", type: "rootRef", hidden: true, edge: { kind: "embed" } },
+    { name: "x", key: "hiddenX", type: "rootRef", flags: EDITFLAGS.HIDDEN, edge: { kind: "embed" } },
     { name: "y", type: "rootRef", edge: { kind: "embed" } },
     { name: "shadow", type: "float32" }
   ] });
@@ -52,7 +53,7 @@ test("filtering precedes inherited name and edge selection without grouping orde
   Object.defineProperty(root, "hiddenX", { get() { throw new Error("hidden"); } });
   Object.defineProperty(root, "baseShadow", { get() { throw new Error("shadowed by leaf"); } });
   const visited = [];
-  CjsGraph.traverse(root, object => { visited.push(object); }, { acceptMember: member => !member.hidden });
+  CjsGraph.traverse(root, object => { visited.push(object); }, { acceptMember: member => (member.flags & EDITFLAGS.HIDDEN) === 0 });
   assert.deepEqual(visited, [root, root.y, root.baseX]);
 });
 

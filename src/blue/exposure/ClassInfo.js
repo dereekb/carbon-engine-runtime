@@ -4,16 +4,47 @@ import { CjsSchema } from "#schema";
 import { getCarbonTypeDefinition } from "../schema/types/carbonTypes.js";
 import { ownMappedInterfaces, exposureChainTo } from "../compose/interface.js";
 import { VarEntry } from "./VarEntry.js";
+import { EDITFLAGS } from "../../global/consts/blue.js";
 
-/** Be::EDITFLAGS bits (BlueTypes.h:288-303), keyed by the schema's edit flag names. */
+/** Be::EDITFLAGS bits, keyed by the schema's edit flag names. */
 const EDIT_FLAG_BITS = [
-  [ "read", 0x001 ], [ "write", 0x002 ], [ "notify", 0x004 ], [ "hidden", 0x008 ],
-  [ "persist", 0x010 ], [ "rpersist", 0x020 ]
+  [ "read", EDITFLAGS.READ ], [ "write", EDITFLAGS.WRITE ], [ "notify", EDITFLAGS.NOTIFY ], [ "hidden", EDITFLAGS.HIDDEN ],
+  [ "persist", EDITFLAGS.PERSIST ], [ "rpersist", EDITFLAGS.RPERSIST ]
 ];
 
-/** Be::FLAGS and Be::ENUM (BlueTypes.h:299-300). */
-const EDIT_FLAGS = 0x100;
-const EDIT_ENUM = 0x200;
+/**
+ * The bits a member's values path honours: its edit flags, Carbon's row with any of ours merged
+ * in, and a Carbon row's editor bits, or what the type adds. @meta.mapAttribute(meta.PERSIST) on a
+ * Carbon READ row is PERSIST here.
+ * @param {object} member Declared member.
+ * @returns {number} Be::EDITFLAGS bits.
+ */
+export function getDeclaredEditFlags(member)
+{
+  let flags = EDITFLAGS.NONE;
+  if (member.edit !== undefined)
+  {
+    for (const [ flag, bit ] of EDIT_FLAG_BITS) if (member.edit[flag] === true) flags |= bit;
+  }
+
+  if (member.exposure) return flags | (member.exposure.flags & EDITFLAGS.EDMASK);
+
+  if (member.type?.flags === true) flags |= EDITFLAGS.FLAGS;
+  if (member.enum) flags |= EDITFLAGS.ENUM;
+
+  return flags;
+}
+
+/**
+ * A member's `mEditFlags` as Carbon's table holds them: the bits its exposure macro wrote, or for
+ * an older declaration what it declares.
+ * @param {object} member Declared member.
+ * @returns {number} Be::EDITFLAGS bits.
+ */
+export function getEditFlags(member)
+{
+  return member.exposure ? member.exposure.flags : getDeclaredEditFlags(member);
+}
 
 /** @type {WeakMap<Function, {schema: object, classInfo: ClassInfo}>} */
 const s_classInfo = new WeakMap();
@@ -229,13 +260,7 @@ export class ClassInfo
     entry.description = member.jessica && member.jessica.description ? member.jessica.description : "";
     // An older declaration without an exposure record is in Blue's view, as PyGetTypeInfo lists it today.
     entry.meta.blue = !member.exposure || member.exposure.origin !== "ours";
-    if (member.exposure) entry.editFlags = member.exposure.flags;
-    else
-    {
-      if (member.edit !== undefined) for (const [ flag, bit ] of EDIT_FLAG_BITS) if (member.edit[flag] === true) entry.editFlags |= bit;
-      if (type?.flags === true) entry.editFlags |= EDIT_FLAGS;
-      if (member.enum) entry.editFlags |= EDIT_ENUM;
-    }
+    entry.editFlags = getEditFlags(member);
     const chooser = member.exposure
       ? member.exposure.chooser ? member.chooser.entries : null
       : member.chooser ? member.chooser.entries : member.enum && member.enum.chooser;

@@ -1,6 +1,7 @@
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CjsGraph, CjsGraphRoot, CjsGraphTypeFloat } from "../../src/global/model/graph/index.js";
+import { CjsGraph, CjsGraphRoot, CjsGraphTypeFloat, GraphMemberFlags } from "../../src/global/model/graph/index.js";
 
 const float = new CjsGraphTypeFloat();
 
@@ -34,7 +35,7 @@ class Holder
 
 const leafMembers = [
   { name: "name", type: "string" },
-  { name: "weight", type: "float32", flags: 1 },
+  { name: "weight", type: "float32" },
   { name: "position", type: "vec3" }
 ];
 
@@ -869,12 +870,14 @@ class Bare
   value = 0;
 }
 
+const NOTIFIED = EDITFLAGS.READWRITE | EDITFLAGS.PERSIST | EDITFLAGS.NOTIFY;
+
 const watchedMembers = [
-  { name: "name", type: "string", notify: true },
-  { name: "weight", type: "float32", notify: true },
+  { name: "name", type: "string", flags: NOTIFIED },
+  { name: "weight", type: "float32", flags: NOTIFIED },
   { name: "quiet", type: "float32" },
-  { name: "child", type: "rootRef", notify: true, edge: { kind: "ref", type: Watched } },
-  { name: "items", type: "list", notify: true, edge: { kind: "ref", collection: true, type: Watched } }
+  { name: "child", type: "rootRef", flags: NOTIFIED, edge: { kind: "ref", type: Watched } },
+  { name: "items", type: "list", flags: NOTIFIED, edge: { kind: "ref", collection: true, type: Watched } }
 ];
 
 CjsGraph.define(Watched, { name: "GraphWatched", notify: true, members: watchedMembers });
@@ -1078,7 +1081,7 @@ test("copy and clone write PERSIST members only, and clone creates", () =>
   }
   CjsGraph.define(Persisted, { name: "GraphPersisted", members: [
     { name: "kept", type: "float32" },
-    { name: "runtime", type: "float32", persist: false }
+    { name: "runtime", type: "float32", flags: EDITFLAGS.READWRITE }
   ] });
 
   const source = new Persisted();
@@ -1150,12 +1153,12 @@ test("get filters by flags, and a hidden derived declaration leaves the visible 
     secret = 4;
   }
   CjsGraph.define(Base, { name: "GraphFlagBase", members: [ { name: "value", type: "float32" } ] });
-  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", type: "float32", persist: false } ] });
+  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", type: "float32", flags: EDITFLAGS.READWRITE } ] });
   CjsGraph.define(Flags, { name: "GraphFlags", members: [
     { name: "shown", type: "float32" },
-    { name: "transient", type: "float32", persist: false },
-    { name: "readOnly", type: "float32", writable: false },
-    { name: "secret", type: "float32", hidden: true }
+    { name: "transient", type: "float32", flags: EDITFLAGS.READWRITE },
+    { name: "readOnly", type: "float32", flags: EDITFLAGS.READ },
+    { name: "secret", type: "float32", flags: GraphMemberFlags.RUNTIMEONLY }
   ] });
 
   assert.deepEqual(CjsGraph.get(new Derived(), { full: true }), { value: 2 });
@@ -1163,7 +1166,7 @@ test("get filters by flags, and a hidden derived declaration leaves the visible 
 
   const flags = new Flags();
   assert.deepEqual(CjsGraph.get(flags, { full: true }), { shown: 1, transient: 2, readOnly: 3 });
-  assert.deepEqual(CjsGraph.get(flags, { full: true, persistOnly: true }), { shown: 1, readOnly: 3 });
+  assert.deepEqual(CjsGraph.get(flags, { full: true, persistOnly: true }), { shown: 1 });
   assert.deepEqual(CjsGraph.get(flags, { full: true, roundTrip: true }), { shown: 1, transient: 2 });
 
   assert.equal(CjsGraph.set(flags, { readOnly: 9, secret: 9 }), false, "skipped, as DictReader skips what it may not write");

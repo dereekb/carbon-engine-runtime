@@ -257,6 +257,25 @@ export function cast(value, Contract)
 
 
 /**
+ * The bases a class names in its own `@be.inherit`, in Carbon's order, held on the CONSTRUCTOR.
+ * Unlike `composedContracts` this is one level, as the header declares it.
+ */
+const BASES = Symbol.for("carbonenginejs.carbon.baseList");
+
+
+/**
+ * The base list a class declares itself.
+ *
+ * @param {Function} Constructor The class to ask about.
+ * @returns {Function[]} Its own `@be.inherit` bases. Do not mutate.
+ */
+export function baseList(Constructor)
+{
+    return Object.hasOwn(Constructor, BASES) ? Constructor[BASES] : [];
+}
+
+
+/**
  * The `@carbon.inherit(X, Y, ...)` class decorator.
  *
  * Takes the additional bases and returns the decorator, so the declaration
@@ -302,6 +321,8 @@ export function carbonInheritDecorator(Contracts, onInstalled = null)
         {
             throw new TypeError("carbon.inherit only supports classes.");
         }
+
+        Object.defineProperty(value, BASES, { value: [ ...baseList(value), ...bases ], configurable: true });
 
         for (const Contract of bases) installInterface(value, Contract, onInstalled);
     };

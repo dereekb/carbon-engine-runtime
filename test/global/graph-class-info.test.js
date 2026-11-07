@@ -1,3 +1,4 @@
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsGraph, CjsGraphClassInfo, CjsGraphTypeFloat, VARTYPE } from "../../src/global/model/graph/index.js";
@@ -122,8 +123,8 @@ test("policy can skip a hidden derived candidate without losing the visible base
   class Visible {}
   class Hidden extends Visible {}
   CjsGraph.define(Visible, { name: "GraphVisibleBase", members: [{ name: "x", key: "base", type: "float32" }] });
-  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", members: [{ name: "x", key: "derived", type: "float32", hidden: true }] });
+  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", members: [{ name: "x", key: "derived", type: "float32", flags: EDITFLAGS.HIDDEN }] });
   const candidates = CjsGraph.getClassInfo(Hidden).compiled.byName.x;
   assert.deepEqual(candidates.map(member => member.key), ["derived", "base"]);
-  assert.equal(candidates.find(member => !member.hidden).key, "base");
+  assert.equal(candidates.find(member => (member.flags & EDITFLAGS.HIDDEN) === 0).key, "base");
 });

@@ -1,6 +1,7 @@
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CjsGraph, GRAPH_TYPES, GRAPH_WRAPPERS, VARTYPE } from "../../src/global/model/graph/index.js";
+import { CjsGraph, GRAPH_TYPES, GRAPH_WRAPPERS, VARTYPE, GraphMemberFlags } from "../../src/global/model/graph/index.js";
 
 /** A compiled member of a type, with its handler. */
 const member = (type, fields = {}) => CjsGraph.compileMember({ name: "value", type, ...fields });
@@ -108,18 +109,18 @@ test("compiled classes carry one PERSIST lookup, derived first, and their facts"
 
   CjsGraph.define(Base, { name: "PersistBase", members: [
     { name: "shared", key: "base", type: "float32" },
-    { name: "quiet", type: "float32", persist: false }
+    { name: "quiet", type: "float32", flags: EDITFLAGS.READWRITE }
   ] });
   CjsGraph.define(Derived, { name: "PersistDerived", proxy: true, customPersist: true, list: true, abstract: true,
     layout: { size: 4, boundaries: [], fields: [] }, members: [
       { name: "shared", key: "derived", type: "float32" },
-      { name: "skipped", type: "float32", persist: false, runtimeOnly: true }
+      { name: "skipped", type: "float32", flags: GraphMemberFlags.RUNTIMEONLY }
     ] });
 
   const { compiled } = CjsGraph.getClassInfo(Derived);
   assert.equal(compiled.persistByName.shared.key, "derived");
   assert.equal(compiled.persistByName.quiet, undefined);
-  assert.equal(compiled.persistByName.skipped.runtimeOnly, true, "a runtime-only member claims its name");
+  assert.equal(compiled.persistByName.skipped.flags, GraphMemberFlags.RUNTIMEONLY, "a runtime-only member claims its name");
   assert.deepEqual([ compiled.proxy, compiled.customPersist, compiled.list, compiled.abstract ], [ true, true, true, true ]);
   assert.equal(compiled.layout.size, 4);
   assert.equal(compiled.name, "PersistDerived");

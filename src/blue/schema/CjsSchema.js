@@ -15,6 +15,7 @@ import { CJS_CLASS_NAME, getRegisteredClassName, requireRegisteredClassName } fr
 import { carbonInheritDecorator, carbonInterfaceDecorator, carbonChainToDecorator, cast, mappedInterfaces, setInterfaceClassResolver } from "../compose/interface.js";
 import { composeValuesDecorator, createValuesTransport, isExportableField, isTransportedDeclaration, isWritableField } from "../compose/values.js";
 import { blueEnums, CjsBlueEnumRegistry } from "../enums/CjsBlueEnumRegistry.js";
+import { EDITFLAGS } from "../../global/consts/blue.js";
 import { TriSettingNames } from "../../global/consts/trinity.js";
 import { CjsUnusedMethodError } from "../../global/utils/errors/CjsUnusedMethodError.js";
 import { registerClass, unregisterClass, getRegisteredConstructor, getClassRegistrationRevision, ClassRegistrarNullFactory } from "../exposure/classes/registry.js";
@@ -3903,9 +3904,7 @@ CjsSchema.meta.define(CjsUnusedMethodError, { className: "CjsUnusedMethodError" 
 /** Carbon's EDITFLAGS; masks are included for native table comparisons. */
 function exposureConstants()
 {
-    return { NONE: 0, READ: 1, WRITE: 2, READWRITE: 3, NOTIFY: 4, HIDDEN: 8,
-        MODMASK: 15, PERSIST: 16, RPERSIST: 32, SERMASK: 240, FLAGS: 256,
-        ENUM: 512, EDMASK: 3840, PERSISTONLY: 24, EDIT_FORCELONG: 0xFFFFFFFF };
+    return { ...EDITFLAGS };
 }
 
 /**

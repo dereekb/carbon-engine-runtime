@@ -65,3 +65,34 @@ export const BLUEERROR = Object.freeze({
     /** Flush the error log to the logger, then clear it. */
     BEFLUSH: -3
 });
+
+/**
+ * `Be::EDITFLAGS`: a member's access, serialization and editor bits, one integer per member.
+ *
+ * Carbon: Be::EDITFLAGS (blueexposure/include/BlueTypes.h:283-311)
+ */
+export const EDITFLAGS = Object.freeze({
+    NONE: 0x000,
+    /** Value is accessible. */
+    READ: 0x001,
+    /** Value is modifiable. */
+    WRITE: 0x002,
+    READWRITE: 0x003,
+    NOTIFY: 0x004,
+    /** Value is hidden. */
+    HIDDEN: 0x008,
+    MODMASK: 0x00f,
+    /** Serialize automatically. */
+    PERSIST: 0x010,
+    /** Like PERSIST, but only unserialize. */
+    RPERSIST: 0x020,
+    SERMASK: 0x0f0,
+    /** Value is a flag or mask. */
+    FLAGS: 0x100,
+    /** Value is an enumeration. */
+    ENUM: 0x200,
+    EDMASK: 0xf00,
+    /** For hidden attributes: HIDDEN | PERSIST. */
+    PERSISTONLY: 0x018,
+    EDIT_FORCELONG: 0xffffffff
+});

@@ -1,7 +1,7 @@
-import { BLUELISTEVENT } from "../../consts/blue.js";
+import { BLUELISTEVENT, EDITFLAGS } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
 import { CjsGraphClassUIInfo } from "./CjsGraphClassUIInfo.js";
-import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphOperation, VARTYPE } from "./GraphTypes.js";
+import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphMemberFlags, GraphOperation, VARTYPE } from "./GraphTypes.js";
 import { getGraphHandler } from "./types/index.js";
 
 /**
@@ -47,6 +47,18 @@ export class CjsGraph
     }
   } ];
 
+  /** A member's flags when its definition gives none. */
+  static _defaultFlags = EDITFLAGS.READWRITE | EDITFLAGS.PERSIST;
+
+  /** The flags of a member no value operation reads. */
+  static _unread = GraphMemberFlags.BINARY | GraphMemberFlags.RUNTIMEONLY;
+
+  /** The flags that claim a persisted name. */
+  static _persistNames = EDITFLAGS.PERSIST | GraphMemberFlags.RUNTIMEONLY;
+
+  /** The flags that each let a value in. */
+  static _accepting = EDITFLAGS.WRITE | EDITFLAGS.PERSIST | EDITFLAGS.RPERSIST;
+
   /** Value keys that are not members. */
   static _reserved = new Set([ "_type", "_id", "_ref", GRAPH_METADATA_KEY ]);
 
@@ -55,14 +67,15 @@ export class CjsGraph
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
-   * Definition shape: { name, members: [{ name, key?, type?, edge?, ...flags }], interfaces? }.
+   * Definition shape: { name, members: [{ name, key?, type?, edge?, flags? }], interfaces? }.
    * A member's type is a GRAPH_TYPES name; one with no type describes and walks, and refuses
-   * every value operation. Its flags are data: persist and writable default to true, and notify,
-   * hidden, binary and runtimeOnly to false. wrapped names a GRAPH_WRAPPERS class, item the type
-   * of a values list, length a length of its own, and options anything rare.
+   * every value operation. flags holds its Be::EDITFLAGS and GraphMemberFlags, READWRITE | PERSIST
+   * by default. wrapped names a GRAPH_WRAPPERS class, item the type of a values list, length a
+   * length of its own, and options anything rare.
    * edge is { kind, type?, collection?, map? }: type is a class, a name or a list of them, the
    * first being the declared one, and collection is true or "list", "array", "set" or "map".
    * interfaces names classes an instance also counts as without inheriting from them.
+   * bases is its C++ base list and chainTo the class its exposure table continues into, or null.
    * whole means members is the class's complete list, so no base definition adds to it.
    * initialize, notify, listNotify and hook say instances take Initialize, OnModified,
    * OnListModified and OnValueChanged. ownValues says instances hold values that are not members,
@@ -112,6 +125,7 @@ export class CjsGraph
   static compileMember(member)
   {
     const entry = member.type === undefined ? GRAPH_TYPES.invalid : GRAPH_TYPES[member.type];
+    const flags = member.flags ?? this._defaultFlags;
     if (!entry) throw new TypeError(`Unknown graph type: ${member.type}`);
 
     const edge = member.edge ? this._compileEdge(member.edge) : null;
@@ -124,7 +138,7 @@ export class CjsGraph
       index: member.index,
       role: member.role ?? "attribute",
       type: member.type ?? "invalid",
-      vartype: member.binary === true ? VARTYPE.BINARYBLOCK : wrapped === null ? entry.storage : VARTYPE.IROOT,
+      vartype: (flags & GraphMemberFlags.BINARY) !== 0 ? VARTYPE.BINARYBLOCK : wrapped === null ? entry.storage : VARTYPE.IROOT,
       handler: getGraphHandler(entry.handler),
       direct: entry.direct === true,
       length: wrapped === null ? member.length ?? entry.length ?? 0 : wrapped.elements.length,
@@ -133,12 +147,7 @@ export class CjsGraph
       ctor: entry.ctor ?? null,
       check: entry.check ?? null,
       item: this._compileItem(member),
-      persist: member.persist !== false,
-      writable: member.writable !== false,
-      notify: member.notify === true,
-      hidden: member.hidden === true,
-      binary: member.binary === true,
-      runtimeOnly: member.runtimeOnly === true,
+      flags,
       wrapped,
       options: member.options ?? null,
       edgeKind: edge === null ? null : edge.kind,
@@ -330,7 +339,7 @@ export class CjsGraph
 
   /**
    * Returns one member's value in the same form get writes it.
-   * @cjs A hidden member is unknown here.
+   * @cjs A binary or runtime-only member is unknown here.
    */
   static getValue(object, name, options = {})
   {
@@ -800,7 +809,7 @@ export class CjsGraph
 
     if (member.collection === "map") return stored.size;
     if (member.collection !== null) return stored.length;
-    if (!member.persist || typeof stored !== "object" || seen.has(stored)) return true;
+    if ((member.flags & EDITFLAGS.PERSIST) === 0 || typeof stored !== "object" || seen.has(stored)) return true;
 
     const info = this._getObjectInfo(stored, member.edgeType);
     return { info, values: this._captureValues(stored, info, seen) };
@@ -1023,7 +1032,7 @@ export class CjsGraph
     {
       const candidates = info.compiled.byName[names[i]];
       if (!candidates) throw new TypeError(`Unknown graph member: ${info.declared.name}.${names[i]}`);
-      if (all || candidates[0].notify === true) object.OnModified(names[i]);
+      if (all || (candidates[0].flags & EDITFLAGS.NOTIFY) !== 0) object.OnModified(names[i]);
     }
   }
 
@@ -1323,6 +1332,16 @@ export class CjsGraph
   }
 
   /**
+   * Whether a member takes a value from a set or a from. WRITE, PERSIST and RPERSIST each let one
+   * in, as DictReader::FindEntry does (blue/src/DictReader.cpp:690-713).
+   * @cjs A member with no access flags stays open to JavaScript.
+   */
+  static _isWritable(flags)
+  {
+    return (flags & this._accepting) !== 0 || (flags & EDITFLAGS.READ) === 0;
+  }
+
+  /**
    * The members one operation sees, resolved once per class and choice of flags.
    * @cjs Lives on the compiled record, so a registration change discards it with the rest.
    * Resolves names after filtering, as _selectEdges does.
@@ -1339,9 +1358,9 @@ export class CjsGraph
     const members = [], byName = Object.create(null);
     for (const member of info.compiled.members)
     {
-      if (byName[member.name] || member.hidden === true) continue;
-      if ((!reading || roundTrip) && member.writable === false) continue;
-      if (persistOnly && member.persist === false) continue;
+      if (byName[member.name] || (member.flags & this._unread) !== 0) continue;
+      if ((!reading || roundTrip) && !this._isWritable(member.flags)) continue;
+      if (persistOnly && (member.flags & EDITFLAGS.PERSIST) === 0) continue;
 
       byName[member.name] = member;
       members.push(member);
@@ -1669,8 +1688,10 @@ export class CjsGraph
     let parent = null;
 
     // Preserve candidates in derived-first order. Flags filter BEFORE resolving a name;
-    // e.g. a hidden derived declaration must not erase a visible base declaration.
+    // e.g. a runtime-only derived declaration must not erase a visible base declaration.
     // The instance prototype chain, the same relation traversal and selection use.
+    // Carbon's FindEntry walks the exposure chain, compiled below as chainTo; the walk moves to it
+    // once every class declares its chain (decorator-upgrade.md, Class names stay string literals).
     for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
     {
       const owner = this._classes.get(prototype.constructor);
@@ -1685,7 +1706,7 @@ export class CjsGraph
         byName[member.name].push(compiled);
         members.push(compiled);
 
-        if ((compiled.persist || compiled.runtimeOnly) && !Object.hasOwn(persistByName, member.name)) persistByName[member.name] = compiled;
+        if ((compiled.flags & this._persistNames) !== 0 && !Object.hasOwn(persistByName, member.name)) persistByName[member.name] = compiled;
       }
     }
 
@@ -1695,6 +1716,8 @@ export class CjsGraph
       revision: this._revision, parent, members, byName, persistByName, tables: [], defaults: null, ui: null,
       name: declared.name,
       interfaces: declared.interfaces,
+      bases: declared.bases ?? [],
+      chainTo: declared.chainTo ?? null,
       initialize: declared.initialize === true,
       notify: declared.notify === true,
       listNotify: declared.listNotify === true,

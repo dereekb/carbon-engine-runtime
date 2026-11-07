@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { carbonChainToDecorator } from "../../src/blue/compose/interface.js";
+import { CjsBlueGraph } from "../../src/blue/formats/graph/index.js";
+import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
+import { EDITFLAGS } from "../../src/global/consts/blue.js";
+import { CjsGraph, GraphMemberFlags } from "../../src/global/model/graph/index.js";
+
+class Parent {}
+class Face {}
+class Chained {}
+class Thing extends Parent
+{
+  readable = 1;
+  only = 2;
+  load = 3;
+  noted = 4;
+  mask = 5;
+  live = null;
+}
+
+const int32 = { kind: "int32" };
+CjsSchema.define(Parent, { className: "GraphFlagsParent", members: [] });
+CjsSchema.define(Face, { className: "GraphFlagsFace", members: [] });
+CjsSchema.define(Chained, { className: "GraphFlagsChained", members: [] });
+CjsSchema.be.inherit(Face)(Thing, { kind: "class" });
+carbonChainToDecorator(Chained)(Thing, { kind: "class" });
+CjsSchema.define(Thing, { className: "GraphFlagsThing", members: [
+  { name: "readable", key: "readable", type: int32, edit: { read: true } },
+  { name: "only", key: "only", type: int32, edit: { persist: true, persistOnly: true, hidden: true } },
+  { name: "load", key: "load", type: int32, edit: { rpersist: true } },
+  { name: "noted", key: "noted", type: int32, edit: { read: true, write: true, persist: true, notify: true } },
+  { name: "mask", key: "mask", type: { kind: "int32", flags: true }, edit: { read: true, write: true } },
+  { name: "live", key: "live", type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } }
+] });
+CjsBlueGraph.define(Thing, "GraphFlagsThing");
+
+const { compiled } = CjsGraph.getClassInfo(Thing);
+const flagsOf = name => compiled.byName[name][0].flags;
+
+test("a member's flags are Carbon's EDITFLAGS, with the bits that are ours above EDMASK", () =>
+{
+  assert.equal(flagsOf("readable"), EDITFLAGS.READ);
+  assert.equal(flagsOf("only"), EDITFLAGS.PERSISTONLY);
+  assert.equal(flagsOf("load"), EDITFLAGS.RPERSIST);
+  assert.equal(flagsOf("noted"), EDITFLAGS.READWRITE | EDITFLAGS.PERSIST | EDITFLAGS.NOTIFY);
+  assert.equal(flagsOf("mask"), EDITFLAGS.READWRITE | EDITFLAGS.FLAGS);
+  assert.equal(flagsOf("live"), EDITFLAGS.PERSIST | GraphMemberFlags.RUNTIMEONLY);
+  assert.equal(GraphMemberFlags.BINARY & (EDITFLAGS.MODMASK | EDITFLAGS.SERMASK | EDITFLAGS.EDMASK), 0);
+});
+
+test("PERSISTONLY stays readable, and RPERSIST loads without being written back", () =>
+{
+  const object = new Thing();
+
+  assert.deepEqual(CjsGraph.get(object, { full: true, persistOnly: true }), { only: 2, noted: 4 });
+  assert.deepEqual(CjsGraph.set(object, { load: 9, readable: 9 }), { load: 9 });
+  assert.equal(object.load, 9);
+  assert.equal(object.readable, 1, "READ alone takes no value");
+  assert.equal(compiled.persistByName.load, undefined, "IRootReaderBase::FindEntry tests PERSIST alone");
+});
+
+test("the base list and the exposure chain are separate facts", () =>
+{
+  assert.deepEqual(compiled.bases, [ "GraphFlagsParent", "GraphFlagsFace" ]);
+  assert.equal(compiled.chainTo, "GraphFlagsChained");
+  assert.equal(compiled.parent, null, "the walk still follows extends, and Parent has no definition here");
+});

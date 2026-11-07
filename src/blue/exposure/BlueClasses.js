@@ -42,17 +42,8 @@ import { mappedInterfaces, ownMappedInterfaces, exposureChainTo } from "../compo
 import { IBlueClasses } from "./IBlueClasses.js";
 import { BlueRttiType } from "./BlueRttiType.js";
 import { Copier } from "./Copier.js";
+import { getEditFlags } from "./ClassInfo.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
-
-/** Be::EDITFLAGS bits (BlueTypes.h:288-303), keyed by the schema's edit flag names. */
-const EDIT_FLAG_BITS = [
-  [ "read", 0x001 ], [ "write", 0x002 ], [ "notify", 0x004 ], [ "hidden", 0x008 ],
-  [ "persist", 0x010 ], [ "rpersist", 0x020 ]
-];
-
-/** Be::EDIT_FLAGS and Be::EDIT_ENUM (BlueTypes.h:288-303): read from the member's type. */
-const EDIT_FLAGS = 0x100;
-const EDIT_ENUM = 0x200;
 
 
 /** `BlueClasses` - the class registry `blue.classes` holds, per blueexposure/BlueClasses.cpp.
@@ -636,16 +627,8 @@ export class BlueClasses extends IBlueClasses
       if (member.exposure) completeExposureNames.add(member.name);
       const type = member.type;
       const reference = type && (type.kind === "rootRef" || type.kind === "rootWeak") ? type.className : null;
-      let editflags = 0;
       // A member declared with no Blue flags has no edit record: Carbon's mEditFlags 0.
-      if (member.exposure) editflags = member.exposure.flags;
-      else
-      {
-        // Old declarations infer editor bits; new macro rows supply them exactly.
-        if (member.edit !== undefined) for (const [ flag, bit ] of EDIT_FLAG_BITS) if (member.edit[flag] === true) editflags |= bit;
-        if (member.type?.flags === true) editflags |= EDIT_FLAGS;
-        if (member.enum) editflags |= EDIT_ENUM;
-      }
+      const editflags = getEditFlags(member);
       // PyGetChooserInfo (TypeInfo.cpp:28-68) reads mChooserTable whatever the
       // edit flags say: a `chooser` declaration (MAP_ATTRIBUTE_WITH_CHOOSER
       // without ENUM) reports its table and sets no bit; otherwise an enum's

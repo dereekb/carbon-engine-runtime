@@ -145,6 +145,16 @@ export const GRAPH_WRAPPERS = {
 };
 
 /**
+ * A compiled member's own bits, above Be::EDMASK, in the integer that holds its Be::EDITFLAGS.
+ * BINARY is a block its class reads and writes itself, and RUNTIMEONLY claims a name and is never read.
+ * @cjs Carbon's binary block is a VARTYPE on a PERSISTONLY row, and it has no runtime-only member.
+ */
+export const GraphMemberFlags = Object.freeze({
+  BINARY: 0x1000,
+  RUNTIMEONLY: 0x2000
+});
+
+/**
  * The operations the graph runs.
  * @cjs Our graph operations; Carbon has no single equivalent.
  */
