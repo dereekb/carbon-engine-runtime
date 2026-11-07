@@ -2,7 +2,7 @@ const TOLERANCE = 1e-12;
 
 /**
  * DOUBLE members.
- * Modelled on: Be::DOUBLE (blueexposure/BlueVariable.cpp:222-244).
+ * Modelled on: Be::DOUBLE (blueexposure/BlueVariable.cpp:225-247)
  * @cjs Owner and key replace native pointers, and a number refuses NaN and Infinity.
  */
 export class CjsGraphTypeDouble

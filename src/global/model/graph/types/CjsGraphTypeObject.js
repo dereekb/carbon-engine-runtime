@@ -2,7 +2,7 @@ import { CjsGraph } from "../CjsGraph.js";
 
 /**
  * IROOTPTR and IROOTWEAKREF members: a reference to one object.
- * Modelled on: Be::IROOTPTR (blueexposure/BlueVariable.cpp:346-437).
+ * Modelled on: Be::IROOTPTR (blueexposure/BlueVariable.cpp:346-438)
  * @cjs Holds no graph logic: CjsGraph walks the object, and this is what the walk calls for such a member.
  */
 export class CjsGraphTypeObject

@@ -1,6 +1,6 @@
 /**
  * BOOL members.
- * Modelled on: Be::BOOL (blueexposure/BlueVariable.cpp).
+ * Modelled on: Be::BOOL (blueexposure/BlueVariable.cpp:250-271)
  * @cjs Owner and key replace native pointers.
  */
 export class CjsGraphTypeBool

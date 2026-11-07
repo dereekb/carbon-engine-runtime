@@ -7,7 +7,7 @@ function convert(value, member)
 
 /**
  * LONG, ULONG, BYTE and SHORT members: the width and sign are on the member.
- * Modelled on: Be::LONG/ULONG (blueexposure/BlueVariable.cpp:151-198).
+ * Modelled on: Be::LONG (blueexposure/BlueVariable.cpp:149-197)
  * @cjs Owner and key replace native pointers; BlueTypes.h:269-270 makes BYTE and SHORT unsigned,
  * and JS adds the signed widths.
  */

@@ -2,7 +2,7 @@ const TOLERANCE = Math.fround(1e-6);
 
 /**
  * FLOAT members.
- * Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-220).
+ * Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-222)
  * @cjs Owner and key replace native pointers, and a number refuses NaN and Infinity.
  */
 export class CjsGraphTypeFloat
@@ -40,7 +40,7 @@ export class CjsGraphTypeFloat
 
   /**
    * Tests whether two values are equal within Carbon's tolerance.
-   * Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-220).
+   * Modelled on: Be::FLOAT (blueexposure/BlueVariable.cpp:200-222).
    * @adapted JavaScript values replace native union members.
    */
   IsEqual(a, b)

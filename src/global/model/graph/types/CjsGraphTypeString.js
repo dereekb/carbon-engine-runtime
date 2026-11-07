@@ -1,6 +1,6 @@
 /**
  * STDSTRING and STDWSTRING members, and the path and expression names over them.
- * Modelled on: Be::STDSTRING (blueexposure/BlueVariable.cpp).
+ * Modelled on: Be::STDSTRING (blueexposure/BlueVariable.cpp:879-906)
  * @cjs JS strings hold every width, and keep embedded NULs.
  */
 export class CjsGraphTypeString

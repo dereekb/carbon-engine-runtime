@@ -8,7 +8,7 @@ function convert(value)
 
 /**
  * CSTRING, WCSTRING, REFERENCE, WREFERENCE and the shared strings: text up to its first NUL.
- * Modelled on: Be::CSTRING (blueexposure/BlueVariable.cpp).
+ * Modelled on: Be::CSTRING (blueexposure/BlueVariable.cpp:473-501)
  * @cjs Native interning is plain JS string equality.
  */
 export class CjsGraphTypeCString

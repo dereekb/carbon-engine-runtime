@@ -2,7 +2,8 @@ const TOLERANCE = Math.fround(1e-6);
 
 /**
  * FLOATARRAY members: vectors, colours, quaternions and matrices, as data on one handler.
- * Modelled on: Be::FLOATARRAY (blueexposure/BlueVariable.cpp:39-50,735-790).
+ * Modelled on: Be::FLOATARRAY (blueexposure/BlueVariable.cpp:735-776)
+ * Modelled on: IsArrayEqual (blueexposure/BlueVariable.cpp:39-50)
  * @cjs Float32Array storage. The length is on the member, and 0 means any.
  */
 export class CjsGraphTypeFloatArray

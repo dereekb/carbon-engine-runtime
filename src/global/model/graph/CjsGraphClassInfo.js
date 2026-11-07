@@ -1,6 +1,6 @@
 /**
  * A registered class's source definition and derived member description.
- * Modelled on: Be::ClassInfo (blueexposure/include/BlueTypes.h:378-400).
+ * Modelled on: Be::ClassInfo (blueexposure/include/BlueTypes.h:378-402)
  * @cjs Retains JS declaration data alongside the compiled view; no Blue services.
  */
 export class CjsGraphClassInfo

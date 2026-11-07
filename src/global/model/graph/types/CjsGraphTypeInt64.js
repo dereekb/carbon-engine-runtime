@@ -24,7 +24,7 @@ function isStored(value, member)
 
 /**
  * INT64 and UINT64 members, as BigInt or a safe integer: the sign is on the member.
- * Modelled on: Be::INT64 (blueexposure/BlueVariable.cpp).
+ * Modelled on: Be::INT64 (blueexposure/BlueVariable.cpp:504-582)
  * @cjs Readers hand over safe integers as Numbers, so both forms hold.
  */
 export class CjsGraphTypeInt64

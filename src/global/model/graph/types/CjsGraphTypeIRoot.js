@@ -3,7 +3,7 @@ import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
 
 /**
  * IROOT members: an embedded object, or a struct written and read as one.
- * Modelled on: Be::IROOT (blueexposure/BlueVariable.cpp:338-343).
+ * Modelled on: Be::IROOT (blueexposure/BlueVariable.cpp:274-343)
  * @cjs A held object keeps its identity, so a value is read into it.
  */
 export class CjsGraphTypeIRoot extends CjsGraphTypeObject

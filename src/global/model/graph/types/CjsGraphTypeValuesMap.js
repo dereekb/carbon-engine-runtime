@@ -6,8 +6,8 @@ function getEntries(value)
 
 /**
  * A member that holds a Map of plain values: the item type is on the member.
- * Modelled on: BlueDict's plain values (blue/src/DictReader.cpp ReadDict).
- * @cjs A bag's keys are strings, so a Map's keys are written as strings.
+ * @cjs No single Carbon donor: IBlueDict holds only IRoot objects (blueexposure/include/IBlueDict.h:20).
+ * A bag's keys are strings, so a Map's keys are written as strings.
  */
 export class CjsGraphTypeValuesMap
 {

@@ -1,6 +1,6 @@
 /**
  * A member with no value type. It describes and walks, and every value operation refuses.
- * Modelled on: Be::INVALID (blueexposure/include/BlueTypes.h:216).
+ * Modelled on: Be::INVALID (blueexposure/include/BlueTypes.h:219)
  * @cjs Fails before reading or changing anything.
  */
 export class CjsGraphTypeInvalid
