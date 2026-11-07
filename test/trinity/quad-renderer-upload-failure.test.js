@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Tr2QuadRenderer } from "../../npm/dist/trinity/core/Tr2QuadRenderer/index.js";
+import { Tr2QuadRenderer } from "../../npm/dist/trinity/core/Tr2QuadRenderer/Tr2QuadRenderer.js";
 import { ALResult } from "../../npm/dist/trinityal/index.js";
 
 function renderer(result)

@@ -1695,21 +1695,21 @@ export class CjsFxOutputGLSL
         const from = CjsFxGlslTypes.glslScalar(argType.builtInType);
         const to = name === "asfloat" ? "float" : name === "asint" ? "int" : "uint";
         const text = this._expression(arg);
+        // Carbon's table types asfloat and asint of a scalar as two wide (ParserState.cpp:50), and readers truncate them.
+        const shaped = cast => (argType.width === 1 && name !== "asuint" ? `${CjsFxGlslTypes.glslVector(to, 2)}(${cast})` : cast);
         if (from === to)
         {
-            return text;
+            return shaped(text);
         }
         if (to === "float")
         {
-            const cast = from === "int" ? `intBitsToFloat(${text})` : `uintBitsToFloat(${text})`;
-            // Carbon's table types asfloat of a scalar as float2 (ParserState.cpp:50), and readers truncate it.
-            return argType.width === 1 ? `vec2(${cast})` : cast;
+            return shaped(from === "int" ? `intBitsToFloat(${text})` : `uintBitsToFloat(${text})`);
         }
         if (from === "float")
         {
-            return to === "int" ? `floatBitsToInt(${text})` : `floatBitsToUint(${text})`;
+            return shaped(to === "int" ? `floatBitsToInt(${text})` : `floatBitsToUint(${text})`);
         }
-        return `${CjsFxGlslTypes.glslVector(to, argType.width)}(${text})`;
+        return shaped(`${CjsFxGlslTypes.glslVector(to, argType.width)}(${text})`);
     }
 
     // ---------------------------------------------------------------------

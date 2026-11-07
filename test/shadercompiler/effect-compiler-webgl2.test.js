@@ -45,6 +45,13 @@ test("one effect is written to both trees at every shader model", () =>
     }
 });
 
+test("an effect standing in for shipped compute is written for WebGL2 alone", () =>
+{
+    const { written } = compileWebgl2("specialfx/gpuparticles/update.fx");
+    assert.ok(written.includes("graphics/effect.webgl/cjs/specialfx/gpuparticles/update.sm_hi"));
+    assert.ok(!written.some(path => path.includes("effect.webgpu")));
+});
+
 test("the whole library compiles for WebGL2", () =>
 {
     const out = mkdtempSync(join(tmpdir(), "cjs-webgl2-"));

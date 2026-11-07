@@ -9,6 +9,7 @@ import { CompileEffectFile } from "../../src/resource/shader/compiler/ShaderComp
 import { Platform } from "../../src/resource/shader/compiler/platforms.js";
 import { CjsFxEffectCompilerWebGPU, CjsFxHlslPacking } from "../../src/resource/shader/compiler/EffectCompilerWebGPU/index.js";
 import { LIBRARY_ROOT } from "../../scripts/shadercompiler/cbuffer-headers.mjs";
+import { isWebgl2OnlyEffect } from "../../scripts/shadercompiler/compile-library.mjs";
 import { parse } from "./support/parse.js";
 import { getDevice, releaseDevice, wgslErrors, pipelineError, runCompute } from "./support/dawn.js";
 
@@ -148,7 +149,7 @@ function libraryEffects(directory = "")
 // which WebGPU's uniformity rule refuses.
 test("every library effect compiles, every permutation, to WGSL that Dawn accepts and links", async () =>
 {
-    const effects = libraryEffects();
+    const effects = libraryEffects().filter(effect => !isWebgl2OnlyEffect(effect));
     assert.ok(effects.includes("/specialfx/backgroundimageinterior.fx"));
     for (const effect of effects)
     {
@@ -167,6 +168,15 @@ test("every library effect compiles, every permutation, to WGSL that Dawn accept
             if (/@builtin\(frag_depth\)/u.test(ps.shaderData)) continue;
             assert.equal(await pipelineError(vs.shaderData, ps.shaderData, buffersFor(vs)), null, effect);
         }
+    }
+});
+
+test("asfloat of a scalar reads as a scalar, though Carbon's table types it float2", async () =>
+{
+    const { results } = compile("/specialfx/gpuparticles/update.fx");
+    for (const pass of passesOf(results))
+    {
+        for (const stage of pass.stages) assert.deepEqual(await wgslErrors(stage.shaderData), []);
     }
 });
 

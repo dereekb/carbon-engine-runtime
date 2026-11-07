@@ -30,6 +30,18 @@ import { LIBRARY_ROOT } from "./cbuffer-headers.mjs";
 /** The containers each effect is written as. */
 const SHADER_MODELS = ["sm_hi", "sm_lo", "sm_depth"];
 
+/**
+ * Whether an effect stands in for shipped compute on a backend without it, so
+ * WebGPU, which runs the shipped effects, has no use for it.
+ *
+ * @param {string} effect The `.fx` path, with or without its leading slash.
+ * @returns {boolean} Whether only WebGL2 draws it.
+ */
+export function isWebgl2OnlyEffect(effect)
+{
+    return effect.replace(/^\//u, "").startsWith("specialfx/gpuparticles/");
+}
+
 /** The trees written, each from its compiler; `required` fails the build when an effect does not compile. */
 const TARGETS = [
     { tree: "effect.webgpu", required: true, defines: [], compilers: new Map([[Platform.PLATFORM_WEBGPU, session => new CjsFxEffectCompilerWebGPU(session)]]) },
@@ -84,6 +96,10 @@ export function compileLibrary(outDirectory, effects = effectFiles(LIBRARY_ROOT)
     {
         for (const effect of effects)
         {
+            if (tree === "effect.webgpu" && isWebgl2OnlyEffect(effect))
+            {
+                continue;
+            }
             let bytes;
             let reason;
             try

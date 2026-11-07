@@ -1495,7 +1495,9 @@ export class CjsFxOutputWGSL
             {
                 const target = name === "asfloat" ? "f32" : name === "asint" ? "i32" : "u32";
                 const width = typeOf(args[0]).width;
-                return `bitcast<${width === 1 ? target : `vec${width}<${target}>`}>(${this._expression(args[0])})`;
+                const cast = `bitcast<${width === 1 ? target : `vec${width}<${target}>`}>(${this._expression(args[0])})`;
+                // Carbon's table types asfloat and asint of a scalar as two wide (ParserState.cpp:50), and readers truncate them.
+                return width === 1 && name !== "asuint" ? `vec2<${target}>(${cast})` : cast;
             }
             case "length":
             case "distance":
