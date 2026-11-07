@@ -11,6 +11,7 @@ import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
 import { TriBatchType, TriStorageFlags } from "#consts/graphics";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { Failed, Tr2BufferDescriptionAL } from "#trinityal";
+import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { Tr2RingVertexBuffer } from "../device/Tr2RingVertexBuffer.js";
 import { Tr2Renderer } from "../Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
@@ -74,6 +75,9 @@ export class Tr2QuadRenderer
 
   /** m_vertexBuffer - the ring the merged instances are uploaded into. */
   _vertexBuffer = null;
+
+  /** Whether a failed upload has been reported; see `UpdateInstanceBuffer`. */
+  _uploadFailureLogged = false;
 
   /** Carbon's constructor (cpp:25-35): the ring grows 512 KiB at a time. */
   constructor()
@@ -192,7 +196,9 @@ export class Tr2QuadRenderer
    * Carbon UpdateInstanceBuffer (cpp:178-199): uploads the merged instances
    * into the ring and remembers where they landed.
    *
-   * @implemented
+   * @adapted Carbon stops without a word on a failed upload (cpp:187-191). Here
+   *   the first failure is logged with its code: no quad draws after one, and
+   *   nothing else reports it.
    */
 
   UpdateInstanceBuffer(renderContext)
@@ -206,6 +212,11 @@ export class Tr2QuadRenderer
     if (Failed(result))
     {
       this.vertexBufferOffset = -1;
+      if (!this._uploadFailureLogged)
+      {
+        this._uploadFailureLogged = true;
+        CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "%s", `Tr2QuadRenderer: instance upload failed (0x${(result >>> 0).toString(16)}), so quads are not drawn`);
+      }
       return;
     }
     this.vertexBufferOffset = offset;

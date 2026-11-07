@@ -20,6 +20,7 @@ test("a failed upload stops the quads drawing, though the failure code is unsign
   quads.vertexBufferOffset = 0;
   quads.UpdateInstanceBuffer(null);
   assert.equal(quads.vertexBufferOffset, -1);
+  assert.equal(quads._uploadFailureLogged, true);
 });
 
 test("a successful upload records where the instances landed", () =>
