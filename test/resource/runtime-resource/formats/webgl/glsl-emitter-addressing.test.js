@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { CjsWebglFormat } from "../../../../../src/resource/formats/webgl/index.js";
-import { buildTwoSamplerPixelDxbc } from "./synthetic.js";
+import { buildTwoSamplerPixelDxbc, versionToken } from "./synthetic.js";
 import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "../../../../../src/resource/format/carbonEffect/carbonEffectBackendBlock.js";
 
 /**
@@ -266,4 +266,23 @@ test("a texture whose mode arrives at bind time is gated even when the container
     // No sampler in this fixture declares an emulated mode at all.
     assert.match(result.source, /cjsAddressBorder\(\(cjsRawDepthLinear_s6 \? [^;]* : texture\(s6,/u);
     assert.match(result.source, /uniform vec4 cb8\[/u);
+});
+
+test("a vertex stage's table has its own name, so it can link beside a pixel stage's", () =>
+{
+    // GLSL makes same-named uniforms in two stages one uniform. The tables differ in size and
+    // content, and `cb8` in both failed the link for the legacy cloud (vertex rows 2, pixel 1).
+    const pixel = CjsWebglFormat.emitGlsl(DXBC, { source: "synthetic", emulatedAddressing: addressing([ { registerIndex: 6 } ]) });
+    const bytes = DXBC.slice(), words = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let version = -1;
+    for (let offset = 0; offset + 4 <= bytes.length; offset += 4) if (words.getUint32(offset, true) === versionToken(0, 5, 0)) version = offset;
+    assert.ok(version >= 0, "found the fixture's stage token");
+    words.setUint32(version, versionToken(1, 5, 0), true);
+
+    const vertex = CjsWebglFormat.emitGlsl(bytes, { source: "synthetic", emulatedAddressing: addressing([ { registerIndex: 6 } ]) });
+
+    assert.match(pixel.source, /uniform vec4 cb8\[/u);
+    assert.match(vertex.source, /uniform vec4 vcb8\[/u);
+    assert.doesNotMatch(vertex.source, /uniform vec4 cb8\[/u);
+    assert.equal(vertex.bindings.find(isAddressBuffer).name, "vcb8");
 });

@@ -996,7 +996,10 @@ export class DxbcGlslEmitter
     _ensureAddressBuffer(state)
     {
         const { bufferRegister, textures } = state.emulatedAddressing;
-        const name = `cb${bufferRegister}`;
+        const register = `cb${bufferRegister}`;
+        // GLSL links same-named uniforms across stages into one, and the two tables have different
+        // sizes and contents, so the vertex stage's takes its own name, as its samplers do.
+        const name = state.isPixel || state.isCompute ? register : `v${register}`;
 
         if (state.addressBufferDeclared) return name;
 
@@ -1008,7 +1011,7 @@ export class DxbcGlslEmitter
         // DXBC slot while the emitted name uses the remapped register, and on a
         // pixel stage slot 0 becomes `cb7`. Comparing register to slot would
         // miss exactly that case and emit two `cb7` declarations.
-        if ([ ...state.constantBufferNames.values() ].includes(name))
+        if ([ ...state.constantBufferNames.values() ].includes(register))
         {
             throw new WebglReadError(
                 "Emulated-addressing buffer register collides with a declared constant buffer",
