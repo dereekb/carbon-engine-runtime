@@ -117,7 +117,7 @@ export class CjsBlueGraph
 
   /**
    * A member's identity and Carbon's flags, as data. A values bag carries no binary block, and a
-   * runtime-only member claims its name unread.
+   * runtime-only member claims its name unread. `owned` is false on `type.object.ref.weak`.
    * @param {object} field Schema declaration.
    * @returns {object} Member fields.
    */
@@ -128,6 +128,7 @@ export class CjsBlueGraph
       persist: field.edit?.persist === true || field.edit?.persistOnly === true,
       writable: isWritableField(field),
       notify: field.edit?.notify === true,
+      owned: field.type?.owned !== false,
       hidden: field.type?.binary === true || field.type?.runtimeOnly === true
     };
   }

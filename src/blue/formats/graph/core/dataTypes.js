@@ -13,6 +13,7 @@ import { CARBON_TYPE } from "../../../schema/types/carbonTypes.js";
  * @property {GraphDataType|Function|string} [itemType] Item declaration for "array", "list" and "set".
  * @property {GraphDataType|Function|string} [valueType] Value declaration for "map".
  * @property {boolean} [runtimeOnly] True when the member is never transported.
+ * @property {boolean} [owned] False when a "rootRef" keeps its target alive without owning it.
  * @property {string} [name] Custom handler name, for "custom".
  * @property {string} [customName] Custom handler name when `name` is absent.
  */

@@ -699,6 +699,11 @@ export class CjsSchema
      * value is populated:
      * - `object.ref(className)` is Carbon's IROOTPTR, a registered class held by
      *   reference; `object.weak(className)` is IROOTWEAKREF;
+     * - `object.ref.weak(className)` is also IROOTPTR, and stores, reads, writes,
+     *   copies and serialises exactly as `object.ref`. It only records that this
+     *   member keeps its target alive without owning it (`owned: false`), so
+     *   Destruct stops there. `object.weak` is a different thing, Carbon's real
+     *   weak reference;
      * - `object.embed(className)` is Carbon's IROOT, an object embedded in its owner:
      *   the owner creates it, and readers and SetValues populate it in place,
      *   keeping its identity. It is not a binary struct; those are described by
@@ -791,7 +796,9 @@ export class CjsSchema
         /** Target ownership spellings retain the existing reader/storage class information. */
         object: {
             embed: className => objectTypeDecorator("root", className),
-            ref: className => objectTypeDecorator("rootRef", className),
+            ref: Object.assign(className => objectTypeDecorator("rootRef", className), {
+                weak: className => fieldDecorator("type", { kind: "rootRef", className, owned: false })
+            }),
             weak: className => objectTypeDecorator("rootWeak", className)
         },
         /**
@@ -2855,11 +2862,15 @@ function mergeMemberMetadata(target, source)
         // inherited value instead of overlaying it. What the row does not define (type, state) stays inherited.
         target[namespace] = source.mapsInherited && value !== null && typeof value === "object" && !Array.isArray(value)
             ? { ...value } : mergeNamespace(target[namespace], value);
-        // A new declared type replaces the resource fact; edit-only overrides
-        // continue to inherit their original type and its marker.
+        // A new declared type replaces the resource and ownership facts; edit-only
+        // overrides continue to inherit their original type and its markers.
         if (namespace === "type" && value?.kind && !Object.hasOwn(value, "runtimeOnly"))
         {
             delete target[namespace].runtimeOnly;
+        }
+        if (namespace === "type" && value?.kind && !Object.hasOwn(value, "owned"))
+        {
+            delete target[namespace].owned;
         }
     }
     return target;
