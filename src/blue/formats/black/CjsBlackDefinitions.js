@@ -137,7 +137,8 @@ export class CjsBlackDefinitions
                 claimed.add(declaration.name);
                 continue;
             }
-            if (!declaration.edit?.persist) continue;
+            // PERSISTONLY carries Be::PERSIST in Carbon, so FindEntry finds it.
+            if (!declaration.edit?.persist && !declaration.edit?.persistOnly) continue;
             claimed.add(declaration.name);
             entries.set(declaration.name, CjsBlackDefinitions.compileEntry(declaration));
         }
