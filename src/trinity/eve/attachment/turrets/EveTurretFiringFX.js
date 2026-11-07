@@ -3,7 +3,7 @@ import { ITr2DebugRenderable } from "#interfaces";
 // Source: trinity/trinity/Eve/Turret/EveTurretFiringFX.h
 // Source: trinity/trinity/Eve/Turret/EveTurretFiringFX.cpp
 // Source: trinity/trinity/Eve/Turret/EveTurretFiringFX_Blue.cpp
-import { IsMatch, BlueClasses } from "#blue";
+import { IsMatch, BlueClasses, BlueList } from "#blue";
 
 import { CjsSchema, type } from "#schema";
 import { EveEntity } from "../../EveEntity.js";
@@ -19,6 +19,7 @@ import { IListNotify } from "../../../../blue/exposure/IListNotify.js";
 import { blue } from "../../../../blue/blue.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import { EveUpdateContext } from "../../EveUpdateContext.js";
+import { IEveFiringEffectElement } from "../../IEveFiringEffectElement.js";
 
 /** Coordinates a turret set's multi-muzzle firing effects, delays, stretch endpoints, observers, and impact timing. */
 @be.define({
@@ -87,7 +88,7 @@ export class EveTurretFiringFX extends EveEntity
    */
 
   @type.list("IEveFiringEffectElement")
-  stretch = [];
+  stretch = new BlueList(IEveFiringEffectElement);
 
   /** m_name (std::string) [READWRITE, PERSIST]
    * Name identifying the firing effect.
@@ -104,6 +105,17 @@ export class EveTurretFiringFX extends EveEntity
 
   @type.float32
   firingPeakTime = 0;
+
+  /**
+   * Carbon EveTurretFiringFX constructor (cpp:48).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.stretch.SetNotify(this);
+  }
 
   /** MAP_ATTRIBUTE("firingDelay1", m_perMuzzleData[0].constantDelay) [READWRITE, PERSIST]
    * Authored start delay added to muzzle 1 when preparing a burst.

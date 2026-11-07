@@ -12,11 +12,12 @@ import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../EveEntity.js";
 import { CjsSchema, type } from "#schema";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
 import { addChild, removeChild, clearChildren } from "../../../blue/children.js";
 import { EveChildTransform } from "./EveChildTransform.js";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
+import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
 
 /** A container of child objects plugged into a socket, forwarding controller events, controller variables and component registration to what it contains. */
 @be.define("EveChildPlug")
@@ -68,7 +69,18 @@ export class EveChildPlug extends EveChildTransform
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Carbon EveChildPlug constructor (cpp:19).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+  }
 
   /**
    * Registers hydrated children and links hydrated controllers.

@@ -3,7 +3,7 @@ import { ITr2DebugRenderable } from "../../../../global/interfaces/ITr2DebugRend
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveStretch3.h
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveStretch3.cpp
 // Source: trinity/trinity/Eve/Renderable/Stretch/EveStretch3_Blue.cpp
-import { IsMatch, blue, BlueClasses } from "#blue";
+import { IsMatch, blue, BlueClasses, BlueList } from "#blue";
 
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
@@ -98,7 +98,7 @@ export class EveStretch3 extends IEveFiringEffectElement
   stretchAudio = null;
 
  @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
  @type.list("TriCurveSet")
   curveSets = [];
@@ -107,7 +107,7 @@ export class EveStretch3 extends IEveFiringEffectElement
   length = new TriFloat();
 
  @type.list("Tr2DynamicBinding")
-  dynamicBindings = [];
+  dynamicBindings = new BlueList(Tr2DynamicBinding, { className: "Tr2DynamicBinding" });
 
 
  @type.boolean
@@ -123,6 +123,18 @@ export class EveStretch3 extends IEveFiringEffectElement
    */
   @type.object.ref("EveSpaceObjectChild")
   _destObject = null;
+
+  /**
+   * Carbon EveStretch3 constructor (cpp:38-39).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+    this.dynamicBindings.SetNotify(this);
+  }
 
   /**
    * Live destObject property.

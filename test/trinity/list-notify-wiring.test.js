@@ -24,6 +24,13 @@ import { EveSmartLightMesh } from "../../npm/dist/trinity/eve/smartLights/EveSma
 import { EveSmartLightPointLight } from "../../npm/dist/trinity/eve/smartLights/EveSmartLightPointLight.js";
 import { EveSmartLightQuad } from "../../npm/dist/trinity/eve/smartLights/EveSmartLightQuad.js";
 
+import { EveStretch3 } from "../../npm/dist/trinity/eve/renderable/stretch/EveStretch3.js";
+import { EveTurretFiringFX } from "../../npm/dist/trinity/eve/attachment/turrets/EveTurretFiringFX.js";
+import { EveMeshOverlayEffect } from "../../npm/dist/trinity/eve/overlays/EveMeshOverlayEffect.js";
+import { EveMultiEffect } from "../../npm/dist/trinity/eve/effect/multiEffect/EveMultiEffect.js";
+import { EveDistanceField } from "../../npm/dist/trinity/eve/EveDistanceField.js";
+import { EveChildPlug } from "../../npm/dist/trinity/eve/child/EveChildPlug.js";
+
 // Carbon calls SetNotify per member, in each owner's constructor. Keep one row per member.
 const WIRED = [
   [ EveBaseDistributionMethod, [ "placementGenerators", "spawnTriggers", "lifetimeModifiers" ] ],
@@ -40,6 +47,12 @@ const WIRED = [
   [ EveSmartLightMesh, [ "attributeModifiers" ] ],
   [ EveSmartLightPointLight, [ "attributeModifiers" ] ],
   [ EveSmartLightQuad, [ "attributeModifiers" ] ],
+  [ EveStretch3, [ "controllers", "dynamicBindings" ] ],
+  [ EveTurretFiringFX, [ "stretch" ] ],
+  [ EveMeshOverlayEffect, [ "controllers" ] ],
+  [ EveMultiEffect, [ "bindings", "parameters", "controllers" ] ],
+  [ EveDistanceField, [ "objects" ] ],
+  [ EveChildPlug, [ "controllers" ] ],
   [ EveProceduralMethodCycling, [ "parameters" ] ],
   [ EveProceduralMethodRandom, [ "parameters" ] ],
   [ EveProceduralMethodThresholds, [ "parameters" ] ]

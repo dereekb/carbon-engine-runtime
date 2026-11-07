@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 import { ITr2DebugRenderable } from "../../global/interfaces/ITr2DebugRenderable.js";
 // Source: trinity/trinity/Eve/EveDistanceField.h
 // Source: trinity/trinity/Eve/EveDistanceField.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { INotify } from "../../blue/exposure/INotify.js";
 import { IListNotify } from "../../blue/exposure/IListNotify.js";
 import { vec3 } from "#math/vec3";
@@ -15,6 +15,7 @@ import { TriDebugFont } from "../core/TriDebugTextRenderer.js";
 import { Tr2CurveInterpolation, Tr2CurveTangentType } from "../curves/enums.js";
 import { Tr2CurveScalar } from "../curves/curve/Tr2CurveScalar.js";
 import { TriCurveSet } from "../curves/TriCurveSet.js";
+import { ITriVectorFunction } from "../../blue/interfaces/ITriVectorFunction.js";
 
 
 /**
@@ -68,7 +69,7 @@ export class EveDistanceField extends IRoot
   timeAdjustmentSecondsOut = 2;
 
   @type.list("ITriVectorFunction")
-  objects = [];
+  objects = new BlueList(ITriVectorFunction);
 
   @type.object.ref("TriView")
   cameraView = null;
@@ -102,6 +103,17 @@ export class EveDistanceField extends IRoot
 
   /** m_debugPositions (EveDistanceField.h:98): the tracked positions recorded for debug drawing. */
   _debugPositions = [];
+
+  /**
+   * Carbon EveDistanceField constructor (cpp:30).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.objects.SetNotify(this);
+  }
 
   /**
    * Configures the field as static, so its extent and midpoint are the authored

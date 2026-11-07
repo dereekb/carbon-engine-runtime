@@ -3,7 +3,7 @@ import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/EveMultiEffect.h
 // Source: trinity/trinity/Eve/EveMultiEffect.cpp
 // Source: trinity/trinity/Eve/EveMultiEffect_Blue.cpp
-import { IInitialize, IListNotify } from "#blue";
+import { IInitialize, IListNotify, BlueList } from "#blue";
 import { ITr2DynamicBindingOwner } from "../../ITr2DynamicBindingOwner.js";
 import { ITr2CurveSetOwner } from "../../../curves/ITr2CurveSetOwner.js";
 import { CjsSchema, type } from "#schema";
@@ -44,12 +44,12 @@ export class EveMultiEffect extends IRoot
   /** m_bindings (PTr2DynamicBindingVector) [READ, PERSIST] */
 
   @type.list("Tr2DynamicBinding")
-  bindings = [];
+  bindings = new BlueList(Tr2DynamicBinding, { className: "Tr2DynamicBinding" });
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
@@ -64,12 +64,25 @@ export class EveMultiEffect extends IRoot
   /** m_parameters (PEveMultiEffectParameterVector) [READ, PERSIST] */
 
   @type.list("EveMultiEffectParameter")
-  parameters = [];
+  parameters = new BlueList(EveMultiEffectParameter, { className: "EveMultiEffectParameter" });
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 
   @type.string
   name = "";
+
+  /**
+   * Carbon EveMultiEffect constructor (cpp:18-20).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.bindings.SetNotify(this);
+    this.parameters.SetNotify(this);
+    this.controllers.SetNotify(this);
+  }
 
   /**
    * Builds the prototype-free name map that dynamic bindings resolve against:

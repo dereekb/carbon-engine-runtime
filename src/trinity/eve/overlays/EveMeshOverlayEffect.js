@@ -1,3 +1,4 @@
+import { BlueList } from "#blue";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
@@ -13,6 +14,7 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { Tr2RenderBatch, TriRenderBatchAreaBlock } from "../../core/batch/TriRenderBatch/index.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { CarbonVertexElements } from "../../core/vertex/vertexUsage.js";
+import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
 
 
 /**
@@ -43,7 +45,7 @@ export class EveMeshOverlayEffect extends IRoot
   name = "";
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
   @type.object.ref("TriCurveSet")
   curveSet = null;
@@ -68,6 +70,17 @@ export class EveMeshOverlayEffect extends IRoot
 
   @type.boolean
   display = true;
+
+  /**
+   * Carbon EveMeshOverlayEffect constructor (cpp:38).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+  }
 
   /**
    * Returns the effect list for a batch type, or null when the overlay is hidden
