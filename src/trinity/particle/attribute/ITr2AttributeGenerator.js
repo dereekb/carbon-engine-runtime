@@ -15,7 +15,9 @@ export class ITr2AttributeGenerator extends IRoot
    * @abstract
    */
   @be.abstract
-  Bind(_particleSystem, _boundElements) {}
+  Bind(_particleSystem, _boundElements)
+  {
+  }
 
   /**
    * Writes this generator's attribute values for one particle.
@@ -23,6 +25,8 @@ export class ITr2AttributeGenerator extends IRoot
    * @abstract
    */
   @be.abstract
-  Generate(_position, _velocity, _index) {}
+  Generate(_position, _velocity, _index)
+  {
+  }
 
 }

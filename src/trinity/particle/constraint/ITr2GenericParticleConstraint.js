@@ -18,7 +18,9 @@ export class ITr2GenericParticleConstraint extends IRoot
    * @param {Tr2ParticleSystem} _particleSystem The owning particle system.
    */
   @be.abstract
-  Bind(_particleSystem) {}
+  Bind(_particleSystem)
+  {
+  }
 
   /**
    * Carbon's pure virtual `ApplyConstraint( const
@@ -34,7 +36,9 @@ export class ITr2GenericParticleConstraint extends IRoot
    * @param {number} _dt Frame time.
    */
   @be.abstract
-  ApplyConstraint(_arguments, _particles, _strides, _count, _dt) {}
+  ApplyConstraint(_arguments, _particles, _strides, _count, _dt)
+  {
+  }
 
   /**
    * Carbon's virtual `RenderDebugInfo( ITr2DebugRenderer2& renderer, const

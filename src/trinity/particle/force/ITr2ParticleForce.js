@@ -15,7 +15,9 @@ export class ITr2ParticleForce extends IRoot
    * @abstract
    */
   @be.abstract
-  Update(_dt) {}
+  Update(_dt)
+  {
+  }
 
   /**
    * Carbon's `XMVECTOR GetForce( FXMVECTOR position, FXMVECTOR velocity,
@@ -35,7 +37,9 @@ export class ITr2ParticleForce extends IRoot
    * @returns {vec3} out
    */
   @be.abstract
-  GetForce(_position, _velocity, _dt, _mass, _out) {}
+  GetForce(_position, _velocity, _dt, _mass, _out)
+  {
+  }
 
   /**
    * Carbon's virtual `RenderDebugInfo( ITr2DebugRenderer2& renderer, const

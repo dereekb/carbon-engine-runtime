@@ -2,8 +2,7 @@
 // Carbon's system is compute shaders over storage buffers, atomics and indirect
 // draws, and WebGL2 has none of them, so this runs the same simulation as draws
 // over textures. The system keeps everything else: its emitters, its emit requests,
-// its params mirror and its clocks. Design: docs internal/decisions/
-// trinity-abstraction-layer.md, GPU particle pass design.
+// its params mirror and its clocks.
 import { vec4 } from "#math/vec4";
 import { PixelFormat, ShaderType, TextureType, Topology, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
@@ -65,10 +64,65 @@ export class Tr2GpuParticleSystemNoCompute
   static className = "Tr2GpuParticleSystemNoCompute";
 
   /**
-   * WebGL2's default capacity (operator, 2026-11-07), a stated difference from
-   * Carbon's 1,048,576. Timings and the scan behind it are on the design page.
+   * WebGL2's default capacity, a stated difference from Carbon's 1,048,576.
+   * No shipped file's continuous emitters reach 65,536 live particles, and four
+   * times that costs under a millisecond to simulate and draw on a high-end GPU.
    */
   static defaultCapacity = 262144;
+
+  /** The Tr2GpuParticleSystem these passes serve. */
+  system = null;
+
+  /** Submits the update and emit passes' geometry. */
+  _triangle = new FullTargetTriangle();
+
+  /** The update pass. */
+  _updateEffect = null;
+
+  /** The emit pass. */
+  _emitEffect = null;
+
+  /** The draw. */
+  _drawEffect = null;
+
+  /** The two state pairs, one read and one written each update. */
+  _state = null;
+
+  /** Which pair holds the current state. */
+  _current = 0;
+
+  /** The next slot the ring writes. */
+  _cursor = 0;
+
+  /** Slots in the state textures. */
+  _capacity = 0;
+
+  /** The state textures' width. */
+  _width = 0;
+
+  /** The emitter params texture. */
+  _params = null;
+
+  /** The params texture's upload. */
+  _paramsBytes = new Uint8Array(PARAMS_WIDTH * PARAMS_HEIGHT * TEXEL_SIZE); // alloc: kept for the system's life
+
+  /** The update constants. */
+  _updateCB = new Tr2ConstantBufferAL();
+
+  /** The emit constants. */
+  _emitCB = new Tr2ConstantBufferAL();
+
+  /** The draw constants. */
+  _drawCB = new Tr2ConstantBufferAL();
+
+  /** The update constants' values. */
+  _updateData = new Float32Array(UPDATE_CB_SIZE / 4); // alloc: kept, written each frame
+
+  /** The emit constants' values. */
+  _emitData = new Float32Array(EMIT_CB_SIZE / 4); // alloc: kept, written per request
+
+  /** The draw constants' values. */
+  _drawData = vec4.create();
 
   /**
    * @param {object} system The Tr2GpuParticleSystem.
@@ -76,23 +130,6 @@ export class Tr2GpuParticleSystemNoCompute
   constructor(system)
   {
     this.system = system;
-    this._triangle = new FullTargetTriangle();
-    this._updateEffect = null;
-    this._emitEffect = null;
-    this._drawEffect = null;
-    this._state = null;
-    this._current = 0;
-    this._cursor = 0;
-    this._capacity = 0;
-    this._width = 0;
-    this._params = null;
-    this._paramsBytes = new Uint8Array(PARAMS_WIDTH * PARAMS_HEIGHT * TEXEL_SIZE); // alloc: the texture's upload, kept
-    this._updateCB = new Tr2ConstantBufferAL();
-    this._emitCB = new Tr2ConstantBufferAL();
-    this._drawCB = new Tr2ConstantBufferAL();
-    this._updateData = new Float32Array(UPDATE_CB_SIZE / 4); // alloc: constants, written each frame
-    this._emitData = new Float32Array(EMIT_CB_SIZE / 4); // alloc: constants, written per request
-    this._drawData = vec4.create();
   }
 
   /**

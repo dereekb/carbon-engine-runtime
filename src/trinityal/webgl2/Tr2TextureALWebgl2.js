@@ -26,7 +26,7 @@
 //   extension lets a compressed format fill a `TEXTURE_3D`. Where the device
 //   cannot take the blocks, they are decompressed on the CPU - Metal's rule for
 //   the same gap (`Tr2TextureALMetal.mm:221-236, :276`), widened to a missing
-//   extension. The DECODER is not Metal's, deliberately (operator, 2026-09-27):
+//   extension. The DECODER is not Metal's, deliberately:
 //   Carbon's `BcDecompress` is a CPU helper only its Mac client runs, and it
 //   carries CE-36 and CE-37. EVE on PC decodes BC in D3D11 hardware, to the
 //   specification, so this uses the BC codec's spec decoder

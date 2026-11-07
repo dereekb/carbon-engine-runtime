@@ -16,7 +16,9 @@ export class ITr2GenericEmitter extends IRoot
    * @abstract
    */
   @meta.abstract
-  Update(_arguments) {}
+  Update(_arguments)
+  {
+  }
 
   /**
    * Carbon's pure virtual SpawnParticles( arguments, position, velocity, rateModifier ) (ITr2GenericEmitter.h:75).
@@ -24,7 +26,9 @@ export class ITr2GenericEmitter extends IRoot
    * @abstract
    */
   @meta.abstract
-  SpawnParticles(_arguments, _position = null, _velocity = null, _rateModifier = 1) {}
+  SpawnParticles(_arguments, _position = null, _velocity = null, _rateModifier = 1)
+  {
+  }
 
   /**
    * Carbon's pure virtual SpawnParticles( arguments, positionStart, positionEnd, velocityStart, velocityEnd, deltaTime ) (ITr2GenericEmitter.h:93).
@@ -32,7 +36,9 @@ export class ITr2GenericEmitter extends IRoot
    * @abstract
    */
   @meta.abstract
-  SpawnParticles__StartEnd(_arguments, _positionStart, _positionEnd, _velocityStart, _velocityEnd, _deltaTime) {}
+  SpawnParticles__StartEnd(_arguments, _positionStart, _positionEnd, _velocityStart, _velocityEnd, _deltaTime)
+  {
+  }
 
   /**
    * Carbon's pure virtual `SetThreadSafeFlag()` (ITr2GenericEmitter.h:105): spawn calls may arrive from concurrent simulation.
@@ -40,7 +46,9 @@ export class ITr2GenericEmitter extends IRoot
    * @abstract
    */
   @meta.abstract
-  SetThreadSafeFlag() {}
+  SetThreadSafeFlag()
+  {
+  }
 
   /** Carbon ITr2GenericEmitter::UpdateArguments (public, ITr2GenericEmitter.h:21-51). */
   static UpdateArguments = ITr2GenericEmitterUpdateArguments;
