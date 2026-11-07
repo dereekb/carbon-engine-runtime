@@ -1,5 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/LineSetPaths/EveLineChildContainer.h
 import { exposure as be } from "#be";
+import { BlueList } from "#blue";
 import { IListNotify } from "../../../../blue/exposure/IListNotify.js";
 import { INotify } from "../../../../blue/exposure/INotify.js";
 // Promoted from generated intake so its required IEveLineSetPath behavior remains explicit.
@@ -84,7 +85,18 @@ export class EveLineChildContainer extends IEveLineSetPath
   /** m_lines (PIEveLineSetPathVector) [READ, PERSIST] */
 
   @type.list("IEveLineSetPath")
-  lines = [];
+  lines = new BlueList(IEveLineSetPath);
+
+  /**
+   * Carbon EveLineChildContainer constructor (cpp:16).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.lines.SetNotify(this);
+  }
 
   /**
    * Carbon invalidates generated points and bounds for every authored change.

@@ -18,11 +18,12 @@ import { vec3 } from "#math/vec3";
 import { EveChildContainer } from "./EveChildContainer.js";
 import { EveChildInstanceTransform } from "./EveChildInstanceTransform.js";
 import { EveChildModifierAttachToBone } from "./modifiers/EveChildModifierAttachToBone.js";
+import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
 import { EveSpaceObject2 } from "../spaceObject/EveSpaceObject2.js";
 import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
 import { EveEntity } from "../EveEntity.js";
 import { Tr2QuadRenderer } from "../../core/Tr2QuadRenderer/index.js";
-import { blue, IsMatch } from "#blue";
+import { blue, BlueList, IsMatch } from "#blue";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 
 /** A child that instantiates a source template across a list of authored or locator-driven transforms, forwarding controller and registration calls to the instances. */
@@ -101,7 +102,7 @@ export class EveChildInstanceContainer extends EveChildTransform
 
 
   @type.list("IEveChildTransformModifier")
-  transformModifiers = [];
+  transformModifiers = new BlueList(IEveChildTransformModifier);
 
   /** m_transforms (PEveChildInstanceTransformStructureList) [READ, PERSIST] */
 
@@ -142,6 +143,17 @@ export class EveChildInstanceContainer extends EveChildTransform
 
   @type.string
   locatorSet = "";
+
+  /**
+   * Carbon EveChildInstanceContainer constructor (cpp:52).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.transformModifiers.SetNotify(this);
+  }
 
   /**
    * m_source (EveSpaceObjectChildPtr, protected, h:154), persisted under its

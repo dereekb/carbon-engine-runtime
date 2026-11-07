@@ -384,16 +384,15 @@ test("__init__ creates the configured ribbon effect only for a set without one",
   assert.equal(assigned.effect, effect, "an assigned effect is retained");
 });
 
-test("__init__ and Destruct rebind and unbind the definitions' dirty callbacks", (t) =>
+test("the list binds, and Destruct unbinds, the definitions' dirty callbacks", (t) =>
 {
   const { make } = setup(t);
   const set = make();
   const ellipse = new EveEllipseDefinition();
-  set.ellipses.push(ellipse);
+  set.ellipses.Append(ellipse);
   set._geometryDirty = false;
-  set.__init__();
   ellipse.OnModified();
-  assert.equal(set._geometryDirty, true, "a hydrated definition is bound");
+  assert.equal(set._geometryDirty, true, "an inserted definition is bound");
 
   set.Destruct();
   set._geometryDirty = false;

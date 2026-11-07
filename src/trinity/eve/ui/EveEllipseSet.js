@@ -1,4 +1,5 @@
 import { exposure as be } from "#be";
+import { BlueList } from "#blue";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { ITr2Pickable } from "../../core/ITr2Pickable.js";
 // Source: trinity/trinity/Eve/UI/EveEllipseSet.h
@@ -120,7 +121,7 @@ export class EveEllipseSet extends EveChildTransform
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveEllipseDefinition")
-  ellipses = [];
+  ellipses = new BlueList(EveEllipseDefinition, { className: "EveEllipseDefinition" });
 
   /** m_effect (Tr2EffectPtr) [READWRITE, PERSIST] - EveEllipseSet_Blue.cpp:27, h:78 */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -161,10 +162,8 @@ export class EveEllipseSet extends EveChildTransform
    *
    * Carbon's Tr2DeviceResource base registers with the device in its own
    * constructor (Tr2DeviceResource.cpp:6-9); here the set registers on use
-   * (IsGood in GetBatches; docs internal/decisions/device-resource-registration.md). Carbon
-   * also makes the set its ellipse list's notify target (cpp:73); a JavaScript
-   * array has no notify slot, so list events reach OnListModified from the
-   * Blue loader and the set's own list methods bind definitions explicitly.
+   * (IsGood in GetBatches; docs internal/decisions/device-resource-registration.md).
+   * The set observes its ellipse list (cpp:73).
    *
    * Carbon prepares here (its constructor); here nothing prepares during a build: the
    * first use (IsGood) does, so a build that fails or is never drawn holds no
@@ -175,6 +174,7 @@ export class EveEllipseSet extends EveChildTransform
   constructor()
   {
     super();
+    this.ellipses.SetNotify(this);
     vec4.set(this._boundingSphere, 0, 0, 0, 0);
   }
 
@@ -271,7 +271,7 @@ export class EveEllipseSet extends EveChildTransform
     vec3.copy(ellipse.planeNormal, planeNormal);
     ellipse.rotationDegrees = rotationDegrees;
     this._BindEllipse(ellipse);
-    this.ellipses.push(ellipse);
+    this.ellipses.Append(ellipse);
     this._MarkGeometryDirty();
     return true;
   }
@@ -282,10 +282,7 @@ export class EveEllipseSet extends EveChildTransform
    * `ellipseRibbonEffectPath` setting names one, creates the ribbon effect
    * from that path. An assigned effect is kept.
    *
-   * @adapted also rebinds the persisted definitions' dirty callbacks. Carbon
-   *   binds them on the list's BELIST_LOADFINISHED (cpp:157-163); a hydrated
-   *   JavaScript array may arrive without that event, and the callbacks are
-   *   what stand in for the native dirty-flag pointer.
+   * @implemented
    * @returns {void}
    */
   @be.mapMethodAndWrap()
@@ -297,11 +294,6 @@ export class EveEllipseSet extends EveChildTransform
       this.effect.StartUpdate();
       this.effect.SetEffectPathName(EveEllipseSet.ellipseRibbonEffectPath);
       this.effect.EndUpdate();
-    }
-
-    for (const ellipse of this.ellipses)
-    {
-      this._BindEllipse(ellipse);
     }
   }
 
@@ -320,7 +312,7 @@ export class EveEllipseSet extends EveChildTransform
     {
       ellipse.SetDirtyFlag(null);
     }
-    this.ellipses.length = 0;
+    this.ellipses.Clear();
     this._MarkGeometryDirty();
   }
 

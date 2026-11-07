@@ -13,6 +13,10 @@ import { FollowASpline } from "../../npm/dist/trinity/eve/child/behaviors/Follow
 import { ProcessLifetime } from "../../npm/dist/trinity/eve/child/behaviors/lifecycle/ProcessLifetime.js";
 import { SplineTunnelGroup } from "../../npm/dist/trinity/eve/child/behaviors/tunnels/SplineTunnelGroup.js";
 
+import { EveEllipseSet } from "../../npm/dist/trinity/eve/ui/EveEllipseSet.js";
+import { EveLineChildContainer } from "../../npm/dist/trinity/eve/child/lineSetPaths/EveLineChildContainer.js";
+import { EveChildInstanceContainer } from "../../npm/dist/trinity/eve/child/EveChildInstanceContainer.js";
+
 // Carbon calls SetNotify per member, in each owner's constructor. Keep one row per member.
 const WIRED = [
   [ EveBaseDistributionMethod, [ "placementGenerators", "spawnTriggers", "lifetimeModifiers" ] ],
@@ -20,6 +24,9 @@ const WIRED = [
   [ FollowASpline, [ "splineTunnels" ] ],
   [ ProcessLifetime, [ "splineTunnels" ] ],
   [ SplineTunnelGroup, [ "curveSets" ] ],
+  [ EveEllipseSet, [ "ellipses" ] ],
+  [ EveLineChildContainer, [ "lines" ] ],
+  [ EveChildInstanceContainer, [ "transformModifiers" ] ],
   [ EveProceduralMethodCycling, [ "parameters" ] ],
   [ EveProceduralMethodRandom, [ "parameters" ] ],
   [ EveProceduralMethodThresholds, [ "parameters" ] ]
