@@ -3,7 +3,7 @@ import { CjsSchema, meta } from "#schema";
 /**
  * One synchronous receipt point for authored SOF edits, independent of UI and storage.
  * Ours: Carbon's INotify and IListNotify retain their native mutation duties;
- * this operator-requested manager reports completed edits to one consumer.
+ * this manager reports completed edits to one consumer.
  * It neither dispatches events nor applies DNA changes to scene objects.
  */
 @meta.define("CjsSOFEditManager")

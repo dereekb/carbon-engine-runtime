@@ -1,6 +1,6 @@
 import { CjsTableData } from "../../resource/format/CjsTableData.js";
 
-// Source: operator-approved Tny orchestration extension; see services/README.md.
+// Source: our Tny orchestration extension; see services/README.md.
 // Carbon's db/StringStore and Blue resource caches do not route host data providers.
 
 /** Host-owned table registry. Providers own acquisition; callers use one query surface. */

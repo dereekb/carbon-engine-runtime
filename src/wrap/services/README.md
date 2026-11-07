@@ -117,7 +117,7 @@ Headers are shared with positional cjstables version 2 through writeRows and
 readRows. Existing raw reader outputs retain version-one key/value semantics;
 these two revisions are explicit and must not be reinterpreted as each other.
 
-Source: operator-approved Tny database work. The donor boundaries are the
+Source: our Tny database work. The donor boundaries are the
 shared-storage search above; this host orchestration does not replace Carbon's
 db/StringStore or resource caches. Graphene and headless tools
 need one schema-described acquisition API across those source mechanisms.

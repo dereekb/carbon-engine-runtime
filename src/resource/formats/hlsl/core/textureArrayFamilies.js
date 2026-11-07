@@ -66,8 +66,7 @@
  *
  * A row for them was written as an array, removed on a standing "never on EVE"
  * ruling, restored when that ruling was shown to collapse into the ordering,
- * and is now a packing row because the array shape was wrong (operator,
- * 2026-09-18).
+ * and is now a packing row because the array shape was wrong.
  *
  * The ruling collapsed because a per-target list can only change the outcome
  * where the ordering already reached this row - that is, where the stage did
@@ -126,7 +125,7 @@ export const TEXTURE_ARRAY_FAMILIES = [
     // which is where the structure and asteroid shaders were failing to link.
     //
     // Grouped by WHAT THE MAP IS, not by "any four scalars that happen to sit
-    // together" (operator, 2026-09-18). A family is one kind of map, numbered;
+    // together". A family is one kind of map, numbered;
     // that is what every row above already is, and a pack of unrelated scalars
     // would be a different idea wearing the same mechanism.
     //

@@ -138,7 +138,7 @@ export function compressSurface(input, width, height, format, output, options = 
     if (quality === -1) quality = 2;
     if (!Number.isInteger(quality) || quality < 0 || quality > 2) throw new RangeError("Unknown squish quality");
     const block = new Uint8Array(64); // alloc: byte-codec workspace reused for all tiles of this surface
-    // Adapted by operator decision, 2026-10-03: Carbon's realtime encoder is
+    // Adapted: Carbon's realtime encoder is
     // id Software LGPL code and cannot ship in this MIT runtime. Preserve the
     // ten native enum values, but use the MIT libsquish port for every mode.
     const squishFormat = format === F.TR2DXT_COMPRESS_RT_DXT1 ? F.TR2DXT_COMPRESS_SQUISH_DXT1 :

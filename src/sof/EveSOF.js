@@ -972,8 +972,7 @@ export class EveSOF extends IRoot
    * round trip growing back.
    *
    * The SOF must always be able to return these values, because it is used as
-   * a service; that does not bar it from building objects (operator,
-   * 2026-10-27). An object build is its own path and leaves this one
+   * a service; that does not bar it from building objects. An object build is its own path and leaves this one
    * class-free. A caller holding values constructs with
    * `RootClass.from(values)` against whatever classes it has.
    *
@@ -1329,8 +1328,7 @@ export class EveSOF extends IRoot
    *
    * @adapted returns model values (BuildValuesFromDNA), not Carbon's live
    *   space-object instance; no object build is ported yet. The SOF may build
-   *   objects, and must keep returning values as a service (operator,
-   *   2026-10-27).
+   *   objects, and must keep returning values as a service.
    */
   async BuildFromDNA(dnaString, options = {})
   {

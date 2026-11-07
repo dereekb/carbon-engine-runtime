@@ -1,6 +1,5 @@
 /*
- * Not Carbon: the `meshIndex` and `lodIndex` read options (operator,
- * 2026-10-25). Carbon's readers publish every mesh and LOD, and a Tr2Mesh picks
+ * Not Carbon: the `meshIndex` and `lodIndex` read options. Carbon's readers publish every mesh and LOD, and a Tr2Mesh picks
  * one by `meshIndex` after the load; these let a standalone reader caller ask
  * for less. Null, the default, keeps everything, and 0 is an index, not "unset".
  */

@@ -72,7 +72,7 @@ export function peekBackendEngineId(bytes)
  * reads it back in the same process (`Tw2EffectRes` calls `buildEffect` then
  * `read` on the result), so writer and reader are always the same build.
  * The runtime WebGPU harness does consume a stored container file named on its
- * command line, but that file is a disposable operator-built input regenerated
+ * command line, but that file is a disposable hand-built input regenerated
  * on demand, not a shipped asset, and a skew there already fails at the CONTAINER
  * magic long before any block is parsed. A per-block version would not have
  * caught it.

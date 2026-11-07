@@ -62,8 +62,7 @@ export function resolveWriteVersion(version)
  * and accepts versions 2 to 15 (`Tr2EffectRes.cpp:209`). The floor was 8 from
  * 2026-08-02 until 2026-10-25, when Incarna's compiled shaders gave the older
  * branches examined files and a consumer: build 1142708's
- * `graphics/shaders/compiled/dx11/*.fxt` are version 3 (operator decision,
- * 2026-10-25). Reading a version is not supporting it: the reader's job ends at
+ * `graphics/shaders/compiled/dx11/*.fxt` are version 3. Reading a version is not supporting it: the reader's job ends at
  * a correct record tree, normalized to the v15 record shape.
  */
 export const CARBON_EFFECT_MIN_DATA_VERSION = 2;

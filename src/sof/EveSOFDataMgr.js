@@ -2170,7 +2170,7 @@ function copyVector(value)
  */
 function flattenParameterValue(parameter)
 {
-  // SOF accepts plain data and real objects by design (operator, 2026-10-18).
+  // SOF accepts plain data and real objects by design.
   if (typeof parameter?.GetValue === "function") return Array.from(parameter.GetValue());
   const value = parameter?.value;
   if (typeof value === "boolean")
