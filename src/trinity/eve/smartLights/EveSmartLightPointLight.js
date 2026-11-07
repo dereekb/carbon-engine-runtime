@@ -6,7 +6,7 @@ import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { EveSmartLightBaseGroup } from "./EveSmartLightBaseGroup.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
-import { IsMatch, blue } from "#blue";
+import { IsMatch, blue, BlueList } from "#blue";
 import { EveEntity } from "../EveEntity.js";
 import { resolveGroupColor } from "../../eve/smartLights/EveSmartLightBaseGroup.js";
 import { num } from "#math/num";
@@ -22,11 +22,12 @@ import { EveComponentType } from "../EntityComponents.js";
 import { LightData } from "../lights/LightData.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveSmartLightGroupAttributeModifier.js";
 
 /** A smart-light group member that places faction-colour-aware point or spot lights at each distribution placement and submits them to the light manager. */
 @be.define({
   name: "EveSmartLightPointLight",
-  inherit: [ EveSmartLightBaseGroup, IInitialize, INotify, ITr2LightOwner ],
+  inherit: [ EveSmartLightBaseGroup, IListNotify, IInitialize, INotify, ITr2LightOwner ],
   // EveSmartLightPointLight_Blue.cpp:12-37, in Carbon's order.
   interfaces: [ EveSmartLightBaseGroup, IInitialize, INotify, IListNotify, EveEntity ],
   members: [
@@ -55,6 +56,17 @@ export class EveSmartLightPointLight extends EveEntity
   // (EveSmartLightPointLight.h:41). Each is an attribute over that path, as
   // Tr2SkinnedObject's m_lod rows are: the accessors only read and write the
   // record.
+
+  /**
+   * Carbon EveSmartLightPointLight constructor (cpp:13, EveSmartLightBaseGroup).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.attributeModifiers.SetNotify(this);
+  }
 
   /**
    * m_lightGroupData.flags (uint16_t) [READWRITE, PERSIST], with Tr2LightFlagChooser and no ENUM bit (EveSmartLightPointLight_Blue.cpp:24).
@@ -161,7 +173,7 @@ export class EveSmartLightPointLight extends EveEntity
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] (EveSmartLightBaseGroup.h:29) */
   @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   /** m_color (Color) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:30) */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

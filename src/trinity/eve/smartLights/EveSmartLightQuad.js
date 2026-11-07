@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightQuad.h
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { INotify } from "../../../blue/exposure/INotify.js";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
@@ -20,11 +20,12 @@ import { vec4 } from "#math/vec4";
 import { TriBatchType } from "#consts/graphics";
 import { BLUELISTEVENT } from "#consts/blue";
 import { packQuadInstanceData, QUAD_INSTANCE_SIZE } from "../child/packQuadInstanceData.js";
+import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveSmartLightGroupAttributeModifier.js";
 
 /** A smart-light group member that places faction-colour-aware flare quads at each distribution placement and submits them to the quad renderer. */
 @be.define({
   name: "EveSmartLightQuad",
-  inherit: [ EveSmartLightBaseGroup, IInitialize, INotify ],
+  inherit: [ EveSmartLightBaseGroup, IListNotify, IInitialize, INotify ],
   // EveSmartLightQuad_Blue.cpp:10-28, in Carbon's order.
   interfaces: [ EveSmartLightBaseGroup, IInitialize, INotify, IListNotify ],
   members: [
@@ -99,7 +100,7 @@ export class EveSmartLightQuad extends EveChildTransform
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] (EveSmartLightBaseGroup.h:29) */
   @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   /** m_color (Color) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:30) */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -119,6 +120,17 @@ export class EveSmartLightQuad extends EveChildTransform
   _activationStrength = 1;
 
   /** Last softQuad value the settle hook applied (JS-only change detection). */
+
+  /**
+   * Carbon EveSmartLightQuad constructor (cpp:13, EveSmartLightBaseGroup).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.attributeModifiers.SetNotify(this);
+  }
 
   /**
    * Faction-aware group color (Carbon base EveSmartLightBaseGroup.cpp:43-53).

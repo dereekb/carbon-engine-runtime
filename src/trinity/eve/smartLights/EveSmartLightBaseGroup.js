@@ -1,3 +1,4 @@
+import { BlueList } from "#blue";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightBaseGroup.h
@@ -9,6 +10,7 @@ import { color } from "#math/color";
 import { vec4 } from "#math/vec4";
 import { resolveFactionColor } from "../resolveFactionColor.js";
 import { BLUELISTEVENT } from "#consts/blue";
+import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveSmartLightGroupAttributeModifier.js";
 
 /**
  * Faction-color resolution shared by every class that flattens Carbon's
@@ -61,7 +63,7 @@ export class EveSmartLightBaseGroup extends IRoot
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] */
 
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   /** m_color (Color) [READWRITE, PERSIST] */
 
@@ -73,6 +75,17 @@ export class EveSmartLightBaseGroup extends IRoot
 
   /** Caller-owned faction-colour result; never aliases the SOF model. */
   _resolvedGroupColor = color.createLinear();
+
+  /**
+   * Carbon EveSmartLightBaseGroup constructor (cpp:13).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.attributeModifiers.SetNotify(this);
+  }
 
   /**
    * IEveSmartLightGroup default: no asynchronous work.

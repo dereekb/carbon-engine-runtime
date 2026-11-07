@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightColorShareGroup.h
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { INotify } from "../../../blue/exposure/INotify.js";
 import { EveSmartLightBaseGroup } from "./EveSmartLightBaseGroup.js";
@@ -13,11 +13,13 @@ import { color } from "#math/color";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { BLUELISTEVENT } from "#consts/blue";
+import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveSmartLightGroupAttributeModifier.js";
+import { IEveSmartLightGroup } from "./IEveSmartLightGroup.js";
 
 /** A smart-light group that computes one shared faction-aware colour, applies it to its child light groups, and fans out their per-frame updates. */
 @be.define({
   name: "EveSmartLightColorShareGroup",
-  inherit: [ EveSmartLightBaseGroup, INotify ],
+  inherit: [ EveSmartLightBaseGroup, IListNotify, INotify ],
   // EveSmartLightColorShareGroup_Blue.cpp:11-23, in Carbon's order.
   interfaces: [ EveSmartLightBaseGroup, INotify, IListNotify, EveEntity ],
   members: [
@@ -45,7 +47,7 @@ export class EveSmartLightColorShareGroup extends EveEntity
 
 
   @type.list("IEveSmartLightGroup")
-  lightGroups = [];
+  lightGroups = new BlueList(IEveSmartLightGroup);
 
   // Flattened EveSmartLightBaseGroup secondary base (Carbon multiple
   // inheritance; EveSmartLightBaseGroup_Blue.cpp:15-20 - the wire format of
@@ -64,7 +66,7 @@ export class EveSmartLightColorShareGroup extends EveEntity
   /** m_attributeModifiers (PIEveSmartLightGroupAttributeModifierVector) [READ, PERSIST] (EveSmartLightBaseGroup.h:29) */
   @be.mapAttribute(be.READ | be.PERSIST)
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   /** m_color (Color) [READWRITE, PERSIST] (EveSmartLightBaseGroup.h:30) */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -78,6 +80,18 @@ export class EveSmartLightColorShareGroup extends EveEntity
   _resolvedGroupColor = color.createLinear();
 
   /** Last `display` value the settle hook applied (JS-only change detection). */
+
+  /**
+   * Carbon EveSmartLightColorShareGroup constructor (cpp:13-14).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.attributeModifiers.SetNotify(this);
+    this.lightGroups.SetNotify(this);
+  }
 
   /**
    * Faction-aware group color (Carbon base EveSmartLightBaseGroup.cpp:43-53).

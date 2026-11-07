@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveChildSmartLightSet.h
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { INotify } from "../../../blue/exposure/INotify.js";
 import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRenderable.js";
@@ -14,6 +14,7 @@ import { EveChildInheritProperties } from "../child/EveChildInheritProperties.js
 import { EveEntity } from "../EveEntity.js";
 import { mat4 } from "#math/mat4";
 import { BLUELISTEVENT } from "#consts/blue";
+import { IEveSmartLightGroup } from "./IEveSmartLightGroup.js";
 
 /** A child that drives a placement distribution and fans its per-frame update, visibility, rendering and registration across a set of smart-light groups. */
 @be.define({
@@ -52,10 +53,21 @@ export class EveChildSmartLightSet extends EveChildTransform
   /** m_lightGroups (PIEveSmartLightGroupVector) [READ, PERSIST] */
 
   @type.list("IEveSmartLightGroup")
-  lightGroups = [];
+  lightGroups = new BlueList(IEveSmartLightGroup);
 
   /** m_inheritProperties (EveChildInheritPropertiesPtr) - lazily created, never persisted (EveChildSmartLightSet.h:72). */
   _inheritProperties = null;
+
+  /**
+   * Carbon EveChildSmartLightSet constructor (cpp:13).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.lightGroups.SetNotify(this);
+  }
 
   /**
    * The smart light set's name.

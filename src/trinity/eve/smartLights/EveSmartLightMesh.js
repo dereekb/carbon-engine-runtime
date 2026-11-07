@@ -1,3 +1,4 @@
+import { BlueList } from "#blue";
 // Source: trinity/trinity/Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh.h
 import { exposure as be } from "#be";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
@@ -21,6 +22,7 @@ import { Tr2Effect } from "../../shader/Tr2Effect.js";
 import { Tr2InstancedMesh } from "../../core/mesh/Tr2InstancedMesh.js";
 import { RotationalConstraints } from "../../generated/eve/child/enums.js";
 import { BLUELISTEVENT } from "#consts/blue";
+import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveSmartLightGroupAttributeModifier.js";
 
 
 /**
@@ -71,12 +73,23 @@ export class EveSmartLightMesh extends EveChildInstanceMeshRenderer
 
 
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 
   @type.color
   customColor = color.createLinear();
+
+  /**
+   * Carbon EveSmartLightMesh constructor (cpp:13, EveSmartLightBaseGroup).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.attributeModifiers.SetNotify(this);
+  }
 
   /**
    * Carbon m_castShadow is exposed under the canonical derived key:
