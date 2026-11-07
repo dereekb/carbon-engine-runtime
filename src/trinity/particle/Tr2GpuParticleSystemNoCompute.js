@@ -7,7 +7,8 @@
 import { vec4 } from "#math/vec4";
 import { PixelFormat, ShaderType, TextureType, Topology, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
-import { Tr2ConstantBufferAL, Tr2TextureSubresource } from "#trinityal";
+import { Failed, Tr2ConstantBufferAL, Tr2TextureSubresource } from "#trinityal";
+import * as CcpLog from "../../global/logging/ccpLog.js";
 import { Tr2MsaaDesc } from "../../trinityal/Tr2HalHelperStructures/Tr2MsaaDesc.js";
 import { PER_OBJECT_VS } from "../core/Tr2Renderer.js";
 import { Tr2RenderUtils } from "../core/Tr2RenderUtils.js";
@@ -23,9 +24,11 @@ const PARAMS_WIDTH = 2048;
 /** Rows of the params texture: 16,384 entries of eight texels. */
 const PARAMS_HEIGHT = 64;
 
-const UPDATE_EFFECT = "res:/graphics/effect/cjs/specialfx/gpuparticles/update.fx";
-const EMIT_EFFECT = "res:/graphics/effect/cjs/specialfx/gpuparticles/emit.fx";
-const DRAW_EFFECT = "res:/graphics/effect/cjs/specialfx/gpuparticles/quads.fx";
+// The WebGL tree by name: these effects exist nowhere else, and building them must not
+// wait on the page's file index, which the path conversion asks.
+const UPDATE_EFFECT = "res:/graphics/effect.webgl/cjs/specialfx/gpuparticles/update.sm_hi";
+const EMIT_EFFECT = "res:/graphics/effect.webgl/cjs/specialfx/gpuparticles/emit.sm_hi";
+const DRAW_EFFECT = "res:/graphics/effect.webgl/cjs/specialfx/gpuparticles/quads.sm_hi";
 
 const PIXEL_MASK = 1 << ShaderType.PIXEL_SHADER;
 const VERTEX_MASK = 1 << ShaderType.VERTEX_SHADER;
@@ -290,7 +293,8 @@ export class Tr2GpuParticleSystemNoCompute
   {
     if (this._params === null || bytes === 0) return;
     this._paramsBytes.set(mirror.subarray(0, Math.min(bytes, this._paramsBytes.length)));
-    this._params.UpdateSubresource(new Tr2TextureSubresource(), this._paramsBytes, PARAMS_WIDTH * TEXEL_SIZE, 0, renderContext);
+    const result = this._params.UpdateSubresource(Tr2TextureSubresource.create__MipLevel(0), this._paramsBytes, PARAMS_WIDTH * TEXEL_SIZE, 0, renderContext);
+    if (Failed(result)) CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "%s", `Tr2GpuParticleSystemNoCompute: emitter params upload failed (0x${(result >>> 0).toString(16)})`);
   }
 
   /**
