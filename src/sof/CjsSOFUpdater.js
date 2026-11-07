@@ -1053,6 +1053,12 @@ export class CjsSOFUpdater
       // This exception is owner-specific; ordinary sprite lists still match.
       if (boosterGlows && type === "EveSpriteSet" && key === "sprites"
         && Array.isArray(value) && value.length === 0 && Array.isArray(live.sprites)) continue;
+      // The layout and rows are the document's, not members of the live object.
+      if (type === "Tr2RuntimeInstanceData" && key === "layout")
+      {
+        if (!this._CollectChanges(live.GetOwnValues().layout, value, anchors, visited, owners, changes)) return false;
+        continue;
+      }
       if (type === "Tr2RuntimeInstanceData" && key === "rows")
       {
         // Tr2RuntimeInstanceData's values factory accepts named rows and stores

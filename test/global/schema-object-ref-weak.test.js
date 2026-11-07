@@ -126,10 +126,10 @@ test("the graph holds the member on its own edge, which only a walk that asks fo
   CjsBlueGraph.define(UnownedHolder, "RefWeakUnownedHolder");
 
   const member = Holder => CjsGraph.getClassInfo(Holder).compiled.byName.target[0];
-  assert.equal(member(OwnedHolder).edge.kind, "ref");
-  assert.equal(member(UnownedHolder).edge.kind, "refWeak");
+  assert.equal(member(OwnedHolder).edgeKind, "ref");
+  assert.equal(member(UnownedHolder).edgeKind, "refWeak");
   assert.equal(member(UnownedHolder).handler, member(OwnedHolder).handler);
-  assert.equal(member(UnownedHolder).edge.type, member(OwnedHolder).edge.type);
+  assert.deepEqual(member(UnownedHolder).edgeType, member(OwnedHolder).edgeType);
 
   const matchClass = info => info.ctor === RefWeakLeaf;
   const reachable = [ "embed", "ref", "refWeak" ];
