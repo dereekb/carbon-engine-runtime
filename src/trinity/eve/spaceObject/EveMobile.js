@@ -8,7 +8,7 @@ import { vec4 } from "#math/vec4";
 import { IEveSpaceObject2ParentData } from "./IEveSpaceObject2ParentData.js";
 import { vec3 } from "#math/vec3";
 import { type } from "#schema";
-import { blue, BlueClasses } from "#blue";
+import { blue, BlueClasses, BlueList } from "#blue";
 import { IListNotify } from "#exposure/IListNotify";
 import { BLUELISTEVENT } from "#consts/blue";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
@@ -41,7 +41,7 @@ export class EveMobile extends EveSpaceObject2
 {
 
   @type.list("EveTurretSet")
-  turretSets = [];
+  turretSets = new BlueList(EveTurretSet, { className: "EveTurretSet" });
 
   @type.uint32
   ActiveTurretCount = 0;
@@ -51,6 +51,17 @@ export class EveMobile extends EveSpaceObject2
 
   _turretSetsLocatorInfo = [];
   _turretLocatorCountingInfo = new Map();
+
+  /**
+   * Carbon EveMobile constructor (cpp:22).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.turretSets.SetNotify(this);
+  }
 
   /**
    * Runs the base initialization, then seeds the turret locator counters from

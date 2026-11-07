@@ -40,7 +40,7 @@ export function ReadValues(target, values = {}, options = {})
     if (options.importContext)
     {
         const writes = [];
-        const changed = new DictReader(options).ReadInto(target, values, null,
+        const changed = new DictReader({ ...options, liveLists: true }).ReadInto(target, values, null,
             (field, didChange) => writes.push([field, didChange]));
         const complete = () => applyValues(target, options, recordWrite =>
         {
@@ -56,5 +56,5 @@ export function ReadValues(target, values = {}, options = {})
         return complete();
     }
     return applyValues(target, options, recordWrite =>
-        new DictReader(options).ReadInto(target, values, null, recordWrite));
+        new DictReader({ ...options, liveLists: true }).ReadInto(target, values, null, recordWrite));
 }

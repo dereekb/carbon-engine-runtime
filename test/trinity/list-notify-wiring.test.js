@@ -31,6 +31,12 @@ import { EveMultiEffect } from "../../npm/dist/trinity/eve/effect/multiEffect/Ev
 import { EveDistanceField } from "../../npm/dist/trinity/eve/EveDistanceField.js";
 import { EveChildPlug } from "../../npm/dist/trinity/eve/child/EveChildPlug.js";
 
+import { EveChildContainer } from "../../npm/dist/trinity/eve/child/EveChildContainer.js";
+import { EveChildMesh } from "../../npm/dist/trinity/eve/child/EveChildMesh.js";
+import { EveEffectRoot2 } from "../../npm/dist/trinity/eve/spaceObject/EveEffectRoot2.js";
+import { EveMobile } from "../../npm/dist/trinity/eve/spaceObject/EveMobile.js";
+import { EveSpaceObject2 } from "../../npm/dist/trinity/eve/spaceObject/EveSpaceObject2.js";
+
 // Carbon calls SetNotify per member, in each owner's constructor. Keep one row per member.
 const WIRED = [
   [ EveBaseDistributionMethod, [ "placementGenerators", "spawnTriggers", "lifetimeModifiers" ] ],
@@ -53,6 +59,11 @@ const WIRED = [
   [ EveMultiEffect, [ "bindings", "parameters", "controllers" ] ],
   [ EveDistanceField, [ "objects" ] ],
   [ EveChildPlug, [ "controllers" ] ],
+  [ EveChildContainer, [ "controllers", "objects", "attachments", "lights" ] ],
+  [ EveChildMesh, [ "decals", "lights", "attachments" ] ],
+  [ EveEffectRoot2, [ "controllers", "effectChildren", "lights" ] ],
+  [ EveMobile, [ "turretSets" ] ],
+  [ EveSpaceObject2, [ "controllers", "lights", "effectChildren", "overlayEffects", "decals", "attachments" ] ],
   [ EveProceduralMethodCycling, [ "parameters" ] ],
   [ EveProceduralMethodRandom, [ "parameters" ] ],
   [ EveProceduralMethodThresholds, [ "parameters" ] ]

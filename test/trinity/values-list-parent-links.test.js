@@ -36,7 +36,7 @@ test("unresolved references leave the live child list and its links intact", () 
   parent.objects.push(old);
   parent.RegisterChildren(parent.objects);
   assert.throws(() => CjsSchema.setValues(parent, { objects: [ { _ref: "missing" } ] }), /Unresolved _ref/u);
-  assert.deepEqual(parent.objects, [ old ]);
+  assert.deepEqual([ ...parent.objects ], [ old ]);
   assert.equal(old.GetParent(), parent);
 });
 

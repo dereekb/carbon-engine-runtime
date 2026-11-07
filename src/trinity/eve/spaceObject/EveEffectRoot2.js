@@ -21,7 +21,7 @@ import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { CjsSchema, type } from "#schema";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { ITr2LightOwner } from "../lights/ITr2LightOwner.js";
 import { IShaderConfigurer } from "../../shader/IShaderConfigurer.js";
 import { IEveEffectChildrenOwner } from "../child/IEveEffectChildrenOwner.js";
@@ -33,6 +33,9 @@ import { EveLODHelper, Tr2Lod } from "../EveLODHelper.js";
 import { RawData } from "../../core/rawData/RawData.js";
 import { EveComponentType } from "../EntityComponents.js";
 import { BLUELISTEVENT } from "#consts/blue";
+import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
+import { Tr2Light } from "../lights/Tr2Light.js";
 
 
 /**
@@ -63,7 +66,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectChild")
-  effectChildren = [];
+  effectChildren = new BlueList(IEveSpaceObjectChild);
 
   /** m_estimatedSize (float) [READ] */
   @be.mapAttribute(be.READ)
@@ -141,7 +144,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2Light")
-  lights = [];
+  lights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
   /** m_externalParameters (PTr2ExternalParameterVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -153,7 +156,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
   /** m_observers (PTriObserverLocalVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -183,6 +186,19 @@ export class EveEffectRoot2 extends EveEntity
 
   /** A view onto _boundingSphere's xyz, made once; the sphere is written in place and never replaced. */
   _boundingSphereCenter = this._boundingSphere.subarray(0, 3);
+
+  /**
+   * Carbon EveEffectRoot2 constructor (cpp:42-44).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+    this.effectChildren.SetNotify(this);
+    this.lights.SetNotify(this);
+  }
 
   /**
    * The centre of the effect's minimum bounding sphere: the first three floats of _boundingSphere.
@@ -261,8 +277,8 @@ export class EveEffectRoot2 extends EveEntity
    * them (EveEffectRoot2.cpp:94-102), which is what the managed child
    * mutation reproduces.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
   AddController(controller)
   {
@@ -274,8 +290,8 @@ export class EveEffectRoot2 extends EveEntity
    * Removes a controller. The unlink is OnListModified's REMOVED arm
    * (EveEffectRoot2.cpp:104-109), not this method's business.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
   RemoveController(controller)
   {
@@ -770,7 +786,7 @@ export class EveEffectRoot2 extends EveEntity
 
   AddLight(light)
   {
-    this.lights.push(light);
+    this.lights.Append(light);
     return light;
   }
 
@@ -782,7 +798,7 @@ export class EveEffectRoot2 extends EveEntity
 
   ClearLights()
   {
-    this.lights.length = 0;
+    this.lights.Clear();
   }
 
   /**
@@ -1317,32 +1333,42 @@ export class EveEffectRoot2 extends EveEntity
   }
 
   /**
-   * Adds and initializes an effect child through Carbon's list-notify behavior.
+   * Carbon EveEffectRoot2::AddToEffectChildrenList (cpp:941-951): the INSERTED event
+   * does the rest of the set-up.
    *
-   * @adapted Plain JavaScript arrays have no Blue IList notifications, so insertion behavior
-   *   is explicit.
+   * @adapted returns the child.
    */
 
   AddToEffectChildrenList(child)
   {
-    this.effectChildren.push(child);
-    EveEffectRoot2._ApplyControllerVariables(child, this._controllerVariables, "SetControllerVariable");
-    child.StartControllers();
+    if (this.IsInRegistry() && this.display)
+    {
+      const entity = CjsSchema.cast(child, EveEntity);
+      if (entity) entity.Register(this.GetComponentRegistry());
+    }
+
+    this.effectChildren.Append(child);
     return child;
   }
 
   /**
-   * Removes an effect child.
+   * Carbon EveEffectRoot2::RemoveFromEffectChildrenList (cpp:954-968).
    *
-   * @adapted Plain JavaScript arrays have no Blue IList notifications, so removal behavior
-   *   is explicit.
+   * @adapted returns whether the child was in the list.
    */
 
   RemoveFromEffectChildrenList(child)
   {
     const index = this.effectChildren.indexOf(child);
     if (index === -1) return false;
-    this.effectChildren.splice(index, 1);
+
+    if (this.IsInRegistry())
+    {
+      const entity = CjsSchema.cast(child, EveEntity);
+      if (entity) entity.UnRegister(this.GetComponentRegistry());
+    }
+
+    this.effectChildren.Remove(index);
     return true;
   }
 

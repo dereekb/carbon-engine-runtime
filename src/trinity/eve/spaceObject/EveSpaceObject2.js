@@ -6,7 +6,7 @@ import { ITr2DebugRenderable } from "../../../global/interfaces/ITr2DebugRendera
 // Source: trinity/trinity/Eve/SpaceObject/EveSpaceObject2.h
 // Source: trinity/trinity/Eve/SpaceObject/EveSpaceObject2.cpp
 // Source: trinity/trinity/Eve/SpaceObject/EveSpaceObject2_Blue.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { FLOAT_MAX } from "../../core/view/TriFrustum.js";
 import { IEveShadowCaster } from "../IEveShadowCaster.js";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
@@ -71,6 +71,11 @@ import { ITr2GrannyAnimationOwner } from "../../core/animation/ITr2GrannyAnimati
 import { IEveSpaceObjectDecalOwner } from "../attachment/decal/IEveSpaceObjectDecalOwner.js";
 import { IEveSpaceObjectAttachmentOwner } from "../attachment/IEveSpaceObjectAttachmentOwner.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
+import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { Tr2Light } from "../lights/Tr2Light.js";
+import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
+import { EveSpaceObjectDecal } from "../attachment/decal/EveSpaceObjectDecal.js";
+import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
 
 // Static scratch for the sorted-transparent area pass (allocation rules: hot
 // per-frame path, copy-into, never allocate per call).
@@ -131,7 +136,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectChild")
-  effectChildren = [];
+  effectChildren = new BlueList(IEveSpaceObjectChild);
 
   /** m_children (PIEveTransformVector) [READ, PERSIST]
    * Transform children whose visibility and transforms follow the hull.
@@ -185,7 +190,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveMeshOverlayEffect")
-  overlayEffects = [];
+  overlayEffects = new BlueList(EveMeshOverlayEffect, { className: "EveMeshOverlayEffect" });
 
   /** m_positionDelta (Tr2BindingVector3Ptr) [READ]
    * Binding target for the object's position delta.
@@ -305,7 +310,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectAttachment")
-  attachments = [];
+  attachments = new BlueList(IEveSpaceObjectAttachment);
 
   /** m_decals (PEveSpaceObjectDecalVector) [READ, PERSIST]
    * Decals rendered against the hull's mesh and parent data.
@@ -314,7 +319,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSpaceObjectDecal")
-  decals = [];
+  decals = new BlueList(EveSpaceObjectDecal, { className: "EveSpaceObjectDecal" });
 
   /** m_lights (PTr2LightVector) [READ, PERSIST, NOTIFY]
    * Local lights whose transforms and brightness follow the object.
@@ -324,7 +329,7 @@ export class EveSpaceObject2 extends EveEntity
 
 
   @type.list("Tr2Light")
-  lights = [];
+  lights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
   /** m_externalParameters (PTr2ExternalParameterVector) [READ, PERSIST]
    * External parameter bindings attached to this object's graph.
@@ -342,7 +347,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
   /** m_locators (PEveLocator2Vector) [READ, PERSIST]
    * Named locators authored directly on the hull.
@@ -658,6 +663,22 @@ export class EveSpaceObject2 extends EveEntity
    * @type {ITr2AudGeometry|null}
    */
   _audioGeometry = null;
+
+  /**
+   * Carbon EveSpaceObject2 constructor (cpp:219-224).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+    this.lights.SetNotify(this);
+    this.effectChildren.SetNotify(this);
+    this.overlayEffects.SetNotify(this);
+    this.decals.SetNotify(this);
+    this.attachments.SetNotify(this);
+  }
 
   /**
    * Carbon MAP_PROPERTY "audioGeometry" over the protected
@@ -1178,8 +1199,7 @@ export class EveSpaceObject2 extends EveEntity
   /**
    * Carbon OnListModified (EveSpaceObject2.cpp:291-469), the owner reacting to
    * its own lists. Carbon installs itself on six of them at cpp:217-222 and the
-   * lists notify it; a JavaScript array has no notify slot, so the managed child
-   * mutation drives the same call.
+   * lists notify it.
    *
    * Controllers link and replay the recorded variables on insert, unlink on
    * remove, and unlink every one on unload. Effect children take ownership,

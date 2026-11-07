@@ -117,6 +117,7 @@ export class DictReader extends IRootReaderBase
    * @param {object} [options] `importContext` to share an anchor table across
    *   legacy reads; anything else is passed to a class's own `from`.
    * @param {boolean} [options.declarations=false] Use isolated declaration-driven construction.
+   * @param {boolean} [options.liveLists=false] A Values edit: see _ReadLiveList.
    * @param {boolean} [options.initialize=true] Initialize owned declared objects after references resolve.
    * @param {Function|null} [populate=null] Optional values-service population policy.
    */
@@ -757,7 +758,12 @@ export class DictReader extends IRootReaderBase
 
     if (current && typeof current === "object" && mappedInterfaces(current.constructor).has(IList))
     {
-      return this._ReadIList(current, field, source);
+      const live = this._options.liveLists === true && Array.isArray(source) && mappedInterfaces(instance.constructor).has(IListNotify)
+        && !(this._options.declarations === true ? this._created.has(instance) : this._anchors.isCreated(instance));
+      if (!live) return this._ReadIList(current, field, source);
+
+      const type = field.type.itemType;
+      return this._ReadLiveList(instance, field, current, source, typeof type === "string" || typeof type === "function" ? type : type?.className ?? null);
     }
 
     if (source === null || source === undefined)
@@ -912,10 +918,12 @@ export class DictReader extends IRootReaderBase
   }
 
   /**
-   * Values editing adaptation: stage an ordinary object list before notifying
-   * its mapped owner. Native bulk loading mutes inserts and ends with
-   * LOADFINISHED; existing owners need live INSERTED callbacks to restore links.
-   * Callback failures propagate without promising rollback of domain effects.
+   * Stages an object list, then edits a live owner's list item by item.
+   *
+   * @cjs Carbon's ReadList mutes inserts and ends with LOADFINISHED, which these
+   *   handlers ignore, so a live edit would leave children unlinked. Registered in
+   *   non-carbon-extensions.md; retires with DictReader at cutover.
+   *   Callback failures propagate without promising rollback of domain effects.
    */
   _ReadLiveList(instance, field, list, source, itemClassName, replacement = list)
   {
@@ -950,6 +958,16 @@ export class DictReader extends IRootReaderBase
         try
         {
           if (replacement === list && list.length === staged.length && list.every((item, index) => item === staged[index])) return;
+          if (mappedInterfaces(list.constructor).has(IList))
+          {
+            list.Remove(-1);
+            for (const item of staged)
+            {
+              if (item != null) list.Append(item);
+              if (!active) return;
+            }
+            return;
+          }
           if (list.length) instance.OnListModified(BLUELISTEVENT.BELIST_UNLOADSTART, 0, 0, null, list);
           if (!active) return;
           list.length = 0;

@@ -26,9 +26,12 @@ import { vec4 } from "#math/vec4";
 import { CjsSchema, meta, type } from "#schema";
 import { Tr2InstancedMesh } from "../../core/mesh/Tr2InstancedMesh.js";
 import { BLUELISTEVENT } from "#consts/blue";
-import { BeObjectMetadata, IsMatch, IListNotify } from "#blue";
+import { BeObjectMetadata, IsMatch, IListNotify, BlueList } from "#blue";
 import { EveEntity } from "../EveEntity.js";
 import { ReflectionMode, TriBatchType } from "#consts/graphics";
+import { EveSpaceObjectDecal } from "../attachment/decal/EveSpaceObjectDecal.js";
+import { Tr2Light } from "../lights/Tr2Light.js";
+import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
 import { EveChildTransform, applyTransformModifiers } from "./EveChildTransform.js";
 import { Origin } from "../../generated/eve/child/enums.js";
 import { EveComponentType, EntityComponents } from "../EntityComponents.js";
@@ -182,6 +185,19 @@ export class EveChildMesh extends EveChildTransform
   armorDamageShader = null;
 
   /**
+   * Carbon EveChildMesh constructor (cpp:71-73).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.decals.SetNotify(this);
+    this.lights.SetNotify(this);
+    this.attachments.SetNotify(this);
+  }
+
+  /**
    * Clears the private visibility state for a derived child whose own Carbon
    * cull rejects it before EveChildMesh::UpdateVisibility runs.
    *
@@ -261,7 +277,7 @@ export class EveChildMesh extends EveChildTransform
   localTransform = mat4.create();
 
   @type.list("EveSpaceObjectDecal")
-  decals = [];
+  decals = new BlueList(EveSpaceObjectDecal, { className: "EveSpaceObjectDecal" });
 
   @type.boolean
   staticTransform = false;
@@ -271,10 +287,10 @@ export class EveChildMesh extends EveChildTransform
   animationUpdater = null;
 
   @type.list("IEveSpaceObjectAttachment")
-  attachments = [];
+  attachments = new BlueList(IEveSpaceObjectAttachment);
 
   @type.list("Tr2Light")
-  lights = [];
+  lights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
   @type.int32
   @type.enum("trinity.Tr2Lod")
@@ -654,7 +670,8 @@ export class EveChildMesh extends EveChildTransform
 
   AddDecal(decal)
   {
-    this.decals.push(decal);
+    decal.SetPriority(this.decals.length);
+    this.decals.Insert(-1, decal);
   }
 
   /**
@@ -666,7 +683,7 @@ export class EveChildMesh extends EveChildTransform
 
   AddAttachment(attachment)
   {
-    this.attachments.push(attachment);
+    this.attachments.Append(attachment);
   }
 
   /**
@@ -678,7 +695,7 @@ export class EveChildMesh extends EveChildTransform
 
   ClearAttachments()
   {
-    this.attachments.length = 0;
+    this.attachments.Clear();
   }
 
   /**
@@ -690,7 +707,7 @@ export class EveChildMesh extends EveChildTransform
 
   AddLight(light)
   {
-    this.lights.push(light);
+    this.lights.Append(light);
   }
 
   /**
@@ -702,7 +719,7 @@ export class EveChildMesh extends EveChildTransform
 
   ClearLights()
   {
-    this.lights.length = 0;
+    this.lights.Clear();
   }
 
   /**

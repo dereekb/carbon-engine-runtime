@@ -43,9 +43,12 @@ import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { ITr2SoundEmitterOwner } from "../ITr2SoundEmitterOwner.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
 import { ITr2ActionController } from "../../controllers/ITr2Controller/ITr2ActionController.js";
-import { IsMatch, blue, EnumRegistrationType } from "#blue";
+import { IsMatch, blue, EnumRegistrationType, BlueList } from "#blue";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 import { IEveSpaceObjectAttachmentOwner } from "../attachment/IEveSpaceObjectAttachmentOwner.js";
+import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
+import { Tr2Light } from "../lights/Tr2Light.js";
 
 // Module scratch (read-only zero vector; container recursion forbids mutable
 // module scratch here - see GetBoundingSphere).
@@ -109,7 +112,7 @@ export class EveChildContainer extends EveChildTransform
   displayFilter = 5;
 
   @type.list("IEveSpaceObjectChild")
-  objects = [];
+  objects = new BlueList(IEveSpaceObjectChild);
 
   @type.list("IEveChildTransformModifier")
   transformModifiers = [];
@@ -152,7 +155,7 @@ export class EveChildContainer extends EveChildTransform
   updateOnDisplay = true;
 
   @type.list("IEveSpaceObjectAttachment")
-  attachments = [];
+  attachments = new BlueList(IEveSpaceObjectAttachment);
 
   @type.list("TriObserverLocal")
   observers = [];
@@ -161,10 +164,10 @@ export class EveChildContainer extends EveChildTransform
   fxAttributes = [];
 
   @type.list("Tr2Light")
-  lights = [];
+  lights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
   @type.list("ITr2Controller")
-  controllers = [];
+  controllers = new BlueList(ITr2Controller);
 
   @type.object.ref("EveChildInheritProperties")
   inheritProperties = null;
@@ -228,6 +231,20 @@ export class EveChildContainer extends EveChildTransform
   _lastWorldTransform = mat4.create();
 
   _hasUpdated = false;
+
+  /**
+   * Carbon EveChildContainer constructor (cpp:42-45).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.controllers.SetNotify(this);
+    this.objects.SetNotify(this);
+    this.attachments.SetNotify(this);
+    this.lights.SetNotify(this);
+  }
 
   /**
    * Carbon MAP_PROPERTY_READONLY "isRendering" over IsRendering
@@ -658,8 +675,8 @@ export class EveChildContainer extends EveChildTransform
    * Appends a child. The registration, the variable replay and the inherited
    * properties are the INSERTED arm's, reached through the managed mutation.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
 
   AddToEffectChildrenList(child)
@@ -671,8 +688,8 @@ export class EveChildContainer extends EveChildTransform
   /**
    * Removes a child by identity; the unregistration is the REMOVED arm's.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
 
   RemoveFromEffectChildrenList(child)
@@ -747,7 +764,7 @@ export class EveChildContainer extends EveChildTransform
 
   ClearAttachments()
   {
-    this.attachments.length = 0;
+    this.attachments.Clear();
   }
 
   /**

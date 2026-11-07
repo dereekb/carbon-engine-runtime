@@ -191,8 +191,8 @@ export class EveChildPlug extends EveChildTransform
    * Appends one plugged child. The registration and the variable replay are the
    * INSERTED arm's, reached through the managed mutation.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
 
   AddToEffectChildrenList(child)
@@ -204,8 +204,8 @@ export class EveChildPlug extends EveChildTransform
   /**
    * Removes one plugged child; the unregistration is the REMOVED arm's.
    *
-   * @adapted A JavaScript array has no notify slot, so the owner drives the notification
-   *   through the shared child service rather than the list driving it.
+   * @adapted Goes through the shared child service, which appends to or removes from
+   *   the list; the list sends the event.
    */
 
   RemoveFromEffectChildrenList(child)
