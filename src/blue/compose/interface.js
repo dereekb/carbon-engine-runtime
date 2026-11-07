@@ -315,16 +315,16 @@ export function carbonInheritDecorator(Contracts, onInstalled = null)
         }
     }
 
-    return function (value, context)
+    return function (Constructor, context)
     {
         if (context && typeof context === "object" && context.kind !== "class")
         {
             throw new TypeError("carbon.inherit only supports classes.");
         }
 
-        Object.defineProperty(value, BASES, { value: [ ...baseList(value), ...bases ], configurable: true });
+        Object.defineProperty(Constructor, BASES, { value: [ ...baseList(Constructor), ...bases ], configurable: true });
 
-        for (const Contract of bases) installInterface(value, Contract, onInstalled);
+        for (const Contract of bases) installInterface(Constructor, Contract, onInstalled);
     };
 }
 
