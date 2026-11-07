@@ -21,6 +21,8 @@ import { type } from "#schema";
 @be.mapInterface(ITriVectorFunction)
 @be.mapInterface(ITriQuaternionFunction)
 @be.mapInterface(ITriColorFunction)
+// Carbon adds this entry by hand, through ITriScalarFunction (Tr2CurveConstant_Blue.cpp:16-19).
+@be.mapInterface(ITriFunction)
 export class Tr2CurveConstant extends ITriScalarFunction
 {
   /**
