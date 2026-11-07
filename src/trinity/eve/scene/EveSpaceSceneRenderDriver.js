@@ -262,7 +262,7 @@ export class EveSpaceSceneRenderDriver
   enableUpscaling = CARBON_DEFAULT_SETTINGS.enableUpscaling;
 
   /** m_projection (TriProjectionPtr) [READWRITE] */
-  @type.object.ref("TriProjection")
+  @type.object.ref.weak("TriProjection")
   projection = null;
 
   /** m_camera (EveCameraPtr) [READWRITE] */

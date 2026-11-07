@@ -81,7 +81,7 @@ export class EveTacticalTrails
   segments = 0;
 
   /** m_egoBall (ITriVectorFunctionPtr) [READWRITE] */
-  @type.object.ref("ITriVectorFunction")
+  @type.object.ref.weak("ITriVectorFunction")
   egoBall = null;
 
   /** m_trailEffect (Tr2EffectPtr) [READWRITE, PERSIST] */

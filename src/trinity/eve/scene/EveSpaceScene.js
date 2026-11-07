@@ -524,7 +524,7 @@ export class EveSpaceScene
 
   /** m_debugRenderer (Tr2DebugRendererPtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2DebugRenderer")
+  @type.object.ref.weak("Tr2DebugRenderer")
   debugRenderer = null;
 
   /**

@@ -121,7 +121,7 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * Source of the tracked bone matrix and world transform (native Tr2SkinnedObjectPtr).
    * @type {Tr2SkinnedObject|null}
    */
-  @type.object.ref("Tr2SkinnedObject")
+  @type.object.ref.weak("Tr2SkinnedObject")
   skinnedObject = null;
 
   /**

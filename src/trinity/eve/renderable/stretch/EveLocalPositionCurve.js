@@ -65,7 +65,7 @@ export class EveLocalPositionCurve extends ITriVectorFunction
 
  @type.vec3
   boundingSize = vec3.create();
-  @type.object.ref("ITriQuaternionFunction")
+  @type.object.ref.weak("ITriQuaternionFunction")
   parentRotationCurve = null;
   @type.object.ref("IEveSpaceObject2")
   parent = null;

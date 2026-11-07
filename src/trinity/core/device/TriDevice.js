@@ -192,7 +192,7 @@ export class TriDevice extends IRoot
   /** m_scene (ITr2ScenePtr) [READWRITE, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.NOTIFY)
 
-  @type.object.ref("ITr2Scene")
+  @type.object.ref.weak("ITr2Scene")
   scene = null;
 
   /** mBackBufferCount (int) [READWRITE, NOTIFY] */

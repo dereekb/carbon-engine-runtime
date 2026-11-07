@@ -189,7 +189,7 @@ export class EveLensflare
   }
 
   /** m_translationCurve (ITriVectorFunctionPtr) [READWRITE] */
-  @type.object.ref("ITriVectorFunction")
+  @type.object.ref.weak("ITriVectorFunction")
   translationCurve = null;
 
   /** m_mesh (Tr2MeshPtr) [READWRITE, PERSIST] */
