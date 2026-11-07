@@ -329,10 +329,11 @@ export class Tr2InteriorStatic extends IRoot
    * Tr2InteriorPlaceable (cpp:291-376).
    *
    * Adapted for Incarna content in two places. An opaque request also draws
-   * the meshes' `opaquePrepassAreas`: Incarna's interior drew those in its
-   * light pre-pass, current Carbon draws them only for picking
-   * (`trinity/trinity/ITr2PickableScene.cpp:242`), and the walkway kits hold
-   * their opaque geometry nowhere else (operator, 2026-10-25). A transparent
+   * the meshes' `opaquePrepassAreas`: Incarna's interior drew those in the forward
+   * gather after its light pass, not in the pre-pass, which drew depth-normal areas
+   * (`Interior/Tr2InteriorScene.cpp:3039-3048`, trinity 71329945~1). Current Carbon
+   * draws them only for picking (`trinity/trinity/ITr2PickableScene.cpp:242`), and
+   * the walkway kits hold their opaque geometry nowhere else. A transparent
    * area's depth uses its mesh's bounds, because Tr2Mesh.GetAreaBounds, which
    * Carbon uses, is not ported.
    *

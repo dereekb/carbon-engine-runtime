@@ -1,4 +1,4 @@
-// Incarna: reconstructed from Black records. Retired from Carbon: its donor is at trinity a198e5da~1, Shader/, not yet compared. See ../README.md.
+// Incarna: reconstructed from Black records. Retired from Carbon: its donor is at trinity a198e5da~1, Tr2HighLevelShader.h, not yet compared. See ../README.md.
 import { exposure as be } from "#be";
 import { IRoot } from "#exposure/IRoot";
 import { meta, type } from "#schema";

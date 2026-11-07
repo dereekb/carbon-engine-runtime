@@ -9,7 +9,9 @@ Carbon's git history still holds some of them: `Tr2ShaderMaterial` to trinity
 a198e5da~1, and `Tr2InteriorFlare`, `Tr2InteriorFlareData` and
 `Tr2InteriorParticleObject` to 71329945~1. Those take their members and flags
 from that source, and each says so at its head; a class found there no longer
-needs guessing. The rest are reconstructed from Black records:
+needs guessing. `Tr2InteriorStatic` (24d033fa~1) and the shader library classes
+(a198e5da~1) also have donors there, but are still reconstructed from Black records
+and not yet compared; each head names its donor. For these and the rest:
 
 - Its members, and their order, are those the records write. Its JSDoc names
   the records.
@@ -36,5 +38,5 @@ through `Tr2EffectRes`; `fxt` is registered as an Incarna-era extension
 (`Tr2EffectRes.additionalExtensions`, registered by `core/configuration.js` through `CjsLibrary`).
 
 An opaque request to a `Tr2InteriorStatic` also draws its meshes'
-`opaquePrepassAreas`. Incarna drew those in its light pre-pass, and current
+`opaquePrepassAreas`. Incarna drew those in the forward gather after its light pass, and current
 Carbon draws them only for picking.

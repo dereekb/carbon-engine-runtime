@@ -86,12 +86,15 @@ export class Tr2ShaderMaterial extends IRoot
    * shader's source (`_ResolveEffectPath`), and setting it initializes the
    * effect.
    *
-   * No row is chosen from `defaultSituation`. Below container version 5
-   * current Carbon reads only a container's first row
-   * (`trinity/trinity/Resources/Tr2EffectRes.cpp:232-234`), and that row is
-   * what the effect draws.
+   * No row is chosen from `defaultSituation`, so the effect draws a container's
+   * first row, which is what current Carbon's `Tr2EffectRes` reads below
+   * container version 5 (`trinity/trinity/Resources/Tr2EffectRes.cpp:232-234`).
+   * That was not this class's path: Carbon's material chose its row from the
+   * shader's permute tags against a situation
+   * (`Tr2HighLevelShader::CreateDefinesFromSituation`, trinity a198e5da~1), and
+   * that selection is not ported.
    *
-   * @implemented
+   * @adapted row selection is not ported, so the effect draws the container's first row
    * @returns {Tr2Effect} The effect, its path still unset.
    */
   CreateEffect()
