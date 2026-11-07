@@ -24,7 +24,7 @@ function files(dir, extensions, excluded = new Set([".git", "node_modules", "npm
 export const MARKER_TAGS = ["implemented","adapted","noop","notSupported","renamed","cjs","abstract","notImplemented","notUsed"];
 const MARKER_TAG = new RegExp("^[ \\t]*\\*?[ \\t]*@(" + MARKER_TAGS.join("|") + ")\\b[ \\t]*(.*)$", "gm");
 /** The marker decorators the tags replace, by the inventory's normalized names. */
-// meta.noop is not converted (its tag is parked for the operator), so it stays a decorator in every mode.
+// meta.noop is not converted (its tag is parked), so it stays a decorator in every mode.
 const MARKER_DECORATORS = new Set([ ...MARKER_TAGS.filter(tag => tag !== "noop").map(tag => "meta." + tag), "exposure.abstract", "blue.abstract" ]);
 /** The marker tags in one JSDoc comment's text, as `{ name: "meta.<tag>", args, line offset }`. */
 export function markerTags(commentValue) {

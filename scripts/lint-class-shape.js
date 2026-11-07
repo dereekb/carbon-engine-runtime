@@ -26,8 +26,7 @@
 //
 // 3. A CLASS FIELD WITH NO INITIALIZER. `_schema;` declares a member whose value is
 //    undefined until a constructor happens to assign it, and "properties can never be
-//    undefined - we treat this as a bug" (operator, 2026-11-03; class-ownership.md
-//    § Class-shape rules). Every field states its default by meaning: null for an
+//    undefined - we treat this as a bug" (class-ownership.md § Class-shape rules). Every field states its default by meaning: null for an
 //    object or a function, "" for a string, a number for a number. Constructors
 //    still assign the real value.
 //

@@ -42,8 +42,7 @@ function stripComments(source)
 
 /**
  * Every numeric vocabulary in one module, as a name -> (member -> value) map.
- * Frozen or not: the library does not freeze its own data (operator,
- * 2026-09-22), so a plain `static Code = { ... }` is a vocabulary too.
+ * Frozen or not: the library does not freeze its own data, so a plain `static Code = { ... }` is a vocabulary too.
  */
 function jsVocabularies(source)
 {

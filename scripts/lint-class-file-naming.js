@@ -4,9 +4,8 @@
 // The three ratcheted categories below enforce findability, not donor coverage;
 // lint-donor-coverage.js owns the latter. The history below explains the scope.
 //
-// WHY THIS SCRIPT EXISTS. The operator opened `trinityal/webgpu/core/workQueue.js`
-// and said a standalone lowercase file was the wrong shape for what was inside
-// it: a 581-line exported class, `CjsWebgpuWorkQueue`, with five free functions
+// WHY THIS SCRIPT EXISTS. `trinityal/webgpu/core/workQueue.js` was the wrong shape
+// for what was inside it, a standalone lowercase file: a 581-line exported class, `CjsWebgpuWorkQueue`, with five free functions
 // beside it, in a folder of otherwise small function modules. That was not one
 // file's mistake. Surveying `src` found 51 files declaring a class that no
 // reader could find by name, and the survey changed what the rule had to be
@@ -50,7 +49,7 @@
 // on the grounds that each mirrored one Carbon header declaring several small
 // types together - the HAL structures, the render-pass attachments, the
 // resource-set trio, the query stubs, the audio action records, the error pair.
-// The operator overruled that: we do not put multiple classes in one file, and
+// That was overruled: we do not put multiple classes in one file, and
 // mirroring a donor header is not a reason to. So there are NO permanent
 // exemptions here. The 2026-09-11 clarification preserves those donor headers as
 // folders; their grouping was valid, their multi-class files needed splitting.

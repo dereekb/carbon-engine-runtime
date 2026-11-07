@@ -112,7 +112,7 @@ export async function readGeneratedOwnership({ sourceRoot, schemaRoot })
   for (const file of await files(sourceRoot, ".js"))
   {
     // The shader compiler is self-contained and its classes are never schema
-    // classes (operator, 2026-10-08): they are not built by readers or
+    // classes: they are not built by readers or
     // writers. Its Carbon names (ParameterInfo, Texture, Pass) would otherwise
     // claim the Blue schema identities that share them.
     if (path.relative(sourceRoot, file).split(path.sep).slice(0, 3).join("/") === "resource/shader/compiler") continue;

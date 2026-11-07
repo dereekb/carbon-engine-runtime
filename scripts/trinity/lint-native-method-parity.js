@@ -9,8 +9,8 @@
 // declared surface, and enforces a per-class baseline ratchet exactly like
 // lint-optional-calls: a class's missing-method set may shrink, never grow.
 //
-// IT REPORTS. It never generates (operator, 2026-09-05: "it can blitz hand
-// crafted classes that haven't been maintained properly"). Carbon classes
+// IT REPORTS. It never generates, because that can blitz hand-crafted classes
+// that haven't been maintained properly. Carbon classes
 // with no JS class at all are counted informationally and NOT gated - class
 // existence is an ownership decision, not a lint's.
 //

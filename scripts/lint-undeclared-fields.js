@@ -1,7 +1,7 @@
 // Guards the class-shape rule that every property an object will ever have is
 // a declared class field above the constructor - private, runtime-only and
 // constructor-set ones included - and that nothing adds a property after
-// construction (class-ownership.md § Class-shape rules, operator 2026-10-19).
+// construction (class-ownership.md § Class-shape rules).
 //
 // WHY THIS SCRIPT EXISTS. A property that appears only because a constructor
 // or a method happened to assign it is invisible to the class's own

@@ -314,7 +314,7 @@ export function carbonRow(row)
     }
     const flags = (row.flags ?? []).reduce((value, flag) => value | (EDIT_FLAGS[flag] ?? NaN), 0);
     // A float view over the member (MAPFLOATARRAYSIZE), or a MAP_ATTRIBUTE over one field of an array element (m_x[i].field), is an
-    // accessor property under the exposed name (operator ruling, 2026-11-03): read-only for READ, persisted for READWRITE | PERSIST.
+    // accessor property under the exposed name: read-only for READ, persisted for READWRITE | PERSIST.
     // Any other flags have no ruled form.
     if (row.macro === "MAPFLOATARRAYSIZE" || (row.macro === "MAP_ATTRIBUTE" && /\]\s*\.\s*\w+\s*$/.test(row.member ?? "")))
     {
@@ -341,7 +341,7 @@ export function attributeKeys(carbon)
     // The only rename is a member private in Blue (HIDDEN): `_` plus its name (decorator-upgrade.md § 000a, docs d8a5bbe).
     const hidden = (carbon.flags & EDIT_FLAGS.HIDDEN) !== 0;
     if (carbon.indexed) return carbon.member ? [ carbon.member, ...(hidden ? [ `_${carbon.member}` ] : []) ] : undefined;
-    // We never put m_ into a JS name (operator, 2026-11-03): an exposed name that starts with it (EveVirtualCameraBehaviourVector3Damping
+    // We never put m_ into a JS name: an exposed name that starts with it (EveVirtualCameraBehaviourVector3Damping
     // "m_dampingRatio", TriStepToggleCubemap "m_showCubemap") is keyed without it, and the row keeps the exposed name.
     const exposed = carbon.name.replace(/^m_/, "");
     if (!hidden) return [ exposed ];

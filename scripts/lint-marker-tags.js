@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Implementation markers are JSDoc tags (decorator-upgrade.md § 00, operator 2026-10-30). This lint knows the complete
+// Implementation markers are JSDoc tags (decorator-upgrade.md § 00). This lint knows the complete
 // set, so a misspelt marker fails instead of passing as an unknown tag that every reader ignores:
 //
 //   @implemented, @adapted, @noop, @notSupported, @renamed, @cjs, @abstract, @notImplemented, @notUsed
