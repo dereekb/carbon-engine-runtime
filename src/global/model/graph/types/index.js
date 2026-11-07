@@ -15,11 +15,13 @@ import { CjsGraphTypeMap } from "./CjsGraphTypeMap.js";
 import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
 import { CjsGraphTypeString } from "./CjsGraphTypeString.js";
 import { CjsGraphTypeValues } from "./CjsGraphTypeValues.js";
+import { CjsGraphTypeValuesMap } from "./CjsGraphTypeValuesMap.js";
 
 export {
   CjsGraphTypeBool, CjsGraphTypeCString, CjsGraphTypeDouble, CjsGraphTypeDoubleArray, CjsGraphTypeFloat,
   CjsGraphTypeFloatArray, CjsGraphTypeInt64, CjsGraphTypeIntArray, CjsGraphTypeInvalid, CjsGraphTypeIRoot,
-  CjsGraphTypeList, CjsGraphTypeLong, CjsGraphTypeMap, CjsGraphTypeObject, CjsGraphTypeString, CjsGraphTypeValues
+  CjsGraphTypeList, CjsGraphTypeLong, CjsGraphTypeMap, CjsGraphTypeObject, CjsGraphTypeString, CjsGraphTypeValues,
+  CjsGraphTypeValuesMap
 };
 
 /** The handlers, built on first use: the object handlers and CjsGraph import each other. */
@@ -36,7 +38,8 @@ export function getGraphHandler(name)
     doubleArray: new CjsGraphTypeDoubleArray(), float: new CjsGraphTypeFloat(), floatArray: new CjsGraphTypeFloatArray(),
     int64: new CjsGraphTypeInt64(), intArray: new CjsGraphTypeIntArray(), invalid: new CjsGraphTypeInvalid(),
     iroot: new CjsGraphTypeIRoot(), list: new CjsGraphTypeList(), long: new CjsGraphTypeLong(), map: new CjsGraphTypeMap(),
-    object: new CjsGraphTypeObject(), string: new CjsGraphTypeString(), values: new CjsGraphTypeValues()
+    object: new CjsGraphTypeObject(), string: new CjsGraphTypeString(), values: new CjsGraphTypeValues(),
+    valuesMap: new CjsGraphTypeValuesMap()
   };
 
   return handlers[name];

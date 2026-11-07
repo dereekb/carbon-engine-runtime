@@ -12,6 +12,7 @@ import { IListNotify } from "../../exposure/IListNotify.js";
 import { INotify } from "../../exposure/INotify.js";
 import { getClassRegistrations, getRegisteredConstructor } from "../../exposure/classes/registry.js";
 import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
+import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { DeclaredClassName } from "../../format/IRootWriter.js";
 
@@ -43,6 +44,7 @@ export class CjsBlueGraph
     }
 
     CjsGraph.registerLibrary(classes);
+    CjsGraph.setMetadataStore(BeObjectMetadata);
   }
 
   /**
@@ -104,6 +106,12 @@ export class CjsBlueGraph
     const kind = field.type?.kind;
     const map = this._getMapType(field.type);
     if (map !== undefined) return this._getMapMember(field, map);
+
+    if (kind === "map")
+    {
+      const item = this._getItem(field.type.valueType);
+      if (item !== undefined) return { ...this._getFlags(field), type: "valuesMap", item };
+    }
 
     const item = this._getValuesItem(field.type);
     if (item !== null) return { ...this._getFlags(field), type: "values", item, collection: kind };
@@ -203,6 +211,20 @@ export class CjsBlueGraph
       type: "map",
       edge: { kind: "ref", collection: "map", type }
     };
+  }
+
+  /**
+   * What a Map or list of plain values holds: a type name, or a nested list of one.
+   * @param {string|object|undefined} type Declared item.
+   * @returns {string|object|undefined} The graph's item, or undefined when it is not plain.
+   */
+  static _getItem(type)
+  {
+    if (typeof type === "string") return Object.hasOwn(GRAPH_TYPES, type) && !KIND_EDGES[type] ? type : undefined;
+    if (type?.kind !== "list" && type?.kind !== "array") return undefined;
+
+    const item = this._getItem(type.itemType);
+    return item === undefined ? undefined : { type: "values", item, collection: type.kind };
   }
 
   /**

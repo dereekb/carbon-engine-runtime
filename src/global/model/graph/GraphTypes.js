@@ -121,8 +121,12 @@ export const GRAPH_TYPES = {
   list: scalar(VARTYPE.IROOT, "list"),
   structList: scalar(VARTYPE.IROOT, "list"),
   map: scalar(VARTYPE.IROOT, "map"),
-  values: scalar(VARTYPE.IROOT, "values")
+  values: scalar(VARTYPE.IROOT, "values"),
+  valuesMap: scalar(VARTYPE.IROOT, "valuesMap")
 };
+
+/** The bag key that holds an object's metadata, as Carbon's readers name it (DictReader.cpp:185). */
+export const GRAPH_METADATA_KEY = "__bluemetadata__";
 
 /**
  * The embedded classes a math member is wrapped in on the wire: persisted element names in

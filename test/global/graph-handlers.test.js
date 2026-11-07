@@ -504,3 +504,82 @@ test("a structure list loads from empty rows, not a constructor's", () =>
   assert.deepEqual(bag, { rows: [ {} ] });
   assert.equal(CjsGraph.from(Rows, bag).rows[0].value, 0);
 });
+
+test("a Map of plain values reads, writes and compares through its item, nested lists included", () =>
+{
+  class Maps { weights = new Map(); curves = new Map(); }
+  CjsGraph.define(Maps, { name: "ValuesMaps", members: [
+    { name: "weights", type: "valuesMap", item: "float64" },
+    { name: "curves", type: "valuesMap", item: { type: "values", item: "float64" } }
+  ] });
+
+  const object = new Maps(), { weights } = object;
+  object.weights.set("a", 1);
+  object.curves.set("b", [ 1, 2 ]);
+
+  assert.deepEqual(CjsGraph.get(object), { weights: { a: 1 }, curves: { b: [ 1, 2 ] } });
+  assert.equal(CjsGraph.set(object, { weights: { a: 1 }, curves: { b: [ 1, 2 ] } }), false);
+
+  CjsGraph.set(object, { weights: { a: 2, c: 3 } });
+  assert.equal(object.weights, weights, "the Map keeps its identity");
+  assert.deepEqual(Array.from(object.weights), [ [ "a", 2 ], [ "c", 3 ] ]);
+
+  const built = CjsGraph.from(Maps, { weights: { x: 1 } });
+  assert.equal(built.weights.get("x"), 1);
+  assert.throws(() => CjsGraph.set(object, { weights: { a: "no" } }), /Invalid value/);
+  assert.throws(() => CjsGraph.set(object, { weights: { a: NaN } }), /Invalid value/);
+  assert.equal(CjsGraph.compileMember({ name: "x", type: "valuesMap", item: "float64" }).destination, "dict");
+});
+
+test("metadata travels with a get and a set through the store it is given, and copy leaves it", () =>
+{
+  const table = new WeakMap();
+  const store = {
+    GetMetadata: object => table.get(object) ?? null,
+    Set(object, key, value) { const row = table.get(object) ?? {}; row[key] = value; table.set(object, row); }
+  };
+  class Tagged { value = 1; }
+  CjsGraph.define(Tagged, { name: "MetadataTagged", members: [ { name: "value", type: "float32" } ] });
+
+  CjsGraph.setMetadataStore(store);
+  try
+  {
+    const object = new Tagged();
+    store.Set(object, "sof_source_id", "7");
+
+    const bag = CjsGraph.get(object);
+    assert.deepEqual(bag, { __bluemetadata__: { sof_source_id: "7" } });
+
+    const built = CjsGraph.from(Tagged, bag);
+    assert.deepEqual(store.GetMetadata(built), { sof_source_id: "7" });
+    assert.equal(CjsGraph.set(built, bag), false, "metadata is not a member, so it is no change");
+
+    const target = new Tagged();
+    CjsGraph.copy(object, target);
+    assert.equal(store.GetMetadata(target), null, "Copier copies members only");
+  }
+  finally { CjsGraph.setMetadataStore(null); }
+});
+
+test("diff says what set would change and writes nothing", () =>
+{
+  class Part { value = 1; label = ""; }
+  class Whole { part = new Part(); name = ""; items = []; }
+  CjsGraph.define(Part, { name: "DiffPart", members: [ { name: "value", type: "float32" }, { name: "label", type: "string" } ] });
+  CjsGraph.define(Whole, { name: "DiffWhole", members: [
+    { name: "part", type: "rootRef", edge: { kind: "ref", type: Part } },
+    { name: "name", type: "string" },
+    { name: "items", type: "list", edge: { kind: "ref", collection: true, type: Part } }
+  ] });
+
+  const object = new Whole();
+  assert.equal(CjsGraph.diff(object, { name: "", part: { value: 1 } }), false);
+  assert.equal(CjsGraph.diff(object, { part: { value: 1 + 1e-7 } }), false, "inside the tolerance");
+
+  const values = { name: "a", part: { value: 2, label: "" }, items: [ { value: 3 } ] };
+  assert.deepEqual(CjsGraph.diff(object, values), { name: "a", part: { value: 2 }, items: [ { value: 3 } ] });
+  assert.equal(object.name, "");
+  assert.equal(object.part.value, 1);
+  assert.equal(object.items.length, 0);
+  assert.throws(() => CjsGraph.diff(object, { nothing: 1 }), /Unknown graph member/);
+});

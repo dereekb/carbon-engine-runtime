@@ -1,6 +1,6 @@
 import { BLUELISTEVENT } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
-import { GRAPH_TYPES, GRAPH_WRAPPERS, GraphOperation, VARTYPE } from "./GraphTypes.js";
+import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphOperation, VARTYPE } from "./GraphTypes.js";
 import { getGraphHandler } from "./types/index.js";
 
 /**
@@ -47,7 +47,10 @@ export class CjsGraph
   } ];
 
   /** Value keys that are not members. */
-  static _reserved = new Set([ "_type", "_id", "_ref" ]);
+  static _reserved = new Set([ "_type", "_id", "_ref", GRAPH_METADATA_KEY ]);
+
+  /** The store that holds object metadata, supplied by whoever owns one. Null keeps none. */
+  static _metadata = null;
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
@@ -127,7 +130,7 @@ export class CjsGraph
       signed: entry.signed === true,
       ctor: entry.ctor ?? null,
       check: entry.check ?? null,
-      item: member.item === undefined ? null : this.compileMember({ name: member.name, type: member.item }),
+      item: this._compileItem(member),
       persist: member.persist !== false,
       writable: member.writable !== false,
       notify: member.notify === true,
@@ -144,11 +147,28 @@ export class CjsGraph
     };
   }
 
+  /** The compiled entry for a member's items: a type name, or { type, item } for a nested list. @cjs */
+  static _compileItem(member)
+  {
+    if (member.item === undefined) return null;
+
+    return this.compileMember(typeof member.item === "string" ? { name: member.name, type: member.item } : { ...member.item, name: member.name });
+  }
+
+  /**
+   * Supplies the object metadata store: GetMetadata(object) and Set(object, key, value).
+   * @cjs The graph imports nothing of Blue; Blue hands over BeObjectMetadata.
+   */
+  static setMetadataStore(store)
+  {
+    this._metadata = store;
+  }
+
   /** Where a reader puts this member's value. @cjs */
   static _getDestination(edge, wrapped, member)
   {
     if (wrapped !== null) return "wrapper";
-    if (edge === null) return member.type === "values" ? "list" : null;
+    if (edge === null) return member.type === "values" ? "list" : member.type === "valuesMap" ? "dict" : null;
     if (edge.collection === "map") return "dict";
     if (edge.collection !== null) return edge.kind === "embed" ? "structureList" : "list";
 
@@ -326,6 +346,51 @@ export class CjsGraph
   }
 
   /**
+   * Returns what set would change, as values, or false, and writes nothing. A held object's
+   * differences nest, as set's record does; anything else is the value it would write.
+   * @cjs A list is one whole value.
+   */
+  static diff(object, values, options = {})
+  {
+    if (!this._isValues(values, "diff")) return false;
+
+    return this._diffObject(object, values, this._noTypes, this._beginSet(options, GraphOperation.SET));
+  }
+
+  /** The differences of one object. @cjs Reads only. */
+  static _diffObject(object, values, type, options)
+  {
+    const info = this._getObjectInfo(object, type);
+    if (values._id !== undefined) this._setAnchor(values._id, object, options);
+
+    const members = this._getMemberTable(info, GraphOperation.SET, options).byName;
+    let changes = false;
+
+    for (const name of Object.keys(values))
+    {
+      const member = members[name];
+
+      if (!member)
+      {
+        if (this._reserved.has(name) || info.compiled.byName[name] || info.declared.ownValues === true) continue;
+        throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
+      }
+
+      const value = values[name], stored = this._readMember(object, member);
+      if (this._isValueLike(stored, member, value, options)) continue;
+
+      if (changes === false) changes = {}; // alloc: only once something differs.
+
+      if (member.edgeKind !== null && member.collection === null && stored !== null && value !== null
+        && this.isPlain(value) && value._ref === undefined && (value._type === undefined || this.isType(stored, value._type)))
+        changes[name] = this._diffObject(stored, value, member.edgeType, options);
+      else changes[name] = value;
+    }
+
+    return changes;
+  }
+
+  /**
    * Writes one member through set.
    * @cjs
    */
@@ -366,7 +431,7 @@ export class CjsGraph
    */
   static copy(source, target, options = {})
   {
-    const values = this.get(source, { persistOnly: true, ...options, typeTags: true, full: true });
+    const values = this.get(source, { persistOnly: true, ...options, typeTags: true, full: true, metadata: false });
     const operation = this._beginSet({ ...options, validate: false }, GraphOperation.COPY);
     const changes = this.setObject(target, values, this._noTypes, operation);
     this._finish(operation);
@@ -380,7 +445,7 @@ export class CjsGraph
    */
   static clone(source, options = {})
   {
-    return this.from(null, this.get(source, { persistOnly: true, ...options, typeTags: true, full: true }), { ...options, validate: false });
+    return this.from(null, this.get(source, { persistOnly: true, ...options, typeTags: true, full: true, metadata: false }), { ...options, validate: false });
   }
 
   /**
@@ -419,6 +484,12 @@ export class CjsGraph
     const bag = {};
     if (options.refs) options.written.set(object, bag);
     if (options.forceTypeTags || (options.typeTags && (type.length === 0 || this.getClassInfo(type[0]) !== info))) bag._type = info.declared.name;
+
+    if (this._metadata !== null && options.metadata)
+    {
+      const metadata = this._metadata.GetMetadata(object);
+      if (metadata) bag[GRAPH_METADATA_KEY] = { ...metadata };
+    }
 
     const members = this._getMemberTable(info, GraphOperation.GET, options).members;
     const defaults = options.full ? null : this._getWriteDefaults(info, options);
@@ -745,6 +816,7 @@ export class CjsGraph
       roundTrip: options.roundTrip === true,
       refs: options.refs !== false,
       full: options.full === true,
+      metadata: options.metadata !== false,
       typeTags: options.typeTags === true,
       forceTypeTags: options.forceTypeTags === true,
       copyOverride: options.copyOverride ?? null,
@@ -801,6 +873,7 @@ export class CjsGraph
   static _setMembers(object, info, values, options)
   {
     if (values._id !== undefined) this._setAnchor(values._id, object, options);
+    if (values[GRAPH_METADATA_KEY] !== undefined && this._metadata !== null) this._readMetadata(object, values[GRAPH_METADATA_KEY]);
 
     const members = this._getMemberTable(info, GraphOperation.SET, options).byName;
     const names = Object.keys(values);
@@ -866,6 +939,16 @@ export class CjsGraph
       this._addCompletion(object, info, changes, nested, options.creating && !copying ? values : null, options);
 
     return changes;
+  }
+
+  /**
+   * Reads a bag's metadata into the store: string keys to string values.
+   * Modelled on: DictReader::ReadMetadata (blue/src/DictReader.cpp:188-213).
+   * @cjs
+   */
+  static _readMetadata(object, metadata)
+  {
+    for (const key of Object.keys(metadata)) this._metadata.Set(object, key, metadata[key]);
   }
 
   /** Writes one member, comparing as the operation requires. @cjs Returns as a handler's Set does. */
