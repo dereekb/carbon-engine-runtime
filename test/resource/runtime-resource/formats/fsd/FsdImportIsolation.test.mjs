@@ -15,6 +15,7 @@ const SHARED_FORMAT_MODULES = new Set([
     "blue/exposure/VarEntry.js",
     "blue/exposure/classes/registry.js",
     "blue/compose/interface.js",
+    "global/consts/blue.js",
     "global/consts/ccpLog.js",
     "resource/format/workerOptions.js",
     "global/model/graph/GraphTypes.js",
