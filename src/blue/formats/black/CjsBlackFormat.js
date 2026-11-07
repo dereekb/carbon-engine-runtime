@@ -363,7 +363,7 @@ export class CjsBlackFormat extends CjsFormat
     static createBlackObjectBuilder(bytes, context)
     {
             if (CjsBlackFormat.probeSupport(bytes)) return CjsBlackFormat.createObjectBuilder(bytes, { emit: "runtime" });
-            const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+            const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); // alloc: byte view
             let offset = 0;
             const reader = new YamlReader();
             reader.SetFileName(context?.path ?? "");

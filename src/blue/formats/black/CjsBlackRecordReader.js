@@ -7,9 +7,6 @@
 // - nothing is constructed, and neither Initialize nor notification runs;
 // - a member holds no storage yet, so arrays and nested records are created;
 // - an object met again is a `{ _ref }` marker, and the object it means gets `_id`.
-//
-// Registered in docs/architecture/non-carbon-extensions.md, "Plain values from a
-// Black file".
 import { CjsSchema } from "#schema";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
@@ -298,15 +295,14 @@ export class CjsBlackRecordReader extends BlackReader
     {
         const numEntries = this.ReadValue__Int32();
 
-        const dict = {};
+        const entries = [];
         for (let i = 0; i < numEntries; ++i)
         {
             const name = this.ReadString();
-            const value = this.ReadIRootClass();
-            Object.defineProperty(dict, name, { value, writable: true, enumerable: true, configurable: true });
+            entries.push([ name, this.ReadIRootClass() ]);
         }
 
-        holder[key] = dict;
+        holder[key] = Object.fromEntries(entries);
     }
 
     /**

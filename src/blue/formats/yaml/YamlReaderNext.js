@@ -899,8 +899,8 @@ export class YamlReaderNext extends IRootReaderBase
     // Native AllocateReadBuffer returns uint8_t*. Owners may expose wider JS
     // typed storage, so decode through its byte view without replacing it.
     const bytes = ArrayBuffer.isView(buffer)
-      ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
-      : new Uint8Array(buffer);
+      ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength) // alloc: byte view
+      : new Uint8Array(buffer); // alloc: byte view
     // Fixes CE-211: Carbon reads past the end; ours throws (Base64.cpp:92-100).
     if (text.length % 4) this._ReportError("Incomplete Base64 quartet would read outside the native input buffer");
     let size = 0;
@@ -1114,7 +1114,7 @@ export class YamlReaderNext extends IRootReaderBase
       const scalar = code & 7, unsigned = (code & 8) !== 0;
       if (scalar === 6)
       {
-        const vectors = new Float32Array(count * 4);
+        const vectors = new Float32Array(count * 4); // alloc: retained by the record
         if (count > 1) { this._ReadVectorBegin(); this._ReadVectorNext(); }
         for (let i = 0; i < count; ++i) this._ReadValue__Vector4(vectors.subarray(i * 4, i * 4 + 4));
         this._ReplaceNonFiniteElements(vectors, vectors.length, member.name);
@@ -1135,7 +1135,7 @@ export class YamlReaderNext extends IRootReaderBase
         default: this._ReportError("Unsupported type for structured lists");
       }
       if (count > 1) { this._ReadVectorBegin(); this._ReadVectorNext(); }
-      const vector = count > 1 ? (Storage ? new Storage(count) : new Array(count)) : null;
+      const vector = count > 1 ? (Storage ? new Storage(count) : new Array(count)) : null; // alloc: retained by the record
       let value;
       for (let index = 0; index < count; ++index)
       {
@@ -1204,7 +1204,7 @@ export class YamlReaderNext extends IRootReaderBase
   /** Buffers a host synchronous stream without exposing a second Red decoding path. */
   static _ReadStream(stream)
   {
-    const buffer = new Uint8Array(16384);
+    const buffer = new Uint8Array(16384); // alloc: one read buffer per stream
     const decoder = new TextDecoder();
     let text = "";
     for (;;)

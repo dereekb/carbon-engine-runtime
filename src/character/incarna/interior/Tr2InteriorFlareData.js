@@ -2,6 +2,7 @@
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { IRoot } from "#exposure/IRoot";
+import { vec2 } from "#math/vec2";
 
 /**
  * One image of an interior flare. Data only: nothing draws flares yet.
@@ -13,22 +14,22 @@ import { IRoot } from "#exposure/IRoot";
 export class Tr2InteriorFlareData extends IRoot
 {
   /** `m_positionWeight`: where this image sits on the line from the screen centre to the flare. */
-  positionWeight = new Float32Array([ 1, 1 ]);
+  positionWeight = vec2.fromValues(1, 1);
 
   /** `m_size`: the size in post-projection space. */
-  size = new Float32Array([ .1, .1 ]);
+  size = vec2.fromValues(.1, .1);
 
   /** `m_textureOffset`: the image's offset in the texture atlas. */
-  textureOffset = new Float32Array([ 0, 0 ]);
+  textureOffset = vec2.create();
 
   /** `m_textureSize`: the image's size in the texture atlas. */
-  textureSize = new Float32Array([ 1, 1 ]);
+  textureSize = vec2.fromValues(1, 1);
 
   /** `m_rotation`: whether the billboard turns with screen position. */
   rotation = false;
 
   /** `m_directionalStretch`: the stretch by screen position. */
-  directionalStretch = new Float32Array([ 1, 1 ]);
+  directionalStretch = vec2.fromValues(1, 1);
 
   /** `m_edgeFadeDistance`: the fade-out distance at the screen's edges. */
   edgeFadeDistance = 1;

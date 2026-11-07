@@ -2,6 +2,8 @@
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { IRoot } from "#exposure/IRoot";
+import { mat4 } from "#math/mat4";
+import { vec3 } from "#math/vec3";
 import { BlueList } from "../../../blue/exposure/BlueList.js";
 import { Tr2Mesh } from "../../../trinity/core/mesh/Tr2Mesh.js";
 import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
@@ -32,16 +34,16 @@ export class Tr2InteriorParticleObject extends IRoot
   meshes = new BlueList(Tr2Mesh, { className: "Tr2Mesh", listOps: 0 });
 
   /** `m_transform`. */
-  transform = new Float32Array([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]);
+  transform = mat4.create();
 
   /** `m_maxParticleRadius`: for the bounding box. */
   maxParticleRadius = 0;
 
   /** `m_shBoundsMin`: the SH lighting box's minimum. */
-  shBoundsMin = new Float32Array(3);
+  shBoundsMin = vec3.create();
 
   /** `m_shBoundsMax`: the SH lighting box's maximum. */
-  shBoundsMax = new Float32Array(3);
+  shBoundsMax = vec3.create();
 
   /** `m_depthOffset`: for transparency sorting. */
   depthOffset = 0;

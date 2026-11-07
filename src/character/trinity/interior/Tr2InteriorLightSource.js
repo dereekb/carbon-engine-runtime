@@ -4,7 +4,7 @@ import { ITr2DebugRenderable } from "#interfaces/ITr2DebugRenderable";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 // Source: trinity/trinity/Interior/Tr2InteriorLightSource.h
 //   trinity/trinity/Interior/Tr2InteriorLightSource.cpp
-import { type } from "#schema";
+import { meta, type } from "#schema";
 import { CcpTime, IInitialize, INotify, IsMatch, BlueList } from "#blue";
 import { ITr2InteriorLight } from "./ITr2InteriorLight.js";
 import { color } from "#math/color";
@@ -37,13 +37,6 @@ import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
     [ be.ATTR, "coneDirection", be.READWRITE | be.PERSIST | be.NOTIFY ],
     [ be.ATTR, "primaryLighting", be.READWRITE | be.PERSIST | be.NOTIFY ],
     [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
-    // Retired from Carbon; old interior records still write them (trinity a8dffa1a, Interior/Tr2InteriorLightSource_Blue.cpp).
-    [ be.ATTR, "shadowImportance", be.READWRITE | be.PERSIST | be.NOTIFY ],
-    [ be.ATTR, "importanceScale", be.READWRITE | be.PERSIST ],
-    [ be.ATTR, "importanceBias", be.READWRITE | be.PERSIST ],
-    [ be.ATTR, "affectTransparentObjects", be.READWRITE | be.PERSIST | be.NOTIFY ],
-    [ be.ATTR, "shadowResolution", be.READWRITE | be.PERSIST | be.NOTIFY ],
-    [ be.ATTR, "shadowCasterTypes", be.READWRITE | be.PERSIST | be.NOTIFY ],
     [ be.METHOD, "IsSpotLight", be.WRAP ]
   ]
 })
@@ -126,33 +119,36 @@ export class Tr2InteriorLightSource extends IRoot
   @type.color
   color = vec4.fromValues(1, 1, 1, 1);
 
-  /** m_shadowImportance (float), retired: read from old records, nothing uses it. */
+  // Retired from Carbon, so these rows are ours, not its exposure block. Old interior
+  // records still write them (trinity a8dffa1a, Interior/Tr2InteriorLightSource_Blue.cpp).
 
+  /** m_shadowImportance (float), retired: read from old records, nothing uses it. */
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
   @type.float32
   shadowImportance = 1;
 
   /** m_importanceScale (float), retired: read from old records, nothing uses it. */
-
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
   @type.float32
   importanceScale = 1;
 
   /** m_importanceBias (float), retired: read from old records, nothing uses it. */
-
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
   @type.float32
   importanceBias = 0;
 
   /** m_affectTransparentObjects (bool), retired: read from old records, nothing uses it. */
-
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
   @type.boolean
   affectTransparentObjects = true;
 
   /** m_shadowResolution (unsigned int), retired: read from old records, nothing uses it. */
-
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
   @type.uint32
   shadowResolution = 256;
 
   /** m_shadowCasterTypes (enum), retired: read from old records, nothing uses it. ST_ALL (ITr2Interior.h:169 at a8dffa1a). */
-
+  @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
   @type.int32
   shadowCasterTypes = 3;
 

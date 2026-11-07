@@ -2,6 +2,8 @@
 import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { IRoot } from "#exposure/IRoot";
+import { mat4 } from "#math/mat4";
+import { vec4 } from "#math/vec4";
 import { BlueList } from "../../../blue/exposure/BlueList.js";
 import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
 import { Tr2InteriorFlareData } from "./Tr2InteriorFlareData.js";
@@ -21,10 +23,10 @@ export class Tr2InteriorFlare extends IRoot
   name = "";
 
   /** `m_transform`: flare local space to world space. */
-  transform = new Float32Array([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]);
+  transform = mat4.create();
 
   /** `m_color`. */
-  color = new Float32Array([ 1, 1, 1, 1 ]);
+  color = vec4.fromValues(1, 1, 1, 1);
 
   /** `m_curveSets`: curve sets that animate the flare. */
   curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet", listOps: 0 });

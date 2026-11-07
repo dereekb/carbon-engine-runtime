@@ -66,7 +66,7 @@ function isAccepted(obj, entry)
 /**
  * Carbon's `IRootReaderBase`: members found by name, values read by VARTYPE.
  *
- * Carbon: IRootReaderBase (blue/src/IRootReader.h:55-155)
+ * Carbon: IRootReaderBase (blue/src/IRootReader.h:55-124)
  */
 export class IRootReaderBase
 {
