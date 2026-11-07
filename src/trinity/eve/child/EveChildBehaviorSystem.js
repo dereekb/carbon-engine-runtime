@@ -1,7 +1,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.h
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { BlueList, IsMatch } from "#blue";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { EveEntity } from "../EveEntity.js";
@@ -87,12 +87,12 @@ export class EveChildBehaviorSystem extends EveChildTransform
 
 
   @type.list("SplineTunnelGroup")
-  splineTunnels = [];
+  splineTunnels = new BlueList(SplineTunnelGroup, { className: "SplineTunnelGroup" });
 
   /** m_behaviorGroups (PBehaviorGroupVector) [READ, PERSIST] */
 
   @type.list("BehaviorGroup")
-  behaviorGroups = [];
+  behaviorGroups = new BlueList(BehaviorGroup, { className: "BehaviorGroup" });
 
   /** m_instanceCount (unsigned) [READ] */
   @type.uint32
@@ -146,6 +146,9 @@ export class EveChildBehaviorSystem extends EveChildTransform
   constructor()
   {
     super();
+    this.behaviorGroups.SetNotify(this);
+    this.splineTunnels.SetNotify(this);
+
     // Carbon's constructor memsets these records; child-mesh defaults differ.
     this._perObjectData.vs.Zero();
     this._perObjectData.ps.Zero();

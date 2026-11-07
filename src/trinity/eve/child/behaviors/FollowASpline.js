@@ -1,3 +1,4 @@
+import { BlueList, IListNotify } from "#blue";
 import { IRoot } from "../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/FollowASpline.h
@@ -33,7 +34,7 @@ const DEBUG_TRANSFORM = mat4.create();
 /** A steering behaviour that pulls unassigned drones into spline tunnel entrances and steers locked drones along their assigned tunnel's points toward the exit. */
 @be.define({
   name: "FollowASpline",
-  inherit: [ INotify, IBehavior ],
+  inherit: [ IListNotify, INotify, IBehavior ],
   // FollowASpline_Blue.cpp:22-37, in Carbon's order.
   interfaces: [ IBehavior, INotify ],
   members: [
@@ -76,7 +77,7 @@ export class FollowASpline extends IRoot
   /** m_splineTunnels (PSplineTunnelGroupVector) [READ, PERSIST] */
 
   @type.list("SplineTunnelGroup")
-  splineTunnels = [];
+  splineTunnels = new BlueList(SplineTunnelGroup, { className: "SplineTunnelGroup" });
 
   /** m_smoothPullFactor (float) [READWRITE, PERSIST] */
 
@@ -113,6 +114,17 @@ export class FollowASpline extends IRoot
   _returnForces = [];
 
   /**
+   * Carbon FollowASpline constructor (cpp:19).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.splineTunnels.SetNotify(this);
+  }
+
+  /**
    * Carbon FollowASpline::GetProcessPriority (cpp:32-35).
    *
    * @implemented
@@ -141,6 +153,10 @@ export class FollowASpline extends IRoot
    * branches are textually identical - each hands the group a bound
    * UpdateTunnelRegistry callback with debug colour 0xff5555aa. One body
    * here; the duplication is the donor's, not three behaviours.
+   *
+   * Carbon quirk, reproduced: LOADFINISHED carries no value and, unlike
+   * ProcessLifetime, this handler never rebuilds the registry, so a loaded
+   * behavior holds only system tunnels until remapTunnels runs.
    *
    * @implemented
    */
@@ -225,10 +241,6 @@ export class FollowASpline extends IRoot
     {
       if (this.shouldReassignTunnelIDs)
       {
-        // JS has no Blue list notify, so the local tunnel list refreshes here
-        // before the system tunnels are prepended (Carbon relies on
-        // OnListModified having filled m_privateTunnels already).
-        this.remapTunnels();
         this._ReassignTunnelIDsAndAddSystemTunnels(system);
         group.InitializeGeometryResource(); // reset all agents
         return forceVectors;

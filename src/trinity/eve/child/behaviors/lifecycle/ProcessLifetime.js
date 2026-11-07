@@ -1,3 +1,4 @@
+import { BlueList, IListNotify } from "#blue";
 import { IRoot } from "../../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
@@ -31,7 +32,7 @@ const SPAWN_POSITION = vec3.create();
 /** ProcessLifetime (eve/child/behaviors) - generated from schema shapeHash 1fd3ebfa.... */
 @be.define({
   name: "ProcessLifetime",
-  inherit: [ IInitialize, IBehavior ],
+  inherit: [ IListNotify, IInitialize, IBehavior ],
   // ProcessLifetime_Blue.cpp:21-36, in Carbon's order.
   interfaces: [ IBehavior, INotify, IInitialize ],
   members: [
@@ -62,7 +63,7 @@ export class ProcessLifetime extends IRoot
 
 
   @type.list("SplineTunnelGroup")
-  splineTunnels = [];
+  splineTunnels = new BlueList(SplineTunnelGroup, { className: "SplineTunnelGroup" });
 
   /** m_respawnAgentsOnDeath (bool) [READWRITE, PERSIST] */
 
@@ -114,7 +115,16 @@ export class ProcessLifetime extends IRoot
 
   _dronesThatDie = [];
 
-  _tunnelGroupSnapshot = [];
+  /**
+   * Carbon ProcessLifetime constructor (cpp:20).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.splineTunnels.SetNotify(this);
+  }
 
   /**
    * Carbon ProcessLifetime::Initialize (cpp:33-38).
@@ -125,39 +135,34 @@ export class ProcessLifetime extends IRoot
   Initialize()
   {
     this._intialSpawn = this.firstSpawnAtRandomPlaces;
-    this._WireTunnelGroups();
-    this.UpdateTunnelRegistry();
     return true;
   }
 
   /**
    * Carbon ProcessLifetime::OnListModified (ProcessLifetime.cpp:40-72): an inserted, removed or loaded spline tunnel
-   * group is handed the callback that rebuilds this behavior's tunnel registry, and the registry is rebuilt.
+   * group is handed the callback that rebuilds this behavior's tunnel registry, then the registry is rebuilt on every
+   * event. LOADFINISHED carries no value, so a loaded group gets no callback, as in Carbon.
    *
-   * @adapted inserted and loaded groups are re-wired as a whole list (_WireTunnelGroups) rather than one value at a
-   *   time.
+   * Carbon quirk, reproduced (ProcessLifetime.cpp:53-58): the REMOVED group is handed the callback again, so a group
+   * taken out of the list keeps rebuilding this behavior's tunnel registry.
+   *
+   * @implemented
    */
 
   OnListModified(event, _key = 0, _key2 = 0, value = null, list = null)
   {
     if (list !== this.splineTunnels) return;
-    const maskedEvent = event & BLUELISTEVENT.BELIST_EVENTMASK;
-    if (maskedEvent === BLUELISTEVENT.BELIST_REMOVED)
+
+    const kind = event & BLUELISTEVENT.BELIST_EVENTMASK;
+    if (kind === BLUELISTEVENT.BELIST_INSERTED || kind === BLUELISTEVENT.BELIST_REMOVED || kind === BLUELISTEVENT.BELIST_LOADFINISHED)
     {
-      // Carbon quirk, reproduced (ProcessLifetime.cpp:53-58): the REMOVED group is handed the callback again, so a
-      // group taken out of the list keeps rebuilding this behavior's tunnel registry.
       const handler = CjsSchema.cast(value, SplineTunnelGroup);
       if (handler)
       {
         handler.SetSystemTunnelFunctionReferenceAndColor(() => this.UpdateTunnelRegistry(), 0xff5555aa);
       }
     }
-    else if (![BLUELISTEVENT.BELIST_INSERTED, BLUELISTEVENT.BELIST_LOADFINISHED].includes(maskedEvent))
-    {
-      this.UpdateTunnelRegistry();
-      return;
-    }
-    this._WireTunnelGroups();
+
     this.UpdateTunnelRegistry();
   }
 
@@ -250,17 +255,8 @@ export class ProcessLifetime extends IRoot
 
   CalculateBehavior(agents, scratchData, deltaTime, group, system, _dronesInSearchRadius)
   {
-    if (!this._TunnelGroupsMatchSnapshot())
-    {
-      this._WireTunnelGroups();
-      this.UpdateTunnelRegistry();
-    }
     if (this._shouldReassignTunnelIDs)
     {
-      // JS has no Blue list notify, so the local tunnel list refreshes here
-      // before the system tunnels are prepended (Carbon relies on
-      // OnListModified having filled m_privateTunnels already).
-      this.UpdateTunnelRegistry();
       this._ReassignTunnelIDsAndAddSystemTunnels(system);
     }
 
@@ -747,33 +743,6 @@ export class ProcessLifetime extends IRoot
     quat.rotationArcCarbon(agent.rotation, Z_AXIS, potentialRotations[randomNbr]);
 
     data.assignedLifeTimeTunnel = tunnelIndex[randomNbr];
-  }
-
-  /**
-   * Snapshots the current spline tunnel group list and hands each group the
-   * callback that rebuilds this behavior's tunnel registry when the group's own
-   * contents change.
-   */
-  _WireTunnelGroups()
-  {
-    this._tunnelGroupSnapshot = this.splineTunnels.slice();
-    for (const group of this.splineTunnels)
-    {
-      group.SetSystemTunnelFunctionReferenceAndColor(() => this.UpdateTunnelRegistry(), 0xff5555aa);
-    }
-  }
-
-  /**
-   * Whether the spline tunnel group list still matches the snapshot taken when
-   * the groups were last wired; the per-frame mismatch check stands in for
-   * Carbon's Blue list change notifications, which JavaScript does not receive.
-   */
-  _TunnelGroupsMatchSnapshot()
-  {
-    return (
-      this._tunnelGroupSnapshot.length === this.splineTunnels.length &&
-      this._tunnelGroupSnapshot.every((group, index) => group === this.splineTunnels[index])
-    );
   }
 
 }

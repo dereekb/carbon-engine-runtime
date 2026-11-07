@@ -1,3 +1,4 @@
+import { BlueList, IListNotify } from "#blue";
 import { IRoot } from "../../../../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Eve/SpaceObject/Children/Behaviors/SplineTunnelGroup.h
@@ -12,6 +13,7 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { TunnelGroupType } from "../enums.js";
 import { SplineTunnel } from "./SplineTunnel.js";
 import { SplineTunnelPoint } from "./SplineTunnelPoint.js";
+import { Tr2CurveVector3 } from "../../../../curves/curve/Tr2CurveVector3.js";
 
 const DEBUG_TRANSFORM = mat4.create();
 const DEBUG_START = vec3.create();
@@ -19,7 +21,7 @@ const DEBUG_END = vec3.create();
 
 /** SplineTunnelGroup (eve/child/behaviors) - generated from schema shapeHash da595535.... */
 @be.define("SplineTunnelGroup")
-@be.inherit(INotify)
+@be.inherit(IListNotify, INotify)
 @be.mapInterface(INotify)
 export class SplineTunnelGroup extends IRoot
 {
@@ -42,7 +44,7 @@ export class SplineTunnelGroup extends IRoot
 
 
   @type.list("Tr2CurveVector3")
-  curveSets = [];
+  curveSets = new BlueList(Tr2CurveVector3, { className: "Tr2CurveVector3" });
 
   /** m_numBreakPoints (int32_t) [READWRITE, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
@@ -78,9 +80,16 @@ export class SplineTunnelGroup extends IRoot
 
   _debugColor = 0xffffff00;
 
-  // Re-entrancy guard: the registry callback may ask for the tunnels while
-  // they are being rebuilt.
-  _creatingTunnels = false;
+  /**
+   * Carbon SplineTunnelGroup constructor (cpp:17).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.curveSets.SetNotify(this);
+  }
 
   /**
    * Carbon SplineTunnelGroup::GetTunnelGroupType (cpp:24-27).
@@ -114,53 +123,41 @@ export class SplineTunnelGroup extends IRoot
    * Carbon method createSplineTunnels -> CreateSplineTunnels (cpp:37-79): one tunnel per curve, sampled at
    * breakPoints + 2 evenly spaced times, each point facing the next; then the registry callback, when one is set.
    *
-   * @adapted a re-entrant call (the callback reading GetTunnels) returns the tunnels being built instead of starting
-   *   again, and the tunnels are returned.
+   * @adapted the tunnels are returned.
    * @renamed CreateSplineTunnels
    */
   @be.mapMethodAndWrap()
   createSplineTunnels()
   {
-    if (this._creatingTunnels)
+    this.tunnels.length = 0;
+    const breakPoints = this.GetNumBreakPoints();
+    for (const curve of this.curveSets)
     {
-      return this.tunnels;
-    }
-    this._creatingTunnels = true;
-    try
-    {
-      this.tunnels.length = 0;
-      const breakPoints = this.GetNumBreakPoints();
-      for (const curve of this.curveSets)
+      const duration = curve.Length();
+      const step = duration / (breakPoints + 1);
+      const positions = [];
+      for (let index = 0; index < breakPoints + 2; index++)
       {
-        const duration = curve.Length();
-        const step = duration / (breakPoints + 1);
-        const positions = [];
-        for (let index = 0; index < breakPoints + 2; index++)
-        {
-          positions.push(curve.GetValue(index * step, vec3.create()));
-        }
-
-        const tunnel = new SplineTunnel();
-        for (let index = 0; index < positions.length; index++)
-        {
-          const point = new SplineTunnelPoint();
-          vec3.copy(point.pos, positions[index]);
-          const previous = index === positions.length - 1 ? positions[index - 1] : positions[index];
-          const next = index === positions.length - 1 ? positions[index] : positions[index + 1];
-          vec3.subtract(point.rot, next, previous);
-          tunnel.splinePoints.push(point);
-        }
-        tunnel.cylWidth = this.tunnelWidth;
-        tunnel.pullSize = this.entrancePullSize;
-        tunnel.pointOfNoReturnSize = this.entrySize;
-        tunnel.tunnelGroupType = this.tunnelGroupType;
-        this.tunnels.push(tunnel);
+        positions.push(curve.GetValue(index * step, vec3.create()));
       }
+
+      const tunnel = new SplineTunnel();
+      for (let index = 0; index < positions.length; index++)
+      {
+        const point = new SplineTunnelPoint();
+        vec3.copy(point.pos, positions[index]);
+        const previous = index === positions.length - 1 ? positions[index - 1] : positions[index];
+        const next = index === positions.length - 1 ? positions[index] : positions[index + 1];
+        vec3.subtract(point.rot, next, previous);
+        tunnel.splinePoints.push(point);
+      }
+      tunnel.cylWidth = this.tunnelWidth;
+      tunnel.pullSize = this.entrancePullSize;
+      tunnel.pointOfNoReturnSize = this.entrySize;
+      tunnel.tunnelGroupType = this.tunnelGroupType;
+      this.tunnels.push(tunnel);
     }
-    finally
-    {
-      this._creatingTunnels = false;
-    }
+
     if (this._changeSystemTunnelRegistry)
     {
       this._changeSystemTunnelRegistry();
@@ -187,16 +184,11 @@ export class SplineTunnelGroup extends IRoot
   /**
    * Returns the tunnel records (Carbon GetTunnels, cpp:81-84).
    *
-   * @adapted builds them on first access when curves are present, since the JS load path raises no curve-set list
-   *   notify to trigger the first CreateSplineTunnels.
+   * @implemented
    */
 
   GetTunnels()
   {
-    if (this.tunnels.length === 0 && this.curveSets.length !== 0 && !this._creatingTunnels)
-    {
-      this.createSplineTunnels();
-    }
     return this.tunnels;
   }
 

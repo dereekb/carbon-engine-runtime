@@ -176,7 +176,7 @@ test("ProcessLifetime wires groups and repairs stable tunnel IDs and empty bound
   const tunnelGroup = TunnelGroup();
   const lifetime = new ProcessLifetime();
   lifetime.firstSpawnAtRandomPlaces = false;
-  lifetime.splineTunnels.push(tunnelGroup);
+  lifetime.splineTunnels.Append(tunnelGroup);
   lifetime.Initialize();
   // Wiring the group rebuilds its tunnels (SetSystemTunnelFunctionReferenceAndColor), so take the tunnel after it.
   const [ localTunnel ] = tunnelGroup.GetTunnels();
@@ -201,17 +201,16 @@ test("ProcessLifetime wires groups and repairs stable tunnel IDs and empty bound
 });
 
 
-test("ProcessLifetime list callbacks re-wire removals (Carbon quirk) and detect direct pushes", () =>
+test("ProcessLifetime list callbacks re-wire removals (Carbon quirk) and wire inserted groups", () =>
 {
   const lifetime = new ProcessLifetime();
   const first = TunnelGroup();
-  lifetime.splineTunnels.push(first);
+  lifetime.splineTunnels.Append(first);
   lifetime.Initialize();
   assert.equal(typeof first._changeSystemTunnelRegistry, "function");
 
   const wired = first._changeSystemTunnelRegistry;
-  lifetime.splineTunnels.splice(0, 1);
-  lifetime.OnListModified(BLUELISTEVENT.BELIST_REMOVED, 0, 0, first, lifetime.splineTunnels);
+  lifetime.splineTunnels.Remove(0);
   // Carbon quirk (ProcessLifetime.cpp:53-58): the removed group is handed the callback again.
   assert.equal(typeof first._changeSystemTunnelRegistry, "function");
   assert.notEqual(first._changeSystemTunnelRegistry, wired, "re-wired on removal, not left as it was");
@@ -220,9 +219,8 @@ test("ProcessLifetime list callbacks re-wire removals (Carbon quirk) and detect 
   assert.equal(lifetime._shouldReassignTunnelIDs, true, "and calling it still rebuilds the removing behavior's registry");
 
   const second = TunnelGroup();
-  lifetime.splineTunnels.push(second);
-  lifetime.CalculateBehavior([], [], 0, new BehaviorGroup(), new EveChildBehaviorSystem(), []);
-  assert.equal(typeof second._changeSystemTunnelRegistry, "function", "a group pushed without notify is wired on the next update");
+  lifetime.splineTunnels.Append(second);
+  assert.equal(typeof second._changeSystemTunnelRegistry, "function");
 });
 
 
