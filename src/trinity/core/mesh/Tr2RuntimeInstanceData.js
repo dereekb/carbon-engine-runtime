@@ -263,10 +263,12 @@ export class Tr2RuntimeInstanceData
    *
    * @cjs Carbon keeps both private and never copies them. JS has callers that copy SOF-built
    *   instance data, and SOF's documents carry them.
-   * @returns {{layout: object[], rows: Array}} Plain values.
+   * @returns {{layout?: object[], rows?: Array}} Plain values; none while no layout is set.
    */
   GetOwnValues()
   {
+    if (this.#elements.length === 0) return {};
+
     return {
       layout: this.#elements.map(Tr2RuntimeInstanceData.#describeElement),
       rows: this.#rows.map(row => row.map(Tr2RuntimeInstanceData.#cloneValue))
@@ -295,10 +297,10 @@ export class Tr2RuntimeInstanceData
    */
   IsOwnValues({ layout, rows })
   {
-    const own = this.GetOwnValues();
+    const { layout: ownLayout = [], rows: ownRows = [] } = this.GetOwnValues();
 
-    return (layout === undefined || JSON.stringify(layout) === JSON.stringify(own.layout))
-      && (rows === undefined || JSON.stringify(rows) === JSON.stringify(own.rows));
+    return (layout === undefined || JSON.stringify(layout) === JSON.stringify(ownLayout))
+      && (rows === undefined || JSON.stringify(rows) === JSON.stringify(ownRows));
   }
 
   /**
