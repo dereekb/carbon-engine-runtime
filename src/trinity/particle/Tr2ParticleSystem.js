@@ -223,6 +223,12 @@ export class Tr2ParticleSystem
   @type.boolean
   updateSimulation = true;
 
+  /** m_updateBoundingBox (bool), retired at trinity 01619dd0: old interior records write it; nothing uses it. */
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
+
+  @type.boolean
+  updateBoundingBox = false;
+
   /** m_requiresSorting (bool) [READWRITE, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
