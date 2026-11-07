@@ -12,6 +12,7 @@ import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { mat4 } from "#math/mat4";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { ITr2AttributeGenerator } from "../attribute/ITr2AttributeGenerator.js";
 import { Tr2ParticleElementDeclaration } from "../element/Tr2ParticleElementDeclaration.js";
 
 // RenderDebugInfo scratch (debug drawing is single-threaded).
@@ -101,7 +102,7 @@ export class Tr2PlaneConstraint extends ITr2GenericParticleConstraint
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
 
   @type.list("ITr2AttributeGenerator")
-  generators = [];
+  generators = new BlueList(ITr2AttributeGenerator);
 
   /** m_particleRadiusComponent (std::string) [READWRITE, PERSIST] */
 

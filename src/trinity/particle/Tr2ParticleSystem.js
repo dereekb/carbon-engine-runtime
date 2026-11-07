@@ -20,6 +20,7 @@ import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { Tr2ParticleElementDeclaration } from "./element/Tr2ParticleElementDeclaration.js";
+import { ITr2ParticleForce } from "./force/ITr2ParticleForce.js";
 import { ITr2InstanceDataInstanceData, ITr2InstanceData } from "../core/mesh/ITr2InstanceData/index.js";
 import { ITr2GenericEmitterUpdateArguments } from "./ITr2GenericEmitter/index.js";
 import { ITr2GpuBuffer } from "../core/ITr2GpuBuffer.js";
@@ -160,7 +161,7 @@ export class Tr2ParticleSystem
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ParticleElementDeclaration")
-  elements = [];
+  elements = new BlueList(Tr2ParticleElementDeclaration, { className: "Tr2ParticleElementDeclaration" });
 
   /** m_isValid (bool) [READ] */
   @be.mapAttribute(be.READ)
@@ -183,7 +184,7 @@ export class Tr2ParticleSystem
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITr2ParticleForce")
-  forces = [];
+  forces = new BlueList(ITr2ParticleForce);
 
   /** m_emissionOnDeathEmitter (ITr2GenericEmitterPtr) [READWRITE, NOTIFY, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.NOTIFY | be.PERSIST)

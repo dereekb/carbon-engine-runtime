@@ -10,6 +10,7 @@ import { ITr2GenericParticleConstraint } from "./ITr2GenericParticleConstraint.j
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { ITr2AttributeGenerator } from "../attribute/ITr2AttributeGenerator.js";
 import { Tr2ParticleElementDeclaration } from "../element/Tr2ParticleElementDeclaration.js";
 
 /** A collision constraint that keeps particles outside or inside a sphere, reflecting velocity and triggering generators and emitters on contact. */
@@ -113,7 +114,7 @@ export class Tr2SphereConstraint extends ITr2GenericParticleConstraint
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
 
   @type.list("ITr2AttributeGenerator")
-  generators = [];
+  generators = new BlueList(ITr2AttributeGenerator);
 
   /** m_particleRadiusComponent (std::string) [READWRITE, PERSIST] */
 

@@ -1163,7 +1163,7 @@ test("particle emitters and near-field spheres enforce Carbon's shared element c
   constraintSystem.UpdateElementDeclaration();
   const collisionGenerator = new Tr2RandomUniformAttributeGenerator();
   collisionGenerator.elementType = Tr2ParticleElementDeclaration.Type.POSITION;
-  constraint.generators = [collisionGenerator];
+  constraint.generators.push(collisionGenerator);
   assert.equal(constraint.Bind(constraintSystem), true);
   constraint.generators.push(collisionGenerator);
   assert.equal(constraint.Bind(constraintSystem), false);
