@@ -5,13 +5,14 @@ import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#int
 // Source: trinity/trinity/Interior/Tr2InteriorLightSource.h
 //   trinity/trinity/Interior/Tr2InteriorLightSource.cpp
 import { type } from "#schema";
-import { CcpTime, IInitialize, INotify, IsMatch } from "#blue";
+import { CcpTime, IInitialize, INotify, IsMatch, BlueList } from "#blue";
 import { ITr2InteriorLight } from "./ITr2InteriorLight.js";
 import { color } from "#math/color";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { mat4 } from "#math/mat4";
 import { Tr2KelvinColor } from "../../../trinity/core/lighting/Tr2KelvinColor.js";
+import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
 
 /**
  * Authored interior light definition with position, color, falloff, cone, and
@@ -78,7 +79,7 @@ export class Tr2InteriorLightSource extends IRoot
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_primaryLighting (bool) [READWRITE, PERSIST, NOTIFY] */
 

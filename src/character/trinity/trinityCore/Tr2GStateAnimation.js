@@ -4,6 +4,8 @@ import { IInitialize } from "#exposure/IInitialize";
 import { ITr2AnimationUpdater } from "../../../trinity/core/animation/ITr2AnimationUpdater.js";
 // Source: trinity/trinity/Tr2GStateAnimation.h
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { Tr2GStateParameter } from "./Tr2GStateParameter.js";
 
 /** Character GState animation record for an external state-machine adapter. */
 @be.define({
@@ -74,7 +76,7 @@ export class Tr2GStateAnimation extends IRoot
 
   /** m_gStateParameterList (PTr2GStateParameterVector) [READ, PERSIST] */
   @type.list("Tr2GStateParameter")
-  parameters = [];
+  parameters = new BlueList(Tr2GStateParameter, { className: "Tr2GStateParameter" });
 
   /** m_grannyRes (TriGrannyResPtr) [READ] */
   @type.object.ref("TriGrannyRes")

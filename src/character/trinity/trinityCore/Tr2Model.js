@@ -9,6 +9,8 @@ import { TriBatchType } from "#consts/graphics";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../../trinity/core/context/Tr2RenderContext.js";
 import { CreateLodAllocations } from "../../../trinity/core/mesh/TriGeometryResAllocations.js";
 import { Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
+import { BlueList } from "#blue";
+import { Tr2Mesh } from "../../../trinity/core/mesh/Tr2Mesh.js";
 
 /** Named character model record grouping its Trinity mesh objects. */
 @be.define({
@@ -28,7 +30,7 @@ export class Tr2Model extends IRoot
   /** m_meshes (PTr2MeshVector) [READ, PERSIST] */
 
   @type.list("Tr2Mesh")
-  meshes = [];
+  meshes = new BlueList(Tr2Mesh, { className: "Tr2Mesh" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 

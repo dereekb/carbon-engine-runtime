@@ -92,7 +92,7 @@ test("uniqueness clones current authored edits and graph topology, with a fresh 
   const replacement = new WodPlaceableRes();
   const { owner, manager } = setup(t, () => replacement), value = owner();
   const source = new WodPlaceableRes(), model = new Tr2Model(), sharedMesh = mesh(7);
-  source.visualModel = model; model.meshes = [sharedMesh, sharedMesh]; source.nearFadeDistance = 123;
+  source.visualModel = model; model.meshes.push(sharedMesh, sharedMesh); source.nearFadeDistance = 123;
   assert.equal(source.IsReady(), true);
   value.placeableResPath = "res:/placeable.black"; value.placeableRes = source;
   CjsSchema.setValues(value, { isUnique: true });

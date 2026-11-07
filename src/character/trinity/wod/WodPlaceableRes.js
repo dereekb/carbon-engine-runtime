@@ -3,8 +3,9 @@
 // Source: trinity/trinity/Wod/WodPlaceableRes_Blue.cpp
 import { exposure as be } from "#be";
 import { type } from "#schema";
-import { IRoot } from "#blue";
+import { IRoot, BlueList } from "#blue";
 import { vec3 } from "#math/vec3";
+import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
 
 /** Authored placeable geometry, animations, fade distances and cached bounds. */
 @be.define({
@@ -40,7 +41,7 @@ export class WodPlaceableRes
   /** Curves animating the placeable graph. */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** Whether this resource participates in shadow casting. */
 
