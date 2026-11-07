@@ -326,8 +326,9 @@ export function FakeWebgl2()
 }
 
 /**
- * A render context stand-in: the resources ask it only for validity and the
- * WebGL2 context.
+ * A render context stand-in: the resources ask it for validity and the
+ * WebGL2 context, and have it bind its own framebuffer again after a copy or
+ * read (it has none, so that is the default framebuffer).
  *
  * @param {object} gl The fake context.
  * @param {boolean} [valid] Whether the context reports itself valid.
@@ -335,5 +336,5 @@ export function FakeWebgl2()
  */
 export function FakeRenderContext(gl, valid = true)
 {
-    return { IsValid: () => valid, GetWebgl2: () => gl };
+    return { IsValid: () => valid, GetWebgl2: () => gl, _RebindFramebuffer: () => gl.bindFramebuffer(gl.FRAMEBUFFER, null) };
 }

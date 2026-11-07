@@ -1273,6 +1273,19 @@ export class Tr2RenderContextALWebgl2
   }
 
   /**
+   * Binds this context's framebuffer for drawing and reading again, after a
+   * texture copy, resolve or read borrowed a framebuffer binding. The context
+   * keeps its own framebuffer bound, so this restores it without reading the
+   * binding back, which would wait for the GPU process.
+   *
+   * @cjs WebGL2 copies and reads through framebuffers; dx11 does neither on the bound targets.
+   */
+  _RebindFramebuffer()
+  {
+    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._framebuffer);
+  }
+
+  /**
    * Attaches the bound targets to the framebuffer (`:1322-1423`). As dx11,
    * a depth-stencil whose size does not match slot zero's target is not bound
    * yet - the caller is between setting the two - and changing slot zero, or

@@ -972,13 +972,12 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     const pitch = width * GetBytesPerPixel(this._desc.GetFormat());
 
     const stagingBuffer = gl.createBuffer();
-    const previous = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
 
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, stagingBuffer);
     gl.bufferData(gl.PIXEL_PACK_BUFFER, pitch * height, gl.STREAM_READ);
     this._BindForRead(gl, mip, region.startFace);
     gl.readPixels(x, y, width, height, this._layout.format, this._layout.type, 0);
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previous);
+    al._RebindFramebuffer();
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
     return new Tr2ReadbackALWebgl2(gl, stagingBuffer, pitch, pitch * height, this._layout.bgra, al.GetRecordingFrameNumber());
@@ -1020,11 +1019,10 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     const pitch = width * GetBytesPerPixel(this._desc.GetFormat());
 
     const bytes = new Uint8Array(pitch * height);
-    const previous = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
 
     this._BindForRead(gl, mip, region.startFace);
     gl.readPixels(x, y, width, height, this._layout.format, this._layout.type, PixelsFor(gl, this._layout.type, bytes));
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previous);
+    al._RebindFramebuffer();
 
     this._stagingTexture = this._layout.bgra ? SwapRedBlue(bytes) : bytes;
     return { result: ALResult.S_OK, data: this._stagingTexture, pitch };
@@ -1107,20 +1105,21 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     this._writeRegion = null;
   }
 
-  /** Binds the texture, uploads one subresource, and restores the binding. */
+  /**
+   * Binds the texture and uploads one subresource. The binding is left as it
+   * is: every draw binds all of its units (`_ApplyTextureUnits`), and reading
+   * the old binding back would wait for the GPU process.
+   */
   _Upload(slice, mip, box, source, pitch, slicePitch)
   {
     const gl = this._gl;
-    const previous = gl.getParameter(this._BindingOf(gl, this._target));
-
     gl.bindTexture(this._target, this._texture);
     this._UploadLevel(gl, this._layout, this._texture, slice, mip, box, source, pitch, slicePitch);
-    gl.bindTexture(this._target, previous);
   }
 
   /**
    * Writes pixels into one subresource (`:1052-1097`). Browser video is uploaded
-   * directly with straight alpha; GL unpack and binding state are restored.
+   * directly with straight alpha; GL unpack state is left at WebGL's defaults.
    *
    * @adapted
    * @param {Tr2TextureSubresource} region The subresource to write.
@@ -1146,17 +1145,15 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
       const gl = this._gl;
       if (this._target !== gl.TEXTURE_2D || region.HasBox() || region.startMipLevel !== 0
         || this._layout.compressed || this._layout.type !== gl.UNSIGNED_BYTE) return ALResult.E_INVALIDARG;
-      const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
-      const names = [gl.UNPACK_FLIP_Y_WEBGL, gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
-        gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.UNPACK_ALIGNMENT, gl.UNPACK_ROW_LENGTH,
-        gl.UNPACK_SKIP_PIXELS, gl.UNPACK_SKIP_ROWS];
-      const values = names.map(name => gl.getParameter(name));
-      const unpackBuffer = gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING);
+      // NO GL STATE IS READ BACK, since `getParameter` waits for the GPU process.
+      // Every AL upload leaves unpack state at WebGL's defaults (straight alpha,
+      // no flip, browser colour conversion, no unpack buffer), so only the
+      // alignment changes and is reset. The binding is left: every draw binds
+      // all of its units.
       try
       {
-        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
         gl.bindTexture(gl.TEXTURE_2D, this._texture);
-        [false, false, gl.BROWSER_DEFAULT_WEBGL, 1, 0, 0, 0].forEach((value, i) => gl.pixelStorei(names[i], value));
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, source);
         // WebGL2 has no reinterpretation views. Allocate the sRGB twin once
         // for a video, then update both cached views from each decoded frame.
@@ -1173,9 +1170,7 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
       }
       finally
       {
-        names.forEach((name, i) => gl.pixelStorei(name, values[i]));
-        gl.bindTexture(gl.TEXTURE_2D, previous);
-        gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpackBuffer);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
       }
       return ALResult.S_OK;
     }
@@ -1219,9 +1214,9 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
       dst.ClampToTexture(this._desc);
     }
 
+    // No binding is read back (that waits for the GPU process): the context's
+    // framebuffer is bound again afterwards, and every draw binds its units.
     const gl = this._gl;
-    const previousRead = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
-    const previousTexture = gl.getParameter(this._BindingOf(gl, this._target));
     const box = { ...src.box };
     const mipCount = Math.min(src.GetMipCount(), dst.GetMipCount());
 
@@ -1257,8 +1252,7 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
       box.bottom = Math.max(box.bottom >> 1, box.top + 1);
     }
 
-    gl.bindTexture(this._target, previousTexture);
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previousRead);
+    al._RebindFramebuffer();
 
     return ALResult.S_OK;
   }
@@ -1279,11 +1273,10 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
     if (this._desc.GetTrueMipCount() <= 1) return ALResult.S_OK;
 
+    // The binding is left, not read back and restored: every draw binds all of its units.
     const gl = this._gl;
-    const previous = gl.getParameter(this._BindingOf(gl, this._target));
     gl.bindTexture(this._target, this._texture);
     gl.generateMipmap(this._target);
-    gl.bindTexture(this._target, previous);
 
     return ALResult.S_OK;
   }
@@ -1315,9 +1308,6 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     if (destination.GetMsaaDesc().samples > 1) return ALResult.E_INVALIDARG;
 
     const gl = this._gl;
-    const previousRead = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
-    const previousDraw = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING);
-
     this._BindForRead(gl, 0, 0);
 
     if (!destination._framebuffer) destination._framebuffer = gl.createFramebuffer();
@@ -1327,8 +1317,8 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     const width = this._desc.GetWidth(), height = this._desc.GetHeight();
     gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
-    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previousRead);
-    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, previousDraw);
+    // Not read back and restored, which would wait for the GPU process.
+    al._RebindFramebuffer();
 
     return ALResult.S_OK;
   }

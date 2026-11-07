@@ -6,18 +6,24 @@ import { PixelFormat, ShaderType, Tr2CpuUsage, Tr2GpuUsage } from "../../../npm/
 import { writeGlslBackendBlock } from "../../../npm/dist/resource/formats/webgl/core/glslBackendBlock.js";
 import { FakeWebgl2 } from "./fakeWebgl2.js";
 
-/** A fake device with exact snapshots of integer subimage uploads and unpack state. */
+/**
+ * A fake device with exact snapshots of integer subimage uploads and unpack
+ * state. Unpack state starts at WebGL's defaults, where every AL upload leaves it.
+ */
 function device(t)
 {
     const { gl, calls } = FakeWebgl2();
     const state = new Map([
-        [ gl.MAX_TEXTURE_SIZE, 16384 ], [ gl.UNPACK_ALIGNMENT, 8 ], [ gl.UNPACK_ROW_LENGTH, 7 ],
-        [ gl.UNPACK_SKIP_ROWS, 2 ], [ gl.UNPACK_SKIP_PIXELS, 3 ],
-        [ gl.UNPACK_FLIP_Y_WEBGL, true ], [ gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true ],
+        [ gl.MAX_TEXTURE_SIZE, 16384 ], [ gl.UNPACK_ALIGNMENT, 4 ], [ gl.UNPACK_ROW_LENGTH, 0 ],
+        [ gl.UNPACK_SKIP_ROWS, 0 ], [ gl.UNPACK_SKIP_PIXELS, 0 ],
+        [ gl.UNPACK_FLIP_Y_WEBGL, false ], [ gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false ],
         [ gl.PIXEL_UNPACK_BUFFER_BINDING, null ]
     ]);
-    const parameter = gl.getParameter, bind = gl.bindBuffer, store = gl.pixelStorei;
-    gl.getParameter = name => state.has(name) ? state.get(name) : parameter(name);
+    const parameter = gl.getParameter, bind = gl.bindBuffer, store = gl.pixelStorei, bindTexture = gl.bindTexture;
+    const reads = [];
+    gl.getParameter = name => { reads.push(name); return state.has(name) ? state.get(name) : parameter(name); };
+    let bound2D = null;
+    gl.bindTexture = (target, texture) => { if (target === gl.TEXTURE_2D) bound2D = texture; bindTexture(target, texture); };
     gl.bindBuffer = (target, value) =>
     {
         if (target === gl.PIXEL_UNPACK_BUFFER) state.set(gl.PIXEL_UNPACK_BUFFER_BINDING, value);
@@ -36,13 +42,13 @@ function device(t)
         assert.equal(state.get(gl.UNPACK_SKIP_ROWS), 0);
         assert.equal(state.get(gl.UNPACK_SKIP_PIXELS), 0);
         assert.equal(state.get(gl.PIXEL_UNPACK_BUFFER_BINDING), null);
-        uploads.push({ texture: gl.getParameter(gl.TEXTURE_BINDING_2D), x, y, width, height,
+        uploads.push({ texture: bound2D, x, y, width, height,
             words: words.slice(offset, offset + width * height * 4) });
     };
     const context = new Tr2RenderContextALWebgl2({ gl });
     assert.equal(context.CreateDevice({ mode: { width: 8, height: 8 } }), ALResult.S_OK);
     t.after(() => context.Destroy());
-    return { gl, calls, context, state, uploads };
+    return { gl, calls, context, state, uploads, reads };
 }
 
 /** Existing typed-buffer source contract; data is deliberately passed with raw float bit patterns. */
@@ -111,7 +117,7 @@ function pixels(uploads, view)
 
 test("packed views resolve both registers, preserve raw words and padding, and share across sets", t =>
 {
-    const { gl, calls, context, state, uploads } = device(t);
+    const { gl, calls, context, state, uploads, reads } = device(t);
     const indexWords = new Uint32Array([ 0, 3, 5, 7, 0xffffffff, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61 ]);
     const dataWords = new Uint32Array([ 0x7fc12345, 0xffc54321, 0x80000000, 0x3f800000, 1, 2, 3, 4,
         5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26 ]);
@@ -124,11 +130,10 @@ test("packed views resolve both registers, preserve raw words and padding, and s
     assert.equal(view.dataWords.buffer, data.TrinityALImpl_GetObject().GetCpuBytes().buffer);
     assert.equal(view.tail.byteLength, 16);
     const before = new Map(state);
-    const previousTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, previousTexture);
+    reads.length = 0;
     assert.equal(view.index._GetPackedShaderResourceTexture(view), view.texture);
-    assert.equal(gl.getParameter(gl.TEXTURE_BINDING_2D), previousTexture);
-    assert.deepEqual(state, before, "unpack state is restored");
+    assert.deepEqual(reads, [], "no GL state is read back: getParameter waits for the GPU process");
+    assert.deepEqual(state, before, "unpack state stays at the defaults");
     const expected = new Uint32Array(view.width * view.height * 4);
     expected.set(indexWords);
     expected.set(dataWords, view.dataTexelBase * 4);

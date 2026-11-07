@@ -802,40 +802,15 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
     if (!view.texture || view.index !== this) return null;
     if (view.indexStart >= view.indexEnd && view.dataStart >= view.dataEnd) return view.texture;
     const gl = this._gl;
-    const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
-    const unpack = gl.getParameter(gl.PIXEL_UNPACK_BUFFER_BINDING);
-    const alignment = gl.getParameter(gl.UNPACK_ALIGNMENT);
-    const rowLength = gl.getParameter(gl.UNPACK_ROW_LENGTH);
-    const skipRows = gl.getParameter(gl.UNPACK_SKIP_ROWS);
-    const skipPixels = gl.getParameter(gl.UNPACK_SKIP_PIXELS);
-    const flip = gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL);
-    const premultiply = gl.getParameter(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL);
+    // NO GL STATE IS READ BACK OR RESTORED. Every AL upload leaves the unpack
+    // state at WebGL's defaults, which these rows need, and no unpack buffer is
+    // ever bound; the render context binds this unit's texture straight after.
+    // A `getParameter` here waits for the GPU process to drain the frame so far.
     gl.bindTexture(gl.TEXTURE_2D, view.texture);
-    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
-    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
-    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
-    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    try
-    {
-      this._UploadPackedShaderResourceRange(view, view.indexWords, view.indexStart, view.indexEnd, 0);
-      this._UploadPackedShaderResourceRange(view, view.dataWords, view.dataStart, view.dataEnd, view.dataTexelBase);
-      view.indexStart = view.dataStart = Infinity;
-      view.indexEnd = view.dataEnd = 0;
-    }
-    finally
-    {
-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, alignment);
-      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, rowLength);
-      gl.pixelStorei(gl.UNPACK_SKIP_ROWS, skipRows);
-      gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, skipPixels);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flip);
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply);
-      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpack);
-      gl.bindTexture(gl.TEXTURE_2D, previous);
-    }
+    this._UploadPackedShaderResourceRange(view, view.indexWords, view.indexStart, view.indexEnd, 0);
+    this._UploadPackedShaderResourceRange(view, view.dataWords, view.dataStart, view.dataEnd, view.dataTexelBase);
+    view.indexStart = view.dataStart = Infinity;
+    view.indexEnd = view.dataEnd = 0;
     return view.texture;
   }
 
@@ -906,12 +881,12 @@ export class Tr2BufferALWebgl2 extends Tr2DeviceResourceAL
       : layout.type === gl.INT ? new Int32Array(padded.buffer)
         : new Uint32Array(padded.buffer);
 
-    const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
+    // Not restored: the render context binds this unit's texture straight
+    // after, and reading the binding back would wait for the GPU process.
     gl.bindTexture(gl.TEXTURE_2D, this._srv);
     gl.texImage2D(gl.TEXTURE_2D, 0, layout.internalFormat, width, height, 0, layout.format, layout.type, source);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.bindTexture(gl.TEXTURE_2D, previous);
 
     this._srvDirty = false;
   }
