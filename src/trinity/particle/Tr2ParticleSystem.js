@@ -56,17 +56,30 @@ export class Tr2ParticleSystem
 
 
   /**
-   * Carbon's constructor: joins the system list and binds the constraint list.
+   * Carbon's constructor: binds the constraint list.
    *
-   * @adapted Carbon registers with the device here, as the Tr2DeviceResource
-   *   base constructor does (Tr2DeviceResource.cpp:6-9). Here it registers on
-   *   use (IsGood at its use site), so one built and never drawn is never listed
-   *   and one left unused is released (docs internal/decisions/device-resource-registration.md).
+   * @adapted Carbon joins s_allSystems (cpp:80) and registers with the device
+   *   here, as the Tr2DeviceResource base constructor does (Tr2DeviceResource.cpp:6-9).
+   *   Both happen on use instead (KeepAlive, from IsGood at its use site), because
+   *   JS has no destructor to take either out again: one built and never drawn is
+   *   never listed and one left unused is released
+   *   (docs internal/decisions/device-resource-registration.md).
    */
   constructor()
   {
-    Tr2ParticleSystem.getAllSystems().add(this);
     this.constraints.SetNotify(this);
+  }
+
+  /**
+   * Stamps use, registers with the device and joins s_allSystems, so the list
+   * follows the device registration: in on use, out on idle expiry.
+   *
+   * @cjs Use-driven membership; Carbon lists a system from construction (cpp:80).
+   */
+  KeepAlive()
+  {
+    if (this._state !== Tr2DeviceResourceState.DESTRUCTED) Tr2ParticleSystem.getAllSystems().add(this);
+    Tr2DeviceResource.prototype.KeepAlive.call(this);
   }
 
   /**
@@ -897,10 +910,15 @@ export class Tr2ParticleSystem
    * Releases the AL allocation and declaration while retaining CPU particles.
    * JS explicitly destroys the handle instead of replacing a C++ RAII value.
    *
-   * @adapted
+   * @adapted Idle expiry also leaves s_allSystems, standing in for the erase in
+   *   Carbon's destructor (cpp:91), which JS does not have. TriDevice.CollectResources
+   *   unregisters before it releases, so a stale generation means expiry; a device
+   *   reset or a declaration rebuild leaves the registration, and the listing, alone.
    */
   ReleaseResources()
   {
+    if (this._generation !== this._registeredGeneration) Tr2ParticleSystem.getAllSystems().delete(this);
+
     this._declaration = Tr2EffectStateManager.Unknown;
     this._vertexBuffer?.Destroy();
     this._vertexBuffer = null;
@@ -1566,12 +1584,14 @@ export class Tr2ParticleSystem
   }
 
   /**
-   * Carbon GetAllSystems (cpp:874-878): every live particle system. The
-   * constructor adds a system and Destruct, which stands in for Carbon's
-   * destructor (cpp:91), removes it.
+   * Carbon GetAllSystems (cpp:874-878): every live particle system.
    *
    * Carbon's std::set<Tr2ParticleSystem*> is ordered by address, so its
    * order means nothing; this Set's insertion order serves.
+   *
+   * @adapted Holds systems in use, not every live one: a strong Set entry would
+   *   own the system and JS has no destructor to erase it (cpp:91). A system
+   *   joins in KeepAlive and leaves on idle expiry (ReleaseResources) or Destruct.
    * @returns {Set<Tr2ParticleSystem>}
    */
 
@@ -1588,7 +1608,10 @@ export class Tr2ParticleSystem
    * assigned, so the same-time early return never fires (cpp:848-856).
    *
    * @adapted Tr2ParallelDo becomes a loop, and the CCP_STATS counters it
-   *   resets and publishes are omitted. Nothing in Carbon calls it.
+   *   resets and publishes are omitted. Reaches only the systems in use
+   *   (getAllSystems), where Carbon reaches every live one, because JS has no
+   *   destructor to end a listing. Nothing in Carbon calls it, and nothing here
+   *   does either: owners update their own systems, which idle expiry leaves alone.
    * @param {ITr2GenericEmitterUpdateArguments} updateArguments
    */
 
