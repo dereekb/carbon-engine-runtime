@@ -3,11 +3,15 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
-import { blue, EnumRegistrationType } from "#blue";
+import { blue, EnumRegistrationType, BlueList } from "#blue";
 import { EveSOFDataFactionColorSet } from "../faction/EveSOFDataFactionColorSet.js";
 import { EveSOFDataLogoSet } from "../shared/EveSOFDataLogoSet.js";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
+import { EveSOFDataDecalIndexBuffer } from "../shared/EveSOFDataDecalIndexBuffer.js";
+import { EveSOFDataMultiHullDecalIndexBuffers } from "./EveSOFDataMultiHullDecalIndexBuffers.js";
+import { EveSOFDataParameter } from "../shared/EveSOFDataParameter.js";
+import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
 
 /** Defines a logo or usage decal with faction color, bone and transform placement, mesh and material data, and single- or multi-hull index buffers. */
 @be.define({
@@ -80,22 +84,22 @@ export class EveSOFDataHullDecalSetItem extends IRoot
   /** m_parameters (PEveSOFDataParameterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataParameter")
-  parameters = [];
+  parameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTexture")
-  textures = [];
+  textures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /** m_indexBuffers (PEveSOFDataDecalIndexBufferVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataDecalIndexBuffer")
-  indexBuffers = [];
+  indexBuffers = new BlueList(EveSOFDataDecalIndexBuffer, { className: "EveSOFDataDecalIndexBuffer" });
 
   /** m_multiHullIndexBuffers (PEveSOFDataMultiHullDecalIndexBuffersVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataMultiHullDecalIndexBuffers")
-  multiHullIndexBuffers = [];
+  multiHullIndexBuffers = new BlueList(EveSOFDataMultiHullDecalIndexBuffers, { className: "EveSOFDataMultiHullDecalIndexBuffers" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 

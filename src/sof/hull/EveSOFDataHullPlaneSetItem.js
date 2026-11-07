@@ -8,6 +8,8 @@ import { EveSOFDataFactionColorSet } from "../faction/EveSOFDataFactionColorSet.
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
+import { BlueList } from "#blue";
+import { EveSOFDataPointLightAttachment } from "../shared/EveSOFDataPointLightAttachment.js";
 
 /** Defines a plane item's transform, colors, blink and UV scrolling, atlas selection, groups, intensity, and point-light contribution. */
 @be.define({
@@ -129,7 +131,7 @@ export class EveSOFDataHullPlaneSetItem extends IRoot
   /** m_lights (PEveSOFDataPointLightAttachmentVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPointLightAttachment")
-  lights = [];
+  lights = new BlueList(EveSOFDataPointLightAttachment, { className: "EveSOFDataPointLightAttachment" });
 
   /** m_intensity (float) [READWRITE, PERSIST] */
 

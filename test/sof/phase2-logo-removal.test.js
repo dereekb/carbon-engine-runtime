@@ -102,5 +102,5 @@ test("custom composition preserves reusable outputs and empty-base-slot behavior
   const result = EveSOFDataLogoSet.combine(set, null);
   assert.deepEqual(result.logos[0].AssignTextures({}), { LogoMap: "base" });
   assert.ok(result.logos[1] instanceof EveSOFDataLogo);
-  assert.deepEqual(result.logos[1].textures, []);
+  assert.deepEqual(Array.from(result.logos[1].textures), []);
 });

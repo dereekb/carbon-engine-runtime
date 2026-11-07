@@ -3,6 +3,9 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:532-543
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataGenericString } from "./EveSOFDataGenericString.js";
+import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
 
 /** Declares the parameters and textures accepted by a decal shader and builds its configuration record.
  * Native IRoot-only data with a self-only Blue table. Independently initialized
@@ -41,7 +44,7 @@ export class EveSOFDataGenericDecalShader extends IRoot
    */
 
   @type.list("EveSOFDataGenericString")
-  parameters = [];
+  parameters = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /**
    * Owned named texture defaults used to seed decal shader resources; native m_defaultTextures
@@ -50,7 +53,7 @@ export class EveSOFDataGenericDecalShader extends IRoot
    */
 
   @type.list("EveSOFDataTexture")
-  defaultTextures = [];
+  defaultTextures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /**
    * Owned texture binding names to inherit from the parent hull mesh when building decals; native
@@ -59,7 +62,7 @@ export class EveSOFDataGenericDecalShader extends IRoot
    */
 
   @type.list("EveSOFDataGenericString")
-  parentTextures = [];
+  parentTextures = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /**
    * Native policy selecting the additive pass so these decals render above other decals;

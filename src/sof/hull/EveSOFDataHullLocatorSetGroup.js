@@ -3,6 +3,7 @@ import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { IEveSOFDataHullLocatorSet } from "./IEveSOFDataHullLocatorSet.js";
+import { BlueList } from "#blue";
 
 /** Recursively groups polymorphic locator-set records under one name. */
 @be.define({
@@ -20,7 +21,7 @@ export class EveSOFDataHullLocatorSetGroup extends IEveSOFDataHullLocatorSet
   /** m_locatorSets (PIEveSOFDataHullLocatorSetVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullLocatorSet")
-  locatorSets = [];
+  locatorSets = new BlueList(IEveSOFDataHullLocatorSet);
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 

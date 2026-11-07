@@ -3,6 +3,8 @@ import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { IEveSOFDataHullLocatorSet } from "./IEveSOFDataHullLocatorSet.js";
+import { BlueList } from "#blue";
+import { EveSOFDataTransform } from "../shared/EveSOFDataTransform.js";
 
 /** Provides a concrete named list of hull locators. */
 @be.define({
@@ -20,7 +22,7 @@ export class EveSOFDataHullLocatorSet extends IEveSOFDataHullLocatorSet
   /** m_locators (PEveSOFDataTransformVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTransform")
-  locators = [];
+  locators = new BlueList(EveSOFDataTransform, { className: "EveSOFDataTransform" });
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 

@@ -3,6 +3,8 @@ import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { IEveSOFDataHullExtensionPlacementDistribution } from "./IEveSOFDataHullExtensionPlacementDistribution.js";
+import { BlueList } from "#blue";
+import { EveSOFDataDistributionDepletionCounter } from "./EveSOFDataDistributionDepletionCounter.js";
 
 /** Tests named depletion counters as a condition for a hull-extension placement. */
 @be.define({
@@ -20,7 +22,7 @@ export class EveSOFDataHullExtensionPlacementDistributionDepletionCounter extend
   /** m_depletionCounters (PEveSOFDataDistributionDepletionCounterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataDistributionDepletionCounter")
-  depletionCounters = [];
+  depletionCounters = new BlueList(EveSOFDataDistributionDepletionCounter, { className: "EveSOFDataDistributionDepletionCounter" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 

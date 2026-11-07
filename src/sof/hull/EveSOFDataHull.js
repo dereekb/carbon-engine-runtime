@@ -3,10 +3,28 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
-import { blue, EnumRegistrationType } from "#blue";
+import { blue, EnumRegistrationType, BlueList } from "#blue";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { EveSOFDataHullBuildFilter } from "./enums.js";
+import { EveSOFDataHullAnimation } from "./EveSOFDataHullAnimation.js";
+import { EveSOFDataHullArea } from "./EveSOFDataHullArea.js";
+import { EveSOFDataHullBannerSet } from "./EveSOFDataHullBannerSet.js";
+import { EveSOFDataHullBanner } from "./EveSOFDataHullBanner.js";
+import { EveSOFDataHullChildSet } from "./EveSOFDataHullChildSet.js";
+import { EveSOFDataHullChild } from "./EveSOFDataHullChild.js";
+import { EveSOFDataHullController } from "./EveSOFDataHullController.js";
+import { EveSOFDataHullDecalSet } from "./EveSOFDataHullDecalSet.js";
+import { EveSOFDataHullHazeSet } from "./EveSOFDataHullHazeSet.js";
+import { EveSOFDataHullLightSet } from "./EveSOFDataHullLightSet.js";
+import { EveSOFDataHullLocator } from "./EveSOFDataHullLocator.js";
+import { EveSOFDataHullPlaneSet } from "./EveSOFDataHullPlaneSet.js";
+import { EveSOFDataHullSoundEmitter } from "./EveSOFDataHullSoundEmitter.js";
+import { EveSOFDataHullSpotlightSet } from "./EveSOFDataHullSpotlightSet.js";
+import { EveSOFDataHullSpriteLineSet } from "./EveSOFDataHullSpriteLineSet.js";
+import { EveSOFDataHullSpriteSet } from "./EveSOFDataHullSpriteSet.js";
+import { EveSOFDataInstancedMesh } from "../shared/EveSOFDataInstancedMesh.js";
+import { IEveSOFDataHullLocatorSet } from "./IEveSOFDataHullLocatorSet.js";
 
 /** Carbon-authored hull record. */
 @be.define({
@@ -95,12 +113,12 @@ export class EveSOFDataHull extends IRoot
   /** m_banners (PEveSOFDataHullBannerVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullBanner")
-  banners = [];
+  banners = new BlueList(EveSOFDataHullBanner, { className: "EveSOFDataHullBanner" });
 
   /** m_soundEmitters (PEveSOFDataHullSoundEmitterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullSoundEmitter")
-  soundEmitters = [];
+  soundEmitters = new BlueList(EveSOFDataHullSoundEmitter, { className: "EveSOFDataHullSoundEmitter" });
 
   /** m_category (BlueSharedString) [READWRITE, PERSIST] */
 
@@ -115,7 +133,7 @@ export class EveSOFDataHull extends IRoot
   /** m_locatorSets (PIEveSOFDataHullLocatorSetVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullLocatorSet")
-  locatorSets = [];
+  locatorSets = new BlueList(IEveSOFDataHullLocatorSet);
 
   /** m_isSkinned (bool) [READWRITE, PERSIST] */
 
@@ -125,22 +143,22 @@ export class EveSOFDataHull extends IRoot
   /** m_animations (PEveSOFDataHullAnimationVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullAnimation")
-  animations = [];
+  animations = new BlueList(EveSOFDataHullAnimation, { className: "EveSOFDataHullAnimation" });
 
   /** m_children (PEveSOFDataHullChildVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullChild")
-  children = [];
+  children = new BlueList(EveSOFDataHullChild, { className: "EveSOFDataHullChild" });
 
   /** m_controllers (PEveSOFDataHullControllerVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullController")
-  controllers = [];
+  controllers = new BlueList(EveSOFDataHullController, { className: "EveSOFDataHullController" });
 
   /** m_instancedMeshes (PEveSOFDataInstancedMeshVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataInstancedMesh")
-  instancedMeshes = [];
+  instancedMeshes = new BlueList(EveSOFDataInstancedMesh, { className: "EveSOFDataInstancedMesh" });
 
   /** m_modelRotationCurvePath (std::string) [READWRITE, PERSIST] */
 
@@ -155,7 +173,7 @@ export class EveSOFDataHull extends IRoot
   /** m_childSets (PEveSOFDataHullChildSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullChildSet")
-  childSets = [];
+  childSets = new BlueList(EveSOFDataHullChildSet, { className: "EveSOFDataHullChildSet" });
 
   /** m_boundingSphere (Vector4) [READWRITE, PERSIST] */
 
@@ -165,7 +183,7 @@ export class EveSOFDataHull extends IRoot
   /** m_additiveAreas (PEveSOFDataHullAreaVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullArea")
-  additiveAreas = [];
+  additiveAreas = new BlueList(EveSOFDataHullArea, { className: "EveSOFDataHullArea" });
 
   /** m_audioPosition (Vector3) [READWRITE, PERSIST] */
 
@@ -175,7 +193,7 @@ export class EveSOFDataHull extends IRoot
   /** m_bannerSets (PEveSOFDataHullBannerSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullBannerSet")
-  bannerSets = [];
+  bannerSets = new BlueList(EveSOFDataHullBannerSet, { className: "EveSOFDataHullBannerSet" });
 
   /** m_booster (EveSOFDataHullBoosterPtr) [READWRITE, PERSIST] */
 
@@ -185,12 +203,12 @@ export class EveSOFDataHull extends IRoot
   /** m_decalAreas (PEveSOFDataHullAreaVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullArea")
-  decalAreas = [];
+  decalAreas = new BlueList(EveSOFDataHullArea, { className: "EveSOFDataHullArea" });
 
   /** m_decalSets (PEveSOFDataHullDecalSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullDecalSet")
-  decalSets = [];
+  decalSets = new BlueList(EveSOFDataHullDecalSet, { className: "EveSOFDataHullDecalSet" });
 
   /** m_defaultPattern (EveSOFDataPatternPerHullPtr) [READWRITE, PERSIST] */
 
@@ -200,7 +218,7 @@ export class EveSOFDataHull extends IRoot
   /** m_distortionAreas (PEveSOFDataHullAreaVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullArea")
-  distortionAreas = [];
+  distortionAreas = new BlueList(EveSOFDataHullArea, { className: "EveSOFDataHullArea" });
 
   /** m_shapeEllipsoidCenter (Vector3) [READWRITE, PERSIST] */
 
@@ -215,7 +233,7 @@ export class EveSOFDataHull extends IRoot
   /** m_hazeSets (PEveSOFDataHullHazeSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullHazeSet")
-  hazeSets = [];
+  hazeSets = new BlueList(EveSOFDataHullHazeSet, { className: "EveSOFDataHullHazeSet" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 
@@ -225,17 +243,17 @@ export class EveSOFDataHull extends IRoot
   /** m_lightSets (PEveSOFDataHullLightSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullLightSet")
-  lightSets = [];
+  lightSets = new BlueList(EveSOFDataHullLightSet, { className: "EveSOFDataHullLightSet" });
 
   /** m_opaqueAreas (PEveSOFDataHullAreaVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullArea")
-  opaqueAreas = [];
+  opaqueAreas = new BlueList(EveSOFDataHullArea, { className: "EveSOFDataHullArea" });
 
   /** m_planeSets (PEveSOFDataHullPlaneSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullPlaneSet")
-  planeSets = [];
+  planeSets = new BlueList(EveSOFDataHullPlaneSet, { className: "EveSOFDataHullPlaneSet" });
 
   /** m_geometryResFilePath (std::string) [READWRITE, PERSIST] */
 
@@ -245,27 +263,27 @@ export class EveSOFDataHull extends IRoot
   /** m_spotlightSets (PEveSOFDataHullSpotlightSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullSpotlightSet")
-  spotlightSets = [];
+  spotlightSets = new BlueList(EveSOFDataHullSpotlightSet, { className: "EveSOFDataHullSpotlightSet" });
 
   /** m_spriteLineSets (PEveSOFDataHullSpriteLineSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullSpriteLineSet")
-  spriteLineSets = [];
+  spriteLineSets = new BlueList(EveSOFDataHullSpriteLineSet, { className: "EveSOFDataHullSpriteLineSet" });
 
   /** m_spriteSets (PEveSOFDataHullSpriteSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullSpriteSet")
-  spriteSets = [];
+  spriteSets = new BlueList(EveSOFDataHullSpriteSet, { className: "EveSOFDataHullSpriteSet" });
 
   /** m_transparentAreas (PEveSOFDataHullAreaVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullArea")
-  transparentAreas = [];
+  transparentAreas = new BlueList(EveSOFDataHullArea, { className: "EveSOFDataHullArea" });
 
   /** m_locatorTurrets (PEveSOFDataHullLocatorVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullLocator")
-  locatorTurrets = [];
+  locatorTurrets = new BlueList(EveSOFDataHullLocator, { className: "EveSOFDataHullLocator" });
 
   /** m_sof6 (bool) [READWRITE, PERSIST] */
 

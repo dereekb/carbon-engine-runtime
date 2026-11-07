@@ -4,6 +4,9 @@ import { IEveSOFDataHullExtensionPlacement } from "./IEveSOFDataHullExtensionPla
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataDistributionDepletionCounter } from "./EveSOFDataDistributionDepletionCounter.js";
+import { IEveSOFDataHullExtensionPlacementDistribution } from "./IEveSOFDataHullExtensionPlacementDistribution.js";
 
 /** Groups enabled nested placements with group-level conditions and depletion counters. */
 @be.define({
@@ -30,12 +33,12 @@ export class EveSOFDataHullExtensionPlacementGroup extends IRoot
   /** m_distributionConditions (PIEveSOFDataHullExtensionPlacementDistributionVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullExtensionPlacementDistribution")
-  distributionConditions = [];
+  distributionConditions = new BlueList(IEveSOFDataHullExtensionPlacementDistribution);
 
   /** m_depletionCounters (PEveSOFDataDistributionDepletionCounterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataDistributionDepletionCounter")
-  depletionCounters = [];
+  depletionCounters = new BlueList(EveSOFDataDistributionDepletionCounter, { className: "EveSOFDataDistributionDepletionCounter" });
 
   /** m_enabled (bool) [READWRITE, PERSIST] */
 

@@ -3,6 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataHullSpriteLineSetItem } from "./EveSOFDataHullSpriteLineSetItem.js";
 
 /** Groups named sprite-line items with visibility and skinning policy. */
 @be.define({
@@ -37,6 +39,6 @@ export class EveSOFDataHullSpriteLineSet extends IRoot
   /** m_items (PEveSOFDataHullSpriteLineSetItemVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullSpriteLineSetItem")
-  items = [];
+  items = new BlueList(EveSOFDataHullSpriteLineSetItem, { className: "EveSOFDataHullSpriteLineSetItem" });
 
 }

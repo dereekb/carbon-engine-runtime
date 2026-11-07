@@ -9,6 +9,12 @@ import { ErrSOFAreaShaderNotFound } from "./ErrSOFAreaShaderNotFound.js";
 import { ErrSOFDecalShaderNotFound } from "./ErrSOFDecalShaderNotFound.js";
 import { ErrSOFMaterialPrefixNotFound } from "./ErrSOFMaterialPrefixNotFound.js";
 import { ErrSOFPatternMaterialPrefixNotFound } from "./ErrSOFPatternMaterialPrefixNotFound.js";
+import { BlueList } from "#blue";
+import { EveSOFDataGenericDecalShader } from "./EveSOFDataGenericDecalShader.js";
+import { EveSOFDataGenericHullCategory } from "./EveSOFDataGenericHullCategory.js";
+import { EveSOFDataGenericString } from "./EveSOFDataGenericString.js";
+import { EveSOFDataGenericVariant } from "./EveSOFDataGenericVariant.js";
+import { EveSOFDataVisibilityGroup } from "./EveSOFDataVisibilityGroup.js";
 
 /** Provides the top-level generic SOF configuration for shaders, material prefixes, decals, material tables, variants, categories, visibility, swarm, and damage data, with their named lookup helpers. */
 @be.define("EveSOFDataGeneric")
@@ -86,19 +92,19 @@ export class EveSOFDataGeneric extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericVariant")
-  variants = [];
+  variants = new BlueList(EveSOFDataGenericVariant, { className: "EveSOFDataGenericVariant" });
 
   /** m_hullCategories (PEveSOFDataGenericStringVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
-  hullCategories = [];
+  hullCategories = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /** m_visibilityGroups (PEveSOFDataVisibilityGroupVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataVisibilityGroup")
-  visibilityGroups = [];
+  visibilityGroups = new BlueList(EveSOFDataVisibilityGroup, { className: "EveSOFDataVisibilityGroup" });
 
   /** m_bannerShader (PEveSOFDataGenericShader) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -134,31 +140,31 @@ export class EveSOFDataGeneric extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericShader")
-  areaShaders = [];
+  areaShaders = new BlueList(EveSOFDataGenericShader, { className: "EveSOFDataGenericShader" });
 
   /** m_decalShaders (PEveSOFDataGenericDecalShaderVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericDecalShader")
-  decalShaders = [];
+  decalShaders = new BlueList(EveSOFDataGenericDecalShader, { className: "EveSOFDataGenericDecalShader" });
 
   /** m_materialPrefixes (PEveSOFDataGenericStringVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
-  materialPrefixes = [];
+  materialPrefixes = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /** m_patternMaterialPrefixes (PEveSOFDataGenericStringVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericString")
-  patternMaterialPrefixes = [];
+  patternMaterialPrefixes = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /** m_hullCategoryData (PEveSOFDataGenericHullCategoryVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveSOFDataGenericHullCategory")
-  hullCategoriesData = [];
+  hullCategoriesData = new BlueList(EveSOFDataGenericHullCategory, { className: "EveSOFDataGenericHullCategory" });
 
   /** m_areaShaderLocation (std::string) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

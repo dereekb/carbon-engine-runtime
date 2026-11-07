@@ -4,6 +4,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { EveSOFDataTexture } from "./EveSOFDataTexture.js";
+import { BlueList } from "#blue";
 
 /** Stores a logo texture set and supports assignment and composition with another logo value. */
 @be.define({
@@ -23,7 +24,7 @@ export class EveSOFDataLogo extends IRoot
    */
 
   @type.list("EveSOFDataTexture")
-  textures = [];
+  textures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /** Populates a logo configuration with authored texture paths; a JS-only helper.
    * @param {object} [config={}] Reused logo configuration.

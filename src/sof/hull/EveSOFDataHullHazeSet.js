@@ -3,7 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
-import { blue, EnumRegistrationType } from "#blue";
+import { blue, EnumRegistrationType, BlueList } from "#blue";
+import { EveSOFDataHullHazeSetItem } from "./EveSOFDataHullHazeSetItem.js";
 
 /** Groups named haze items with spherical-type, visibility, and skinning policy. */
 @be.define({
@@ -47,7 +48,7 @@ export class EveSOFDataHullHazeSet extends IRoot
   /** m_items (PEveSOFDataHullHazeSetItemVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullHazeSetItem")
-  items = [];
+  items = new BlueList(EveSOFDataHullHazeSetItem, { className: "EveSOFDataHullHazeSetItem" });
 
   static HazeType = {
     TYPE_SPHERICAL: 0,

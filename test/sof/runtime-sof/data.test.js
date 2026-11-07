@@ -344,7 +344,7 @@ test("SOF catalog, area, hull, and hull-area records preserve Carbon shape", () 
   assert.equal(first.generic, null);
   for (const name of ["faction", "hull", "layout", "material", "pattern", "race"])
   {
-    assert.deepEqual(first[name], [], name);
+    assert.deepEqual(Array.from(first[name]), [], name);
     assert.notEqual(first[name], second[name], name);
   }
 

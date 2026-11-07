@@ -4,8 +4,9 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import "#consts/trinity";
 import { type } from "#schema";
-import { blue, EnumRegistrationType } from "#blue";
+import { blue, EnumRegistrationType, BlueList } from "#blue";
 import { Tr2Lod } from "#consts/trinity";
+import { EveSOFDataTexture } from "./EveSOFDataTexture.js";
 
 /** Defines instanced-mesh geometry, shader, display and LOD policy, textures, and instance transforms. */
 @be.define({
@@ -44,7 +45,7 @@ export class EveSOFDataInstancedMesh extends IRoot
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTexture")
-  textures = [];
+  textures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 

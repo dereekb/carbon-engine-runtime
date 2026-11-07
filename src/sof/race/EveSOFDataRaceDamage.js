@@ -5,6 +5,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 import { type } from "#schema";
 import { EveSOFDataParameter } from "../shared/EveSOFDataParameter.js";
 import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
+import { BlueList } from "#blue";
 
 /** Stores, combines, and assigns race-level armor and shield damage parameters and textures. */
 @be.define({
@@ -25,22 +26,22 @@ export class EveSOFDataRaceDamage extends IRoot
   /** m_armorImpactParameters (PEveSOFDataParameterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataParameter")
-  armorImpactParameters = [];
+  armorImpactParameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /** m_armorImpactTextures (PEveSOFDataTextureVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTexture")
-  armorImpactTextures = [];
+  armorImpactTextures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /** m_shieldImpactParameters (PEveSOFDataParameterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataParameter")
-  shieldImpactParameters = [];
+  shieldImpactParameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /** m_shieldImpactTextures (PEveSOFDataTextureVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTexture")
-  shieldImpactTextures = [];
+  shieldImpactTextures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /**
    * Ensures output maps exist and writes the race's armor-impact parameters and

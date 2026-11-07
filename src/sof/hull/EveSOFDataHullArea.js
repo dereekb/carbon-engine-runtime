@@ -4,6 +4,9 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
 import { EveSOFDataArea } from "../shared/EveSOFDataArea.js";
+import { BlueList } from "#blue";
+import { EveSOFDataParameter } from "../shared/EveSOFDataParameter.js";
+import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
 
 /** Carbon-authored hull mesh-area record. */
 @be.define({
@@ -37,12 +40,12 @@ export class EveSOFDataHullArea extends IRoot
   /** m_textures (PEveSOFDataTextureVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataTexture")
-  textures = [];
+  textures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /** m_parameters (PEveSOFDataParameterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataParameter")
-  parameters = [];
+  parameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /** m_index (uint32_t) [READWRITE, PERSIST] */
 

@@ -3,6 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataHullChildSetItem } from "./EveSOFDataHullChildSetItem.js";
 
 /** Groups child-resource placements under a named visibility identity. */
 @be.define({
@@ -26,7 +28,7 @@ export class EveSOFDataHullChildSet extends IRoot
   /** m_items (PEveSOFDataHullChildSetItemVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullChildSetItem")
-  items = [];
+  items = new BlueList(EveSOFDataHullChildSetItem, { className: "EveSOFDataHullChildSetItem" });
 
   /**
    * Carbon MAP_PROPERTY_READONLY "name" over GetName

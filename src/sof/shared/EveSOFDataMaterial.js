@@ -3,6 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:187-195
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataParameter } from "./EveSOFDataParameter.js";
 
 /** Stores named material parameters and assigns them to a target with an optional parameter prefix.
  * Native IRoot-only data with a self-only Blue table. Owned authored records
@@ -38,7 +40,7 @@ export class EveSOFDataMaterial extends IRoot
    */
 
   @type.list("EveSOFDataParameter")
-  parameters = [];
+  parameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /**
    * Writes every authored material parameter into the supplied map using an

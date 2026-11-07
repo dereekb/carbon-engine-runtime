@@ -6,6 +6,8 @@ import { type } from "#schema";
 import { EveSOFDataFactionColorSet } from "../faction/EveSOFDataFactionColorSet.js";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
+import { BlueList } from "#blue";
+import { EveSOFDataPointLightAttachment } from "../shared/EveSOFDataPointLightAttachment.js";
 
 /** Defines a faction-aware haze item with bone-relative transform, brightness, falloff, saturation, booster influence, and point-light data. */
 @be.define({
@@ -88,7 +90,7 @@ export class EveSOFDataHullHazeSetItem extends IRoot
   /** m_lights (PEveSOFDataPointLightAttachmentVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPointLightAttachment")
-  lights = [];
+  lights = new BlueList(EveSOFDataPointLightAttachment, { className: "EveSOFDataPointLightAttachment" });
 
   /** m_saturation (float) [READWRITE, PERSIST] */
 

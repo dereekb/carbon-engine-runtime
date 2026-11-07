@@ -3,8 +3,9 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
-import { blue, EnumRegistrationType } from "#blue";
+import { blue, EnumRegistrationType, BlueList } from "#blue";
 import { vec2 } from "#math/vec2";
+import { EveSOFDataHullPlaneSetItem } from "./EveSOFDataHullPlaneSetItem.js";
 
 /** Groups plane items with usage, texture, atlas, visibility, and skinning policy. */
 @be.define({
@@ -78,7 +79,7 @@ export class EveSOFDataHullPlaneSet extends IRoot
   /** m_items (PEveSOFDataHullPlaneSetItemVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullPlaneSetItem")
-  items = [];
+  items = new BlueList(EveSOFDataHullPlaneSetItem, { className: "EveSOFDataHullPlaneSetItem" });
 
   static Usage = {
     USAGE_STANDARD: 0,

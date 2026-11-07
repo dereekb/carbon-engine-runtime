@@ -49,7 +49,7 @@ test("shader records retain exact native tables, exposure order, flags and indep
     {
       assert.equal(field.edit.read, true); assert.equal(field.edit.persist, true);
       assert.equal(field.edit.write === true, writable.includes(field.name));
-      if (Array.isArray(a[field.name])) { assert.deepEqual(a[field.name], []); assert.notEqual(a[field.name], b[field.name]); }
+      if (Array.isArray(a[field.name])) { assert.deepEqual(Array.from(a[field.name]), []); assert.notEqual(a[field.name], b[field.name]); }
     }
     assert.equal(a.shader, "");
   }

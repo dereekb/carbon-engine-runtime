@@ -3,6 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataHullLightSetItem } from "./EveSOFDataHullLightSetItem.js";
 
 /** Groups named hull light items and their visibility policy. */
 @be.define({
@@ -31,6 +33,6 @@ export class EveSOFDataHullLightSet extends IRoot
   /** m_items (PEveSOFDataHullLightSetItemVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullLightSetItem")
-  items = [];
+  items = new BlueList(EveSOFDataHullLightSetItem, { className: "EveSOFDataHullLightSetItem" });
 
 }

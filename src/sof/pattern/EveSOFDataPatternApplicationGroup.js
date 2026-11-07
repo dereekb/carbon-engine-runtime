@@ -3,6 +3,8 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataPatternPerHull } from "./EveSOFDataPatternPerHull.js";
 
 /** Names per-layer pattern properties and provides searchable per-hull projections. */
 @be.define({
@@ -38,7 +40,7 @@ export class EveSOFDataPatternApplicationGroup extends IRoot
   /** m_projections (PEveSOFDataPatternPerHullVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPatternPerHull")
-  projections = [];
+  projections = new BlueList(EveSOFDataPatternPerHull, { className: "EveSOFDataPatternPerHull" });
 
   /**
    * Locates a hull projection by case-insensitive hull name and returns null

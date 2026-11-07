@@ -3,6 +3,10 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataFactionChild } from "./EveSOFDataFactionChild.js";
+import { EveSOFDataFactionPlaneSet } from "./EveSOFDataFactionPlaneSet.js";
+import { EveSOFDataFactionSpotlightSet } from "./EveSOFDataFactionSpotlightSet.js";
 
 /** Aggregates a faction's area, color, logo, pattern, material-slot, visibility, plane, spotlight, child, and resource-path configuration. */
 @be.define({
@@ -57,17 +61,17 @@ export class EveSOFDataFaction extends IRoot
   /** m_children (PEveSOFDataFactionChildVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataFactionChild")
-  children = [];
+  children = new BlueList(EveSOFDataFactionChild, { className: "EveSOFDataFactionChild" });
 
   /** m_planeSets (PEveSOFDataFactionPlaneSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataFactionPlaneSet")
-  planeSets = [];
+  planeSets = new BlueList(EveSOFDataFactionPlaneSet, { className: "EveSOFDataFactionPlaneSet" });
 
   /** m_spotlightSets (PEveSOFDataFactionSpotlightSetVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataFactionSpotlightSet")
-  spotlightSets = [];
+  spotlightSets = new BlueList(EveSOFDataFactionSpotlightSet, { className: "EveSOFDataFactionSpotlightSet" });
 
   /** m_visibilityGroupSet (EveSOFDataFactionVisibilityGroupSetPtr) [READWRITE, PERSIST] */
 

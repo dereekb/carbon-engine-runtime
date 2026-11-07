@@ -6,6 +6,8 @@ import { IEveSOFDataHullExtensionPlacement } from "./IEveSOFDataHullExtensionPla
 import { EveSOFDNADescriptor } from "../shared/EveSOFDNADescriptor.js";
 import { EveSOFDataHullExtensionPlacementDistributionPlacement } from "./EveSOFDataHullExtensionPlacementDistributionPlacement.js";
 import { vec3 } from "#math/vec3";
+import { BlueList } from "#blue";
+import { IEveSOFDataHullExtensionPlacementDistribution } from "./IEveSOFDataHullExtensionPlacementDistribution.js";
 
 /** Defines a concrete hull extension by DNA, locator, offset, distribution, conditions, and build flags. */
 @be.define({
@@ -32,7 +34,7 @@ export class EveSOFDataHullExtensionPlacement extends IEveSOFDataHullExtensionPl
   /** m_distributionConditions (PIEveSOFDataHullExtensionPlacementDistributionVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullExtensionPlacementDistribution")
-  distributionConditions = [];
+  distributionConditions = new BlueList(IEveSOFDataHullExtensionPlacementDistribution);
 
   /** m_extendsBoundingSphere (bool) [READWRITE, PERSIST] */
 

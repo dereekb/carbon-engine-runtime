@@ -3,6 +3,13 @@ import { IRoot } from "../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataFaction } from "./faction/EveSOFDataFaction.js";
+import { EveSOFDataHull } from "./hull/EveSOFDataHull.js";
+import { EveSOFDataLayout } from "./layout/EveSOFDataLayout.js";
+import { EveSOFDataMaterial } from "./shared/EveSOFDataMaterial.js";
+import { EveSOFDataPattern } from "./pattern/EveSOFDataPattern.js";
+import { EveSOFDataRace } from "./race/EveSOFDataRace.js";
 
 /** Root SOF data catalog. */
 @be.define({
@@ -25,7 +32,7 @@ export class EveSOFData extends IRoot
   /** m_faction (PEveSOFDataFactionVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataFaction")
-  faction = [];
+  faction = new BlueList(EveSOFDataFaction, { className: "EveSOFDataFaction" });
 
   /** m_generic (EveSOFDataGenericPtr) [READWRITE, PERSIST] */
 
@@ -35,26 +42,26 @@ export class EveSOFData extends IRoot
   /** m_hull (PEveSOFDataHullVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHull")
-  hull = [];
+  hull = new BlueList(EveSOFDataHull, { className: "EveSOFDataHull" });
 
   /** m_layout (PEveSOFDataLayoutVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataLayout")
-  layout = [];
+  layout = new BlueList(EveSOFDataLayout, { className: "EveSOFDataLayout" });
 
   /** m_material (PEveSOFDataMaterialVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataMaterial")
-  material = [];
+  material = new BlueList(EveSOFDataMaterial, { className: "EveSOFDataMaterial" });
 
   /** m_pattern (PEveSOFDataPatternVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPattern")
-  pattern = [];
+  pattern = new BlueList(EveSOFDataPattern, { className: "EveSOFDataPattern" });
 
   /** m_race (PEveSOFDataRaceVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataRace")
-  race = [];
+  race = new BlueList(EveSOFDataRace, { className: "EveSOFDataRace" });
 
 }

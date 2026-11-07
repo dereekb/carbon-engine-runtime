@@ -6,6 +6,8 @@ import { type } from "#schema";
 import { EveSOFDataPatternLayer } from "./EveSOFDataPatternLayer.js";
 import { EveSOFDataPatternPerHull } from "./EveSOFDataPatternPerHull.js";
 import { ErrSOFProjectionNotFound } from "./ErrSOFProjectionNotFound.js";
+import { BlueList } from "#blue";
+import { EveSOFDataPatternApplicationGroup } from "./EveSOFDataPatternApplicationGroup.js";
 
 /** Defines a named two-layer pattern with application groups, per-hull lookup, flip policy, and custom mask support. */
 @be.define({
@@ -28,12 +30,12 @@ export class EveSOFDataPattern extends IRoot
   /** m_projections (PEveSOFDataPatternPerHullVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPatternPerHull")
-  projections = [];
+  projections = new BlueList(EveSOFDataPatternPerHull, { className: "EveSOFDataPatternPerHull" });
 
   /** m_applicationGroups (PEveSOFDataPatternApplicationGroupVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataPatternApplicationGroup")
-  applicationGroups = [];
+  applicationGroups = new BlueList(EveSOFDataPatternApplicationGroup, { className: "EveSOFDataPatternApplicationGroup" });
 
   /** m_layer1 (EveSOFDataPatternLayerPtr) [READWRITE, PERSIST] */
 

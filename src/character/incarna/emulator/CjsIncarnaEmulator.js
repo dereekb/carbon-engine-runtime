@@ -166,9 +166,9 @@ export class CjsIncarnaEmulator
 
     const root = this.CreateHull(name, first.mesh, slots);
     root.buildClass = blue.enums.GetEnum("trinity.EveSOFDataHull.BuildClass").BUILDCLASS_STATIONARY;
-    root.locatorSets = [ ...placements ].map(([ hullName, { transforms } ]) => CjsIncarnaEmulator.locatorSet(hullName, transforms));
+    root.locatorSets.ReplaceItems([ ...placements ].map(([ hullName, { transforms } ]) => CjsIncarnaEmulator.locatorSet(hullName, transforms)));
     root.boundingSphere = CjsIncarnaEmulator.assemblySphere([ { sphere: root.boundingSphere, transforms: [ mat4.create() ] }, ...placements.values() ]);
-    root.lightSets = lights.length === 0 ? [] : [ CjsIncarnaEmulator.lightSet(name, lights) ];
+    root.lightSets.ReplaceItems(lights.length === 0 ? [] : [ CjsIncarnaEmulator.lightSet(name, lights) ]);
     this._dataMgr.UpdateHull(name, root);
 
     const layout = blue.classes.CreateInstanceFromName("EveSOFDataLayout");
@@ -419,8 +419,8 @@ export class CjsIncarnaEmulator
     geometry.GetBoundingBox(mesh.GetMeshIndex(), min, max);
     const center = vec3.lerp(vec3.create(), min, max, 0.5);
     hull.boundingSphere = vec4.fromValues(center[0], center[1], center[2], vec3.distance(min, max) / 2);
-    hull.opaqueAreas = mesh.opaquePrepassAreas.map(area => CjsIncarnaEmulator.hullArea(area, AREA_KINDS.opaque, slots));
-    hull.transparentAreas = mesh.transparentAreas.map(area => CjsIncarnaEmulator.hullArea(area, AREA_KINDS.glass, slots));
+    hull.opaqueAreas.ReplaceItems(mesh.opaquePrepassAreas.map(area => CjsIncarnaEmulator.hullArea(area, AREA_KINDS.opaque, slots)));
+    hull.transparentAreas.ReplaceItems(mesh.transparentAreas.map(area => CjsIncarnaEmulator.hullArea(area, AREA_KINDS.glass, slots)));
     return hull;
   }
 
@@ -447,13 +447,13 @@ export class CjsIncarnaEmulator
     value.count = area.count;
     value.shader = kind.shader;
     value.areaType = blue.enums.GetEnum("trinity.EveSOFDataArea.AreaType")[kind.areaType];
-    value.textures = AREA_TEXTURES.filter(([ , , , , detail ]) => kind.details || !detail).map(([ input, maps, role, fill ]) =>
+    value.textures.ReplaceItems(AREA_TEXTURES.filter(([ , , , , detail ]) => kind.details || !detail).map(([ input, maps, role, fill ]) =>
     {
       if (input === "MaterialMap" && slot !== undefined) return CjsIncarnaEmulator.namedValue("EveSOFDataTexture", input, "resFilePath", `dynamic:/color/${+(slot / 3).toFixed(6)},0,0,1`);
       const source = role === "glow" && !glows ? null : maps.map(map => sources.get(map)).find(Boolean);
       return CjsIncarnaEmulator.namedValue("EveSOFDataTexture", input, "resFilePath",
         source ? CjsIncarnaTextureConstructor.texturePath(role, source) : kind.fills[input] ?? fill);
-    });
+    }));
     const detailParameters = [
       [ "Detail1Data", [ tile, DETAIL_STRENGTH, 0, 0 ] ],
       [ "Detail2Data", [ 0, 0, 0, 0 ] ],
@@ -462,8 +462,8 @@ export class CjsIncarnaEmulator
       [ "DetailAlbedoColor", [ 0, 0, 0, 0 ] ],
       [ "DetailFresnelColor", [ 0, 0, 0, 0 ] ]
     ];
-    value.parameters = [ ...(kind.details ? detailParameters : []), [ "GeneralData", [ 1, 1, 0, 0 ] ] ]
-      .map(([ parameter, values ]) => CjsIncarnaEmulator.namedValue("EveSOFDataParameter", parameter, "value", vec4.fromValues(...values)));
+    value.parameters.ReplaceItems([ ...(kind.details ? detailParameters : []), [ "GeneralData", [ 1, 1, 0, 0 ] ] ]
+      .map(([ parameter, values ]) => CjsIncarnaEmulator.namedValue("EveSOFDataParameter", parameter, "value", vec4.fromValues(...values))));
     return value;
   }
 
@@ -740,7 +740,7 @@ export class CjsIncarnaEmulator
   {
     const set = blue.classes.CreateInstanceFromName("EveSOFDataHullLightSet");
     set.name = name;
-    set.items = lights.map((light, index) =>
+    set.items.ReplaceItems(lights.map((light, index) =>
     {
       const item = blue.classes.CreateInstanceFromName("EveSOFDataHullLightSetItem");
       item.name = `${name}_${index}`;
@@ -750,7 +750,7 @@ export class CjsIncarnaEmulator
       item.brightness = light.brightness;
       item.lightColor = light.lightColor;
       return item;
-    });
+    }));
     return set;
   }
 
@@ -782,12 +782,12 @@ export class CjsIncarnaEmulator
   {
     const set = blue.classes.CreateInstanceFromName("EveSOFDataHullLocatorSet");
     set.name = name;
-    set.locators = transforms.map(transform =>
+    set.locators.ReplaceItems(transforms.map(transform =>
     {
       const locator = blue.classes.CreateInstanceFromName("EveSOFDataTransform");
       mat4.decomposeCarbon(transform, locator.rotation, locator.position, locator.scaling);
       return locator;
-    });
+    }));
     return set;
   }
 

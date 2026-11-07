@@ -3,6 +3,10 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData.h
 // Source: trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue2.cpp:517-529
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveSOFDataGenericString } from "./EveSOFDataGenericString.js";
+import { EveSOFDataParameter } from "../shared/EveSOFDataParameter.js";
+import { EveSOFDataTexture } from "../shared/EveSOFDataTexture.js";
 
 /** Defines a generic shader's parameters, textures, defaults, transparency and depth policy, and generated configuration.
  * Native IRoot-only data with a self-only Blue table. Independently initialized
@@ -61,7 +65,7 @@ export class EveSOFDataGenericShader extends IRoot
    */
 
   @type.list("EveSOFDataGenericString")
-  parameters = [];
+  parameters = new BlueList(EveSOFDataGenericString, { className: "EveSOFDataGenericString" });
 
   /**
    * Owned named texture defaults applied before supplied texture values; native m_defaultTextures
@@ -70,7 +74,7 @@ export class EveSOFDataGenericShader extends IRoot
    */
 
   @type.list("EveSOFDataTexture")
-  defaultTextures = [];
+  defaultTextures = new BlueList(EveSOFDataTexture, { className: "EveSOFDataTexture" });
 
   /**
    * Owned named parameter defaults used to seed shader configuration values; native
@@ -79,7 +83,7 @@ export class EveSOFDataGenericShader extends IRoot
    */
 
   @type.list("EveSOFDataParameter")
-  defaultParameters = [];
+  defaultParameters = new BlueList(EveSOFDataParameter, { className: "EveSOFDataParameter" });
 
   /**
    * Checks whether a name is referenced by transparency, declared or default

@@ -3,6 +3,8 @@ import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { meta, type } from "#schema";
 import { EveSOFDataHullExtensionPlacement } from "./EveSOFDataHullExtensionPlacement.js";
+import { BlueList } from "#blue";
+import { EveSOFDataDistributionDepletionCounter } from "./EveSOFDataDistributionDepletionCounter.js";
 
 /** Groups extension placements and depletion counters while preserving the compatible Blue bucket surface. */
 // Carbon really does declare Bucket as a subclass of the concrete Placement
@@ -38,7 +40,7 @@ export class EveSOFDataHullExtensionBucket extends EveSOFDataHullExtensionPlacem
   /** m_depletionCounters (PEveSOFDataDistributionDepletionCounterVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataDistributionDepletionCounter")
-  depletionCounters = [];
+  depletionCounters = new BlueList(EveSOFDataDistributionDepletionCounter, { className: "EveSOFDataDistributionDepletionCounter" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 
