@@ -1,11 +1,12 @@
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.h
 // Source: trinity/trinity/Shader/Parameter/TriFloatArrayParameter.cpp
 import { exposure as be } from "#be";
-import { IInitialize } from "#blue";
+import { IInitialize, BlueList } from "#blue";
 import { INotify } from "#blue";
 import { ITriEffectParameter } from "./ITriEffectParameter.js";
 import { type } from "#schema";
 import { FNV1_INITIAL, hashFnv1Floats, hashFnv1String } from "#utils/hash";
+import { TriVector4 } from "./TriVector4.js";
 
 
 /** An ordered list of vec4 rows uploaded into one named shader constant array. */
@@ -25,7 +26,7 @@ export class TriFloatArrayParameter extends ITriEffectParameter
 {
 
   @type.list("TriVector4")
-  value = [];
+  value = new BlueList(TriVector4, { className: "TriVector4" });
 
   @type.boolean
   usedByCurrentTechnique = false;

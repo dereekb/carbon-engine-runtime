@@ -7,7 +7,8 @@ import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { quat } from "#math/quat";
-import { BlueScriptCallback } from "#blue";
+import { BlueScriptCallback, BlueList } from "#blue";
+import { Tr2PrimitiveSet } from "../line/Tr2PrimitiveSet.js";
 
 /** The interactive manipulator base: axis selection, drag handling and the callback a move reports through. */
 @be.define("Tr2ManipulationTool")
@@ -32,7 +33,7 @@ export class Tr2ManipulationTool extends IRoot
   /** m_primitives (PTr2PrimitiveSetVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("Tr2PrimitiveSet")
-  primitives = [];
+  primitives = new BlueList(Tr2PrimitiveSet, { className: "Tr2PrimitiveSet" });
 
   /**
    * m_pythonUserData (PyObject*) [READWRITE]

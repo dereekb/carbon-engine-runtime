@@ -2,9 +2,10 @@
 import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
-import { IsMatch, IInitialize, INotify, CcpTime } from "#blue";
+import { IsMatch, IInitialize, INotify, CcpTime, BlueList } from "#blue";
 import { hasUnboundParticleElements } from "../element/particleElementBinding.js";
 import { ITr2GenericEmitterUpdateArguments, ITr2GenericEmitter } from "../ITr2GenericEmitter/index.js";
+import { ITr2AttributeGenerator } from "../attribute/ITr2AttributeGenerator.js";
 
 /** A continuous-rate particle emitter that binds attribute generators to a particle system and spawns particles over time from an accumulated emission rate. */
 @be.define({
@@ -50,7 +51,7 @@ export class Tr2DynamicEmitter extends ITr2GenericEmitter
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
 
   @type.list("ITr2AttributeGenerator")
-  generators = [];
+  generators = new BlueList(ITr2AttributeGenerator);
 
   /** m_maxParticles (int32_t) [READWRITE, PERSIST] */
 

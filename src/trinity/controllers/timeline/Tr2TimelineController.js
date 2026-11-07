@@ -3,11 +3,14 @@
 import { exposure as be } from "#be";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { type } from "#schema";
-import { blue, CcpTime, ISimTimeRebaseNotify } from "#blue";
+import { blue, CcpTime, ISimTimeRebaseNotify, BlueList } from "#blue";
 import { EveThrottleable } from "../../eve/EveThrottleable.js";
 import { ITr2Controller, ITr2ActionController } from "../ITr2Controller/index.js";
 import { Tr2TimelineEntry } from "./Tr2TimelineEntry.js";
 import { UnlinkReason } from "../enums.js";
+import { ITr2ControllerAction } from "../action/ITr2ControllerAction.js";
+import { Tr2ControllerEventHandler } from "../Tr2ControllerEventHandler.js";
+import { Tr2ControllerFloatVariable } from "../expression/Tr2ControllerFloatVariable.js";
 
 
 /**
@@ -57,7 +60,7 @@ import { UnlinkReason } from "../enums.js";
 export class Tr2TimelineController extends EveThrottleable
 {
   @type.list("ITr2ControllerAction")
-  actions = [];
+  actions = new BlueList(ITr2ControllerAction);
 
   @type.structList("Tr2TimelineEntry")
   entries = [];
@@ -66,10 +69,10 @@ export class Tr2TimelineController extends EveThrottleable
   name = "";
 
   @type.list("Tr2ControllerFloatVariable")
-  variables = [];
+  variables = new BlueList(Tr2ControllerFloatVariable, { className: "Tr2ControllerFloatVariable" });
 
   @type.list("Tr2ControllerEventHandler")
-  eventHandlers = [];
+  eventHandlers = new BlueList(Tr2ControllerEventHandler, { className: "Tr2ControllerEventHandler" });
 
   @type.float32
   timeScale = 1;

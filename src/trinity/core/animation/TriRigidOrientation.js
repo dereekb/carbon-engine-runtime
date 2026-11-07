@@ -2,9 +2,10 @@
 import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
-import { ITriFunction, ITriQuaternionFunction, CcpTime } from "#blue";
+import { ITriFunction, ITriQuaternionFunction, CcpTime, BlueList } from "#blue";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
+import { TriTorque } from "./TriTorque.js";
 
 /**
  * Integrates torque into an orientation over time using relative seconds.
@@ -88,7 +89,7 @@ export class TriRigidOrientation extends ITriQuaternionFunction
    */
 
   @type.list("TriTorque")
-  states = [];
+  states = new BlueList(TriTorque, { className: "TriTorque" });
 
   /**
    * Sorts torque keys, resets the sampling cursor and propagates initial states.

@@ -5,6 +5,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 import { type } from "#schema";
 import { Tr2RenderContext, Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { TriRenderJob } from "./TriRenderJob.js";
+import { BlueList } from "#blue";
 
 
 /**
@@ -19,22 +20,22 @@ export class Tr2RenderJobs extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriRenderJob")
-  recurring = [];
+  recurring = new BlueList(TriRenderJob, { className: "TriRenderJob" });
 
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriRenderJob")
-  once = [];
+  once = new BlueList(TriRenderJob, { className: "TriRenderJob" });
 
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriRenderJob")
-  chained = [];
+  chained = new BlueList(TriRenderJob, { className: "TriRenderJob" });
 
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriRenderJob")
-  updateRecurring = [];
+  updateRecurring = new BlueList(TriRenderJob, { className: "TriRenderJob" });
 
   /**
    * Carbon Tr2RenderJobs::Run (cpp:23-98): runs every recurring job, then every one-off job keeping only those still RJ_IN_PROGRESS for the next frame, then chained jobs until one reports RJ_IN_PROGRESS, at which point that job and all remaining ones are carried over.
@@ -64,7 +65,8 @@ export class Tr2RenderJobs extends IRoot
         const status = Tr2RenderJobs.#runJob(job, realTime, simTime, context);
         if (status === TriRenderJob.Status.RJ_IN_PROGRESS) continuedOnce.push(job);
       }
-      this.once = continuedOnce;
+      this.once.length = 0;
+      for (const job of continuedOnce) this.once.push(job);
 
       const chained = this.chained.slice();
       const continuedChained = [];
@@ -78,7 +80,8 @@ export class Tr2RenderJobs extends IRoot
           break;
         }
       }
-      this.chained = continuedChained;
+      this.chained.length = 0;
+      for (const job of continuedChained) this.chained.push(job);
     }
     finally
     {

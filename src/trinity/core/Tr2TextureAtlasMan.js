@@ -8,6 +8,7 @@ import { exposure as be } from "#be";
 // so the mutex has nothing to guard and is not ported.
 import { type } from "#schema";
 import { Tr2TextureAtlas } from "./Tr2TextureAtlas.js";
+import { BlueList } from "#blue";
 
 /** Holds texture atlases and finds one for a given pixel format. */
 @be.define("Tr2TextureAtlasMan")
@@ -17,7 +18,7 @@ export class Tr2TextureAtlasMan extends IRoot
   /** m_atlases (PTr2TextureAtlasVectorRO) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("Tr2TextureAtlas")
-  atlases = [];
+  atlases = new BlueList(Tr2TextureAtlas, { className: "Tr2TextureAtlas" });
 
   /**
    * Returns the first atlas of a format (`Tr2TextureAtlasMan.cpp:19-32`).

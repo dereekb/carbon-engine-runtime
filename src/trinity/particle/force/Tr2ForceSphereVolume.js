@@ -5,6 +5,7 @@ import { type } from "#schema";
 import { ITr2ParticleForce } from "./ITr2ParticleForce.js";
 import { vec3 } from "#math/vec3";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { BlueList } from "#blue";
 
 /** Aggregates child forces within a spherical region, scaling their combined contribution by a falloff toward the sphere's edge. */
 @be.define({
@@ -33,7 +34,7 @@ export class Tr2ForceSphereVolume extends ITr2ParticleForce
   /** m_forces (PITr2ParticleForceVector) [READ, PERSIST] */
 
   @type.list("ITr2ParticleForce")
-  forces = [];
+  forces = new BlueList(ITr2ParticleForce);
 
   /** m_position (Vector3) [READWRITE, PERSIST] */
 

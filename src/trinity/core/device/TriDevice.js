@@ -12,7 +12,7 @@ import {
   convertProjectionCoordToWorldPickRay,
   screenToProjection
 } from "../view/pickRay.js";
-import { blue, BlueScriptCallback, EnumRegistrationType, IBlueEvents, ISimTimeRebaseNotify } from "#blue";
+import { blue, BlueScriptCallback, EnumRegistrationType, IBlueEvents, ISimTimeRebaseNotify, BlueList } from "#blue";
 import { TriStorageFlags } from "#consts/graphics";
 import { TriGeometryRes } from "#trinity/resources/geometry";
 import { ALResult, Failed } from "../../../trinityal/ALResult.js";
@@ -28,6 +28,7 @@ import { Tr2DeviceResourceState, TICKS_PER_SECOND, PREPARE_RETRY_SECONDS } from 
 import "#consts/renderContext/presentation";
 import "#consts/renderContext/upscaling";
 import { blueEnums } from "#blue/enums/CjsBlueEnumRegistry";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
 
 /** TriDevice reasons for throttling; Carbon's chooser lists the first two and does not register the enum. */
 const ThrottlingReason = Object.freeze({
@@ -129,7 +130,7 @@ export class TriDevice extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_supportedUpscalingTechniques (PTr2UpscalingTechniqueInfoStructureList) [READ] */
   @be.mapAttribute(be.READ)
@@ -1195,7 +1196,9 @@ export class TriDevice extends IRoot
       curveSet.Update__RealTimeSimTime(realTime, simTime);
     }
 
-    this.curveSets = this.curveSets.filter(curveSet => curveSet.IsPlaying());
+    const remaining = this.curveSets.filter(curveSet => curveSet.IsPlaying());
+    this.curveSets.length = 0;
+    for (const curveSet of remaining) this.curveSets.push(curveSet);
     return this;
   }
 

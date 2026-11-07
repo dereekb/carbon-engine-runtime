@@ -6,7 +6,7 @@ import { type } from "#schema";
 import { Tr2RenderContext, Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { TriRenderStep } from "./step/TriRenderStep.js";
 import { TriRenderJobStatus } from "../generated/renderJob/enums.js";
-import { blue } from "#blue";
+import { blue, BlueList } from "#blue";
 
 
 /**
@@ -51,7 +51,7 @@ export class TriRenderJob extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriRenderStep")
-  steps = [];
+  steps = new BlueList(TriRenderStep, { className: "TriRenderStep" });
 
   #currentStep = 0;
 

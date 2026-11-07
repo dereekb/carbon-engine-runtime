@@ -5,6 +5,7 @@ import { exposure as be } from "#be";
 import { type } from "#schema";
 import { RenderingMode } from "#consts/graphics";
 import { ITr2RenderNode } from "#interfaces/ITr2RenderNode";
+import { BlueList } from "#blue";
 import "#consts/graphics/trinityEnums";
 
 /** A render-graph node that binds named sources onto an effect and produces its output. */
@@ -47,7 +48,7 @@ export class Tr2RenderNodeEffect extends IRoot
   /** m_inputNodes (PITr2RenderNodeVector) [READ, PERSIST] */
 
   @type.list("ITr2RenderNode")
-  inputNodes = [];
+  inputNodes = new BlueList(ITr2RenderNode);
 
   /**
    * Carbon Tr2RenderNodeEffect::Validate (cpp:15-46).

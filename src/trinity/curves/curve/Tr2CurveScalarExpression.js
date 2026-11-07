@@ -3,7 +3,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Curves/Tr2CurveScalarExpression.h
 // Source: trinity/trinity/Curves/Tr2CurveScalarExpression.cpp
 // Source: trinity/trinity/Curves/Tr2CurveScalarExpression_Blue.cpp
-import { ITriScalarFunction, ITriFunction, IInitialize } from "#blue";
+import { ITriScalarFunction, ITriFunction, IInitialize, BlueList } from "#blue";
 import { type } from "#schema";
 import { CjsControllerExpressionProgram } from "../../controllers/expression/CjsControllerExpressionProgram.js";
 
@@ -87,7 +87,7 @@ export class Tr2CurveScalarExpression extends ITriScalarFunction
   /** Owned scalar input functions in native declaration order. */
 
   @type.list("ITriScalarFunction")
-  inputs = [];
+  inputs = new BlueList(ITriScalarFunction);
 
   /** First authored scalar argument. */
 

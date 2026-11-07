@@ -4,6 +4,8 @@ import { IInitialize } from "../../blue/exposure/IInitialize.js";
 // Source: trinity/trinity/Tr2PostProcess.h
 // Source: trinity/trinity/Tr2PostProcess.cpp
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { Tr2Effect } from "../shader/Tr2Effect.js";
 
 
 /**
@@ -21,7 +23,7 @@ import { type } from "#schema";
 export class Tr2PostProcess extends IRoot
 {
   @type.list("Tr2Effect")
-  stages = [];
+  stages = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   /**
    * Accepts the authored stage graph; Carbon performs no additional setup.

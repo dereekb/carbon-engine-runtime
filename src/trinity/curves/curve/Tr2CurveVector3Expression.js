@@ -3,7 +3,7 @@ import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Curves/Tr2CurveVector3Expression.h
 // Source: trinity/trinity/Curves/Tr2CurveVector3Expression.cpp
 // Source: trinity/trinity/Curves/Tr2CurveVector3Expression_Blue.cpp
-import { ITriColorFunction, ITriVectorFunction, ITriFunction, IInitialize } from "#blue";
+import { ITriColorFunction, ITriVectorFunction, ITriFunction, IInitialize, BlueList, ITriScalarFunction } from "#blue";
 import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { CjsControllerExpressionProgram } from "../../controllers/expression/CjsControllerExpressionProgram.js";
@@ -120,7 +120,7 @@ export class Tr2CurveVector3Expression extends ITriColorFunction
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("ITriScalarFunction")
-  inputs = [];
+  inputs = new BlueList(ITriScalarFunction);
 
   /** First authored scalar argument. */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

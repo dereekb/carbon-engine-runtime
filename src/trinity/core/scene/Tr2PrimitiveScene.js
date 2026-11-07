@@ -20,6 +20,9 @@ import { PROJECTION_TYPE } from "../../generated/shader/enums.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
+import { BlueList } from "#blue";
+import { Tr2PrimitiveSet } from "../line/Tr2PrimitiveSet.js";
+import { Tr2PrimitiveText } from "../../generated/trinityCore/Tr2PrimitiveText.js";
 
 /** Native primitive scene and tool handles. Text rendering is a separate port. */
 @be.define("Tr2PrimitiveScene")
@@ -33,12 +36,12 @@ export class Tr2PrimitiveScene extends ITr2PickableScene
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2PrimitiveSet")
-  primitives = [];
+  primitives = new BlueList(Tr2PrimitiveSet, { className: "Tr2PrimitiveSet" });
 
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2PrimitiveText")
-  textLabels = [];
+  textLabels = new BlueList(Tr2PrimitiveText, { className: "Tr2PrimitiveText" });
 
   @be.mapAttribute(be.READWRITE)
   @type.object.ref.weak("Tr2ManipulationTool")

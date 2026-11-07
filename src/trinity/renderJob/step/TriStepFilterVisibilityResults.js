@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { FilterType } from "../../generated/renderJob/enums.js";
-import { blue } from "#blue";
+import { blue, BlueList, IRoot } from "#blue";
 import "../../core/context/Tr2VisibilityResults/Tr2VisibilityEvent.js";
 
 /** A render step that filters one visibility-result set into another by event and object filter. */
@@ -41,7 +41,7 @@ export class TriStepFilterVisibilityResults extends TriRenderStep
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IRoot")
-  objects = [];
+  objects = new BlueList(IRoot);
 
   /** m_outputResults (Tr2VisibilityResultsPtr) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

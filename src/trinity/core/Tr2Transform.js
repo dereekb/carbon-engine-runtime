@@ -11,8 +11,9 @@ import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { Tr2TransformModifier } from "../generated/trinityCore/enums.js";
 import { ITr2Renderable } from "./ITr2Renderable.js";
-import { blue, CcpTime } from "#blue";
+import { blue, CcpTime, BlueList } from "#blue";
 import { Tr2Renderer } from "./Tr2Renderer.js";
+import { TriCurveSet } from "../curves/TriCurveSet.js";
 
 
 // Carbon uses row vectors. A single matrix has the same flat bytes as our
@@ -516,7 +517,7 @@ export class Tr2Transform extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_useDistanceBasedScale (bool) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

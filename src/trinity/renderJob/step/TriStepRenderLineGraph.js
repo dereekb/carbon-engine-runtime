@@ -3,7 +3,8 @@ import { exposure as be } from "#be";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
-import { BlueScriptCallback } from "#blue";
+import { BlueScriptCallback, BlueList } from "#blue";
+import { Tr2LineGraph } from "../../core/line/Tr2LineGraph.js";
 
 /** A render step that draws a set of line graphs with a shared scale and legend. */
 @be.define("TriStepRenderLineGraph")
@@ -15,7 +16,7 @@ export class TriStepRenderLineGraph extends TriRenderStep
   /** m_lineGraphs (PTr2LineGraphVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("Tr2LineGraph")
-  lineGraphs = [];
+  lineGraphs = new BlueList(Tr2LineGraph, { className: "Tr2LineGraph" });
 
   /** m_scale (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

@@ -6,6 +6,8 @@ import { type } from "#schema";
 import { Tr2PPDepthOfFieldEffect } from "./effect/Tr2PPDepthOfFieldEffect.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { Quality } from "../generated/postProcess/enums.js";
+import { BlueList } from "#blue";
+import { Tr2PPLutEffect } from "./effect/Tr2PPLutEffect.js";
 
 
 /**
@@ -65,7 +67,7 @@ export class Tr2PostProcess2 extends IRoot
   fade = null;
 
   @type.list("Tr2PPLutEffect")
-  luts = [];
+  luts = new BlueList(Tr2PPLutEffect, { className: "Tr2PPLutEffect" });
 
   @type.object.ref("Tr2PPLutEffect")
   lut = null;
