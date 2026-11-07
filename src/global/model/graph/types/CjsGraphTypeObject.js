@@ -1,26 +1,20 @@
 import { CjsGraph } from "../CjsGraph.js";
 
 /**
- * Shared operations for a member that holds a reference to one object.
- *
- * This is a type handler, not a trait or a new Carbon VARTYPE. It holds no graph logic:
- * CjsGraph walks the object, and this class is what the walk calls for such a member.
- *
- * @cjs No single Carbon donor: IRoot, IRootPtr and IRootWeakRef specialise it.
+ * IROOTPTR and IROOTWEAKREF members: a reference to one object.
+ * Modelled on: Be::IROOTPTR (blueexposure/BlueVariable.cpp:346-437).
+ * @cjs Holds no graph logic: CjsGraph walks the object, and this is what the walk calls for such a member.
  */
 export class CjsGraphTypeObject
 {
 
-  /** Definition name. */
-  name = "Object";
-
   /**
    * Returns the held object's values, or an alias to them.
-   * @cjs options is the running operation; its member names the declared type.
+   * @cjs options is the running operation.
    */
-  static get(target, key, options)
+  Get(target, key, member, options)
   {
-    return CjsGraph.getObject(target[key], options.member.edge.type, options);
+    return CjsGraph.getObject(target[key], member.edgeType, options);
   }
 
   /**
@@ -31,7 +25,7 @@ export class CjsGraphTypeObject
    * Modelled on: Blue::DictReader::ReadIRootPtr; a bag reads into the object held (door rule).
    * @cjs A non-plain value is a reference: the declared type decides, not the value.
    */
-  static set(target, key, value, options)
+  Set(target, key, value, member, options)
   {
     const current = target[key];
 
@@ -43,7 +37,7 @@ export class CjsGraphTypeObject
       return true;
     }
 
-    const type = options.member.edge.type;
+    const type = member.edgeType;
     let object = value;
 
     if (CjsGraph.isPlain(value))
@@ -77,37 +71,11 @@ export class CjsGraphTypeObject
    * Tests valid input: a bag, an _id reference or a live object.
    * @cjs The graph operation calls it, and passes null around it.
    */
-  static isValidValue(value)
+  IsValidValue(value)
   {
     return typeof value === "object" && !Array.isArray(value) && !ArrayBuffer.isView(value);
   }
 
-  /**
-   * Instance shortcut to get.
-   * @cjs
-   */
-  Get(target, key, options)
-  {
-    return this.constructor.get(target, key, options);
-  }
-
-  /**
-   * Instance shortcut to set.
-   * @cjs
-   */
-  Set(target, key, value, options)
-  {
-    return this.constructor.set(target, key, value, options);
-  }
-
-  /**
-   * Instance shortcut to isValidValue.
-   * @cjs
-   */
-  IsValidValue(value)
-  {
-    return this.constructor.isValidValue(value);
-  }
 
   /** Stable class identity. */
   static className = "CjsGraphTypeObject";

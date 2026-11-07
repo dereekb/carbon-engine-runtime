@@ -1,66 +1,43 @@
-// Independent graph value handlers; object/list/struct operations remain pending.
-export { CjsGraphTypeScalar } from "./CjsGraphTypeScalar.js";
-export { CjsGraphTypeNumber } from "./CjsGraphTypeNumber.js";
-export { CjsGraphTypeInteger } from "./CjsGraphTypeInteger.js";
-export { CjsGraphTypeBigInt } from "./CjsGraphTypeBigInt.js";
-export { CjsGraphTypeArray } from "./CjsGraphTypeArray.js";
+// One value handler per storage kind. What differs between types is data, in GRAPH_TYPES.
+import { CjsGraphTypeBool } from "./CjsGraphTypeBool.js";
+import { CjsGraphTypeCString } from "./CjsGraphTypeCString.js";
+import { CjsGraphTypeDouble } from "./CjsGraphTypeDouble.js";
+import { CjsGraphTypeDoubleArray } from "./CjsGraphTypeDoubleArray.js";
+import { CjsGraphTypeFloat } from "./CjsGraphTypeFloat.js";
+import { CjsGraphTypeFloatArray } from "./CjsGraphTypeFloatArray.js";
+import { CjsGraphTypeInt64 } from "./CjsGraphTypeInt64.js";
+import { CjsGraphTypeIntArray } from "./CjsGraphTypeIntArray.js";
+import { CjsGraphTypeInvalid } from "./CjsGraphTypeInvalid.js";
+import { CjsGraphTypeIRoot } from "./CjsGraphTypeIRoot.js";
+import { CjsGraphTypeList } from "./CjsGraphTypeList.js";
+import { CjsGraphTypeLong } from "./CjsGraphTypeLong.js";
+import { CjsGraphTypeMap } from "./CjsGraphTypeMap.js";
+import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
+import { CjsGraphTypeString } from "./CjsGraphTypeString.js";
+import { CjsGraphTypeValues } from "./CjsGraphTypeValues.js";
 
-export { CjsGraphTypeBoolean } from "./CjsGraphTypeBoolean.js";
-export { CjsGraphTypeString } from "./CjsGraphTypeString.js";
-export { CjsGraphTypeFloat32 } from "./CjsGraphTypeFloat32.js";
-export { CjsGraphTypeFloat64 } from "./CjsGraphTypeFloat64.js";
-export { CjsGraphTypeInt8 } from "./CjsGraphTypeInt8.js";
-export { CjsGraphTypeUint8 } from "./CjsGraphTypeUint8.js";
-export { CjsGraphTypeInt16 } from "./CjsGraphTypeInt16.js";
-export { CjsGraphTypeUint16 } from "./CjsGraphTypeUint16.js";
-export { CjsGraphTypeInt32 } from "./CjsGraphTypeInt32.js";
-export { CjsGraphTypeUint32 } from "./CjsGraphTypeUint32.js";
-export { CjsGraphTypeInt64 } from "./CjsGraphTypeInt64.js";
-export { CjsGraphTypeUint64 } from "./CjsGraphTypeUint64.js";
+export {
+  CjsGraphTypeBool, CjsGraphTypeCString, CjsGraphTypeDouble, CjsGraphTypeDoubleArray, CjsGraphTypeFloat,
+  CjsGraphTypeFloatArray, CjsGraphTypeInt64, CjsGraphTypeIntArray, CjsGraphTypeInvalid, CjsGraphTypeIRoot,
+  CjsGraphTypeList, CjsGraphTypeLong, CjsGraphTypeMap, CjsGraphTypeObject, CjsGraphTypeString, CjsGraphTypeValues
+};
 
-export { CjsGraphTypeInt8Array } from "./CjsGraphTypeInt8Array.js";
-export { CjsGraphTypeUint8Array } from "./CjsGraphTypeUint8Array.js";
-export { CjsGraphTypeUint8ClampedArray } from "./CjsGraphTypeUint8ClampedArray.js";
-export { CjsGraphTypeInt16Array } from "./CjsGraphTypeInt16Array.js";
-export { CjsGraphTypeUint16Array } from "./CjsGraphTypeUint16Array.js";
-export { CjsGraphTypeInt32Array } from "./CjsGraphTypeInt32Array.js";
-export { CjsGraphTypeUint32Array } from "./CjsGraphTypeUint32Array.js";
-export { CjsGraphTypeFloat32Array } from "./CjsGraphTypeFloat32Array.js";
-export { CjsGraphTypeFloat64Array } from "./CjsGraphTypeFloat64Array.js";
-export { CjsGraphTypeBigInt64Array } from "./CjsGraphTypeBigInt64Array.js";
-export { CjsGraphTypeBigUint64Array } from "./CjsGraphTypeBigUint64Array.js";
+/** The handlers, built on first use: the object handlers and CjsGraph import each other. */
+let handlers = null;
 
-export { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
-export { CjsGraphTypeStruct } from "./CjsGraphTypeStruct.js";
-export { CjsGraphTypeList } from "./CjsGraphTypeList.js";
-export { CjsGraphTypeValues } from "./CjsGraphTypeValues.js";
-export { CjsGraphTypeMap } from "./CjsGraphTypeMap.js";
+/**
+ * The one handler for a handler name in GRAPH_TYPES.
+ * @cjs
+ */
+export function getGraphHandler(name)
+{
+  handlers ??= {
+    bool: new CjsGraphTypeBool(), cstring: new CjsGraphTypeCString(), double: new CjsGraphTypeDouble(),
+    doubleArray: new CjsGraphTypeDoubleArray(), float: new CjsGraphTypeFloat(), floatArray: new CjsGraphTypeFloatArray(),
+    int64: new CjsGraphTypeInt64(), intArray: new CjsGraphTypeIntArray(), invalid: new CjsGraphTypeInvalid(),
+    iroot: new CjsGraphTypeIRoot(), list: new CjsGraphTypeList(), long: new CjsGraphTypeLong(), map: new CjsGraphTypeMap(),
+    object: new CjsGraphTypeObject(), string: new CjsGraphTypeString(), values: new CjsGraphTypeValues()
+  };
 
-export { CjsGraphTypeWString } from "./CjsGraphTypeWString.js";
-export { CjsGraphTypeWCString } from "./CjsGraphTypeWCString.js";
-export { CjsGraphTypeReference } from "./CjsGraphTypeReference.js";
-export { CjsGraphTypeWReference } from "./CjsGraphTypeWReference.js";
-export { CjsGraphTypeSharedString } from "./CjsGraphTypeSharedString.js";
-export { CjsGraphTypeSharedStringW } from "./CjsGraphTypeSharedStringW.js";
-export { CjsGraphTypeCString } from "./CjsGraphTypeCString.js";
-export { CjsGraphTypeInvalid } from "./CjsGraphTypeInvalid.js";
-export { CjsGraphTypeIRoot } from "./CjsGraphTypeIRoot.js";
-export { CjsGraphTypeIRootPtr } from "./CjsGraphTypeIRootPtr.js";
-export { CjsGraphTypeIRootWeakRef } from "./CjsGraphTypeIRootWeakRef.js";
-export { CjsGraphTypeCharArray } from "./CjsGraphTypeCharArray.js";
-export { CjsGraphTypePyObject } from "./CjsGraphTypePyObject.js";
-export { CjsGraphTypePyObjectPtr } from "./CjsGraphTypePyObjectPtr.js";
-export { CjsGraphTypePyProperty } from "./CjsGraphTypePyProperty.js";
-export { CjsGraphTypeRotReference } from "./CjsGraphTypeRotReference.js";
-export { CjsGraphTypeBinaryBlock } from "./CjsGraphTypeBinaryBlock.js";
-export { CjsGraphTypeScriptCallback } from "./CjsGraphTypeScriptCallback.js";
-export { CjsGraphTypeVector2 } from "./CjsGraphTypeVector2.js";
-export { CjsGraphTypeVector2d } from "./CjsGraphTypeVector2d.js";
-export { CjsGraphTypeVector3 } from "./CjsGraphTypeVector3.js";
-export { CjsGraphTypeVector3d } from "./CjsGraphTypeVector3d.js";
-export { CjsGraphTypeVector3i } from "./CjsGraphTypeVector3i.js";
-export { CjsGraphTypeVector4 } from "./CjsGraphTypeVector4.js";
-export { CjsGraphTypeVector4d } from "./CjsGraphTypeVector4d.js";
-export { CjsGraphTypeMatrix } from "./CjsGraphTypeMatrix.js";
-export { CjsGraphTypeColor } from "./CjsGraphTypeColor.js";
-export { CjsGraphTypeQuaternion } from "./CjsGraphTypeQuaternion.js";
+  return handlers[name];
+}

@@ -1,16 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-  CjsGraph, CjsGraphRoot, CjsGraphTypeFloat32, CjsGraphTypeIRootPtr, CjsGraphTypeList, CjsGraphTypeString, CjsGraphTypeStruct,
-  CjsGraphTypeMap, CjsGraphTypeValues, CjsGraphTypeVector3
-} from "../../src/global/model/graph/index.js";
+import { CjsGraph, CjsGraphRoot, CjsGraphTypeFloat } from "../../src/global/model/graph/index.js";
 
-const string = new CjsGraphTypeString();
-const float = new CjsGraphTypeFloat32();
-const vector = new CjsGraphTypeVector3();
-const reference = new CjsGraphTypeIRootPtr();
-const list = new CjsGraphTypeList();
-const struct = new CjsGraphTypeStruct();
+const float = new CjsGraphTypeFloat();
+
 
 class Leaf
 {
@@ -40,22 +33,22 @@ class Holder
 }
 
 const leafMembers = [
-  { name: "name", handler: string },
-  { name: "weight", handler: float, flags: 1 },
-  { name: "position", handler: vector }
+  { name: "name", type: "string" },
+  { name: "weight", type: "float32", flags: 1 },
+  { name: "position", type: "vec3" }
 ];
 
 CjsGraph.define(Leaf, { name: "GraphValueLeaf", members: leafMembers });
-CjsGraph.define(Special, { name: "GraphValueSpecial", members: [ { name: "extra", handler: float } ] });
-CjsGraph.define(Row, { name: "GraphValueRow", members: [ { name: "value", handler: float } ] });
+CjsGraph.define(Special, { name: "GraphValueSpecial", members: [ { name: "extra", type: "float32" } ] });
+CjsGraph.define(Row, { name: "GraphValueRow", members: [ { name: "value", type: "float32" } ] });
 CjsGraph.define(Holder, { name: "GraphValueHolder", members: [
-  { name: "name", handler: string },
-  { name: "child", handler: reference, edge: { kind: "ref", type: Leaf } },
-  { name: "other", handler: reference, edge: { kind: "ref" } },
-  { name: "items", handler: list, edge: { kind: "ref", collection: true, type: Leaf } },
-  { name: "rows", handler: list, edge: { kind: "embed", collection: true, type: Row } },
-  { name: "first", key: "slots", index: 0, handler: reference, edge: { kind: "ref", type: Leaf } },
-  { name: "second", key: "slots", index: 1, handler: reference, edge: { kind: "ref", type: Leaf } }
+  { name: "name", type: "string" },
+  { name: "child", type: "rootRef", edge: { kind: "ref", type: Leaf } },
+  { name: "other", type: "rootRef", edge: { kind: "ref" } },
+  { name: "items", type: "list", edge: { kind: "ref", collection: true, type: Leaf } },
+  { name: "rows", type: "list", edge: { kind: "embed", collection: true, type: Row } },
+  { name: "first", key: "slots", index: 0, type: "rootRef", edge: { kind: "ref", type: Leaf } },
+  { name: "second", key: "slots", index: 1, type: "rootRef", edge: { kind: "ref", type: Leaf } }
 ] });
 
 function leaf(name, weight = 1)
@@ -93,7 +86,7 @@ test("get writes a shared object once, anchors it on second sight and closes a c
   {
     next = null;
   }
-  CjsGraph.define(Node, { name: "GraphValueNode", members: [ { name: "next", handler: reference, edge: { kind: "ref", type: Node } } ] });
+  CjsGraph.define(Node, { name: "GraphValueNode", members: [ { name: "next", type: "rootRef", edge: { kind: "ref", type: Node } } ] });
 
   const shared = leaf("shared");
   const holder = new Holder();
@@ -159,7 +152,7 @@ test("struct handler writes an embedded object", () =>
   {
     row = new Row();
   }
-  CjsGraph.define(Embed, { name: "GraphValueEmbed", members: [ { name: "row", handler: struct, edge: { kind: "embed", type: Row } } ] });
+  CjsGraph.define(Embed, { name: "GraphValueEmbed", members: [ { name: "row", type: "rawStruct", edge: { kind: "embed", type: Row } } ] });
   assert.deepEqual(CjsGraph.get(new Embed()), { row: { value: 0 } });
 });
 
@@ -354,8 +347,8 @@ test("an embedded object keeps its identity, ignores null and copies a live obje
     empty = null;
   }
   CjsGraph.define(Embed, { name: "GraphValueEmbedSet", members: [
-    { name: "row", handler: struct, edge: { kind: "embed", type: Row } },
-    { name: "empty", handler: struct, edge: { kind: "embed", type: Row } }
+    { name: "row", type: "rawStruct", edge: { kind: "embed", type: Row } },
+    { name: "empty", type: "rawStruct", edge: { kind: "embed", type: Row } }
   ] });
 
   const embed = new Embed(), row = embed.row;
@@ -385,9 +378,9 @@ test("forward _refs fill rows by value, chain through waiting rows, and record t
     more = [];
   }
   CjsGraph.define(Rows, { name: "GraphValueRows", members: [
-    { name: "rows", handler: list, edge: { kind: "embed", collection: true, type: Row } },
-    { name: "more", handler: list, edge: { kind: "embed", collection: true, type: Row } },
-    { name: "source", handler: reference, edge: { kind: "ref", type: Row } }
+    { name: "rows", type: "list", edge: { kind: "embed", collection: true, type: Row } },
+    { name: "more", type: "list", edge: { kind: "embed", collection: true, type: Row } },
+    { name: "source", type: "rootRef", edge: { kind: "ref", type: Row } }
   ] });
 
   const object = new Rows();
@@ -438,9 +431,9 @@ test("a forward _ref on an embedded member fills it, keeping its identity", () =
     source = null;
   }
   CjsGraph.define(Embed, { name: "GraphValueEmbedForward", members: [
-    { name: "row", handler: struct, edge: { kind: "embed", type: Row } },
-    { name: "empty", handler: struct, edge: { kind: "embed", type: Row } },
-    { name: "source", handler: reference, edge: { kind: "ref", type: Row } }
+    { name: "row", type: "rawStruct", edge: { kind: "embed", type: Row } },
+    { name: "empty", type: "rawStruct", edge: { kind: "embed", type: Row } },
+    { name: "source", type: "rootRef", edge: { kind: "ref", type: Row } }
   ] });
 
   const embed = new Embed(), row = embed.row;
@@ -480,9 +473,9 @@ test("shared references, cycles and forward references rebuild the same topology
     friend = null;
   }
   CjsGraph.define(Node, { name: "GraphValueSetNode", members: [
-    { name: "name", handler: string },
-    { name: "next", handler: reference, edge: { kind: "ref", type: Node } },
-    { name: "friend", handler: reference, edge: { kind: "ref", type: Node } }
+    { name: "name", type: "string" },
+    { name: "next", type: "rootRef", edge: { kind: "ref", type: Node } },
+    { name: "friend", type: "rootRef", edge: { kind: "ref", type: Node } }
   ] });
 
   const ring = CjsGraph.from(Node, { _id: 1, name: "a", next: { name: "b", next: { _ref: 1 } } });
@@ -630,7 +623,7 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
     name = "";
     weight = 1;
   }
-  CjsGraph.define(Rooted, { name: "GraphValueRooted", members: [ { name: "name", handler: string }, { name: "weight", handler: float } ] });
+  CjsGraph.define(Rooted, { name: "GraphValueRooted", members: [ { name: "name", type: "string" }, { name: "weight", type: "float32" } ] });
 
   const object = Rooted.from({ name: "a" });
   assert.equal(object.constructor, Rooted);
@@ -660,8 +653,8 @@ test("a definition marked whole takes nothing from its base", () =>
     dropped = 2;
   }
   class Derived extends Base {}
-  CjsGraph.define(Base, { name: "GraphValueWholeBase", members: [ { name: "shared", handler: float }, { name: "dropped", handler: float } ] });
-  CjsGraph.define(Derived, { name: "GraphValueWholeDerived", whole: true, members: [ { name: "shared", handler: float } ] });
+  CjsGraph.define(Base, { name: "GraphValueWholeBase", members: [ { name: "shared", type: "float32" }, { name: "dropped", type: "float32" } ] });
+  CjsGraph.define(Derived, { name: "GraphValueWholeDerived", whole: true, members: [ { name: "shared", type: "float32" } ] });
 
   assert.deepEqual(CjsGraph.get(new Derived()), { shared: 1 });
   assert.equal(CjsGraph.getClassInfo(Derived).compiled.parent, CjsGraph.getClassInfo(Base), "the base is still its parent");
@@ -679,7 +672,7 @@ test("an interface a definition names counts as assignable, without inheritance"
   CjsGraph.define(Contract, { name: "GraphValueContract", members: [] });
   CjsGraph.define(Mapped, { name: "GraphValueMapped", interfaces: [ "GraphValueContract" ], members: [] });
   CjsGraph.define(Unmapped, { name: "GraphValueUnmapped", members: [] });
-  CjsGraph.define(Holds, { name: "GraphValueHolds", members: [ { name: "held", handler: reference, edge: { kind: "ref", type: Contract } } ] });
+  CjsGraph.define(Holds, { name: "GraphValueHolds", members: [ { name: "held", type: "rootRef", edge: { kind: "ref", type: Contract } } ] });
 
   const holds = new Holds();
   holds.held = new Mapped();
@@ -697,8 +690,8 @@ test("a list of values reads, writes and compares through its item handler", () 
     names = [];
   }
   CjsGraph.define(Transforms, { name: "GraphValueTransforms", members: [
-    { name: "transforms", handler: new CjsGraphTypeValues(vector) },
-    { name: "names", handler: new CjsGraphTypeValues(string) }
+    { name: "transforms", type: "values", item: "vec3" },
+    { name: "names", type: "values", item: "string" }
   ] });
 
   const object = new Transforms(), first = object.transforms[0];
@@ -727,8 +720,8 @@ test("a Map of objects behaves as a list keyed by name", () =>
     other = null;
   }
   CjsGraph.define(Named, { name: "GraphValueNamed", members: [
-    { name: "entries", handler: new CjsGraphTypeMap(), edge: { kind: "ref", collection: true, map: true, type: Leaf } },
-    { name: "other", handler: reference, edge: { kind: "ref", type: Leaf } }
+    { name: "entries", type: "map", edge: { kind: "ref", collection: true, map: true, type: Leaf } },
+    { name: "other", type: "rootRef", edge: { kind: "ref", type: Leaf } }
   ] });
 
   const object = new Named(), entries = object.entries, stays = leaf("stays");
@@ -773,10 +766,10 @@ test("a comparison reaching a Map inside a list reads the Map's own declared typ
     inners = [];
   }
   CjsGraph.define(Inner, { name: "GraphValueInner", members: [
-    { name: "entries", handler: new CjsGraphTypeMap(), edge: { kind: "ref", collection: true, map: true, type: Row } }
+    { name: "entries", type: "map", edge: { kind: "ref", collection: true, map: true, type: Row } }
   ] });
   CjsGraph.define(Outer, { name: "GraphValueOuter", members: [
-    { name: "inners", handler: list, edge: { kind: "ref", collection: true, type: Inner } }
+    { name: "inners", type: "list", edge: { kind: "ref", collection: true, type: Inner } }
   ] });
 
   const outer = new Outer(), inner = new Inner();
@@ -877,17 +870,17 @@ class Bare
 }
 
 const watchedMembers = [
-  { name: "name", handler: string, notify: true },
-  { name: "weight", handler: float, notify: true },
-  { name: "quiet", handler: float },
-  { name: "child", handler: reference, notify: true, edge: { kind: "ref", type: Watched } },
-  { name: "items", handler: list, notify: true, edge: { kind: "ref", collection: true, type: Watched } }
+  { name: "name", type: "string", notify: true },
+  { name: "weight", type: "float32", notify: true },
+  { name: "quiet", type: "float32" },
+  { name: "child", type: "rootRef", notify: true, edge: { kind: "ref", type: Watched } },
+  { name: "items", type: "list", notify: true, edge: { kind: "ref", collection: true, type: Watched } }
 ];
 
 CjsGraph.define(Watched, { name: "GraphWatched", notify: true, members: watchedMembers });
 CjsGraph.define(Started, { name: "GraphStarted", initialize: true, notify: true, members: [] });
 CjsGraph.define(Hooked, { name: "GraphHooked", hook: true, members: [] });
-CjsGraph.define(Bare, { name: "GraphBare", members: [ { name: "value", handler: float } ] });
+CjsGraph.define(Bare, { name: "GraphBare", members: [ { name: "value", type: "float32" } ] });
 
 function watched(name)
 {
@@ -1084,8 +1077,8 @@ test("copy and clone write PERSIST members only, and clone creates", () =>
     runtime = 2;
   }
   CjsGraph.define(Persisted, { name: "GraphPersisted", members: [
-    { name: "kept", handler: float },
-    { name: "runtime", handler: float, persist: false }
+    { name: "kept", type: "float32" },
+    { name: "runtime", type: "float32", persist: false }
   ] });
 
   const source = new Persisted();
@@ -1156,13 +1149,13 @@ test("get filters by flags, and a hidden derived declaration leaves the visible 
     readOnly = 3;
     secret = 4;
   }
-  CjsGraph.define(Base, { name: "GraphFlagBase", members: [ { name: "value", handler: float } ] });
-  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", handler: float, persist: false } ] });
+  CjsGraph.define(Base, { name: "GraphFlagBase", members: [ { name: "value", type: "float32" } ] });
+  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", type: "float32", persist: false } ] });
   CjsGraph.define(Flags, { name: "GraphFlags", members: [
-    { name: "shown", handler: float },
-    { name: "transient", handler: float, persist: false },
-    { name: "readOnly", handler: float, writable: false },
-    { name: "secret", handler: float, hidden: true }
+    { name: "shown", type: "float32" },
+    { name: "transient", type: "float32", persist: false },
+    { name: "readOnly", type: "float32", writable: false },
+    { name: "secret", type: "float32", hidden: true }
   ] });
 
   assert.deepEqual(CjsGraph.get(new Derived()), { value: 2 });
@@ -1186,10 +1179,10 @@ test("a registration change rebuilds the member tables", () =>
     a = 1;
     b = 2;
   }
-  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "a", handler: float } ] });
+  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "a", type: "float32" } ] });
   assert.deepEqual(CjsGraph.get(new Late()), { a: 1 });
 
-  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "b", handler: float } ] });
+  CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "b", type: "float32" } ] });
   assert.deepEqual(CjsGraph.get(new Late()), { b: 2 });
 });
 
@@ -1217,9 +1210,9 @@ class Listed
 }
 
 CjsGraph.define(Listed, { name: "GraphListed", listNotify: true, members: [
-  { name: "name", handler: string },
-  { name: "mapped", handler: list, edge: { kind: "ref", collection: true, type: Leaf } },
-  { name: "plain", handler: list, edge: { kind: "ref", collection: true, type: Leaf } }
+  { name: "name", type: "string" },
+  { name: "mapped", type: "list", edge: { kind: "ref", collection: true, type: Leaf } },
+  { name: "plain", type: "list", edge: { kind: "ref", collection: true, type: Leaf } }
 ] });
 
 const UNLOADSTART = 0x100000, INSERTED = 0x2;

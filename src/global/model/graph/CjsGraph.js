@@ -1,7 +1,7 @@
 import { BLUELISTEVENT } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
-import { GraphOperation } from "./GraphTypes.js";
-import { CjsGraphTypeInvalid } from "./types/CjsGraphTypeInvalid.js";
+import { GRAPH_TYPES, GRAPH_WRAPPERS, GraphOperation, VARTYPE } from "./GraphTypes.js";
+import { getGraphHandler } from "./types/index.js";
 
 /**
  * Independent graph declarations and their compiled class records.
@@ -13,11 +13,11 @@ export class CjsGraph
   /** One record per registered constructor. */
   static _classes = new Map();
 
+  /** The edgeType of a member that declares no class. */
+  static _noTypes = [];
+
   /** Stable declared names, never inferred from Function.name. */
   static _names = new Map();
-
-  /** Shared throwing default for members without an assigned value handler. */
-  static _invalidHandler = new CjsGraphTypeInvalid();
 
   /** Invalidates derived descriptions after registration changes, including late parents. */
   static _revision = 0;
@@ -51,13 +51,20 @@ export class CjsGraph
 
   /**
    * Registers or replaces a class's own definition while retaining its class-info identity.
-   * Definition shape: { name, members: [{ name, key?, handler?, ...metadata }], interfaces? }.
+   * Definition shape: { name, members: [{ name, key?, type?, edge?, ...flags }], interfaces? }.
+   * A member's type is a GRAPH_TYPES name; one with no type describes and walks, and refuses
+   * every value operation. Its flags are data: persist and writable default to true, and notify,
+   * hidden, binary and runtimeOnly to false. wrapped names a GRAPH_WRAPPERS class, item the type
+   * of a values list, length a length of its own, and options anything rare.
+   * edge is { kind, type?, collection?, map? }: type is a class, a name or a list of them, the
+   * first being the declared one, and collection is true or "list", "array", "set" or "map".
    * interfaces names classes an instance also counts as without inheriting from them.
    * whole means members is the class's complete list, so no base definition adds to it.
    * initialize, notify, listNotify and hook say instances take Initialize, OnModified,
-   * OnListModified and OnValueChanged. A member's flags are data: persist, writable, notify and
-   * hidden, where writable and persist default to true.
-   * @cjs Snapshots declaration containers; handlers and authored default values are not cloned.
+   * OnListModified and OnValueChanged. ownValues says instances hold values that are not members,
+   * through GetOwnValues, SetOwnValues and IsOwnValues. customPersist, list, proxy and abstract are
+   * facts for readers, and layout a structure record's { size, boundaries, fields }.
+   * @cjs Compiles each member to one flat object; authored default values are not cloned.
    */
   static define(ctor, definition)
   {
@@ -78,8 +85,7 @@ export class CjsGraph
         throw new TypeError(`Graph member index must be a non-negative integer: ${name}.${member.name}`);
       names.add(member.name);
 
-      const edge = member.edge ? this._compileEdge(member.edge) : null;
-      members.push({ ...member, handler: member.handler ?? this._invalidHandler, edge });
+      members.push(this.compileMember(member));
     }
     const declared = { ...definition, members, interfaces: definition.interfaces ?? [] };
 
@@ -91,6 +97,61 @@ export class CjsGraph
 
     this._revision++;
     return info;
+  }
+
+  /**
+   * Compiles one member definition to the flat object every walk reads.
+   * Modelled on: Be::VarEntry (blueexposure/include/BlueTypes.h:326-376).
+   * @cjs One shape: the type's data copied flat, then name, flags and edge. JS keys replace offsets.
+   */
+  static compileMember(member)
+  {
+    const entry = member.type === undefined ? GRAPH_TYPES.invalid : GRAPH_TYPES[member.type];
+    if (!entry) throw new TypeError(`Unknown graph type: ${member.type}`);
+
+    const edge = member.edge ? this._compileEdge(member.edge) : null;
+    const wrapped = member.wrapped === undefined ? null : GRAPH_WRAPPERS[member.wrapped];
+    if (wrapped === undefined) throw new TypeError(`Unknown graph wrapper: ${member.wrapped}`);
+
+    return {
+      name: member.name,
+      key: member.key ?? member.name,
+      index: member.index,
+      role: member.role ?? "attribute",
+      type: member.type ?? "invalid",
+      vartype: member.binary === true ? VARTYPE.BINARYBLOCK : wrapped === null ? entry.storage : VARTYPE.IROOT,
+      handler: getGraphHandler(entry.handler),
+      direct: entry.direct === true,
+      length: wrapped === null ? member.length ?? entry.length ?? 0 : wrapped.elements.length,
+      bits: entry.bits ?? 0,
+      signed: entry.signed === true,
+      ctor: entry.ctor ?? null,
+      item: member.item === undefined ? null : this.compileMember({ name: member.name, type: member.item }),
+      persist: member.persist !== false,
+      writable: member.writable !== false,
+      notify: member.notify === true,
+      hidden: member.hidden === true,
+      binary: member.binary === true,
+      runtimeOnly: member.runtimeOnly === true,
+      wrapped,
+      options: member.options ?? null,
+      edgeKind: edge === null ? null : edge.kind,
+      edgeType: edge === null ? this._noTypes : edge.types,
+      collection: edge === null ? member.collection ?? null : edge.collection,
+      destination: this._getDestination(edge, wrapped, member),
+      owner: null
+    };
+  }
+
+  /** Where a reader puts this member's value. @cjs */
+  static _getDestination(edge, wrapped, member)
+  {
+    if (wrapped !== null) return "wrapper";
+    if (edge === null) return member.type === "values" ? "list" : null;
+    if (edge.collection === "map") return "dict";
+    if (edge.collection !== null) return edge.kind === "embed" ? "structureList" : "list";
+
+    return edge.kind === "embed" ? "embedded" : null;
   }
 
   /**
@@ -200,7 +261,7 @@ export class CjsGraph
    */
   static get(object, options = {})
   {
-    return this._writeObject(object, null, this._beginGet(options));
+    return this._writeObject(object, this._noTypes, this._beginGet(options));
   }
 
   /**
@@ -210,7 +271,7 @@ export class CjsGraph
   static getValue(object, name, options = {})
   {
     const operation = this._beginGet(options);
-    const info = this._getObjectInfo(object, null);
+    const info = this._getObjectInfo(object, this._noTypes);
     const member = this._getMemberTable(info, GraphOperation.GET, operation).byName[name];
     if (!member) throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
 
@@ -238,7 +299,7 @@ export class CjsGraph
     if (!this._isValues(values, "set")) return false;
 
     const operation = this._beginSet(options, GraphOperation.SET);
-    const changes = this.setObject(object, values, null, operation);
+    const changes = this.setObject(object, values, this._noTypes, operation);
     this._finish(operation);
     return changes;
   }
@@ -251,7 +312,7 @@ export class CjsGraph
    */
   static updateValues(object, names = null)
   {
-    const info = this._getObjectInfo(object, null);
+    const info = this._getObjectInfo(object, this._noTypes);
 
     if (names === null)
     {
@@ -287,7 +348,7 @@ export class CjsGraph
     if (options.valuesMode === true) return this._copyValues(values);
 
     const operation = this._beginSet(options, GraphOperation.CREATE);
-    const object = this.createObject(values, type, operation);
+    const object = this.createObject(values, type === null ? this._noTypes : [ type ], operation);
     this._finish(operation);
     return object;
   }
@@ -305,7 +366,7 @@ export class CjsGraph
   {
     const values = this.get(source, { persistOnly: true, ...options, typeTags: true });
     const operation = this._beginSet({ ...options, validate: false }, GraphOperation.COPY);
-    const changes = this.setObject(target, values, null, operation);
+    const changes = this.setObject(target, values, this._noTypes, operation);
     this._finish(operation);
     return changes;
   }
@@ -355,7 +416,7 @@ export class CjsGraph
 
     const bag = {};
     if (options.refs) options.written.set(object, bag);
-    if (options.forceTypeTags || (options.typeTags && (!type || this.getClassInfo(type) !== info))) bag._type = info.declared.name;
+    if (options.forceTypeTags || (options.typeTags && (type.length === 0 || this.getClassInfo(type[0]) !== info))) bag._type = info.declared.name;
 
     const members = this._getMemberTable(info, GraphOperation.GET, options).members;
     for (let i = 0; i < members.length; i++)
@@ -364,6 +425,8 @@ export class CjsGraph
       if (member.index !== undefined && object[member.key][member.index] === null) continue;
       bag[member.name] = this._getMember(object, member, options);
     }
+
+    if (info.declared.ownValues === true) Object.assign(bag, object.GetOwnValues());
 
     return bag;
   }
@@ -394,7 +457,8 @@ export class CjsGraph
    */
   static createObject(values, type, options)
   {
-    const typeName = values._type ?? (typeof type === "function" ? this.getClassInfo(type).declared.name : type);
+    const declared = type[0] ?? null;
+    const typeName = values._type ?? (typeof declared === "function" ? this.getClassInfo(declared).declared.name : declared);
     if (!typeName) throw new TypeError("Graph value names no class: it has no _type, and its member declares none.");
 
     const object = this._create(typeName);
@@ -480,7 +544,7 @@ export class CjsGraph
     if (options.skipEvents) return false;
     if (Object.getPrototypeOf(list) !== Array.prototype) return true;
 
-    return !options.creating && this._getObjectInfo(owner, null).declared.listNotify;
+    return !options.creating && this._getObjectInfo(owner, this._noTypes).declared.listNotify;
   }
 
   /** Whether a value is a _ref. @cjs */
@@ -512,6 +576,7 @@ export class CjsGraph
       if (!member)
       {
         if (this._reserved.has(name) || info.compiled.byName[name]) continue;
+        if (info.declared.ownValues === true) return object.IsOwnValues(value);
         return false;
       }
 
@@ -557,23 +622,23 @@ export class CjsGraph
       forceTypeTags: options.forceTypeTags === true,
       copyOverride: options.copyOverride ?? null,
       written: new Map(),
-      anchor: 1,
-      member: null
+      anchor: 1
     };
   }
 
   /**
    * Reads one member through its handler; a null never reaches a handler.
-   * @cjs member.index selects a slot of the stored array.
+   * @cjs member.index selects a slot of the stored array. A direct leaf needs no call.
    */
   static _getMember(object, member, options)
   {
     const holder = member.index === undefined ? object : object[member.key];
     const key = member.index === undefined ? member.key : member.index;
-    if (holder[key] === null) return null;
+    const stored = holder[key];
 
-    options.member = member;
-    return member.handler.Get(holder, key, options);
+    if (stored === null || member.direct) return stored;
+
+    return member.handler.Get(holder, key, member, options);
   }
 
   /** The operation record for one set, from or copy. @cjs Nothing is allocated per member. */
@@ -596,7 +661,6 @@ export class CjsGraph
       creating: false,
       initialize: false,
       owner: null,
-      member: null,
       deferred: null
     };
   }
@@ -624,19 +688,18 @@ export class CjsGraph
 
       if (!member)
       {
-        if (this._reserved.has(name) || info.compiled.byName[name]) continue;
+        if (this._reserved.has(name) || info.compiled.byName[name] || info.declared.ownValues === true) continue;
         throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
       }
 
       const value = values[name];
-      if (options.validate && value !== null && !member.handler.IsValidValue(value))
+      if (options.validate && value !== null && !member.handler.IsValidValue(value, member))
         throw new TypeError(`Invalid value for graph member: ${info.declared.name}.${name}`);
 
       const holder = member.index === undefined ? object : object[member.key];
       const key = member.index === undefined ? member.key : member.index;
 
       options.owner = object;
-      options.member = member;
       const result = this._setMember(holder, key, value, member, options);
 
       if (!tracking)
@@ -657,12 +720,18 @@ export class CjsGraph
       }
       else changes[name] = result === true ? this._getMember(object, member, options) : result;
 
-      if (member.edge === null) continue;
+      if (member.edgeKind === null) continue;
       if (options.idMap !== null) this._addRecorded(changes, name, member, options);
 
       // A nested bag is the child's own set: only the child's completion tells of it. Copier
       // tells the owner too: the embedded object's bytes differ (Copier.cpp:170-190).
-      if (!copying && !member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
+      if (!copying && member.collection === null && result !== true && this.isPlain(result)) (nested ??= []).push(name);
+    }
+
+    if (info.declared.ownValues === true && !object.IsOwnValues(values))
+    {
+      object.SetOwnValues(values);
+      if (tracking && changes === false) changes = {}; // alloc: only once something changed.
     }
 
     if (changes !== false || options.creating || options.initialize)
@@ -674,16 +743,16 @@ export class CjsGraph
   /** Writes one member, comparing as the operation requires. @cjs Returns as a handler's Set does. */
   static _setMember(holder, key, value, member, options)
   {
-    if (member.edge !== null) return member.handler.Set(holder, key, value, options);
+    if (member.edgeKind !== null) return member.handler.Set(holder, key, value, member, options);
     if (value === null) return this._clear(holder, key);
 
     if (options.operation === GraphOperation.COPY)
     {
-      if (holder[key] !== null && member.handler.IsExactEqual(holder[key], value)) return false;
+      if (holder[key] !== null && member.handler.IsExactEqual(holder[key], value, member)) return false;
     }
-    else if (!this.isWritingAll(options)) return member.handler.Set(holder, key, value, options);
+    else if (!this.isWritingAll(options)) return member.handler.Set(holder, key, value, member, options);
 
-    member.handler.Write(holder, key, value, options);
+    member.handler.Write(holder, key, value, member, options);
     return true;
   }
 
@@ -707,7 +776,7 @@ export class CjsGraph
   /** Notes where a record holds live objects, for _recordReferences. @cjs idMap only. */
   static _addRecorded(record, name, member, options)
   {
-    if (!member.edge.map || record[name] === null)
+    if (member.collection !== "map" || record[name] === null)
     {
       options.recorded.push(record, name);
       return;
@@ -797,15 +866,14 @@ export class CjsGraph
   {
     if (stored === null || value === null) return stored === value;
 
-    if (options.validate && !member.handler.IsValidValue(value))
+    if (options.validate && !member.handler.IsValidValue(value, member))
       throw new TypeError(`Invalid value for graph member: ${member.owner.declared.name}.${member.name}`);
 
-    if (member.edge === null) return member.handler.IsUnchanged(stored, value);
-    options.member = member;
-    if (member.edge.map) return member.handler.IsUnchanged(stored, value, options);
-    if (member.edge.collection) return this.isListLike(stored, value, member.edge.type, options);
+    if (member.edgeKind === null) return member.handler.IsUnchanged(stored, value, member);
+    if (member.collection === "map") return member.handler.IsUnchanged(stored, value, member, options);
+    if (member.collection !== null) return this.isListLike(stored, value, member.edgeType, options);
 
-    return this.isObjectLike(stored, value, member.edge.type, options);
+    return this.isObjectLike(stored, value, member.edgeType, options);
   }
 
   /** Records an object for completion, once, children before parents. @cjs */
@@ -1045,7 +1113,7 @@ export class CjsGraph
     const pass = ++state.pass;
     const revision = this._revision;
     let top = 0, count = 0;
-    this._setFrame(state.frames, top, root, null);
+    this._setFrame(state.frames, top, root, this._noTypes);
 
     try
     {
@@ -1126,17 +1194,17 @@ export class CjsGraph
           throw new TypeError(`Graph member index is outside its storage: ${member.name}`);
         const value = member.index === undefined ? stored : stored[member.index];
         if (value === undefined) throw new TypeError(`Graph edge is undefined: ${member.name}`);
-        if (member.edge.collection)
+        if (member.collection !== null)
         {
-          const items = member.edge.map && value !== null ? Array.from(value.values()) : value;
+          const items = member.collection === "map" && value !== null ? Array.from(value.values()) : value;
           if (!Array.isArray(items)) throw new TypeError(`Graph collection must be an array: ${member.name}`);
           frame.items = items;
           frame.itemIndex = 0;
-          frame.type = member.edge.type;
+          frame.type = member.edgeType;
         }
         else
         {
-          this._setFrame(state.frames, ++top, value, member.edge.type);
+          this._setFrame(state.frames, ++top, value, member.edgeType);
         }
       }
 
@@ -1152,39 +1220,49 @@ export class CjsGraph
   }
 
   /**
-   * Snapshots an explicit object/struct edge; an omitted type is dynamic.
+   * Snapshots an explicit object/struct edge; an empty type list is dynamic.
    * @cjs Ownership is retained independently of collection shape and target class.
    */
   static _compileEdge(edge)
   {
     if (edge.kind !== "embed" && edge.kind !== "ref" && edge.kind !== "refWeak" && edge.kind !== "weak")
       throw new TypeError("Graph edge requires embed, ref, refWeak or weak ownership.");
-    if (edge.type != null && typeof edge.type !== "function" && typeof edge.type !== "string")
-      throw new TypeError("Graph edge type requires a constructor or registered name.");
-    if (edge.collection !== undefined && typeof edge.collection !== "boolean")
-      throw new TypeError("Graph edge collection must be boolean.");
 
-    return { kind: edge.kind, type: edge.type ?? null, collection: edge.collection ?? false, map: edge.map === true };
+    const types = edge.type == null ? this._noTypes : Array.isArray(edge.type) ? edge.type.slice() : [ edge.type ];
+    for (const type of types)
+    {
+      if (typeof type !== "function" && typeof type !== "string")
+        throw new TypeError("Graph edge type requires a constructor or registered name.");
+    }
+
+    const collection = edge.map === true ? "map" : edge.collection === true ? "list" : edge.collection || null;
+    if (collection !== null && collection !== "list" && collection !== "array" && collection !== "set" && collection !== "map")
+      throw new TypeError("Graph edge collection must be list, array, set or map.");
+
+    return { kind: edge.kind, types, collection };
   }
 
   /** Resolves actual classes, using the declared type only for plain struct storage. @cjs */
-  static _getObjectInfo(object, type)
+  static _getObjectInfo(object, types)
   {
     if (typeof object !== "object") throw new TypeError("Graph edge requires an object.");
     const prototype = Object.getPrototypeOf(object);
     const plain = prototype === Object.prototype || prototype === null;
-    if (type)
+
+    if (types.length !== 0)
     {
-      const declared = this.getClassInfo(type);
-      if (plain) return declared;
-      let current = prototype;
-      while (current && current !== declared.ctor.prototype) current = Object.getPrototypeOf(current);
-      if (current) return this.getClassInfo(prototype.constructor);
+      if (plain) return this.getClassInfo(types[0]);
 
       const info = this.getClassInfo(prototype.constructor);
-      if (info.declared.interfaces.includes(declared.declared.name)) return info;
-      throw new TypeError(`Graph edge is not assignable to ${declared.declared.name}: holds ${info.declared.name}.`);
+      for (let i = 0; i < types.length; i++)
+      {
+        const declared = this.getClassInfo(types[i]);
+        if (declared.ctor.prototype.isPrototypeOf(object) || info.declared.interfaces.includes(declared.declared.name)) return info;
+      }
+
+      throw new TypeError(`Graph edge is not assignable to ${this.getClassInfo(types[0]).declared.name}: holds ${info.declared.name}.`);
     }
+
     if (plain) throw new TypeError("Graph edge has no declared type for a plain object.");
     return this.getClassInfo(prototype.constructor);
   }
@@ -1229,9 +1307,9 @@ export class CjsGraph
     {
       for (const member of row.full)
       {
-        const type = member.edge.type;
-        const target = typeof type === "string" ? this._names.get(type) : this._classes.get(type);
-        const targets = target ? descendants.get(target) : null;
+        const types = member.edgeType;
+        const known = types.map(type => typeof type === "string" ? this._names.get(type) : this._classes.get(type));
+        const targets = types.length !== 0 && known.every(Boolean) ? known.flatMap(target => descendants.get(target) ?? []) : null;
         row.dependencies.push({ member, targets });
         if (targets)
         {
@@ -1246,7 +1324,7 @@ export class CjsGraph
           }
           if (diagnostics) diagnostics.push({
             className: row.info.declared.name, member: member.name,
-            reason: type == null ? "dynamic" : "unregistered target"
+            reason: types.length === 0 ? "dynamic" : "unregistered target"
           });
         }
       }
@@ -1298,7 +1376,7 @@ export class CjsGraph
     const members = [];
     for (const member of selected.values())
     {
-      if (member.edge && edges.includes(member.edge.kind)) members.push(member);
+      if (member.edgeKind !== null && edges.includes(member.edgeKind)) members.push(member);
     }
     return members;
   }
@@ -1333,6 +1411,7 @@ export class CjsGraph
   {
     const members = [];
     const byName = Object.create(null);
+    const persistByName = Object.create(null);
     let parent = null;
 
     // Preserve candidates in derived-first order. Flags filter BEFORE resolving a name;
@@ -1347,14 +1426,30 @@ export class CjsGraph
 
       for (const member of owner.declared.members)
       {
-        const compiled = { ...member, key: member.key ?? member.name, owner };
+        const compiled = { ...member, owner };
         if (!Object.hasOwn(byName, member.name)) byName[member.name] = [];
         byName[member.name].push(compiled);
         members.push(compiled);
+
+        if ((compiled.persist || compiled.runtimeOnly) && !Object.hasOwn(persistByName, member.name)) persistByName[member.name] = compiled;
       }
     }
 
-    return { revision: this._revision, parent, members, byName, tables: [] };
+    const { declared } = info;
+
+    return {
+      revision: this._revision, parent, members, byName, persistByName, tables: [],
+      name: declared.name,
+      interfaces: declared.interfaces,
+      initialize: declared.initialize === true,
+      notify: declared.notify === true,
+      listNotify: declared.listNotify === true,
+      customPersist: declared.customPersist === true,
+      list: declared.list === true,
+      proxy: declared.proxy === true,
+      abstract: declared.abstract === true,
+      layout: declared.layout ?? null
+    };
   }
 
   /** Stable class identity. */

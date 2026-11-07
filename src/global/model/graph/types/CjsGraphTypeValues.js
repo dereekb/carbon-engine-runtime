@@ -9,32 +9,20 @@
 export class CjsGraphTypeValues
 {
 
-  /** Definition name. */
-  name = "Values";
 
-  /** The leaf handler for one element. */
-  item = null;
-
-  /**
-   * @param {object} item The leaf handler for one element.
-   */
-  constructor(item)
-  {
-    this.item = item;
-  }
 
   /**
    * Returns a plain array of element values; a null element stays null.
    * @cjs
    */
-  Get(target, key, options)
+  Get(target, key, member, options)
   {
-    const list = target[key];
+    const list = target[key], item = member.item;
     const values = new Array(list.length); // alloc: the returned plain array.
 
     for (let i = 0; i < list.length; i++)
     {
-      values[i] = list[i] === null ? null : this.item.Get(list, i, options);
+      values[i] = list[i] === null ? null : item.handler.Get(list, i, item, options);
     }
 
     return values;
@@ -44,9 +32,9 @@ export class CjsGraphTypeValues
    * Writes each element through its handler, keeping the array and any element storage.
    * @cjs A missing element holds null until its handler writes it.
    */
-  Set(target, key, value, options)
+  Set(target, key, value, member, options)
   {
-    const list = target[key] ??= []; // alloc: a member holding no array gets one.
+    const list = target[key] ??= [], item = member.item; // alloc: a member holding no array gets one.
     let changed = list.length !== value.length;
 
     for (let i = 0; i < value.length; i++)
@@ -58,7 +46,7 @@ export class CjsGraphTypeValues
         if (list[i] !== null) changed = true;
         list[i] = null;
       }
-      else if (this.item.Set(list, i, value[i], options)) changed = true;
+      else if (item.handler.Set(list, i, value[i], item, options)) changed = true;
     }
 
     list.length = value.length;
@@ -69,14 +57,14 @@ export class CjsGraphTypeValues
    * Writes every element with no comparison.
    * @cjs
    */
-  Write(target, key, value, options)
+  Write(target, key, value, member, options)
   {
-    const list = target[key] ??= []; // alloc: a member holding no array gets one.
+    const list = target[key] ??= [], item = member.item; // alloc: a member holding no array gets one.
 
     for (let i = 0; i < value.length; i++)
     {
       if (i >= list.length || value[i] === null) list[i] = null;
-      if (value[i] !== null) this.item.Write(list, i, value[i], options);
+      if (value[i] !== null) item.handler.Write(list, i, value[i], item, options);
     }
 
     list.length = value.length;
@@ -86,8 +74,10 @@ export class CjsGraphTypeValues
    * Tests exact equality with no tolerance, element by element.
    * @cjs
    */
-  IsExactEqual(stored, value)
+  IsExactEqual(stored, value, member)
   {
+    const item = member.item;
+
     if (stored.length !== value.length) return false;
 
     for (let i = 0; i < value.length; i++)
@@ -96,7 +86,7 @@ export class CjsGraphTypeValues
       {
         if (stored[i] !== value[i]) return false;
       }
-      else if (!this.item.IsExactEqual(stored[i], value[i])) return false;
+      else if (!item.handler.IsExactEqual(stored[i], value[i], item)) return false;
     }
 
     return true;
@@ -106,13 +96,15 @@ export class CjsGraphTypeValues
    * Tests valid input: a plain array of null or valid elements.
    * @cjs
    */
-  IsValidValue(value)
+  IsValidValue(value, member)
   {
     if (!Array.isArray(value)) return false;
 
+    const item = member.item;
+
     for (let i = 0; i < value.length; i++)
     {
-      if (value[i] !== null && !this.item.IsValidValue(value[i])) return false;
+      if (value[i] !== null && !item.handler.IsValidValue(value[i], item)) return false;
     }
 
     return true;
@@ -122,8 +114,10 @@ export class CjsGraphTypeValues
    * Whether Set has nothing to do.
    * @cjs
    */
-  IsUnchanged(stored, value)
+  IsUnchanged(stored, value, member)
   {
+    const item = member.item;
+
     if (stored.length !== value.length) return false;
 
     for (let i = 0; i < value.length; i++)
@@ -132,7 +126,7 @@ export class CjsGraphTypeValues
       {
         if (stored[i] !== value[i]) return false;
       }
-      else if (!this.item.IsUnchanged(stored[i], value[i])) return false;
+      else if (!item.handler.IsUnchanged(stored[i], value[i], item)) return false;
     }
 
     return true;

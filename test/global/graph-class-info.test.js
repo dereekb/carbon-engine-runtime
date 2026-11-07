@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CjsGraph, CjsGraphClassInfo, CjsGraphTypeFloat32, VARTYPE } from "../../src/global/model/graph/index.js";
+import { CjsGraph, CjsGraphClassInfo, CjsGraphTypeFloat, VARTYPE } from "../../src/global/model/graph/index.js";
 import { VarEntry } from "../../src/blue/exposure/VarEntry.js";
 
-const handler = new CjsGraphTypeFloat32();
 
 test("source declarations and compiled members share one stable class record", () =>
 {
@@ -14,7 +13,7 @@ test("source declarations and compiled members share one stable class record", (
     get value() { reads++; return 3; }
   }
   const declaration = { name: "GraphInfoExample", members: [
-    { name: "value", key: "storedValue", handler, flags: 7 }
+    { name: "value", key: "storedValue", type: "float32", options: { flags: 7 } }
   ] };
   const info = CjsGraph.define(Example, declaration);
   assert.equal(info.constructor, CjsGraphClassInfo);
@@ -25,7 +24,8 @@ test("source declarations and compiled members share one stable class record", (
   const resolved = CjsGraph.getClassInfo("GraphInfoExample");
   assert.equal(resolved, info);
   assert.equal(resolved.compiled.byName.value[0].key, "storedValue");
-  assert.equal(resolved.compiled.byName.value[0].handler, handler);
+  assert.equal(resolved.compiled.byName.value[0].handler.constructor, CjsGraphTypeFloat);
+  assert.deepEqual(resolved.compiled.byName.value[0].options, { flags: 7 });
   assert.equal(CjsGraph.getClassInfo(Example).compiled, resolved.compiled);
   assert.equal(constructions, 0);
   assert.equal(reads, 0);
@@ -37,10 +37,10 @@ test("compilation preserves derived precedence and authored member order", () =>
   class Middle extends Base {}
   class Derived extends Middle {}
   CjsGraph.define(Base, { name: "GraphOrderBase", members: [
-    { name: "shared", key: "baseValue", handler }, { name: "baseOnly", handler }
+    { name: "shared", key: "baseValue", type: "float32" }, { name: "baseOnly", type: "float32" }
   ] });
   const info = CjsGraph.define(Derived, { name: "GraphOrderDerived", members: [
-    { name: "own", handler }, { name: "shared", key: "derivedValue", handler }
+    { name: "own", type: "float32" }, { name: "shared", key: "derivedValue", type: "float32" }
   ] });
   const compiled = CjsGraph.getClassInfo(Derived).compiled;
   assert.deepEqual(compiled.members.map(member => member.name), ["own", "shared", "shared", "baseOnly"]);
@@ -54,15 +54,15 @@ test("late parent registration and replacement invalidate derived descriptions",
 {
   class Parent {}
   class Child extends Parent {}
-  const info = CjsGraph.define(Child, { name: "GraphLateChild", members: [{ name: "child", handler }] });
+  const info = CjsGraph.define(Child, { name: "GraphLateChild", members: [{ name: "child", type: "float32" }] });
   const first = CjsGraph.getClassInfo(Child).compiled;
-  CjsGraph.define(Parent, { name: "GraphLateParent", members: [{ name: "parent", handler }] });
+  CjsGraph.define(Parent, { name: "GraphLateParent", members: [{ name: "parent", type: "float32" }] });
   assert.equal(info.compiled, first); // Lazy invalidation retains the old immutable snapshot until lookup.
   const second = CjsGraph.getClassInfo(Child).compiled;
   assert.notEqual(first, second);
   assert.deepEqual(second.members.map(member => member.name), ["child", "parent"]);
 
-  assert.equal(CjsGraph.define(Child, { name: "GraphRenamedChild", members: [{ name: "replacement", handler }] }), info);
+  assert.equal(CjsGraph.define(Child, { name: "GraphRenamedChild", members: [{ name: "replacement", type: "float32" }] }), info);
   assert.throws(() => CjsGraph.getClassInfo("GraphLateChild"), TypeError);
   assert.deepEqual(CjsGraph.getClassInfo(Child).compiled.members.map(member => member.name), ["replacement", "parent"]);
 });
@@ -71,11 +71,11 @@ test("failed registration does not mutate published definitions", () =>
 {
   class Good {}
   class Other {}
-  const info = CjsGraph.define(Good, { name: "GraphValidation", members: [{ name: "x", handler }] });
+  const info = CjsGraph.define(Good, { name: "GraphValidation", members: [{ name: "x", type: "float32" }] });
   const before = CjsGraph.getClassInfo(Good).compiled;
   assert.throws(() => CjsGraph.define(Other, { name: "GraphValidation", members: [] }), TypeError);
   assert.throws(() => CjsGraph.define(Good, { name: "GraphValidation", members: [
-    { name: "x", handler }, { name: "x", handler }
+    { name: "x", type: "float32" }, { name: "x", type: "float32" }
   ] }), TypeError);
   assert.equal(CjsGraph.getClassInfo(Good).compiled, before);
   assert.equal(info.declared.members.length, 1);
@@ -87,23 +87,22 @@ test("untyped members share the throwing Invalid handler until explicitly define
 {
   class Untyped {}
   const info = CjsGraph.define(Untyped, { name: "GraphDefaultHandler", members: [
-    { name: "first" }, { name: "second", handler: null }
+    { name: "first" }, { name: "second" }
   ] });
   const members = CjsGraph.getClassInfo(Untyped).compiled.members;
-  assert.equal(members[0].handler.name, "Invalid");
+  assert.equal(members[0].vartype, VARTYPE.INVALID);
   assert.equal(members[0].handler, members[1].handler);
-  assert.equal(info.declared.members[0].handler, members[0].handler);
-  assert.throws(() => members[0].handler.Get({}, "first"), /Invalid type handler.*first/);
-  CjsGraph.define(Untyped, { name: "GraphDefaultHandler", members: [{ name: "first", handler }] });
+    assert.throws(() => members[0].handler.Get({}, "first"), /Invalid type handler.*first/);
+  CjsGraph.define(Untyped, { name: "GraphDefaultHandler", members: [{ name: "first", type: "float32" }] });
   assert.equal(CjsGraph.getClassInfo(Untyped), info);
-  assert.equal(info.compiled.members[0].handler, handler);
+  assert.equal(info.compiled.members[0].handler.constructor, CjsGraphTypeFloat);
 });
 
 test("compiled lookup accepts object-prototype names without collision", () =>
 {
   class Names {}
   CjsGraph.define(Names, { name: "GraphSpecialNames", members: [
-    { name: "__proto__", handler }, { name: "constructor", handler }
+    { name: "__proto__", type: "float32" }, { name: "constructor", type: "float32" }
   ] });
   const compiled = CjsGraph.getClassInfo(Names).compiled;
   assert.equal(compiled.byName.__proto__[0].name, "__proto__");
@@ -122,10 +121,9 @@ test("policy can skip a hidden derived candidate without losing the visible base
 {
   class Visible {}
   class Hidden extends Visible {}
-  const HIDDEN = 0x008;
-  CjsGraph.define(Visible, { name: "GraphVisibleBase", members: [{ name: "x", key: "base", handler, flags: 0 }] });
-  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", members: [{ name: "x", key: "derived", handler, flags: HIDDEN }] });
+  CjsGraph.define(Visible, { name: "GraphVisibleBase", members: [{ name: "x", key: "base", type: "float32" }] });
+  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", members: [{ name: "x", key: "derived", type: "float32", hidden: true }] });
   const candidates = CjsGraph.getClassInfo(Hidden).compiled.byName.x;
   assert.deepEqual(candidates.map(member => member.key), ["derived", "base"]);
-  assert.equal(candidates.find(member => !(member.flags & HIDDEN)).key, "base");
+  assert.equal(candidates.find(member => !member.hidden).key, "base");
 });

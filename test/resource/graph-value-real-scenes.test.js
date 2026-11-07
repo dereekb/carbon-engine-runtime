@@ -41,29 +41,19 @@ function persisted(ctor)
 /** External adapter for this bounded family, not a production Blue adapter. */
 function registerFamily()
 {
-  const handler = name => new graph[`CjsGraphType${name}`]();
-  const known = new Map(family.map(ctor => [ CjsSchema.getClassName(ctor), ctor ]));
-  const leaves = {
-    int32: handler("Int32"), uint32: handler("Uint32"), float32: handler("Float32"), float64: handler("Float64"),
-    boolean: handler("Boolean"), string: handler("String"), path: handler("String"), color: handler("Color"),
-    vec3: handler("Vector3"), vec4: handler("Vector4"), quat: handler("Quaternion")
-  };
-  const objects = { rootRef: handler("IRootPtr"), root: handler("IRoot"), rootWeak: handler("IRootWeakRef"), rawStruct: handler("Struct") };
-  const list = handler("List");
-
   for (const ctor of family)
   {
     const members = persisted(ctor).map(member =>
     {
       const { kind, className, itemType } = member.type;
       const collection = kind === "list" || kind === "structList";
-      const object = objects[kind];
+      const object = kind === "rootRef" || kind === "root" || kind === "rootWeak" || kind === "rawStruct";
       const child = collection ? className ?? itemType : className;
-      assert.ok(collection || object || leaves[kind], `unreviewed member kind ${kind}`);
+      assert.ok(Object.hasOwn(graph.GRAPH_TYPES, kind), `unreviewed member kind ${kind}`);
 
       return {
         name: member.name, key: member.key, index: member.index,
-        handler: collection ? list : object ?? leaves[kind],
+        type: collection ? "list" : kind,
         edge: collection || object ? {
           kind: kind === "rawStruct" || kind === "structList" ? "embed" : "ref",
           collection, type: known.get(child) ?? null

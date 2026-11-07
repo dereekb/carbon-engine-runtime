@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { CjsGraph, CjsGraphTypeObject, CjsGraphTypeList, CjsGraphTypeScalar } from "../../src/global/model/graph/index.js";
+import { CjsGraph } from "../../src/global/model/graph/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 // Scene construction registers device resources; no device or GPU is created by this import.
@@ -53,7 +53,7 @@ function registerFamily()
       const childType = collection ? type.className ?? type.itemType : type.className;
       return {
         name: member.name, key: member.key, index: member.index,
-        handler: collection ? CjsGraphTypeList : object ? CjsGraphTypeObject : CjsGraphTypeScalar,
+        type: collection ? "list" : object ? "rootRef" : undefined,
         edge: collection || object ? {
           kind: type.kind === "rawStruct" || type.kind === "structList" ? "embed" : "ref",
           collection, type: known.get(childType) ?? null
@@ -65,14 +65,14 @@ function registerFamily()
     if (ctor === EveSpaceScene)
     {
       for (const name of ["envMap1", "envMap2", "envMap3", "_envMapTextureRes", "_staticEnvMapTextureRes"])
-        members.push({ name, handler: CjsGraphTypeObject, edge: { kind: "ref" } });
+        members.push({ name, type: "rootRef", edge: { kind: "ref" } });
     }
     if (ctor === Tr2Effect)
-      members.push({ name: "effectResource", key: "_effectResource", handler: CjsGraphTypeObject, edge: { kind: "ref", type: Tr2EffectRes } });
+      members.push({ name: "effectResource", key: "_effectResource", type: "rootRef", edge: { kind: "ref", type: Tr2EffectRes } });
     if (ctor === TriTextureParameter)
     {
       for (const name of ["resource", "_lowResResource"])
-        members.push({ name, handler: CjsGraphTypeObject, edge: { kind: "ref" } });
+        members.push({ name, type: "rootRef", edge: { kind: "ref" } });
     }
     CjsGraph.define(ctor, { name: CjsSchema.getClassName(ctor), members });
   }
@@ -238,7 +238,7 @@ test("exact-build real environment graphs preserve full/cached selection identit
   // Shared resources across four different real scenes must also be emitted only once.
   class SceneBatch { scenes = []; }
   CjsGraph.define(SceneBatch, { name: "RealSceneSelectionBatch", members: [
-    { name: "scenes", handler: CjsGraphTypeList, edge: { kind: "ref", type: EveSpaceScene, collection: true } }
+    { name: "scenes", type: "list", edge: { kind: "ref", type: EveSpaceScene, collection: true } }
   ] });
   const batch = new SceneBatch();
   batch.scenes = scenes;

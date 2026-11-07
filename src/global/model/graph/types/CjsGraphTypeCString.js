@@ -1,47 +1,65 @@
-import { CjsGraphTypeString } from "./CjsGraphTypeString.js";
+/** The text before the first NUL. @cjs */
+function convert(value)
+{
+  const text = String(value);
+  const end = text.indexOf("\0");
+  return end < 0 ? text : text.slice(0, end);
+}
 
 /**
- * NUL-terminated text operations shared by Carbon's C and reference strings.
- * Carbon: Be::CSTRING (blueexposure/BlueVariable.cpp:473-501).
- * @adapted Immutable JS text replaces allocated pointers; no free/strdup operation is needed.
- * Native null pointers are not a second authored JS string value. Byte/wide encoding belongs
- * to readers/writers. These operations preserve the visible prefix before the first NUL.
+ * CSTRING, WCSTRING, REFERENCE, WREFERENCE and the shared strings: text up to its first NUL.
+ * Modelled on: Be::CSTRING (blueexposure/BlueVariable.cpp).
+ * @cjs Native interning is plain JS string equality.
  */
-export class CjsGraphTypeCString extends CjsGraphTypeString
+export class CjsGraphTypeCString
 {
 
-  /** Definition name. */
-  name = "CString";
-
-  /**
-   * Returns the visible C-string prefix.
-   * @adapted Decoded JS text replaces pointer-based string access.
-   */
-  static get(target, key)
+  /** Returns the stored text up to its first NUL. @cjs */
+  Get(holder, key)
   {
-    return this.convert(target[key]);
+    return convert(holder[key]);
+  }
+
+  /** Writes unless the value is unchanged; returns whether it wrote. @cjs */
+  Set(holder, key, value, member)
+  {
+    if (this.IsUnchanged(holder[key], value, member)) return false;
+
+    holder[key] = convert(value);
+    return true;
+  }
+
+  /** Stores a value with no comparison. @cjs */
+  Write(holder, key, value)
+  {
+    holder[key] = convert(value);
+  }
+
+  /** Tests whether two values are the same text. @cjs */
+  IsEqual(a, b)
+  {
+    return convert(a) === convert(b);
   }
 
   /**
-   * Converts to text, retaining only the NUL-terminated prefix.
-   * @adapted String conversion replaces native caller-language extraction and strdup.
+   * Tests whether Set has nothing to do: IsEqual, except that a stored null is always overwritten.
+   * @cjs
    */
-  static convert(value)
+  IsUnchanged(stored, value, member)
   {
-    const text = super.convert(value);
-    const end = text.indexOf("\0");
-    return end < 0 ? text : text.slice(0, end);
+    return stored !== null && this.IsEqual(stored, value, member);
   }
 
-  /**
-   * Copies the visible immutable text without preserving inaccessible trailing bytes.
-   * Comparison sees the same visible prefix through convert, as strcmp/wcscmp do
-   * (CompareStrings/CompareWStrings, blueexposure/BlueVariable.cpp:5-35).
-   * @adapted JS strings need no independently allocated native character buffer.
-   */
-  static clone(target, key)
+  /** Tests whether two values are the same text. @cjs */
+  IsExactEqual(a, b)
   {
-    return this.get(target, key);
+    return convert(a) === convert(b);
+  }
+
+  /** Tests valid input. @cjs */
+  IsValidValue(value)
+  {
+    return typeof value === "string";
   }
 
   /** Stable class identity. */

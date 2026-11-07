@@ -12,16 +12,13 @@ import { CjsGraph } from "../CjsGraph.js";
 export class CjsGraphTypeMap
 {
 
-  /** Definition name. */
-  name = "Map";
-
   /**
    * Returns a bag of each entry's values; a null entry stays null.
-   * @cjs The member is read once: nested objects overwrite options.member.
+   * @cjs
    */
-  static get(target, key, options)
+  Get(target, key, member, options)
   {
-    const type = options.member.edge.type;
+    const type = member.edgeType;
     const values = {}; // alloc: the returned bag.
 
     for (const [ name, item ] of target[key])
@@ -38,11 +35,11 @@ export class CjsGraphTypeMap
    * Returns false, or the new contents as a plain bag.
    * @cjs A forward reference holds its entry with null until the end of the operation.
    */
-  static set(target, key, value, options)
+  Set(target, key, value, member, options)
   {
     if (value === null && target[key] === null) return false;
 
-    const type = options.member.edge.type;
+    const type = member.edgeType;
     const map = target[key] ??= new Map(); // alloc: a member holding no Map gets one.
     const entries = this._getEntries(value);
 
@@ -66,7 +63,7 @@ export class CjsGraphTypeMap
    * Tests valid input: a Map or a plain object.
    * @cjs The graph operation calls it, and passes null around it.
    */
-  static isValidValue(value)
+  IsValidValue(value)
   {
     return value instanceof Map || (typeof value === "object" && !Array.isArray(value) && CjsGraph.isPlain(value));
   }
@@ -75,13 +72,13 @@ export class CjsGraphTypeMap
    * Whether Set has nothing to do.
    * @cjs Compares objects through the graph, as a list does.
    */
-  static isUnchanged(stored, value, options)
+  IsUnchanged(stored, value, member, options)
   {
-    return this._isEntriesLike(stored, this._getEntries(value), options.member.edge.type, options);
+    return this._isEntriesLike(stored, this._getEntries(value), member.edgeType, options);
   }
 
   /** The entries of a Map, a bag or a null. @cjs */
-  static _getEntries(value)
+  _getEntries(value)
   {
     if (value === null) return [];
 
@@ -89,7 +86,7 @@ export class CjsGraphTypeMap
   }
 
   /** Tests whether a Map already holds these entries, writing nothing. @cjs */
-  static _isEntriesLike(map, entries, type, options)
+  _isEntriesLike(map, entries, type, options)
   {
     if (map.size !== entries.length) return false;
 
@@ -102,7 +99,7 @@ export class CjsGraphTypeMap
   }
 
   /** Resolves one incoming entry. @cjs */
-  static _getItem(value, map, name, record, type, options)
+  _getItem(value, map, name, record, type, options)
   {
     if (value === null || !CjsGraph.isPlain(value)) return value;
     if (value._ref === undefined) return CjsGraph.createObject(value, type, options);
@@ -114,41 +111,6 @@ export class CjsGraphTypeMap
     return null;
   }
 
-  /**
-   * Instance shortcut to get.
-   * @cjs
-   */
-  Get(target, key, options)
-  {
-    return this.constructor.get(target, key, options);
-  }
-
-  /**
-   * Instance shortcut to set.
-   * @cjs
-   */
-  Set(target, key, value, options)
-  {
-    return this.constructor.set(target, key, value, options);
-  }
-
-  /**
-   * Instance shortcut to isValidValue.
-   * @cjs
-   */
-  IsValidValue(value)
-  {
-    return this.constructor.isValidValue(value);
-  }
-
-  /**
-   * Instance shortcut to isUnchanged.
-   * @cjs
-   */
-  IsUnchanged(stored, value, options)
-  {
-    return this.constructor.isUnchanged(stored, value, options);
-  }
 
   /** Stable class identity. */
   static className = "CjsGraphTypeMap";

@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CjsGraph, CjsGraphTypeObject } from "../../src/global/model/graph/index.js";
+import { CjsGraph } from "../../src/global/model/graph/index.js";
 
-const handler = CjsGraphTypeObject;
 const matchClass = info => info.declared.resource === true;
 
 function sameIdentities(actual, expected)
@@ -19,16 +18,16 @@ test("cached resource selection matches full DFS identities/order while skipping
   class Root { dry = null; path = null; direct = null; }
   CjsGraph.define(Resource, { name: "SelectResource", resource: true });
   CjsGraph.define(Dry, { name: "SelectDry", members: [
-    { name: "children", handler, edge: { kind: "embed", type: Dry, collection: true } }
+    { name: "children", type: "rootRef", edge: { kind: "embed", type: Dry, collection: true } }
   ] });
   CjsGraph.define(Link, { name: "SelectLink", members: [
-    { name: "next", handler, edge: { kind: "ref", type: Link } },
-    { name: "resource", handler, edge: { kind: "ref", type: Resource } }
+    { name: "next", type: "rootRef", edge: { kind: "ref", type: Link } },
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "SelectRoot", members: [
-    { name: "dry", handler, edge: { kind: "embed", type: Dry } },
-    { name: "path", handler, edge: { kind: "embed", type: Link } },
-    { name: "direct", handler, edge: { kind: "ref", type: Resource } }
+    { name: "dry", type: "rootRef", edge: { kind: "embed", type: Dry } },
+    { name: "path", type: "rootRef", edge: { kind: "embed", type: Link } },
+    { name: "direct", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   const root = new Root(), first = new Link(), second = new Link(), dry = new Dry();
   root.dry = dry;
@@ -66,11 +65,11 @@ test("dynamic edges and registered subclasses cannot produce false negative reac
   CjsGraph.define(Resource, { name: "SelectDynamicResource", resource: true });
   CjsGraph.define(Base, { name: "SelectDynamicBase" });
   CjsGraph.define(Derived, { name: "SelectDynamicDerived", members: [
-    { name: "resource", handler, edge: { kind: "ref", type: Resource } }
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "SelectDynamicRoot", members: [
-    { name: "typed", handler, edge: { kind: "ref", type: Base } },
-    { name: "dynamic", handler, edge: { kind: "ref" } }
+    { name: "typed", type: "rootRef", edge: { kind: "ref", type: Base } },
+    { name: "dynamic", type: "rootRef", edge: { kind: "ref" } }
   ] });
   const root = new Root();
   root.typed = new Derived();
@@ -91,11 +90,11 @@ test("reachability propagates through mutually recursive class declarations", ()
   class B { a = null; resource = null; }
   class Resource {}
   CjsGraph.define(A, { name: "SelectCycleA", members: [
-    { name: "b", handler, edge: { kind: "ref", type: B } }
+    { name: "b", type: "rootRef", edge: { kind: "ref", type: B } }
   ] });
   CjsGraph.define(B, { name: "SelectCycleB", members: [
-    { name: "a", handler, edge: { kind: "ref", type: A } },
-    { name: "resource", handler, edge: { kind: "ref", type: Resource } }
+    { name: "a", type: "rootRef", edge: { kind: "ref", type: A } },
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Resource, { name: "SelectCycleResource", resource: true });
   const root = new A();
@@ -116,7 +115,7 @@ test("manually established prototype inheritance uses the same assignability for
   CjsGraph.define(Base, { name: "SelectPrototypeBase" });
   CjsGraph.define(Derived, { name: "SelectPrototypeDerived", resource: true });
   CjsGraph.define(Root, { name: "SelectPrototypeRoot", members: [
-    { name: "child", handler, edge: { kind: "ref", type: Base } }
+    { name: "child", type: "rootRef", edge: { kind: "ref", type: Base } }
   ] });
   const root = new Root();
   root.child = new Derived();
@@ -133,8 +132,8 @@ test("late registration and redefinition rebuild negative reachability and class
   class Later {}
   CjsGraph.define(Base, { name: "SelectLateBase" });
   CjsGraph.define(Root, { name: "SelectLateRoot", members: [
-    { name: "child", handler, edge: { kind: "ref", type: Base } },
-    { name: "unresolved", handler, edge: { kind: "ref", type: "SelectLateTarget" } }
+    { name: "child", type: "rootRef", edge: { kind: "ref", type: Base } },
+    { name: "unresolved", type: "rootRef", edge: { kind: "ref", type: "SelectLateTarget" } }
   ] });
   const root = new Root();
   root.child = new Base();
@@ -165,12 +164,12 @@ test("selection retains hidden-derived fallback order, weak-edge policy and matc
   class Root extends Base { y = null; weak = null; }
   CjsGraph.define(Resource, { name: "SelectPolicyResource", resource: true });
   CjsGraph.define(Base, { name: "SelectPolicyBase", members: [
-    { name: "x", key: "baseX", handler, edge: { kind: "ref", type: Resource } }
+    { name: "x", key: "baseX", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "SelectPolicyRoot", resource: true, members: [
-    { name: "x", key: "hiddenX", hidden: true, handler, edge: { kind: "ref", type: Resource } },
-    { name: "y", handler, edge: { kind: "ref", type: Resource } },
-    { name: "weak", handler, edge: { kind: "weak", type: Resource } }
+    { name: "x", key: "hiddenX", hidden: true, type: "rootRef", edge: { kind: "ref", type: Resource } },
+    { name: "y", type: "rootRef", edge: { kind: "ref", type: Resource } },
+    { name: "weak", type: "rootRef", edge: { kind: "weak", type: Resource } }
   ] });
   const root = new Root();
   root.y = new Resource();
@@ -194,8 +193,8 @@ test("typed edges are validated even after the same identity was visited through
   CjsGraph.define(Resource, { name: "SelectActual", resource: true });
   CjsGraph.define(Other, { name: "SelectWrongType", resource: true });
   CjsGraph.define(Root, { name: "SelectWrongRoot", members: [
-    { name: "dynamic", handler, edge: { kind: "ref" } },
-    { name: "typed", handler, edge: { kind: "ref", type: Other } }
+    { name: "dynamic", type: "rootRef", edge: { kind: "ref" } },
+    { name: "typed", type: "rootRef", edge: { kind: "ref", type: Other } }
   ] });
   const root = new Root();
   root.dynamic = root.typed = new Resource();
@@ -215,8 +214,8 @@ test("full traversal rejects a shared plain struct declared as two different cla
   CjsGraph.define(A, { name: "SelectStructA" });
   CjsGraph.define(B, { name: "SelectStructB", resource: true });
   CjsGraph.define(Root, { name: "SelectStructRoot", members: [
-    { name: "a", handler, edge: { kind: "embed", type: A } },
-    { name: "b", handler, edge: { kind: "embed", type: B } }
+    { name: "a", type: "rootRef", edge: { kind: "embed", type: A } },
+    { name: "b", type: "rootRef", edge: { kind: "embed", type: B } }
   ] });
   const root = new Root();
   root.a = root.b = {};
@@ -254,7 +253,7 @@ test("nested selection from a getter uses independent operation state", () =>
   class Root { nested = false; }
   CjsGraph.define(Resource, { name: "SelectNestedResource", resource: true });
   CjsGraph.define(Root, { name: "SelectNestedRoot", members: [
-    { name: "resource", handler, edge: { kind: "ref", type: Resource } }
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   const root = new Root(), resource = new Resource(), nested = [];
   const selection = CjsGraph.compileSelection({ matchClass });
@@ -281,15 +280,15 @@ test("measure cold compilation, warm full/pruned walks and registration rebuild 
   class Root { dry = null; path = null; }
   CjsGraph.define(Resource, { name: "BenchSelectionResource", resource: true });
   CjsGraph.define(Dry, { name: "BenchSelectionDry", members: [
-    { name: "next", handler, edge: { kind: "embed", type: Dry } }
+    { name: "next", type: "rootRef", edge: { kind: "embed", type: Dry } }
   ] });
   CjsGraph.define(Path, { name: "BenchSelectionPath", members: [
-    { name: "next", handler, edge: { kind: "ref", type: Path } },
-    { name: "resource", handler, edge: { kind: "ref", type: Resource } }
+    { name: "next", type: "rootRef", edge: { kind: "ref", type: Path } },
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "BenchSelectionRoot", members: [
-    { name: "dry", handler, edge: { kind: "embed", type: Dry } },
-    { name: "path", handler, edge: { kind: "embed", type: Path } }
+    { name: "dry", type: "rootRef", edge: { kind: "embed", type: Dry } },
+    { name: "path", type: "rootRef", edge: { kind: "embed", type: Path } }
   ] });
 
   const root = new Root(), resources = Array.from({ length: 20 }, () => new Resource());
@@ -333,7 +332,7 @@ test("measure cold compilation, warm full/pruned walks and registration rebuild 
   assert.equal(prunedStats.compiledClasses, 0);
 
   CjsGraph.define(Dry, { name: "BenchSelectionDry", members: [
-    { name: "next", handler, edge: { kind: "embed", type: Dry } }
+    { name: "next", type: "rootRef", edge: { kind: "embed", type: Dry } }
   ] });
   const rebuildStart = performance.now();
   CjsGraph.select(null, selection, [], { stats: prunedStats });

@@ -1,28 +1,22 @@
 import { CjsGraph } from "../CjsGraph.js";
 
 /**
- * Shared operations for a member that holds a list of objects.
- *
- * This is a type handler, not a trait or a new Carbon VARTYPE. It holds no graph logic:
- * CjsGraph walks each item, and this class is what the walk calls for such a member.
- *
- * @cjs No single Carbon donor: one handler for BlueList, plain arrays and structure lists.
+ * A member that holds a list of objects: BlueList, a plain array or a structure list.
+ * @cjs No single Carbon donor. Holds no graph logic: CjsGraph walks each item, and this is what the
+ * walk calls for such a member.
  */
 export class CjsGraphTypeList
 {
 
-  /** Definition name. */
-  name = "List";
-
   /**
    * Returns a plain array of item values; a null item stays null.
    * Modelled on: YamlWriter's list rule (IRootWriter.WriteList).
-   * @cjs The member is read once: nested items overwrite options.member.
+   * @cjs
    */
-  static get(target, key, options)
+  Get(target, key, member, options)
   {
     const list = target[key];
-    const type = options.member.edge.type;
+    const type = member.edgeType;
     const values = new Array(list.length); // alloc: the returned plain array.
 
     for (let i = 0; i < list.length; i++)
@@ -42,26 +36,26 @@ export class CjsGraphTypeList
    * operation, because they need the old items still in place. A list with neither is
    * written here, raw (BlueListUtil.h:206-210). A copy rebuilds unless both sides are empty.
    */
-  static set(target, key, value, options)
+  Set(target, key, value, member, options)
   {
     if (value === null && target[key] === null) return false;
 
     const source = value ?? [];
     const { owner } = options;
-    const edge = options.member.edge;
+    const type = member.edgeType;
     const list = target[key] ??= []; // alloc: a member holding no list gets one.
 
     if (source === list) return false;
-    if (edge.kind === "embed") return this._setRows(list, source, edge.type, options);
+    if (member.edgeKind === "embed") return this._setRows(list, source, type, options);
     if (list.length === 0 && source.length === 0 && !CjsGraph.isLoadingList(options)) return false;
-    if (!CjsGraph.isWritingAll(options) && CjsGraph.isListLike(list, source, edge.type, options)) return false;
+    if (!CjsGraph.isWritingAll(options) && CjsGraph.isListLike(list, source, type, options)) return false;
 
     const items = new Array(source.length); // alloc: the change record, and the new contents.
     const staged = CjsGraph.isListStaged(list, owner, options);
 
     for (let i = 0; i < source.length; i++)
     {
-      items[i] = this._getItem(source[i], staged ? items : list, i, items, edge.type, options);
+      items[i] = this._getItem(source[i], staged ? items : list, i, items, type, options);
     }
 
     if (staged)
@@ -80,7 +74,7 @@ export class CjsGraphTypeList
    * Resolves one incoming item; a forward reference holds its slot with null.
    * @cjs
    */
-  static _getItem(value, list, index, items, type, options)
+  _getItem(value, list, index, items, type, options)
   {
     if (value === null || !CjsGraph.isPlain(value)) return value;
     if (value._ref === undefined) return CjsGraph.createObject(value, type, options);
@@ -98,7 +92,7 @@ export class CjsGraphTypeList
    * @cjs Rows are values with no identity, so they do reuse their position. A _ref holds its
    * row and fills it once every source is read, so it counts as a change.
    */
-  static _setRows(list, source, type, options)
+  _setRows(list, source, type, options)
   {
     let changed = list.length !== source.length;
 
@@ -135,37 +129,11 @@ export class CjsGraphTypeList
    * Tests valid input.
    * @cjs The graph operation calls it, and passes null around it.
    */
-  static isValidValue(value)
+  IsValidValue(value)
   {
     return Array.isArray(value);
   }
 
-  /**
-   * Instance shortcut to get.
-   * @cjs
-   */
-  Get(target, key, options)
-  {
-    return this.constructor.get(target, key, options);
-  }
-
-  /**
-   * Instance shortcut to set.
-   * @cjs
-   */
-  Set(target, key, value, options)
-  {
-    return this.constructor.set(target, key, value, options);
-  }
-
-  /**
-   * Instance shortcut to isValidValue.
-   * @cjs
-   */
-  IsValidValue(value)
-  {
-    return this.constructor.isValidValue(value);
-  }
 
   /** Stable class identity. */
   static className = "CjsGraphTypeList";

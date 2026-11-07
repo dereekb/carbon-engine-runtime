@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { CjsGraph, CjsGraphTypeObject, CjsGraphTypeList, CjsGraphTypeScalar } from "../../src/global/model/graph/index.js";
+import { CjsGraph } from "../../src/global/model/graph/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 import { blue } from "../../npm/dist/blue/blue.js";
@@ -158,7 +158,7 @@ function registerFamily(family)
             const childType = collection ? type.className ?? type.itemType : type.className;
             return {
                 name: member.name, key: member.key, index: member.index,
-                handler: collection ? CjsGraphTypeList : object ? CjsGraphTypeObject : CjsGraphTypeScalar,
+                type: collection ? "list" : object ? "rootRef" : undefined,
                 edge: collection || object ? {
                     kind: type.kind === "rawStruct" || type.kind === "structList" ? "embed" : "ref",
                     collection, type: known.get(childType) ?? null
@@ -166,7 +166,7 @@ function registerFamily(family)
             };
         });
         for (const [name, type] of resourceSlots(ctor))
-            members.push({ name, handler: CjsGraphTypeObject, edge: { kind: "ref", type } });
+            members.push({ name, type: "rootRef", edge: { kind: "ref", type } });
         CjsGraph.define(ctor, { name: CjsSchema.getClassName(ctor), members });
     }
     for (const ctor of resourceClasses) CjsGraph.define(ctor, { name: CjsSchema.getClassName(ctor), members: [] });

@@ -4,15 +4,24 @@ This subtree imports only its own modules. Blue may use it; it does not load Blu
 CjsSchema, formats, Trinity or the legacy model barrel.
 
 CjsGraph.define(Constructor, definition) registers a stable name and the class's own
-member declarations. CjsGraphClassInfo retains a shallow snapshot in
-`declared` and the last derived snapshot in `compiled`. Handler and default value
-references are retained, not cloned or instantiated. Defaults must not later be
-assigned as shared mutable instance storage.
+member declarations. Each member compiles once to one flat object: a `GRAPH_TYPES` entry's data,
+then name, flags, edge and a slot for anything rare. Every walk, reader and writer reads that one
+shape. CjsGraphClassInfo retains the compiled members in `declared` and the last derived record in
+`compiled`: the members, `byName`, `persistByName` (derived first, PERSIST only) and the class's
+facts. Default values are not cloned or instantiated, and must not later be assigned as shared
+mutable instance storage.
 
-Omitted or null member handlers use one shared CjsGraphTypeInvalid instance.
-Registration and traversal can describe untyped members; attempting any value
-operation through that handler throws. Assign the actual handler by replacing
-the definition through CjsGraph.define.
+A compiled member holds: `name`, `key`, `index`, `role`, `type`, `vartype`, `handler`, `direct`,
+`length`, `bits`, `signed`, `ctor`, `item`, `persist`, `writable`, `notify`, `hidden`, `binary`,
+`runtimeOnly`, `wrapped`, `options`, `edgeKind`, `edgeType`, `collection`, `destination` and `owner`.
+`edgeType` is always a list, the declared class first; empty is dynamic. `destination` says where a
+reader puts the value: `list`, `dict`, `structureList`, `embedded`, `wrapper`, or null.
+
+A class with `ownValues` holds values that are not members, through `GetOwnValues`, `SetOwnValues`
+and `IsOwnValues`: its bags carry those names beside its members.
+
+A member with no type uses CjsGraphTypeInvalid. Registration and traversal can describe it;
+any value operation throws. Give it a type by replacing the definition through CjsGraph.define.
 
 CjsGraph.getClassInfo(ConstructorOrName) returns that same class-info record and
 refreshes its compiled snapshot if registration changed. Consumers must use this
@@ -150,5 +159,5 @@ and controller references remain unexpanded; dynamically created runtime content
 GPU preparation are not covered. Production schemas and resource enumeration are unchanged.
 
 GraphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
-The generic handlers are under types/. CjsGraphRoot will be added with working
+The handlers are under types/. CjsGraphRoot will be added with working
 operation forwards; there are no speculative no-op graph methods here.

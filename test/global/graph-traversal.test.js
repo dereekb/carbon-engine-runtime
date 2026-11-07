@@ -1,17 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CjsGraph, CjsGraphTypeObject, CjsGraphTypeFloat32 } from "../../src/global/model/graph/index.js";
+import { CjsGraph } from "../../src/global/model/graph/index.js";
 
-const handler = CjsGraphTypeObject;
 
 test("declared traversal preserves DFS order, shares and cycles without reading undeclared values", () =>
 {
   class Node { child = null; links = []; observer = null; }
   CjsGraph.define(Node, { name: "WalkNode", members: [
-    { name: "child", handler, edge: { kind: "embed" } },
-    { name: "links", handler, edge: { kind: "ref", collection: true } },
-    { name: "observer", handler, edge: { kind: "weak" } },
-    { name: "leaf", handler: CjsGraphTypeFloat32 }
+    { name: "child", type: "rootRef", edge: { kind: "embed" } },
+    { name: "links", type: "rootRef", edge: { kind: "ref", collection: true } },
+    { name: "observer", type: "rootRef", edge: { kind: "weak" } },
+    { name: "leaf", type: "float32" }
   ] });
   const root = new Node(), child = new Node(), shared = new Node(), weak = new Node();
   Object.assign(root, { child, links: [shared, child, null], observer: weak });
@@ -39,13 +38,13 @@ test("filtering precedes inherited name and edge selection without grouping orde
   class Leaf {}
   CjsGraph.define(Leaf, { name: "WalkLeaf" });
   CjsGraph.define(Base, { name: "WalkBase", members: [
-    { name: "x", key: "baseX", handler, edge: { kind: "embed" } },
-    { name: "shadow", key: "baseShadow", handler, edge: { kind: "embed" } }
+    { name: "x", key: "baseX", type: "rootRef", edge: { kind: "embed" } },
+    { name: "shadow", key: "baseShadow", type: "rootRef", edge: { kind: "embed" } }
   ] });
   CjsGraph.define(Derived, { name: "WalkDerived", members: [
-    { name: "x", key: "hiddenX", handler, hidden: true, edge: { kind: "embed" } },
-    { name: "y", handler, edge: { kind: "embed" } },
-    { name: "shadow", handler: CjsGraphTypeFloat32 }
+    { name: "x", key: "hiddenX", type: "rootRef", hidden: true, edge: { kind: "embed" } },
+    { name: "y", type: "rootRef", edge: { kind: "embed" } },
+    { name: "shadow", type: "float32" }
   ] });
   const root = new Derived();
   root.y = new Leaf();
@@ -64,10 +63,10 @@ test("explicit struct type, indexed storage and dynamic derived classes resolve 
   class Base {}
   class Derived extends Base {}
   CjsGraph.define(Container, { name: "WalkContainer", members: [
-    { name: "part", key: "slots", index: 1, handler, edge: { kind: "embed", type: "WalkStruct" } }
+    { name: "part", key: "slots", index: 1, type: "rootRef", edge: { kind: "embed", type: "WalkStruct" } }
   ] });
   CjsGraph.define(Struct, { name: "WalkStruct", members: [
-    { name: "child", handler, edge: { kind: "ref", type: Base } }
+    { name: "child", type: "rootRef", edge: { kind: "ref", type: Base } }
   ] });
   CjsGraph.define(Base, { name: "WalkTypedBase" });
   CjsGraph.define(Derived, { name: "WalkTypedDerived" });
@@ -82,7 +81,7 @@ test("nested walks revisit finished outer nodes without overwriting outer pass m
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkNested", members: [
-    { name: "children", handler, edge: { kind: "ref", collection: true } }
+    { name: "children", type: "rootRef", edge: { kind: "ref", collection: true } }
   ] });
   const root = new Node(), a = new Node(), b = new Node();
   root.children = [a, b, a];
@@ -103,7 +102,7 @@ test("failure and pruning release reusable state and subsequent calls remain ind
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkFailure", members: [
-    { name: "child", handler, edge: { kind: "ref" } }
+    { name: "child", type: "rootRef", edge: { kind: "ref" } }
   ] });
   const root = new Node();
   root.child = new Node();
@@ -133,7 +132,7 @@ test("unknown dynamic classes fail instead of silently hiding their descendants"
   class Root {}
   class Later {}
   CjsGraph.define(Root, { name: "WalkUnknownRoot", members: [
-    { name: "child", handler, edge: { kind: "ref" } }
+    { name: "child", type: "rootRef", edge: { kind: "ref" } }
   ] });
   const root = new Root();
   root.child = new Later();
@@ -148,7 +147,7 @@ test("traversal is iterative for a deep chain and reuses the same frames on a wa
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkDeep", members: [
-    { name: "child", handler, edge: { kind: "embed" } }
+    { name: "child", type: "rootRef", edge: { kind: "embed" } }
   ] });
   const root = new Node();
   let node = root;
@@ -164,20 +163,20 @@ test("edge declarations are snapshotted and invalid definitions do not replace v
 {
   class Node { child = null; children = []; }
   const edge = { kind: "embed", collection: true };
-  const info = CjsGraph.define(Node, { name: "WalkEdgeValidation", members: [{ name: "children", handler, edge }] });
+  const info = CjsGraph.define(Node, { name: "WalkEdgeValidation", members: [{ name: "children", type: "rootRef", edge }] });
   edge.kind = "weak";
-  assert.equal(info.declared.members[0].edge.kind, "embed");
+  assert.equal(info.declared.members[0].edgeKind, "embed");
   assert.throws(() => CjsGraph.define(Node, { name: "WalkEdgeValidation", members: [
-    { name: "children", handler, edge: { kind: "unknown" } }
+    { name: "children", type: "rootRef", edge: { kind: "unknown" } }
   ] }), /ownership/);
-  assert.equal(info.declared.members[0].edge.kind, "embed");
+  assert.equal(info.declared.members[0].edgeKind, "embed");
 });
 
 test("a failed nested visitor can be caught without changing the outer walk", () =>
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkNestedFailure", members: [
-    { name: "child", handler, edge: { kind: "embed" } }
+    { name: "child", type: "rootRef", edge: { kind: "embed" } }
   ] });
   const root = new Node();
   root.child = new Node();
@@ -195,7 +194,7 @@ test("registration from a visitor fails before reading edges, then the new defin
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkMutation", members: [
-    { name: "child", handler, edge: { kind: "embed" } }
+    { name: "child", type: "rootRef", edge: { kind: "embed" } }
   ] });
   const root = new Node();
   Object.defineProperty(root, "child", { get() { throw new Error("stale edge read"); } });
@@ -210,7 +209,7 @@ test("getter errors clear state, and eligibility is selected once per encountere
 {
   class Node { child = null; children = []; }
   CjsGraph.define(Node, { name: "WalkAccess", members: [
-    { name: "children", handler, edge: { kind: "ref", collection: true } }
+    { name: "children", type: "rootRef", edge: { kind: "ref", collection: true } }
   ] });
   const root = new Node(), child = new Node();
   root.children = [child];
@@ -230,19 +229,19 @@ test("missing edges, sparse collections and invalid indexed storage fail instead
 {
   class Node { child = null; }
   CjsGraph.define(Node, { name: "WalkMissing", members: [
-    { name: "child", handler, edge: { kind: "ref" } }
+    { name: "child", type: "rootRef", edge: { kind: "ref" } }
   ] });
   const root = new Node();
   delete root.child;
   assert.throws(() => CjsGraph.traverse(root, () => {}), /edge is undefined/);
 
   CjsGraph.define(Node, { name: "WalkMissing", members: [
-    { name: "child", handler, edge: { kind: "ref", collection: true } }
+    { name: "child", type: "rootRef", edge: { kind: "ref", collection: true } }
   ] });
   root.child = Array(1);
   assert.throws(() => CjsGraph.traverse(root, () => {}), /requires an object/);
 
-  const indexed = { name: "child", handler, index: 1, edge: { kind: "ref" } };
+  const indexed = { name: "child", type: "rootRef", index: 1, edge: { kind: "ref" } };
   CjsGraph.define(Node, { name: "WalkMissing", members: [indexed] });
   root.child = [null];
   assert.throws(() => CjsGraph.traverse(root, () => {}), /outside its storage/);

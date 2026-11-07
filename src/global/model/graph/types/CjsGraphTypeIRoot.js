@@ -2,15 +2,12 @@ import { CjsGraph } from "../CjsGraph.js";
 import { CjsGraphTypeObject } from "./CjsGraphTypeObject.js";
 
 /**
- * Explicit IROOT definition: an embedded object, which keeps its identity.
- * Carbon: Be::IROOT (blueexposure/BlueVariable.cpp:274-343).
- * @cjs An embedded object keeps its identity; Set reads into it.
+ * IROOT members: an embedded object, or a struct written and read as one.
+ * Modelled on: Be::IROOT (blueexposure/BlueVariable.cpp:338-343).
+ * @cjs A held object keeps its identity, so a value is read into it.
  */
 export class CjsGraphTypeIRoot extends CjsGraphTypeObject
 {
-
-  /** Distinct definition name. */
-  name = "IRoot";
 
   /**
    * Reads values into the embedded object. A null is no change; a member holding nothing
@@ -18,11 +15,11 @@ export class CjsGraphTypeIRoot extends CjsGraphTypeObject
    * Modelled on: Blue::DictReader::ReadIRoot.
    * @cjs A live object is copied by its values; a _ref fills once every source is read.
    */
-  static set(target, key, value, options)
+  Set(target, key, value, member, options)
   {
     if (value === null) return false;
 
-    const type = options.member.edge.type;
+    const type = member.edgeType;
 
     if (CjsGraph.isReference(value))
     {

@@ -5,44 +5,23 @@ import * as graph from "../../../global/model/graph/index.js";
 import { CjsSchema } from "#schema";
 import { mappedInterfaces } from "../../compose/interface.js";
 import { isWritableField } from "../../compose/values.js";
+import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
+import { IList } from "../../exposure/IList.js";
 import { IListNotify } from "../../exposure/IListNotify.js";
 import { INotify } from "../../exposure/INotify.js";
 import { getClassRegistrations, getRegisteredConstructor } from "../../exposure/classes/registry.js";
+import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { DeclaredClassName } from "../../format/IRootWriter.js";
 
-const { CjsGraph } = graph;
+const { CjsGraph, GRAPH_TYPES } = graph;
 
-const handler = name => new graph[`CjsGraphType${name}`]();
-
-/** One shared handler per declared schema kind; a class never allocates its own. */
-const KIND_HANDLERS = {
-  float32: handler("Float32"), float64: handler("Float64"), boolean: handler("Boolean"),
-  int8: handler("Int8"), uint8: handler("Uint8"), int16: handler("Int16"), uint16: handler("Uint16"),
-  int32: handler("Int32"), uint32: handler("Uint32"), int64: handler("Int64"), uint64: handler("Uint64"),
-  string: handler("String"), path: handler("String"), expression: handler("String"),
-  wstring: handler("WString"), wpath: handler("WString"),
-  vec2: handler("Vector2"), vec3: handler("Vector3"), vec4: handler("Vector4"),
-  quat: handler("Quaternion"), color: handler("Color"), mat4: handler("Matrix"),
-  rootRef: handler("IRootPtr"), rootWeak: handler("IRootWeakRef"), root: handler("IRoot"), rawStruct: handler("Struct"),
-  list: handler("List"), structList: handler("List")
-};
-
-/**
- * Classes a member may hold beyond what they inherit or map. A legacy Tr2ShaderMaterial sits in
- * Tr2MeshArea.effect until the owner converts it, as its class comment records.
- */
-const HELD_AS = { Tr2ShaderMaterial: [ "Tr2Effect" ] };
-
-/** One shared handler per item kind, for a list of plain values. */
-const VALUE_HANDLERS = {};
-
-/** The one handler for a Map of objects. */
-const MAP_HANDLER = handler("Map");
+/** The element class of a typed array, as its name in the graph's type table. */
+const arrayType = name => name.charAt(0).toLowerCase() + name.slice(1);
 
 /** How each object kind holds its object. `type.object.ref.weak` is a rootRef on the edge `refWeak`. */
-const KIND_EDGES = { rootRef: "ref", rootWeak: "weak", root: "embed", rawStruct: "embed", list: "ref", structList: "embed" };
+const KIND_EDGES = { rootRef: "ref", rootWeak: "weak", root: "embed", rawStruct: "embed", list: "ref", array: "ref", structList: "embed" };
 
 /**
  * Registers Blue's classes with the graph, from the same declarations the values path reads.
@@ -83,13 +62,39 @@ export class CjsBlueGraph
       initialize: mapped.has(IInitialize),
       notify: mapped.has(INotify),
       listNotify: mapped.has(IListNotify),
-      interfaces: [ ...Array.from(mapped, item => CjsSchema.getClassName(item)), ...HELD_AS[name] ?? [] ],
+      customPersist: mapped.has(ICustomPersist),
+      list: mapped.has(IList),
+      proxy: mapped.has(IBlueObjectProxy),
+      layout: this._getLayout(ctor),
+      ownValues: ctor.ownValues === true,
+      interfaces: Array.from(mapped, item => CjsSchema.getClassName(item)),
       members: fields.map(field => this._getMember(field))
     });
   }
 
   /**
-   * One graph member. A kind with no handler stays Invalid, which throws when used.
+   * A structure record's layout, or null for a class declaring none.
+   * @param {Function} ctor The class.
+   * @returns {object|null} { size, boundaries, fields: [ { name, key, offset, dataType } ] }.
+   */
+  static _getLayout(ctor)
+  {
+    const schema = CjsSchema.getSchema(ctor);
+    const definition = schema.structureDefinition;
+    if (!definition) return null;
+
+    const { size, boundaries, members } = definition;
+    const keys = new Map(schema.members.map(member => [ member.name, member.key ]));
+
+    return {
+      size,
+      boundaries: boundaries ?? [],
+      fields: members.map(({ name: field, offset, type }) => ({ name: field, key: keys.get(field), offset, dataType: type }))
+    };
+  }
+
+  /**
+   * One graph member. A kind the type table does not name stays Invalid, which throws when used.
    * A declared type nothing registers (an interface) stays dynamic.
    * @param {object} field Schema declaration.
    * @returns {object} Graph member.
@@ -100,19 +105,35 @@ export class CjsBlueGraph
     const map = this._getMapType(field.type);
     if (map !== undefined) return this._getMapMember(field, map);
 
-    const values = this._getValuesHandler(field.type);
-    const edge = values ? null : field.type?.owned === false ? "refWeak" : KIND_EDGES[kind];
-    const declared = edge ? DeclaredClassName(field.type) : null;
+    const item = this._getValuesItem(field.type);
+    if (item !== null) return { ...this._getFlags(field), type: "values", item, collection: kind };
+
+    const edge = field.type?.owned === false ? "refWeak" : KIND_EDGES[kind];
+    const name = kind === "typedArray" ? arrayType(field.type.arrayType) : kind === "array" ? "list" : kind;
 
     return {
       ...this._getFlags(field),
-      handler: values ?? KIND_HANDLERS[kind],
+      type: Object.hasOwn(GRAPH_TYPES, name) && (edge || name !== "map") ? name : undefined,
+      wrapped: field.type?.wrapped,
       edge: edge ? {
         kind: edge,
-        collection: kind === "list" || kind === "structList",
-        type: declared && getRegisteredConstructor(declared) ? declared : null
+        collection: kind === "structList" ? "list" : kind === "list" || kind === "array" ? kind : null,
+        type: this._getDeclaredTypes(field.type)
       } : null
     };
+  }
+
+  /**
+   * The classes a member may hold, the declared one first. One nothing registers (an interface)
+   * makes the member dynamic.
+   * @param {object} type Schema type.
+   * @returns {string[]} Class names.
+   */
+  static _getDeclaredTypes(type)
+  {
+    const names = (type.accepts ?? [ DeclaredClassName(type) ]).map(name => typeof name === "function" ? CjsSchema.getClassName(name) : name);
+
+    return names.every(name => name && getRegisteredConstructor(name)) ? names : [];
   }
 
   /**
@@ -124,11 +145,13 @@ export class CjsBlueGraph
   static _getFlags(field)
   {
     return {
-      name: field.name, key: field.key, index: field.index,
+      name: field.name, key: field.key, index: field.index, role: field.role,
       persist: field.edit?.persist === true || field.edit?.persistOnly === true,
       writable: isWritableField(field),
       notify: field.edit?.notify === true,
-      hidden: field.type?.binary === true || field.type?.runtimeOnly === true
+      hidden: field.type?.binary === true || field.type?.runtimeOnly === true,
+      binary: field.type?.binary === true,
+      runtimeOnly: field.type?.runtimeOnly === true
     };
   }
 
@@ -144,7 +167,7 @@ export class CjsBlueGraph
 
     const value = type.valueType;
     const name = typeof value === "string" ? value : value?.kind === "rootRef" ? value.className : undefined;
-    if (name === undefined || Object.hasOwn(KIND_HANDLERS, name)) return undefined;
+    if (name === undefined || Object.hasOwn(GRAPH_TYPES, name)) return undefined;
 
     return getRegisteredConstructor(name) ? name : null;
   }
@@ -159,24 +182,23 @@ export class CjsBlueGraph
   {
     return {
       ...this._getFlags(field),
-      handler: MAP_HANDLER,
-      edge: { kind: "ref", collection: true, map: true, type }
+      type: "map",
+      edge: { kind: "ref", collection: "map", type }
     };
   }
 
   /**
-   * The shared handler for a list or array of plain values, or null for any other member.
+   * The item type of a list or array of plain values, or null for any other member.
    * @param {object|undefined} type Schema type.
-   * @returns {object|null} The handler.
+   * @returns {string|null} A type name.
    */
-  static _getValuesHandler(type)
+  static _getValuesItem(type)
   {
     if (type?.kind !== "list" && type?.kind !== "array") return null;
 
     const item = typeof type.itemType === "string" ? type.itemType : type.itemType?.kind;
-    if (!Object.hasOwn(KIND_HANDLERS, item) || KIND_EDGES[item]) return null;
 
-    return VALUE_HANDLERS[item] ??= new graph.CjsGraphTypeValues(KIND_HANDLERS[item]);
+    return Object.hasOwn(GRAPH_TYPES, item) && !KIND_EDGES[item] ? item : null;
   }
 
   /** Stable class identity. */
