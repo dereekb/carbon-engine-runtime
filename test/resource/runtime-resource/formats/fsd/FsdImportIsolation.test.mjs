@@ -90,6 +90,8 @@ async function ReadRelativeModuleGraph(entry)
 
 function ModuleSpecifiers(source)
 {
+    // A JSDoc `import("...")` type is not an import.
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     const values = [];
     const staticPattern = /(?:import|export)\s+(?:[^"'()]*?\s+from\s*)?["']([^"']+)["']/g;
     const dynamicPattern = /import\(\s*["']([^"']+)["']\s*\)/g;
@@ -97,7 +99,7 @@ function ModuleSpecifiers(source)
     for (const pattern of [ staticPattern, dynamicPattern ])
     {
         let match;
-        while ((match = pattern.exec(source))) values.push(match[1]);
+        while ((match = pattern.exec(code))) values.push(match[1]);
     }
 
     return values;

@@ -107,7 +107,8 @@ test("live seed writes always reseed while explicit Initialize retains its nonze
 
 test("declared seed reads bypass live setters and do not infer initialization from a method", t =>
 {
-  t.mock.method(Math, "random", () => 0.125);
+  // An unseeded curve seeds from the clock (Tr2CurveRandomAxisRotation.cpp:131).
+  t.mock.method(blue.os, "GetActualTime", () => 1234);
   const constructorState = new Tr2CurveRandomAxisRotation();
   const reader = new DictReader({ declarations: true });
   const created = reader.CreateObject({ _type: "Tr2CurveRandomAxisRotation", seed: 123 });
