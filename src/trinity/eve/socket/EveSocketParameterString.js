@@ -4,6 +4,7 @@ import { exposure as be } from "#be";
 import { type } from "#schema";
 import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
 import { IEveSocketParameter } from "./IEveSocketParameter.js";
+import { BlueList } from "#blue";
 
 /** Binds a named string socket value to external parameters while capturing defaults for restoration. */
 @be.define({
@@ -36,7 +37,7 @@ export class EveSocketParameterString extends IEveSocketParameter
 
   /** m_externalParameters (PTr2ExternalParameterVector) */
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_defaults (std::vector<std::string>) */
   @type.list("std::string")

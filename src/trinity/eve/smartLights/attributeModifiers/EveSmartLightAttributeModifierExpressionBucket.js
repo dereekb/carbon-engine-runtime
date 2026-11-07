@@ -11,6 +11,8 @@ import { EveSmartLightAttributeModifierBucket } from "./EveSmartLightAttributeMo
 import { CjsControllerExpressionProgram } from "../../../controllers/expression/CjsControllerExpressionProgram.js";
 import { vec3 } from "#math/vec3";
 import { EveSmartLightAttributeModifierExpressionBucketArguments } from "./EveSmartLightAttributeModifierExpressionBucketArguments.js";
+import { BlueList } from "#blue";
+import { ITriScalarFunction } from "#blue";
 
 /** EveSmartLightAttributeModifierExpressionBucket (eve/smartLights/attributeModifiers) - generated from schema shapeHash 02cc58c3.... */
 @be.define({
@@ -73,7 +75,7 @@ export class EveSmartLightAttributeModifierExpressionBucket extends EveSmartLigh
   /** m_inputs (PITriScalarFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriScalarFunction")
-  expressionInputs = [];
+  expressionInputs = new BlueList(ITriScalarFunction);
 
   /**
    * Value after the last update: Carbon's READ attribute "currentValue" over

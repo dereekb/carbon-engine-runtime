@@ -1,11 +1,12 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodAttributeMap.h
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { INotify } from "../../../../../blue/exposure/INotify.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
 import { EveProceduralMethodAttributeMapParameter } from "./EveProceduralMethodAttributeMapParameter.js";
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
+import { IEveVolume } from "../../../volume/IEveVolume.js";
 
 /** EveProceduralMethodAttributeMap (eve/child/procedural/selection) - generated from schema shapeHash 691cb5f9.... */
 @be.define({
@@ -29,12 +30,12 @@ export class EveProceduralMethodAttributeMap extends IEveProceduralSelectionMeth
   /** m_parameters (PEveProceduralMethodAttributeMapParameterVector) [READ, PERSIST] */
 
   @type.list("EveProceduralMethodAttributeMapParameter")
-  parameters = [];
+  parameters = new BlueList(EveProceduralMethodAttributeMapParameter, { className: "EveProceduralMethodAttributeMapParameter" });
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
   @type.list("IEveVolume")
-  debugVolumes = [];
+  debugVolumes = new BlueList(IEveVolume);
 
   /** m_mappedAttribute (BlueSharedString) [READWRITE, PERSIST] */
 

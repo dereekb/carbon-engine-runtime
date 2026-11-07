@@ -12,6 +12,8 @@ import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../core/context/Tr2RenderContext.js";
 import { Tr2SpriteObjectBlendMode, Tr2SpriteObjectEffect, Tr2SpriteTarget, Tr2Sprite2dTextureSettings } from "../../generated/sprite2d/enums.js";
 import { Tr2SpriteObject } from "../../sprite2d/Tr2SpriteObject.js";
+import { BlueList } from "#blue";
+import { EveSprite2dBracket } from "./EveSprite2dBracket.js";
 
 
 /**
@@ -73,7 +75,7 @@ export class EveSprite2dBracketRenderer extends Tr2SpriteObject
 
   /** m_brackets (PEveSprite2dBracketVector) [READ] */
   @type.list("EveSprite2dBracket")
-  brackets = [];
+  brackets = new BlueList(EveSprite2dBracket, { className: "EveSprite2dBracket" });
 
   /**
    * Carbon submits its own buffers directly rather than joining sprite vertices.

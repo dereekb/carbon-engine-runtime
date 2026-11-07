@@ -8,6 +8,9 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { type } from "#schema";
+import { BlueList } from "#blue";
+import { EveVirtualCameraBehaviourFloatBase } from "./behaviour/EveVirtualCameraBehaviourFloatBase.js";
+import { EveVirtualCameraBehaviourVector3Base } from "./behaviour/EveVirtualCameraBehaviourVector3Base.js";
 
 
 const SCRUB_INCREMENT_DT = 1 / 60;
@@ -91,16 +94,16 @@ export class EveVirtualCamera extends IRoot
   pointOfInterestAnchorForwardDirection = vec3.create();
 
   @type.list("EveVirtualCameraBehaviourFloatBase")
-  fovBehaviours = [];
+  fovBehaviours = new BlueList(EveVirtualCameraBehaviourFloatBase, { className: "EveVirtualCameraBehaviourFloatBase" });
 
   @type.list("EveVirtualCameraBehaviourVector3Base")
-  pointOfInterestBehaviours = [];
+  pointOfInterestBehaviours = new BlueList(EveVirtualCameraBehaviourVector3Base, { className: "EveVirtualCameraBehaviourVector3Base" });
 
   @type.list("EveVirtualCameraBehaviourVector3Base")
-  positionBehaviours = [];
+  positionBehaviours = new BlueList(EveVirtualCameraBehaviourVector3Base, { className: "EveVirtualCameraBehaviourVector3Base" });
 
   @type.list("EveVirtualCameraBehaviourFloatBase")
-  rollBehaviours = [];
+  rollBehaviours = new BlueList(EveVirtualCameraBehaviourFloatBase, { className: "EveVirtualCameraBehaviourFloatBase" });
 
   @type.float32
   roll = 0;

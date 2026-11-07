@@ -30,6 +30,8 @@ import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
 import { Tr2SuballocatedBufferAllocation } from "../../../core/device/Tr2SuballocatedBuffer/index.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
 import { Tr2DeviceResourceState } from "../../../core/device/deviceResourceState.js";
+import { BlueList } from "#blue";
+import { EveHazeSetItem } from "./EveHazeSetItem.js";
 
 // Carbon's function-local s_hazeVertexDecl (EveHazeSet.cpp:131-145), stream 0:
 // it lands on HazeVertex (cpp:15-31) - three transform rows, three inverse
@@ -104,7 +106,7 @@ export class EveHazeSet extends IEveSpaceObjectAttachment
   name = "";
 
   @type.list("EveHazeSetItem")
-  hazes = [];
+  hazes = new BlueList(EveHazeSetItem, { className: "EveHazeSetItem" });
 
   @meta.mapAttribute(meta.PERSIST)
   @type.list("EveHazeSetLight")

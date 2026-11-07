@@ -6,6 +6,8 @@ import { IBehavior } from "./IBehavior.js";
 import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { ProcessPriority } from "./enums.js";
+import { BlueList } from "#blue";
+import { IEveVolume } from "../../volume/IEveVolume.js";
 
 // Module scratch for the per-agent loop (behavior updates run sequentially).
 const FROM_TARGET = vec3.create();
@@ -43,7 +45,7 @@ export class CollisionAvoidance extends IRoot
   /** m_exclusionVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
   @type.list("IEveVolume")
-  exclusionVolumes = [];
+  exclusionVolumes = new BlueList(IEveVolume);
 
   /** m_collisionAvoidanceScalar (float) [READWRITE, PERSIST] */
 

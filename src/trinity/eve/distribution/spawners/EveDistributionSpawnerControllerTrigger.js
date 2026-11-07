@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerControllerTrigger.h
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { INotify } from "../../../../blue/exposure/INotify.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
@@ -46,7 +46,7 @@ export class EveDistributionSpawnerControllerTrigger extends IEveDistributionSpa
   /** m_distributionSpawners (PIEveDistributionSpawnerVector) [READ, PERSIST] */
 
   @type.list("IEveDistributionSpawner")
-  spawners = [];
+  spawners = new BlueList(IEveDistributionSpawner);
 
   /** m_restartOnReceivingValue (bool) [READWRITE, PERSIST] */
 

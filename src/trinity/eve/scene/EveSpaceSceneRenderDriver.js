@@ -56,11 +56,12 @@ import "../../core/volumetrics/Tr2VolumetricsRenderer.js";
 import { EveSpaceScene } from "./EveSpaceScene.js";
 import { EveSpaceSceneRenderDriverSettings } from "./EveSpaceSceneRenderDriverSettings.js";
 import { EveSpaceSceneRenderDriverTimers } from "./EveSpaceSceneRenderDriverTimers.js";
-import { blue } from "#blue";
+import { blue, BlueList } from "#blue";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
 import "../../postProcess/effect/Tr2PPEffect.js";
 import "#consts/renderContext/formats";
 import { trinity } from "../../CjsTrinity.js";
+import { ITr2Scene } from "../../core/ITr2Scene.js";
 
 /**
  * Carbon's default m_settings (EveSpaceSceneRenderDriver.h:54-71): the flat
@@ -312,7 +313,7 @@ export class EveSpaceSceneRenderDriver
 
   /** m_toolsScenes (PITr2SceneVector) [READ] */
   @type.list("ITr2Scene")
-  toolsScenes = [];
+  toolsScenes = new BlueList(ITr2Scene);
 
   /** m_depthPassTechnique (unknown) [READWRITE] */
   @type.string

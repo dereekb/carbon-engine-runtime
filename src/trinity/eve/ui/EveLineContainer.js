@@ -6,6 +6,8 @@ import { exposure as be } from "#be";
 // Promoted to hand-maintained source 2026-08-22; this is portable CPU graph policy.
 import { type } from "#schema";
 import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
+import { BlueList } from "#blue";
+import { EveConnector } from "./EveConnector.js";
 
 
 /** Owns and updates a connector-built EveCurveLineSet. */
@@ -27,7 +29,7 @@ export class EveLineContainer extends IRoot
   /** m_connectors (PEveConnectorVector) [READ, PERSIST] */
 
   @type.list("EveConnector")
-  connectors = [];
+  connectors = new BlueList(EveConnector, { className: "EveConnector" });
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 

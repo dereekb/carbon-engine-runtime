@@ -10,7 +10,7 @@ import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 // Hand-maintained from Carbon source, promoted out of generated intake.
-import { IsMatch, blue } from "#blue";
+import { IsMatch, blue, BlueList } from "#blue";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { EveChildPlug } from "./EveChildPlug.js";
 import { CjsSchema, type } from "#schema";
@@ -20,6 +20,7 @@ import { quat } from "#math/quat";
 import { EveChildTransform } from "./EveChildTransform.js";
 import { EveSocketParameterString } from "../socket/EveSocketParameterString.js";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
+import { IEveSocketParameter } from "../socket/IEveSocketParameter.js";
 
 /** A named attachment point on a ship that resolves and hot-reloads a plugged-in child resource, forwarding controller and registration calls to it. */
 @be.define("EveChildSocket")
@@ -91,7 +92,7 @@ export class EveChildSocket extends EveChildTransform
 
 
   @type.list("IEveSocketParameter")
-  parameters = [];
+  parameters = new BlueList(IEveSocketParameter);
 
   /** m_plugResPath (std::string) [READWRITE, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)

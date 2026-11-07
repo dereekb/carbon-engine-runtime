@@ -5,7 +5,7 @@ import { ITr2DebugRenderable } from "../../global/interfaces/ITr2DebugRenderable
 import { IWorldPosition } from "../core/IWorldPosition.js";
 // Source: trinity/trinity/Eve/AudioGameObject.h
 // Source: trinity/trinity/Eve/AudioGameObject.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { IInitialize } from "../../blue/exposure/IInitialize.js";
 import { mat4 } from "#math/mat4";
 import { IEveSpaceObject2 } from "./IEveSpaceObject2.js";
@@ -14,6 +14,7 @@ import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { CjsSchema, type } from "#schema";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { Tr2ExternalParameter } from "../core/binding/Tr2ExternalParameter.js";
 
 
 /**
@@ -50,7 +51,7 @@ export class AudioGameObject extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 

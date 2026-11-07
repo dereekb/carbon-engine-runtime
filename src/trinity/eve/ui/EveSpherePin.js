@@ -12,7 +12,7 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
-import { blue, IInitialize, INotify, IsMatch } from "#blue";
+import { blue, IInitialize, INotify, IsMatch, BlueList } from "#blue";
 import { CcpTime } from "../../../blue/CcpTime.js";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { TriBatchType } from "#consts/graphics";
@@ -27,6 +27,7 @@ import { Tr2BufferAL } from "../../../trinityal/Tr2BufferAL/Tr2BufferAL.js";
 import { Tr2BufferDescriptionAL } from "../../../trinityal/Tr2BufferAL/Tr2BufferDescriptionAL.js";
 import { Failed } from "../../../trinityal/ALResult.js";
 import { EveSpherePinIndexTree } from "./EveSpherePinIndexTree/index.js";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
 
 // Native s_treeMap shares one index per source resource. Weak keys replace
 // its process-lifetime owning map so retired resources can be collected.
@@ -95,7 +96,7 @@ export class EveSpherePin
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_sortValueMultiplier (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

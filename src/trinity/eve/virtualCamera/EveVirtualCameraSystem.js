@@ -8,6 +8,7 @@ import { assertFiniteNumber } from "#utils/validation";
 import { EveVirtualCamera } from "./EveVirtualCamera.js";
 import { EveVirtualCameraTransitionCut } from "./transition/EveVirtualCameraTransitionCut.js";
 import { EveVirtualCameraTransitionLerp } from "./transition/EveVirtualCameraTransitionLerp.js";
+import { BlueList } from "#blue";
 
 
 /**
@@ -37,7 +38,7 @@ export class EveVirtualCameraSystem
   externalCamera = null;
 
   @type.list("EveVirtualCamera")
-  cameras = [];
+  cameras = new BlueList(EveVirtualCamera, { className: "EveVirtualCamera" });
 
   @type.object.ref("EveVirtualCamera")
   mainCamera = null;

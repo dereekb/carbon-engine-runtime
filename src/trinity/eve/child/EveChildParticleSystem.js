@@ -1,7 +1,7 @@
 import { exposure as be } from "#be";
 import { ITr2DebugRenderable } from "#interfaces";
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildParticleSystem.h
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { INotify } from "../../../blue/exposure/INotify.js";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
@@ -23,6 +23,8 @@ import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { Tr2RenderReason } from "../../generated/trinityCore/enums.js";
 import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmitter/index.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
+import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
+import { Tr2ParticleSystem } from "../../particle/Tr2ParticleSystem.js";
 
 /** A child that hosts particle systems and emitters, driving their transforms, LOD-based particle budgets, and per-frame visibility and render submission. */
 @be.define({
@@ -125,7 +127,7 @@ export class EveChildParticleSystem extends EveChildTransform
    */
 
   @type.list("Tr2ParticleSystem")
-  particleSystems = [];
+  particleSystems = new BlueList(Tr2ParticleSystem, { className: "Tr2ParticleSystem" });
 
   /**
    * m_transformModifiers (PIEveChildTransformModifierVector) [READ, PERSIST]
@@ -135,7 +137,7 @@ export class EveChildParticleSystem extends EveChildTransform
    */
 
   @type.list("IEveChildTransformModifier")
-  transformModifiers = [];
+  transformModifiers = new BlueList(IEveChildTransformModifier);
 
   /**
    * m_display (bool) [READWRITE, PERSIST, NOTIFY]

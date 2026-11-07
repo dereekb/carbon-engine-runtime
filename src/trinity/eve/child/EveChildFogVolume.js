@@ -16,6 +16,8 @@ import { vec4 } from "#math/vec4";
 import { ITr2FroxelFogSettings } from "./ITr2FroxelFogSettings.js";
 import { EveComponentType } from "../EntityComponents.js";
 import { Priority } from "../../generated/postProcess/enums.js";
+import { BlueList } from "#blue";
+import { IEveVolume } from "../volume/IEveVolume.js";
 import "../../postProcess/Tr2PostProcessAttributes.js";
 
 
@@ -112,7 +114,7 @@ export class EveChildFogVolume extends ITr2FroxelFogSettings
   priority = 2;
 
   @type.list("IEveVolume")
-  volumes = [];
+  volumes = new BlueList(IEveVolume);
 
   @type.vec3
   boundingSphereCenter = vec3.create();

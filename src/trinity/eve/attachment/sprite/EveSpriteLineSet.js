@@ -21,6 +21,8 @@ import { num } from "#math/num";
 import { TriBatchType } from "#consts/graphics";
 import { EveSpriteSet } from "./EveSpriteSet.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { BlueList } from "#blue";
+import { EveSpriteLineSetItem } from "./EveSpriteLineSetItem.js";
 // RenderDebugInfo scratch (debug drawing is single-threaded).
 const DEBUG_TRANSFORM = mat4.create();
 const DEBUG_BONE = mat4.create();
@@ -60,7 +62,7 @@ export class EveSpriteLineSet extends IEveSpaceObjectAttachment
 {
 
   @type.list("EveSpriteLineSetItem")
-  spriteLines = [];
+  spriteLines = new BlueList(EveSpriteLineSetItem, { className: "EveSpriteLineSetItem" });
 
   @type.boolean
   skinned = false;

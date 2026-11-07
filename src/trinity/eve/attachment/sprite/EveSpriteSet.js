@@ -23,6 +23,7 @@ import { TriBatchType } from "#consts/graphics";
 import { num } from "#math/num";
 import { Tr2VertexDefinition } from "../../../core/vertex/Tr2VertexDefinition/index.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { BlueList } from "#blue";
 
 // Carbon PoolVertex (EveSpriteSet.h:56-70): 32 bytes -
 // position float3 @0; TEXCOORD0 half4 @12 = activation, blinkPhase,
@@ -72,7 +73,7 @@ export class EveSpriteSet extends IEveSpaceObjectAttachment
 
 
   @type.list("EveSpriteSetItem")
-  sprites = [];
+  sprites = new BlueList(EveSpriteSetItem, { className: "EveSpriteSetItem" });
 
   @type.string
   name = "";

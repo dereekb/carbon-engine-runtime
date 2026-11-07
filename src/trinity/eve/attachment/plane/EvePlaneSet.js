@@ -2,7 +2,7 @@ import { exposure as be } from "#be";
 import { ITr2LightOwner } from "../../lights/ITr2LightOwner.js";
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/Sets/EvePlaneSet.h
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/Sets/EvePlaneSet.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { EveEntity } from "../../EveEntity.js";
 import { INotify } from "../../../../blue/exposure/INotify.js";
 import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
@@ -29,6 +29,7 @@ import { CreateLightRecord, MatrixCopyFrom3x4, ReleaseLightRecord } from "../../
 import { LightFeatures } from "../../lights/LightFeatures.js";
 import { LightData } from "../../lights/LightData.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { EvePlaneSetItem } from "./EvePlaneSetItem.js";
 
 const WHITE = new Float32Array([1, 1, 1, 1]);
 
@@ -140,7 +141,7 @@ export class EvePlaneSet extends IEveSpaceObjectAttachment
   name = "";
 
   @type.list("EvePlaneSetItem")
-  planes = [];
+  planes = new BlueList(EvePlaneSetItem, { className: "EvePlaneSetItem" });
 
   @meta.mapAttribute(meta.PERSIST)
   @type.list("EvePlaneLight")

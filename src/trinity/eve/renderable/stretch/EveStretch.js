@@ -13,13 +13,15 @@ import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { CjsSchema, type } from "#schema";
-import { INotify, IsMatch, CcpTime } from "#blue";
+import { INotify, IsMatch, CcpTime, BlueList } from "#blue";
 import { IEveFiringEffectElement } from "../../IEveFiringEffectElement.js";
 import { EveComponentType } from "../../EntityComponents.js";
 import { TriFloat } from "../../../core/variable/TriFloat.js";
 import { Tr2CurveScalar } from "../../../curves/curve/Tr2CurveScalar.js";
 import { CjsStretchRuntime } from "./CjsStretchRuntime.js";
 import { sph3 } from "#math/sph3";
+import { Tr2Light } from "../../lights/Tr2Light.js";
+import { TriCurveSet } from "../../../curves/TriCurveSet.js";
 
 
 /**
@@ -95,7 +97,7 @@ export class EveStretch extends IEveFiringEffectElement
   moveCompletion = null;
 
  @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
  @type.object.ref("TriFloat")
   length = new TriFloat();
@@ -112,10 +114,10 @@ export class EveStretch extends IEveFiringEffectElement
   update = true;
 
  @type.list("Tr2Light")
-  destLights = [];
+  destLights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
  @type.list("Tr2Light")
-  sourceLights = [];
+  sourceLights = new BlueList(Tr2Light, { className: "Tr2Light" });
 
  @type.object.ref("EveTransform")
   destObject = null;

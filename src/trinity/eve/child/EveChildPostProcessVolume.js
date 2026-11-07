@@ -16,6 +16,8 @@ import { color } from "#math/color";
 import { Tr2PostProcessAttributes } from "../../postProcess/Tr2PostProcessAttributes.js";
 import { ITr2PostProcessOwner } from "../../postProcess/ITr2PostProcessOwner.js";
 import { EveComponentType } from "../EntityComponents.js";
+import { BlueList } from "#blue";
+import { IEveVolume } from "../volume/IEveVolume.js";
 
 /** A child that unions a set of inclusion and exclusion volumes into a bounding sphere and drives a post-process effect's intensity from the camera's position relative to them. */
 @be.define({
@@ -41,12 +43,12 @@ export class EveChildPostProcessVolume extends EveChildTransform
   /** m_volumes (PIEveVolumeVector) [READ, PERSIST] */
 
   @type.list("IEveVolume")
-  volumes = [];
+  volumes = new BlueList(IEveVolume);
 
   /** m_exclusionVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
   @type.list("IEveVolume")
-  exclusionVolumes = [];
+  exclusionVolumes = new BlueList(IEveVolume);
 
   /** m_boundingSphere.center (CcpMath::Sphere) [READ] */
   @type.vec3

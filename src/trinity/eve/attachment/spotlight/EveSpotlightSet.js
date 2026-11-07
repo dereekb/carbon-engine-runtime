@@ -22,6 +22,8 @@ import { TriBatchType } from "#consts/graphics";
 import { num } from "#math/num";
 import { Tr2QuadRenderer } from "../../../core/Tr2QuadRenderer/index.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { BlueList } from "#blue";
+import { EveSpotlightSetItem } from "./EveSpotlightSetItem.js";
 
 
 // Carbon's two nested pool-vertex layouts, BUILT as Carbon builds them
@@ -94,7 +96,7 @@ export class EveSpotlightSet extends IEveSpaceObjectAttachment
 {
 
   @type.list("EveSpotlightSetItem")
-  spotlightItems = [];
+  spotlightItems = new BlueList(EveSpotlightSetItem, { className: "EveSpotlightSetItem" });
 
   @type.string
   name = "";

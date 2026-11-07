@@ -19,6 +19,8 @@ import { Tr2ParticleElementDeclaration } from "../../particle/element/Tr2Particl
 import { IEveSpaceObjectChild } from "./IEveSpaceObjectChild.js";
 import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
+import { BlueList } from "#blue";
+import { ITr2AttributeGenerator } from "../../particle/attribute/ITr2AttributeGenerator.js";
 
 
 const BIND_PENDING = 0;
@@ -126,7 +128,7 @@ export class EveChildParticleSphere extends EveSpaceObjectChild
   /** m_generators (PITr2AttributeGeneratorVector) [READ, PERSIST] */
 
   @type.list("ITr2AttributeGenerator")
-  generators = [];
+  generators = new BlueList(ITr2AttributeGenerator);
 
   /** m_movementScale (float) [READWRITE, PERSIST] */
 

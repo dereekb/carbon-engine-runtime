@@ -30,6 +30,9 @@ import { IInitialize } from "#exposure/IInitialize";
 import { CcpTime } from "../../../blue/CcpTime.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmitter/index.js";
+import { BlueList } from "#blue";
+import { Tr2ParticleSystem } from "../../particle/Tr2ParticleSystem.js";
+import { TriObserverLocal } from "../../core/variable/TriObserverLocal.js";
 
 // Static scratch for the singular-world patch fixup (allocation rules: hot
 // per-object path, copy-into, never allocate per call).
@@ -122,7 +125,7 @@ export class EveTransform extends Tr2Transform
    */
 
   @type.list("Tr2ParticleSystem")
-  particleSystems = [];
+  particleSystems = new BlueList(Tr2ParticleSystem, { className: "Tr2ParticleSystem" });
 
   /**
    * m_lodLevel (Tr2Lod - enum Tr2Lod) [READ]
@@ -162,7 +165,7 @@ export class EveTransform extends Tr2Transform
    */
 
   @type.list("TriObserverLocal")
-  observers = [];
+  observers = new BlueList(TriObserverLocal, { className: "TriObserverLocal" });
 
   /**
    * m_useLodLevel (bool) [READWRITE, PERSIST]

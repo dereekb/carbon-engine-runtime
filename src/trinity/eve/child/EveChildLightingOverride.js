@@ -15,6 +15,8 @@ import { EveChildTransform } from "./EveChildTransform.js";
 import { EveComponentType } from "../EntityComponents.js";
 import { Priority } from "../../generated/postProcess/enums.js";
 import { IEveLightingOverride } from "./IEveLightingOverride.js";
+import { BlueList } from "#blue";
+import { IEveVolume } from "../volume/IEveVolume.js";
 import "../../postProcess/Tr2PostProcessAttributes.js";
 
 const DEBUG_TRANSFORM = mat4.create();
@@ -73,7 +75,7 @@ export class EveChildLightingOverride extends EveChildTransform
   sunColor = vec4.fromValues(1, 1, 1, 1);
 
   @type.list("IEveVolume")
-  volumes = [];
+  volumes = new BlueList(IEveVolume);
 
   /**
    * Carbon EveChildLightingOverride::RegisterComponents (cpp:47-50):

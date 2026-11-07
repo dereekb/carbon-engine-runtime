@@ -6,7 +6,7 @@ import { random as carbonRandom } from "#math/random";
 // Hand-maintained from Carbon source, promoted out of generated intake.
 import { IBehavior } from "./IBehavior.js";
 import { type } from "#schema";
-import { blue } from "#blue";
+import { blue, BlueList } from "#blue";
 import { LocatorType } from "./enums.js";
 import { quat } from "#math/quat";
 import { mat3 } from "#math/mat3";
@@ -84,7 +84,7 @@ export class BackAndForth extends IRoot
   /** m_locatorSets (PEveLocatorSetsVector) [READ, PERSIST] */
 
   @type.list("EveLocatorSets")
-  locatorSet = [];
+  locatorSet = new BlueList(EveLocatorSets, { className: "EveLocatorSets" });
 
   /** m_arrivedRadius (float) [READWRITE, PERSIST] */
 

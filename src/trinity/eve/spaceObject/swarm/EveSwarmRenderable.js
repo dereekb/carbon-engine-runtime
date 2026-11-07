@@ -18,6 +18,7 @@ import { ITr2Renderable } from "../../../core/ITr2Renderable.js";
 import { Tr2PickType } from "#consts/graphics/tr2PickType";
 import { EveSpaceObjectDecal } from "../../attachment/decal/EveSpaceObjectDecal.js";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
+import { BlueList } from "#blue";
 
 /** Carbon's EveSwarmRenderable (EveSwarm.h:20-95): one fighter of an EveSwarm, drawing the squad's shared mesh at its own world transform. */
 @be.define({
@@ -44,7 +45,7 @@ export class EveSwarmRenderable extends EveEntity
 
   /** m_decals (PEveSpaceObjectDecalVector) */
   @type.list("EveSpaceObjectDecal")
-  decals = [];
+  decals = new BlueList(EveSpaceObjectDecal, { className: "EveSpaceObjectDecal" });
 
   /** m_perObjectDataVs (Tr2PersistentPerObjectData<EveSwarmRenderable>) */
   @type.rawStruct("Tr2PersistentPerObjectData")

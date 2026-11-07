@@ -4,7 +4,7 @@ import { ITr2LightOwner } from "../../lights/ITr2LightOwner.js";
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/EveBoosterSet2.h
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/EveBoosterSet2.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Attachments/EveBoosterSet2_Blue.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { mat4 } from "#math/mat4";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
 import { sph3 } from "#math/sph3";
@@ -185,7 +185,7 @@ export class EveBoosterSet2 extends EveEntity
   /** m_boosterRenderables (PEveBoosterSet2RenderableVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("EveBoosterSet2Renderable")
-  instances = [];
+  instances = new BlueList(EveBoosterSet2Renderable, { className: "EveBoosterSet2Renderable" });
 
   /** m_maxVel (float) [READWRITE] */
   @be.mapAttribute(be.READWRITE)

@@ -3,7 +3,7 @@ import { INotify } from "../../../blue/exposure/INotify.js";
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay.h
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay.cpp
 // Source: trinity/trinity/Eve/UI/EveTacticalOverlay_Blue.cpp
-import { IsMatch } from "#blue";
+import { IsMatch, BlueList } from "#blue";
 import { IInitialize } from "../../../blue/exposure/IInitialize.js";
 // Promoted to hand-maintained source 2026-08-22; quad instance policy is portable CPU work.
 import { mat4 } from "#math/mat4";
@@ -16,6 +16,7 @@ import { TriBatchType } from "#consts/graphics";
 import { Tr2VariableStore } from "../../core/variable/Tr2VariableStore.js";
 import { Tr2VertexDefinition } from "../../core/vertex/Tr2VertexDefinition/index.js";
 import { TriVariableContentType } from "../../generated/trinityCore/enums.js";
+import { EveTacticalOverlayTrackObject } from "./tacticalOverlay/EveTacticalOverlayTrackObject.js";
 
 
 const effectIdentities = new WeakMap();
@@ -499,7 +500,7 @@ export class EveTacticalOverlay
 
   /** m_trackObjects (PEveTacticalOverlayTrackObjectVector) [READ] */
   @type.list("EveTacticalOverlayTrackObject")
-  trackObjects = [];
+  trackObjects = new BlueList(EveTacticalOverlayTrackObject, { className: "EveTacticalOverlayTrackObject" });
 
   /** m_totalSegmentsLast (float) [READ] */
   @type.float32

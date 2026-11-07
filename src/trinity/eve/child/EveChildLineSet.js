@@ -10,7 +10,7 @@ import { EveChildTransform } from "./EveChildTransform.js";
 import { color } from "#math/color";
 import { vec4 } from "#math/vec4";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
-import { blue, EnumRegistrationType, IInitialize, INotify, IsMatch } from "#blue";
+import { blue, EnumRegistrationType, IInitialize, INotify, IsMatch, BlueList } from "#blue";
 import { mat4 } from "#math/mat4";
 import { sph3 } from "#math/sph3";
 import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
@@ -29,6 +29,7 @@ import { RawData } from "../../core/rawData/RawData.js";
 import { EveChildLineSetPerObjectData } from "../../core/rawData/perObjectData/EveChildLineSetPerObjectData.js";
 import { CalculateBoundingSphereForLineSetPaths } from "./lineSetPaths/IEveLineSetPath.js";
 import { trinity } from "../../CjsTrinity.js";
+import { IEveLineSetPath } from "./lineSetPaths/IEveLineSetPath.js";
 
 const DEBUG_TRANSFORM = mat4.create();
 
@@ -136,7 +137,7 @@ export class EveChildLineSet extends EveChildTransform
   /** m_lines (PIEveLineSetPathVector) [READ, PERSIST] */
 
   @type.list("IEveLineSetPath")
-  lines = [];
+  lines = new BlueList(IEveLineSetPath);
 
   /** m_isAlwaysOn (bool) [READWRITE, PERSIST] */
 

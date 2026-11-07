@@ -14,6 +14,9 @@ import { vec4 } from "#math/vec4";
 import { color as colorMath } from "#math/color";
 import { type } from "#schema";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { BlueList } from "#blue";
+import { IEveVolume } from "./volume/IEveVolume.js";
+import { Tr2ExternalParameter } from "../core/binding/Tr2ExternalParameter.js";
 
 const WORLD_CENTER_SCRATCH = vec3.create();
 const TRACKED_POSITION_SCRATCH = vec3.create();
@@ -67,12 +70,12 @@ export class EveTriggerVolume extends IRoot
   /** The volumes defining the trigger region. */
 
   @type.list("IEveVolume")
-  volumes = [];
+  volumes = new BlueList(IEveVolume);
 
   /** Volumes subtracted from the trigger region. */
 
   @type.list("IEveVolume")
-  exclusionVolumes = [];
+  exclusionVolumes = new BlueList(IEveVolume);
 
   /** Volume intensity (0..1) at which the tracked position counts as inside. */
 
@@ -82,7 +85,7 @@ export class EveTriggerVolume extends IRoot
   /** External parameters exposing per-placement values, e.g. for dungeon asset manipulations. */
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_ballPosition: vector function slot placing the trigger volume. */
 

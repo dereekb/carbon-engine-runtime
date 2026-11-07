@@ -2,7 +2,7 @@
 import { exposure as be } from "#be";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { type } from "#schema";
-import { IInitialize, INotify } from "#blue";
+import { IInitialize, INotify, BlueList } from "#blue";
 import { EveSmartLightBaseAttributeModifier } from "./EveSmartLightBaseAttributeModifier.js";
 import { IEveSmartLightGroupAttributeModifier } from "./IEveSmartLightGroupAttributeModifier.js";
 
@@ -30,7 +30,7 @@ export class EveSmartLightAttributeModifierBucket extends IEveSmartLightGroupAtt
 
 
   @type.list("IEveSmartLightGroupAttributeModifier")
-  attributeModifiers = [];
+  attributeModifiers = new BlueList(IEveSmartLightGroupAttributeModifier);
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 

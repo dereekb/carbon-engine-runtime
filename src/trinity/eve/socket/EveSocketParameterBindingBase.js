@@ -3,6 +3,8 @@
 import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { IEveSocketParameter } from "./IEveSocketParameter.js";
+import { BlueList } from "#blue";
+import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";
 
 /**
  * Provides named typed socket parameters with external-value binding, default capture, and propagation hooks.
@@ -25,7 +27,7 @@ export class EveSocketParameterBindingBase extends IEveSocketParameter
 
   /** m_bindings (PITr2ValueBindingVector) */
   @type.list("ITr2ValueBinding")
-  bindings = [];
+  bindings = new BlueList(ITr2ValueBinding);
 
   /** Returns the name an external parameter has to match before it can bind here. */
 
