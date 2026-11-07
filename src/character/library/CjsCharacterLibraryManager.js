@@ -276,8 +276,7 @@ export class CjsCharacterLibraryManager
      * released after the decode. Each pair is decoded once for every character; a failed decode is retried.
      *
      * Ours (non-carbon-extensions.md § *The shared character library*): Graphene's composers decoded each pair
-     * themselves (`textureComposer.colorAreas`); the material mask is part data the library resolves
-     * (operator, 2026-11-01).
+     * themselves (`textureComposer.colorAreas`); the material mask is part data the library resolves.
      *
      * @param {string} detailPath The detail map's `res:` path, as the composer loads it.
      * @param {string} zonePath The zone map's `res:` path.

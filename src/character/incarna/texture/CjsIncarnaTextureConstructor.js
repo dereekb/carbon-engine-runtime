@@ -3,7 +3,7 @@ import { blue as blueService } from "#blue/blue";
 // Not Carbon: `dynamic:/incarna` is ours, like `dynamic:/texturepack`. It
 // serves the textures an Incarna material becomes when it is drawn with the
 // quad shaders: each is one channel mapping of one Incarna texture, built by
-// Carbon's texture pipeline (operator, 2026-10-25).
+// Carbon's texture pipeline.
 import { IBlueDynamicResourceConstructor } from "#blue";
 import { PixelFormat } from "#consts/render-context";
 import { meta } from "#schema";

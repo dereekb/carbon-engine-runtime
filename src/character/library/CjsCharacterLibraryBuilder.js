@@ -185,7 +185,7 @@ export class CjsCharacterLibraryBuilder
      *
      * Ours, as the whole builder is (non-carbon-extensions.md § *The shared character library*): the
      * library loads each record when a reader first needs it, rather than its whole family, so one
-     * palette read does not read every palette (operator ruling, 2026-11-01).
+     * palette read does not read every palette.
      *
      * @param {string} kind Configured source family.
      * @param {string} path Canonical indexed source path.

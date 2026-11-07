@@ -5,15 +5,14 @@ import { PaperDollPass } from "./paperDollOrder.js";
  * One built paper doll character: what was made from a definition. It owns
  * its pass bindings (the prepared compositions, their targets and effects),
  * the skinned objects drawn for it, and the captured settings each pass was
- * last built from. Nothing an instance builds is shared with another instance
- * (operator, 25 October 2026: characters own their state until sharing is
- * proven).
+ * last built from. Nothing an instance builds is shared with another instance:
+ * characters own their state until sharing is proven.
  *
  * `Update` captures each pass from the definition in bake order and calls
  * that pass's binding only when its capture changed. Bindings are synchronous
  * and run outside a render pass.
  *
- * An application class (operator-approved character application); no Carbon
+ * An application class; no Carbon
  * donor.
  */
 @meta.define("CjsPaperDollInstance")

@@ -507,8 +507,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
    *   fov overload, cpp:1233), so every pick after the first reuses the first
    *   pick's candidates, culled to that pick's view: an object added later, or
    *   outside the first pick's view, is never a candidate, and a removed one
-   *   stays in the list. Carbon defect CE-227; fixed here at the operator's
-   *   direction (2026-10-27), for character swaps and a moving camera.
+   *   stays in the list. Carbon defect CE-227; fixed here, for character swaps and a moving camera.
    * @param {vec3} dirWorld The pick ray's world direction.
    * @param {Tr2RenderContext} [_context] The base class's context argument, unused here.
    * @returns {object[]} The renderables to pick among.

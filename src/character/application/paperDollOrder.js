@@ -4,8 +4,7 @@
  *
  * This is the composition order, not the recipe category order
  * (`CjsCharacterModifierOrder`), which files parts by where they are stored.
- * The ranks are the working order agreed with the operator on 2026-10-25 and
- * are confirmed layer by layer against the game. They are spaced so a layer
+ * The ranks are a working order, and are confirmed layer by layer against the game. They are spaced so a layer
  * can be placed between two others without renumbering.
  *
  * @readonly
@@ -28,7 +27,7 @@ export const PaperDollLayer = Object.freeze({
     BEARD: 96,
     EYELINER: 100,
     LIPSTICK: 110,
-    /** Over the lipstick (operator, in game) and before every garment; its place against the scars is unconfirmed. */
+    /** Over the lipstick (in game) and before every garment; its place against the scars is unconfirmed. */
     AUGMENTATIONS: 112,
     /** Body augmentations: with the face ones, before every garment. */
     BODYAUGMENTATION: 114,

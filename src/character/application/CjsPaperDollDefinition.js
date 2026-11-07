@@ -56,7 +56,7 @@ const TEXTURE_TIERS = [ [ "4k", "_4k" ], [ "2k", "" ], [ "512", "_512" ], [ "256
  * record edits as dirty flags, which the one instance building from it
  * consumes.
  *
- * An application class (operator-approved character application); no Carbon
+ * An application class; no Carbon
  * donor.
  */
 @meta.define("CjsPaperDollDefinition")
@@ -309,7 +309,7 @@ export class CjsPaperDollDefinition
         const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.passes & pass)
             .sort((a, b) => (this.GetLayer(a) ?? -Infinity) - (this.GetLayer(b) ?? -Infinity) || 0);
         // An active occluder draws after every active part it occludes, so in each shared pass it covers them
-        // exactly where its own coverage is (operator, 2026-10-25: occlusion covers only what it covers).
+        // exactly where its own coverage is: occlusion covers only what it covers.
         for (const occluder of [ ...order ])
         {
             const targets = this._Occludes(occluder);
@@ -423,7 +423,7 @@ export class CjsPaperDollDefinition
      * The tier suffixes to try for a quality: its own, then each smaller, then each
      * larger. A map missing at the set size is taken from the nearest size below,
      * and from above only when nothing below exists (`shirtqf01` ships its zone map
-     * unsuffixed only). Ours: the fallback order the operator approved with
+     * unsuffixed only). Ours: the fallback order, with
      * `characterTextureQuality` (non-carbon-extensions.md § *Character texture quality*).
      * @param {string} [quality] A `characterTextureQuality` value; the setting's by default.
      * @returns {string[]} The tier suffixes in the order to try.

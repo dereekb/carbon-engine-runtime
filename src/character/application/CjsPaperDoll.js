@@ -11,12 +11,11 @@ import { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
  * because every binding composes synchronously before the frame.
  *
  * The doll owns what its character's composition and animation hold (each
- * character instance owns its composition targets, effects and caches;
- * operator, 2026-10-25, docs projects/character-graphene-demo.md): the
+ * character instance owns its composition targets, effects and caches): the
  * compositors and the animation's skeleton and clip resources are handed to
  * it when they are built, kept as fields, and released by `Destruct`.
  *
- * An application class (operator-approved character application); no Carbon
+ * An application class; no Carbon
  * donor.
  */
 @meta.define("CjsPaperDoll")
@@ -80,7 +79,7 @@ export class CjsPaperDoll
      * drawing and its update renew the same things, and a back-buffer character is renewed through its twin.
      *
      * The composers and the authored animation are Graphene's today, so they hand their compositors and resources
-     * to the doll; moving them into the runtime character is a separate operator call.
+     * to the doll; moving them into the runtime character is a separate decision.
      * @returns {boolean} Whether everything is good.
      */
     IsGood()

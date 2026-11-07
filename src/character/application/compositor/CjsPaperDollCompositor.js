@@ -167,7 +167,7 @@ export class CjsPaperDollCompositor
 
     /**
      * A composition target. One a mesh samples takes a full mip chain (`mips`): drawn at a distance, a single level
-     * aliases into moiré on fine detail such as hair cards (operator, 26 October 2026).
+     * aliases into moiré on fine detail such as hair cards.
      * @param {number} width Its width.
      * @param {number} height Its height.
      * @param {boolean} [mips=false] Whether it has a full mip chain; call `Finish` after drawing into it. A mipped

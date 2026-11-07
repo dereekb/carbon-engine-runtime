@@ -1,6 +1,5 @@
 import { blue as blueService } from "#blue/blue";
-// Not Carbon: our emulation of Incarna interiors as SOF data (operator,
-// 2026-10-25). Current Carbon has no renderer for a Tr2InteriorStatic's areas,
+// Not Carbon: our emulation of Incarna interiors as SOF data. Current Carbon has no renderer for a Tr2InteriorStatic's areas,
 // and EveSOF builds only from SOF data, so each piece becomes an EveSOF hull
 // whose areas draw the quad shader from the piece's own maps
 // (`dynamic:/incarna`), and an assembly of pieces becomes one layout, which a
@@ -58,9 +57,8 @@ const AREA_KINDS = {
  * colour by the dirt amount, keeping (1 - dirt)^3 of it
  * (`quad/unpacked_quaddetailv5.sm_depth`, pass 0 pixel), and the `_nm`
  * grime channel (`dynamic:/incarna/dirt`) averages 0.72 under the Caldari
- * walkway, so a hull with one material in every slot still drew mostly dust
- * (operator, 2026-10-26: one material in all four slots must make the hull one
- * colour). Incarna's own row 0 draws no grime.
+ * walkway, so a hull with one material in every slot still drew mostly dust,
+ * and one material in all four slots must make the hull one colour. Incarna's own row 0 draws no grime.
  */
 const AREA_TEXTURES = [
   [ "AlbedoMap", [ "OverlayMap", "DiffuseMap" ], "albedo", BLACK, false ],
@@ -183,7 +181,7 @@ export class CjsIncarnaEmulator
    * Where an assembly's lights go: one place in front of each glowing patch of
    * its areas, in the root's space, as `AddAssembly` takes them. An Incarna
    * interior's lights are objects of its scene, not of its pieces, so the
-   * glow is what shows where they were (operator, 2026-10-26).
+   * glow is what shows where they were.
    *
    * Every texel of a glowing area's mask (`glows`; `dynamic:/incarna/glow`,
    * its overlay map's alpha) at or above `threshold` is found through the
@@ -266,7 +264,7 @@ export class CjsIncarnaEmulator
 
   /**
    * Where an assembly's fill lights go, which light everything the glow lights
-   * do not (operator, 2026-10-26): one place `height` above each floor, on a
+   * do not: one place `height` above each floor, on a
    * square grid `spacing` apart in x and z, in the root's space. The grid is
    * centred on the root's origin, so a mirror-symmetric assembly gets
    * mirror-symmetric places.
@@ -486,7 +484,7 @@ export class CjsIncarnaEmulator
   /**
    * The SOF material slot, 0 to 3, each of an assembly's Incarna materials
    * takes: one slot per material, so every area draws one of the faction's
-   * four materials whole (operator, 2026-10-26). An Incarna area is one
+   * four materials whole. An Incarna area is one
    * material, told apart by its diffuse colour (`materialKey`); the distinct
    * colours, darkest first, take the slots in turn. quad picks slot i where its
    * material mask is i / 3, and only there: each slot's weight is

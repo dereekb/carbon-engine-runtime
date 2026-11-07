@@ -4,7 +4,7 @@
  * tuple gaining alpha 1. The model classes hold the fields; how a file lays them out is the format's.
  *
  * Ours (non-carbon-extensions.md § *Character source YAML values*): the game's files write colours as tuple
- * lists, and the records hold one named colour per value (operator, 2026-11-01), as Carbon exposes
+ * lists, and the records hold one named colour per value, as Carbon exposes
  * `EveSOFDataFactionColorSet` colour by colour.
  */
 export const characterSourceLists = {

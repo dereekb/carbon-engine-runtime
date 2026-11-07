@@ -8,7 +8,7 @@ import { meta } from "#schema";
  * Dolls are told nothing about the scene type. A space scene reaches
  * characters only through an interior scene placed in it.
  *
- * An application class (operator-approved character application); no Carbon
+ * An application class; no Carbon
  * donor.
  */
 @meta.define("CjsPaperDollManager")

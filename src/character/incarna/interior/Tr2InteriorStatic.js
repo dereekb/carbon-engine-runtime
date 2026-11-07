@@ -85,7 +85,7 @@ export class Tr2InteriorStatic extends IRoot
 
   /**
    * Puts in each mesh area the Tr2Effect its Tr2ShaderMaterial becomes, and
-   * drops the material (operator, 2026-10-25), so the meshes draw as current
+   * drops the material, so the meshes draw as current
    * Carbon's do: their areas hold Tr2Effects (`trinity/trinity/Tr2MeshArea.h:77`).
    * Every area list is visited through `GetAreas`.
    *
