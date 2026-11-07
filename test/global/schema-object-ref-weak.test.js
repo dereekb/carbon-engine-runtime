@@ -119,37 +119,37 @@ test("Find reaches the target, as ref does", () =>
   }
 });
 
-test("the graph tells the member apart and every walk still reaches it", () =>
+test("the graph holds the member on its own edge, which only a walk that asks for it follows", () =>
 {
   CjsBlueGraph.define(RefWeakLeaf, "RefWeakLeaf");
   CjsBlueGraph.define(OwnedHolder, "RefWeakOwnedHolder");
   CjsBlueGraph.define(UnownedHolder, "RefWeakUnownedHolder");
 
   const member = Holder => CjsGraph.getClassInfo(Holder).compiled.byName.target[0];
-  assert.equal(member(OwnedHolder).owned, true);
-  assert.equal(member(UnownedHolder).owned, false);
-  assert.deepEqual(member(UnownedHolder).edge, member(OwnedHolder).edge);
+  assert.equal(member(OwnedHolder).edge.kind, "ref");
+  assert.equal(member(UnownedHolder).edge.kind, "refWeak");
+  assert.equal(member(UnownedHolder).handler, member(OwnedHolder).handler);
+  assert.equal(member(UnownedHolder).edge.type, member(OwnedHolder).edge.type);
 
-  // Default walk and cached selection, which resource walks use.
-  const selection = CjsGraph.compileSelection({ matchClass: info => info.ctor === RefWeakLeaf });
-  for (const holder of holders())
+  const matchClass = info => info.ctor === RefWeakLeaf;
+  const reachable = [ "embed", "ref", "refWeak" ];
+  const owned = CjsGraph.compileSelection({ matchClass });
+  const all = CjsGraph.compileSelection({ matchClass, edges: reachable });
+  const walk = (root, options) =>
   {
     const visited = [];
-    CjsGraph.traverse(holder, object => { visited.push(object); });
-    assert.deepEqual(visited, [ holder, holder.target ]);
-    assert.deepEqual(CjsGraph.select(holder, selection, []), [ holder.target ]);
-  }
-
-  // A walk that follows ownership stops at the member, with no change to the graph.
-  const acceptMember = candidate => candidate.owned !== false;
-  const [ owned, unowned ] = holders();
-  const walk = root =>
-  {
-    const visited = [];
-    CjsGraph.traverse(root, object => { visited.push(object); }, { acceptMember });
+    CjsGraph.traverse(root, object => { visited.push(object); }, options);
     return visited;
   };
 
-  assert.deepEqual(walk(owned), [ owned, owned.target ]);
-  assert.deepEqual(walk(unowned), [ unowned ]);
+  const [ ownedHolder, unownedHolder ] = holders();
+
+  // An ownership walk, Destruct's: the default.
+  assert.deepEqual(walk(ownedHolder), [ ownedHolder, ownedHolder.target ]);
+  assert.deepEqual(walk(unownedHolder), [ unownedHolder ]);
+  assert.deepEqual(CjsGraph.select(unownedHolder, owned, []), []);
+
+  // A walk over everything reachable, Find's and a resource walk's, names the edge.
+  assert.deepEqual(walk(unownedHolder, { edges: reachable }), [ unownedHolder, unownedHolder.target ]);
+  assert.deepEqual(CjsGraph.select(unownedHolder, all, []), [ unownedHolder.target ]);
 });

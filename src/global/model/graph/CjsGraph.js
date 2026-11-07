@@ -1129,8 +1129,8 @@ export class CjsGraph
    */
   static _compileEdge(edge)
   {
-    if (edge.kind !== "embed" && edge.kind !== "ref" && edge.kind !== "weak")
-      throw new TypeError("Graph edge requires embed, ref or weak ownership.");
+    if (edge.kind !== "embed" && edge.kind !== "ref" && edge.kind !== "refWeak" && edge.kind !== "weak")
+      throw new TypeError("Graph edge requires embed, ref, refWeak or weak ownership.");
     if (edge.type != null && typeof edge.type !== "function" && typeof edge.type !== "string")
       throw new TypeError("Graph edge type requires a constructor or registered name.");
     if (edge.collection !== undefined && typeof edge.collection !== "boolean")

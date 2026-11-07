@@ -42,7 +42,7 @@ There is no policy class or option: Blue's rules are the graph's own behaviour, 
 are plain options (`persistOnly`, `roundTrip`, `skipEquality`, `skipEvents`, `validate`, `idMap`,
 `initializeHeld`, `copyOverride`). The graph imports nothing from Blue: `Initialize`, `OnModified`
 and `OnListModified` are methods on objects, and flags are data. A member carries `persist`,
-`writable`, `notify`, `owned` and `hidden`; a definition says `initialize`, `notify`, `listNotify` and `hook`.
+`writable`, `notify` and `hidden`; a definition says `initialize`, `notify`, `listNotify` and `hook`.
 Member tables are cached per class and choice of flags on the compiled record.
 
 - **Set on a live object:** IsEqual, then updateValues(changedNames), children first and once
@@ -74,17 +74,17 @@ Blue's side is `blue/formats/graph/CjsBlueGraph.js`, which supplies definitions 
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per
 object, depth-first in declaration/list order. A member's `edge` declares `kind`
-(`embed`, `ref`, `weak`), optional child `type` (constructor or registered name), and
+(`embed`, `ref`, `refWeak`, `weak`), optional child `type` (constructor or registered name), and
 `collection: true` for an array of children. Without an edge, the member is a leaf
 and traversal does not read its value. `key` selects storage and optional `index`
 selects an array slot. Missing/undefined edges, invalid slots and unknown dynamic
 classes fail; explicit null object edges are absent. Plain structs use their declared
 type; class instances resolve their actual registered type from the prototype.
 
-The default follows embed/ref; `options.edges` may also include weak. Member data is
-kept as given, and the graph reads no `owned`: a Blue `ref` member with `owned: false`
-keeps its target alive without owning it (`@type.object.ref.weak`), so every walk still
-reaches it, and a walk that follows ownership rejects it in `acceptMember`.
+The default follows embed/ref, what an object owns; `options.edges` may also include
+weak and refWeak. A `refWeak` edge keeps its target alive without owning it
+(`@type.object.ref.weak`), so a walk over everything reachable names it, and an ownership
+walk does not.
 `options.acceptMember(member, classInfo)` filters candidates before inherited name
 resolution, once per encountered class. Eligibility must be class-level and stable
 for the call. A selected leaf shadows a same-name base edge. The synchronous visitor

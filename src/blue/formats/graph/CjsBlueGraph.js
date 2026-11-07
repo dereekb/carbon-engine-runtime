@@ -41,7 +41,7 @@ const VALUE_HANDLERS = {};
 /** The one handler for a Map of objects. */
 const MAP_HANDLER = handler("Map");
 
-/** How each object kind holds its object. */
+/** How each object kind holds its object. `type.object.ref.weak` is a rootRef on the edge `refWeak`. */
 const KIND_EDGES = { rootRef: "ref", rootWeak: "weak", root: "embed", rawStruct: "embed", list: "ref", structList: "embed" };
 
 /**
@@ -101,7 +101,7 @@ export class CjsBlueGraph
     if (map !== undefined) return this._getMapMember(field, map);
 
     const values = this._getValuesHandler(field.type);
-    const edge = values ? null : KIND_EDGES[kind];
+    const edge = values ? null : field.type?.owned === false ? "refWeak" : KIND_EDGES[kind];
     const declared = edge ? DeclaredClassName(field.type) : null;
 
     return {
@@ -117,7 +117,7 @@ export class CjsBlueGraph
 
   /**
    * A member's identity and Carbon's flags, as data. A values bag carries no binary block, and a
-   * runtime-only member claims its name unread. `owned` is false on `type.object.ref.weak`.
+   * runtime-only member claims its name unread.
    * @param {object} field Schema declaration.
    * @returns {object} Member fields.
    */
@@ -128,7 +128,6 @@ export class CjsBlueGraph
       persist: field.edit?.persist === true || field.edit?.persistOnly === true,
       writable: isWritableField(field),
       notify: field.edit?.notify === true,
-      owned: field.type?.owned !== false,
       hidden: field.type?.binary === true || field.type?.runtimeOnly === true
     };
   }

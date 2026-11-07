@@ -701,8 +701,8 @@ export class CjsSchema
      *   reference; `object.weak(className)` is IROOTWEAKREF;
      * - `object.ref.weak(className)` is also IROOTPTR, and stores, reads, writes,
      *   copies and serialises exactly as `object.ref`. It only records that this
-     *   member keeps its target alive without owning it (`owned: false`), so
-     *   Destruct stops there. `object.weak` is a different thing, Carbon's real
+     *   member keeps its target alive without owning it (`owned: false`, the graph's
+     *   `refWeak` edge), so Destruct stops there. `object.weak` is a different thing, Carbon's real
      *   weak reference;
      * - `object.embed(className)` is Carbon's IROOT, an object embedded in its owner:
      *   the owner creates it, and readers and SetValues populate it in place,
