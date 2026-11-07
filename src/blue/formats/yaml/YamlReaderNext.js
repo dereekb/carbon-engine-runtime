@@ -1,18 +1,18 @@
 // Source: blue/src/YamlReader.h
 // Source: blue/src/YamlReader.cpp
 // Source: blue/src/YamlReader_Blue.cpp
-import { exposure as be } from "#be";
+//
+// BESIDE, NOT LIVE. This is YamlReader on Carbon's stream base, step 7 of the Blue
+// plan. YamlReader stays the live reader until takeover, when this replaces it and
+// takes its name and its registration. Only member dispatch differs from YamlReader:
+// the base's handlers replace _ReadMember, so a type reads as it does in Black.
 import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
-import { CjsSchema, type } from "#schema";
+import { CjsSchema } from "#schema";
 import { IRootReaderBase } from "../black/IRootReaderBase.js";
 import { CjsBlackDefinitions } from "../black/CjsBlackDefinitions.js";
-import { IRootReader } from "../../format/IRootReader.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
-import { IBlueObjectBuilder } from "../../interfaces/IBlueObjectBuilder.js";
 import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
-import { ICacheable } from "../../interfaces/ICacheable.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
-import { INotify } from "../../exposure/INotify.js";
 import { IList } from "../../exposure/IList.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
@@ -66,7 +66,7 @@ export class YamlReaderNext extends IRootReaderBase
    * Reads an object, returning null on a reader error. Adapted: host Read
    * fills bytes synchronously; UTF-8 and yaml nodes replace libyaml callbacks.
    *
-   * @adapted
+   * @adapted Reads an object, returning null on a reader error. Adapted: host Read fills bytes synchronously; UTF-8 and yaml nodes replace libyaml callbacks
    * @param {object} stream Stream implementing Read(buffer, size).
    * @returns {object|null} Last root mapping, or null on a reader failure.
    */
@@ -112,7 +112,7 @@ export class YamlReaderNext extends IRootReaderBase
    * Caches parser events for repeated construction and lazy proxies. Adapted:
    * nodes are parsed once; event indices replace native list iterators.
    *
-   * @adapted
+   * @adapted Caches parser events for repeated construction and lazy proxies. Adapted: nodes are parsed once; event indices replace native list iterators
    * @param {object} stream Stream implementing Read(buffer, size).
    * @returns {boolean} Whether a root mapping was cached.
    */
@@ -144,7 +144,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads UTF-8 text; the native output pointer is returned, failures throw.
    *
-   * @adapted
+   * @adapted Reads UTF-8 text; the native output pointer is returned, failures throw
    */
 
   CreateObjectFromString(text)
@@ -165,7 +165,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Returns the output pointer; a failed native Result becomes a reader exception.
    *
-   * @adapted
+   * @adapted Returns the output pointer; a failed native Result becomes a reader exception
    */
 
   CreateObjectFromStream(stream)
@@ -205,7 +205,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Stores the float32 slice; JavaScript has no synchronous Stackless tasklet yield.
    *
-   * @adapted
+   * @adapted Stores the float32 slice; JavaScript has no synchronous Stackless tasklet yield
    */
 
   SetTimeSlice(value) { this._timeSlice = Math.max(0, Math.fround(value)); }
@@ -213,7 +213,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Returns the native string output parameter.
    *
-   * @adapted
+   * @adapted Returns the native string output parameter
    */
 
   GetErrorMessage() { return this._errorMessage; }
@@ -221,7 +221,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Builds from an event marker. Garbage collection replaces native reference counting.
    *
-   * @adapted
+   * @adapted Builds from an event marker. Garbage collection replaces native reference counting
    */
 
   CreateObject(objectMarker, callingProxy)
@@ -232,7 +232,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Builds synchronously: JavaScript cannot yield a synchronous Stackless tasklet.
    *
-   * @adapted
+   * @adapted Builds synchronously: JavaScript cannot yield a synchronous Stackless tasklet
    */
 
   CreateObjectWithYield(objectMarker, callingProxy)
@@ -251,7 +251,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Preserves Carbon's rough estimate; this is not a JavaScript heap measurement.
    *
-   * @adapted
+   * @adapted Preserves Carbon's rough estimate; this is not a JavaScript heap measurement
    */
 
   GetMemoryUsage() { return 128 + this._eventList.length * 64; }
@@ -259,7 +259,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Cached event indices replace native iterators; Stackless scheduling is unavailable.
    *
-   * @adapted
+   * @adapted Cached event indices replace native iterators; Stackless scheduling is unavailable
    */
 
   _CreateObjectHelper(objectMarker, _callingProxy, _yieldBehavior)
@@ -339,7 +339,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Uses the current node's source location instead of libyaml's parser mark.
    *
-   * @adapted
+   * @adapted Uses the current node's source location instead of libyaml's parser mark
    */
 
   _ConstructMessage(message)
@@ -352,7 +352,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Throws the native reader exception with filename and line context.
    *
-   * @adapted
+   * @adapted Throws the native reader exception with filename and line context
    */
 
   _ReportError(message) { throw new IRootReaderException(this._ConstructMessage(message)); }
@@ -372,7 +372,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Validates the event currently being consumed.
    *
-   * @adapted
+   * @adapted Validates the event currently being consumed
    */
 
   _VerifyEvent(type)
@@ -384,7 +384,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Advances the buffered node events, honoring Carbon's single-event pushback.
    *
-   * @adapted
+   * @adapted Advances the buffered node events, honoring Carbon's single-event pushback
    */
 
   _GetNextEvent()
@@ -417,7 +417,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Buffered parsing has already checked syntax; exhaustion is the end event.
    *
-   * @adapted
+   * @adapted Buffered parsing has already checked syntax; exhaustion is the end event
    */
 
   _IsParserExhausted() { return this._event?.type === "STREAM_END"; }
@@ -425,7 +425,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Releases native cached-event storage through JavaScript garbage collection.
    *
-   * @adapted
+   * @adapted Releases native cached-event storage through JavaScript garbage collection
    */
 
   _ClearCachedEvents()
@@ -486,7 +486,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Returns scalar text, never YAML's inferred boolean/numeric value.
    *
-   * @adapted
+   * @adapted Returns scalar text, never YAML's inferred boolean/numeric value
    */
 
   _ReadScalar()
@@ -499,7 +499,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Returns null at a mapping end; native string output becomes the result.
    *
-   * @adapted
+   * @adapted Returns null at a mapping end; native string output becomes the result
    */
 
   _ReadMemberName()
@@ -511,7 +511,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads the mandatory first type key; C++'s output pointer becomes the return value.
    *
-   * @adapted
+   * @adapted Reads the mandatory first type key; C++'s output pointer becomes the return value
    */
 
   _ReadClassType() { return this._ReadScalar() === "type" ? this._ReadScalar() : null; }
@@ -519,7 +519,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Exact Blue registration replaces native CLSID lookup and factory resolution.
    *
-   * @adapted
+   * @adapted Exact Blue registration replaces native CLSID lookup and factory resolution
    */
 
   _ReadClsid()
@@ -534,7 +534,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Preserves the native eight-byte identifier, using BigInt instead of memcpy.
    *
-   * @adapted
+   * @adapted Preserves the native eight-byte identifier, using BigInt instead of memcpy
    */
 
   _ExtractAnchorFromMappingStart() { return YamlReaderNext._AnchorId(this._event.node?.anchor); }
@@ -542,7 +542,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Creates directly through the registered factory; no values/hydration adapter intervenes.
    *
-   * @adapted
+   * @adapted Creates directly through the registered factory; no values/hydration adapter intervenes
    */
 
   _ReadIRootClassInternal()
@@ -581,7 +581,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads null, a class mapping or an already completed object's alias.
    *
-   * @adapted
+   * @adapted Reads null, a class mapping or an already completed object's alias
    */
 
   ReadIRootClass()
@@ -609,7 +609,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Fills an existing embedded object only when its exact registered type matches.
    *
-   * @adapted
+   * @adapted Fills an existing embedded object only when its exact registered type matches
    */
 
   ReadIRoot(instance)
@@ -632,7 +632,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads metadata only in native first-member position; preserves native exception recovery.
    *
-   * @adapted
+   * @adapted Reads metadata only in native first-member position; preserves native exception recovery
    */
 
   _ReadMembers(instance)
@@ -662,7 +662,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * JS objects are weakly addressable, so every constructed owner can have metadata.
    *
-   * @adapted
+   * @adapted JS objects are weakly addressable, so every constructed owner can have metadata
    */
 
   _ReadMetadata(instance)
@@ -682,7 +682,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * atoi's decimal prefix, with explicit native signed 32-bit storage.
    *
-   * @adapted
+   * @adapted atoi's decimal prefix, with explicit native signed 32-bit storage
    */
 
   ReadValue__Int32() { return Number(BigInt.asIntN(32, YamlReaderNext._Decimal(this._ReadScalar()))); }
@@ -690,7 +690,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Windows strtoul's 32-bit saturation and unsigned sign conversion.
    *
-   * @adapted
+   * @adapted Windows strtoul's 32-bit saturation and unsigned sign conversion
    */
 
   ReadValue__UInt32() { return Number(YamlReaderNext._Unsigned(this._ReadScalar(), 32)); }
@@ -698,7 +698,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native atoi followed by uint16 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by uint16 storage conversion
    */
 
   ReadValue__UInt16() { return this.ReadValue__Int32() & 65535; }
@@ -706,7 +706,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native atoi followed by uint8 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by uint8 storage conversion
    */
 
   ReadValue__UInt8() { return this.ReadValue__Int32() & 255; }
@@ -714,7 +714,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native atoi followed by int16 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by int16 storage conversion
    */
 
   ReadValue__Int16() { return (this.ReadValue__Int32() << 16) >> 16; }
@@ -722,7 +722,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native atoi followed by int8 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by int8 storage conversion
    */
 
   ReadValue__Int8() { return (this.ReadValue__Int32() << 24) >> 24; }
@@ -738,7 +738,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * BigInt retains native signed 64-bit precision; strtoll overflow saturates.
    *
-   * @adapted
+   * @adapted BigInt retains native signed 64-bit precision; strtoll overflow saturates
    */
 
   ReadValue__Int64()
@@ -750,7 +750,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * BigInt retains native unsigned 64-bit precision.
    *
-   * @adapted
+   * @adapted BigInt retains native unsigned 64-bit precision
    */
 
   ReadValue__UInt64() { return YamlReaderNext._Unsigned(this._ReadScalar(), 64); }
@@ -758,7 +758,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * C locale atof decimal prefixes and nonfinite spellings, using JS binary64.
    *
-   * @adapted
+   * @adapted C locale atof decimal prefixes and nonfinite spellings, using JS binary64
    */
 
   ReadValue__Double() { return YamlReaderNext._NativeDouble(this._ReadScalar()); }
@@ -766,7 +766,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Rounds at the native float assignment.
    *
-   * @adapted
+   * @adapted Rounds at the native float assignment
    */
 
   ReadValue__Float() { return Math.fround(this.ReadValue__Double()); }
@@ -774,7 +774,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native shared-string output is a garbage-collected JS string.
    *
-   * @adapted
+   * @adapted Native shared-string output is a garbage-collected JS string
    */
 
   _ReadValue__BlueSharedString() { return this.ReadString(); }
@@ -782,7 +782,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native output storage is supplied by the caller.
    *
-   * @adapted
+   * @adapted Native output storage is supplied by the caller
    */
 
   _ReadValue__Vector4(value) { this.ReadFloatArray(value, 4); }
@@ -792,7 +792,7 @@ export class YamlReaderNext extends IRootReaderBase
    * inlined because its class/helper is not ported. Its 0x7fff nonfinite
    * spelling and subnormal rounding are intentionally not num.toHalfFloat's.
    *
-   * @adapted
+   * @adapted Returns native half bits. BlueStructureList.cpp:559-651's conversion is inlined because its class/helper is not ported. Its 0x7fff nonfinite spelling and subnormal roundi
    */
 
   _ReadFloat16()
@@ -828,7 +828,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads scalar strings only in native plain or quoted styles.
    *
-   * @adapted
+   * @adapted Reads scalar strings only in native plain or quoted styles
    */
 
   ReadString()
@@ -841,7 +841,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * JS strings already represent wide text; native allocation is garbage-collected.
    *
-   * @adapted
+   * @adapted JS strings already represent wide text; native allocation is garbage-collected
    */
 
   ReadWString() { return this.ReadString(); }
@@ -849,7 +849,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * CE-212: fills existing float storage; shorter sequences leave the tail unchanged.
    *
-   * @adapted
+   * @adapted CE-212: fills existing float storage; shorter sequences leave the tail unchanged
    */
 
   ReadFloatArray(values, count)
@@ -889,7 +889,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Reads the native custom-persistence buffer, preserving Base64's permissive lookup.
    *
-   * @adapted
+   * @adapted Reads the native custom-persistence buffer, preserving Base64's permissive lookup
    */
 
   ReadBinaryBlock(persist, name)
@@ -962,7 +962,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Native IList population.
    *
-   * @adapted
+   * @adapted Native IList population
    */
 
   ReadList(list)
@@ -1027,7 +1027,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Alternating string keys and object values; Map replaces native IBlueDict storage.
    *
-   * @adapted
+   * @adapted Alternating string keys and object values; Map replaces native IBlueDict storage
    */
 
   ReadDict(holder, key, entry)
@@ -1047,7 +1047,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Checks native wire layouts; schema records replace native byte-offset writes.
    *
-   * @adapted
+   * @adapted Checks native wire layouts; schema records replace native byte-offset writes
    */
 
   ReadStructureList(holder, key, entry)
@@ -1102,7 +1102,7 @@ export class YamlReaderNext extends IRootReaderBase
   /**
    * Type codes choose readers; typed vectors preserve numeric storage while skipping or writing rows.
    *
-   * @adapted
+   * @adapted Type codes choose readers; typed vectors preserve numeric storage while skipping or writing rows
    */
 
   _ReadStructureListItem(definition, item)
