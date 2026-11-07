@@ -1,3 +1,4 @@
+import * as CcpLog from "../../../src/global/logging/ccpLog.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -145,6 +146,7 @@ test("inactive fragment outputs are omitted while conflicting active locations r
     gl.getFragDataLocation = () => 2;
     assert.equal(program.Create(...link([ vertex, pixel ]), FakeRenderContext(gl)), ALResult.E_INVALIDARG);
     assert.match(program.GetLinkLog(), /SV_Target0 linked at 2, expected 0/u);
+    assert.match(CcpLog.GetLastErrorMessage(), /WebGL2 refused a shader program: Fragment output SV_Target0 linked at 2/u);
     assert.equal(program.IsValid(), false);
     assert.equal(program._fragmentOutputMask, 0);
 });

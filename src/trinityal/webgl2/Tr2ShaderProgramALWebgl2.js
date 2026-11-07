@@ -222,6 +222,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
     {
       this._log = gl.getProgramInfoLog(program) ?? "";
+      this._LogRefusal();
       gl.deleteProgram(program);
       this._Reset();
       return ALResult.E_FAIL;
@@ -243,6 +244,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     }
     if (fragment && !this._LayOutFragmentOutputs(gl, program, fragment))
     {
+      this._LogRefusal();
       this._Reset();
       return ALResult.E_INVALIDARG;
     }
@@ -253,6 +255,17 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._isValid = true;
 
     return ALResult.S_OK;
+  }
+
+  /**
+   * Prints why this program was refused. The effect state manager caches a refused
+   * program, so each logs once, and its draws are skipped with no GL error to show why.
+   *
+   * @cjs
+   */
+  _LogRefusal()
+  {
+    CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "WebGL2 refused a shader program: %s", this._log);
   }
 
   /**
@@ -278,7 +291,7 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
 
       const names = textures.map(binding => binding.name).join(", ");
       this._log = `Stage ${type} uses ${textures.length} texture units, over the budget of ${TEXTURE_UNITS_PER_STAGE}: ${names}`;
-      CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "WebGL2 refused a shader program: %s", this._log);
+      this._LogRefusal();
       return false;
     }
 

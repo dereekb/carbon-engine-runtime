@@ -604,10 +604,15 @@ export class Tr2EffectStateManager
    * layer may not import Trinity. So the stamp happens at the Trinity boundary
    * instead, on the first rebuild that resolves a shader.
    *
-   * That is a timing difference with no behavioural one. Registration interns
-   * identity and creates nothing, so it neither needs a device nor makes the
-   * reflection graph device-dependent, and interning is idempotent: re-stamping
-   * the same shader yields the same handles.
+   * Registration here interns identity and creates nothing, so it neither needs
+   * a device nor makes the reflection graph device-dependent, and interning is
+   * idempotent: re-stamping the same shader yields the same handles.
+   *
+   * THAT LOSES CARBON'S FAILURE PATH. Carbon creates the program while reading
+   * and a refused Create fails the read, naming the effect
+   * (Tr2EffectStateManager.cpp:572-574, Tr2EffectDescription.cpp:651-656). Ours
+   * creates at first apply, per context (GetShaderProgram), so a refused program
+   * only logs and skips its draws, and the effect still reports good.
    *
    * Program members are collected in the pass's retained file order, not by
    * stage type, because Carbon indexes its handle array by position while
