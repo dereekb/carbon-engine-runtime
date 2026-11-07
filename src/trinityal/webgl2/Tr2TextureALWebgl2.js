@@ -315,6 +315,9 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
   /** The other colour space's texture, built on first request; see the head comment. */
   _twin = null;
 
+  /** What shaders sample in place of this depth while it stays attached; see `CopyDepthForSampling`. */
+  _depthCopy = null;
+
   /** Initial data kept until the twin is built. */
   _twinSource = null;
 
@@ -769,6 +772,7 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     {
       if (this._texture) gl.deleteTexture(this._texture);
       if (this._twin) gl.deleteTexture(this._twin);
+      if (this._depthCopy) gl.deleteTexture(this._depthCopy);
       if (this._renderbuffer) gl.deleteRenderbuffer(this._renderbuffer);
       if (this._framebuffer) gl.deleteFramebuffer(this._framebuffer);
     }
@@ -1477,6 +1481,41 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
   GetRenderbuffer()
   {
     return this._renderbuffer;
+  }
+
+  /**
+   * Copies this depth to the texture shaders sample while it stays attached
+   * read-only. dx11 binds a read-only view of one texture; WebGL2 has no views,
+   * and sampling an attached texture is a feedback loop, so the copy stands in.
+   *
+   * @cjs
+   * @param {WebGLFramebuffer} readFramebuffer Scratch framebuffer to read this depth from.
+   * @param {WebGLFramebuffer} drawFramebuffer Scratch framebuffer to write the copy to.
+   * @returns {WebGLTexture} The copy. The caller rebinds its own framebuffers.
+   */
+  CopyDepthForSampling(readFramebuffer, drawFramebuffer)
+  {
+    const gl = this._gl, point = this.GetDepthAttachmentPoint();
+    const width = this.GetWidth(), height = this.GetHeight();
+
+    if (!this._depthCopy)
+    {
+      const previous = gl.getParameter(gl.TEXTURE_BINDING_2D);
+      this._depthCopy = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this._depthCopy);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, this._layout.internalFormat, width, height);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.bindTexture(gl.TEXTURE_2D, previous);
+    }
+
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, readFramebuffer);
+    this.AttachToFramebuffer(gl.READ_FRAMEBUFFER, point, 0, 0);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, drawFramebuffer);
+    gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, point, gl.TEXTURE_2D, this._depthCopy, 0);
+    gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+
+    return this._depthCopy;
   }
 
   /**

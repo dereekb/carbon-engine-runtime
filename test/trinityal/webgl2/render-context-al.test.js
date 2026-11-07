@@ -87,6 +87,38 @@ test("a depth-stencil of another size is not attached until the target matches, 
     assert.equal(calledWith(calls, "framebufferTexture2D").filter(([ , point ]) => point === gl.DEPTH_ATTACHMENT).length, 1);
 });
 
+test("read-only depth stays attached with writes masked, and shaders sample one copy per span", () =>
+{
+    const { gl, calls, context } = device();
+    const depth = texture(context, 64, 32, Tr2GpuUsage.DEPTH_STENCIL, PixelFormat.PIXEL_FORMAT_D32_FLOAT);
+    context.SetRenderTarget(0, texture(context, 64, 32, Tr2GpuUsage.RENDER_TARGET));
+    context.SetDepthStencil(depth);
+    calls.length = 0;
+
+    context.SetReadOnlyDepth(true);
+    assert.equal(calledWith(calls, "framebufferRenderbuffer").length, 0, "the depth is not detached");
+    assert.equal(calledWith(calls, "framebufferTexture2D").filter(([ , point ]) => point === gl.DEPTH_ATTACHMENT).length, 0);
+
+    context._depthStencilState.depthWrite = true;
+    context._dirty.depthStencil = true;
+    context.ApplyDepthStencilState();
+    assert.deepEqual(calledWith(calls, "depthMask").at(-1), [ false ]);
+
+    const implementation = depth.TrinityALImpl_GetObject();
+    const copy = context._GetDepthCopy(implementation);
+    assert.equal(context._GetDepthCopy(implementation), copy);
+    assert.equal(calledWith(calls, "blitFramebuffer").length, 1);
+
+    context.SetReadOnlyDepth(false);
+    context.ApplyDepthStencilState();
+    assert.deepEqual(calledWith(calls, "depthMask").at(-1), [ true ]);
+
+    context.SetReadOnlyDepth(true);
+    context._GetDepthCopy(implementation);
+    assert.equal(calledWith(calls, "blitFramebuffer").length, 2, "a new span copies again");
+    assert.notEqual(context._GetDepthCopy(implementation), implementation.GetShaderResourceTexture(0));
+});
+
 test("render-target and depth stacks restore per slot, and an empty pop fails", () =>
 {
     const { context } = device();

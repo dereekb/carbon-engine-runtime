@@ -292,6 +292,12 @@ export class Tr2RenderContextALWebgl2
   /** m_isDepthReadOnly: the read-only flag the targets were last bound with. */
   _isDepthReadOnly = false;
 
+  /** The depth implementation the sampled copy is current for, this read-only span. */
+  _depthCopySource = null;
+
+  /** Scratch read and draw framebuffers for that copy. */
+  _depthCopyFramebuffers = null;
+
   /** m_recodingFrame (sic) */
   _recordingFrame = 1;
 
@@ -1222,13 +1228,11 @@ export class Tr2RenderContextALWebgl2
 
   /**
    * Binds depth read-only, so a pass can sample it while it stays bound
-   * (`:1425-1435`). dx11 switches to a read-only depth view. WebGL2 has none,
-   * and a texture that is both attached and sampled is a feedback loop GL
-   * refuses to draw, so this detaches the depth while the flag is set; depth
-   * testing against it is lost for those draws, which is the loss this
-   * backend accepts.
+   * (`:1425-1435`). dx11 switches to a read-only depth view.
    *
-   * @adapted
+   * @adapted WebGL2 has no views, and a texture both attached and sampled is a
+   *   feedback loop GL refuses to draw. The depth stays attached with writes
+   *   masked, so draws still test against it, and shaders sample a copy.
    * @param {boolean} enable Whether depth is read-only.
    */
   SetReadOnlyDepth(enable)
@@ -1236,8 +1240,36 @@ export class Tr2RenderContextALWebgl2
     if (this._readOnlyDepth === Boolean(enable)) return;
 
     this._readOnlyDepth = Boolean(enable);
+    this._ApplyDepthReadOnly();
+  }
+
+  /** Makes the flag current: writes follow it, and the next sample takes a fresh copy. */
+  _ApplyDepthReadOnly()
+  {
     this._isDepthReadOnly = this._readOnlyDepth;
-    this._SetRtDsToDevice(MAX_RENDER_TARGET);
+    this._depthCopySource = null;
+    this._dirty.depthStencil = true;
+  }
+
+  /**
+   * The texture shaders sample for the attached read-only depth, copied once per read-only span.
+   *
+   * @param {Tr2TextureALWebgl2} depth The attached depth's implementation.
+   * @returns {WebGLTexture} The copy.
+   */
+  _GetDepthCopy(depth)
+  {
+    const gl = this._gl;
+    if (this._depthCopySource === depth) return depth._depthCopy;
+
+    this._depthCopyFramebuffers ??= [ gl.createFramebuffer(), gl.createFramebuffer() ];
+    const scissor = gl.isEnabled(gl.SCISSOR_TEST);
+    if (scissor) gl.disable(gl.SCISSOR_TEST);
+    const copy = depth.CopyDepthForSampling(this._depthCopyFramebuffers[0], this._depthCopyFramebuffers[1]);
+    if (scissor) gl.enable(gl.SCISSOR_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+    this._depthCopySource = depth;
+    return copy;
   }
 
   /**
@@ -1281,7 +1313,7 @@ export class Tr2RenderContextALWebgl2
         }
       }
 
-      if (depth && !this._isDepthReadOnly) wanted.set(depth.TrinityALImpl_GetObject().GetDepthAttachmentPoint(), { texture: depth, slice: 0 });
+      if (depth) wanted.set(depth.TrinityALImpl_GetObject().GetDepthAttachmentPoint(), { texture: depth, slice: 0 });
 
       this._Attach(gl, wanted);
       this._ApplyDrawBuffers(0xff);
@@ -1819,6 +1851,8 @@ export class Tr2RenderContextALWebgl2
     if (!set || !set.IsValid()) return;
 
     const units = set.GetUnits();
+    const readOnlyDepth = this._isDepthReadOnly && this._depthStencil && this._depthStencil.IsValid()
+      ? this._depthStencil.TrinityALImpl_GetObject() : null;
     for (let i = 0; i < units.length; ++i)
     {
       const unit = units[i];
@@ -1828,9 +1862,11 @@ export class Tr2RenderContextALWebgl2
       // Carbon binds retained buffer SRVs; the WebGL pair owns its one derived
       // texture and uploads dirty ranges only after either source was written.
       const packed = unit.packedLocalLights;
+      const implementation = !packed && resource && resource.IsValid() ? resource.TrinityALImpl_GetObject() : null;
       const texture = packed
         ? packed.index ? packed.index._GetPackedShaderResourceTexture(packed) : null
-        : resource && resource.IsValid() ? resource.TrinityALImpl_GetObject().GetShaderResourceTexture(unit.colorSpace) : null;
+        : implementation === null ? null
+          : implementation === readOnlyDepth ? this._GetDepthCopy(implementation) : implementation.GetShaderResourceTexture(unit.colorSpace);
       gl.bindTexture(unit.isBuffer || !resource || !resource.IsValid() ? gl.TEXTURE_2D : resource.TrinityALImpl_GetObject().GetTarget(), texture);
       const rawDepthState = unit.rawDepthLinearState;
       let rawDepthSampler = null;
@@ -2149,7 +2185,8 @@ export class Tr2RenderContextALWebgl2
 
     if (ds.depthEnable) gl.enable(gl.DEPTH_TEST);
     else gl.disable(gl.DEPTH_TEST);
-    gl.depthMask(ds.depthWrite);
+    // Read-only depth stays attached here, where dx11's read-only view ignores writes.
+    gl.depthMask(ds.depthWrite && !this._isDepthReadOnly);
     gl.depthFunc(ComparisonOf(gl, ds.depthFunc));
 
     if (ds.stencilEnable)
@@ -2162,7 +2199,7 @@ export class Tr2RenderContextALWebgl2
     {
       gl.disable(gl.STENCIL_TEST);
     }
-    gl.stencilMask(ds.stencilMask);
+    gl.stencilMask(this._isDepthReadOnly ? 0 : ds.stencilMask);
 
     this._dirty.depthStencil = false;
     return true;
@@ -2233,8 +2270,7 @@ export class Tr2RenderContextALWebgl2
   {
     if (this._readOnlyDepth === this._isDepthReadOnly) return;
 
-    this._isDepthReadOnly = this._readOnlyDepth;
-    this._SetRtDsToDevice(MAX_RENDER_TARGET);
+    this._ApplyDepthReadOnly();
   }
 
   /**
@@ -2794,6 +2830,7 @@ export class Tr2RenderContextALWebgl2
     {
       for (const fence of this._frameFences) if (fence.sync) gl.deleteSync(fence.sync);
       if (this._framebuffer) gl.deleteFramebuffer(this._framebuffer);
+      if (this._depthCopyFramebuffers) for (const framebuffer of this._depthCopyFramebuffers) gl.deleteFramebuffer(framebuffer);
       if (this._presentFramebuffer) gl.deleteFramebuffer(this._presentFramebuffer);
       if (this._boneBlockBuffer) gl.deleteBuffer(this._boneBlockBuffer);
     }
@@ -2807,6 +2844,8 @@ export class Tr2RenderContextALWebgl2
     this._enabledAttributes = new Set();
     this._frameFences = [];
     this._framebuffer = null;
+    this._depthCopyFramebuffers = null;
+    this._depthCopySource = null;
     this._drawBuffers = [];
     this._presentFramebuffer = null;
     this._boneBlockBuffer = null;
