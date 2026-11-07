@@ -501,7 +501,7 @@ test("runtime instance data packs and publishes Carbon SOF records", () =>
   assertEquals(data.dataRevision, 1);
   assertEquals(Object.hasOwn(data, "gpuBuffer"), false);
 
-  const values = CjsSchema.getValues(data, {}, { persistOnly: true });
+  const values = data.GetOwnValues();
   assert.deepEqual(values.layout, layout);
   assert.deepEqual(values.rows[0], [
     [2, 3, 4, 5],
@@ -514,10 +514,7 @@ test("runtime instance data packs and publishes Carbon SOF records", () =>
   ]);
   assert.equal(Object.hasOwn(values, "data"), false);
 
-  const restored = CjsSchema.from("Tr2RuntimeInstanceData", values);
-  const control = CjsSchema.from("Tr2RuntimeInstanceData", values, { initialize: false });
-  assert.equal(control.GetStride(), 0, "negative control: persisted rows do not pack themselves");
-  assert.equal(control.GetCount(), 0);
+  const restored = Tr2RuntimeInstanceData.from(values);
   assert.equal(restored.GetStride(), 100);
   assert.equal(restored.GetCount(), 1);
   assert.deepEqual(restored.GetItem(0), values.rows[0]);
@@ -540,7 +537,7 @@ test("runtime instance data builds the standard transform stream", () =>
   assert.equal(maxScale, 4);
   assert.equal(data.GetStride(), 100);
   assert.equal(data.GetCount(), 1);
-  assert.deepEqual(data.layout, Tr2RuntimeInstanceData.TransformLayout);
+  assert.deepEqual(data.GetOwnValues().layout, Tr2RuntimeInstanceData.TransformLayout);
   assert.deepEqual(data.GetItem(0), [
     [2, 0, 0, 5],
     [0, 3, 0, 6],
@@ -556,7 +553,7 @@ test("runtime instance data builds the standard transform stream", () =>
   assert.equal(data.dirty, false);
   assert.equal(Object.hasOwn(data, "gpuBuffer"), false);
 
-  const restored = CjsSchema.from("Tr2RuntimeInstanceData", CjsSchema.getValues(data, {}, { persistOnly: true }));
+  const restored = Tr2RuntimeInstanceData.from({ ...CjsSchema.getValues(data, {}, { persistOnly: true }), ...data.GetOwnValues() });
   assert.deepEqual(restored.GetItem(0), data.GetItem(0));
   assert.deepEqual(Array.from(restored.aabbMin), [5, 6, 7]);
   assert.deepEqual(Array.from(restored.aabbMax), [5, 6, 7]);
@@ -567,8 +564,8 @@ test("runtime instance data preserves explicit bounds and computes position boun
 {
   const data = new Tr2RuntimeInstanceData();
   assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "count")?.type.kind, "uint32");
-  assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "layout")?.type.kind, "array");
-  assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "rows")?.type.kind, "array");
+  assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "layout"), null);
+  assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "rows"), null);
   assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "aabbMin")?.type.kind, "vec3");
   assertEquals(CjsSchema.getField(Tr2RuntimeInstanceData, "aabbMax")?.type.kind, "vec3");
   assertEquals(data.aabbMin.join(","), "0,0,0");

@@ -75,6 +75,22 @@ export class Tr2VertexDefinition
   }
 
   /**
+   * Adds a list of items, each as Add does.
+   *
+   * @cjs Carbon's callers loop over Add. JS holds these lists as plain records.
+   * @param {Array<{type: string, usage: number, usageIndex?: number, stream?: number, stepRate?: number}>} items The items.
+   * @returns {void}
+   */
+  Add__Items(items)
+  {
+    for (let i = 0; i < items.length; i++)
+    {
+      const { type, usage, usageIndex, stream, stepRate } = items[i];
+      this.Add(type, usage, usageIndex, stream, stepRate);
+    }
+  }
+
+  /**
    * Carbon Find( usage ) (h:171): the first item with the usage; null when absent.
    *
    * @adapted

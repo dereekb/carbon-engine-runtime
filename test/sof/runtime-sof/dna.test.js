@@ -5181,10 +5181,10 @@ test("SOF emits and hydrates Carbon instanced attachments with public CPU instan
   assert.equal(hydratedChild.mesh.GetInstanceGeometryResource(), hydratedRuntimeData);
   hydratedChild.mesh.Initialize();
   assert.equal(hydratedChild.mesh.GetInstanceGeometryResource(), hydratedRuntimeData);
-  assert.equal(hydratedRuntimeData.rows.length, 2);
+  assert.equal(hydratedRuntimeData.GetRows().length, 2);
   assert.equal(hydratedRuntimeData.GetCount(), 2);
   assert.equal(hydratedRuntimeData.GetStride(), 100);
-  assert.equal(hydratedRuntimeData.GetLayout().length, 7);
+  assert.equal(hydratedRuntimeData.GetLayout().items.length, 7);
   assert.deepEqual(hydratedRuntimeData.GetItemElement(0, 0), [2, 0, 0, 5]);
   assert.equal(hydratedRuntimeData.GetItemElement(0, 6), 9);
   assert.deepEqual(Array.from(hydratedRuntimeData.aabbMin), [-1, 6, 2]);

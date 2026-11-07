@@ -453,13 +453,13 @@ test("an unchanged transform stream updates in place: same allocation, same byte
   const provider=new Tr2RuntimeInstanceData(),fresh=new Tr2RuntimeInstanceData();
   const first=mat4.fromTranslation(mat4.create(),[1,2,3]),second=mat4.fromRotationTranslationScale(mat4.create(),[0,0,0,1],[4,5,6],[2,2,2]);
   provider.SetTransformInstances([{transform:first,boneIndex:3},{transform:first}]);
-  const allocation=provider.GetInstanceData().buffer,offset=provider.GetInstanceData().offset,rows=provider.rows,row0=provider.rows[0];
+  const allocation=provider.GetInstanceData().buffer,offset=provider.GetInstanceData().offset,rows=provider.GetRows(),row0=provider.GetRows()[0];
   const before=uploads.length;
   // Carbon copies into the same stream each update (EveChildInstanceMeshRenderer.cpp:354-380).
   const scale=provider.SetTransformInstances([{transform:second,previousTransform:first,boneIndex:5},{transform:second}]);
   assert.equal(provider.GetInstanceData().buffer,allocation);
   assert.equal(provider.GetInstanceData().offset,offset);
-  assert.equal(provider.rows,rows);assert.equal(provider.rows[0],row0);
+  assert.equal(provider.GetRows(),rows);assert.equal(provider.GetRows()[0],row0);
   assert.equal(uploads.length,before+1);
   fresh.SetTransformInstances([{transform:second,previousTransform:first,boneIndex:5},{transform:second}]);
   assert.deepEqual(provider.GetData(),fresh.GetData());
@@ -469,6 +469,6 @@ test("an unchanged transform stream updates in place: same allocation, same byte
   // A new count repacks.
   provider.SetTransformInstances([{transform:first}]);
   assert.equal(provider.GetCount(),1);
-  assert.notEqual(provider.rows,rows);
+  assert.notEqual(provider.GetRows(),rows);
   fresh.ReleaseResources();provider.ReleaseResources();
 });

@@ -283,7 +283,7 @@ test("instance transforms preserve logical matrices and pack provider TEXCOORD0 
     EveChildInstanceMeshRenderer.RotationalConstraints.NONE
   );
 
-  assert.deepEqual(provider.layout.map(value => value.usageIndex), [0, 1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(provider.GetElementLayout().map(value => value.usageIndex), [0, 1, 2, 3, 4, 5, 6]);
   assert.equal(provider.GetStride(), 100);
   assert.equal(provider.GetData().byteLength, 100);
   assert.equal(provider.dirty, false, "CPU rows are published before device creation");

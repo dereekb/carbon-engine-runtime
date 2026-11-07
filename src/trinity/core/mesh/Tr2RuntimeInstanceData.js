@@ -2,7 +2,7 @@
 // Source: trinity/trinity/Tr2RuntimeInstanceData.cpp
 // Source: trinity/trinity/Tr2RuntimeInstanceData_Blue.cpp
 import { exposure as be } from "#be";
-import { IsMatch } from "#blue";
+import { ICopierCustomAssignment } from "#blue";
 import { Failed } from "../../../trinityal/ALResult.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { Tr2VertexDefinition } from "../vertex/Tr2VertexDefinition/Tr2VertexDefinition.js";
@@ -25,30 +25,36 @@ import { Tr2DeviceResourceState } from "../device/deviceResourceState.js";
  * particle system on demand.
  */
 @be.define("Tr2RuntimeInstanceData")
-@be.inherit(ITr2InstanceData, ITr2GpuBuffer, Tr2DeviceResource)
+@be.inherit(ITr2InstanceData, ITr2GpuBuffer, ICopierCustomAssignment, Tr2DeviceResource)
 @be.mapInterface(ITr2InstanceData)
 @be.mapInterface(ITr2GpuBuffer)
+@be.mapInterface(ICopierCustomAssignment)
 export class Tr2RuntimeInstanceData
 {
   /**
-   * Reconstructs the JS-only persisted CPU layout/rows, absent from native Black data.
+   * Builds instance data from a values bag, which may carry `layout` and `rows`: SOF emits both
+   * in its documents, and Carbon's files carry neither.
    *
-   * Adapted: The JS values format persists private layout/rows; its factory explicitly
-   * repacks them without inventing native IInitialize exposure.
+   * @cjs SOF's values output has no Carbon counterpart; Carbon's SOF calls SetLayout (EveSOF.cpp:2336).
    */
   static from(values = {}, options = {})
   {
     const instance = new Tr2RuntimeInstanceData();
+    const { layout, rows, ...members } = values;
     const complete = () =>
     {
       if (options.initialize !== false) instance.Initialize();
     };
     // A parent reader completes this custom format with the shared graph.
     if (options.importContext) options.importContext.registerCreated(instance, complete);
-    ReadValues(instance, values, { ...options, notify: false });
+    ReadValues(instance, members, { ...options, notify: false });
+    instance.SetOwnValues({ layout, rows });
     if (!options.importContext) complete();
     return instance;
   }
+
+  /** @cjs This class holds values that are not members (GetOwnValues). */
+  static ownValues = true;
 
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 
@@ -59,24 +65,6 @@ export class Tr2RuntimeInstanceData
 
   @type.object.ref("Tr2ParticleSystem")
   particleSystem = null;
-
-  // DIVERGENCE (deliberate): Carbon only Blue-persists name/particleSystem and
-  // exposes aabbMin/aabbMax as Be::READ; layout/rows/explicitBoundingBox are
-  // private, fed at runtime via SetElementLayout/SetData/SetBoundingBox.
-  // The JS port persists the whole quintet so instance data authored in JS can
-  // round-trip without Carbon's Python/CMF side channels. Carbon-authored
-  // .black files never populate these fields.
-
-
-  @be.mapAttribute(be.PERSIST | be.NOTIFY)
-  @type.array("unknown")
-  layout = [];
-
-
-  /** @cjs */
-  @meta.mapAttribute(meta.NOTIFY | meta.PERSIST)
-  @type.array("unknown")
-  rows = [];
 
   /**
    * @adapted Carbon declares m_explicitBoundingBox (trinity/trinity/Tr2RuntimeInstanceData.h:109) but does not expose it; exposed here for the values interface.
@@ -112,7 +100,14 @@ export class Tr2RuntimeInstanceData
   @type.vec3
   aabbMax = vec3.create();
 
-  #layout = Object.freeze([]);
+  /** m_layout (Tr2RuntimeInstanceData.h:99). */
+  #layout = new Tr2VertexDefinition();
+
+  /** @cjs The normalized element descriptors behind m_layout, which rows are read and packed against. */
+  #elements = Object.freeze([]);
+
+  /** @cjs The CPU rows, one array of element values per instance, that m_data is packed from. */
+  #rows = [];
 
   #data = null;
 
@@ -179,14 +174,9 @@ export class Tr2RuntimeInstanceData
       );
       if (!this.#allocation) return false;
     }
-    if (this.#vertexDeclaration === Tr2EffectStateManager.Unknown && this.#layout.length)
+    if (this.#vertexDeclaration === Tr2EffectStateManager.Unknown && !this.#layout.empty())
     {
-      const definition = new Tr2VertexDefinition();
-      for (const element of this.#layout)
-      {
-        definition.Add(element.type, element.usageCode, element.usageIndex);
-      }
-      this.#vertexDeclaration = Tr2EffectStateManager.getVertexDeclarationHandle(definition);
+      this.#vertexDeclaration = Tr2EffectStateManager.getVertexDeclarationHandle(this.#layout);
     }
     return true;
   }
@@ -214,10 +204,9 @@ export class Tr2RuntimeInstanceData
   }
 
   /**
-   * Repacks the CPU buffer from the persisted layout and rows, then publishes
-   * it.
+   * Publishes rows set while building.
    *
-   * @cjs Carbon persists no rows, so it has no Initialize. A prepared provider
+   * @cjs Carbon has no Initialize. A prepared provider
    *   publishes through UpdateData; one not yet prepared only marks the rows
    *   published, because nothing prepares during a build and the first use
    *   (IsGood) allocates the shared range from these same repacked bytes, so a
@@ -225,7 +214,6 @@ export class Tr2RuntimeInstanceData
    */
   Initialize()
   {
-    this.#rebuildCpuData();
     if (this._state === Tr2DeviceResourceState.PREPARED) this.UpdateData();
     else if (this.#dirty)
     {
@@ -236,19 +224,117 @@ export class Tr2RuntimeInstanceData
   }
 
   /**
-   * Repacks persisted JS layout/rows; GPU publication remains explicit.
+   * Carbon SetLayout (Tr2RuntimeInstanceData.cpp:359-376): drops the data and its
+   * range, then takes the stride from the layout's items.
    *
-   * Adapted: JS persists layout and rows, unlike Carbon; edits repack CPU data while
-   * UpdateData owns GPU publication.
+   * @adapted The element descriptors are JS state; SetElementLayout supplies them.
+   * @param {Tr2VertexDefinition} layout The new layout.
    */
-  @meta.invalidates("#dirty")
-  OnModified(propertyName)
+  SetLayout(layout)
   {
-    if (IsMatch(propertyName, "layout") || IsMatch(propertyName, "rows"))
+    this.DestroyData();
+    this.ReleaseResources();
+    this.#stride = 0;
+    this.#elements = Object.freeze([]);
+
+    for (const item of layout.items)
     {
-      this.#rebuildCpuData();
+      if (item.stream !== 0) throw new TypeError("Tr2RuntimeInstanceData: vertex layout needs to reference stream 0 only");
+      this.#stride = Math.max(this.#stride, item.offset + Tr2VertexDefinition.getDataTypeSizeInBytes(item.type));
     }
+
+    this.#layout = layout;
+    this.#vertexDeclaration = Tr2EffectStateManager.getVertexDeclarationHandle(layout);
+  }
+
+  /**
+   * Carbon GetLayout (Tr2RuntimeInstanceData.cpp:384-387).
+   *
+   * @implemented
+   * @returns {Tr2VertexDefinition} The current layout.
+   */
+  GetLayout()
+  {
+    return this.#layout;
+  }
+
+  /**
+   * The layout and rows as plain values, which a graph holds in place of members.
+   *
+   * @cjs Carbon keeps both private and never copies them. JS has callers that copy SOF-built
+   *   instance data, and SOF's documents carry them.
+   * @returns {{layout: object[], rows: Array}} Plain values.
+   */
+  GetOwnValues()
+  {
+    return {
+      layout: this.#elements.map(Tr2RuntimeInstanceData.#describeElement),
+      rows: this.#rows.map(row => row.map(Tr2RuntimeInstanceData.#cloneValue))
+    };
+  }
+
+  /**
+   * Takes a layout and rows from plain values. A missing one leaves its state alone.
+   *
+   * @cjs See GetOwnValues.
+   * @param {{layout?: object[], rows?: Array}} values Plain values.
+   * @returns {void}
+   */
+  SetOwnValues({ layout, rows })
+  {
+    if (layout !== undefined) this.SetElementLayout(layout);
+    if (rows !== undefined && (rows.length || this.#rows.length)) this.#setData(rows);
+  }
+
+  /**
+   * Whether plain values describe the layout and rows held now.
+   *
+   * @cjs See GetOwnValues.
+   * @param {{layout?: object[], rows?: Array}} values Plain values.
+   * @returns {boolean} True when nothing would change.
+   */
+  IsOwnValues({ layout, rows })
+  {
+    const own = this.GetOwnValues();
+
+    return (layout === undefined || JSON.stringify(layout) === JSON.stringify(own.layout))
+      && (rows === undefined || JSON.stringify(rows) === JSON.stringify(own.rows));
+  }
+
+  /**
+   * Copies the layout and rows, which are not members.
+   *
+   * @cjs See GetOwnValues. Carbon's class has no AssignTo.
+   * @param {Tr2RuntimeInstanceData} other The destination.
+   * @returns {boolean} True.
+   */
+  AssignTo(other)
+  {
+    other.SetOwnValues(this.GetOwnValues());
     return true;
+  }
+
+  /**
+   * The rows, as held. Callers do not change them.
+   *
+   * @cjs
+   * @returns {Array} One array of element values per instance.
+   */
+  GetRows()
+  {
+    return this.#rows;
+  }
+
+  /**
+   * The frozen normalized element descriptors, each carrying usage, type, component count, byte
+   * size and byte offset.
+   *
+   * @cjs
+   * @returns {object[]} The descriptors.
+   */
+  GetElementLayout()
+  {
+    return this.#elements;
   }
 
   /**
@@ -288,7 +374,7 @@ export class Tr2RuntimeInstanceData
   GetItem(index)
   {
     this.#assertItemIndex(index);
-    return this.rows[index].map(Tr2RuntimeInstanceData.#cloneValue);
+    return this.#rows[index].map(Tr2RuntimeInstanceData.#cloneValue);
   }
 
   /**
@@ -303,7 +389,7 @@ export class Tr2RuntimeInstanceData
   {
     this.#assertItemIndex(index);
     const normalized = this.#normalizeRow(row, index);
-    this.rows[index] = normalized;
+    this.#rows[index] = normalized;
     this.#writeRow(new DataView(this.#data), index, normalized);
     this.#dirty = true;
   }
@@ -318,7 +404,7 @@ export class Tr2RuntimeInstanceData
   {
     this.#assertItemIndex(index);
     this.#assertElementIndex(elementIndex);
-    return Tr2RuntimeInstanceData.#cloneValue(this.rows[index][elementIndex]);
+    return Tr2RuntimeInstanceData.#cloneValue(this.#rows[index][elementIndex]);
   }
 
   /**
@@ -334,11 +420,11 @@ export class Tr2RuntimeInstanceData
     this.#assertItemIndex(index);
     this.#assertElementIndex(elementIndex);
     const normalized = Tr2RuntimeInstanceData.#normalizeElementValue(
-      this.#layout[elementIndex],
+      this.#elements[elementIndex],
       value,
       `Instance ${index} element ${elementIndex}`
     );
-    this.rows[index][elementIndex] = normalized;
+    this.#rows[index][elementIndex] = normalized;
     this.#writeElement(new DataView(this.#data), index, elementIndex, normalized);
     this.#dirty = true;
   }
@@ -395,7 +481,7 @@ export class Tr2RuntimeInstanceData
       return false;
     }
 
-    const positionIndex = this.#layout.findIndex(element =>
+    const positionIndex = this.#elements.findIndex(element =>
       element.usage === "POSITION" && element.usageIndex === 0 && element.componentCount >= 3
     );
     if (positionIndex === -1 || this.count === 0)
@@ -407,7 +493,7 @@ export class Tr2RuntimeInstanceData
 
     vec3.set(this.aabbMin, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
     vec3.set(this.aabbMax, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
-    for (const row of this.rows)
+    for (const row of this.#rows)
     {
       const position = row[positionIndex];
       for (let axis = 0; axis < 3; axis++)
@@ -494,17 +580,6 @@ export class Tr2RuntimeInstanceData
   }
 
   /**
-   * The frozen normalized element descriptors, each carrying usage, type,
-   * component count, byte size and byte offset.
-   *
-   * @implemented
-   */
-  GetLayout()
-  {
-    return this.#layout;
-  }
-
-  /**
    * A copy of the packed instance bytes, or null when no rows are set; the
    * caller owns the returned array.
    *
@@ -570,7 +645,7 @@ export class Tr2RuntimeInstanceData
   DestroyData()
   {
     this.#freeAllocation();
-    this.rows = [];
+    this.#rows = [];
     this.#data = null;
     this.#bytes = null;
     this.count = 0;
@@ -588,7 +663,7 @@ export class Tr2RuntimeInstanceData
   Spawn()
   {
     const particleSystem = this.particleSystem;
-    if (!particleSystem?.isValid || !this.#layout.length || !this.#data)
+    if (!particleSystem?.isValid || !this.#elements.length || !this.#data)
     {
       return;
     }
@@ -606,7 +681,7 @@ export class Tr2RuntimeInstanceData
       const usageIndex = element.elementType === Tr2ParticleElementDeclaration.Type.CUSTOM
         ? element.usageIndex
         : 0;
-      const layoutIndex = this.#layout.findIndex(item =>
+      const layoutIndex = this.#elements.findIndex(item =>
         item.usage === usage && item.usageIndex === usageIndex
       );
       if (layoutIndex === -1)
@@ -614,7 +689,7 @@ export class Tr2RuntimeInstanceData
         return;
       }
 
-      const layout = this.#layout[layoutIndex];
+      const layout = this.#elements[layoutIndex];
       if (layout.baseType !== "FLOAT32" || layout.componentCount < element.dimension)
       {
         return;
@@ -623,7 +698,7 @@ export class Tr2RuntimeInstanceData
     }
 
     particleSystem.ClearParticles();
-    for (const row of this.rows)
+    for (const row of this.#rows)
     {
       const particleIndex = particleSystem.BeginSpawnParticle();
       if (particleIndex === null)
@@ -775,32 +850,9 @@ export class Tr2RuntimeInstanceData
   }
 
   /**
-   * Re-normalizes the persisted layout and repacks the persisted rows; throws
-   * when rows exist but the layout is empty.
-   */
-  #rebuildCpuData()
-  {
-    const rows = this.rows;
-    this.#setElementLayout(this.layout);
-    if (!this.#layout.length)
-    {
-      if (rows.length)
-      {
-        throw new Error("SetElementLayout must be called before SetData");
-      }
-      this.rows = [];
-      this.#data = null;
-      this.#bytes = null;
-      this.count = 0;
-      this.#dirty = true;
-      return;
-    }
-    this.#setData(rows);
-  }
-
-  /**
-   * Normalizes each element descriptor, assigns sequential byte offsets,
-   * computes the row stride and republishes the persisted layout summary.
+   * Normalizes each element descriptor, assigns sequential byte offsets and sets
+   * the Tr2VertexDefinition they describe, which is Carbon's PySetElementLayout
+   * (Tr2RuntimeInstanceData_Blue.cpp:11-75).
    */
   #setElementLayout(layout)
   {
@@ -817,9 +869,11 @@ export class Tr2RuntimeInstanceData
       return descriptor;
     });
 
-    this.ReleaseResources();
-    this.layout = normalized.map(Tr2RuntimeInstanceData.#describeElement);
-    this.#layout = normalized;
+    const definition = new Tr2VertexDefinition();
+    definition.Add__Items(normalized.map(element => ({ type: element.type, usage: element.usageCode, usageIndex: element.usageIndex })));
+
+    this.SetLayout(definition);
+    this.#elements = normalized;
     this.#stride = offset;
     this.#transformLayout = false;
   }
@@ -854,7 +908,7 @@ export class Tr2RuntimeInstanceData
         throw new TypeError(`Transform instance ${index} must contain 16 previous-transform values`);
       }
 
-      const row = this.rows[index];
+      const row = this.#rows[index];
       Tr2RuntimeInstanceData.#packTransformInto(transform, row, 0, index);
       Tr2RuntimeInstanceData.#packTransformInto(previousTransform, row, 3, index);
       row[6] = Number(value?.boneIndex ?? 0) | 0;
@@ -885,7 +939,7 @@ export class Tr2RuntimeInstanceData
    */
   #setData(rows)
   {
-    if (!this.#layout.length)
+    if (!this.#elements.length)
     {
       throw new Error("SetElementLayout must be called before SetData");
     }
@@ -903,7 +957,7 @@ export class Tr2RuntimeInstanceData
     }
 
     if (this.count !== normalizedRows.length) this.#freeAllocation();
-    this.rows = normalizedRows;
+    this.#rows = normalizedRows;
     this.#data = data;
     this.#view = data ? view : null;
     this.#bytes = data ? new Uint8Array(data) : null; // alloc: one byte view per repacked instance stream
@@ -919,13 +973,13 @@ export class Tr2RuntimeInstanceData
   {
     const values = Array.isArray(row)
       ? row
-      : this.#layout.map(element => row?.[element.name]);
-    if (values.length !== this.#layout.length)
+      : this.#elements.map(element => row?.[element.name]);
+    if (values.length !== this.#elements.length)
     {
-      throw new TypeError(`Instance ${rowIndex} must contain ${this.#layout.length} elements`);
+      throw new TypeError(`Instance ${rowIndex} must contain ${this.#elements.length} elements`);
     }
     return values.map((value, elementIndex) => Tr2RuntimeInstanceData.#normalizeElementValue(
-      this.#layout[elementIndex],
+      this.#elements[elementIndex],
       value,
       `Instance ${rowIndex} element ${elementIndex}`
     ));
@@ -934,7 +988,7 @@ export class Tr2RuntimeInstanceData
   /** Writes every element of one normalized row into the packed buffer. */
   #writeRow(view, rowIndex, row)
   {
-    for (let elementIndex = 0; elementIndex < this.#layout.length; elementIndex++)
+    for (let elementIndex = 0; elementIndex < this.#elements.length; elementIndex++)
     {
       this.#writeElement(view, rowIndex, elementIndex, row[elementIndex]);
     }
@@ -947,7 +1001,7 @@ export class Tr2RuntimeInstanceData
    */
   #writeElement(view, rowIndex, elementIndex, value)
   {
-    const element = this.#layout[elementIndex];
+    const element = this.#elements[elementIndex];
     const offset = rowIndex * this.#stride + element.offset;
     if (!Array.isArray(value))
     {
@@ -990,7 +1044,7 @@ export class Tr2RuntimeInstanceData
   /** Throws RangeError unless the index is an integer inside the current layout. */
   #assertElementIndex(index)
   {
-    if (!Number.isInteger(index) || index < 0 || index >= this.#layout.length)
+    if (!Number.isInteger(index) || index < 0 || index >= this.#elements.length)
     {
       throw new RangeError("Element index out of range");
     }
@@ -1037,7 +1091,7 @@ export class Tr2RuntimeInstanceData
   }
 
   /**
-   * The frozen persistable summary of an element descriptor: usage, usage index,
+   * The plain summary of an element descriptor: usage, usage index,
    * type and name.
    */
   static #describeElement(value)

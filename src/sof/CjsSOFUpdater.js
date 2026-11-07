@@ -1061,7 +1061,7 @@ export class CjsSOFUpdater
         if (!Array.isArray(value) || !Array.isArray(desired.layout)) return false;
         const rows = value.map(row => Array.isArray(row) ? row
           : desired.layout.map(element => row[element.name]));
-        if (!this._CollectChanges(live.rows, rows, anchors, visited, owners, changes)) return false;
+        if (!this._CollectChanges(live.GetRows(), rows, anchors, visited, owners, changes)) return false;
         continue;
       }
       if (key === "__bluemetadata__")
