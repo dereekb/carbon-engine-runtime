@@ -207,6 +207,7 @@ test("EveStretch2 retains Carbon curve timing and portable render data", async (
   // A Tr2DeviceResource (EveStretch2.h:28): built before the device, it and the
   // shared "EveStretch2VB" quads are prepared when the device prepares.
   const { TriDevice } = await import("../../npm/dist/trinity/core/index.js");
+  stretch.IsGood();
   new TriDevice().PrepareDeviceResources();
   assert.equal(stretch.GetBatches(batches, TriBatchType.TRIBATCHTYPE_ADDITIVE, data, 0), true);
   assert.equal(stretch.HasTransparentBatches(), false);

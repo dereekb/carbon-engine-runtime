@@ -622,11 +622,14 @@ test("CjsGr2Format instances expose only the PascalCase public profile API", () 
         assert.equal(typeof CjsGr2Format.prototype[name], "function", name);
     }
     assert.deepEqual(Object.getOwnPropertyNames(CjsGr2Format.prototype).sort(), [
+        "FinishRead",
         "GetValues",
+        "GetWorkerRequest",
         "Inspect",
         "InspectGSF",
         "IsGSF",
         "Read",
+        "ReadDataAsync",
         "ReadGSF",
         "ReadRaw",
         "SetValues",

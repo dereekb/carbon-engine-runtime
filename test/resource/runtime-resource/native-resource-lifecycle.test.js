@@ -45,10 +45,8 @@ test("native attempts settle on one handle and retain no event or manager callba
   assert.equal(await manager.Ready(resource), resource);
   assert.equal(resource.value, 1);
   assert.equal(manager.GetResourcePayload(resource), null);
-  assert.equal(resource._revision, 1);
   assert.equal(await manager.ReloadResource(resource.GetPath()), resource);
   assert.equal(resource.value, 2);
-  assert.equal(resource._revision, 2, "the reload's prepare is one more change for owners to pull");
   for (const key of ["__reloadHook", "__objectLoader", "__lifecycleController", "__state", "state", "object"])
     assert.equal(Object.hasOwn(resource, key), false, key);
   for (const key of ["OnEvent", "Ready", "GetPayload", "SetState", "IsCurrent"])

@@ -161,7 +161,7 @@ test("GetThumbnail renders the lit room into a B8G8R8X8 bitmap (cpp:286-352)", a
   withFiles(t, new Map([ [ "res:/light/test.ies", new TextEncoder().encode(IES) ] ]));
 
   const resource = new Tr2LightProfileRes();
-  resource.path = "res:/light/test.ies";
+  resource._path = "res:/light/test.ies";
 
   const width = 16;
   const height = 8;
@@ -233,10 +233,10 @@ test("GetThumbnail fails with IO_ERROR when the path cannot be read, and RUNTIME
   withFiles(t, new Map([ [ "res:/light/broken.ies", new TextEncoder().encode("TILT=INCLUDE\n") ] ]));
 
   const missing = new Tr2LightProfileRes();
-  missing.path = "res:/light/missing.ies";
+  missing._path = "res:/light/missing.ies";
   await assert.rejects(missing.GetThumbnail(4, 4), { code: "BLUE_STD_RESULT_IO_ERROR" });
 
   const broken = new Tr2LightProfileRes();
-  broken.path = "res:/light/broken.ies";
+  broken._path = "res:/light/broken.ies";
   await assert.rejects(broken.GetThumbnail(4, 4), { code: "BLUE_STD_RESULT_RUNTIME_ERROR", message: "Failed to parse IES file" });
 });

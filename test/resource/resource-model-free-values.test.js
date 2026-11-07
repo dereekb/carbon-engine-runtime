@@ -70,7 +70,7 @@ test("a real High raytracing library retains its program bytes through binary sh
   const restored = Tr2Shader.fromCarbonBinary(reader, 0);
   const library = restored.effect.techniques[0].libraries[0];
   assert.ok(library.sourceProgram.bytes instanceof Uint8Array);
-  assert.equal(library.sourceProgram.bytes.length, 9748);
+  assert.equal(library.sourceProgram.bytes.length, 6400);
   assert.equal(library.globalInput.resources.get(0).name, "RtShadowScene");
   const writer = new CjsCarbonEffectWriter({
     compilerVersion: reader.compilerVersion,

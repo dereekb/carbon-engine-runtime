@@ -41,11 +41,12 @@ function WithStubbedReaders(t)
 test("the .gr2 format route retains Granny provenance and rebuilds missing bounds", (t) =>
 {
   const seen = WithStubbedReaders(t);
-  assert.equal(DefaultConfiguration.extensions.gr2.Handler, TriGeometryRes);
+  assert.equal(DefaultConfiguration.formats.gr2.routes[0].Res, TriGeometryRes);
+  assert.equal(DefaultConfiguration.formats.gr2.options.grannyFileInfo, true);
 
   const resource = new TriGeometryRes();
-  const route = DefaultConfiguration.extensions.gr2;
-  const decoded = route.Format.read(new Uint8Array(4), route.defaults);
+  const route = DefaultConfiguration.formats.gr2raw;
+  const decoded = route.Format.read(new Uint8Array(4), route.options);
   decoded.grannyFileFormatRevision = 7;
   resource.ReadGrannyFile(decoded);
   const payload = resource.GetCMFData();

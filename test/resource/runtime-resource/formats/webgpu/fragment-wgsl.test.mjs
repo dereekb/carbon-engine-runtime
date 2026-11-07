@@ -676,7 +676,7 @@ test("fragment lowering emits a parameterless entry point when declared inputs a
         "    var output: FragmentOutput;",
         "    output.output0 = vec4<f32>(bitcast<f32>(0x3f800000u), bitcast<f32>(0x00000000u), bitcast<f32>(0x3f000000u), bitcast<f32>(0x3f800000u));",
         "    if (cjsUnormTarget0) { output.output0 = clamp(select(output.output0, vec4<f32>(0.0), (bitcast<vec4<u32>>(output.output0) & vec4<u32>(0x7fffffffu)) > vec4<u32>(0x7f800000u)), vec4<f32>(0.0), vec4<f32>(1.0)); }",
-        "    if (cjsCoverageDiscard != 0u && !(select(output.output0.a, max(max(abs(output.output0.r), abs(output.output0.g)), abs(output.output0.b)), cjsCoverageDiscard == 2u) > 0.001)) { discard; }",
+        "    if (cjsCoverageDiscard != 0u && !(select(select(output.output0.a, max(max(abs(output.output0.r), abs(output.output0.g)), abs(output.output0.b)), cjsCoverageDiscard == 2u), max(max(abs(output.output0.r), abs(output.output0.g)), abs(output.output0.b)) * clamp(output.output0.a, 0.0, 1.0), cjsCoverageDiscard == 3u) > 0.001)) { discard; }",
         "    return output;",
         "}",
         ""

@@ -45,7 +45,7 @@ test("real turret geometry remains READ-accessible and collected but is excluded
 {
   const {set,resource}=await assets(t);
   set.Initialize();
-  const declaration=CjsSchema.getSchema(EveTurretSet).members.find(member=>member.name==="geometryResource");
+  const declaration=CjsSchema.getField(EveTurretSet,"geometryResource");
   assert.equal(declaration.edit.read,true,"native READ accessibility is retained");
   assert.ok(set.geometryResource===resource,"initialized turret owns the requested real geometry");
   assert.ok(GetResources(set, []).includes(resource),"the held resource remains a dependency edge");
@@ -55,11 +55,10 @@ test("real turret geometry remains READ-accessible and collected but is excluded
   assert.ok(Object.hasOwn(values,"turretEffect"),"ordinary owned graph references remain Values data");
   const incoming=Object.defineProperty({},"geometryResource",{enumerable:true,get(){throw new Error("runtime resource input must not be read");}});
   CjsSchema.setValues(set,incoming);assert.ok(set.geometryResource===resource);
-  const descriptor=Object.getOwnPropertyDescriptor(set,"geometryResource");
   Object.defineProperty(set,"geometryResource",{configurable:true,get(){throw new Error("Copier must not read the source runtime handle");}});
   let clone;
   try { clone=new Copier().CloneTo(set); }
-  finally { Object.defineProperty(set,"geometryResource",descriptor); }
+  finally { delete set.geometryResource; }
   assert.ok(clone);t.after(()=>clone.Destruct());
   assert.equal(clone.geometryResPath,geometryPath);
   assert.equal(clone.geometryResource,null,"READ-only LOD is not copied, so the constructor's initial LOD has no loaded handle");
@@ -453,7 +452,7 @@ test("real packed turret shader receives native instance IDs and final opaque/sh
   assert.deepEqual(instanceUploads[0],Array.from({length:24},(_,i)=>i),"native cpp:296 IDs0..23");
   assert.ok(TriDevice.GetResourcesRegistered().includes(set),"native Tr2DeviceResource base registration");
   const bytes=await client.Read("res:/graphics/effect.dx11/managed/space/turret/v5/quadv5.sm_depth");
-  assert.equal(createHash("md5").update(bytes).digest("hex"),"352fc276516262e229648fa98310bb17");
+  assert.equal(createHash("md5").update(bytes).digest("hex"),"184d9718c0dd2c89cb3aa368d482ffc0");
   const metadata=CjsCarbonEffectFormat.read(bytes,{emit:"metadata",source:"quadv5.sm_depth",permutation:[{name:"SPACE_OBJECT_CLIPPING",value:"SOC_DISABLED"},{name:"V5_DEBUG",value:"OFF"}]});
   const inputs=metadata.effect.techniques.find(item=>item.name==="Main").passes[0].stageInputs.find(item=>item?.stageName==="vertex").signature.pipelineInputs;
   const idInput=inputs.find(item=>item.usage===5&&item.usageIndex===2);

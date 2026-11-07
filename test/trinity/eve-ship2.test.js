@@ -31,7 +31,7 @@ test("EveShip2 derives speed and drives boosters from the position curve", () =>
 
   assert.ok(ship.speed, "speed holder created");
   assert.ok(Math.abs(ship.speed.value - 5) < 1e-5, "speed = |worldVelocity| from the dot curve");
-  assert.ok(Math.abs(ship.audioSpeedParameter.value - 0.05) < 1e-6, "audio parameter = speed / maxSpeed");
+  assert.ok(Math.abs(ship.audioSpeedParameter.value - 0.75) < 1e-6, "audio parameter = booster intensity (EveShip2.cpp:372)");
 
   ship.UpdateBoosters(context);
   assert.equal(boosterCalls[0][0], "Update", "boosters updated");

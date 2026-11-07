@@ -105,11 +105,12 @@ test("EveChildBoosterSet packs 64-byte instance rows and gates draws on the ring
   set.SetRingBuffer(ring, offsets);
   set.effect = FixtureEffect({ name: "booster-effect" });
   // Carbon draws only once OnPrepareResources has made the vertex declaration
-  // (EveChildBoosterSet.cpp:267-286, :483-486). With a device, the draw's own
-  // use (IsGood) registers and prepares the set.
+  // (EveChildBoosterSet.cpp:267-286, :483-486). With a device, use (IsGood) registers
+  // the set, and the next device prepare makes it.
   Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL().CreateDevice({ mode: { width: 64, height: 64 } });
   // The device's prepare makes the shared box (Tr2ProceduralBuffer) and reserves the quad-list indices
   // (Tr2Renderer.cpp:1300-1301), as a real device does when it comes up.
+  set.IsGood();
   InitializeTrinityStub().PrepareDeviceResources();
   set.UpdateAsyncronous(null, updateParams());
   set.UpdateVisibility({
