@@ -87,7 +87,7 @@ const VERB_PATTERN = [ ...VERBS.map(([ verb ]) => verb), "Clear", "BeginScene", 
  * Receivers that are not render contexts but share a verb name are listed.
  */
 const BOOLEAN_USE = new RegExp(String.raw`(!\s*|&&\s*|\|\|\s*)([\w$#.?]+)\.(${VERB_PATTERN})\(|([\w$#.?]+)\.(${VERB_PATTERN})\([^;]*\)\s*(\?|&&|\|\|)`, "u");
-const NOT_A_RENDER_CONTEXT = /\b(esm|states|GetEffectStateManager\(\)|glows|trails|componentRegistry|documents|library|allocator|GetTriPoolAllocator\(\))\??\.$/u;
+const NOT_A_RENDER_CONTEXT = /\b(esm|states|GetEffectStateManager\(\)|glows|trails|componentRegistry|documents|library|allocator|noCompute|GetTriPoolAllocator\(\))\??\.$/u;
 
 function* sourceFiles(directory)
 {
