@@ -84,5 +84,5 @@ test("PopFront removes the oldest instance and leaves an empty list alone", () =
   const first = new EveChildContainer(), second = new EveChildContainer();
   container.instances.push(first, second);
   container.PopFront();
-  assert.deepEqual(container.instances, [ second ]);
+  assert.deepEqual(Array.from(container.instances), [ second ]);
 });
