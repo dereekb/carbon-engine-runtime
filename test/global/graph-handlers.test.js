@@ -583,3 +583,39 @@ test("diff says what set would change and writes nothing", () =>
   assert.equal(object.items.length, 0);
   assert.throws(() => CjsGraph.diff(object, { nothing: 1 }), /Unknown graph member/);
 });
+
+test("a class's presentation is built when asked for, base first, with a host's on top", () =>
+{
+  let built = 0;
+  class Base { value = 0; }
+  class Ship extends Base { sun = new Float32Array(3); dirtLevel = 0; }
+
+  CjsGraph.define(Base, { name: "UiBase", ui: () => { built++; return { members: { value: { group: "Base", min: 0 } } }; }, members: [
+    { name: "value", type: "float32" }
+  ] });
+  CjsGraph.define(Ship, { name: "UiShip", ui: () => { built++; return { members: { value: { group: "Ship" }, sun: { group: "Lighting" } } }; }, members: [
+    { name: "sun", type: "vec3" }, { name: "dirtLevel", type: "float32" }
+  ] });
+
+  CjsGraph.getClassInfo(Ship);
+  CjsGraph.get(new Ship());
+  assert.equal(built, 0, "nothing builds it but asking");
+
+  const weeksToDirt = weeks => weeks / 260;
+  CjsGraph.defineUI(Ship, {
+    settings: { nameProperty: "name" },
+    members: { sun: { widget: "direction", directionSign: 1 } },
+    parameters: { age: { label: "age in weeks", group: "Age", min: 0, max: 260, step: 1, precision: 0, member: "dirtLevel", convert: weeksToDirt } }
+  });
+
+  const ui = CjsGraph.getClassUIInfo(Ship);
+  assert.equal(built, 2);
+  assert.equal(CjsGraph.getClassUIInfo(Ship), ui, "built once");
+  assert.deepEqual(ui.members.value, { group: "Ship", min: 0 });
+  assert.deepEqual(ui.members.sun, { group: "Lighting", widget: "direction", directionSign: 1 });
+  assert.equal(ui.settings.nameProperty, "name");
+  assert.equal(ui.parameters.age.convert(26), 0.1);
+  assert.equal(ui.parameters.age.member, "dirtLevel");
+
+  assert.equal(Object.hasOwn(CjsGraph.get(new Ship(), { full: true }), "age"), false, "a parameter is not a value");
+});

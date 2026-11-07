@@ -1,5 +1,6 @@
 import { BLUELISTEVENT } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
+import { CjsGraphClassUIInfo } from "./CjsGraphClassUIInfo.js";
 import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphOperation, VARTYPE } from "./GraphTypes.js";
 import { getGraphHandler } from "./types/index.js";
 
@@ -66,7 +67,8 @@ export class CjsGraph
    * initialize, notify, listNotify and hook say instances take Initialize, OnModified,
    * OnListModified and OnValueChanged. ownValues says instances hold values that are not members,
    * through GetOwnValues, SetOwnValues and IsOwnValues. customPersist, list, proxy and abstract are
-   * facts for readers, and layout a structure record's { size, boundaries, fields }.
+   * facts for readers, and layout a structure record's { size, boundaries, fields }. ui is a
+   * function returning the class's presentation, called only when something asks for it.
    * @cjs Compiles each member to one flat object; authored default values are not cloned.
    */
   static define(ctor, definition)
@@ -173,6 +175,46 @@ export class CjsGraph
     if (edge.collection !== null) return edge.kind === "embed" ? "structureList" : "list";
 
     return edge.kind === "embed" ? "embedded" : null;
+  }
+
+  /**
+   * Adds presentation to a class: { settings?, members?, parameters? }. A host uses this for what
+   * the class does not say itself, and for parameters of its own.
+   * @cjs
+   */
+  static defineUI(type, ui)
+  {
+    const info = this.getClassInfo(type);
+
+    (info.declared.hostUI ??= []).push(ui);
+    info.compiled.ui = null;
+  }
+
+  /**
+   * Returns a class's presentation: its own and its bases', base first, then what a host added.
+   * @cjs Built on the first request, so a library with no editor builds none.
+   */
+  static getClassUIInfo(type)
+  {
+    const info = this.getClassInfo(type);
+    if (info.compiled.ui !== null) return info.compiled.ui;
+
+    const ui = new CjsGraphClassUIInfo(), owners = [];
+
+    for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
+    {
+      const owner = this._classes.get(prototype.constructor);
+      if (owner) owners.unshift(owner);
+    }
+
+    for (const owner of owners)
+    {
+      if (owner.declared.ui) ui.Merge(owner.declared.ui());
+      for (const added of owner.declared.hostUI ?? []) ui.Merge(added);
+    }
+
+    info.compiled.ui = ui;
+    return ui;
   }
 
   /**
@@ -348,7 +390,8 @@ export class CjsGraph
   /**
    * Returns what set would change, as values, or false, and writes nothing. A held object's
    * differences nest, as set's record does; anything else is the value it would write.
-   * @cjs A list is one whole value.
+   * @cjs A list is one whole value: its items are only matched once they carry a _guid or a
+   * declared key, neither of which exists yet.
    */
   static diff(object, values, options = {})
   {
@@ -1649,7 +1692,7 @@ export class CjsGraph
     const { declared } = info;
 
     return {
-      revision: this._revision, parent, members, byName, persistByName, tables: [], defaults: null,
+      revision: this._revision, parent, members, byName, persistByName, tables: [], defaults: null, ui: null,
       name: declared.name,
       interfaces: declared.interfaces,
       initialize: declared.initialize === true,

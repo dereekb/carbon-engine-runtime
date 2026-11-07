@@ -881,7 +881,8 @@ export class CjsSchema
 
     /**
      * Editor-facing presentation hints: `group(name)`, `description(text)`,
-     * `hidden` and `widget(name)`. They change no persistence, validation or
+     * `hidden`, `widget(name)` and the rest of Carbon's `:jessica-*:` keys, with `label`, `step` and
+     * `precision`, which Carbon lacks. They change no persistence, validation or
      * mutation: `jessica.hidden` is not `hideInherited`. Editability is Blue's
      * WRITE flag; Carbon has no read-only annotation.
      */
@@ -889,7 +890,22 @@ export class CjsSchema
         group: name => fieldDecorator("jessica", { group: name }),
         description: text => fieldDecorator("jessica", { description: String(text) }),
         hidden: fieldDecorator("jessica", { hidden: true }),
-        widget: name => fieldDecorator("jessica", { widget: name })
+        widget: name => fieldDecorator("jessica", { widget: name }),
+        numericRange: (min, max) => fieldDecorator("jessica", { min, max }),
+        fileFilter: filter => fieldDecorator("jessica", { fileFilter: String(filter) }),
+        icon: name => fieldDecorator("jessica", { icon: name }),
+        iconColor: (r, g, b) => fieldDecorator("jessica", { iconColor: [ r, g, b ] }),
+        placement: name => fieldDecorator("jessica", { placement: name }),
+        deprecated: fieldDecorator("jessica", { deprecated: true }),
+        favorite: fieldDecorator("jessica", { favorite: true }),
+        tupleType: name => fieldDecorator("jessica", { tupleType: name }),
+        helpUrl: url => fieldDecorator("jessica", { helpUrl: String(url) }),
+        skipValidation: fieldDecorator("jessica", { skipValidation: true }),
+        choices: list => fieldDecorator("jessica", { choices: list }),
+        // Not Carbon's: an editor's label and number control.
+        label: text => fieldDecorator("jessica", { label: String(text) }),
+        step: value => fieldDecorator("jessica", { step: value }),
+        precision: value => fieldDecorator("jessica", { precision: value })
     };
 
     // impl decorators apply to methods AND fields: a promoted/diverging field

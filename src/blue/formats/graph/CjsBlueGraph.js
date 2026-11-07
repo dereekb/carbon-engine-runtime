@@ -68,10 +68,28 @@ export class CjsBlueGraph
       list: mapped.has(IList),
       proxy: mapped.has(IBlueObjectProxy),
       layout: this._getLayout(ctor),
+      ui: () => this._getUI(ctor),
       ownValues: ctor.ownValues === true,
       interfaces: Array.from(mapped, item => CjsSchema.getClassName(item)),
       members: fields.map(field => this._getMember(field))
     });
+  }
+
+  /**
+   * A class's own presentation, from `meta.ui`.
+   * @param {Function} ctor The class.
+   * @returns {{members: object}} Graph presentation.
+   */
+  static _getUI(ctor)
+  {
+    const members = {};
+
+    for (const field of IRootReaderBase.getDictionaryDeclarations(ctor).fields)
+    {
+      if (field.jessica) members[field.name] = field.jessica;
+    }
+
+    return { members };
   }
 
   /**
