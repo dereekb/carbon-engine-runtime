@@ -1,10 +1,10 @@
-import * as CcpLog from "../../../src/global/logging/ccpLog.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Tr2ShaderALWebgl2, Tr2ShaderProgramALWebgl2 } from "../../../npm/dist/trinityal/webgl2/index.js";
 import { ALResult, Tr2ShaderAL } from "../../../npm/dist/trinityal/index.js";
 import { ShaderType } from "../../../npm/dist/global/consts/renderContext/index.js";
+import * as CcpLog from "../../../npm/dist/global/logging/ccpLog.js";
 import { writeGlslBackendBlock } from "../../../npm/dist/resource/formats/webgl/core/glslBackendBlock.js";
 import { FakeRenderContext, FakeWebgl2 } from "./fakeWebgl2.js";
 
