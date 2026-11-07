@@ -58,7 +58,7 @@ test('mapped cloud and ball notifications preserve pending snapshot then dirty s
 });
 
 test('cloud list loading phases wire weak owners without spurious rasterization', t => {
-  const cloud = volume(t), sphere = ball(); cloud.balls.push(sphere);
+  const cloud = volume(t), sphere = ball(); Array.prototype.push.call(cloud.balls, sphere);
   cloud.OnListModified(Event.BELIST_INSERTED | Event.BELIST_LOADING, 0, 0, sphere, cloud.balls);
   assert.equal(sphere._owner, null); assert.equal(cloud._thread, null);
   cloud.OnListModified(Event.BELIST_LOADFINISHED, 0, 0, null, cloud.balls);
@@ -74,7 +74,7 @@ test('cloud list loading phases wire weak owners without spurious rasterization'
 
 test('animated cloud samples four curve times into native channels and restores playing time', t => {
   const cloud = volume(t, { animated: true }), sphere = ball(), curves = new TriCurveSet();
-  cloud.balls.push(sphere); cloud.OnListModified(Event.BELIST_LOADFINISHED, 0, 0, null, cloud.balls);
+  Array.prototype.push.call(cloud.balls, sphere); cloud.OnListModified(Event.BELIST_LOADFINISHED, 0, 0, null, cloud.balls);
   curves.PlayFrom(.7); cloud.curveSets.push(curves);
   const times = [], update = curves.Update.bind(curves);
   t.mock.method(curves, 'Update', (...args) => {
@@ -108,7 +108,7 @@ test('default zero-radius balls preserve existing voxel contributions', t => {
 });
 
 test('completed cloud status retains native Update publication and debug option declaration', t => {
-  const cloud=volume(t); cloud.balls.push(ball()); cloud.Rasterize();
+  const cloud=volume(t); Array.prototype.push.call(cloud.balls, ball()); cloud.Rasterize();
   const adopt=t.mock.method(cloud.texture, 'CreateFromHostBitmap');
   cloud.Update(0); cloud.Update(1);
   assert.equal(adopt.mock.callCount(), 2, 'cpp:100 checks DataReady without requiring a live thread handle');

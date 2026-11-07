@@ -63,7 +63,7 @@ test("identical SOF decal patches return false and preserve decal and effect obj
   const requests = manager.requests.length;
   const input = structuredClone(values.decals);
   assert.equal(SetShipValues(ship, values, patch), false);
-  assert.deepEqual(ship.decals, decals);
+  assert.deepEqual([ ...ship.decals ], decals);
   for (let i = 0; i < decals.length; i++)
   {
     assert.equal(ship.decals[i], decals[i]);

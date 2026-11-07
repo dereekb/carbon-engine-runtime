@@ -10,7 +10,7 @@ function mergeThrough(childToObject)
     const ship = new EveSpaceObject2();
     const sets = new EveLocatorSets();
     sets.Set("child", [ new Locator() ]);
-    ship.effectChildren.push({
+    Array.prototype.push.call(ship.effectChildren, {
         CollectOwnedLocatorSets(parent, out)
         {
             out.push({ sets, childToObject, owner: this });

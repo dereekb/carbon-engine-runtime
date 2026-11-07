@@ -1,3 +1,6 @@
+import { EveChildContainer } from "../../npm/dist/trinity/eve/child/EveChildContainer.js";
+import { Tr2Light } from "../../npm/dist/trinity/eve/lights/Tr2Light.js";
+import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { ITr2SoundEmitterOwner } from "../../npm/dist/trinity/eve/ITr2SoundEmitterOwner.js";
 import { ITr2CurveSetOwner } from "../../npm/dist/trinity/curves/ITr2CurveSetOwner.js";
 import test from "node:test";
@@ -396,14 +399,14 @@ test("EveSpaceObject2 propagates Carbon inherit properties to existing and futur
   const existingChildCalls = [];
   const existingLightCalls = [];
   const ordinaryChildCalls = [];
-  object.effectChildren.push(new (class extends IEveInheritPropertiesOwner
+  Array.prototype.push.call(object.effectChildren, new (class extends IEveInheritPropertiesOwner
   {
     SetInheritProperties(properties)
     {
       existingChildCalls.push(properties);
     }
   })());
-  object.lights.push(new (class extends IEveInheritPropertiesOwner
+  Array.prototype.push.call(object.lights, new (class extends IEveInheritPropertiesOwner
   {
     SetInheritProperties(properties)
     {
@@ -428,7 +431,7 @@ test("EveSpaceObject2 propagates Carbon inherit properties to existing and futur
 
   let childWasInserted = null;
   const futureChildCalls = [];
-  const futureChild = Object.assign(new (WithInterfaces(EveSpaceObjectChild, IEveInheritPropertiesOwner))(), {
+  const futureChild = Object.assign(new (WithInterfaces(EveChildContainer, IEveInheritPropertiesOwner))(), {
     SetInheritProperties(properties)
     {
       childWasInserted = object.effectChildren.includes(futureChild);
@@ -444,14 +447,13 @@ test("EveSpaceObject2 propagates Carbon inherit properties to existing and futur
 
   let lightWasInserted = null;
   const futureLightCalls = [];
-  const futureLight = new (class extends IEveInheritPropertiesOwner
-  {
+  const futureLight = Object.assign(new (WithInterfaces(Tr2Light, IEveInheritPropertiesOwner))(), {
     SetInheritProperties(properties)
     {
       lightWasInserted = object.lights.includes(futureLight);
       futureLightCalls.push(properties);
     }
-  })();
+  });
   object.AddLight(futureLight);
   assert.equal(lightWasInserted, true, "the light is in the list before it is told");
   assert.equal(object.lights.at(-1), futureLight);
@@ -469,11 +471,11 @@ test("EveSpaceObject2 propagates Carbon inherit properties to existing and futur
   assert.deepEqual(ordinaryChildCalls, []);
 
   object.ClearLights();
-  assert.deepEqual(object.lights, []);
+  assert.deepEqual([ ...object.lights ], []);
 
   const nullObject = new EveSpaceObject2();
   const nullCalls = [];
-  nullObject.effectChildren.push(new (class extends IEveInheritPropertiesOwner
+  Array.prototype.push.call(nullObject.effectChildren, new (class extends IEveInheritPropertiesOwner
   {
     SetInheritProperties(properties)
     {
@@ -492,7 +494,7 @@ test("EveSpaceObject2 owns the Carbon controller graph and mesh alias", () =>
   const object = new EveSpaceObject2();
   const mesh = { GetGeometryResource: () => null };
   const calls = [];
-  const controller = {
+  const controller = Object.assign(new Tr2Controller(), {
     linked: false,
     IsLinked()
     {
@@ -515,8 +517,8 @@ test("EveSpaceObject2 owns the Carbon controller graph and mesh alias", () =>
     {
       calls.push(["controller-start"]);
     }
-  };
-  const child = Object.assign(new EveSpaceObjectChild(), {
+  });
+  const child = Object.assign(new EveChildContainer(), {
     name: "child",
     SetVariable(name, value)
     {
@@ -595,7 +597,7 @@ test("EveSpaceObject2 owns the Carbon controller graph and mesh alias", () =>
   calls.length = 0;
   object.AddToEffectChildrenList(child);
   assert.equal(calls.some(call => call[0] === "wrong-child-variable"), false);
-  object.overlayEffects.push(overlay);
+  Array.prototype.push.call(object.overlayEffects, overlay);
   assert.equal(object.GetEffectChildByName("child"), child);
   calls.length = 0;
   object.SetControllerVariable("DirtLevel", 0.75);
@@ -741,10 +743,10 @@ test("EveSpaceObject2 drives observers, controller frequency, mute, and emitter 
     }
   }
 
-  object.controllers.push(new FrequencyController());
+  Array.prototype.push.call(object.controllers, new FrequencyController());
   object.estimatedPixelDiameter = 50;
   const childUpdates = [];
-  object.effectChildren.push(Object.assign(new EveSpaceObjectChild(), {
+  Array.prototype.push.call(object.effectChildren, Object.assign(new EveSpaceObjectChild(), {
     IsAlwaysOn()
     {
       return false;
@@ -787,7 +789,7 @@ test("EveSpaceObject2 drives observers, controller frequency, mute, and emitter 
 
   const nestedEmitter = {};
   // Carbon casts each effect child to ITr2SoundEmitterOwner.
-  object.effectChildren.push(Object.assign(new ITr2SoundEmitterOwner(), {
+  Array.prototype.push.call(object.effectChildren, Object.assign(new ITr2SoundEmitterOwner(), {
     FindSoundEmitter(name)
     {
       return name === "nested" ? nestedEmitter : null;
@@ -1433,7 +1435,7 @@ test("EveSpaceObject2 transforms locator records and freezes high detail meshes"
   assertVecNear(moved[0][1], [0, 0.7071067811865476, 0, 0.7071067811865476], 1e-6);
 
   const decalStates = [];
-  object.decals.push({
+  Array.prototype.push.call(object.decals, {
     SetHighDetailDecalState(state)
     {
       decalStates.push(state);
@@ -1500,13 +1502,13 @@ test("the LightOwner component follows the light list's edges", () =>
   };
   object.GetComponentRegistry = () => registry;
 
-  object.AddLight({});
+  object.AddLight(new Tr2Light());
   assert.equal(calls.length, 1, "the first light did not register the component");
   assert.equal(calls[0][0], "register");
   assert.equal(calls[0][2], object);
 
   // Control: a second light is not a second registration.
-  const second = {};
+  const second = new Tr2Light();
   object.AddLight(second);
   assert.equal(calls.length, 1, "a later light registered again");
 
@@ -1516,7 +1518,7 @@ test("the LightOwner component follows the light list's edges", () =>
 
   object.ClearLights();
   assert.equal(calls.at(-1)[0], "unregister", "clearing the lights left the component registered");
-  assert.deepEqual(object.lights, []);
+  assert.deepEqual([ ...object.lights ], []);
 });
 
 test("decal priority is its index, renumbered on every structural change", () =>

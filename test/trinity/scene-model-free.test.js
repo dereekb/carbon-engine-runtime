@@ -71,6 +71,6 @@ test("scene native lists notify once and removing an absent item never clears si
   clearChildren(scene, "objects", { listNotify: scene });
   assert.equal(changed.mock.callCount(), 2);
   assert.equal(scene.objects.length, 0);
-  scene.objects.push(first);
+  Array.prototype.push.call(scene.objects, first);
   assert.equal(changed.mock.callCount(), 2, "negative control: raw Array mutation bypasses native observation");
 });

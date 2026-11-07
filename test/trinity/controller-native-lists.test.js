@@ -251,7 +251,7 @@ test("schema construction and editing populate configured lists and initialize a
   CjsSchema.setValues(controller, { variables: [{ _type: "Tr2ControllerFloatVariable", name: "replacement", defaultValue: 8 }] });
   assert.equal(controller.variables, list);
   assert.equal(Info(list).notify, controller);
-  assert.deepEqual(events.map(entry => entry.event), [BELIST_UNLOADSTART, BELIST_LOADFINISHED]);
+  assert.deepEqual(events.map(entry => entry.event), [BELIST_UNLOADSTART, BELIST_INSERTED]);
   assert.equal(list[0].GetValue(), 8);
   controller.Link({});
   t.after(() => controller.Unlink());

@@ -1,3 +1,5 @@
+import { EveSpriteSet } from "../../npm/dist/trinity/eve/attachment/sprite/EveSpriteSet.js";
+import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
@@ -124,7 +126,7 @@ test("EveChildContainer owns Carbon quality defaults and effect-child recursion"
   assert.equal(container.Empty(), true);
 
   const calls = [];
-  const child = Object.assign(new EveSpaceObjectChild(), {
+  const child = Object.assign(new EveChildContainer(), {
     name: "Instanced Mesh",
     SetControllerVariable(name, value)
     {
@@ -171,7 +173,7 @@ test("EveChildContainer owns Carbon quality defaults and effect-child recursion"
 test("EveChildContainer initializes and drives controller CPU lifecycle", () =>
 {
   const calls = [];
-  const controller = {
+  const controller = Object.assign(new Tr2Controller(), {
     linked: false,
     IsLinked()
     {
@@ -194,7 +196,7 @@ test("EveChildContainer initializes and drives controller CPU lifecycle", () =>
     {
       calls.push(["start"]);
     }
-  };
+  });
   const container = new EveChildContainer();
   container.AddController(controller);
   container.SetControllerVariable("strength", 0.5);
@@ -568,7 +570,7 @@ test("EveChildContainer registers what it holds, once it is in a registry", () =
 
   // Carbon casts to EveEntityPtr before registering, so the fixtures must BE
   // entities - a plain object is correctly skipped by that cast.
-  const makeEntity = name => Object.assign(new EveEntity(), {
+  const makeEntity = name => Object.assign(new EveChildContainer(), {
     name,
     Register(r) { calls.push([ "Register", name, r ]); },
     UnRegister(r) { calls.push([ "UnRegister", name, r ]); },
@@ -581,15 +583,21 @@ test("EveChildContainer registers what it holds, once it is in a registry", () =
     SetPartTag() {}
   });
 
+  const makeAttachment = name => Object.assign(new EveSpriteSet(), {
+    name,
+    Register(r) { calls.push([ "Register", name, r ]); },
+    UnRegister(r) { calls.push([ "UnRegister", name, r ]); }
+  });
+
   // Negative control first: OUT of a registry, nothing registers (cpp:148).
   container.IsInRegistry = () => false;
   container.AddToEffectChildrenList(makeEntity("early"));
-  container.AddAttachment(makeEntity("earlyAttachment"));
+  container.AddAttachment(makeAttachment("earlyAttachment"));
   assert.deepEqual(calls, [], "registered while out of a registry");
 
   container.IsInRegistry = () => true;
   const child = makeEntity("child");
-  const attachment = makeEntity("attachment");
+  const attachment = makeAttachment("attachment");
 
   container.AddToEffectChildrenList(child);
   container.AddAttachment(attachment);
@@ -614,11 +622,11 @@ test("EveChildContainer links a controller through the hook, not inline", () =>
   container.SetControllerVariable("Speed", 2);
 
   const calls = [];
-  const controller = {
+  const controller = Object.assign(new Tr2Controller(), {
     Link(owner) { calls.push([ "Link", owner ]); },
     Unlink() { calls.push([ "Unlink" ]); },
     SetVariable(name, value) { calls.push([ "SetVariable", name, value ]); }
-  };
+  });
 
   container.AddController(controller);
   assert.deepEqual(calls, [

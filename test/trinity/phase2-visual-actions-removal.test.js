@@ -118,13 +118,13 @@ test("Overlay reuses an overlay already on the owner and releases its reference 
     assert.equal(action._overlay, overlay);
     action.Stop(controller);
     assert.equal(action._overlay, null);
-    assert.deepEqual(owner.overlayEffects, [overlay]);
+    assert.deepEqual([ ...owner.overlayEffects ], [overlay]);
     action.removeOnStop = true;
     action.Stop(controller);
-    assert.deepEqual(owner.overlayEffects, [overlay]);
+    assert.deepEqual([ ...owner.overlayEffects ], [overlay]);
     action.Start(controller);
     action.Stop(controller);
-    assert.deepEqual(owner.overlayEffects, []);
+    assert.deepEqual([ ...owner.overlayEffects ], []);
     action.Start(controller);
     assert.equal(action._overlay, null);
     assert.throws(() => action.Start({}), TypeError);

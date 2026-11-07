@@ -69,7 +69,7 @@ test("a visible hull hands its decals one ParentData built for the pass", () =>
   const object = visibleHull();
   object.spaceObjectShipData.set([ 0.1, 0.2, 0.3, 0.4 ]);
   const decal = decalSpy();
-  object.decals.push(decal);
+  Array.prototype.push.call(object.decals, decal);
 
   assert.equal(object.UpdateVisibility(visibleContext), true);
   assert.equal(decal.seen.length, 1, "the decal pass ran");
@@ -88,7 +88,7 @@ test("a hull whose mesh is not visible runs no decal pass", () =>
 {
   const object = visibleHull();
   const decal = decalSpy();
-  object.decals.push(decal);
+  Array.prototype.push.call(object.decals, decal);
 
   object.UpdateVisibility(updateContext(false));
   assert.equal(decal.seen.length, 0);
@@ -107,7 +107,7 @@ test("a child mesh hands its decals its own ParentData, placed by the child", ()
     GetAreas() { return []; }
   })();
   const decal = decalSpy();
-  child.decals.push(decal);
+  Array.prototype.push.call(child.decals, decal);
 
   child.UpdateAsyncronous(new EveUpdateContext(), {
     localToWorldTransform: mat4.fromTranslation(mat4.create(), [ 7, 8, 9 ]),

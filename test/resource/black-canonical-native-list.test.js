@@ -196,6 +196,7 @@ test("Array inheritance without an exact IList mapping keeps the ordinary popula
     const { observer } = begin(list);
     list.Remove = () => { throw Error("unmapped Remove must not run"); };
     list.Append = () => { throw Error("unmapped Append must not run"); };
+    list.push = Array.prototype.push;
     read(wire(f => [f.Object(2,"BlackNativeListWrongItem"),f.Object(0)]));
     assert.equal(list.length,1);
     assert.ok(list[0] instanceof WrongItem);

@@ -1,6 +1,7 @@
 // Source: blueexposure/include/BlueListUtil.h:172-347,459-476,506-781
 import { CjsSchema } from "#schema";
 import { BLUELISTEVENT } from "#consts/blue";
+import * as CcpLog from "../../global/logging/ccpLog.js";
 import { BlueClasses } from "./BlueClasses.js";
 import { BeClasses } from "./classes/registry.js";
 import { IList } from "./IList.js";
@@ -8,14 +9,24 @@ import { IListNotify } from "./IListNotify.js";
 import { ICopierCustomAssignment } from "./ICopierCustomAssignment.js";
 
 /**
+ * HERE BE DRAGONS: `list[i] = item` and `list.length = n` cannot be caught. JavaScript
+ * gives an Array subclass no hook for either, and a Proxy costs too much. They skip
+ * admission and notification, so the owner is never told. Change a list through its
+ * methods. Every Array method that mutates either notifies or, for `fill` and
+ * `copyWithin`, throws. `Sort` is Carbon's, and stays silent.
+ *
  * A typed object list with Carbon's explicit single-observer mutation methods.
  * Adapted: constructor configuration replaces C++ template parameters; Array
  * storage replaces the native vector and pointer/reference-count machinery.
- * Raw indexing and array methods intentionally bypass admission and notification,
- * matching the native escape hatch (BlueListUtil.h:206-210). Callers using that
- * access must preserve the non-null, correctly typed item invariant. This template
- * is not registered as a concrete native List or an automatically constructible
- * specialization. Callers must supply the element type and copy destination.
+ * `push`, `pop`, `shift`, `unshift` and `splice` notify as Carbon's Append, Insert and
+ * Remove do, but do not check the item type: a wrong item stays in the list rather than
+ * vanishing. `sort` and `reverse` reorder through Swap. Only Append and Insert refuse an
+ * item, and they log it. Carbon reaches its vector with neither check nor event
+ * (BlueListUtil.h:206-210); code that needs that asks for it deliberately, with
+ * `Array.prototype.push.call(list, item)`, and keeps the non-null, correctly typed item
+ * invariant itself. This template is not registered as a concrete native List or an
+ * automatically constructible specialization. Callers must supply the element type and
+ * copy destination.
  */
 export class BlueList extends Array
 {
@@ -107,17 +118,16 @@ export class BlueList extends Array
    *
    * @adapted exact mapped identities replace native QI pointer conversion.
    *   Non-integer keys are rejected rather than coerced into native ssize_t.
+   *   A refused item is logged; Carbon's refusal is silent to a native caller.
    * @param {number} key Insertion index, or -1 for the old list length.
    * @param {object} value Non-null item exposing the element interface.
    * @returns {boolean} False leaves the list unchanged.
    */
   Insert(key, value)
   {
-    if (!BlueList._AcceptsItem(this, value)) return false;
+    if (!BlueList._Admit(this, value)) return false;
     if (!BlueList._RangeCheck(key, this.length, true)) return false;
-    const index = key === -1 ? this.length : key;
-    Array.prototype.splice.call(this, index, 0, value);
-    if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, index, 0, value, this);
+    BlueList._InsertAt(this, key === -1 ? this.length : key, value);
     return true;
   }
 
@@ -126,12 +136,13 @@ export class BlueList extends Array
    * This native quirk differs from Insert(-1) (BlueListUtil.h:610-615).
    *
    * @adapted mapped constructor identities replace native QI pointer conversion.
+   *   A refused item is logged; Carbon's refusal is silent to a native caller.
    * @param {object} value Non-null item exposing the element interface.
    * @returns {boolean} False leaves the list unchanged.
    */
   Append(value)
   {
-    if (!BlueList._AcceptsItem(this, value)) return false;
+    if (!BlueList._Admit(this, value)) return false;
     Array.prototype.push.call(this, value);
     if (this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, this.length, 0, value, this);
     return true;
@@ -157,7 +168,8 @@ export class BlueList extends Array
     }
     if (!BlueList._RangeCheck(key, this.length, false)) return false;
     const value = this[key];
-    Array.prototype.splice.call(this, key, 1);
+    for (let i = key + 1; i < this.length; i++) this[i - 1] = this[i];
+    this.length--;
     if (value && this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_REMOVED, key, 0, value, this);
     return true;
   }
@@ -284,7 +296,7 @@ export class BlueList extends Array
    * Returns borrowed storage and a snapshot of its size.
    *
    * @adapted the native pointer/size pair is a named JavaScript record; items is
-   *   this same array and raw mutations do not emit list notifications.
+   *   this same array, so an index write through it does not emit a list notification.
    * @returns {{items: BlueList, size: number}} Borrowed storage and captured size.
    */
   GetAllItems()
@@ -367,6 +379,166 @@ export class BlueList extends Array
     }
     if (i && other._notify) other._notify.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, other);
     return true;
+  }
+
+  /**
+   * Array's push: notifies with Append's key, without its type check.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @param {...object} items Items to append.
+   * @returns {number} The new length.
+   */
+  push(...items)
+  {
+    for (let i = 0; i < items.length; i++)
+    {
+      Array.prototype.push.call(this, items[i]);
+      if (items[i] && this._notify) this._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, this.length, 0, items[i], this);
+    }
+    return this.length;
+  }
+
+  /**
+   * Array's pop, through Remove.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @returns {object|undefined} The removed item, or undefined for an empty list.
+   */
+  pop()
+  {
+    if (!this.length) return undefined;
+    const value = this[this.length - 1];
+    this.Remove(this.length - 1);
+    return value;
+  }
+
+  /**
+   * Array's shift, through Remove.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @returns {object|undefined} The removed item, or undefined for an empty list.
+   */
+  shift()
+  {
+    if (!this.length) return undefined;
+    const value = this[0];
+    this.Remove(0);
+    return value;
+  }
+
+  /**
+   * Array's unshift: notifies as Insert does, without its type check.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @param {...object} items Items to insert at the front.
+   * @returns {number} The new length.
+   */
+  unshift(...items)
+  {
+    for (let i = 0; i < items.length; i++) BlueList._InsertAt(this, i, items[i]);
+    return this.length;
+  }
+
+  /**
+   * Array's splice: removes through Remove, then inserts as Insert does without its type
+   * check, one event per item. Written out because native splice on an Array subclass is
+   * 27-50 times slower than on an Array, measured at 4 to 1024 items.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @param {number} [start] First index; negative counts from the end.
+   * @param {number} [deleteCount] Items to remove; omitted means to the end.
+   * @param {...object} items Items to insert at start.
+   * @returns {object[]} The removed items, in a plain array.
+   */
+  splice(start, deleteCount, ...items)
+  {
+    const size = this.length;
+    const relative = Math.trunc(start) || 0;
+    const index = relative < 0 ? Math.max(size + relative, 0) : Math.min(relative, size);
+
+    let count = 0;
+    if (arguments.length === 1) count = size - index;
+    else if (arguments.length > 1) count = Math.min(Math.max(Math.trunc(deleteCount) || 0, 0), size - index);
+
+    const removed = new Array(count);
+    for (let i = 0; i < count; i++)
+    {
+      removed[i] = this[index];
+      this.Remove(index);
+    }
+
+    for (let i = 0; i < items.length; i++) BlueList._InsertAt(this, index + i, items[i]);
+    return removed;
+  }
+
+  /**
+   * Array's sort, reaching the order through Swap so an observer hears each step.
+   * With no observer, or nothing out of place, it sends nothing.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @param {Function} [compare] Array's numeric comparator.
+   * @returns {BlueList} This list.
+   */
+  sort(compare)
+  {
+    if (!this._notify) return Array.prototype.sort.call(this, compare);
+
+    const sorted = Array.prototype.slice.call(this).sort(compare);
+    for (let i = 0; i < sorted.length; i++)
+    {
+      if (this[i] !== sorted[i]) this.Swap(i, Array.prototype.indexOf.call(this, sorted[i], i + 1));
+    }
+    return this;
+  }
+
+  /**
+   * Array's reverse, through Swap.
+   *
+   * @cjs JavaScript callers change a list through Array's names.
+   * @returns {BlueList} This list.
+   */
+  reverse()
+  {
+    if (!this._notify) return Array.prototype.reverse.call(this);
+
+    for (let i = 0, j = this.length - 1; i < j; i++, j--) this.Swap(i, j);
+    return this;
+  }
+
+  /**
+   * @cjs An object list has no use for it, and it would fire no event.
+   * @throws {TypeError} Always.
+   */
+  fill()
+  {
+    throw new TypeError("BlueList does not support fill.");
+  }
+
+  /**
+   * @cjs An object list has no use for it, and it would fire no event.
+   * @throws {TypeError} Always.
+   */
+  copyWithin()
+  {
+    throw new TypeError("BlueList does not support copyWithin.");
+  }
+
+  /** Opens a slot, stores the value and sends INSERTED. Native splice on an Array subclass is far slower. */
+  static _InsertAt(list, index, value)
+  {
+    for (let i = list.length; i > index; i--) list[i] = list[i - 1];
+    list[index] = value;
+    if (value && list._notify) list._notify.OnListModified(BLUELISTEVENT.BELIST_INSERTED, index, 0, value, list);
+  }
+
+  /** Admission for Append and Insert: a refused item is logged, so a drop is never silent. */
+  static _Admit(list, value)
+  {
+    if (BlueList._AcceptsItem(list, value)) return true;
+
+    CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("blue"), "BlueList of %s refused %s",
+      CjsSchema.getClassName(list._itemType) ?? list._itemType.name, CjsSchema.getClassName(value?.constructor) ?? String(value));
+    return false;
   }
 
   /** Native QI admission, represented by the exact constructor identity in the exposure table. */

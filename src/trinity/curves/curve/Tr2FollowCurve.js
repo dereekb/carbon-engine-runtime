@@ -209,7 +209,7 @@ export class Tr2FollowCurve extends ITriVectorFunction
   Sort()
   {
     // Native stable_sort compares keys directly and does not notify the list.
-    this.keys.sort((a, b) => a.GetTime() < b.GetTime() ? -1 : b.GetTime() < a.GetTime() ? 1 : 0);
+    Array.prototype.sort.call(this.keys, (a, b) => a.GetTime() < b.GetTime() ? -1 : b.GetTime() < a.GetTime() ? 1 : 0);
   }
 
   /**

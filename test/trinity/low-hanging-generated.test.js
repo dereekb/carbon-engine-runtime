@@ -452,8 +452,8 @@ test("generated child wrappers propagate Carbon controller and socket calls", as
     Start: () => calls.push(["controller-start"])
   };
   const plug = new EveChildPlug();
-  plug.controllers.push(controller);
-  plug.objects.push(child);
+  Array.prototype.push.call(plug.controllers, controller);
+  Array.prototype.push.call(plug.objects, child);
   plug.SetControllerVariable("Heat", 0.5);
   plug.HandleControllerEvent("Cycle");
   plug.StartControllers();
@@ -523,7 +523,7 @@ test("Eve effects propagate controllers, bindings, and named parameters", () =>
     Start: () => calls.push(["start"])
   };
   const lensflare = new EveLensflare();
-  lensflare.controllers.push(controller);
+  Array.prototype.push.call(lensflare.controllers, controller);
   lensflare.SetControllerVariable("Brightness", 0.75);
   lensflare.StartControllers();
   assert.equal(calls.length, 2);
@@ -554,15 +554,15 @@ test("Eve effects propagate controllers, bindings, and named parameters", () =>
 
   calls.length = 0;
   const effect = new EveMultiEffect();
-  effect.controllers.push(controller);
-  effect.bindings.push({
+  Array.prototype.push.call(effect.controllers, controller);
+  Array.prototype.push.call(effect.bindings, {
     SetOwner: owner => calls.push(["owner", owner]),
     Link: () => calls.push(["binding-link"]),
     Update: time => calls.push(["binding-update", time])
   });
   const parameter = new EveMultiEffectParameter();
   parameter.name = "Target";
-  effect.parameters.push(parameter);
+  Array.prototype.push.call(effect.parameters, parameter);
   const targetObject = {};
   assert.equal(effect.SetParameter("Target", targetObject), true);
   assert.equal(parameter.object, targetObject);

@@ -158,7 +158,8 @@ export class EveProceduralMethodThresholds extends IEveProceduralSelectionMethod
       return;
     }
 
-    this.parameters.sort(EveProceduralMethodThresholds._SelectiveParameterCompare);
+    // Carbon's std::sort sends no list event, and an event would land back here.
+    Array.prototype.sort.call(this.parameters, EveProceduralMethodThresholds._SelectiveParameterCompare);
   }
 
   /**

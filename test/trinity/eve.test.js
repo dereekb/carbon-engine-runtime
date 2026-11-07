@@ -75,7 +75,7 @@ test("ellipse list mutations bind and release owner callbacks with Carbon event 
     bindings = [];
     SetDirtyFlag(callback)
     {
-      this.bindings.push(callback);
+      Array.prototype.push.call(this.bindings, callback);
       super.SetDirtyFlag(callback);
     }
   }
@@ -87,7 +87,7 @@ test("ellipse list mutations bind and release owner callbacks with Carbon event 
   removeChild(set, "ellipses", ellipse, { ...options, listNotify: set });
   assertEquals(ellipse.bindings[1], null);
 
-  set.ellipses.push(ellipse);
+  Array.prototype.push.call(set.ellipses, ellipse);
   set.OnListModified(BLUELISTEVENT.BELIST_INSERTED | BLUELISTEVENT.BELIST_LOADING, 0, 0, ellipse, set.ellipses);
   set.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, ellipse, []);
   set.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, {}, set.ellipses);

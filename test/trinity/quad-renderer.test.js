@@ -149,8 +149,8 @@ test("an object pushed after Initialize registers its quad effects through Rereg
   const sprites = new EveSpriteSet();
   sprites.effect = FixtureEffect({ GetHashValue: () => 0x5a1e });
   sprites.Rebuild();
-  ship.attachments.push(sprites);
-  scene.objects.push(ship);
+  Array.prototype.push.call(ship.attachments, sprites);
+  Array.prototype.push.call(scene.objects, ship);
 
   assert.equal(Tr2QuadRenderer.Instance().GetEffectRecords().has(0x5a1e), false);
   scene.ReregisterEntities();

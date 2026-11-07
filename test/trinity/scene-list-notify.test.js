@@ -43,7 +43,7 @@ test("a plain push raises no list event (negative control)", () =>
   const { manager, calls } = RecordingManager();
   scene.shLightingManager = manager;
   const root = new EveEffectRoot2();
-  scene.objects.push(root);
+  Array.prototype.push.call(scene.objects, root);
   assert.equal(scene.componentRegistry.registeredEntities.includes(root), false);
   assert.equal(calls.registered, 0);
 });

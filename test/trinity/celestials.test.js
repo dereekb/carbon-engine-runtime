@@ -46,7 +46,7 @@ test('planet composes ball before local rotation; surface scales translation and
     UpdateAsyncronous(_context, params) { calls.push([name, 'async', Array.from(params.localToWorldTransform), params.spaceObjectParent, params.childParent]); },
     UpdateSyncronous(_context, params) { calls.push([name, 'sync', Array.from(params.localToWorldTransform)]); }
   });
-  planet.effectChildren.push(child('surface'));
+  Array.prototype.push.call(planet.effectChildren, child('surface'));
   planet.zOnlyModel = child('depth');
   planet.UpdatePlanetSyncronous({ GetTime: () => 123, renderContext: null }, 1000000);
   assert.deepEqual(calls.map(c => c.slice(0, 2)), [['surface','async'],['surface','sync'],['depth','sync'],['depth','async']]);
@@ -64,7 +64,7 @@ test('planet size threshold is strict and depth proxy has no minScreenSize gate'
   const planet = new EvePlanet();
   const changes = [];
   const child = { ChangeLOD: level => changes.push(level), GetRenderables: out => out.push('child') };
-  planet.effectChildren.push(child);
+  Array.prototype.push.call(planet.effectChildren, child);
   planet.zOnlyModel = child;
   planet.estimatedPixelDiameter = planet.minScreenSize;
   planet.lodLevel = Tr2Lod.TR2_LOD_HIGH;

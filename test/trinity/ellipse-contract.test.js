@@ -7,7 +7,7 @@ test("clearing ellipses requires every definition's dirty-flag method", () =>
   const set = new EveEllipseSet();
   const ellipse = new EveEllipseDefinition();
   ellipse.SetDirtyFlag = undefined;
-  set.ellipses.push(ellipse);
+  Array.prototype.push.call(set.ellipses, ellipse);
   assert.throws(() => set.ClearEllipses(), /SetDirtyFlag/);
   assert.equal(set.ellipses.length, 1);
 });
@@ -25,7 +25,7 @@ test("clearing ellipses disconnects dirty callbacks and empties the set", () =>
   const ellipse = new EveEllipseDefinition();
   let changes = 0;
   ellipse.SetDirtyFlag(() => changes++);
-  set.ellipses.push(ellipse);
+  Array.prototype.push.call(set.ellipses, ellipse);
   ellipse.OnModified();
   assert.equal(changes, 1);
   set.ClearEllipses();

@@ -110,7 +110,7 @@ test("EveMeshOverlayEffect drives its single named curve set", () =>
     GetRangeDuration: name => name === "Burst" ? 2.5 : 0,
     Update__RealTimeSimTime: (realTime, simTime) => calls.push(["curveUpdate", realTime, simTime])
   };
-  overlay.controllers.push({ Update: frequency => calls.push(["controllerUpdate", frequency]) });
+  Array.prototype.push.call(overlay.controllers, { Update: frequency => calls.push(["controllerUpdate", frequency]) });
 
   overlay.PlayCurveSet("Pulse");
   overlay.PlayCurveSet("Pulse", "Burst");

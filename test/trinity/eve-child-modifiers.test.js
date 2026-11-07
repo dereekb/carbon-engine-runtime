@@ -269,7 +269,7 @@ test("EveChildContainer.UpdateAsyncronous ticks controllers and folds modifiers"
   const container = new EveChildContainer();
 
   let updatedFrequency = null;
-  container.controllers.push({ Update(frequency) { updatedFrequency = frequency; } });
+  Array.prototype.push.call(container.controllers, { Update(frequency) { updatedFrequency = frequency; } });
 
   const modifier = new EveChildModifierSRT();
   modifier.translation = vec3.fromValues(0, 5, 0);

@@ -540,9 +540,17 @@ export class Tr2Effect extends Tr2Material
     {
       return false;
     }
-    this.parameters.splice(0, this.parameters.length, ...this.parameters.filter(parameter => this.#isShaderParameterVisible(getNamedValue(parameter))));
+    for (let y = 0; y < this.parameters.length;)
+    {
+      if (this.#isShaderParameterVisible(getNamedValue(this.parameters[y]))) y++;
+      else this.parameters.Remove(y);
+    }
     this.constParameters = this.constParameters.filter(parameter => this.#isShaderParameterVisible(parameter?.name));
-    this.resources.splice(0, this.resources.length, ...this.resources.filter(parameter => this.#isShaderParameterVisible(getNamedValue(parameter))));
+    for (let y = 0; y < this.resources.length;)
+    {
+      if (this.#isShaderParameterVisible(getNamedValue(this.resources[y]))) y++;
+      else this.resources.Remove(y);
+    }
     this._PruneOwnedProviders();
     return true;
   }
@@ -1149,8 +1157,9 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
-   * Appends a resource parameter, attaches it to this material and rebuilds
-   * cached data; does not check for a duplicate name and always returns true.
+   * Appends a resource parameter; the list's INSERTED event attaches it to this
+   * material and rebuilds cached data (Tr2Effect.cpp:922-925). Does not check for a
+   * duplicate name and always returns true.
    */
 
   AddResource(parameter)
@@ -1165,11 +1174,7 @@ export class Tr2Effect extends Tr2Material
     {
       throw new TypeError("Tr2Effect.AddResource requires an ITriEffectResourceParameter.");
     }
-    this.resources.push(parameter);
-    // The push fires no list event, so this stands in for the INSERTED arm
-    // that would have run (Tr2Effect.cpp:922-925).
-    resource.OnAddedToMaterial(this);
-    this.RebuildCachedDataInternal();
+    this.resources.Append(parameter);
     return true;
   }
 
@@ -1290,6 +1295,30 @@ export class Tr2Effect extends Tr2Material
    */
   SetParameters(values = {})
   {
+    // One rebuild for the whole batch, not one per list event.
+    const insideStartUpdate = this.insideStartUpdate;
+    this.insideStartUpdate = true;
+
+    let updated = false;
+    try
+    {
+      updated = this._SetParametersBatch(values);
+    }
+    finally
+    {
+      this.insideStartUpdate = insideStartUpdate;
+    }
+
+    if (updated)
+    {
+      this.RebuildCachedDataInternal();
+    }
+    return updated;
+  }
+
+  /** The body of SetParameters, inside its update batch. */
+  _SetParametersBatch(values)
+  {
     let updated = false;
     for (const name of Object.keys(values ?? {}))
     {
@@ -1303,10 +1332,6 @@ export class Tr2Effect extends Tr2Material
         continue;
       }
       updated = this.#setNamedParameter(name, value) || updated;
-    }
-    if (updated)
-    {
-      this.RebuildCachedDataInternal();
     }
     return updated;
   }
@@ -1504,8 +1529,7 @@ export class Tr2Effect extends Tr2Material
     const parameter = new Parameter();
     parameter.name = parameterName;
     parameter.SetValue(value);
-    this.parameters.push(parameter);
-    this.RebuildCachedDataInternal();
+    this.parameters.Append(parameter);
   }
 
   /**
@@ -1625,6 +1649,30 @@ export class Tr2Effect extends Tr2Material
    */
   SetTextures(values = {})
   {
+    // One rebuild for the whole batch, not one per list event.
+    const insideStartUpdate = this.insideStartUpdate;
+    this.insideStartUpdate = true;
+
+    let updated = false;
+    try
+    {
+      updated = this._SetTexturesBatch(values);
+    }
+    finally
+    {
+      this.insideStartUpdate = insideStartUpdate;
+    }
+
+    if (updated)
+    {
+      this.RebuildCachedDataInternal();
+    }
+    return updated;
+  }
+
+  /** The body of SetTextures, inside its update batch. */
+  _SetTexturesBatch(values)
+  {
     let updated = false;
     for (const name of Object.keys(values ?? {}))
     {
@@ -1636,10 +1684,6 @@ export class Tr2Effect extends Tr2Material
         continue;
       }
       updated = this.#setNamedTexture(name, value) || updated;
-    }
-    if (updated)
-    {
-      this.RebuildCachedDataInternal();
     }
     return updated;
   }
@@ -1833,9 +1877,9 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
-   * Removes the named entry from one of the effect's collections, detaching it
-   * from the material first when the list is `resources`; returns whether
-   * anything was removed.
+   * Removes the named entry from one of the effect's collections; the REMOVED
+   * event detaches a resource from the material. Returns whether anything was
+   * removed.
    */
   #removeNamed(list, name)
   {
@@ -1843,10 +1887,6 @@ export class Tr2Effect extends Tr2Material
     if (!existing)
     {
       return false;
-    }
-    if (list === this.resources)
-    {
-      existing.OnRemovedFromMaterial(this);
     }
     list.splice(list.indexOf(existing), 1);
     this._PruneOwnedProviders();
@@ -1881,24 +1921,22 @@ export class Tr2Effect extends Tr2Material
       const existingResource = findByName(this.resources, name);
       if (existingResource)
       {
-        existingResource.OnRemovedFromMaterial(this);
-        this.resources[this.resources.indexOf(existingResource)] = created;
+        this.resources.Replace(this.resources.indexOf(existingResource), created);
       }
       else
       {
-        this.resources.push(created);
+        this.resources.Append(created);
       }
-      created.OnAddedToMaterial(this);
       this._PruneOwnedProviders();
       return true;
     }
     if (existing)
     {
-      this.parameters[this.parameters.indexOf(existing)] = created;
+      this.parameters.Replace(this.parameters.indexOf(existing), created);
     }
     else
     {
-      this.parameters.push(created);
+      this.parameters.Append(created);
     }
     return true;
   }
@@ -1998,7 +2036,7 @@ export class Tr2Effect extends Tr2Material
   {
     this.StartUpdate();
     this.constParameters = [];
-    this.parameters.length = 0;
+    this.parameters.Clear();
     this.EndUpdate();
   }
 
@@ -2014,7 +2052,7 @@ export class Tr2Effect extends Tr2Material
       // Tr2Effect.cpp:270-273 calls through the typed list, as above.
       resource.OnRemovedFromMaterial(this);
     }
-    this.resources.length = 0;
+    this.resources.Clear();
     this.RebuildCachedDataInternal();
   }
 

@@ -92,7 +92,7 @@ test("real Crisis material hydration retains subscribed lists and native resourc
   assert.equal(resources.Insert(-1, resource), true);
   assert.equal(resources.Remove(resources.FindKey(resource)), true);
   assert.deepEqual(calls, ["added", "removed"]);
-  resources.push(resource);
+  Array.prototype.push.call(resources, resource);
   assert.deepEqual(calls, ["added", "removed"], "Negative control: raw array mutation emits no native list event");
   resources.pop();
   CjsSchema.setValues(effect, { parameters: effects[0].parameters, resources: effects[0].resources });

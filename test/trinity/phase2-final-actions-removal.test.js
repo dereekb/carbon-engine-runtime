@@ -66,16 +66,16 @@ test("ChildEffect discards an older load and releases its cache without removing
   pending[0](first);
   pending[1](second);
   await new Promise(resolve => setImmediate(resolve));
-  assert.deepEqual(owner.objects, [second]);
+  assert.deepEqual([ ...owner.objects ], [second]);
   assert.deepEqual(events, ["start"]);
   assert.equal(action._child, second);
   action.removeOnStop = false;
   action.Stop(controller);
   assert.equal(action._child, null);
-  assert.deepEqual(owner.objects, [second]);
+  assert.deepEqual([ ...owner.objects ], [second]);
   action.removeOnStop = true;
   action.Stop(controller);
-  assert.deepEqual(owner.objects, [second]);
+  assert.deepEqual([ ...owner.objects ], [second]);
 });
 
 function HostFactory(t, factory)

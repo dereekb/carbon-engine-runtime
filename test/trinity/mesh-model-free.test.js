@@ -35,7 +35,7 @@ test("real Crisis mesh retains native area ownership and shared particle initial
   assert.deepEqual(area.GetOwnerMeshes(), []);
   assert.deepEqual(list[0].GetOwnerMeshes(), [mesh]);
   const detached = new Tr2MeshArea();
-  list.push(detached);
+  Array.prototype.push.call(list, detached);
   assert.deepEqual(detached.GetOwnerMeshes(), [], "raw array insertion does not notify");
   for (const field of ["decalNormalAreas", "flareAreas"])
   {

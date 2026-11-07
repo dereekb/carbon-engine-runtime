@@ -133,7 +133,7 @@ test("empty explicitly configured lists dispatch before the object-content heuri
   } });
   const source = new EmptyHost(), destination = new EmptyHost();
   const old = MakeLeaf(1), originalList = destination.items;
-  destination.items.push(old); // Raw storage deliberately bypasses item admission.
+  Array.prototype.push.call(destination.items, old); // Raw storage deliberately bypasses item admission.
   const observer = Observe(destination.items);
   assert.equal(CjsSchema.getClassName(UnregisteredItem), null);
   assert.equal(new Copier().CopyTo(source, destination), destination);

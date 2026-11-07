@@ -366,10 +366,10 @@ test("EveMultiEffect owns dynamic graphs, preserves map precedence, and updates 
   record(controller, "Update", "controller-update");
 
   const effect = new EveMultiEffect();
-  effect.parameters.push(ownerParameter, duplicateParameter);
+  Array.prototype.push.call(effect.parameters, ownerParameter, duplicateParameter);
   effect.curveSets.push(curveSet);
-  effect.bindings.push(binding);
-  effect.controllers.push(controller);
+  Array.prototype.push.call(effect.bindings, binding);
+  Array.prototype.push.call(effect.controllers, controller);
   assert.equal(effect.Initialize(), true);
   assert.deepEqual(calls.filter(([ tag ]) => tag.endsWith("owner")), [ [ "parameter-owner", effect ], [ "binding-owner", effect ] ]);
 

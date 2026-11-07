@@ -1,3 +1,4 @@
+import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { EveEffectRoot2, EveSpaceObjectChild, ITr2Controller } from "../../npm/dist/trinity/index.js";
@@ -12,7 +13,7 @@ import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 function makeController()
 {
   const calls = [];
-  return Object.assign(new ITr2Controller(), {
+  return Object.assign(new Tr2Controller(), {
     calls,
     Link(owner) { calls.push([ "Link", owner ]); },
     Unlink() { calls.push([ "Unlink" ]); },
@@ -40,7 +41,7 @@ test("controller inserts link and replay recorded variables; removals unlink", (
   root.SetControllerVariable("Speed", 0.5);
 
   const controller = makeController();
-  root.controllers.push(controller);
+  Array.prototype.push.call(root.controllers, controller);
   root.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, controller, root.controllers);
   assert.deepEqual(controller.calls, [ [ "Link", root ], [ "SetVariable", "Speed", 0.5 ] ]);
 
@@ -56,7 +57,7 @@ test("controller inserts link and replay recorded variables; removals unlink", (
 
   // Unload-start unlinks every controller still in the list.
   const second = makeController();
-  root.controllers.push(second);
+  Array.prototype.push.call(root.controllers, second);
   root.OnListModified(BLUELISTEVENT.BELIST_UNLOADSTART, 0, 0, null, root.controllers);
   assert.deepEqual(controller.calls, [ [ "Unlink" ] ]);
   assert.deepEqual(second.calls, [ [ "Unlink" ] ]);
@@ -68,7 +69,7 @@ test("child inserts take ownership, replay variables and start controllers", () 
   root.SetControllerVariable("Heat", 2);
 
   const child = makeChild();
-  root.effectChildren.push(child);
+  Array.prototype.push.call(root.effectChildren, child);
   root.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, child, root.effectChildren);
   assert.deepEqual(child.calls, [
     [ "SetOwner", root ],
@@ -95,7 +96,7 @@ test("registry edges: children register when the root is registered; lights togg
   root.Register(registry);
 
   const child = makeChild();
-  root.effectChildren.push(child);
+  Array.prototype.push.call(root.effectChildren, child);
   root.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, child, root.effectChildren);
   assert.deepEqual(child.calls.at(-1), [ "Register", registry ]);
 
@@ -106,7 +107,7 @@ test("registry edges: children register when the root is registered; lights togg
   // Lights: FIRST insert registers the LightOwner component, LAST removal
   // (list already empty) unregisters it - Carbon's size-edge rule.
   registryCalls.length = 0;
-  root.lights.push({});
+  Array.prototype.push.call(root.lights, {});
   root.OnListModified(BLUELISTEVENT.BELIST_INSERTED, 0, 0, root.lights[0], root.lights);
   assert.equal(registryCalls.length, 1);
   assert.equal(registryCalls[0][0], "RegisterComponent");
@@ -117,7 +118,7 @@ test("registry edges: children register when the root is registered; lights togg
 
   // A removal that leaves lights in the list does NOT unregister.
   registryCalls.length = 0;
-  root.lights.push({}, {});
+  Array.prototype.push.call(root.lights, {}, {});
   const dropped = root.lights.pop();
   root.OnListModified(BLUELISTEVENT.BELIST_REMOVED, 0, 0, dropped, root.lights);
   assert.equal(registryCalls.length, 0);
@@ -138,7 +139,7 @@ test("AddController and RemoveController reach the hook rather than working arou
   const controller = makeController();
 
   assert.equal(root.AddController(controller), controller);
-  assert.deepEqual(root.controllers, [ controller ]);
+  assert.deepEqual([ ...root.controllers ], [ controller ]);
   assert.deepEqual(controller.calls, [
     [ "Link", root ],
     [ "SetVariable", "Speed", 0.5 ]
@@ -146,7 +147,7 @@ test("AddController and RemoveController reach the hook rather than working arou
 
   controller.calls.length = 0;
   assert.equal(root.RemoveController(controller), true);
-  assert.deepEqual(root.controllers, []);
+  assert.deepEqual([ ...root.controllers ], []);
   assert.deepEqual(controller.calls, [ [ "Unlink" ] ], "the REMOVED arm did not run");
 
   // Negative control: removing something absent notifies nobody.

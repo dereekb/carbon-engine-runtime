@@ -13,8 +13,8 @@ test("Initialize registers the scene's objects, so their light owners are gather
   const ship = new EveShip2();
   // EveSpaceObject2::RegisterComponents registers a LightOwner only when the
   // object holds lights.
-  ship.lights.push({});
-  scene.objects.push(ship);
+  Array.prototype.push.call(ship.lights, {});
+  Array.prototype.push.call(scene.objects, ship);
 
   const owners = () => scene.componentRegistry.GetComponents(EveComponentType.LightOwner);
   assert.deepEqual(owners(), [], "a pushed object is not registered until Initialize");

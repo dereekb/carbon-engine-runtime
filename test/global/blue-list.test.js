@@ -156,7 +156,7 @@ test("single removal notifies after erase while nonempty clear notifies before i
   assert.equal(list.GetSize(), 0);
   assert.equal(list.Remove(-1), true);
   assert.equal(observer.events.length, 2, "empty clear adds no event");
-  list.push(null);
+  Array.prototype.push.call(list, null);
   assert.equal(list.Remove(0), true);
   assert.equal(observer.events.length, 2, "native null storage erases without REMOVED");
 });
@@ -258,15 +258,112 @@ test("Sort uses the context-first boolean comparator without notifications", () 
   assert.equal(observer.events.length, 0);
 });
 
-test("raw array access deliberately bypasses admission and notification and retains ordinary species", () =>
+test("Array's mutators send Carbon's events, in Carbon's order", () =>
+{
+  const a = MakeItem(1), b = MakeItem(2), c = MakeItem(3), d = MakeItem(4);
+  const list = MakeList();
+  const observer = new Observer();
+  list.SetNotify(observer);
+  const { BELIST_INSERTED, BELIST_REMOVED } = BLUELISTEVENT;
+
+  assert.equal(list.push(a, b), 2);
+  assert.equal(list.unshift(c, d), 4);
+  assert.deepEqual(Array.from(list), [ c, d, a, b ]);
+  assert.equal(list.pop(), b);
+  assert.equal(list.shift(), c);
+  assert.deepEqual(Array.from(list), [ d, a ]);
+  assert.deepEqual(Events(observer), [
+    [ BELIST_INSERTED, 1, 0 ], [ BELIST_INSERTED, 2, 0 ],
+    [ BELIST_INSERTED, 0, 0 ], [ BELIST_INSERTED, 1, 0 ],
+    [ BELIST_REMOVED, 3, 0 ], [ BELIST_REMOVED, 0, 0 ]
+  ]);
+
+  const empty = MakeList();
+  assert.equal(empty.pop(), undefined);
+  assert.equal(empty.shift(), undefined);
+});
+
+test("splice follows Array's arguments, with one event per item", () =>
+{
+  const items = [ 1, 2, 3, 4, 5 ].map(MakeItem);
+  const [ a, b, c, d, e ] = items;
+  const list = MakeList(items);
+  const observer = new Observer();
+  list.SetNotify(observer);
+  const { BELIST_INSERTED, BELIST_REMOVED } = BLUELISTEVENT;
+
+  const added = MakeItem(6);
+  const removed = list.splice(1, 2, added);
+  assert.equal(removed.constructor, Array);
+  assert.deepEqual(removed, [ b, c ]);
+  assert.deepEqual(Array.from(list), [ a, added, d, e ]);
+  assert.deepEqual(Events(observer), [ [ BELIST_REMOVED, 1, 0 ], [ BELIST_REMOVED, 1, 0 ], [ BELIST_INSERTED, 1, 0 ] ]);
+
+  assert.deepEqual(list.splice(), []);
+  assert.deepEqual(list.splice(1, 0), []);
+  assert.deepEqual(list.splice(1, -3), []);
+  assert.deepEqual(list.splice(99, 1), []);
+  assert.deepEqual(list.splice(-1), [ e ]);
+  assert.deepEqual(list.splice(-99, 1), [ a ]);
+  assert.deepEqual(list.splice(1), [ d ]);
+  assert.deepEqual(Array.from(list), [ added ]);
+
+  const wrong = new UnexposedItem();
+  list.push(wrong);
+  list.splice(1, 0, b);
+  assert.deepEqual(Array.from(list), [ added, b, wrong ], "only Append and Insert refuse an item");
+});
+
+test("sort and reverse reorder through Swap; fill and copyWithin throw", () =>
+{
+  const a = MakeItem(1), b = MakeItem(2), c = MakeItem(3);
+  const list = MakeList([ c, a, b ]);
+  const observer = new Observer();
+  list.SetNotify(observer);
+  const { BELIST_SWAPPED } = BLUELISTEVENT;
+
+  assert.equal(list.sort((x, y) => x.value - y.value), list);
+  assert.deepEqual(Array.from(list), [ a, b, c ]);
+  assert.deepEqual(Events(observer), [ [ BELIST_SWAPPED, 0, 1 ], [ BELIST_SWAPPED, 1, 2 ] ]);
+
+  observer.events.length = 0;
+  list.sort((x, y) => x.value - y.value);
+  assert.equal(observer.events.length, 0, "nothing out of place sends nothing");
+
+  assert.equal(list.reverse(), list);
+  assert.deepEqual(Array.from(list), [ c, b, a ]);
+  assert.deepEqual(Events(observer), [ [ BELIST_SWAPPED, 0, 2 ] ]);
+
+  const quiet = MakeList([ c, a, b ]);
+  quiet.sort((x, y) => x.value - y.value);
+  assert.deepEqual(Array.from(quiet), [ a, b, c ]);
+  assert.deepEqual(Array.from(quiet.reverse()), [ c, b, a ]);
+
+  assert.throws(() => list.fill(a), TypeError);
+  assert.throws(() => list.copyWithin(0, 1), TypeError);
+});
+
+test("a refused item is logged, naming the list and the class", t =>
+{
+  const lines = [];
+  for (const name of [ "log", "info", "warn", "error" ]) t.mock.method(console, name, (...args) => lines.push(args.join(" ")));
+  const list = MakeList();
+  assert.equal(list.Append(new UnexposedItem()), false);
+  assert.equal(list.Insert(0, null), false);
+  assert.equal(list.GetSize(), 0);
+  assert.equal(lines.length, 2, lines.join());
+  assert.match(lines[0], /refused/);
+});
+
+test("raw array access is asked for deliberately, and species stays ordinary", () =>
 {
   const list = MakeList();
   const observer = new Observer();
   list.SetNotify(observer);
   const wrong = new UnexposedItem(), a = MakeItem(1);
-  list.push(wrong);
+  Array.prototype.push.call(list, wrong);
   list[0] = a;
-  const removed = list.splice(0, 1, wrong);
+  const removed = Array.prototype.splice.call(list, 0, 1, wrong);
   assert.equal(removed.constructor, Array);
   assert.deepEqual(removed, [ a ]);
   assert.equal(list.slice().constructor, Array);
@@ -274,7 +371,7 @@ test("raw array access deliberately bypasses admission and notification and reta
   const view = list.GetAllItems();
   assert.equal(view.items, list);
   assert.equal(view.size, 1);
-  view.items.push(a);
+  Array.prototype.push.call(view.items, a);
   assert.equal(view.size, 1, "size is a snapshot, not a live getter");
   assert.equal(list.length, 2);
   assert.equal(observer.events.length, 0);
@@ -381,7 +478,7 @@ test("empty assignment has no LOADFINISHED and mismatched template facts leave t
   ])
   {
     const old = MakeItem(8);
-    other.push(old);
+    Array.prototype.push.call(other, old);
     other.SetNotify(observer);
     assert.equal(source.AssignTo(other, new Copier()), false);
     assert.throws(() => other.AssignFrom(source), /same configured list type/u);
@@ -415,7 +512,7 @@ test("raw nulls and holes violate list invariants and propagate Copier exception
     const source = new ItemList(), dest = new ItemList();
     source.push(MakeItem(1));
     if (hole) source.length = 2;
-    else source.push(null);
+    else Array.prototype.push.call(source, null);
     dest.push(MakeItem(9));
     const observer = new Observer();
     dest.SetNotify(observer);

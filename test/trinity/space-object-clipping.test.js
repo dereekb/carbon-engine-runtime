@@ -45,10 +45,10 @@ test("SetShaderOption reaches the mesh, overlays, decals, attachments and effect
   const target = name => ({ SetShaderOption: (option, value) => seen.push(`${name}:${option}=${value}`) });
 
   object.mesh = target("mesh");
-  object.overlayEffects.push(target("overlay"));
-  object.decals.push(target("decal"));
-  object.attachments.push(target("attachment"));
-  object.effectChildren.push(target("child"));
+  Array.prototype.push.call(object.overlayEffects, target("overlay"));
+  Array.prototype.push.call(object.decals, target("decal"));
+  Array.prototype.push.call(object.attachments, target("attachment"));
+  Array.prototype.push.call(object.effectChildren, target("child"));
   object.SetShaderOption("SPACE_OBJECT_CLIPPING", "SOC_ENABLED");
 
   assert.deepEqual(seen, [ "mesh", "overlay", "decal", "attachment", "child" ].map(name => `${name}:SPACE_OBJECT_CLIPPING=SOC_ENABLED`));
