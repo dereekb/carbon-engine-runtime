@@ -35,7 +35,7 @@ export class AudManager extends IRoot
 
   /** m_log (IAudActionLogPtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("IAudActionLog")
+  @type.object.ref.weak("IAudActionLog")
   log = null;
 
   /** m_audioCullingEnabled (mutable bool) [READ] */
@@ -55,7 +55,7 @@ export class AudManager extends IRoot
    *   values interchange.
    */
   @meta.mapAttribute(meta.PERSIST)
-  @type.object.ref("AudSettings")
+  @type.object.ref.weak("AudSettings")
   settings = null;
 
   // AudioState (Uninitialized/Disabled/Enabled) as lowercase strings;

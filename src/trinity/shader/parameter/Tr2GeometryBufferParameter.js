@@ -36,7 +36,7 @@ export class Tr2GeometryBufferParameter extends ITriEffectResourceParameter
   /** m_gpuBuffer (ITr2GpuBufferPtr) [READWRITE, PERSIST, NOTIFY] */
 
 
-  @type.object.ref("ITr2GpuBuffer")
+  @type.object.ref.weak("ITr2GpuBuffer")
   gpuBuffer = null;
 
   /** m_isUsedByEffect (bool) [READ] */

@@ -19,7 +19,7 @@ export class TriStepSetDebugRenderer extends TriRenderStep
 {
 
   /** m_debugRenderer (ITr2DebugRendererPtr) [READWRITE] */
-  @type.object.ref("ITr2DebugRenderer")
+  @type.object.ref.weak("ITr2DebugRenderer")
   renderer = null;
 
   /**

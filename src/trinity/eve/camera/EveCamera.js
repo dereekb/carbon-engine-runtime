@@ -213,7 +213,7 @@ export class EveCamera extends IRoot
   stableView = false;
 
   /** m_errorListener (IBlueEventListenerPtr) [READWRITE] */
-  @type.object.ref("IBlueEventListener")
+  @type.object.ref.weak("IBlueEventListener")
   errorHandler = null;
 
   /** m_noiseScale (float) [READWRITE, PERSIST] */
@@ -222,7 +222,7 @@ export class EveCamera extends IRoot
   noiseScale = 1;
 
   /** m_audio2Listener (IBluePlacementObserverPtr) [READWRITE] */
-  @type.object.ref("IBluePlacementObserver")
+  @type.object.ref.weak("IBluePlacementObserver")
   audio2Listener = null;
 
   /** m_noise (bool) [READWRITE, PERSIST] */
@@ -288,7 +288,7 @@ export class EveCamera extends IRoot
 
   /** m_interestTranslationCurve (ITriVectorFunctionPtr) [READWRITE, NOTIFY] */
 
-  @type.object.ref("ITriVectorFunction")
+  @type.object.ref.weak("ITriVectorFunction")
   interest = null;
 
   /** m_rotationOfInterest (Quaternion) [READWRITE, PERSIST, NOTIFY] */
@@ -381,7 +381,7 @@ export class EveCamera extends IRoot
   maxYaw = 0;
 
   /** m_parentTranslationCurve (ITriVectorFunctionPtr) [READWRITE] */
-  @type.object.ref("ITriVectorFunction")
+  @type.object.ref.weak("ITriVectorFunction")
   parent = null;
 
   /** m_idleScale (float) [READWRITE, PERSIST] */

@@ -75,7 +75,7 @@ export class AudEventCurve extends IRoot
 
   /** m_sourceTriObserver (ITriObserverLocalPtr) [READWRITE, PERSIST] */
 
-  @type.object.ref("ITriObserverLocal")
+  @type.object.ref.weak("ITriObserverLocal")
   sourceTriObserver = null;
 
   /** m_keys (PAudEventKeyVector) [PERSISTONLY] */
@@ -83,7 +83,7 @@ export class AudEventCurve extends IRoot
   keys = [];
 
   /** m_audioEmitter (AudEmitterPtr) [READ] */
-  @type.object.ref("AudEmitter")
+  @type.object.ref.weak("AudEmitter")
   audioEmitter = null;
 
   // Playback cursor (C++ m_currentKeyIt) - runtime state, rebuildable.

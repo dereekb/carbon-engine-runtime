@@ -315,7 +315,7 @@ export class BlueObjectProxy extends IBlueObjectProxy
 }
 
 CjsSchema.decorateField(BlueObjectProxy, "object", CjsSchema.be.property(), type.object.ref("IRoot"));
-CjsSchema.decorateField(BlueObjectProxy, "builder", be.mapAttribute(be.READWRITE), type.object.ref("IBlueObjectBuilder"));
+CjsSchema.decorateField(BlueObjectProxy, "builder", be.mapAttribute(be.READWRITE), type.object.ref.weak("IBlueObjectBuilder"));
 CjsSchema.decorateField(BlueObjectProxy, "objectMarker", be.mapAttribute(be.READWRITE), type.uint32);
 CjsSchema.decorateField(BlueObjectProxy, "temporary", CjsSchema.be.property(), type.boolean);
 CjsSchema.decorateField(BlueObjectProxy, "isResident", CjsSchema.be.property(), type.boolean);

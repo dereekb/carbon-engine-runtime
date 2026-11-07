@@ -29,7 +29,7 @@ export class TriStepRunComputeShader extends TriRenderStep
 
   /** m_effect (Tr2MaterialPtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2Material")
+  @type.object.ref.weak("Tr2Material")
   effect = null;
 
   /** m_indirectionBuffer (ITr2GpuBufferPtr) [READWRITE] */

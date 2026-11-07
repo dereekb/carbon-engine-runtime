@@ -178,7 +178,7 @@ export class EveChildMesh extends EveChildTransform
   ownedLocatorSets = [];
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.object.ref("Tr2Effect")
+  @type.object.ref.weak("Tr2Effect")
   armorDamageShader = null;
 
   /**

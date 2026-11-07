@@ -32,11 +32,11 @@ export class TriStepCopyRenderTarget extends TriRenderStep
   Source = null;
 
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("TriViewport")
+  @type.object.ref.weak("TriViewport")
   sourceViewport = null;
 
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("TriViewport")
+  @type.object.ref.weak("TriViewport")
   destinationViewport = null;
 
   /** Reads the destination render target under Carbon's lower-case accessor name. */

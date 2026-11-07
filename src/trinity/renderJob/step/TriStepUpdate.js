@@ -13,7 +13,7 @@ export class TriStepUpdate extends TriRenderStep
 
   /** m_object (ITr2UpdateablePtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("ITr2Updateable")
+  @type.object.ref.weak("ITr2Updateable")
   object = null;
 
   /**

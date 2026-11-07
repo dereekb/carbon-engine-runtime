@@ -21,11 +21,11 @@ export class TriStepResolve extends TriRenderStep
   generateMipmap = false;
 
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2RenderTarget")
+  @type.object.ref.weak("Tr2RenderTarget")
   source = null;
 
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2RenderTarget")
+  @type.object.ref.weak("Tr2RenderTarget")
   destination = null;
 
   /**

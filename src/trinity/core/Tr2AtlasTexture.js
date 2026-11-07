@@ -78,7 +78,7 @@ export class Tr2AtlasTexture extends IRoot
 
   /** m_textureAtlas (Tr2TextureAtlasPtr) [READ] */
   @be.mapAttribute(be.READ)
-  @type.object.ref("Tr2TextureAtlas")
+  @type.object.ref.weak("Tr2TextureAtlas")
   atlas = null;
 
   /**

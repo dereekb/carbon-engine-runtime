@@ -134,7 +134,7 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
 
   /** m_sourceObject (EveSpaceObject2Ptr) [READWRITE, NOTIFY] */
 
-  @type.object.ref("EveSpaceObject2")
+  @type.object.ref.weak("EveSpaceObject2")
   sourceObject = null;
 
   /** m_multiplier (uint32_t) [READWRITE, PERSIST, NOTIFY] */

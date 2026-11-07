@@ -48,7 +48,7 @@ export class Tr2ExternalParameter extends IInitialize
   /** m_destinationObject (IRootPtr) [READWRITE, PERSIST, NOTIFY] */
 
 
-  @type.object.ref("IRoot")
+  @type.object.ref.weak("IRoot")
   destinationObject = null;
 
   /** m_destinationAttribute (std::string) [READWRITE, PERSIST, NOTIFY] */

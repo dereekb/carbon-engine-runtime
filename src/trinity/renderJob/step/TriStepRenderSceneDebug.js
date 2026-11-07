@@ -13,7 +13,7 @@ export class TriStepRenderSceneDebug extends TriRenderStep
 
   /** m_scene (ITr2ScenePtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("ITr2Scene")
+  @type.object.ref.weak("ITr2Scene")
   scene = null;
 
   /**

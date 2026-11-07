@@ -67,7 +67,7 @@ export class TriValueBinding extends INotify
 
   /** Carbon: m_sourceObject (trinity/trinity/TriValueBinding.h:61).
    */
-  @type.object.ref("IRoot")
+  @type.object.ref.weak("IRoot")
   _sourceObject = null;
 
   // Native MAP_ATTRIBUTE storage and MAP_PROPERTY access remain separate.
@@ -108,7 +108,7 @@ export class TriValueBinding extends INotify
 
   /** Carbon: m_destinationObject (trinity/trinity/TriValueBinding.h:63).
    */
-  @type.object.ref("IRoot")
+  @type.object.ref.weak("IRoot")
   _destinationObject = null;
 
   // Native MAP_ATTRIBUTE storage and MAP_PROPERTY access remain separate.

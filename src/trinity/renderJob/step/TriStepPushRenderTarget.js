@@ -17,7 +17,7 @@ export class TriStepPushRenderTarget extends TriRenderStep
   slot = 0;
 
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2RenderTarget")
+  @type.object.ref.weak("Tr2RenderTarget")
   renderTarget = null;
 
   /**

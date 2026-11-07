@@ -61,15 +61,15 @@ export class EveUpdateContext
   raytracingEnabled = false;
 
   /** m_dataTextureManager (Tr2DataTextureManagerPtr) */
-  @type.object.ref("Tr2DataTextureManager")
+  @type.object.ref.weak("Tr2DataTextureManager")
   dataTextureManager = null;
 
   /** m_gpuParticleSystem (Tr2GpuParticleSystemPtr) */
-  @type.object.ref("Tr2GpuParticleSystem")
+  @type.object.ref.weak("Tr2GpuParticleSystem")
   gpuParticleSystem = null;
 
   /** m_ballpark (IEveBallparkPtr) */
-  @type.object.ref("IEveBallpark")
+  @type.object.ref.weak("IEveBallpark")
   ballpark = null;
 
   /** m_taskGroup (Tr2ParallelTaskGroup*) */

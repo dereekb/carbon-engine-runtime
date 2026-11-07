@@ -56,7 +56,7 @@ export class EveChildLink extends EveChildMesh
   currentDirection = vec3.fromValues(0, 0, 1);
 
   /** m_target (ITriVectorFunctionPtr) [READWRITE] */
-  @type.object.ref("ITriVectorFunction")
+  @type.object.ref.weak("ITriVectorFunction")
   target = null;
 
   /** m_linkStrength (float) [READ] */

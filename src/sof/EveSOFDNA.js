@@ -57,7 +57,7 @@ export class EveSOFDNA extends IRoot
   @type.string
   dna = "";
 
-  @type.object.ref("EveSOFDataMgr")
+  @type.object.ref.weak("EveSOFDataMgr")
   dataMgr = null;
 
   @type.list("EveSOFDataMgr::HullData")

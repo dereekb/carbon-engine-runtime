@@ -188,7 +188,7 @@ export class EveChildContainer extends EveChildTransform
    * @type {ITr2GrannyAnimationOwner|null}
    */
   @meta.persist
-  @type.object.ref("ITr2GrannyAnimationOwner")
+  @type.object.ref.weak("ITr2GrannyAnimationOwner")
   animationOwner = null;
 
   /**

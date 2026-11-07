@@ -47,7 +47,7 @@ export class TriTextureParameter extends ITriEffectTextureParameter
   positionScale = 0;
 
   @be.mapAttribute(be.READ)
-  @type.object.ref("ITr2TextureProvider")
+  @type.object.ref.weak("ITr2TextureProvider")
   resource = null;
 
   @be.mapAttribute(be.READ)

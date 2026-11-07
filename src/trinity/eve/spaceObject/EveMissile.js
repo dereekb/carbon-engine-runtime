@@ -41,7 +41,7 @@ export class EveMissile extends EveSpaceObject2
 {
   @type.list("EveMissileWarhead") warheads = [];
   @type.boolean updateWarheads = true;
-  @type.object.ref("ITriTargetable") target = null;
+  @type.object.ref.weak("ITriTargetable") target = null;
   @type.float32 targetRadius = 0;
   @type.rawStruct("BlueScriptCallback") explosionCallback = null;
 

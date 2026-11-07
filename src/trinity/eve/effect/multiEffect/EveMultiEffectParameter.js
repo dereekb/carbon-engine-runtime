@@ -36,7 +36,7 @@ export class EveMultiEffectParameter extends IRoot
   @type.string
   name = "";
 
-  @type.object.ref("IRoot")
+  @type.object.ref.weak("IRoot")
   object = null;
 
   _owner = null;

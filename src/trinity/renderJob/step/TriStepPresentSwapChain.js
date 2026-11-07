@@ -16,7 +16,7 @@ import { TriRenderStep } from "./TriRenderStep.js";
 export class TriStepPresentSwapChain extends TriRenderStep
 {
   @be.mapAttribute(be.READWRITE)
-  @type.object.ref("Tr2SwapChain")
+  @type.object.ref.weak("Tr2SwapChain")
   swapChain = null;
 
   /**
