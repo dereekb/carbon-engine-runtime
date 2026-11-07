@@ -1,4 +1,4 @@
-// Not Carbon: `dynamic:/mesh` is ours (operator, 2026-10-25). Carbon's dynamic
+// Not Carbon: `dynamic:/mesh` is ours. Carbon's dynamic
 // constructors (SolidColorTexture.cpp, GradientTexture.cpp) rasterize from the
 // query, and a Tr2Mesh picks a mesh by `meshIndex` after the whole file loads;
 // a path that names one mesh is what lets a consumer that always draws mesh 0,

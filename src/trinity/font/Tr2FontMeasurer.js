@@ -257,7 +257,7 @@ export class Tr2FontMeasurer extends IRoot
    *
    * Carbon bug CE-129, Tr2FontMeasurer.cpp:243-244: Carbon shifts the face's
    * font-unit underline metrics by 6 as if they were 26.6 pixels, so its
-   * underline does not scale with size. Fixed, operator ruling 2026-10-13:
+   * underline does not scale with size. Fixed:
    * the size-scaled estimate is used.
    *
    * @adapted JS Unicode code points replace native wchar_t units. A face
@@ -1075,8 +1075,7 @@ export class Tr2FontMeasurer extends IRoot
    * once outside the run loop and never reset, so when an earlier run was split
    * a later split run's indices are rebased by the earlier run's offset too
    * (AdjustIndicesIfNeeded, cpp:1342-1360) and wrap below zero: Carbon draws
-   * scrambled glyphs there, which nothing can rely on. Fixed, operator ruling
-   * 2026-10-13: each run is rebased on its own.
+   * scrambled glyphs there, which nothing can rely on. Fixed: each run is rebased on its own.
    *
    * @adapted array slices replace pointer ranges, and a renderer that cannot
    *   fit one quad throws instead of looping.

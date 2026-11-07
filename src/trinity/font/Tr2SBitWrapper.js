@@ -297,7 +297,7 @@ export class Tr2SBitWrapper extends IRoot
    * Carbon bug CE-129, Tr2SBit.cpp:80-81: Carbon shifts the FT_Face
    * underline_position/underline_thickness by 6 as if they were 26.6 pixels,
    * but they are font units, so its underline offset and thickness do not
-   * scale with the font size. Fixed, operator ruling 2026-10-13: the
+   * scale with the font size. Fixed: the
    * underline is estimated from the pixel size, which scales.
    *
    * @adapted browsers expose no underline metrics; use the same pixel-size

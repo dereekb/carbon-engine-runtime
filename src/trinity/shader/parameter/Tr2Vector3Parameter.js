@@ -50,7 +50,7 @@ export class Tr2Vector3Parameter extends ITriEffectParameter
    *
    * `null` until first needed: most parameters are never sRGB, so the mirror is
    * created by the first refresh that needs it. This is the one ruled exception
-   * to typed-array defaults (operator, 2026-11-03). Carbon embeds the member,
+   * to typed-array defaults. Carbon embeds the member,
    * initialised to (1, 1, 1) (Tr2Vector3Parameter.cpp).
    *
    * @type {Float32Array|null}

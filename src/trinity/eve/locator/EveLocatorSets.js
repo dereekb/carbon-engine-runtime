@@ -27,7 +27,7 @@ const POSE_BONE_SCRATCH = mat4.create();
  * a locator on binding 0 keeps its authored place. Binding 0 is a mesh bone
  * binding and can be animated - the Bowhead (orecs2_t1) moves its MASTER
  * binding through Normal2Warp, and child meshes on bone 0 were seen to stay
- * behind (operator, 2026-10-14) - so ours applies bone 0 like any other; -1
+ * behind - so ours applies bone 0 like any other; -1
  * stays no bone.
  *
  * @param {Float32Array} outPosition - receives the object-space position

@@ -1541,7 +1541,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
    * declaration, so the still-valid ring buffers keep Carbon from ever re-running
    * OnPrepareResources and the mirrors keep their old size. This port also re-prepares when
    * the vertex declaration is uninitialized, which resizes the buffers and restores the
-   * default texture: a silent fix, kept until the operator rules on CE-126 (reproduce or
+   * default texture: a silent fix, kept until CE-126 is ruled on (reproduce or
    * keep). That pending ruling, not a platform limit, is the reason for the adapted marker.
    *
    * @adapted Retains the pending CE-126 declaration check and renews expiring effect owners.
@@ -1552,7 +1552,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
   {
     // Prepare resources if we don't have valid index or vertex buffers.
     // Carbon quirk, Tr2Sprite2dScene.cpp:2275, CE-126: Carbon tests only the buffers; the
-    // _vertexDecl test is this port's silent fix, kept pending the operator's ruling.
+    // _vertexDecl test is this port's silent fix, kept pending a ruling.
     if (this._vertexDecl === -1 || !this._indexBuffer.IsValid() || !this._vertexBuffer.IsValid())
     {
       this._OnPrepareResources();
@@ -2133,8 +2133,8 @@ export class Tr2Sprite2dScene extends ITr2Scene
 
       // Carbon quirk, Tr2Sprite2dScene.cpp:1103, 1158, 1911, 2569, CE-125: after a skipped
       // draw Carbon's m_currentVertexData keeps advancing while vertexOffset restarts at 0.
-      // This port writes at the count, which silently fixes it; kept until the
-      // operator rules on CE-125.
+      // This port writes at the count, which silently fixes it; kept until
+      // CE-125 is ruled on.
       vertexOffset = this._vertexCount;
       indexOffset = this._indexCount;
     }
@@ -2175,7 +2175,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
    * CCP_ASSERT( !m_captureDisplayList ) (cpp:1023) is compiled out of the shipping build, so
    * inside a capture this flushes into the capture and still draws directly, as Carbon does.
    *
-   * @adapted two silent fixes of Carbon behaviour are kept pending the operator's ruling (the
+   * @adapted two silent fixes of Carbon behaviour are kept pending a ruling (the
    *   reason for the marker): see CE-123 and CE-124 at their sites.
    * @param {Tr2BufferAL} vertices Vertex buffer in the 88-byte Tr2Sprite2dD3DVertex layout.
    * @param {number} vertexCount Number of vertices.
@@ -2192,7 +2192,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
 
     // Carbon quirk, Tr2Sprite2dScene.cpp:1021-1045, CE-124: Carbon binds no
     // textures here, so the draw samples whatever slot-0 SRV was bound last. This port binds
-    // the current textures; a silent fix kept until the operator rules on CE-124.
+    // the current textures; a silent fix kept until CE-124 is ruled on.
     if (this._effect)
     {
       const pass = this._effect.GetPassDescription(0, 0);
@@ -2213,8 +2213,8 @@ export class Tr2Sprite2dScene extends ITr2Scene
 
     // Carbon quirk, Tr2Sprite2dScene.cpp:1034-1042, 1192, CE-123: Carbon draws
     // from the stale ring m_drawCallStartIndex and leaves m_indexCount set afterwards. This
-    // port draws from index 0 and zeroes the index count too; a silent fix kept until the
-    // operator rules on CE-123.
+    // port draws from index 0 and zeroes the index count too; a silent fix kept until
+    // CE-123 is ruled on.
     this._drawCallStartIndex = 0;
 
     if (this._effect) this._effect.Render(this, context);
@@ -2310,7 +2310,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
     // Carbon quirk, Tr2Sprite2dScene.cpp:1103, 1158, CE-125: Carbon calls ResetBufferPointers
     // only inside the draw branch, so a skipped draw (effect not ready, or maxDrawCallsToRender)
     // leaves the write pointers advanced. Write positions here are the counts, so they restart
-    // with them: a silent fix kept until the operator rules on CE-125.
+    // with them: a silent fix kept until CE-125 is ruled on.
     this._vertexCount = this._indexCount = this._transformCurrent = 0;
   }
 

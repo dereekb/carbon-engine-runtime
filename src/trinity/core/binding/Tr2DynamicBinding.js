@@ -175,7 +175,7 @@ export class Tr2DynamicBinding extends INotify
    *
    * @adapted JavaScript has no deterministic destructor, so the holder that
    *   abandons a binding calls this; which owners do is pending the open teardown
-   *   ruling (operator, with TriDevice's registry and plan Q4).
+   *   ruling (with TriDevice's registry and plan Q4).
    * @returns {void}
    */
   Destruct()

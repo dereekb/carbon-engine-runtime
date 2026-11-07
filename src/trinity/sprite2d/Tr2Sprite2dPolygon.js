@@ -95,7 +95,7 @@ export class Tr2Sprite2dPolygon extends Tr2TexturedSpriteObject
    *   Carbon sizes `indexMap` by `m_triangles.size() * 3` but indexes it by vertex index (cpp:71, 86-89), which
    *   writes out of bounds when a vertex index exceeds that size (Carbon bug CE-152, cpp:71). JS cannot reproduce the
    *   undefined behaviour, so an out-of-range slot reads as unmapped, which is what the code evidently intends.
-   *   This is a silent fix, pending the operator's decision (CE-152).
+   *   This is a silent fix, pending a decision (CE-152).
    * @param {Tr2Sprite2dScene} renderer Gathering scene.
    * @returns {void}
    */

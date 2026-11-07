@@ -10,7 +10,7 @@ import { Tr2TexturePipelineStepPack } from "./Tr2TexturePipelineStepPack.js";
  *
  * Carbon's Pack writes BGRA, BGRX or R8. A pair of channels packed into BGRA
  * costs four bytes a texel to carry two; this writes `PIXEL_FORMAT_R8G8_UNORM`
- * at two (operator ruling, 2026-09-24). Carbon's formats pass straight through
+ * at two. Carbon's formats pass straight through
  * to Carbon's step, which is left exactly as Carbon has it.
  *
  * Same records as Carbon's: r, g, b and a are `Tr2TexturePackChannel`s. For RG8

@@ -367,7 +367,7 @@ export class CjsGrannyCurves
    * which its caller admits (Tr2GrannyTrack.cpp:37), and indexes with an
    * undefined int(NaN) for a zero-duration track (GrannyCurveHelpers.h:17-19);
    * ours clamps the end time to the last frame and reads frame 0 for a zero
-   * duration (operator, 2026-10-18).
+   * duration.
    *
    * Adapted: any other frame outside the controls (a negative time) throws a
    * RangeError instead of reading undefined (ruling 11).

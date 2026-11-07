@@ -19,8 +19,7 @@ import { ColorPrefix } from "./solidColorTexture.js";
 export class SolidColorTextureConstructor extends IBlueDynamicResourceConstructor
 {
   /**
-   * A solid colour is four numbers in its own path; kept for good once built
-   * (operator, 2026-09-24).
+   * A solid colour is four numbers in its own path; kept for good once built.
    *
    * @returns {boolean} Always true.
    */

@@ -132,8 +132,8 @@ const shaderObjects = new WeakMap();
  *
  * The tables are shared and the realized objects are per context (multiple
  * contexts are our extension; Carbon has one table and one backend). Only one
- * backend (WebGPU or WebGL2) exists at a time, never one per context
- * (operator rule), so every context realized its objects on that backend. The
+ * backend (WebGPU or WebGL2) exists at a time, never one per context,
+ * so every context realized its objects on that backend. The
  * static `releaseDeviceResources` truncates the tables, which frees every
  * handle number for the next registration, so it must release the objects
  * every context realized under those numbers - not only the calling
@@ -393,8 +393,8 @@ export class Tr2EffectStateManager
    *
    * Wireframe (`SetWireframeRendering`, cpp:801-812). Carbon overrides
    * RS_FILLMODE; neither browser backend has a fill mode (no equivalent of
-   * `glPolygonMode`), so that render-state route cannot be projected. The
-   * operator ruled for LINE TOPOLOGY (route (a), 2026-10-18) over barycentric
+   * `glPolygonMode`), so that render-state route cannot be projected. Ours uses
+   * LINE TOPOLOGY (route (a)) over barycentric
    * edges in the fragment shader:
    *
    *   - this flag is stored here and read by `Tr2RenderContext.SubmitGeometry`;

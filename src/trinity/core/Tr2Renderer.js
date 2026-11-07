@@ -7,7 +7,7 @@
 // HALF STATIC, HALF NOT, AND THE SPLIT IS DATED. Carbon's `Tr2Renderer` is
 // entirely static - 106 of 106 members - and a process-wide singleton.
 //
-// On 2026-09-05 the operator decided ours would be an instance instead. The
+// On 2026-09-05 ours was made an instance instead. The
 // reason that carried the decision was that this runtime supported more than
 // one library instance, each with its own resource manager, and a static
 // renderer would silently make the second one share the first one's frame

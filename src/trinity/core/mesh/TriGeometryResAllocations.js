@@ -307,7 +307,7 @@ const reportedWithoutIndices = new WeakSet();
  * Ours: Carbon draws wireframe through the fill-mode render-state override
  * (Tr2EffectStateManager.cpp:801-812). Neither browser backend has a fill
  * mode, so wireframe is drawn as a line list over this edge buffer instead
- * (operator ruling, route (a)); see Tr2EffectStateManager's wireframe note.
+ * (route (a)); see Tr2EffectStateManager's wireframe note.
  *
  * @param {object} geometry The `TriGeometryRes`.
  * @param {number} meshIndex The mesh.
