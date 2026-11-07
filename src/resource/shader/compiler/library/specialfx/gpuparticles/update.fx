@@ -8,14 +8,20 @@
 
 cbuffer ParticleUpdate : register( b3 )
 {
-    float4 UpdateTime;          // w: dt
+    float4 UpdateTime;          // x: not zero to retire every slot, w: dt
     float4 UpdateOriginShift;   // xyz: the origin shift
     float4 UpdateTurbulenceOffset;
     float4 UpdateTurbulenceAnimation;
 };
 
-Texture3D ParticleNoise : register( t0 );
-SamplerState ParticleNoiseSampler : register( s0 );
+Texture3D NoiseMap : register( t0 );
+SamplerState NoiseMapSampler
+{
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = WRAP;
+    AddressV = WRAP;
+    AddressW = WRAP;
+};
 
 struct UpdateVSOutput
 {
@@ -39,7 +45,7 @@ UpdateVSOutput UpdateVS( uint vertexId : SV_VertexID )
 
 float3 Noise( float3 uvw )
 {
-    return ParticleNoise.SampleLevel( ParticleNoiseSampler, uvw, 0.0 ).xyz;
+    return NoiseMap.SampleLevel( NoiseMapSampler, uvw, 0.0 ).xyz;
 }
 
 UpdatePSOutput UpdatePS( UpdateVSOutput input )
@@ -50,6 +56,11 @@ UpdatePSOutput UpdatePS( UpdateVSOutput input )
     uint4 word1 = ParticleState1.Load( texel );
     output.state0 = word0;
     output.state1 = word1;
+    if( UpdateTime.x != 0.0 )
+    {
+        output.state0.w = asuint( -1.0 );
+        return output;
+    }
 
     float age = WordToFloat( word0.w );
     if( age < 0.0 )

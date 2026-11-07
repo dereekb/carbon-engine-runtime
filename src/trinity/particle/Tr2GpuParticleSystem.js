@@ -36,6 +36,7 @@ import { Tr2VariableStore } from "../core/variable/Tr2VariableStore.js";
 import { Tr2EffectStateManager } from "../shader/Tr2EffectStateManager.js";
 import { MAX_TURBULENCE_LENGTH, Tr2GpuParticleSystemEmitterParamsGpu } from "./Tr2GpuParticleSystemEmitterParamsGpu.js";
 import { TriVariableContentType } from "../generated/trinityCore/enums.js";
+import { Tr2GpuParticleSystemNoCompute } from "./Tr2GpuParticleSystemNoCompute.js";
 
 /** Carbon DEFAULT_MAX_PARTICLES (cpp:19). */
 const DEFAULT_MAX_PARTICLES = 1024 * 1024;
@@ -214,6 +215,9 @@ export class Tr2GpuParticleSystem
 
   @type.object.ref("Tr2Effect")
   setSortParameters = null;
+
+  /** The passes standing in for compute; see `_GetNoCompute`. */
+  _noCompute = null;
 
   /** m_particleData: per-particle data (ParticleData). */
   _particleData = null;
@@ -460,6 +464,14 @@ export class Tr2GpuParticleSystem
   _OnPrepareResources()
   {
     const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
+    const noCompute = this._GetNoCompute();
+    if (noCompute)
+    {
+      noCompute.Prepare(DEFAULT_MAX_PARTICLES, renderContext);
+      this.UpdateGpuEmitterParams(renderContext);
+      return true;
+    }
+
     const { GPU_WRITABLE, DRAW_INDIRECT } = Tr2GpuBuffer.CreationFlags;
     const structured = Tr2GpuStructuredBuffer.CreationFlag;
 
@@ -560,7 +572,8 @@ export class Tr2GpuParticleSystem
 
   Update(time, originShift, renderContext)
   {
-    if (!CheckEffect(this.emit) || !CheckEffect(this.update) || !CheckEffect(this.clear) || !CheckEffect(this.setDrawParameters))
+    const noCompute = this._GetNoCompute();
+    if (noCompute ? !noCompute.IsGood() : !CheckEffect(this.emit) || !CheckEffect(this.update) || !CheckEffect(this.clear) || !CheckEffect(this.setDrawParameters))
     {
       return;
     }
@@ -571,7 +584,7 @@ export class Tr2GpuParticleSystem
 
     if (this._clearRequested)
     {
-      if (!this.DoClear(renderContext)) return;
+      if (noCompute ? !noCompute.Clear(renderContext) : !this.DoClear(renderContext)) return;
       this._clearRequested = false;
       this._turbulenceOffset.fill(0);
     }
@@ -596,6 +609,13 @@ export class Tr2GpuParticleSystem
 
     // No particles left alive.
     if (this._liveTime <= 0) return;
+
+    if (noCompute)
+    {
+      noCompute.Simulate(dt, originShift, this._turbulenceOffset, this._turbulenceAnimation, false, renderContext);
+      this._liveTime -= dt;
+      return;
+    }
 
     this.RunSimulation(dt, originShift, renderContext);
 
@@ -781,6 +801,13 @@ export class Tr2GpuParticleSystem
 
   UpdateGpuEmitterParams(renderContext)
   {
+    const noCompute = this._GetNoCompute();
+    if (noCompute)
+    {
+      noCompute.UpdateEmitterParams(this._emitterParams, this._emitterParamsCount * EMITTER_PARAMS_GPU_SIZE, renderContext);
+      return;
+    }
+
     const buffer = this._emitterParamsBuffer;
 
     if (!buffer.IsValid() || buffer.GetCount() < this._emitterParamsCount)
@@ -805,6 +832,13 @@ export class Tr2GpuParticleSystem
 
   EmitParticles(renderContext)
   {
+    const noCompute = this._GetNoCompute();
+    if (noCompute)
+    {
+      noCompute.Emit(this._emitRequests, this._emitRequestCount, renderContext);
+      return;
+    }
+
     const data = this._emitData;
     const prefix = this._emitPrefix;
 
@@ -919,6 +953,13 @@ export class Tr2GpuParticleSystem
     if (!this.render || !this.display || this._liveTime <= 0) return;
 
     renderContext.GetEffectStateManager().ApplyStandardStates(RenderingMode.RM_ALPHA_ADDITIVE);
+    const noCompute = this._GetNoCompute();
+    if (noCompute)
+    {
+      noCompute.Render(this, renderContext);
+      return;
+    }
+
     this.render.Render(this, renderContext);
   }
 
@@ -933,6 +974,13 @@ export class Tr2GpuParticleSystem
 
   SubmitGeometry(renderContext)
   {
+    const noCompute = this._GetNoCompute();
+    if (noCompute)
+    {
+      noCompute.SubmitGeometry(renderContext);
+      return;
+    }
+
     if (!this._drawParameters.IsValid()) return;
 
     renderContext.SetTopology(Topology.TOP_TRIANGLES);
@@ -1092,6 +1140,19 @@ export class Tr2GpuParticleSystem
   get hasParticles()
   {
     return this.HasParticles();
+  }
+
+  /**
+   * The passes that stand in for compute where the backend has none, or null.
+   *
+   * @cjs Carbon's backends all have compute.
+   * @returns {Tr2GpuParticleSystemNoCompute|null} The passes.
+   */
+  _GetNoCompute()
+  {
+    if (Tr2RenderContext_GetMainThreadRenderContext().GetCaps().SUPPORTS_COMPUTE !== false) return null;
+    this._noCompute ??= new Tr2GpuParticleSystemNoCompute(this);
+    return this._noCompute;
   }
 
   /** The next emit request record, growing the pool when every record is live. */
