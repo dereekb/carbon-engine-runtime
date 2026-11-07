@@ -1701,7 +1701,9 @@ export class CjsFxOutputGLSL
         }
         if (to === "float")
         {
-            return from === "int" ? `intBitsToFloat(${text})` : `uintBitsToFloat(${text})`;
+            const cast = from === "int" ? `intBitsToFloat(${text})` : `uintBitsToFloat(${text})`;
+            // Carbon's table types asfloat of a scalar as float2 (ParserState.cpp:50), and readers truncate it.
+            return argType.width === 1 ? `vec2(${cast})` : cast;
         }
         if (from === "float")
         {
