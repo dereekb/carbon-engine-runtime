@@ -530,7 +530,7 @@ export class EveInstancedMeshManager
    * apart, is invisible to JavaScript, so this name throws rather than
    * guessing from how many arguments a caller passed.
    *
-   * @notSupported Carbon's bare AddMeshGroup (h:113-145). Its two overloads differ in the C++ type of the instance array - `DynamicPerInstanceData*` against `StaticPerInstanceData*` - and 
+   * @notSupported Carbon's bare AddMeshGroup (h:113-145). Its two overloads differ in the C++ type of the instance array - `DynamicPerInstanceData*` against `StaticPerInstanceData*` - and
    * @throws {TypeError} Always.
    */
   AddMeshGroup()
