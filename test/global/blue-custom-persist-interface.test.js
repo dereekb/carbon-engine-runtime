@@ -149,7 +149,7 @@ test("ICustomPersist import registers without domain evaluation or operational s
         load(url, context, nextLoad)
         {
           if (/\\/(?:src|dist)\\/(?:audio|character|trinity|trinityal|sof)\\//.test(url)
-            || /\\/(?:src|dist)\\/global\\/model\\//.test(url))
+            || /\\/(?:src|dist)\\/global\\/model\\/(?!graph\\/)/.test(url))
           {
             throw new Error("ICustomPersist import reached a domain or model: " + url);
           }

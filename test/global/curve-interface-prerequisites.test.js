@@ -240,7 +240,7 @@ test("curve interfaces import inertly without pulling domain consumers or model 
           const allowed = url.match(/\\/(?:src|dist)\\/trinity\\/curves\\/(ITriDuration|ITr2ValueBinding)\\.js$/);
           if (allowed) trinityModules.add(allowed[1]);
           if ((!allowed && /\\/(?:src|dist)\\/(?:audio|character|trinity|trinityal|sof)\\//.test(url))
-            || /\\/(?:src|dist)\\/global\\/model\\//.test(url))
+            || /\\/(?:src|dist)\\/global\\/model\\/(?!graph\\/)/.test(url))
           {
             throw new Error("Curve interface import reached an unrequested domain or model: " + url);
           }

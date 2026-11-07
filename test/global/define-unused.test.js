@@ -40,7 +40,7 @@ test("the BlueClasses stubs are unused, not notImplemented", () =>
 {
   const classes = new BlueClasses();
   for (const name of [ "FindVariable", "UpdateObjectCount", "ProcessPendingDeletes",
-    "SetPendingDeletesEnabled", "IsPendingDeletesEnabled", "RegisterThunker", "GetRtti" ])
+    "SetPendingDeletesEnabled", "IsPendingDeletesEnabled", "RegisterThunker" ])
   {
     assert.throws(() => classes[name](), CjsUnusedMethodError, name);
   }

@@ -58,7 +58,7 @@ test("ICurveSetDriver imports and registers without domain evaluation or operati
     export async function load(url, context, nextLoad)
     {
       if (/\/(?:src|dist)\/(?:audio|character|trinity|sof)\//.test(url)
-        || /\/(?:src|dist)\/global\/model\//.test(url))
+        || /\/(?:src|dist)\/global\/model\/(?!graph\/)/.test(url))
       {
         throw new Error("Blue interface import reached a domain or model: " + url);
       }

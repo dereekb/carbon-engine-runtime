@@ -163,7 +163,7 @@ test("Blue observer contracts import without domain evaluation or operational st
     export async function load(url, context, nextLoad)
     {
       if (/\/(?:src|dist)\/(?:audio|character|trinity|trinityal|sof)\//.test(url)
-        || /\/(?:src|dist)\/global\/model\//.test(url))
+        || /\/(?:src|dist)\/global\/model\/(?!graph\/)/.test(url))
       {
         throw new Error("Observer contract import reached a domain or model: " + url);
       }

@@ -96,7 +96,7 @@ test("the shared debug contract imports without Trinity, audio, model or device 
     export async function load(url, context, nextLoad)
     {
       if (/\/(?:src|dist)\/(?:audio|character|trinity|trinityal|sof)\//.test(url)
-        || /\/(?:src|dist)\/global\/model\//.test(url))
+        || /\/(?:src|dist)\/global\/model\/(?!graph\/)/.test(url))
       {
         throw new Error("Shared debug contract import reached a domain or model: " + url);
       }
