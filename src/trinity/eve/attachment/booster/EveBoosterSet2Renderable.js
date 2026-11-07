@@ -279,6 +279,9 @@ export class EveBoosterSet2Renderable
       this.trailIntensity = 1;
     }
 
+    // Carbon quirk, reproduced (EveBoosterSet2.cpp:383-387): this also skips the minimum
+    // length, so a slow ship with an always-on set draws its whole trail mesh, built for
+    // 200 m and up, crushed into a few metres behind each booster.
     if (boosterSet.alwaysOn)
     {
       this.trailIntensity = 1;
