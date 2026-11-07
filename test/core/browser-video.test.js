@@ -184,7 +184,7 @@ test("WebGPU external frame upload uses straight sRGB copy and leaves byte uploa
   const calls=[];const texture=new CjsWebgpuTextureAL();
   texture._texture={};texture._format="rgba8unorm";texture._gpuUsage=Tr2GpuUsage.RENDER_TARGET;
   texture._webgpu={GetGeneration:()=>1,IsReady:()=>true,GetDevice:()=>({queue:{copyExternalImageToTexture:(...args)=>calls.push(args),writeTexture:(...args)=>calls.push(args)}})};
-  texture._desc={GetWidth:()=>640,GetHeight:()=>360,GetMipWidth:()=>640,GetMipHeight:()=>360,GetType:()=>0};
+  texture._desc={GetWidth:()=>640,GetHeight:()=>360,GetMipWidth:()=>640,GetMipHeight:()=>360,GetType:()=>0,GetArraySize:()=>1,GetTrueMipCount:()=>1};
   const region=Tr2TextureSubresource.create__MipLevel(0),video={};
   assert.equal(texture.UpdateSubresource(region,video,0,0),0);
   assert.equal(calls[0][0].source,video);assert.equal(calls[0][1].premultipliedAlpha,false);

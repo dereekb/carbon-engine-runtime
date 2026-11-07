@@ -5,6 +5,8 @@ import { createHash } from "node:crypto";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
 import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
 import { CjsBlackSchemaRegistry } from "../../npm/dist/blue/formats/black/core/CjsBlackSchemaRegistry.js";
+// Scene construction registers device resources; no device or GPU is created by this import.
+import "../../npm/dist/trinity/core/device/TriDevice.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
 import { Tr2Effect } from "../../npm/dist/trinity/shader/Tr2Effect.js";
 import { TriTextureParameter } from "../../npm/dist/trinity/shader/parameter/TriTextureParameter.js";

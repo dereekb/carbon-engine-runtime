@@ -9,6 +9,10 @@ import { CullMode, ShaderType, Topology } from "../../npm/dist/global/consts/ren
 import { ALResult } from "../../npm/dist/trinityal/index.js";
 import { Tr2RenderContextALWebgl2 } from "../../npm/dist/trinityal/webgl2/index.js";
 import { FakeWebgl2 } from "../trinityal/webgl2/fakeWebgl2.js";
+import { writeGlslBackendBlock } from "../../npm/dist/resource/formats/webgl/core/glslBackendBlock.js";
+
+// An empty output list is what the emitter writes for a pass with no colour output.
+const noOutputs = { backendBlock: { bytes: writeGlslBackendBlock({ stages: { pixel: { stageOutputs: [] } } }) }, registers: [] };
 
 const { Unknown, RenderingMode } = Tr2EffectStateManager;
 
@@ -403,8 +407,8 @@ test("a WebGL2 context's GL shaders and programs are deleted with the realized o
   const states = context.GetEffectStateManager();
   const glsl = source => new TextEncoder().encode(`#version 300 es\n${source}\nvoid main() {}\n`);
   const vertex = Tr2EffectStateManager.registerShader(ShaderType.VERTEX_SHADER, glsl("// esm leak vs"));
-  const pixel = Tr2EffectStateManager.registerShader(ShaderType.PIXEL_SHADER, glsl("// esm leak ps a"));
-  const otherPixel = Tr2EffectStateManager.registerShader(ShaderType.PIXEL_SHADER, glsl("// esm leak ps b"));
+  const pixel = Tr2EffectStateManager.registerShader(ShaderType.PIXEL_SHADER, glsl("// esm leak ps a"), noOutputs);
+  const otherPixel = Tr2EffectStateManager.registerShader(ShaderType.PIXEL_SHADER, glsl("// esm leak ps b"), noOutputs);
   const count = name => calls.filter(call => call[0] === name).length;
   const before = { shaders: count("createShader"), programs: count("createProgram") };
 

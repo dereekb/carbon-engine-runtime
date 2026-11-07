@@ -196,6 +196,7 @@ test("Eve transforms drive particle view state directly", t =>
   particles.maxParticleCount = 1;
   particles.elements.push(Object.assign(new trinity.Tr2ParticleElementDeclaration(), {elementType: 1}));
   particles.Initialize();
+  particles.PrepareResources();
   t.after(() => {particles.ReleaseResources(); ambient.SetRenderContextAL(previousAL);});
   particles.aliveCount = 1;
   particles.aabbMin.set([ -1, -2, -3 ]);
