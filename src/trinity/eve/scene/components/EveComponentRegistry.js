@@ -27,11 +27,9 @@ export class EveComponentRegistry extends IRoot
   #componentCollections = [];
 
   /** m_componentCollectionLoopGuard (mutable std::shared_mutex) */
-  @type.rawStruct("std::shared_mutex")
   componentCollectionLoopGuard = null;
 
-  /** m_registeredEntities (std::vector<EveEntity*>) */
-  @type.list("EveEntity")
+  /** m_registeredEntities (std::vector<EveEntity*>): Carbon exposes no member of this class. */
   registeredEntities = [];
 
   /**
