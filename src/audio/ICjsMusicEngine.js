@@ -2,7 +2,7 @@
 // engine's interface. Wwise plays interactive music inside the SDK, behind the
 // same free `AK::SoundEngine` functions as every other event, so Carbon has no
 // class here. The Web Audio backend routes music events to this engine.
-// Name held for the operator (docs research/audio-backend-interface.md).
+// The name is provisional.
 import { CjsSchema, meta } from "#schema";
 
 /**

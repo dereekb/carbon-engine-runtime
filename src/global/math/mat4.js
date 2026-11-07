@@ -1386,8 +1386,7 @@ const RADIANS = Math.PI / 180;
  * Where longitude zero points, in degrees, added to a placement's longitude
  * before it becomes a direction.
  *
- * The geometry puts longitude 0 on hull +X. Measured against the client
- * (operator, 2026-09-08) that is the hull's LEFT side, so an unshifted angle
+ * The geometry puts longitude 0 on hull +X. Measured against the client, that is the hull's LEFT side, so an unshifted angle
  * runs a quarter turn ahead of the panel's own horizontal axis the whole way
  * round:
  *

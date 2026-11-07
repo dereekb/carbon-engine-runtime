@@ -24,8 +24,7 @@
 // an unknown name throws `InvalidAttributeException` (:99-106). Ours finds any
 // selected dictionary declaration, and skips one that is read-only: our `GetValues`
 // exports every field, read-only ones included, so a round trip must read
-// back what it wrote (operator ruling 2026-09-27; see the research page
-// `blue-values-engine.md`). Selection is owner-first, stored-before-live within
+// back what it wrote. Selection is owner-first, stored-before-live within
 // an owner, with no flag merging or filter fallback. Selected aliases name it too.
 import { CjsSchema, meta } from "#schema";
 import { omitRuntimeValues } from "../schema/CjsSchema.js";

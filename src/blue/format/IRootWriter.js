@@ -10,8 +10,7 @@
 // `BlueMemberIterator` and, with `m_skipDefaults` (on by default), leaves out
 // any member equal to a freshly constructed instance's (IRootWriter.cpp:25-37).
 // Ours writes every declared field, or the persisted ones when
-// `options.persistOnly` asks. DictWriter retains the full shape (operator
-// ruling 2026-09-27; research page `blue-values-engine.md`); YamlWriter opts
+// `options.persistOnly` asks. DictWriter retains the full shape; YamlWriter opts
 // into Carbon's persisted-only traversal and default comparison.
 import { IRootReaderBase } from "./IRootReaderBase.js";
 import { exposure as be } from "#be";

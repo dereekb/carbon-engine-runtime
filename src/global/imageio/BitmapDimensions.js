@@ -42,8 +42,7 @@ import {
  * the interface. The accessors below already existed, so the public fields were
  * a second way to read the same state.
  *
- * The abstraction layer is engine machinery, not authored parameters (operator,
- * 2026-09-05), so nothing here is a knob a human sets. The value TYPES it passes
+ * The abstraction layer is engine machinery, not authored parameters, so nothing here is a knob a human sets. The value TYPES it passes
  * around are a different matter: `Tr2MsaaDesc`, the texture box and subresource,
  * and the pass attachments are `struct`s in Carbon with public members, and stay
  * that way.

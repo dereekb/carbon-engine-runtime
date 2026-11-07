@@ -10,7 +10,7 @@ import * as CcpLog from "../../../global/logging/ccpLog.js";
 /**
  * Authoring metadata safe to publish. Adapted from YamlWriter.cpp:333:
  * Carbon emits every key; private authoring paths can identify a person's
- * machine, so the operator requires an explicit output allow-list.
+ * machine, so output takes an explicit allow-list.
  * Reading metadata is unrestricted; this policy applies only to writing.
  */
 const YAML_WRITER_METADATA_KEYS = new Set([

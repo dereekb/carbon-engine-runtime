@@ -1,8 +1,8 @@
 // Installs the body of an abstract method: one an implementer must supply.
 //
 // `meta.abstract` and `blue.abstract` both record implementation status
-// `abstract` AND install this throwing body (operator ruling, 2026-10-17:
-// "abstract's whole point is it should throw"). The method is still declared
+// `abstract` AND install this throwing body, because an abstract method must
+// throw. The method is still declared
 // at its site exactly as it is called, with Carbon's full parameter list; its
 // body is replaced, so nobody hand-writes the error and no message can drift
 // from a rename.

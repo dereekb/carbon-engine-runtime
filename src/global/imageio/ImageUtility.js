@@ -12,8 +12,7 @@ import { CjsSchema } from "#schema/CjsSchema";
 //
 // Values are read little-endian, as the x86/ARM targets Carbon ships on do.
 //
-// TWO CARBON BUGS ARE FIXED HERE (operator, 2026-09-22: fix image-io defects in
-// our library and report them upstream):
+// TWO CARBON BUGS ARE FIXED HERE, and reported upstream:
 //
 // 1. Carbon's GetPixelColor_BC3 computes the block index and never uses it, so
 //    every pixel is read from block 0 (ImageUtility.cpp:101-110, 130-134).

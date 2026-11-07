@@ -3,10 +3,8 @@
 // Source: blue/src/blue.cpp:333-395 (the Find functions' exposure on the `blue` module).
 //
 // Carbon registers blueexposure's Find functions (Find.h) on the `blue`
-// module; here they are instance methods of the `blue` holder (operator
-// ruling, 2026-10-11) that forward to their bodies, the camelCase statics on
-// BlueClasses (Weka, 2026-11-01: free functions become statics, and
-// blueexposure's BlueClasses is their home). Modules the holder itself imports
+// module; here they are instance methods of the `blue` holder
+// that forward to their bodies, the camelCase statics on BlueClasses. Modules the holder itself imports
 // call the statics: importing the `blue` instance from them would be an
 // import cycle.
 //

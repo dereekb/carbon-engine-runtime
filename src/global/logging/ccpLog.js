@@ -535,5 +535,5 @@ export function SetLogtypeErrIsPrivileged(value)
     return previous;
 }
 
-// Adapted: the operator-requested console default is a removable native echo.
+// Adapted: the console default is a removable native echo.
 RegisterLogEcho(LogToDebugger);

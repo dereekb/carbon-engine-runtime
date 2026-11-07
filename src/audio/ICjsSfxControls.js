@@ -1,7 +1,7 @@
 // CarbonEngineJS extension (no Carbon counterpart): Wwise evaluates an event's
 // switches, states, RTPCs and voice properties inside the SDK. Our SFX engine
 // evaluates them in JavaScript and reads the posting emitter's live values
-// through this interface. Name held for the operator (docs research/audio-backend-interface.md).
+// through this interface. The name is provisional.
 import { CjsSchema, meta } from "#schema";
 
 /**

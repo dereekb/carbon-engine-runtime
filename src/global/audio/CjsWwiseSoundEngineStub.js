@@ -2,7 +2,7 @@
 // It keeps the state Wwise would - banks, game objects and their placement,
 // switches, RTPCs, states, playing IDs - and makes no sound, the way the
 // trinityal stub keeps AL state without a device. Node hosts and tests use it.
-// Name held for the operator (docs research/audio-backend-interface.md).
+// The name is provisional.
 import { CjsSchema } from "#schema";
 import { ICjsWwiseSoundEngine } from "./ICjsWwiseSoundEngine.js";
 

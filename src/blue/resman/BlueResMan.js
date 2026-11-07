@@ -228,8 +228,7 @@ export class BlueResMan
    * @cjs JavaScript cannot see a resource's last reference go, so the
    *   inactivity sweep stands in for Carbon's `WeakRefNotify`
    *   (MotherLode.cpp:329-401), which needs no configuration. Off by default,
-   *   nothing was ever released (operator, 2026-11-02: "Resman should be on
-   *   autopurge by default, in case no-one passes any options").
+   *   nothing was ever released, so it is on, in case no one passes options.
    */
   static defaultAutoPurgePolicy = { intervalMilliseconds: 1000, maxIdleMilliseconds: 30000 };
 
@@ -1606,7 +1605,7 @@ export class BlueResMan
   }
 
   /**
-   * AN OBJECT KNOWS ITS CLASS (operator ruling, 2026-09-28): LoadObject builds
+   * AN OBJECT KNOWS ITS CLASS: LoadObject builds
    * from a registered object builder or a route that hydrates a Target or an
    * Identify class. Plain decoded values are neither a resource nor an object;
    * they are read directly (2026-11-01).
@@ -2302,7 +2301,7 @@ export class BlueResMan
    * marker in the load and prepare queues that
    * `EveSpaceObject2::PushRenderables` waits on through `Tr2Mesh::IsLoading`;
    * one slow resource then holds back every object queued after it. This is
-   * the operator's ccpwgl `Tw2MotherLode.Watch` (fork commit `da5a9786`, 2020)
+   * ccpwgl's `Tw2MotherLode.Watch` (fork commit `da5a9786`, 2020)
    * instead, so each object waits on its own resources only.
    *
    * Every manager update (`UpdateWatched`):

@@ -1,7 +1,7 @@
 // CarbonEngineJS extension (no Carbon counterpart): Wwise evaluates global
 // RTPCs and States inside the SDK. Our shared bus mixer and music engine
 // evaluate them in JavaScript and read the backend's global values through
-// this interface. Name held for the operator (docs research/audio-backend-interface.md).
+// this interface. The name is provisional.
 import { CjsSchema, meta } from "#schema";
 
 /**

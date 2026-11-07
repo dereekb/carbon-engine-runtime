@@ -21,8 +21,7 @@
 // - Diagnostics use CcpLog on the Trinity module channel, matching the
 //   native image library embedded by Trinity. Return values are unchanged.
 //
-// CARBON'S DEFECTS ARE FIXED, NOT REPRODUCED (operator, 2026-09-22: fix the
-// image-io defects in our library and report them upstream). Each fix is marked
+// CARBON'S DEFECTS ARE FIXED, NOT REPRODUCED, and reported upstream. Each fix is marked
 // `diverged:` and reported upstream. Behaviour
 // that is Carbon's design rather than a defect is kept and marked `quirk:`.
 import * as CcpLog from "../logging/ccpLog.js";
