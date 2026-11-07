@@ -4378,6 +4378,25 @@ function classStateMetadata(Constructor, namespace, value)
     SCHEMA_GENERATION += 1;
 }
 
+/**
+ * Replaces a member a class already holds with the unused-method error, at class definition.
+ * @param {Function|Function["prototype"]} target The class, for a static member, or its prototype.
+ * @param {string} key The member's name.
+ */
+function installUnusedMember(target, key)
+{
+    const descriptor = findPropertyDescriptor(target, key);
+    if (!descriptor) return;
+    const thrower = function unusedCarbonMember()
+    {
+        const Constructor = typeof target === "function" ? target : this.constructor;
+        throw new CjsUnusedMethodError(requireRegisteredClassName(Constructor), String(key));
+    };
+    Object.defineProperty(target, key, descriptor.get || descriptor.set
+        ? { ...descriptor, ...(descriptor.get ? { get: thrower } : {}), ...(descriptor.set ? { set: thrower } : {}) }
+        : { ...descriptor, value: thrower });
+}
+
 /** Installs the existing unused-method error without invoking the original implementation. */
 function unusedMethodDecorator()
 {
@@ -4395,16 +4414,7 @@ function unusedMethodDecorator()
                 throw new CjsUnusedMethodError(requireRegisteredClassName(Constructor), String(context.name));
             };
         }
-        const descriptor = findPropertyDescriptor(target, context);
-        if (!descriptor) return;
-        const thrower = function unusedCarbonMember()
-        {
-            const Constructor = typeof target === "function" ? target : this.constructor;
-            throw new CjsUnusedMethodError(requireRegisteredClassName(Constructor), String(context));
-        };
-        Object.defineProperty(target, context, descriptor.get || descriptor.set
-            ? { ...descriptor, ...(descriptor.get ? { get: thrower } : {}), ...(descriptor.set ? { set: thrower } : {}) }
-            : { ...descriptor, value: thrower });
+        installUnusedMember(target, context);
     };
     Object.defineProperty(decorator, DECORATOR_METADATA, { value: getDecoratorMetadata(status) });
     return decorator;
