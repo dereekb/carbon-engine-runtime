@@ -6,6 +6,7 @@ import { IInitialize } from "../../../../../blue/exposure/IInitialize.js";
 import { CjsSchema, type } from "#schema";
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
 import { EveProceduralMethodThresholdParameter } from "./EveProceduralMethodThresholdParameter.js";
+import { IEveVolume } from "../../../volume/IEveVolume.js";
 
 // Carbon BELIST_LOADING (blueexposure IList.h:50): list events raised while a
 // persisted list hydrates carry this flag and must not trigger a re-sort.
@@ -39,7 +40,7 @@ export class EveProceduralMethodThresholds extends IEveProceduralSelectionMethod
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
   @type.list("IEveVolume")
-  debugVolumes = [];
+  debugVolumes = new BlueList(IEveVolume);
 
   /** m_name (BlueSharedString) [READWRITE, PERSIST] */
 

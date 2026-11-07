@@ -50,7 +50,7 @@ export class EveSOFDataHullExtensionBucket extends EveSOFDataHullExtensionPlacem
   /** m_placements (PEveSOFDataHullExtensionPlacementVector) [READ, PERSIST] */
 
   @type.list("EveSOFDataHullExtensionPlacement")
-  placements = [];
+  placements = new BlueList(EveSOFDataHullExtensionPlacement, { className: "EveSOFDataHullExtensionPlacement" });
 
   /** Carbon bucket/group-like discriminator used by the JavaScript runtime. */
   IsBucket()

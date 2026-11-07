@@ -49,6 +49,10 @@ import { IEveSpaceObjectAttachmentOwner } from "../attachment/IEveSpaceObjectAtt
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
 import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
 import { Tr2Light } from "../lights/Tr2Light.js";
+import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
+import { IEveFxAttribute } from "../spaceObject/fxAttributes/IEveFxAttribute.js";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
+import { TriObserverLocal } from "../../core/variable/TriObserverLocal.js";
 
 // Module scratch (read-only zero vector; container recursion forbids mutable
 // module scratch here - see GetBoundingSphere).
@@ -115,10 +119,10 @@ export class EveChildContainer extends EveChildTransform
   objects = new BlueList(IEveSpaceObjectChild);
 
   @type.list("IEveChildTransformModifier")
-  transformModifiers = [];
+  transformModifiers = new BlueList(IEveChildTransformModifier);
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   @type.mat4
   worldTransform = mat4.create();
@@ -158,10 +162,10 @@ export class EveChildContainer extends EveChildTransform
   attachments = new BlueList(IEveSpaceObjectAttachment);
 
   @type.list("TriObserverLocal")
-  observers = [];
+  observers = new BlueList(TriObserverLocal, { className: "TriObserverLocal" });
 
   @type.list("IEveFxAttribute")
-  fxAttributes = [];
+  fxAttributes = new BlueList(IEveFxAttribute);
 
   @type.list("Tr2Light")
   lights = new BlueList(Tr2Light, { className: "Tr2Light" });

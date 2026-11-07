@@ -53,6 +53,7 @@ import { EveDamageOverlayOwnerInfo } from "../overlays/EveDamageOverlayOwnerInfo
 import { EveMeshOverlayEffect } from "../overlays/EveMeshOverlayEffect.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
+import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
 import "./EveChildContainer.js";
 
 // Module scratch for the hot per-frame visibility/shadow paths (allocation
@@ -225,7 +226,7 @@ export class EveChildMesh extends EveChildTransform
   reflectionMode = 3;
 
   @type.list("IEveChildTransformModifier")
-  transformModifiers = [];
+  transformModifiers = new BlueList(IEveChildTransformModifier);
 
   @type.mat4
   worldTransform = mat4.create();
@@ -238,7 +239,7 @@ export class EveChildMesh extends EveChildTransform
   inheritOverlayEffects = true;
 
   @type.list("EveMeshOverlayEffect")
-  overlayEffects = [];
+  overlayEffects = new BlueList(EveMeshOverlayEffect, { className: "EveMeshOverlayEffect" });
 
   @type.object.ref("EveDamageOverlay")
   damageOverlay = null;

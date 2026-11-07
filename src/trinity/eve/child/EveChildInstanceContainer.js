@@ -136,7 +136,7 @@ export class EveChildInstanceContainer extends EveChildTransform
 
   /** m_instances (PIEveSpaceObjectChildVector) [READ] */
   @type.list("IEveSpaceObjectChild")
-  instances = [];
+  instances = new BlueList(IEveSpaceObjectChild);
 
   /** m_locatorSetName (BlueSharedString) [READWRITE, PERSIST, NOTIFY] */
 
@@ -438,7 +438,7 @@ export class EveChildInstanceContainer extends EveChildTransform
   {
     this.UnRegisterComponents();
     this.UnregisterChildren(this.instances);
-    this.instances.length = 0;
+    this.instances.Clear();
   }
 
   /**

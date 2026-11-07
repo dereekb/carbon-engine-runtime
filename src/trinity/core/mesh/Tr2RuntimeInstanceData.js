@@ -17,6 +17,7 @@ import { ITr2InstanceDataInstanceData, ITr2InstanceData } from "./ITr2InstanceDa
 import { ITr2GpuBuffer } from "../ITr2GpuBuffer.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { Tr2DeviceResourceState } from "../device/deviceResourceState.js";
+import { ITr2GenericEmitter } from "../../particle/ITr2GenericEmitter/ITr2GenericEmitter.js";
 
 
 /**
@@ -27,6 +28,7 @@ import { Tr2DeviceResourceState } from "../device/deviceResourceState.js";
 @be.define("Tr2RuntimeInstanceData")
 @be.inherit(ITr2InstanceData, ITr2GpuBuffer, ICopierCustomAssignment, Tr2DeviceResource)
 @be.mapInterface(ITr2InstanceData)
+@be.mapInterface(ITr2GenericEmitter)
 @be.mapInterface(ITr2GpuBuffer)
 @be.mapInterface(ICopierCustomAssignment)
 export class Tr2RuntimeInstanceData

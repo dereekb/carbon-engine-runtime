@@ -18,6 +18,7 @@ import { addChild, removeChild, clearChildren } from "../../../blue/children.js"
 import { EveChildTransform } from "./EveChildTransform.js";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
 
 /** A container of child objects plugged into a socket, forwarding controller events, controller variables and component registration to what it contains. */
 @be.define("EveChildPlug")
@@ -44,7 +45,7 @@ export class EveChildPlug extends EveChildTransform
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveSpaceObjectChild")
-  objects = [];
+  objects = new BlueList(IEveSpaceObjectChild);
 
   /** m_display (bool) [READWRITE, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
@@ -63,7 +64,7 @@ export class EveChildPlug extends EveChildTransform
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)

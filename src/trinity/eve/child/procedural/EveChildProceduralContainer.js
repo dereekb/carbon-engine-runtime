@@ -20,6 +20,8 @@ import { vec4 } from "#math/vec4";
 import { EveChildTransform, applyTransformModifiers } from "../EveChildTransform.js";
 import { EveChildUpdateParams } from "../../EveChildUpdateParams.js";
 import { Tr2Lod } from "../../EveLODHelper.js";
+import { BlueList } from "#blue";
+import { IEveChildTransformModifier } from "../modifiers/IEveChildTransformModifier.js";
 
 /** EveChildProceduralContainer (eve/child/procedural) - generated from schema shapeHash 91d6cbc5.... */
 @be.define({
@@ -80,7 +82,7 @@ export class EveChildProceduralContainer extends EveChildTransform
   /** m_transformModifiers (PIEveChildTransformModifierVector) [READ, PERSIST] */
 
   @type.list("IEveChildTransformModifier")
-  transformModifiers = [];
+  transformModifiers = new BlueList(IEveChildTransformModifier);
 
   /** m_selectedObject (IEveSpaceObjectChildPtr) [READ] */
   @type.object.ref("IEveSpaceObjectChild")

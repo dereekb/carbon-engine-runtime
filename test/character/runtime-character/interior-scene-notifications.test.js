@@ -26,7 +26,7 @@ test('interior scene initialization acquires cubemap and native white shadows an
   // Carbon's constructor also takes the noise texture RenderShadows registers (cpp:178-179).
   assert.equal(manager.requests[2].path,'res:/texture/global/noise.png');
   for(let i=0;i<4;i++)assert.equal(Tr2VariableStore.globalStore().FindVariable(`SpotlightShadow${i}`).GetValue(),s._whiteTexture);
-  assert.deepEqual(s.lightRenderTargets,[]);assert.equal(s._lightDepthStencil,null);
+  assert.equal(s.lightRenderTargets.length,0);assert.equal(s._lightDepthStencil,null);
   CjsSchema.setValues(s,{backgroundCubemapPath:''});assert.equal(s.backgroundCubemapRes,null);assert.equal(manager.requests.length,3);
 });
 
@@ -71,7 +71,7 @@ test('shadow rebuild and final destruction release old AL surfaces exactly once'
   const targetDestroy=t.mock.method(target.GetRenderTarget(),'Destroy'),depthDestroy=t.mock.method(depth.GetDepthStencil(),'Destroy');
   s.SetupShadowMaps();assert.equal(targetDestroy.mock.callCount(),1);assert.equal(depthDestroy.mock.callCount(),1);
   const nextTarget=s.lightRenderTargets[0],nextDepth=s._lightDepthStencil;s.Destruct();s.Destruct();
-  assert.equal(nextTarget.IsValid(),false);assert.equal(nextDepth.IsValid(),false);assert.deepEqual(s.lightRenderTargets,[]);assert.equal(s._lightDepthStencil,null);
+  assert.equal(nextTarget.IsValid(),false);assert.equal(nextDepth.IsValid(),false);assert.equal(s.lightRenderTargets.length,0);assert.equal(s._lightDepthStencil,null);
 });
 
 test('allocation failures leave invalid wrappers and the next rebuild can recover',t=>{

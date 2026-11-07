@@ -5,6 +5,8 @@ import { type } from "#schema";
 import { EveChildMesh } from "./EveChildMesh.js";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
+import { BlueList } from "#blue";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
 
 /**
  * Child mesh that draws a pin on a sphere's surface, contributing the pin's
@@ -36,7 +38,7 @@ export class EveChildSpherePin extends EveChildMesh
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_centerNormal (Vector3) [READWRITE, NOTIFY, PERSIST] */
 

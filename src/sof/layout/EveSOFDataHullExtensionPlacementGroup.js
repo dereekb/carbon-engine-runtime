@@ -28,7 +28,7 @@ export class EveSOFDataHullExtensionPlacementGroup extends IRoot
   /** m_placements (PIEveSOFDataHullExtensionPlacementVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullExtensionPlacement")
-  placements = [];
+  placements = new BlueList(IEveSOFDataHullExtensionPlacement);
 
   /** m_distributionConditions (PIEveSOFDataHullExtensionPlacementDistributionVector) [READ, PERSIST] */
 

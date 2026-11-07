@@ -25,6 +25,7 @@ import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmi
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
 import { Tr2ParticleSystem } from "../../particle/Tr2ParticleSystem.js";
+import { ITr2GenericEmitter } from "../../particle/ITr2GenericEmitter/ITr2GenericEmitter.js";
 
 /** A child that hosts particle systems and emitters, driving their transforms, LOD-based particle budgets, and per-frame visibility and render submission. */
 @be.define({
@@ -117,7 +118,7 @@ export class EveChildParticleSystem extends EveChildTransform
    */
 
   @type.list("ITr2GenericEmitter")
-  particleEmitters = [];
+  particleEmitters = new BlueList(ITr2GenericEmitter);
 
   /**
    * m_particleSystems (PTr2ParticleSystemVector) [READ, PERSIST]

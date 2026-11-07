@@ -7,6 +7,7 @@ import { CjsSchema, type } from "#schema";
 import { EveProceduralMethodCyclingParameter } from "./EveProceduralMethodCyclingParameter.js";
 import { blue, BlueList, CcpTime, IListNotify } from "#blue";
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
+import { IEveVolume } from "../../../volume/IEveVolume.js";
 
 // Carbon BELIST_LOADING (blueexposure IList.h:50): list events raised while a
 // persisted list hydrates carry this flag and must not trigger reselection.
@@ -35,7 +36,7 @@ export class EveProceduralMethodCycling extends IEveProceduralSelectionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveVolume")
-  debugVolumes = [];
+  debugVolumes = new BlueList(IEveVolume);
 
   /** m_startTimeOffset (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

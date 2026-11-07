@@ -30,6 +30,7 @@ import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 import { INotify } from "../../../../blue/exposure/INotify.js";
 import { IListNotify } from "../../../../blue/exposure/IListNotify.js";
 import { CjsStretchRuntime } from "./CjsStretchRuntime.js";
+import { TriCurveSet } from "../../../curves/TriCurveSet.js";
 
 
 /**
@@ -101,7 +102,7 @@ export class EveStretch3 extends IEveFiringEffectElement
   controllers = new BlueList(ITr2Controller);
 
  @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
  @type.object.ref("TriFloat")
   length = new TriFloat();

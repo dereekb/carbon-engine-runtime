@@ -36,6 +36,9 @@ import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
 import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
 import { Tr2Light } from "../lights/Tr2Light.js";
+import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
+import { TriObserverLocal } from "../../core/variable/TriObserverLocal.js";
 
 
 /**
@@ -138,7 +141,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_lights (PTr2LightVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -150,7 +153,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -162,7 +165,7 @@ export class EveEffectRoot2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriObserverLocal")
-  observers = [];
+  observers = new BlueList(TriObserverLocal, { className: "TriObserverLocal" });
 
   /** m_ballRotation (ITriQuaternionFunctionPtr) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)

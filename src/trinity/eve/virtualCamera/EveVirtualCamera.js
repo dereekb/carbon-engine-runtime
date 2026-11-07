@@ -11,6 +11,7 @@ import { type } from "#schema";
 import { BlueList } from "#blue";
 import { EveVirtualCameraBehaviourFloatBase } from "./behaviour/EveVirtualCameraBehaviourFloatBase.js";
 import { EveVirtualCameraBehaviourVector3Base } from "./behaviour/EveVirtualCameraBehaviourVector3Base.js";
+import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 
 
 const SCRUB_INCREMENT_DT = 1 / 60;
@@ -70,10 +71,10 @@ export class EveVirtualCamera extends IRoot
   positionAnchorCenter = vec3.create();
 
   @type.list("IEveSpaceObject2")
-  pointOfInterestAnchors = [];
+  pointOfInterestAnchors = new BlueList(IEveSpaceObject2);
 
   @type.list("IEveSpaceObject2")
-  positionAnchors = [];
+  positionAnchors = new BlueList(IEveSpaceObject2);
 
   @type.float32
   localElapsedTime = 0;

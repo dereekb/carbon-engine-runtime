@@ -17,6 +17,11 @@ import { Tr2VariableStore } from "../../../core/variable/Tr2VariableStore.js";
 import { Tr2OcclusionBuffer } from "./Tr2OcclusionBuffer.js";
 import { TriVariableContentType } from "../../../generated/trinityCore/enums.js";
 import { Tr2Renderer } from "../../../core/Tr2Renderer.js";
+import { EveOccluder } from "./EveOccluder.js";
+import { EveTransform } from "../../spaceObject/EveTransform.js";
+import { ITr2ValueBinding } from "../../../curves/ITr2ValueBinding.js";
+import { ITriFunction } from "../../../../blue/interfaces/ITriFunction.js";
+import { TriCurveSet } from "../../../curves/TriCurveSet.js";
 
 /** Scratch for PrepareRender's negated vectors. */
 const prepareScratch = vec3.create();
@@ -205,42 +210,42 @@ export class EveLensflare
   /** m_backgroundOccluders (PEveOccluderVector) [READ, PERSIST] */
 
   @type.list("EveOccluder")
-  backgroundOccluders = [];
+  backgroundOccluders = new BlueList(EveOccluder, { className: "EveOccluder" });
 
   /** m_occluders (PEveOccluderVector) [READ, PERSIST] */
 
   @type.list("EveOccluder")
-  occluders = [];
+  occluders = new BlueList(EveOccluder, { className: "EveOccluder" });
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_distanceToEdgeCurves (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  distanceToEdgeCurves = [];
+  distanceToEdgeCurves = new BlueList(ITriFunction);
 
   /** m_distanceToCenterCurves (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  distanceToCenterCurves = [];
+  distanceToCenterCurves = new BlueList(ITriFunction);
 
   /** m_radialAngleCurves (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  radialAngleCurves = [];
+  radialAngleCurves = new BlueList(ITriFunction);
 
   /** m_xDistanceToCenter (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  xDistanceToCenter = [];
+  xDistanceToCenter = new BlueList(ITriFunction);
 
   /** m_yDistanceToCenter (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  yDistanceToCenter = [];
+  yDistanceToCenter = new BlueList(ITriFunction);
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST] */
 
@@ -250,7 +255,7 @@ export class EveLensflare
   /** m_bindings (PITr2ValueBindingVector) [READ, PERSIST] */
 
   @type.list("ITr2ValueBinding")
-  bindings = [];
+  bindings = new BlueList(ITr2ValueBinding);
 
   /** m_cameraFactor (float) [READWRITE, PERSIST] */
 
@@ -265,7 +270,7 @@ export class EveLensflare
   /** m_flares (PEveTransformVector) [READ, PERSIST] */
 
   @type.list("EveTransform")
-  flares = [];
+  flares = new BlueList(EveTransform, { className: "EveTransform" });
 
   /** m_update (bool) [READWRITE, PERSIST] */
 

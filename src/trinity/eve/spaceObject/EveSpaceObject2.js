@@ -76,6 +76,11 @@ import { Tr2Light } from "../lights/Tr2Light.js";
 import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
 import { EveSpaceObjectDecal } from "../attachment/decal/EveSpaceObjectDecal.js";
 import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
+import { EveLocator2 } from "../locator/EveLocator2.js";
+import { IEveTransform } from "../IEveTransform.js";
+import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
+import { TriObserverLocal } from "../../core/variable/TriObserverLocal.js";
 
 // Static scratch for the sorted-transparent area pass (allocation rules: hot
 // per-frame path, copy-into, never allocate per call).
@@ -145,7 +150,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveTransform")
-  children = [];
+  children = new BlueList(IEveTransform);
 
   /** m_name (std::string) [READWRITE, NOTIFY, PERSIST]
    * Name identifying the space object.
@@ -181,7 +186,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveCustomMask")
-  customMasks = [];
+  customMasks = new BlueList(EveCustomMask, { className: "EveCustomMask" });
 
   /** m_overlayEffects (PEveMeshOverlayEffectVector) [READ, PERSIST]
    * Mesh overlay effects applied to this hull.
@@ -216,7 +221,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_isPickable (bool) [READWRITE]
    * Whether the object participates in picking.
@@ -338,7 +343,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_controllers (PITr2ControllerVector) [READ, PERSIST]
    * Controllers linked to this object and supplied with its variables.
@@ -356,7 +361,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveLocator2")
-  locators = [];
+  locators = new BlueList(EveLocator2, { className: "EveLocator2" });
 
   /** m_mesh (Tr2MeshBasePtr) [READWRITE, PERSIST]
    * Hull mesh supplying geometry, areas and shader options.
@@ -411,7 +416,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriObserverLocal")
-  observers = [];
+  observers = new BlueList(TriObserverLocal, { className: "TriObserverLocal" });
 
   /** m_worldPosition (Vector3) [READ]
    * Current world position sampled from the translation curve.
@@ -454,7 +459,7 @@ export class EveSpaceObject2 extends EveEntity
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveLocatorSets")
-  locatorSets = [];
+  locatorSets = new BlueList(EveLocatorSets, { className: "EveLocatorSets" });
 
   /** m_activationStrength (float) [READWRITE]
    * Activation value forwarded to children, lights and shader data.
@@ -3522,7 +3527,7 @@ export class EveSpaceObject2 extends EveEntity
    */
   ClearLocatorSets()
   {
-    this.locatorSets.length = 0;
+    this.locatorSets.Clear();
     this.InvalidateMergedLocators("structure");
   }
 

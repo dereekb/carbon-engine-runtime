@@ -71,6 +71,11 @@ import "./EveSpaceSceneRenderDriver.js";
 import { EveSpaceScenePerThreadAccumulator } from "./EveSpaceScenePerThreadAccumulator.js";
 import { Tr2Effect } from "../../shader/Tr2Effect.js";
 import { trinity } from "../../CjsTrinity.js";
+import { EveDistanceField } from "../EveDistanceField.js";
+import { EveLensflare } from "../effect/lensflare/EveLensflare.js";
+import { EveSceneStaticParticles } from "../particles/static/EveSceneStaticParticles.js";
+import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
 
 
 /** VISUALIZER_EFFECT_PATH (EveSpaceScene.cpp:124-132), indexed by EveVisualizeMethod. */
@@ -426,7 +431,7 @@ export class EveSpaceScene
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_defaultDiffuseRoughness (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -456,7 +461,7 @@ export class EveSpaceScene
   /** m_distanceFields (PEveDistanceFieldVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("EveDistanceField")
-  distanceFields = [];
+  distanceFields = new BlueList(EveDistanceField, { className: "EveDistanceField" });
 
   /** m_backgroundEffect (Tr2EffectPtr) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -503,13 +508,13 @@ export class EveSpaceScene
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveLensflare")
-  lensflares = [];
+  lensflares = new BlueList(EveLensflare, { className: "EveLensflare" });
 
   /** m_externalParameters (PTr2ExternalParameterVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_fogMax (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -520,7 +525,7 @@ export class EveSpaceScene
   /** m_staticParticles (PEveSceneStaticParticlesVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("EveSceneStaticParticles")
-  staticParticles = [];
+  staticParticles = new BlueList(EveSceneStaticParticles, { className: "EveSceneStaticParticles" });
 
   /** m_debugRenderer (Tr2DebugRendererPtr) [READWRITE] */
   @be.mapAttribute(be.READWRITE)

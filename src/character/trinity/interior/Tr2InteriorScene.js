@@ -50,6 +50,7 @@ import { TriView } from "../../../trinity/core/view/TriView.js";
 import { TriProjection } from "../../../trinity/core/view/TriProjection.js";
 import { Tr2InteriorLightSource } from "./Tr2InteriorLightSource.js";
 import { Tr2SkinnedObject } from "../trinityCore/Tr2SkinnedObject.js";
+import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
 
 /** RenderShadows' light up vector (cpp:744). */
 const Z_UP = vec3.fromValues(0, 0, 1);
@@ -189,7 +190,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_renderShadows (bool) [READWRITE, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.NOTIFY)
@@ -278,7 +279,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
   /** m_lightRenderTargets (PTr2RenderTargetVector) [READ] */
   @be.mapAttribute(be.READ)
   @type.list("Tr2RenderTarget")
-  lightRenderTargets = [];
+  lightRenderTargets = new BlueList(Tr2RenderTarget, { className: "Tr2RenderTarget" });
 
   /** m_sunDiffuseColor (Color) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
@@ -1311,7 +1312,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
   SetupShadowMaps(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
   {
     for (const target of this.lightRenderTargets) target.Destroy();
-    this.lightRenderTargets.length = 0;
+    this.lightRenderTargets.Clear();
     for (let i = 0; i < this.lights.length && i < this.shadowCount; i++)
     {
       const target = new Tr2RenderTarget();
@@ -1479,7 +1480,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
   Destruct()
   {
     for (const target of this.lightRenderTargets) target.Destroy();
-    this.lightRenderTargets.length = 0;
+    this.lightRenderTargets.Clear();
     if (this._lightDepthStencil) this._lightDepthStencil.Destroy();
     this._lightDepthStencil = null;
     this.backgroundCubemapRes = null;

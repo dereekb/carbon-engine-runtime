@@ -9,6 +9,9 @@ import { quat } from "#math/quat";
 import { sph3 } from "#math/sph3";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
+import { BlueList } from "#blue";
+import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";
+import { ITriFunction } from "../../../blue/interfaces/ITriFunction.js";
 
 /**
  * A stretched link between a shield hull and an arc target: it orients itself
@@ -36,12 +39,12 @@ export class EveChildLink extends EveChildMesh
   /** m_linkStrengthCurves (PITriFunctionVector) [READ, PERSIST] */
 
   @type.list("ITriFunction")
-  linkStrengthCurves = [];
+  linkStrengthCurves = new BlueList(ITriFunction);
 
   /** m_linkStrengthBindings (PITr2ValueBindingVector) [READ, PERSIST] */
 
   @type.list("ITr2ValueBinding")
-  linkStrengthBindings = [];
+  linkStrengthBindings = new BlueList(ITr2ValueBinding);
 
   /** m_linkBarrier (float) [READWRITE] */
   @type.float32

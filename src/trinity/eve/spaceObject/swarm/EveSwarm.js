@@ -22,6 +22,7 @@ import { vec4 } from "#math/vec4";
 import { EveSwarmRenderable } from "./EveSwarmRenderable.js";
 import { SwarmVehicle } from "./SwarmVehicle.js";
 import { SwarmVehicleDebug } from "./SwarmVehicleDebug.js";
+import { BlueList } from "#blue";
 
 /** Carbon BoundingBoxInitialize's FLT_MAX (Utilities/BoundingBox.cpp:118-127). */
 const FLT_MAX = 3.4028234663852886e38;
@@ -81,11 +82,11 @@ export class EveSwarm extends EveShip2
 {
 
   /** CPU SwarmVehicle state; live draw resources remain renderer-owned. */
-  @type.list("SwarmVehicle")
+  @type.array("SwarmVehicle")
   vehicles = [];
 
   @type.list("EveSwarmRenderable")
-  renderables = [];
+  renderables = new BlueList(EveSwarmRenderable, { className: "EveSwarmRenderable" });
 
   @type.int32
   targetIndex = 0;

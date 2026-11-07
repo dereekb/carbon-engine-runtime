@@ -5,6 +5,8 @@ import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { blue, EnumRegistrationType } from "#blue";
+import { BlueList } from "#blue";
+import { Tr2PointLight } from "../../eve/lights/Tr2PointLight.js";
 
 
 // Secondary lighting: light from one primary source reflected off "secondary
@@ -111,7 +113,7 @@ export class Tr2ShLightingManager extends IRoot
   /** m_lights (PTr2PointLightVector) [READ, PERSIST] */
 
   @type.list("Tr2PointLight")
-  lights = [];
+  lights = new BlueList(Tr2PointLight, { className: "Tr2PointLight" });
 
   /** m_primaryIntensity (float) [READWRITE, PERSIST] */
 

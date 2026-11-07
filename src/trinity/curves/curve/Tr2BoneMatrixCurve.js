@@ -5,7 +5,7 @@
 import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { isArrayLike } from "#utils/is";
-import { ITriFunction, ITriCurveLength, IInitialize } from "#blue";
+import { BlueList, ITriFunction, ITriCurveLength, IInitialize } from "#blue";
 import { type } from "#schema";
 import { Tr2MatrixKey } from "../key/Tr2MatrixKey.js";
 
@@ -129,7 +129,7 @@ export class Tr2BoneMatrixCurve extends ITriFunction
    * @type {Tr2MatrixKey[]}
    */
   @type.list("Tr2MatrixKey")
-  keys = [];
+  keys = new BlueList(Tr2MatrixKey, { className: "Tr2MatrixKey" });
 
   /**
    * Additional transform applied in bone-local space before the bone and world transforms (native Matrix m_transform).

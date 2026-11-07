@@ -16,6 +16,8 @@ import { CjsCharacterRigBinding } from "../../controls/CjsCharacterRigBinding.js
 import { Tr2SkinnedObjectLod } from "./Tr2SkinnedObjectLod.js";
 import { Obb } from "../../../trinity/utilities/Obb.js";
 import { ITr2Renderable } from "../../../trinity/core/ITr2Renderable.js";
+import { BlueList } from "#blue";
+import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
 
 /**
  * Skinned character object managing whole-model LOD selection and an immediate
@@ -249,7 +251,7 @@ export class Tr2SkinnedObject extends IRoot
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_maxBounds (Vector3) [READWRITE, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)

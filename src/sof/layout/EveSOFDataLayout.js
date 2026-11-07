@@ -5,6 +5,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 import { type } from "#schema";
 import { BlueList } from "#blue";
 import { EveSOFDataDistributionDepletionCounter } from "./EveSOFDataDistributionDepletionCounter.js";
+import { IEveSOFDataHullExtensionPlacement } from "./IEveSOFDataHullExtensionPlacement.js";
 
 /** Defines a named, seeded top-level layout with placements, counters, and randomization policy. */
 @be.define({
@@ -35,7 +36,7 @@ export class EveSOFDataLayout extends IRoot
   /** m_placements (PIEveSOFDataHullExtensionPlacementVector) [READ, PERSIST] */
 
   @type.list("IEveSOFDataHullExtensionPlacement")
-  placements = [];
+  placements = new BlueList(IEveSOFDataHullExtensionPlacement);
 
   /** m_randomizeSeedOnLoad (bool) [READWRITE, PERSIST] */
 

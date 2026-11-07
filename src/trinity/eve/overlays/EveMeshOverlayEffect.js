@@ -15,6 +15,7 @@ import { Tr2RenderBatch, TriRenderBatchAreaBlock } from "../../core/batch/TriRen
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { CarbonVertexElements } from "../../core/vertex/vertexUsage.js";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { Tr2Effect } from "../../shader/Tr2Effect.js";
 
 
 /**
@@ -51,19 +52,19 @@ export class EveMeshOverlayEffect extends IRoot
   curveSet = null;
 
   @type.list("Tr2Effect")
-  additiveEffects = [];
+  additiveEffects = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   @type.list("Tr2Effect")
-  decalEffects = [];
+  decalEffects = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   @type.list("Tr2Effect")
-  distortionEffects = [];
+  distortionEffects = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   @type.list("Tr2Effect")
-  opaqueEffects = [];
+  opaqueEffects = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   @type.list("Tr2Effect")
-  transparentEffects = [];
+  transparentEffects = new BlueList(Tr2Effect, { className: "Tr2Effect" });
 
   @type.boolean
   update = true;

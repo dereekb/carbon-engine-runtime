@@ -15,6 +15,7 @@ import { vec3 } from "#math/vec3";
 import { EveChildUpdateParams } from "../EveChildUpdateParams.js";
 import { PlacementDataWithIdentifier } from "../PlacementDataWithIdentifier.js";
 import { DistributionEntityLifeTimeEvent } from "./attributeModifiers/enums.js";
+import { IEveDistributionSpawnModifier } from "./spawnModifiers/IEveDistributionSpawnModifier.js";
 
 /** Manages an authored placement pool and updates its live entities through placement generators, spawners, and lifetime modifiers. */
 @be.define("EveBaseDistributionMethod")
@@ -86,7 +87,7 @@ export class EveBaseDistributionMethod extends IEveDistributionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("IEveDistributionSpawnModifier")
-  spawnModifiers = [];
+  spawnModifiers = new BlueList(IEveDistributionSpawnModifier);
 
   /** m_distributionSpawners (PIEveDistributionSpawnerVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)

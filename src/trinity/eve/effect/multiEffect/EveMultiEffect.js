@@ -13,6 +13,8 @@ import { ITr2Controller } from "../../../controllers/ITr2Controller/ITr2Controll
 import { ITr2ControllerOwner } from "../../../controllers/ITr2ControllerOwner.js";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 import { BLUELISTEVENT } from "#consts/blue";
+import { Tr2ExternalParameter } from "../../../core/binding/Tr2ExternalParameter.js";
+import { TriCurveSet } from "../../../curves/TriCurveSet.js";
 
 /**
  * A named bundle of curve sets, controllers and dynamic bindings that animates
@@ -54,12 +56,12 @@ export class EveMultiEffect extends IRoot
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_externalParameters (PTr2ExternalParameterVector) [READ, PERSIST] */
 
   @type.list("Tr2ExternalParameter")
-  externalParameters = [];
+  externalParameters = new BlueList(Tr2ExternalParameter, { className: "Tr2ExternalParameter" });
 
   /** m_parameters (PEveMultiEffectParameterVector) [READ, PERSIST] */
 

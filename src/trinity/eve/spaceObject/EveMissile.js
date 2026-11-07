@@ -15,6 +15,7 @@ import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { EveLODHelper } from "../EveLODHelper.js";
 import { EveSpaceObject2 } from "./EveSpaceObject2.js";
 import { EveMissileWarhead } from "./EveMissileWarhead.js";
+import { BlueList } from "#blue";
 
 
 /**
@@ -39,7 +40,7 @@ import { EveMissileWarhead } from "./EveMissileWarhead.js";
 })
 export class EveMissile extends EveSpaceObject2
 {
-  @type.list("EveMissileWarhead") warheads = [];
+  @type.list("EveMissileWarhead") warheads = new BlueList(EveMissileWarhead, { className: "EveMissileWarhead" });
   @type.boolean updateWarheads = true;
   @type.object.ref.weak("ITriTargetable") target = null;
   @type.float32 targetRadius = 0;

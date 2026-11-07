@@ -24,6 +24,8 @@ import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
 import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { Tr2DeviceResourceState } from "../../core/device/deviceResourceState.js";
+import { BlueList } from "#blue";
+import { IEveSpaceObject2 } from "../IEveSpaceObject2.js";
 
 /** BulletStormVertex (cpp:20-23): one float corner id. */
 const CORNER_STRIDE = 4;
@@ -118,7 +120,7 @@ export class EveChildBulletStorm extends EveSpaceObjectChild
   /** m_targetObjects (PIEveSpaceObject2Vector) [READ, NOTIFY] */
 
   @type.list("IEveSpaceObject2")
-  targetObjects = [];
+  targetObjects = new BlueList(IEveSpaceObject2);
 
   /** m_objectCount (unsigned int) [READ] */
   @type.uint32

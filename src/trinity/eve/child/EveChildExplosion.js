@@ -15,6 +15,7 @@ import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { Tr2SphereShapeAttributeGenerator } from "../../particle/attribute/Tr2SphereShapeAttributeGenerator.js";
+import { BlueList } from "#blue";
 
 /** A container child that sequences and spawns local and global explosion instances over time from authored transforms and delays. */
 @be.define({
@@ -120,7 +121,7 @@ export class EveChildExplosion extends EveChildContainer
   /** m_globalExplosions (PIEveSpaceObjectChildVector) [READ, PERSIST] */
 
   @type.list("IEveSpaceObjectChild")
-  globalExplosions = [];
+  globalExplosions = new BlueList(IEveSpaceObjectChild);
 
   /** m_localExplosionIntervalFactor (float) [READWRITE, PERSIST] */
 
@@ -153,7 +154,7 @@ export class EveChildExplosion extends EveChildContainer
   /** m_localExplosions (PIEveSpaceObjectChildVector) [READ, PERSIST] */
 
   @type.list("IEveSpaceObjectChild")
-  localExplosions = [];
+  localExplosions = new BlueList(IEveSpaceObjectChild);
 
   /** m_localExplosionInterval (float) [READWRITE, PERSIST] */
 

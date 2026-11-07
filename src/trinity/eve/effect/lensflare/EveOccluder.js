@@ -8,6 +8,8 @@ import { EffectKeyGenerator, TriRenderBatchAccumulator } from "../../../core/bat
 import { Tr2VariableStore } from "../../../core/variable/Tr2VariableStore.js";
 import { TriVariableContentType } from "../../../generated/trinityCore/enums.js";
 import { EveUpdateContext } from "../../EveUpdateContext.js";
+import { BlueList } from "#blue";
+import { EveTransform } from "../../spaceObject/EveTransform.js";
 
 /** The bits of a uint32 read as a float32: Carbon's `*reinterpret_cast<float*>( &bufferOffset )`. */
 const bitsAsFloat = value => new Float32Array(new Uint32Array([ value >>> 0 ]).buffer)[0];
@@ -36,7 +38,7 @@ export class EveOccluder extends IRoot
   /** m_sprites (PEveTransformVector) [READ, PERSIST] */
 
   @type.list("EveTransform")
-  sprites = [];
+  sprites = new BlueList(EveTransform, { className: "EveTransform" });
 
   /** m_name (std::string) [READWRITE, PERSIST] */
 

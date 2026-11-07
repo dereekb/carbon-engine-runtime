@@ -171,7 +171,7 @@ export class CjsIncarnaEmulator
 
     const layout = blue.classes.CreateInstanceFromName("EveSOFDataLayout");
     layout.name = name;
-    layout.placements = [ ...placements.keys() ].map(hullName => CjsIncarnaEmulator.placement(hullName));
+    layout.placements.ReplaceItems([ ...placements.keys() ].map(hullName => CjsIncarnaEmulator.placement(hullName)));
     this._dataMgr.UpdateLayout(name, layout);
 
     return CjsIncarnaEmulator.assemblyDna(name, faction, race);

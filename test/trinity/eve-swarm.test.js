@@ -177,7 +177,7 @@ test("RemoveSwarmer swap-pops the vehicle but erases the renderable (Carbon quir
   const removed = swarm.RemoveSwarmer();
   assert.deepEqual(Array.from(removed), [ 7, 8, 9 ]);
   assert.deepEqual(swarm.vehicles, [ v2, v1 ]);
-  assert.deepEqual(swarm.renderables, [ r1, r2 ]);
+  assert.deepEqual(Array.from(swarm.renderables), [ r1, r2 ]);
   assert.equal(r0.owner, null);
   assert.equal(swarm.count, 2);
 });
@@ -193,7 +193,7 @@ test("PushRenderables pushes the fighters, not the swarm or its children", async
   swarm._isMeshVisible = true;
   const out = [];
   swarm.PushRenderables(out);
-  assert.deepEqual(out, swarm.renderables);
+  assert.deepEqual(out, Array.from(swarm.renderables));
 });
 
 test("GetTurretTransform: a turret set rides the fighter its swarm ID names", () =>

@@ -12,6 +12,7 @@ import { TriTextureRes } from "#trinity/resources/texture";
 import { Tr2HostBitmap } from "../../core/Tr2HostBitmap.js";
 import { EveCloudVolumeBall } from "./EveCloudVolumeBall.js";
 import { ITr2DebugRenderer2, Tr2DebugColor, Tr2DebugObjectReference } from "#interfaces";
+import { TriCurveSet } from "../../curves/TriCurveSet.js";
 
 const MAX_FRAMES = 4;
 const Status = Object.freeze({ Working: 0, StopRequested: 1, DataReady: 2, Aborted: 3 });
@@ -42,7 +43,7 @@ export class EveCloudEditableVolume
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
   @type.list("TriCurveSet")
-  curveSets = [];
+  curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
 
   /** m_animated (bool) [READWRITE, PERSIST, NOTIFY] */
 

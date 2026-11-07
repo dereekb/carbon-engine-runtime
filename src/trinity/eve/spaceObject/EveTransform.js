@@ -33,6 +33,7 @@ import { ITr2GenericEmitterUpdateArguments } from "../../particle/ITr2GenericEmi
 import { BlueList } from "#blue";
 import { Tr2ParticleSystem } from "../../particle/Tr2ParticleSystem.js";
 import { TriObserverLocal } from "../../core/variable/TriObserverLocal.js";
+import { ITr2GenericEmitter } from "../../particle/ITr2GenericEmitter/ITr2GenericEmitter.js";
 
 // Static scratch for the singular-world patch fixup (allocation rules: hot
 // per-object path, copy-into, never allocate per call).
@@ -85,7 +86,7 @@ export class EveTransform extends Tr2Transform
    */
 
   @type.list("IEveTransform")
-  children = [];
+  children = new BlueList(IEveTransform);
 
   /**
    * m_overrideBoundsMin (Vector3) [READWRITE, PERSIST]
@@ -115,7 +116,7 @@ export class EveTransform extends Tr2Transform
    */
 
   @type.list("ITr2GenericEmitter")
-  particleEmitters = [];
+  particleEmitters = new BlueList(ITr2GenericEmitter);
 
   /**
    * m_particleSystems (PTr2ParticleSystemVector) [READ, PERSIST]
