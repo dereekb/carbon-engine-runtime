@@ -53,7 +53,7 @@ export class CjsGraphTypeList
 
     if (source === list) return false;
     if (edge.kind === "embed") return this._setRows(list, source, edge.type, options);
-    if (list.length === 0 && source.length === 0) return false;
+    if (list.length === 0 && source.length === 0 && !CjsGraph.isLoadingList(options)) return false;
     if (!CjsGraph.isWritingAll(options) && CjsGraph.isListLike(list, source, edge.type, options)) return false;
 
     const items = new Array(source.length); // alloc: the change record, and the new contents.

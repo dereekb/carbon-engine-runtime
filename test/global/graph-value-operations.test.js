@@ -1287,3 +1287,43 @@ test("-0 and 0 are the same value in both comparisons", () =>
   assert.equal(float.IsExactEqual(NaN, NaN), true);
   assert.equal(float.IsExactEqual(1, 1 + 1e-6), false);
 });
+
+test("a fresh load of an empty mapped list still replaces it, because ReadList always sends LOADFINISHED", () =>
+{
+  const built = CjsGraph.from(Listed, { mapped: [] });
+  assert.deepEqual(built.mapped.calls, [ 0 ]);
+
+  const held = new Listed();
+  CjsGraph.set(held, { mapped: [] });
+  assert.deepEqual(held.mapped.calls, [], "a live set of an equal list is no change");
+});
+
+test("copy tells every changed PERSIST member, whether or not it is NOTIFY, as Copier does", () =>
+{
+  const source = watched("a"), target = watched("a");
+  source.quiet = 5;
+
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), [ [ "OnModified", "a", "quiet" ] ]);
+});
+
+test("copy tells a new child only what differs from its defaults", () =>
+{
+  const source = watched("a"), target = watched("a");
+  source.child = watched("kid");
+
+  assert.deepEqual(told(() => CjsGraph.copy(source, target)), [ [ "OnModified", "kid", "name" ], [ "OnModified", "a", "child" ] ]);
+});
+
+test("copy sends what AssignTo does: LOADFINISHED for items on an ordinary list, and nothing for an empty one", () =>
+{
+  const LOADFINISHED = 6;
+  const source = new Listed(), target = new Listed();
+  source.plain.push(leaf("a"), leaf("b"));
+
+  CjsGraph.copy(source, target);
+  assert.deepEqual(target.events, [ [ LOADFINISHED, 0, null, 2 ] ]);
+
+  const emptied = new Listed();
+  CjsGraph.copy(new Listed(), emptied);
+  assert.deepEqual(emptied.events, []);
+});

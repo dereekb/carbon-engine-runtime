@@ -458,6 +458,16 @@ export class CjsGraph
     return options.skipEquality || options.creating || options.operation === GraphOperation.COPY;
   }
 
+  /**
+   * Whether a list is being loaded, which sends LOADFINISHED even when it is empty.
+   * Modelled on: DictReader::ReadList (blue/src/DictReader.cpp:471-475).
+   * @cjs A copy is AssignTo, which only sends it for items (BlueListUtil.h:542).
+   */
+  static isLoadingList(options)
+  {
+    return options.creating && options.operation !== GraphOperation.COPY;
+  }
+
   /** Whether a bag on a held reference reads into that object; a copy makes a new one. @cjs */
   static isReadingInto(options)
   {
@@ -602,7 +612,8 @@ export class CjsGraph
 
     const members = this._getMemberTable(info, GraphOperation.SET, options).byName;
     const names = Object.keys(values);
-    const tracking = !options.creating;
+    const copying = options.operation === GraphOperation.COPY;
+    const tracking = !options.creating || copying;
     let changes = false;
     let nested = null;
 
@@ -649,12 +660,13 @@ export class CjsGraph
       if (member.edge === null) continue;
       if (options.idMap !== null) this._addRecorded(changes, name, member, options);
 
-      // A nested bag is the child's own set: only the child's completion tells of it.
-      if (!member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
+      // A nested bag is the child's own set: only the child's completion tells of it. Copier
+      // tells the owner too: the embedded object's bytes differ (Copier.cpp:170-190).
+      if (!copying && !member.edge.collection && result !== true && this.isPlain(result)) (nested ??= []).push(name);
     }
 
     if (changes !== false || options.creating || options.initialize)
-      this._addCompletion(object, info, changes, nested, options.creating ? values : null, options);
+      this._addCompletion(object, info, changes, nested, options.creating && !copying ? values : null, options);
 
     return changes;
   }
@@ -675,8 +687,12 @@ export class CjsGraph
     return true;
   }
 
-  /** Fires OnModified for the NOTIFY members among names. @cjs Carbon's per-member INotify. */
-  static _notify(object, info, names)
+  /**
+   * Fires OnModified for the NOTIFY members among names, or for every name.
+   * @cjs Carbon's per-member INotify. Copier takes no NOTIFY flag (Copier.cpp:190), so a copy
+   * passes all.
+   */
+  static _notify(object, info, names, all = false)
   {
     if (!info.declared.notify) return;
 
@@ -684,7 +700,7 @@ export class CjsGraph
     {
       const candidates = info.compiled.byName[names[i]];
       if (!candidates) throw new TypeError(`Unknown graph member: ${info.declared.name}.${names[i]}`);
-      if (candidates[0].notify === true) object.OnModified(names[i]);
+      if (all || candidates[0].notify === true) object.OnModified(names[i]);
     }
   }
 
@@ -833,7 +849,7 @@ export class CjsGraph
       if (entry.fill !== null) this._fill(entry, options);
     }
 
-    for (const edit of options.listEdits) this._replaceList(edit.owner, edit.list, edit.items);
+    for (const edit of options.listEdits) this._replaceList(edit.owner, edit.list, edit.items, options);
 
     for (let i = 0; i < options.recorded.length; i += 2)
     {
@@ -842,7 +858,7 @@ export class CjsGraph
 
     if (options.skipEvents) return;
 
-    for (const entry of options.completions.values()) this._complete(entry);
+    for (const entry of options.completions.values()) this._complete(entry, options);
   }
 
   /**
@@ -851,7 +867,7 @@ export class CjsGraph
    * (DictReader.cpp:162-167, Copier.cpp:141-145).
    * @cjs On a live set, only members it changed are told.
    */
-  static _complete(entry)
+  static _complete(entry, options)
   {
     const { object, info } = entry;
 
@@ -862,7 +878,7 @@ export class CjsGraph
     }
 
     const changes = entry.values ?? this._getOwnChanges(entry.changes, entry.nested);
-    if (changes !== false) this._notify(object, info, this._getMemberNames(changes));
+    if (changes !== false) this._notify(object, info, this._getMemberNames(changes), options.operation === GraphOperation.COPY);
   }
 
   /** The member names in a bag, without _type, _id and _ref. @cjs */
@@ -880,21 +896,33 @@ export class CjsGraph
 
   /**
    * Writes a list that waited: a mapped list through its own ReplaceItems, and an ordinary array on
-   * a list-notified owner with the owner's events.
+   * a list-notified owner with the owner's events. A copy sends what AssignTo does: the removal,
+   * then LOADFINISHED only for items.
    * Modelled on: DictReader::ReadList (blue/src/DictReader.cpp:427-476).
+   * Modelled on: BlueList_Impl::AssignTo (blueexposure/include/BlueListUtil.h:506-545).
    * @cjs UNLOADSTART runs with the old items still in the list.
    */
-  static _replaceList(owner, list, items)
+  static _replaceList(owner, list, items, options)
   {
+    const copying = options.operation === GraphOperation.COPY;
+
     if (Object.getPrototypeOf(list) !== Array.prototype)
     {
-      list.ReplaceItems(items);
+      if (copying && items.length === 0) list.Remove(-1);
+      else list.ReplaceItems(items);
       return;
     }
 
     if (list.length) owner.OnListModified(BLUELISTEVENT.BELIST_UNLOADSTART, 0, 0, null, list);
 
     list.length = 0;
+
+    if (copying)
+    {
+      for (let i = 0; i < items.length; i++) list.push(items[i]);
+      if (items.length) owner.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, list);
+      return;
+    }
 
     for (let i = 0; i < items.length; i++)
     {
