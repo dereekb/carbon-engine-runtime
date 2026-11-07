@@ -1,7 +1,7 @@
 import { exposure as be } from "#be";
 import { random as carbonRandom } from "#math/random";
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodRandom.h
-import { IsMatch, INotify, IListNotify } from "#blue";
+import { BlueList, IsMatch, INotify, IListNotify } from "#blue";
 import { IInitialize } from "../../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
@@ -40,7 +40,7 @@ export class EveProceduralMethodRandom extends IEveProceduralSelectionMethod
   /** m_parameters (PEveProceduralMethodRandomParameterVector) [READ, PERSIST] */
 
   @type.list("EveProceduralMethodRandomParameter")
-  parameters = [];
+  parameters = new BlueList(EveProceduralMethodRandomParameter, { className: "EveProceduralMethodRandomParameter" });
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
@@ -69,6 +69,17 @@ export class EveProceduralMethodRandom extends IEveProceduralSelectionMethod
 
   @type.float32
   seed_temp = -1;
+
+  /**
+   * Carbon EveProceduralMethodRandom constructor (cpp:14).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.parameters.SetNotify(this);
+  }
 
   /**
    * Carbon EveProceduralMethodRandom::Initialize (cpp:21-25).

@@ -5,7 +5,7 @@ import { INotify } from "../../../../../blue/exposure/INotify.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
 import { EveProceduralMethodCyclingParameter } from "./EveProceduralMethodCyclingParameter.js";
-import { blue, CcpTime } from "#blue";
+import { blue, BlueList, CcpTime, IListNotify } from "#blue";
 import { IEveProceduralSelectionMethod } from "./IEveProceduralSelectionMethod.js";
 
 // Carbon BELIST_LOADING (blueexposure IList.h:50): list events raised while a
@@ -14,7 +14,7 @@ const BELIST_LOADING = 0x10;
 
 /** EveProceduralMethodCycling (eve/child/procedural/selection) - generated from schema shapeHash 2014815d.... */
 @be.define("EveProceduralMethodCycling")
-@be.inherit(INotify)
+@be.inherit(IListNotify, INotify)
 @be.mapInterface(IEveProceduralSelectionMethod)
 @be.mapInterface(INotify)
 export class EveProceduralMethodCycling extends IEveProceduralSelectionMethod
@@ -29,7 +29,7 @@ export class EveProceduralMethodCycling extends IEveProceduralSelectionMethod
   @be.mapAttribute(be.READ | be.PERSIST)
 
   @type.list("EveProceduralMethodCyclingParameter")
-  parameters = [];
+  parameters = new BlueList(EveProceduralMethodCyclingParameter, { className: "EveProceduralMethodCyclingParameter" });
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
@@ -53,6 +53,17 @@ export class EveProceduralMethodCycling extends IEveProceduralSelectionMethod
   @be.mapAttribute(be.READ)
   @type.int32
   selectedChild = -1;
+
+  /**
+   * Carbon EveProceduralMethodCycling constructor (cpp:15).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.parameters.SetNotify(this);
+  }
 
   /**
    * Carbon method restart -> SelectParameter (MAP_METHOD_AND_WRAP,

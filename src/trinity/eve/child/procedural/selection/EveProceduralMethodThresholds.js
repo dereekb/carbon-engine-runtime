@@ -1,6 +1,6 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodThresholds.h
 import { exposure as be } from "#be";
-import { IsMatch, INotify, IListNotify } from "#blue";
+import { BlueList, IsMatch, INotify, IListNotify } from "#blue";
 import { IInitialize } from "../../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
 import { CjsSchema, type } from "#schema";
@@ -34,7 +34,7 @@ export class EveProceduralMethodThresholds extends IEveProceduralSelectionMethod
   /** m_parameters (PEveProceduralMethodThresholdParameterVector) [READ, PERSIST] */
 
   @type.list("EveProceduralMethodThresholdParameter")
-  parameters = [];
+  parameters = new BlueList(EveProceduralMethodThresholdParameter, { className: "EveProceduralMethodThresholdParameter" });
 
   /** m_debugVolumes (PIEveVolumeVector) [READ, PERSIST] */
 
@@ -59,6 +59,17 @@ export class EveProceduralMethodThresholds extends IEveProceduralSelectionMethod
 
   @type.float32
   seed_temp = -1;
+
+  /**
+   * Carbon EveProceduralMethodThresholds constructor (cpp:13).
+   *
+   * @implemented
+   */
+  constructor()
+  {
+    super();
+    this.parameters.SetNotify(this);
+  }
 
   /**
    * Carbon EveProceduralMethodThresholds::Initialize (cpp:20-24).
