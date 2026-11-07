@@ -76,7 +76,7 @@ test("ExecuteFromScript loads each dependency, runs the pipeline and returns the
   const load = new Tr2TexturePipelineStepLoad();
   load.path = "res:/a.bmp";
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load ];
+  pipeline.steps.push(load);
 
   const result = await pipeline.ExecuteFromScript();
   assert.ok(result instanceof Tr2HostBitmap);
@@ -95,7 +95,7 @@ test("ExecuteFromScript loads each dependency, runs the pipeline and returns the
   const limit = new Tr2TexturePipelineStepLimitSize();
   limit.maxWidth = 1;
   load.path = "res:/a.bmp";
-  pipeline.steps = [ load, limit ];
+  pipeline.steps.push(load, limit);
   assert.equal((await pipeline.ExecuteFromScript()).width, 1);
 
   const row = CjsSchema.getMethod(Tr2TexturePipeline, "ExecuteFromScript");
@@ -115,7 +115,7 @@ test("ExecuteFromScript reports Carbon's out-of-memory result when Tr2HostBitmap
     const load = new Tr2TexturePipelineStepLoad();
     load.path = "res:/a.bmp";
     const pipeline = new Tr2TexturePipeline();
-    pipeline.steps = [ load ];
+    pipeline.steps.push(load);
     await assert.rejects(pipeline.ExecuteFromScript(), /^Error: out of memory$/u);
   }
   finally

@@ -76,7 +76,7 @@ test("pipeline conversion runs on a registered worker and preserves mips, layers
   const load = new Tr2TexturePipelineStepLoad();
   load.path = "res:/source.dds";
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [new CjsTexturePipelineStepConvert(), load];
+  pipeline.steps.push(new CjsTexturePipelineStepConvert(), load);
   const result = new HostBitmap();
 
   assert.equal(await pipeline.Execute(result, inputs), true);
@@ -120,7 +120,7 @@ test("cancellation passed through Execute discards completed and in-flight copie
   const first = compressed(), second = compressed();
   const inputs = new Map([["first", first], ["second", second]]);
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [new CjsTexturePipelineStepConvert()];
+  pipeline.steps.push(new CjsTexturePipelineStepConvert());
   const before = new AbortController();
   before.abort();
   assert.equal(await pipeline.Execute(new HostBitmap(), inputs, undefined, { signal: before.signal }), false);

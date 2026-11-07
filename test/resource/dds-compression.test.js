@@ -155,7 +155,7 @@ test("pipeline awaits compression before following steps consume BC bytes", asyn
     const step = new Tr2TexturePipelineStepCompress(); step.format = 71;
     let observed = 0;
     const pipeline = new Tr2TexturePipeline();
-    pipeline.steps = [load, step, { Execute(bitmap) { observed = bitmap.GetFormat(); return true; } }];
+    pipeline.steps.push(load, step, { Execute(bitmap) { observed = bitmap.GetFormat(); return true; } });
     assert.equal(await pipeline.Execute(new HostBitmap(), new Map([[load.path, source]])), true);
     assert.equal(observed, 71);
 });

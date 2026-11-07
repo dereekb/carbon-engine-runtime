@@ -4,6 +4,7 @@ export * from "./CjsTexturePipelineStepConvert.js";
 export * from "./CjsTexturePipelineStepPack.js";
 export * from "./CjsTexturePipelineStepPublishSrgb.js";
 export * from "./CjsTexturePipelineStepResize.js";
+export * from "./ITr2TexturePipelineStep.js";
 export * from "./Tr2TexturePackChannel.js";
 export * from "./Tr2TexturePipeline.js";
 export * from "./Tr2TexturePipelineParams.js";

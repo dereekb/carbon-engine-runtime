@@ -11,6 +11,8 @@ import "#blue/values";
 // Source: trinity/trinity/Resources/TexturePipeline/Tr2TexturePipelineStepPack.cpp
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { CjsSchema, type } from "#schema";
+import { BlueList } from "#blue";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 import { Tr2TexturePipelineParams } from "./Tr2TexturePipelineParams.js";
 import { Tr2TexturePipelineStepLimitSize } from "./Tr2TexturePipelineStepLimitSize.js";
 
@@ -31,7 +33,7 @@ export class Tr2TexturePipeline extends IRoot
   pipelineType = "";
 
   /** m_steps (PITr2TexturePipelineStepVector) [READ, PERSIST] */
-  steps = [];
+  steps = new BlueList(ITr2TexturePipelineStep);
 
 
   /**

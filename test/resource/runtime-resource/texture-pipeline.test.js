@@ -48,7 +48,7 @@ test("Tr2TexturePipeline collects sorted unique Carbon step dependencies", async
   pack.r = Object.assign(new Tr2TexturePackChannel(), { path: "res:/a.png" });
   pack.g = Object.assign(new Tr2TexturePackChannel(), { path: "res:/z.png" });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load, pack ];
+  pipeline.steps.push(load, pack);
 
   assert.deepEqual(pipeline.GetResourceDependencies(), [ "res:/a.png", "res:/z.png" ]);
   assert.equal(
@@ -64,7 +64,7 @@ test("Tr2TexturePipeline runs Carbon's steps against one HostBitmap", async () =
   const limit = new Tr2TexturePipelineStepLimitSize();
   limit.maxWidth = 1;
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load, limit ];
+  pipeline.steps.push(load, limit);
 
   // 2x2 BGRA; each pixel's blue channel is 0, 20, 40, 60.
   const source = Bgra(2, 2, [
@@ -93,7 +93,7 @@ test("a failed step stops the pipeline (diverged from Carbon, issue 19)", async 
   load.path = "res:/missing.png";
   const mips = new Tr2TexturePipelineStepGenerateMips();
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load, mips ];
+  pipeline.steps.push(load, mips);
   const result = new HostBitmap();
 
   assert.equal(await pipeline.Execute(result, new Map()), false);
@@ -109,7 +109,7 @@ test("Tr2TexturePipeline packs channels from independent inputs", async () =>
   pack.b = Object.assign(new Tr2TexturePackChannel(), { path: "res:/b.png", channel: 0 });
   pack.a = Object.assign(new Tr2TexturePackChannel(), { fill: 255 });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ pack ];
+  pipeline.steps.push(pack);
   const result = new HostBitmap();
 
   const inputs = new Map([
@@ -129,7 +129,7 @@ test("an R8 pack writes one byte per pixel (diverged from Carbon, issue 2)", asy
   pack.format = PixelFormat.PIXEL_FORMAT_R8_UNORM;
   pack.r = Object.assign(new Tr2TexturePackChannel(), { path: "res:/r.png", channel: 0 });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ pack ];
+  pipeline.steps.push(pack);
   const result = new HostBitmap();
 
   assert.equal(await pipeline.Execute(result, new Map([[ "res:/r.png", Bgra(2, 1, [ 1, 2, 3, 4, 5, 6, 7, 8 ]) ]])), true);
@@ -146,7 +146,7 @@ test("a BGRX pack leaves the X byte alone (diverged from Carbon, issue 2)", asyn
   pack.g = Object.assign(new Tr2TexturePackChannel(), { fill: 9 });
   pack.r = Object.assign(new Tr2TexturePackChannel(), { fill: 8 });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ pack ];
+  pipeline.steps.push(pack);
   const result = new HostBitmap();
 
   assert.equal(await pipeline.Execute(result, new Map([[ "res:/x.png", Bgra(2, 1, [ 1, 2, 3, 4, 5, 6, 7, 8 ]) ]])), true);
@@ -198,11 +198,11 @@ test("our Convert and Resize steps let Pack join a compressed source and a diffe
   pack.a = Object.assign(new Tr2TexturePackChannel(), { fill: 255 });
 
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ new CjsTexturePipelineStepConvert(), new CjsTexturePipelineStepResize(), pack ];
+  pipeline.steps.push(new CjsTexturePipelineStepConvert(), new CjsTexturePipelineStepResize(), pack);
 
   // Carbon's Pack alone refuses both: a block format, and mismatched sizes.
   const carbonOnly = new Tr2TexturePipeline();
-  carbonOnly.steps = [ pack ];
+  carbonOnly.steps.push(pack);
   assert.equal(await carbonOnly.Execute(new HostBitmap(), new Map(inputs)), false);
 
   const result = new HostBitmap();
@@ -221,7 +221,7 @@ test("Tr2TexturePipeline exposes its FromScript members under Carbon's names (Tr
   const pack = new Tr2TexturePipelineStepPack();
   pack.r = Object.assign(new Tr2TexturePackChannel(), { path: "res:/a.png" });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load, pack ];
+  pipeline.steps.push(load, pack);
 
   assert.deepEqual(pipeline.GetResourceDependenciesFromScript(), [ "res:/a.png", "res:/z.png" ], "the sorted std::vector copy of the std::set");
 

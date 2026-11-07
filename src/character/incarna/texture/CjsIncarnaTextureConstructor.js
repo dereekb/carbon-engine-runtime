@@ -128,10 +128,10 @@ export class CjsIncarnaTextureConstructor extends IBlueDynamicResourceConstructo
     }
 
     const pipeline = new Tr2TexturePipeline();
-    pipeline.steps = [
+    pipeline.steps.ReplaceItems([
       new CjsTexturePipelineStepConvert(),
       pack
-    ];
+    ]);
     return pipeline;
   }
 

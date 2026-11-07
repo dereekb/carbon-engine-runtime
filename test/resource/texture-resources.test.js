@@ -143,7 +143,7 @@ test("a texture built from a pipeline packs images loaded as raw Tr2ImageRes (Ca
   pack.r = Object.assign(new Tr2TexturePackChannel(), { path: "res:/x/red.dds", channel: 0 });
   pack.a = Object.assign(new Tr2TexturePackChannel(), { path: "res:/x/mask.dds", channel: 0 });
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ pack ];
+  pipeline.steps.push(pack);
 
   const texture = new TriTextureRes();
   assert.equal(await texture.LoadPipeline(pipeline, resMan), true);
@@ -168,7 +168,7 @@ test("a pipeline whose input fails leaves the texture prepared without a bitmap,
   const load = new Tr2TexturePipelineStepLoad();
   load.path = "res:/x/broken.dds";
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load ];
+  pipeline.steps.push(load);
 
   const texture = new TriTextureRes();
   assert.equal(await texture.LoadPipeline(pipeline, resMan), false);
@@ -251,7 +251,7 @@ test("a loaded texture resource handed to a runtime texture parameter is made on
   const load = new Tr2TexturePipelineStepLoad();
   load.path = "res:/texture/ssao/lookup.dds";
   const pipeline = new Tr2TexturePipeline();
-  pipeline.steps = [ load ];
+  pipeline.steps.push(load);
 
   const resource = new TriTextureRes();
   assert.equal(await resource.LoadPipeline(pipeline, resMan), true);

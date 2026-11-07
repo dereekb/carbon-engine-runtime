@@ -2,6 +2,7 @@
 import { CjsSchema, meta, type } from "#schema";
 import { HostBitmap } from "#imageio";
 import { GetBytesPerPixel, IsCompressedFormat } from "#consts/render-context";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 /**
  * Resamples the pipeline's INPUTS to one size before a later step reads them.
@@ -138,3 +139,4 @@ CjsSchema.meta.define(CjsTexturePipelineStepResize, {
     resample: []
   }
 });
+CjsSchema.be.interface(ITr2TexturePipelineStep)(CjsTexturePipelineStepResize, { kind: "class" });

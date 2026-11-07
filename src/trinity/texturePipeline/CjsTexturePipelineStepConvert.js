@@ -4,6 +4,7 @@ import { BeCallbackMan, BlueCallbackMan } from "#blue/services/BlueCallbackMan";
 import { PixelFormat } from "#consts/render-context";
 import { CONVERT_BITMAP_CALLBACK } from "../../resource/imageio/imageDecodeCallbacks.js";
 import { createDdsBitmap } from "../../resource/formats/dds/ddsBitmap.js";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 /**
  * Converts the pipeline's INPUTS to one pixel format before a later step reads
@@ -110,3 +111,4 @@ CjsSchema.meta.define(CjsTexturePipelineStepConvert, {
     Execute: []
   }
 });
+CjsSchema.be.interface(ITr2TexturePipelineStep)(CjsTexturePipelineStepConvert, { kind: "class" });

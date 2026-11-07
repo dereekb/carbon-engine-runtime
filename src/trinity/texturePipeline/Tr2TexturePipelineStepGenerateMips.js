@@ -4,6 +4,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 // generation itself happens where the pipeline is executed.
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { CjsSchema } from "#schema";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 // Source: trinity/trinity/Resources/TexturePipeline/ITr2TexturePipelineStep.h:26
 const s_texturePipelineChannel = CcpLog.CCP_LOG_DEFINE_CHANNEL("TexturePipeline", "trinity");
@@ -47,3 +48,4 @@ export class Tr2TexturePipelineStepGenerateMips extends IRoot
 
 
 CjsSchema.exposure.define("Tr2TexturePipelineStepGenerateMips")(Tr2TexturePipelineStepGenerateMips);
+CjsSchema.be.interface(ITr2TexturePipelineStep)(Tr2TexturePipelineStepGenerateMips, { kind: "class" });

@@ -12,6 +12,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { CjsSchema, type } from "#schema";
 import { GetBytesPerPixel, PixelFormat, TextureType } from "#consts/render-context";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 // Source: trinity/trinity/Resources/TexturePipeline/ITr2TexturePipelineStep.h:26
 const s_texturePipelineChannel = CcpLog.CCP_LOG_DEFINE_CHANNEL("TexturePipeline", "trinity");
@@ -279,3 +280,4 @@ CjsSchema.decorateField(Tr2TexturePipelineStepPack, "g", be.mapAttribute(be.READ
  */
 CjsSchema.decorateField(Tr2TexturePipelineStepPack, "r", be.mapAttribute(be.READ | be.PERSIST), type.object.embed("Tr2TexturePackChannel"));
 CjsSchema.exposure.define("Tr2TexturePipelineStepPack")(Tr2TexturePipelineStepPack);
+CjsSchema.be.interface(ITr2TexturePipelineStep)(Tr2TexturePipelineStepPack, { kind: "class" });

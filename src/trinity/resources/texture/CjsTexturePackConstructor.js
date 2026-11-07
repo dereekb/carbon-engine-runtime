@@ -113,12 +113,12 @@ export class CjsTexturePackConstructor extends IBlueDynamicResourceConstructor
     }
 
     const pipeline = new Tr2TexturePipeline();
-    pipeline.steps = [
+    pipeline.steps.ReplaceItems([
       new CjsTexturePipelineStepConvert(),
       new CjsTexturePipelineStepResize(),
       pack,
       new Tr2TexturePipelineStepGenerateMips()
-    ];
+    ]);
     return pipeline;
   }
 

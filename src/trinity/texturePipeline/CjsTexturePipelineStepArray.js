@@ -1,5 +1,6 @@
 // Not Carbon. A texture-pipeline step of our own.
 import { CjsSchema, meta, type } from "#schema";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 /**
  * Stacks the named inputs, in order, into one 2D texture array: layer 0 is the
@@ -81,3 +82,4 @@ CjsSchema.meta.define(CjsTexturePipelineStepArray, {
     Execute: []
   }
 });
+CjsSchema.be.interface(ITr2TexturePipelineStep)(CjsTexturePipelineStepArray, { kind: "class" });

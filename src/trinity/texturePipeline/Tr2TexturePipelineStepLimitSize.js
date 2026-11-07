@@ -5,6 +5,7 @@ import { IRoot } from "../../blue/exposure/IRoot.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { CjsSchema, type } from "#schema";
 import { HostBitmap } from "#imageio";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 // Source: trinity/trinity/Resources/TexturePipeline/ITr2TexturePipelineStep.h:26
 const s_texturePipelineChannel = CcpLog.CCP_LOG_DEFINE_CHANNEL("TexturePipeline", "trinity");
@@ -125,3 +126,4 @@ export class Tr2TexturePipelineStepLimitSize extends IRoot
 CjsSchema.decorateField(Tr2TexturePipelineStepLimitSize, "maxHeight", be.mapAttribute(be.READWRITE | be.PERSIST), type.uint32);
 CjsSchema.decorateField(Tr2TexturePipelineStepLimitSize, "maxWidth", be.mapAttribute(be.READWRITE | be.PERSIST), type.uint32);
 CjsSchema.exposure.define("Tr2TexturePipelineStepLimitSize")(Tr2TexturePipelineStepLimitSize);
+CjsSchema.be.interface(ITr2TexturePipelineStep)(Tr2TexturePipelineStepLimitSize, { kind: "class" });

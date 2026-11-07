@@ -7,6 +7,7 @@ import { compressBitmapAsync } from "#resource/codecs/bcn";
 import { createDdsBitmap } from "../../resource/formats/dds/ddsBitmap.js";
 import { PixelFormat as P } from "#consts/render-context";
 import { Tr2DxtCompressionFormat as F } from "#consts/trinity";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 const MODES = new Map([
   [P.PIXEL_FORMAT_BC1_UNORM, F.TR2DXT_COMPRESS_SQUISH_DXT1],
@@ -101,3 +102,4 @@ CjsSchema.decorateField(Tr2TexturePipelineStepCompress, "b", be.mapAttribute(be.
 CjsSchema.decorateField(Tr2TexturePipelineStepCompress, "g", be.mapAttribute(be.READWRITE | be.PERSIST), type.float32);
 CjsSchema.decorateField(Tr2TexturePipelineStepCompress, "r", be.mapAttribute(be.READWRITE | be.PERSIST), type.float32);
 CjsSchema.exposure.define("Tr2TexturePipelineStepCompress")(Tr2TexturePipelineStepCompress);
+CjsSchema.be.interface(ITr2TexturePipelineStep)(Tr2TexturePipelineStepCompress, { kind: "class" });

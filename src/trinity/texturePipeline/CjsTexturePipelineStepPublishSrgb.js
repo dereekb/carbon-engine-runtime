@@ -2,6 +2,7 @@
 import { blue } from "#blue";
 import { CjsSchema } from "#schema";
 import { MakeSrgb, PixelFormat, TextureType } from "#consts/render-context";
+import { ITr2TexturePipelineStep } from "./ITr2TexturePipelineStep.js";
 
 /** Publishes a composed UNORM image as sRGB without changing its bytes, alpha or existing mip chain. */
 export class CjsTexturePipelineStepPublishSrgb
@@ -65,3 +66,4 @@ CjsSchema.meta.define(CjsTexturePipelineStepPublishSrgb, {
   className: "CjsTexturePipelineStepPublishSrgb",
   methods: { GetResourceDependencies: [], Execute: [] }
 });
+CjsSchema.be.interface(ITr2TexturePipelineStep)(CjsTexturePipelineStepPublishSrgb, { kind: "class" });
