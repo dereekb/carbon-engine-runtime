@@ -16,12 +16,16 @@ cbuffer ParticleDraw : register( b3 )
     float4 ParticleTextureSize; // x: the state textures' width
 };
 
-Texture2D AtlasMap : register( t0 );
+// Tr2sRGB as the shipped effect declares it: the pixel stage encodes its result, so the atlas must decode.
+Texture2D AtlasMap : register( t0 )
+<
+    bool Tr2sRGB = true;
+>;
 SamplerState AtlasMapSampler
 {
     Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = CLAMP;
-    AddressV = CLAMP;
+    AddressU = WRAP;
+    AddressV = WRAP;
 };
 
 struct QuadVSOutput
