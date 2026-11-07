@@ -162,6 +162,62 @@ for (const entry of all)
   }
 }
 
+// No file carries metadata, and SOF sets it on a load, so each hull takes it the way SOF does.
+const { CjsBlackReader } = await load("blue/formats/black/core/CjsBlackReader.js");
+const { BeObjectMetadata } = await load("blue/services/BlueObjectMetadata.js");
+const { EveSOFDataMgr } = await load("sof/EveSOFDataMgr.js");
+const dataMgr = new EveSOFDataMgr();
+const metadata = stats.metadata = { hulls: 0, items: 0, get: 0, kept: 0, lost: 0, diff: 0, threw: 0 };
+
+/** Every value in a bag that holds object metadata. */
+function countMetadata(value)
+{
+  if (value === null || typeof value !== "object" || ArrayBuffer.isView(value)) return 0;
+
+  let count = Object.hasOwn(value, "__bluemetadata__") ? 1 : 0;
+  for (const key of Object.keys(value)) count += countMetadata(value[key]);
+  return count;
+}
+
+for (const path of all.filter(entry => entry.includes("/spaceobjectfactory/hulls/") && entry.endsWith(".black")))
+{
+  const response = await fetch(`${base}res/${path.slice(5)}`);
+  if (!response.ok) continue;
+
+  const hull = new CjsBlackReader(new Uint8Array(await response.arrayBuffer()), { schema: null, initialize: false }).CreateObject();
+  if (!Array.isArray(hull?.decalSets)) continue;
+
+  try
+  {
+    dataMgr.EnsureHullDecalOrigins(hull);
+    const items = hull.decalSets.flatMap(set => set?.items ?? []).filter(Boolean);
+    if (items.length === 0) continue;
+
+    metadata.hulls++;
+    metadata.items += items.length;
+
+    const bag = CjsGraph.get(hull, reading);
+    const values = CjsSchema.getValues(hull, {}, { ...reading, metadata: true });
+    metadata.get += countMetadata(bag);
+    if (valueDiff(bag, values, "", Number.MIN_VALUE)) (stats.examples.metadata ??= `${path} ${valueDiff(bag, values, "", Number.MIN_VALUE)}`);
+
+    const built = CjsGraph.from(null, { _type: CjsSchema.getClassName(hull.constructor), ...bag }, { skipEvents: true });
+    const held = built.decalSets.flatMap(set => set?.items ?? []).filter(Boolean);
+    held.forEach((item, index) =>
+    {
+      if (BeObjectMetadata.Get(item, "sof_source_id", "") === BeObjectMetadata.Get(items[index], "sof_source_id", "")) metadata.kept++;
+      else metadata.lost++;
+    });
+
+    if (CjsGraph.diff(built, bag)) metadata.diff++;
+  }
+  catch (error)
+  {
+    metadata.threw++;
+    (stats.examples.metadataThrew ??= `${path} ${String(error.message).slice(0, 120)}`);
+  }
+}
+
 writeFileSync(outPath, JSON.stringify(stats, null, 1));
 console.log(`done ${target} files ${stats.files}`);
 process.exit(0);

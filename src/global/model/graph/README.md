@@ -54,8 +54,8 @@ nothing is allocated per member.
 There is no policy class or option: Blue's rules are the graph's own behaviour, and variations
 are plain options (`persistOnly`, `roundTrip`, `skipEquality`, `skipEvents`, `validate`, `idMap`,
 `initializeHeld`, `copyOverride`). The graph imports nothing from Blue: `Initialize`, `OnModified`
-and `OnListModified` are methods on objects, and flags are data. A member carries `persist`,
-`writable`, `notify` and `hidden`; a definition says `initialize`, `notify`, `listNotify` and `hook`.
+and `OnListModified` are methods on objects, and flags are data: a member carries `flags`, and a
+definition says `initialize`, `notify`, `listNotify` and `hook`.
 Member tables are cached per class and choice of flags on the compiled record.
 
 - **Set on a live object:** IsEqual, then updateValues(changedNames), children first and once
@@ -69,6 +69,13 @@ Member tables are cached per class and choice of flags on the compiled record.
   sends LOADFINISHED (`DictReader.cpp:472-475`). An ordinary array on a live list-notified owner
   gets UNLOADSTART and INSERTED from the owner, with the old items still in place. Structure lists
   are silent. `skipEvents` writes everything raw.
+`get` leaves out what a new instance holds, by Carbon's `AreEqual` tolerance, and `full: true` keeps
+everything. Defaults come from the first object a door creates, straight after its constructor,
+or from one spare instance. `diff(object, values)` returns what `set` would change and writes
+nothing; a list is one whole value. Object metadata travels as `__bluemetadata__` through the store
+given to `setMetadataStore`, and `copy` leaves it. `getClassUIInfo` builds a class's presentation on
+first ask, and `defineUI` layers a host's over it. No value operation reads either.
+
 `_type` names resolve through
 `CjsGraph.registerLibrary(library)`, newest first, ending in the graph's own definitions.
 A library has `Get(typeName)` and `Create(typeName)`. A failed operation completes
