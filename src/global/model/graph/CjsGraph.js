@@ -126,6 +126,7 @@ export class CjsGraph
       bits: entry.bits ?? 0,
       signed: entry.signed === true,
       ctor: entry.ctor ?? null,
+      check: entry.check ?? null,
       item: member.item === undefined ? null : this.compileMember({ name: member.name, type: member.item }),
       persist: member.persist !== false,
       writable: member.writable !== false,
@@ -250,9 +251,10 @@ export class CjsGraph
   }
 
   /**
-   * Returns an object's values as a plain bag, written from its compiled members.
-   * options: persistOnly writes PERSIST members; roundTrip writes only members a read takes
-   * back; refs (default true) writes a shared object once, then _ref, while false
+   * Returns an object's values as a plain bag, written from its compiled members. A member equal
+   * to a new instance's is left out, as a writer's m_skipDefaults does (IRootWriter.cpp:10,41).
+   * options: full writes every member; persistOnly writes PERSIST members; roundTrip writes only
+   * members a read takes back; refs (default true) writes a shared object once, then _ref, while false
    * writes it at every reference and a cycle never ends; typeTags writes _type where the class
    * differs from the declared one; forceTypeTags writes it always; copyOverride(object) may
    * return an object to hold in place of writing a held one, which set then keeps as a reference.
@@ -270,7 +272,7 @@ export class CjsGraph
    */
   static getValue(object, name, options = {})
   {
-    const operation = this._beginGet(options);
+    const operation = this._beginGet({ ...options, full: true });
     const info = this._getObjectInfo(object, this._noTypes);
     const member = this._getMemberTable(info, GraphOperation.GET, operation).byName[name];
     if (!member) throw new TypeError(`Unknown graph member: ${info.declared.name}.${name}`);
@@ -364,7 +366,7 @@ export class CjsGraph
    */
   static copy(source, target, options = {})
   {
-    const values = this.get(source, { persistOnly: true, ...options, typeTags: true });
+    const values = this.get(source, { persistOnly: true, ...options, typeTags: true, full: true });
     const operation = this._beginSet({ ...options, validate: false }, GraphOperation.COPY);
     const changes = this.setObject(target, values, this._noTypes, operation);
     this._finish(operation);
@@ -378,7 +380,7 @@ export class CjsGraph
    */
   static clone(source, options = {})
   {
-    return this.from(null, this.get(source, { persistOnly: true, ...options, typeTags: true }), { ...options, validate: false });
+    return this.from(null, this.get(source, { persistOnly: true, ...options, typeTags: true, full: true }), { ...options, validate: false });
   }
 
   /**
@@ -419,10 +421,18 @@ export class CjsGraph
     if (options.forceTypeTags || (options.typeTags && (type.length === 0 || this.getClassInfo(type[0]) !== info))) bag._type = info.declared.name;
 
     const members = this._getMemberTable(info, GraphOperation.GET, options).members;
+    const defaults = options.full ? null : this._getWriteDefaults(info, options);
+
     for (let i = 0; i < members.length; i++)
     {
       const member = members[i];
       if (member.index !== undefined && object[member.key][member.index] === null) continue;
+      if (defaults !== null)
+      {
+        if (this._isDefault(object, member, defaults, options)) continue;
+        options.heldDefault = defaults[member.name];
+      }
+
       bag[member.name] = this._getMember(object, member, options);
     }
 
@@ -465,12 +475,28 @@ export class CjsGraph
     const info = this._getObjectInfo(object, type);
     const creating = options.creating, initialize = options.initialize;
 
+    if (info.compiled.defaults === null) this.captureDefaults(object);
+
     options.creating = options.initialize = true;
     this._setMembers(object, info, values, options);
     options.creating = creating;
     options.initialize = initialize;
 
     return object;
+  }
+
+  /**
+   * Records what a new instance holds, for leaving defaults out of a bag. A reader calls this on
+   * the first object it creates of a class, straight after the constructor and before any value.
+   * Modelled on: IRootWriter::WriteMembers's default instance (blue/src/IRootWriter.cpp:25-37).
+   * @cjs The first real construction stands in for Carbon's spare instance. A class with none by
+   * the time a writer needs it gets one spare, once, without Initialize, so a bag does not depend
+   * on what was built before it.
+   */
+  static captureDefaults(object)
+  {
+    const info = this._getObjectInfo(object, this._noTypes);
+    info.compiled.defaults = this._captureValues(object, info);
   }
 
   /**
@@ -608,7 +634,107 @@ export class CjsGraph
    */
   static getEmbeddedValues(value, options)
   {
-    return this.isPlain(value) ? value : this.get(value, { refs: false });
+    return this.isPlain(value) ? value : this.get(value, { refs: false, full: true });
+  }
+
+  /**
+   * The defaults to write an object against. An embedded object is written against the default
+   * instance's own (IRootWriter.cpp:134).
+   * @cjs A referenced one is too, where Carbon uses its class's (:149): a bag here reads into the
+   * object held, which a constructor may have set, and Carbon's reader makes a new one.
+   */
+  static _getWriteDefaults(info, options)
+  {
+    const held = options.heldDefault;
+    options.heldDefault = null;
+
+    return held !== null && held !== undefined && held.info === info ? held.values : this._getDefaults(info);
+  }
+
+  /** What each member of a new instance holds, as compared by _isDefault. @cjs */
+  static _captureValues(object, info, seen = new Set())
+  {
+    const values = Object.create(null); // alloc: once per class.
+    seen.add(object);
+
+    for (const member of info.compiled.members)
+    {
+      if (member.name in values) continue;
+
+      const stored = this._readMember(object, member);
+      values[member.name] = this._captureValue(stored, member, seen);
+    }
+
+    return values;
+  }
+
+  /**
+   * One member's default. A list is only compared with nothing, as AreEqual does
+   * (BlueVariable.cpp:274-349), so it keeps its size.
+   * @cjs A held object keeps its values and class: _isDefault recurses into an embedded one, and
+   * _getWriteDefaults writes a referenced one against them.
+   */
+  static _captureValue(stored, member, seen)
+  {
+    if (stored === null || stored === undefined) return null;
+
+    if (member.edgeKind === null)
+    {
+      if (Array.isArray(stored)) return stored.slice();
+      return ArrayBuffer.isView(stored) ? stored.slice() : stored;
+    }
+
+    if (member.collection === "map") return stored.size;
+    if (member.collection !== null) return stored.length;
+    if (!member.persist || typeof stored !== "object" || seen.has(stored)) return true;
+
+    const info = this._getObjectInfo(stored, member.edgeType);
+    return { info, values: this._captureValues(stored, info, seen) };
+  }
+
+  /** The defaults of a class, from one spare instance if nothing has been built yet. @cjs */
+  static _getDefaults(info)
+  {
+    const { compiled } = info;
+
+    if (compiled.defaults === null) compiled.defaults = this._captureValues(this._create(info.declared.name), info);
+
+    return compiled.defaults;
+  }
+
+  /** Reads a member's storage, through its slot if it has one. @cjs */
+  static _readMember(object, member)
+  {
+    return member.index === undefined ? object[member.key] : object[member.key][member.index];
+  }
+
+  /**
+   * Whether a member holds what a new instance does, within Carbon's tolerance.
+   * Modelled on: BlueMemberIterator::SkipEquals (blueexposure/BlueMemberIterator.cpp:121-148).
+   * @adapted AreEqual<IROOT> gives up on an embedded object that is not an empty collection
+   * (BlueVariable.cpp:274-314). This recurses into it, so an embedded object left at its
+   * defaults is left out: a reader starts from the same defaults.
+   */
+  static _isDefault(object, member, defaults, options)
+  {
+    const stored = this._readMember(object, member), value = defaults[member.name];
+
+    if (stored === null || value === null) return stored === value;
+    if (member.edgeKind === null) return member.handler.IsEqual(stored, value, member);
+    if (member.collection === "map") return stored.size === 0 && value === 0;
+    if (member.collection !== null) return stored.length === 0 && value === 0;
+    if (member.edgeKind !== "embed" || value === true) return false;
+
+    const info = this._getObjectInfo(stored, member.edgeType);
+    if (info !== value.info) return false;
+
+    const { members } = this._getMemberTable(info, GraphOperation.GET, options);
+    for (let i = 0; i < members.length; i++)
+    {
+      if (!this._isDefault(stored, members[i], value.values, options)) return false;
+    }
+
+    return true;
   }
 
   /** The operation record for one get. @cjs Nothing is allocated per member. */
@@ -618,11 +744,13 @@ export class CjsGraph
       persistOnly: options.persistOnly === true,
       roundTrip: options.roundTrip === true,
       refs: options.refs !== false,
+      full: options.full === true,
       typeTags: options.typeTags === true,
       forceTypeTags: options.forceTypeTags === true,
       copyOverride: options.copyOverride ?? null,
       written: new Map(),
-      anchor: 1
+      anchor: 1,
+      heldDefault: null
     };
   }
 
@@ -1438,7 +1566,7 @@ export class CjsGraph
     const { declared } = info;
 
     return {
-      revision: this._revision, parent, members, byName, persistByName, tables: [],
+      revision: this._revision, parent, members, byName, persistByName, tables: [], defaults: null,
       name: declared.name,
       interfaces: declared.interfaces,
       initialize: declared.initialize === true,

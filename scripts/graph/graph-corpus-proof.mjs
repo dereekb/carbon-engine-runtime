@@ -3,6 +3,7 @@
 // scan: every .black file: key order, get values and a count of non-finite numbers.
 // events: every Nth file and all character and interior files: Initialize, OnModified and OnListModified
 // recorded and not run, for from, set and copy. real: the same files with real hooks, compared by value.
+// skip: the same files, read back from a bag with defaults left out.
 // Needs tools-core on 5510. CJS_GRAPH_DIST points at a private copy of npm (with its package.json) so a long
 // run survives a shared build. Writes counts and res: paths only, never game bytes.
 import { writeFileSync, readdirSync } from "node:fs";
@@ -181,14 +182,14 @@ function orderDiff(a, b, path)
   return null;
 }
 
-function valueDiff(a, b, path = "")
+function valueDiff(a, b, path = "", tolerance = 0)
 {
   if (a === b || (a !== a && b !== b)) return null;
-  if (typeof a === "number" && typeof b === "number" && Math.fround(a) === Math.fround(b)) return null;
+  if (typeof a === "number" && typeof b === "number" && (Math.fround(a) === Math.fround(b) || Math.abs(a - b) < tolerance)) return null;
   if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return path;
   for (const key of new Set([ ...Object.keys(a), ...Object.keys(b) ]))
   {
-    const found = valueDiff(a[key], b[key], `${path}.${key}`);
+    const found = valueDiff(a[key], b[key], `${path}.${key}`, tolerance);
     if (found) return found;
   }
   return null;
@@ -226,7 +227,33 @@ function mismatches(oldTrace, newTrace)
   return out;
 }
 
-const reading = { persistOnly: true, typeTags: true };
+const reading = { persistOnly: true, typeTags: true, full: true };
+
+const skip = { same: 0, differ: 0, threw: 0, fullKeys: 0, skippedKeys: 0, first: {} };
+events.skip = skip;
+
+const countKeys = value =>
+{
+  if (value === null || typeof value !== "object") return 0;
+  if (Array.isArray(value)) return value.reduce((total, item) => total + countKeys(item), 0);
+  return Object.keys(value).reduce((total, key) => total + 1 + countKeys(value[key]), 0);
+};
+
+/** A bag with defaults left out builds what the full bag describes. */
+function checkSkip(root, path)
+{
+  try
+  {
+    const full = CjsGraph.get(root, reading), bag = CjsGraph.get(root, { persistOnly: true, typeTags: true });
+    skip.fullKeys += countKeys(full);
+    skip.skippedKeys += countKeys(bag);
+    // Inside Carbon's tolerance a value reads back as its default, as SkipEquals leaves it.
+    const held = valueDiff(CjsGraph.get(CjsGraph.from(null, { _type: nameOf(root), ...bag }, { skipEvents: true }), reading), full, "", 2e-6);
+    if (held) { skip.differ++; note(skip, held.replace(/.d+/gu, "[]").slice(-80), path); }
+    else skip.same++;
+  }
+  catch (error) { skip.threw++; note(skip, `threw ${String(error.message).slice(0, 80)}`, path); }
+}
 
 const real = { same: 0, differ: 0, oldThrew: 0, newThrew: 0, bothThrew: 0, first: {} };
 events.real = real;
@@ -367,7 +394,7 @@ for (let index = shard; index < wanted.length; index += shards)
 
   if (eventsHere)
   {
-    try { if (mode === "real") checkReal(root, values, path); else checkEvents(root, values, path); }
+    try { if (mode === "real") checkReal(root, values, path); else if (mode === "skip") checkSkip(root, path); else checkEvents(root, values, path); }
     catch (error) { note(events.copy, `harness ${String(error.message).slice(0, 100)}`, path); }
   }
 }

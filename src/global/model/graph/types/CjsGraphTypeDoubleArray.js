@@ -4,7 +4,7 @@ const TOLERANCE = 1e-12;
  * DOUBLEARRAY members.
  * Modelled on: Be::DOUBLEARRAY (blueexposure/BlueVariable.cpp:791-803).
  * @cjs Float64Array storage. Carbon has no AreEqual for it, and that gap does not apply: it
- * compares as its elements do (operator, 2026-11-07).
+ * compares as its elements do.
  */
 export class CjsGraphTypeDoubleArray
 {

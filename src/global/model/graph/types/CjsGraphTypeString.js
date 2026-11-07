@@ -48,10 +48,10 @@ export class CjsGraphTypeString
     return String(a) === String(b);
   }
 
-  /** Tests valid input. @cjs */
-  IsValidValue(value)
+  /** Tests valid input: text, which a path also checks. @cjs */
+  IsValidValue(value, member)
   {
-    return typeof value === "string";
+    return typeof value === "string" && (member.check === null || member.check(value));
   }
 
   /** Stable class identity. */

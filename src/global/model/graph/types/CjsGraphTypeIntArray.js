@@ -2,7 +2,7 @@
  * INTARRAY members and the typed integer arrays: the array class, width and sign are on the member.
  * Modelled on: Be::INTARRAY (blueexposure/BlueVariable.cpp:804-815).
  * @cjs Storage converts on write, so a clamped array clamps. Carbon has no AreEqual for it, and
- * that gap does not apply: it compares as its elements do (operator, 2026-11-07).
+ * that gap does not apply: it compares as its elements do.
  */
 export class CjsGraphTypeIntArray
 {

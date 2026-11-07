@@ -74,6 +74,28 @@ export class CjsGraphTypeValues
    * Tests exact equality with no tolerance, element by element.
    * @cjs
    */
+  IsEqual(stored, value, member)
+  {
+    const item = member.item;
+
+    if (stored.length !== value.length) return false;
+
+    for (let i = 0; i < value.length; i++)
+    {
+      if (stored[i] === null || value[i] === null)
+      {
+        if (stored[i] !== value[i]) return false;
+      }
+      else if (!item.handler.IsEqual(stored[i], value[i], item)) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Tests whether two lists are exactly equal, item by item.
+   * @cjs
+   */
   IsExactEqual(stored, value, member)
   {
     const item = member.item;

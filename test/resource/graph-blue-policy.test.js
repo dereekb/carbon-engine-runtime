@@ -66,7 +66,7 @@ test("a mapped interface counts as assignable, and a legacy material sits in an 
 {
   const area = create("Tr2MeshArea");
   area.effect = create("Tr2ShaderMaterial");
-  assert.equal(CjsGraph.get(area, { persistOnly: true, typeTags: true }).effect._type, "Tr2ShaderMaterial");
+  assert.equal(CjsGraph.get(area, { full: true, persistOnly: true, typeTags: true }).effect._type, "Tr2ShaderMaterial");
 });
 
 test("a Map of objects reads and writes as a bag keyed by name", () =>
@@ -76,7 +76,7 @@ test("a Map of objects reads and writes as a bag keyed by name", () =>
   parameter.name = "x";
   material.parameters.set("x", parameter);
 
-  const values = CjsGraph.get(material, { persistOnly: true, typeTags: true });
+  const values = CjsGraph.get(material, { full: true, persistOnly: true, typeTags: true });
   assert.deepEqual(values, CjsSchema.getValues(material, {}, { persistOnly: true, typeTags: true }));
 
   const built = CjsGraph.from(null, values, { skipEvents: true });
@@ -89,13 +89,13 @@ test("flags on members pick what the values path picks", () =>
 {
   const area = create("Tr2MeshArea");
   area.name = "a";
-  assert.deepEqual(CjsGraph.get(area, { persistOnly: true }), CjsSchema.getValues(area, {}, { persistOnly: true }));
+  assert.deepEqual(CjsGraph.get(area, { full: true, persistOnly: true }), CjsSchema.getValues(area, {}, { persistOnly: true }));
 });
 
 test("a member the class's own declaration dropped stays dropped, though a JS base declares it", () =>
 {
   const light = create("EveSOFDataHullLightSetTexturedPointLight");
-  const values = CjsGraph.get(light, { persistOnly: true });
+  const values = CjsGraph.get(light, { full: true, persistOnly: true });
   assert.deepEqual(values, CjsSchema.getValues(light, {}, { persistOnly: true }));
   assert.equal(Object.hasOwn(values, "lightColor"), false);
 });

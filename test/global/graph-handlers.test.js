@@ -95,10 +95,10 @@ test("a member holds what any listed class accepts, and anything else is refused
 
   const area = new Area();
   area.effect = new Material();
-  assert.equal(CjsGraph.get(area, { typeTags: true }).effect._type, "ListedMaterial");
+  assert.equal(CjsGraph.get(area, { full: true, typeTags: true }).effect._type, "ListedMaterial");
 
   area.effect = new Other();
-  assert.throws(() => CjsGraph.get(area), /not assignable to ListedEffect: holds ListedOther/);
+  assert.throws(() => CjsGraph.get(area, { full: true }), /not assignable to ListedEffect: holds ListedOther/);
 });
 
 test("compiled classes carry one PERSIST lookup, derived first, and their facts", () =>
@@ -158,13 +158,13 @@ test("get throws on a non-finite number, because one reaching it is a bug", () =
     { name: "position", type: "vec3" }, { name: "wide", type: "vec3d" }
   ] });
 
-  assert.deepEqual(CjsGraph.get(new Stored()), { weight: 1, twice: 2, position: [ 0, 0, 0 ], wide: [ 0, 0, 0 ] });
+  assert.deepEqual(CjsGraph.get(new Stored(), { full: true }), { weight: 1, twice: 2, position: [ 0, 0, 0 ], wide: [ 0, 0, 0 ] });
 
   for (const [ name, value ] of [ [ "weight", NaN ], [ "twice", Infinity ], [ "position", new Float32Array([ 0, NaN, 0 ]) ], [ "wide", new Float64Array([ 0, 0, -Infinity ]) ] ])
   {
     const object = new Stored();
     object[name] = value;
-    assert.throws(() => CjsGraph.get(object), new RegExp(`Non-finite number in graph member: ${name}`));
+    assert.throws(() => CjsGraph.get(object, { full: true }), new RegExp(`Non-finite number in graph member: ${name}`));
   }
 });
 
@@ -340,4 +340,167 @@ test("a member with no type refuses every value operation before touching anythi
 test("an unknown type name fails at definition", () =>
 {
   assert.throws(() => member("nothing"), /Unknown graph type: nothing/);
+});
+
+/** A class whose constructor sets what its field does not. */
+class Defaulted
+{
+  static built = 0;
+  name = "";
+  weight = 0.5;
+  position = new Float32Array([ 1, 2, 3 ]);
+  items = [];
+  child = null;
+  embedded = null;
+  held = null;
+
+  constructor()
+  {
+    Defaulted.built++;
+    this.name = "Listener";
+  }
+}
+
+class Plain
+{
+  value = 1;
+  Initialize() { Plain.initialized++; }
+  static initialized = 0;
+}
+
+CjsGraph.define(Plain, { name: "DefaultPlain", initialize: true, members: [ { name: "value", type: "float32" } ] });
+CjsGraph.define(Defaulted, { name: "DefaultDefaulted", members: [
+  { name: "name", type: "string" }, { name: "weight", type: "float32" }, { name: "position", type: "vec3" },
+  { name: "items", type: "list", edge: { kind: "ref", collection: true, type: Plain } },
+  { name: "child", type: "rootRef", edge: { kind: "ref", type: Plain } },
+  { name: "embedded", type: "root", edge: { kind: "embed", type: Plain } }
+] });
+
+test("get leaves out what a new instance holds, and full keeps it", () =>
+{
+  const object = new Defaulted();
+
+  assert.deepEqual(CjsGraph.get(object), {});
+  assert.deepEqual(Object.keys(CjsGraph.get(object, { full: true })), [ "name", "weight", "position", "items", "child", "embedded" ]);
+
+  object.weight = 2;
+  assert.deepEqual(CjsGraph.get(object), { weight: 2 });
+});
+
+test("a default is what the constructor left, so an empty name is written, and reads back", () =>
+{
+  const object = new Defaulted();
+  object.name = "";
+
+  const bag = CjsGraph.get(object);
+  assert.deepEqual(bag, { name: "" });
+  assert.equal(CjsGraph.from(Defaulted, bag).name, "");
+});
+
+test("comparison keeps Carbon's tolerance", () =>
+{
+  const object = new Defaulted();
+  object.weight = 0.5 + 1e-7;
+  object.position[1] = 2 + 1e-7;
+
+  assert.deepEqual(CjsGraph.get(object), {});
+});
+
+test("a held object is written, an empty list is not, and a list with items is", () =>
+{
+  const object = new Defaulted();
+  object.child = new Plain();
+  object.items.push(new Plain());
+
+  assert.deepEqual(Object.keys(CjsGraph.get(object)), [ "items", "child" ]);
+});
+
+test("an embedded object at its defaults is left out, and one that differs is written", () =>
+{
+  class Holder { embedded = new Plain(); }
+  CjsGraph.define(Holder, { name: "DefaultHolder", members: [ { name: "embedded", type: "root", edge: { kind: "embed", type: Plain } } ] });
+
+  const object = new Holder();
+  assert.deepEqual(CjsGraph.get(object), {});
+
+  object.embedded.value = 7;
+  assert.deepEqual(CjsGraph.get(object), { embedded: { value: 7 } });
+});
+
+test("defaults come from the first object a door creates, or one spare with no Initialize, once", () =>
+{
+  class Fresh { value = 1; constructor() { Fresh.built++; } static built = 0; Initialize() { Fresh.initialized++; } static initialized = 0; }
+  CjsGraph.define(Fresh, { name: "DefaultFresh", initialize: true, members: [ { name: "value", type: "float32" } ] });
+
+  const first = new Fresh();
+  assert.equal(Fresh.built, 1);
+  assert.deepEqual(CjsGraph.get(first), {});
+  assert.equal(Fresh.built, 2, "no capture yet, so one spare");
+  assert.equal(Fresh.initialized, 0);
+  assert.deepEqual(CjsGraph.get(new Fresh()), {});
+  assert.equal(Fresh.built, 3, "the spare is only built once");
+
+  class Door { value = 1; constructor() { Door.built++; } static built = 0; }
+  CjsGraph.define(Door, { name: "DefaultDoor", members: [ { name: "value", type: "float32" } ] });
+
+  const created = CjsGraph.from(Door, { value: 9 });
+  assert.equal(Door.built, 1);
+  assert.deepEqual(CjsGraph.get(created), { value: 9 });
+  assert.equal(Door.built, 1, "the door's own instance was captured before its values");
+});
+
+test("copy and clone never lose a member to a default", () =>
+{
+  const source = new Defaulted(), target = new Defaulted();
+  target.weight = 3;
+
+  CjsGraph.copy(source, target);
+  assert.equal(target.weight, 0.5);
+});
+
+test("a path takes any text with no control characters, empty included, and keeps its accepts", () =>
+{
+  const path = member("path", { options: { accepts: [ "TriTextureRes" ] } }), { handler } = path;
+
+  for (const value of [ "", "res:/dx9/model/a.black", "RES:/A/B.DDS", "res:/a\\b.dds", "dynamic:/name", "a b.dds", "c:/x/y.tga" ])
+  {
+    assert.equal(handler.IsValidValue(value, path), true, value);
+  }
+
+  assert.equal(handler.IsValidValue("res:/a\nb", path), false);
+  assert.equal(handler.IsValidValue("res:/a\0b", path), false);
+  assert.equal(handler.IsValidValue(1, path), false);
+  assert.deepEqual(path.options.accepts, [ "TriTextureRes" ]);
+  assert.equal(member("wpath").vartype, VARTYPE.STDWSTRING);
+  assert.equal(member("expression").handler.IsValidValue("a\nb", member("expression")), true, "an expression is not a path");
+});
+
+test("a held object a constructor built is written against what the constructor put there", () =>
+{
+  class Curve { scale = 1; offset = 0; }
+  class Owner { curve = new Curve(); constructor() { this.curve.scale = 5; } }
+  CjsGraph.define(Curve, { name: "DefaultCurve", members: [ { name: "scale", type: "float32" }, { name: "offset", type: "float32" } ] });
+  CjsGraph.define(Owner, { name: "DefaultOwner", members: [ { name: "curve", type: "rootRef", edge: { kind: "ref", type: Curve } } ] });
+
+  const object = new Owner();
+  object.curve.scale = 1;
+  const bag = CjsGraph.get(object);
+
+  assert.deepEqual(bag, { curve: { scale: 1 } }, "1 is the class's default, not this member's");
+  assert.equal(CjsGraph.from(Owner, bag).curve.scale, 1);
+});
+
+test("a structure list loads from empty rows, not a constructor's", () =>
+{
+  class Row { value = 0; }
+  class Rows { rows = [ Object.assign(new Row(), { value: 9 }) ]; }
+  CjsGraph.define(Row, { name: "DefaultRow", members: [ { name: "value", type: "float32" } ] });
+  CjsGraph.define(Rows, { name: "DefaultRows", members: [ { name: "rows", type: "structList", edge: { kind: "embed", collection: true, type: Row } } ] });
+
+  const object = new Rows();
+  object.rows[0].value = 0;
+  const bag = CjsGraph.get(object);
+
+  assert.deepEqual(bag, { rows: [ {} ] });
+  assert.equal(CjsGraph.from(Rows, bag).rows[0].value, 0);
 });

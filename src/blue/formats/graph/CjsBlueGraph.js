@@ -108,19 +108,37 @@ export class CjsBlueGraph
     const item = this._getValuesItem(field.type);
     if (item !== null) return { ...this._getFlags(field), type: "values", item, collection: kind };
 
-    const edge = field.type?.owned === false ? "refWeak" : KIND_EDGES[kind];
+    const edge = this._getEdgeKind(field);
     const name = kind === "typedArray" ? arrayType(field.type.arrayType) : kind === "array" ? "list" : kind;
 
     return {
       ...this._getFlags(field),
-      type: Object.hasOwn(GRAPH_TYPES, name) && (edge || name !== "map") ? name : undefined,
+      type: Object.hasOwn(GRAPH_TYPES, name) && (edge || (name !== "map" && name !== "list")) ? name : undefined,
       wrapped: field.type?.wrapped,
+      options: kind === "path" || kind === "wpath" ? { accepts: field.type.accepts ?? [] } : undefined,
       edge: edge ? {
         kind: edge,
         collection: kind === "structList" ? "list" : kind === "list" || kind === "array" ? kind : null,
         type: this._getDeclaredTypes(field.type)
       } : null
     };
+  }
+
+  /**
+   * How a member holds its objects, or undefined for a value. A private field cannot be walked,
+   * and an array of plain values is not an object list.
+   * @param {object} field Schema declaration.
+   * @returns {string|undefined} An edge kind.
+   */
+  static _getEdgeKind(field)
+  {
+    if (typeof field.key === "string" && field.key.startsWith("#")) return undefined;
+
+    const kind = field.type?.kind;
+    const held = DeclaredClassName(field.type);
+    if (kind === "array" && (!held || held === "unknown" || Object.hasOwn(GRAPH_TYPES, held))) return undefined;
+
+    return field.type?.owned === false ? "refWeak" : KIND_EDGES[kind];
   }
 
   /**

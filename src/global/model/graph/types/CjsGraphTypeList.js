@@ -94,6 +94,9 @@ export class CjsGraphTypeList
    */
   _setRows(list, source, type, options)
   {
+    // A load starts from empty rows: a constructor's rows would show through a bag that left a default out.
+    if (CjsGraph.isLoadingList(options)) list.length = 0;
+
     let changed = list.length !== source.length;
 
     for (let i = 0; i < source.length; i++)

@@ -67,7 +67,7 @@ test("get writes declared members, independent arrays and null", () =>
   holder.child.position.set([ 1, 2, 3 ]);
   holder.rows.push(new Row());
 
-  const values = CjsGraph.get(holder);
+  const values = CjsGraph.get(holder, { full: true });
   assert.deepEqual(values, {
     name: "h",
     child: { name: "a", weight: 2, position: [ 1, 2, 3 ] },
@@ -93,19 +93,19 @@ test("get writes a shared object once, anchors it on second sight and closes a c
   holder.child = shared;
   holder.items.push(shared, leaf("own"), null);
 
-  const values = CjsGraph.get(holder);
+  const values = CjsGraph.get(holder, { full: true });
   assert.equal(values.child._id, 1);
   assert.deepEqual(values.items[0], { _ref: 1 });
   assert.equal(values.items[1].name, "own");
   assert.equal(values.items[2], null);
 
-  const flat = CjsGraph.get(holder, { refs: false });
+  const flat = CjsGraph.get(holder, { full: true, refs: false });
   assert.equal(flat.child._id, undefined);
   assert.equal(flat.items[0].name, "shared");
 
   const node = new Node();
   node.next = node;
-  assert.deepEqual(CjsGraph.get(node), { _id: 1, next: { _ref: 1 } });
+  assert.deepEqual(CjsGraph.get(node, { full: true }), { _id: 1, next: { _ref: 1 } });
 });
 
 test("get writes _type only where the class differs from the declared one, unless forced", () =>
@@ -115,15 +115,15 @@ test("get writes _type only where the class differs from the declared one, unles
   holder.items.push(new Special());
   holder.other = new Row();
 
-  const tagged = CjsGraph.get(holder, { typeTags: true });
+  const tagged = CjsGraph.get(holder, { full: true, typeTags: true });
   assert.equal(tagged._type, "GraphValueHolder");
   assert.equal(tagged.child._type, undefined);
   assert.equal(tagged.items[0]._type, "GraphValueSpecial");
   assert.equal(tagged.other._type, "GraphValueRow");
 
-  const forced = CjsGraph.get(holder, { forceTypeTags: true });
+  const forced = CjsGraph.get(holder, { full: true, forceTypeTags: true });
   assert.equal(forced.child._type, "GraphValueLeaf");
-  assert.equal(CjsGraph.get(holder).child._type, undefined);
+  assert.equal(CjsGraph.get(holder, { full: true }).child._type, undefined);
 });
 
 test("get omits an empty indexed slot and reads a filled one", () =>
@@ -131,7 +131,7 @@ test("get omits an empty indexed slot and reads a filled one", () =>
   const holder = new Holder();
   holder.slots[1] = leaf("slot");
 
-  const values = CjsGraph.get(holder);
+  const values = CjsGraph.get(holder, { full: true });
   assert.equal(Object.hasOwn(values, "first"), false);
   assert.equal(values.second.name, "slot");
   assert.equal(CjsGraph.getValue(holder, "second").name, "slot");
@@ -143,7 +143,7 @@ test("get refuses an unregistered object rather than dropping it", () =>
   class Unknown {}
   const holder = new Holder();
   holder.other = new Unknown();
-  assert.throws(() => CjsGraph.get(holder), /Unknown graph class/);
+  assert.throws(() => CjsGraph.get(holder, { full: true }), /Unknown graph class/);
 });
 
 test("struct handler writes an embedded object", () =>
@@ -153,7 +153,7 @@ test("struct handler writes an embedded object", () =>
     row = new Row();
   }
   CjsGraph.define(Embed, { name: "GraphValueEmbed", members: [ { name: "row", type: "rawStruct", edge: { kind: "embed", type: Row } } ] });
-  assert.deepEqual(CjsGraph.get(new Embed()), { row: { value: 0 } });
+  assert.deepEqual(CjsGraph.get(new Embed(), { full: true }), { row: { value: 0 } });
 });
 
 test("set skips equal members, records changed ones and returns false when nothing changed", () =>
@@ -284,7 +284,7 @@ test("a list that already matches is no change, including bags and live items", 
   holder.items.push(first);
 
   assert.equal(CjsGraph.set(holder, { items: [ first ] }), false);
-  assert.equal(CjsGraph.set(holder, { items: CjsGraph.get(holder).items }), false);
+  assert.equal(CjsGraph.set(holder, { items: CjsGraph.get(holder, { full: true }).items }), false);
   assert.equal(CjsGraph.set(holder, { items: holder.items }), false);
   assert.equal(holder.items[0], first);
 
@@ -489,7 +489,7 @@ test("shared references, cycles and forward references rebuild the same topology
   const holder = new Holder();
   holder.child = shared;
   holder.items.push(shared, leaf("own"));
-  const built = CjsGraph.from(Holder, CjsGraph.get(holder));
+  const built = CjsGraph.from(Holder, CjsGraph.get(holder, { full: true }));
   assert.equal(built.items[0], built.child);
   assert.notEqual(built.items[1], built.child);
 
@@ -600,7 +600,7 @@ test("clone rebuilds a separate graph, and copy writes into a target, keeping id
 
   const clone = CjsGraph.clone(holder);
   assert.equal(clone.constructor, Holder);
-  assert.deepEqual(CjsGraph.get(clone), CjsGraph.get(holder));
+  assert.deepEqual(CjsGraph.get(clone, { full: true }), CjsGraph.get(holder, { full: true }));
   assert.notEqual(clone.child, shared);
   assert.equal(clone.items[0], clone.child, "sharing inside the graph is kept");
   assert.equal(clone.other.constructor, Special);
@@ -628,7 +628,7 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
   const object = Rooted.from({ name: "a" });
   assert.equal(object.constructor, Rooted);
   assert.equal(object.__cjs.destructed, false);
-  assert.deepEqual(object.GetValues(), { name: "a", weight: 1 });
+  assert.deepEqual(object.GetValues({ full: true }), { name: "a", weight: 1 });
   assert.equal(object.GetValue("name"), "a");
   assert.deepEqual(object.SetValues({ weight: 2 }), { weight: 2 });
   assert.deepEqual(object.SetValue("name", "b"), { name: "b" });
@@ -639,7 +639,7 @@ test("CjsGraphRoot forwards every operation and holds per-object state", () =>
   const clone = object.Clone();
   assert.notEqual(clone, object);
   assert.notEqual(clone.__cjs, object.__cjs);
-  assert.deepEqual(clone.GetValues(), object.GetValues());
+  assert.deepEqual(clone.GetValues({ full: true }), object.GetValues({ full: true }));
 
   const target = new Rooted();
   assert.deepEqual(target.Copy(object), { name: "b", weight: 2 });
@@ -656,7 +656,7 @@ test("a definition marked whole takes nothing from its base", () =>
   CjsGraph.define(Base, { name: "GraphValueWholeBase", members: [ { name: "shared", type: "float32" }, { name: "dropped", type: "float32" } ] });
   CjsGraph.define(Derived, { name: "GraphValueWholeDerived", whole: true, members: [ { name: "shared", type: "float32" } ] });
 
-  assert.deepEqual(CjsGraph.get(new Derived()), { shared: 1 });
+  assert.deepEqual(CjsGraph.get(new Derived(), { full: true }), { shared: 1 });
   assert.equal(CjsGraph.getClassInfo(Derived).compiled.parent, CjsGraph.getClassInfo(Base), "the base is still its parent");
 });
 
@@ -676,10 +676,10 @@ test("an interface a definition names counts as assignable, without inheritance"
 
   const holds = new Holds();
   holds.held = new Mapped();
-  assert.deepEqual(CjsGraph.get(holds, { typeTags: true }).held, { _type: "GraphValueMapped" });
+  assert.deepEqual(CjsGraph.get(holds, { full: true, typeTags: true }).held, { _type: "GraphValueMapped" });
 
   holds.held = new Unmapped();
-  assert.throws(() => CjsGraph.get(holds), /not assignable/);
+  assert.throws(() => CjsGraph.get(holds, { full: true }), /not assignable/);
 });
 
 test("a list of values reads, writes and compares through its item handler", () =>
@@ -696,7 +696,7 @@ test("a list of values reads, writes and compares through its item handler", () 
 
   const object = new Transforms(), first = object.transforms[0];
 
-  assert.deepEqual(CjsGraph.get(object), { transforms: [ [ 0, 0, 0 ] ], names: [] });
+  assert.deepEqual(CjsGraph.get(object, { full: true }), { transforms: [ [ 0, 0, 0 ] ], names: [] });
   assert.equal(CjsGraph.set(object, { transforms: [ [ 0, 0, 0 ] ], names: [] }), false);
 
   const changes = CjsGraph.set(object, { transforms: [ [ 1, 2, 3 ], [ 4, 5, 6 ] ], names: [ "a" ] });
@@ -728,7 +728,7 @@ test("a Map of objects behaves as a list keyed by name", () =>
   entries.set("a", stays);
   entries.set("gone", leaf("gone"));
 
-  assert.deepEqual(CjsGraph.get(object).entries.a.name, "stays");
+  assert.deepEqual(CjsGraph.get(object, { full: true }).entries.a.name, "stays");
   assert.equal(CjsGraph.traverse(object, () => {}), 3);
 
   const changes = CjsGraph.set(object, { entries: { a: stays, b: { name: "new" } } });
@@ -739,7 +739,7 @@ test("a Map of objects behaves as a list keyed by name", () =>
   assert.equal(changes.entries.b, entries.get("b"));
 
   assert.equal(CjsGraph.set(object, { entries: { a: stays, b: entries.get("b") } }), false);
-  assert.equal(CjsGraph.set(object, { entries: CjsGraph.get(object).entries }), false);
+  assert.equal(CjsGraph.set(object, { entries: CjsGraph.get(object, { full: true }).entries }), false);
 
   const forward = CjsGraph.set(object, { entries: { c: { _ref: 4 } }, other: { _id: 4, name: "later" } });
   assert.equal(entries.get("c"), object.other);
@@ -776,7 +776,7 @@ test("a comparison reaching a Map inside a list reads the Map's own declared typ
   inner.entries.set("a", new Row());
   outer.inners.push(inner);
 
-  assert.equal(CjsGraph.set(outer, CjsGraph.get(outer)), false);
+  assert.equal(CjsGraph.set(outer, CjsGraph.get(outer, { full: true })), false);
   assert.equal(outer.inners[0], inner);
 });
 
@@ -1158,13 +1158,13 @@ test("get filters by flags, and a hidden derived declaration leaves the visible 
     { name: "secret", type: "float32", hidden: true }
   ] });
 
-  assert.deepEqual(CjsGraph.get(new Derived()), { value: 2 });
+  assert.deepEqual(CjsGraph.get(new Derived(), { full: true }), { value: 2 });
   assert.deepEqual(CjsGraph.get(new Derived(), { persistOnly: true }), { value: 1 });
 
   const flags = new Flags();
-  assert.deepEqual(CjsGraph.get(flags), { shown: 1, transient: 2, readOnly: 3 });
-  assert.deepEqual(CjsGraph.get(flags, { persistOnly: true }), { shown: 1, readOnly: 3 });
-  assert.deepEqual(CjsGraph.get(flags, { roundTrip: true }), { shown: 1, transient: 2 });
+  assert.deepEqual(CjsGraph.get(flags, { full: true }), { shown: 1, transient: 2, readOnly: 3 });
+  assert.deepEqual(CjsGraph.get(flags, { full: true, persistOnly: true }), { shown: 1, readOnly: 3 });
+  assert.deepEqual(CjsGraph.get(flags, { full: true, roundTrip: true }), { shown: 1, transient: 2 });
 
   assert.equal(CjsGraph.set(flags, { readOnly: 9, secret: 9 }), false, "skipped, as DictReader skips what it may not write");
   assert.equal(flags.readOnly, 3);
@@ -1180,10 +1180,10 @@ test("a registration change rebuilds the member tables", () =>
     b = 2;
   }
   CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "a", type: "float32" } ] });
-  assert.deepEqual(CjsGraph.get(new Late()), { a: 1 });
+  assert.deepEqual(CjsGraph.get(new Late(), { full: true }), { a: 1 });
 
   CjsGraph.define(Late, { name: "GraphLate", members: [ { name: "b", type: "float32" } ] });
-  assert.deepEqual(CjsGraph.get(new Late()), { b: 2 });
+  assert.deepEqual(CjsGraph.get(new Late(), { full: true }), { b: 2 });
 });
 
 /** A list with its own operations, recording what is asked of it. */

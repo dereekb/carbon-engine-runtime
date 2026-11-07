@@ -43,6 +43,21 @@ export const VARTYPE = Object.freeze({
   VARTYPE_FORCELONG: 0xFFFFFFFF
 });
 
+/**
+ * Tests that a string can be a path: empty, or text with no control characters.
+ * @cjs Authored files hold paths with no scheme, backslashes, spaces and drive letters, so the
+ * shape is not enforced. What a path may name is `accepts`, which only tools read.
+ */
+function isPathLike(value)
+{
+  for (let i = 0; i < value.length; i++)
+  {
+    if (value.charCodeAt(i) < 32) return false;
+  }
+
+  return true;
+}
+
 const scalar = (storage, handler, fields) => ({ storage, handler, ...fields });
 const integer = (storage, bits, signed) => ({ storage, handler: "long", direct: true, bits, signed });
 const floats = length => ({ storage: VARTYPE.FLOATARRAY, handler: "floatArray", length });
@@ -70,8 +85,8 @@ export const GRAPH_TYPES = {
   uint64: { storage: VARTYPE.UINT64, handler: "int64", bits: 64, signed: false },
   string: scalar(VARTYPE.STDSTRING, "string", { direct: true }),
   wstring: scalar(VARTYPE.STDWSTRING, "string", { direct: true }),
-  path: scalar(VARTYPE.STDSTRING, "string", { direct: true }),
-  wpath: scalar(VARTYPE.STDWSTRING, "string", { direct: true }),
+  path: scalar(VARTYPE.STDSTRING, "string", { direct: true, check: isPathLike }),
+  wpath: scalar(VARTYPE.STDWSTRING, "string", { direct: true, check: isPathLike }),
   expression: scalar(VARTYPE.STDSTRING, "string", { direct: true }),
   cstring: scalar(VARTYPE.CSTRING, "cstring"),
   wcstring: scalar(VARTYPE.WCSTRING, "cstring"),

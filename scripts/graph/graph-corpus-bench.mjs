@@ -60,7 +60,7 @@ const all = await (await fetch(base + "resfiles")).json();
 const wanted = all.filter(path => /\.black$/iu.test(path) && !path.includes("/shaders/")).sort();
 const files = wanted.filter((path, index) => index % every === 0);
 
-const reading = { persistOnly: true, typeTags: true };
+const reading = { persistOnly: true, typeTags: true, full: true };
 const events = { skipEvents: true };
 const quiet = { notify: false, markDirty: false, reuseObjects: true };
 const rows = [];
@@ -86,7 +86,7 @@ for (const path of files)
 }
 
 const passes = {
-  get: [ row => CjsSchema.getValues(row.root, {}, reading), row => CjsGraph.get(row.root, reading) ],
+  get: [ row => CjsSchema.getValues(row.root, {}, reading), row => CjsGraph.get(row.root, process.env.BENCH_SKIP ? { persistOnly: true, typeTags: true } : reading) ],
   set: [ row => CjsSchema.setValues(row.oldTarget, row.values, quiet), row => CjsGraph.set(row.newTarget, row.values, events) ],
   from: [ row => new DictReader({ initialize: false }).CreateObject(row.values, row.root.constructor), row => CjsGraph.from(null, row.values, events) ],
   copy: [ row => new Copier().CopyTo(row.root, row.copyOld), row => CjsGraph.copy(row.root, row.copyNew) ]
