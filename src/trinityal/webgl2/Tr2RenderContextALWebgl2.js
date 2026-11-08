@@ -1273,6 +1273,23 @@ export class Tr2RenderContextALWebgl2
   }
 
   /**
+   * Ours: the KHR_parallel_shader_compile extension, or null without it. With
+   * it, shaders compile and programs link without being waited for
+   * (Tr2ShaderProgramALWebgl2.IsGood). Asked once per context.
+   *
+   * @cjs
+   * @returns {object|null} The extension.
+   */
+  GetParallelShaderCompile()
+  {
+    if (this._parallelShaderCompile === undefined) this._parallelShaderCompile = this._gl ? this._gl.getExtension("KHR_parallel_shader_compile") : null;
+    return this._parallelShaderCompile;
+  }
+
+  /** Ours: the cached KHR_parallel_shader_compile extension; undefined until asked. */
+  _parallelShaderCompile = undefined;
+
+  /**
    * Binds this context's framebuffer for drawing and reading again, after a
    * texture copy, resolve or read borrowed a framebuffer binding. The context
    * keeps its own framebuffer bound, so this restores it without reading the
@@ -1736,7 +1753,8 @@ export class Tr2RenderContextALWebgl2
   {
     const gl = this._gl;
     const program = this._shaderProgram;
-    if (!program || !program.IsValid()) return false;
+    // A program still linking in parallel is skipped, as a refused one is.
+    if (!program || !program.IsValid() || !program.IsGood()) return false;
 
     const native = program.GetGpuResource();
     if (this._currentProgram !== native)

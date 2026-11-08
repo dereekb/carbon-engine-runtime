@@ -139,7 +139,10 @@ export class Tr2ShaderALWebgl2 extends Tr2DeviceResourceAL
     gl.shaderSource(shader, GlslFrom(bytecode));
     gl.compileShader(shader);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+    // PARALLEL LINKING (KHR_parallel_shader_compile): the compile is not waited
+    // for. A stage that fails reports when a program linking it finishes
+    // (Tr2ShaderProgramALWebgl2.IsGood), through GetCompileLog.
+    if (!al.GetParallelShaderCompile() && !gl.getShaderParameter(shader, gl.COMPILE_STATUS))
     {
       this._log = gl.getShaderInfoLog(shader) ?? "";
       gl.deleteShader(shader);
@@ -289,12 +292,18 @@ export class Tr2ShaderALWebgl2 extends Tr2DeviceResourceAL
 
   /**
    * The compiler's info log from the last failed `Create`, for diagnostics.
+   * Under parallel linking Create does not wait for the compile, so a failure
+   * is read from the driver here instead; a program asks only once its link
+   * has finished, so this never waits.
    *
    * @returns {string} The log, empty after a successful compile.
    */
   GetCompileLog()
   {
-    return this._log;
+    if (this._log) return this._log;
+    const gl = this._gl, shader = this._shader;
+    if (!gl || !shader || gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return "";
+    return gl.getShaderInfoLog(shader) ?? "";
   }
 }
 

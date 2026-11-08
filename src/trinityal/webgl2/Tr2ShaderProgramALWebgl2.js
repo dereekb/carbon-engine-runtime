@@ -36,7 +36,7 @@
 import { CjsSchema, type } from "#schema";
 import { Tr2ALMemoryType } from "#consts/graphics";
 import { Tr2DeviceResourceAL } from "../Tr2DeviceResourceAL/index.js";
-import { ALResult } from "../ALResult.js";
+import { ALResult, Failed } from "../ALResult.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { RenderContextALOf } from "../renderContextAL.js";
 import { Tr2RegisterMapAL } from "../Tr2ResourceSetAL/Tr2RegisterMapAL.js";
@@ -58,6 +58,12 @@ const TEXTURE_KINDS = new Set([ "resource", "bufferTexture", "structuredTexture"
 
 /** The texture units WebGL2 guarantees each stage; a larger device limit is not relied on. */
 const TEXTURE_UNITS_PER_STAGE = 16;
+
+/** Ours: where a program's link stands; see IsGood. */
+const LINK_NONE = 0;
+const LINK_PENDING = 1;
+const LINK_GOOD = 2;
+const LINK_FAILED = 3;
 
 /** The uniform-block name the emitter's `std140` profile gives constant buffer `cbN`. */
 function BlockNameOf(name)
@@ -108,6 +114,15 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
 
   /** @adapted WebGL2 draw buffers may enable only locations active in the linked fragment stage. */
   _fragmentOutputMask = 0;
+
+  /** Ours: where linking stands: LINK_NONE, LINK_PENDING, LINK_GOOD or LINK_FAILED. */
+  _linkState = LINK_NONE;
+
+  /** Ours: the KHR_parallel_shader_compile extension when linking runs in parallel, else null. */
+  _parallel = null;
+
+  /** Ours: the pixel or compute stage, for laying out fragment outputs once the link finishes. */
+  _fragmentStage = null;
 
   /** The linker's info log from the last failed link. */
   _log = "";
@@ -219,16 +234,72 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
 
     gl.linkProgram(program);
 
+    this._program = program;
+    this._shaders = stages;
+    this._vertexShader = stages.get(ShaderType.VERTEX_SHADER) ?? null;
+    this._fragmentStage = fragment ?? null;
+    this._registerMap = new Tr2RegisterMapAL({ shaders: linked });
+    this._isValid = true;
+
+    // PARALLEL LINKING (KHR_parallel_shader_compile): nothing here waits for
+    // the driver. The program exists now and IsGood answers false until the
+    // driver reports completion; draws and resource sets skip it until then.
+    this._parallel = al.GetParallelShaderCompile();
+    this._linkState = LINK_PENDING;
+    if (this._parallel) return ALResult.S_OK;
+
+    // Without the extension the link is finished now, as before, so a refusal
+    // is Create's failure.
+    const result = this._FinishLink();
+    if (Failed(result)) this._Reset();
+    return result;
+  }
+
+  /**
+   * Ours: whether the program has finished linking and can draw. With
+   * KHR_parallel_shader_compile it polls the driver without waiting
+   * (`COMPLETION_STATUS_KHR`) and finishes the link the first time it is
+   * done; a failed link is permanently not good, and logs once. Without the
+   * extension the link finished in Create.
+   *
+   * @cjs
+   * @returns {boolean} Whether the program is linked and laid out.
+   */
+  IsGood()
+  {
+    if (this._linkState === LINK_GOOD) return true;
+    if (this._linkState !== LINK_PENDING || !this._isValid) return false;
+    if (!this._gl.getProgramParameter(this._program, this._parallel.COMPLETION_STATUS_KHR)) return false;
+    if (Failed(this._FinishLink()))
+    {
+      // Permanently not good: the refusal is logged once, in _FinishLink.
+      this._linkState = LINK_FAILED;
+      this._gl.deleteProgram(this._program);
+      this._program = null;
+    }
+    return this._linkState === LINK_GOOD;
+  }
+
+  /**
+   * Reads the finished link and lays the program out: the link status, the
+   * attribute types, the fragment outputs and the bindings
+   * (`Tr2ShaderProgramALDx11.cpp:51-73` for what dx11 does at Create).
+   *
+   * @cjs
+   * @returns {number} An `ALResult` value; a refusal is logged.
+   */
+  _FinishLink()
+  {
+    const gl = this._gl, program = this._program, fragment = this._fragmentStage;
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
     {
-      this._log = gl.getProgramInfoLog(program) ?? "";
+      // A stage that failed to compile reports here: its compile was not waited for.
+      const stageLogs = [ ...this._shaders.values() ].map(stage => stage.GetCompileLog()).filter(Boolean);
+      this._log = [ gl.getProgramInfoLog(program) ?? "", ...stageLogs ].filter(Boolean).join("\n");
       this._LogRefusal();
-      gl.deleteProgram(program);
-      this._Reset();
       return ALResult.E_FAIL;
     }
 
-    this._program = program;
     const attributeCount = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
     for (let index = 0; index < attributeCount; ++index)
     {
@@ -245,14 +316,10 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     if (fragment && !this._LayOutFragmentOutputs(gl, program, fragment))
     {
       this._LogRefusal();
-      this._Reset();
       return ALResult.E_INVALIDARG;
     }
-    this._shaders = stages;
-    this._vertexShader = stages.get(ShaderType.VERTEX_SHADER) ?? null;
-    this._LayOutBindings(gl, program, stages);
-    this._registerMap = new Tr2RegisterMapAL({ shaders: linked });
-    this._isValid = true;
+    this._LayOutBindings(gl, program, this._shaders);
+    this._linkState = LINK_GOOD;
 
     return ALResult.S_OK;
   }
@@ -488,6 +555,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     this._vertexInputs = [];
     this._vertexAttributeTypes = new Map();
     this._fragmentOutputMask = 0;
+    this._linkState = LINK_NONE;
+    this._parallel = null;
+    this._fragmentStage = null;
     this._gl = null;
   }
 

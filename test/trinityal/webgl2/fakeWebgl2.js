@@ -336,5 +336,6 @@ export function FakeWebgl2()
  */
 export function FakeRenderContext(gl, valid = true)
 {
-    return { IsValid: () => valid, GetWebgl2: () => gl, _RebindFramebuffer: () => gl.bindFramebuffer(gl.FRAMEBUFFER, null) };
+    return { IsValid: () => valid, GetWebgl2: () => gl, _RebindFramebuffer: () => gl.bindFramebuffer(gl.FRAMEBUFFER, null),
+        GetParallelShaderCompile: () => null };
 }

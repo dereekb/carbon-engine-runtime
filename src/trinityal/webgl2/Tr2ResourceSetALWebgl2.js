@@ -125,6 +125,11 @@ export class Tr2ResourceSetALWebgl2 extends Tr2DeviceResourceAL
   {
     this._Reset();
 
+    // The bindings are laid out when the link finishes. Until a program linking
+    // in parallel is good, the set is refused, and Tr2Material retries on its
+    // next apply, as it does after any failed Create.
+    if (!program.TrinityALImpl_GetObject().IsGood()) return ALResult.E_FAIL;
+
     if (!program.GetRegisterMap().equals(description._registerMap)) return ALResult.E_INVALIDARG;
 
     this._description = new Tr2ResourceSetDescriptionAL({ copy: description });

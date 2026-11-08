@@ -288,3 +288,65 @@ test("a compute-only program links with a full-screen vertex stage of its own", 
     assert.match(attached[0].source, /gl_VertexID/);
     assert.ok(calls.some(call => call[0] === "createShader" && call[1] === attached[0]));
 });
+
+/** A WebGL2 fake with KHR_parallel_shader_compile, whose completion the test decides. */
+function parallelDevice()
+{
+    const { gl } = FakeWebgl2();
+    const extension = { COMPLETION_STATUS_KHR: 0x91B1 };
+    gl.extensions = { KHR_parallel_shader_compile: extension };
+    const state = { done: false, reads: [] };
+    const parameter = gl.getProgramParameter.bind(gl);
+    gl.getProgramParameter = (program, name) =>
+    {
+        state.reads.push(name);
+        return name === extension.COMPLETION_STATUS_KHR ? state.done : parameter(program, name);
+    };
+    const context = { ...FakeRenderContext(gl), GetParallelShaderCompile: () => extension };
+    const stage = (type, source) =>
+    {
+        const created = new Tr2ShaderALWebgl2();
+        assert.equal(created.Create(type, source, { backendBlock: block(), registers: [] }, "test", context), ALResult.S_OK);
+        return created;
+    };
+    return { gl, state, context, stage };
+}
+
+test("with parallel linking a program exists at once and is good only when the driver is done", () =>
+{
+    const { gl, state, context, stage } = parallelDevice();
+    const program = new Tr2ShaderProgramALWebgl2();
+    assert.equal(program.Create(...link([ stage(ShaderType.VERTEX_SHADER, VERTEX), stage(ShaderType.PIXEL_SHADER, PIXEL) ]), context), ALResult.S_OK);
+    assert.equal(program.IsValid(), true, "the program exists as soon as the link starts");
+    assert.equal(state.reads.includes(gl.LINK_STATUS), false, "Create does not wait for the link");
+    assert.equal(program.IsGood(), false);
+    assert.equal(program.IsGood(), false, "still linking");
+    assert.equal(program._fragmentOutputMask, 0, "laid out only once linked");
+    state.done = true;
+    assert.equal(program.IsGood(), true);
+    assert.equal(program._fragmentOutputMask, 1);
+    assert.equal(program.GetGpuResource().attributes.get("in_POSITION0"), 0);
+    const reads = state.reads.length;
+    assert.equal(program.IsGood(), true);
+    assert.equal(state.reads.length, reads, "a good program asks the driver nothing more");
+});
+
+test("with parallel linking a failed link or compile is permanently not good and logs once", () =>
+{
+    const { state, context, stage } = parallelDevice();
+    const before = CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR);
+    const program = new Tr2ShaderProgramALWebgl2();
+    // The fake fails a link whose stage carries #nolink; the stage compile itself is not waited for.
+    assert.equal(program.Create(...link([ stage(ShaderType.VERTEX_SHADER, VERTEX), stage(ShaderType.PIXEL_SHADER, PIXEL + "\n// #nolink") ]), context), ALResult.S_OK);
+    state.done = true;
+    assert.equal(program.IsGood(), false);
+    assert.equal(program.IsGood(), false);
+    assert.equal(program.IsValid(), true, "it stays a program, never good");
+    assert.equal(CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR) - before, 1, "logged once");
+    assert.match(CcpLog.GetLastErrorMessage(), /WebGL2 refused a shader program: link failed/u);
+    // A stage that failed to compile reports through the program's log.
+    const broken = new Tr2ShaderProgramALWebgl2();
+    assert.equal(broken.Create(...link([ stage(ShaderType.VERTEX_SHADER, VERTEX), stage(ShaderType.PIXEL_SHADER, PIXEL + "\n#error nope\n// #nolink") ]), context), ALResult.S_OK);
+    assert.equal(broken.IsGood(), false);
+    assert.match(CcpLog.GetLastErrorMessage(), /#error/u);
+});
