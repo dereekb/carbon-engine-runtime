@@ -50,3 +50,29 @@ test("strict, the same bag fails the read, as Carbon's DictReader and BlackReade
 {
   assert.throws(() => CjsSchema.from("Tr2PointLight", olderLight, { strict: true }), /Invalid attribute: startTime/u);
 });
+
+test("a wrong-typed exposed member keeps its default, with one warning", () =>
+{
+  const defaultRadius = new (CjsSchema.getConstructor("Tr2PointLight"))().radius;
+  let light;
+  const warnings = warningsOf(() =>
+  {
+    light = CjsSchema.from("Tr2PointLight", { radius: "far", boneIndex: 7 });
+  });
+
+  assert.equal(light.radius, defaultRadius);
+  assert.equal(light.boneIndex, 7, "the other members still apply");
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0][0], "values");
+  assert.ok(warnings[0][1].includes("Expected a float") && warnings[0][1].includes("'radius'") && warnings[0][1].includes("Tr2PointLight"), warnings[0][1]);
+
+  // The default radius is 0, so a member that already holds a value shows it is skipped, not coerced to 0.
+  CjsSchema.setValues(light, { radius: 4 });
+  warningsOf(() => CjsSchema.setValues(light, { radius: "far" }));
+  assert.equal(light.radius, 4);
+});
+
+test("strict, a wrong-typed member fails the read with Carbon's DictReader message", () =>
+{
+  assert.throws(() => CjsSchema.from("Tr2PointLight", { radius: "far" }, { strict: true }), /radius[\s\S]*Expected a float/u);
+});

@@ -615,7 +615,7 @@ test("defines a complete hydratable schema from a manual JSON declaration", () =
         }]
     });
 
-    const node = CjsSchema.from(CjsSchema.getClassName(ManualSchemaNode), { value: "1.25" });
+    const node = CjsSchema.from(CjsSchema.getClassName(ManualSchemaNode), { value: 1.25 });
     const schema = CjsSchema.getSchema(ManualSchemaNode);
 
     assert.equal(CjsSchema.getConstructor("LegacyManualSchemaNode"), ManualSchemaNode);

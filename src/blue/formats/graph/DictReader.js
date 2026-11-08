@@ -46,7 +46,7 @@ import { exposure as be } from "#be";
 // roots, embedded storage and supplied live objects remain borrowed.
 import { CjsSchema } from "#schema";
 import { omitRuntimeValues } from "../../schema/CjsSchema.js";
-import { normalizeCarbonValue } from "../../schema/types/index.js";
+import { CARBON_TYPE, normalizeCarbonTypeDescriptor, normalizeCarbonValue } from "../../schema/types/index.js";
 import { IRoot } from "../../exposure/IRoot.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
@@ -346,6 +346,110 @@ export class DictReader extends IRootReaderBase
     this._skipped.add(key);
     CcpLog.LogFuncChannel(CcpLog.GetModuleChannel("blue"), LogType.LOGTYPE_WARN, { subtitle: "values" },
       "Error handling attribute '%s' on %s - skipping it", name, className);
+  }
+
+  /**
+   * Reads one member, first checking a plain value against the member's declared type, as
+   * Carbon's DictReader::ReadValue overloads do (blue/src/DictReader.cpp:227-389).
+   *
+   * @adapted Carbon's DictReader throws on a value that does not convert; values bags warn and
+   *   skip the member, which keeps its value, as `_SkipAttribute` does for an unexposed one.
+   *   Strict, the read fails with Carbon's message.
+   * @param {object} instance Destination object.
+   * @param {object} field Selected declaration.
+   * @param {object|null} [notification=null] Declared-read notification retained with a deferred assignment.
+   * @returns {boolean} Whether the member changed; false for a skipped one.
+   */
+  _ReadMember(instance, field, notification = null)
+  {
+    if (!this.IsReferenceSource() && !this.IsTypedSource() && !this.IsObjectSource())
+    {
+      const mismatch = DictReader._TypeMismatch(this._currentSource, field.type);
+      if (mismatch !== null)
+      {
+        if (this._options.strict === true) this._ThrowError(mismatch);
+        this._SkipMismatchedAttribute(field.name, instance, mismatch);
+        return false;
+      }
+    }
+    return super._ReadMember(instance, field, notification);
+  }
+
+  /**
+   * Leaves out a member whose value has the wrong type, and warns once per class and name.
+   *
+   * @cjs The values reader's counterpart of `_SkipAttribute`, on the same channel.
+   * @param {string} name The member.
+   * @param {object} instance The object being read into.
+   * @param {string} mismatch Carbon's message for the value, from `_TypeMismatch`.
+   * @returns {void}
+   */
+  _SkipMismatchedAttribute(name, instance, mismatch)
+  {
+    const className = CjsSchema.getClassName(instance.constructor);
+    const key = `type ${className}.${name}`;
+    if (this._skipped.has(key)) return;
+    this._skipped.add(key);
+    CcpLog.LogFuncChannel(CcpLog.GetModuleChannel("blue"), LogType.LOGTYPE_WARN, { subtitle: "values" },
+      "%s for attribute '%s' on %s - skipping it", mismatch, name, className);
+  }
+
+  /**
+   * Carbon's DictReader message for a plain value its member's type cannot hold
+   * (blue/src/DictReader.cpp:227-389), or null when it can. Only plain values are checked: a
+   * dictionary, an alias or an object is read by its own path.
+   *
+   * @cjs Carbon has no message for a string member, whose ReadString answers null (:345-353).
+   *   A null value is not checked: values bags carry null for an unset member, and it is written as before.
+   * @param {*} value The source value.
+   * @param {object} type The member's type descriptor.
+   * @returns {string|null} The message, or null.
+   */
+  static _TypeMismatch(value, type)
+  {
+    if (value === undefined || value === null || DictReader._IsPlainObject(value)) return null;
+    const descriptor = normalizeCarbonTypeDescriptor(type);
+    switch (descriptor.kind)
+    {
+      case CARBON_TYPE.BOOLEAN:
+        return typeof value === "boolean" ? null : "Expected a bool";
+      case CARBON_TYPE.FLOAT32:
+        return typeof value === "number" ? null : "Expected a float";
+      case CARBON_TYPE.FLOAT64:
+        return typeof value === "number" ? null : "Expected a double";
+      case CARBON_TYPE.INT8:
+      case CARBON_TYPE.UINT8:
+      case CARBON_TYPE.INT16:
+      case CARBON_TYPE.UINT16:
+      case CARBON_TYPE.INT32:
+      case CARBON_TYPE.UINT32:
+        return Number.isInteger(value) ? null : "Expected an int";
+      case CARBON_TYPE.INT64:
+      case CARBON_TYPE.UINT64:
+        // A magnitude JSON cannot hold travels as a BigInt or its decimal string.
+        return Number.isInteger(value) || typeof value === "bigint" || (typeof value === "string" && /^\s*-?\d+\s*$/u.test(value))
+          ? null : "Expected an int";
+      case CARBON_TYPE.STRING:
+      case CARBON_TYPE.WSTRING:
+      case CARBON_TYPE.PATH:
+      case CARBON_TYPE.WPATH:
+      case CARBON_TYPE.EXPRESSION:
+        return typeof value === "string" ? null : "Expected a string";
+      case CARBON_TYPE.VECTOR2:
+      case CARBON_TYPE.VECTOR3:
+      case CARBON_TYPE.VECTOR4:
+      case CARBON_TYPE.COLOR:
+      case CARBON_TYPE.QUATERNION:
+      case CARBON_TYPE.MATRIX3:
+      case CARBON_TYPE.MATRIX4:
+        if (!Array.isArray(value) && !ArrayBuffer.isView(value)) return "Expected a list or a tuple";
+        if (value.length !== descriptor.length)
+          return `List/tuple does not match float array - expected ${descriptor.length} floats, got ${value.length}`;
+        for (let i = 0; i < value.length; i++) if (typeof value[i] !== "number") return "Expected a float";
+        return null;
+      default:
+        return null;
+    }
   }
 
   /**

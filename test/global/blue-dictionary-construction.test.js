@@ -146,7 +146,7 @@ test("nested declared collections construct nodes and preserve borrowed identiti
     define(Parent, { items: { type: spec.type }, later: ref(childName) });
     const borrowed = new Child(); borrowed.initialized = 1;
     Object.defineProperty(borrowed, "cache", { enumerable: true, get() { assert.fail("enumerable borrowed resource"); } });
-    const authored = Object.defineProperty({ _type: childName, value: "7" }, "cache", { enumerable: true, get() { assert.fail("incoming resource"); } });
+    const authored = Object.defineProperty({ _type: childName, value: 7 }, "cache", { enumerable: true, get() { assert.fail("incoming resource"); } });
     const target = reader().CreateObject({ items: spec.wrap([authored, borrowed, { _ref: "later" }]), later: { _id: "later", value: 8 } }, Parent);
     const items = spec.read(target.items);
     assert.ok(items[0] instanceof Child);
