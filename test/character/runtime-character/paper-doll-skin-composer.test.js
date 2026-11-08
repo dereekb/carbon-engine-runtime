@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollDefinition, CjsPaperDollMaterialLayer, CjsPaperDollSkinComposer } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMaterialLayer, CjsPaperDollSkinComposer } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
@@ -36,7 +36,9 @@ class StubCompositor
   destructed = false;
   async Texture(path)
   {
-    // An alpha of 51/255 at every sampled texel of a 32x32 RGBA bitmap.
+    // A foundation map covers its whole atlas (2048x1024 head, 2048x2048 body at 4k); a skin detail is a 32x32 cutout
+    // of half its atlas, with an alpha of 51/255 at every sampled texel.
+    if (/_(head|body)_d\.dds$/.test(path)) return { path, cutoutX: 0, cutoutY: 0, cutoutWidth: 1, cutoutHeight: 1, width: 2048, height: path.includes("_head_") ? 1024 : 2048 };
     const data = new Uint8Array(32 * 32 * 4).fill(51);
     return { path, cutoutX: 0, cutoutY: 0, cutoutWidth: 1, cutoutHeight: .5, width: 32, height: 32, loadedBitmap: { GetMipRawData: () => data, GetPitch: () => 128 } };
   }
@@ -60,12 +62,13 @@ async function prepared(t)
 {
   const { fetched } = services(t);
   const build = { content: { root: "res:/graphics/character/female/paperdoll/" }, report: {}, CheckActive() {}, Ready: value => value };
-  const skin = new CjsPaperDollSkinComposer(null, build);
-  const compositor = skin.compositor = new StubCompositor();
+  const composition = new CjsPaperDollComposition(null, build);
+  const compositor = composition.compositor = new StubCompositor();
+  const skin = new CjsPaperDollSkinComposer(composition, build);
   const doll = definition(), notes = [], body = [ { SetResource(value) { this.bound = value; } } ];
   const foundations = new Map([ [ "a", foundation("a") ] ]);
   await skin.Prepare(doll, foundation("a"), foundations, body, message => notes.push(message));
-  return { skin, compositor, doll, notes, body, build, foundations, fetched };
+  return { skin, composition, compositor, doll, notes, body, build, foundations, fetched };
 }
 
 test("listFiles lists a directory from the index, each stored .black under its own name, sorted (Graphene's ListResourceFiles moved)", t =>
@@ -97,11 +100,11 @@ test("Apply draws into the other target each time, binds the body base and repor
 {
   const { skin, compositor, body, build, notes } = await prepared(t);
   const first = skin.bodyTexture;
-  skin.Apply({ skin: { option: "basic", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], skin: { option: "basic", colors: PALETTE } });
   assert.notEqual(skin.bodyTexture, first);
   assert.equal(body[0].bound, skin.bodyTexture);
   assert.deepEqual(Array.from(compositor.draws.at(-1).value.FindParameterByName("Color1").value), PALETTE[0].map(Math.fround));
-  skin.Apply({ skin: { option: "", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], skin: { option: "", colors: PALETTE } });
   assert.equal(skin.bodyTexture, first, "two targets, alternating");
   assert.equal(compositor.draws.at(-1).clear, true, "no option: the base only");
   assert.equal(compositor.draws.at(-1).value.FindParameterByName("AlphaMultiplier").GetValue(), 1);
@@ -112,16 +115,16 @@ test("Apply draws into the other target each time, binds the body base and repor
 
 test("a foundation is copied once, selected for the next apply, and an unprepared one is refused; Destruct releases the compositor", async t =>
 {
-  const { skin, compositor, build, foundations } = await prepared(t);
+  const { skin, composition, compositor, build, foundations } = await prepared(t);
   foundations.set("b", foundation("b"));
   await skin.PrepareFoundation("b", foundation("b"));
   await skin.PrepareFoundation("b", foundation("b"));
   skin.SelectFoundation("b");
   assert.equal(build.report.skin.foundation, "b");
   assert.equal(build.report.skin.regions.head.base, "res:/b_head_d.dds");
-  skin.Apply({ skin: { option: "basic", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], skin: { option: "basic", colors: PALETTE } });
   assert.equal(compositor.draws.at(-2).value.source.path, "res:/b_body_d.dds");
   assert.throws(() => skin.SelectFoundation("c"), /Unprepared skin foundation c/);
-  skin.Destruct();
+  composition.Destruct();
   assert.equal(compositor.destructed, true);
 });
