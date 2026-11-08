@@ -34,15 +34,15 @@ export class TriSettings extends IRoot
    * @param {string} name The setting's name.
    * @param {object|boolean|number|string} ownerOrValue The value's owner, or the value.
    * @param {string} [key] The owner's property holding the value.
-   * @param {{ applies?: string, enum?: object|string|null, values?: Array|null, carbon?: boolean }} [options] See meta.setting.
+   * @param {{ applies?: string, enum?: object|string|null, values?: Array|null, carbon?: boolean, category?: ReadonlyArray<string>|null }} [options] See meta.setting; `category` is ours, for menus only.
    * @returns {TriSettings} This registry.
    */
 
-  RegisterSetting(name, ownerOrValue, key, { applies = "always", enum: enumType = null, values = null, carbon = false } = {})
+  RegisterSetting(name, ownerOrValue, key, { applies = "always", enum: enumType = null, values = null, carbon = false, category = null } = {})
   {
     const owner = key === undefined ? { value: ownerOrValue } : ownerOrValue;
     const property = key === undefined ? "value" : key;
-    this._RegisterSettingHelper(TriSettings._GetKey(name), owner, property, typeof owner[property], { applies, enum: enumType, values, carbon });
+    this._RegisterSettingHelper(TriSettings._GetKey(name), owner, property, typeof owner[property], { applies, enum: enumType, values, carbon, category });
     return this;
   }
 
@@ -67,7 +67,7 @@ export class TriSettings extends IRoot
    *
    * @implemented
    * @param {string} name The setting's name.
-   * @returns {{ valueType: string, owner: object, key: string, applies: string, enum: object|string|null, values: Array|null, carbon: boolean }|null} The entry.
+   * @returns {{ valueType: string, owner: object, key: string, applies: string, enum: object|string|null, values: Array|null, carbon: boolean, category: ReadonlyArray<string>|null }|null} The entry.
    */
 
   FindSetting(name)

@@ -242,7 +242,7 @@ export class CjsSchema
 
     /**
      * Every static described by `meta.setting`, in definition order, as
-     * `{ name, owner, key, applies, enum, values, carbon }`. The list only grows.
+     * `{ name, owner, key, applies, enum, values, carbon, category }`. The list only grows.
      *
      * @returns {ReadonlyArray<object>} The described settings.
      */
@@ -1128,6 +1128,10 @@ export class CjsSchema
          * (read while something is built or loaded). `enum` is the enum a
          * numeric setting takes its values from, as the enum object or its
          * registered name; `values` lists the values any other setting takes.
+         * `category` (ours, menu-only; Carbon records none) names the part of
+         * the engine a setting belongs to, as one string or several, such as
+         * "webgpu", "webgl2" or "video"; a menu may hide categories that do not
+         * apply. A setting with no category always applies.
          */
         setting: SETTING_DECORATOR,
         struct: createStructNamespace(),
@@ -1673,7 +1677,7 @@ function getDecoratorMetadata(candidate)
     return typeof candidate === "function" ? candidate[DECORATOR_METADATA] || null : null;
 }
 
-function settingDecorator(name, { applies = SETTING_APPLIES.ALWAYS, enum: enumType = null, values = null } = {})
+function settingDecorator(name, { applies = SETTING_APPLIES.ALWAYS, enum: enumType = null, values = null, category = null } = {})
 {
     if (typeof name !== "string" || !name)
     {
@@ -1691,8 +1695,17 @@ function settingDecorator(name, { applies = SETTING_APPLIES.ALWAYS, enum: enumTy
     {
         throw new TypeError(`meta.setting "${name}": values must be an array.`);
     }
+    if (category !== null)
+    {
+        category = typeof category === "string" ? [ category ] : category;
+        if (!Array.isArray(category) || !category.length || category.some(entry => typeof entry !== "string" || !entry))
+        {
+            throw new TypeError(`meta.setting "${name}": category must be a non-empty string or array of strings.`);
+        }
+        category = Object.freeze([ ...category ]);
+    }
     const carbon = CARBON_SETTING_NAMES.has(name);
-    const value = { name, applies, enum: enumType, values, carbon };
+    const value = { name, applies, enum: enumType, values, carbon, category };
 
     return describeDecorator(function schemaSettingDecorator(_, context)
     {
@@ -1707,7 +1720,7 @@ function settingDecorator(name, { applies = SETTING_APPLIES.ALWAYS, enum: enumTy
         {
             // The same class loaded twice (two bundles) describes it again;
             // the later copy is the one in use. A second field is a mistake.
-            const entry = { name, owner: this, key: context.name, applies, enum: enumType, values, carbon };
+            const entry = { name, owner: this, key: context.name, applies, enum: enumType, values, carbon, category };
             const index = SETTINGS.findIndex(existing => existing.name === name);
             if (index >= 0 && SETTINGS[index].key !== entry.key)
             {

@@ -26,7 +26,7 @@ export class TriSettingsRegistrar
    * @param {string} name Carbon's setting name.
    * @param {object} owner The object holding the value.
    * @param {string} key The owner's property holding the value.
-   * @param {{ applies?: string, enum?: object|string|null, values?: Array|null, carbon?: boolean }} [options] See meta.setting.
+   * @param {{ applies?: string, enum?: object|string|null, values?: Array|null, carbon?: boolean, category?: ReadonlyArray<string>|null }} [options] See meta.setting.
    */
   constructor(name, owner, key, options = {})
   {
@@ -42,11 +42,11 @@ export class TriSettingsRegistrar
   static getSettings()
   {
     const settings = TriSettingsRegistrar._settings ??= new TriSettings();
-    for (const { name, owner, key, applies, enum: enumType, values, carbon } of CjsSchema.getSettings())
+    for (const { name, owner, key, applies, enum: enumType, values, carbon, category } of CjsSchema.getSettings())
     {
       const registered = settings.FindSetting(name);
       if (registered?.owner === owner && registered.key === key) continue;
-      settings.RegisterSetting(name, owner, key, { applies, enum: enumType, values, carbon });
+      settings.RegisterSetting(name, owner, key, { applies, enum: enumType, values, carbon, category });
     }
     return settings;
   }
