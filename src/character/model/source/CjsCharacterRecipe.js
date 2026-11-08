@@ -26,7 +26,9 @@ export class CjsCharacterRecipe
     value = [];
 
     /**
-     * The ordered modifier records, without the leading sex string.
+     * The ordered modifier records, without the leading sex string. The string is optional: 58 of the 63 recipes
+     * under res:/graphics/character carry it (src/character/discovery/prs.yaml:527), all 317 scene recipes do
+     * (scenes_prs.yaml:1049).
      * @cjs
      * @returns {Array<import("./CjsCharacterRecipeModifier.js").CjsCharacterRecipeModifier>}
      */

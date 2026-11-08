@@ -1,5 +1,8 @@
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 
+/** The note on a derived fact: our own earlier code's behaviour, which the screenshots keep. */
+const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a47517 ";
+
 /**
  * What a paper doll texture file is, from its name: `<family>_<region>_<suffix>[<tier>].png`. Every composer reads
  * texture roles here, never from a per-part table: give it a file and it returns the region, the suffix, the effect
@@ -18,9 +21,6 @@ import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
-/** The note on a derived fact: our own earlier code's behaviour, which the screenshots keep. */
-const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a47517 ";
-
 export class CjsPaperDollTextureRoles
 {
 
@@ -32,7 +32,7 @@ export class CjsPaperDollTextureRoles
     /**
      * Each suffix's role. `families`: the name prefixes it is sourced for. `property`: the effect texture parameter
      * the composed map feeds. `channels`: what the file's channels hold. `operation`: the `CjsPaperDollCompositor`
-     * method that draws it, or null for an input of another role's operation (`inputOf`). `blend`: `replace` (drawn
+     * method that draws it, or null for an input of another role's operation (`inputOf`). `plan`: `replace` (drawn
      * over what is under it) or `add` (added to it); one part's layers on one property draw replacements first, then
      * additions (character-compositing.md:593, `PlanNormal`). `covered`: drawn through the same option's diffuse
      * coverage when the option has a diffuse. `source`: where each fact is read. `derived`: the facts no source states,
@@ -44,7 +44,7 @@ export class CjsPaperDollTextureRoles
             property: "DiffuseMap",
             channels: { rgb: "colour", a: "coverage" },
             operation: "Simple",
-            blend: "replace",
+            plan: "replace",
             covered: false,
             source: "simpleblit: RGB = Texture.rgb, SRC_ALPHA/INV_SRC_ALPHA (character-compositing.md:370, :395); "
                 + "DiffuseMap (shaders.yaml partSlots)",
@@ -55,7 +55,7 @@ export class CjsPaperDollTextureRoles
             property: "DiffuseMap",
             channels: { rgb: "detail, multiplied by the colour areas", a: "coverage (UseMask 0 keeps the detail's alpha)" },
             operation: "Colorized",
-            blend: "replace",
+            plan: "replace",
             covered: false,
             source: "colorizedblit D (character-compositing.md:367, :395)",
             derived: "drawn as it is (Simple) without a zone map or palette (CjsPaperDollCompositor.CreateMaterialLayer); "
@@ -67,7 +67,7 @@ export class CjsPaperDollTextureRoles
             channels: { r: "colour area 1 weight", g: "colour area 2 weight", b: "colour area 3 weight", a: "where colourising applies" },
             operation: null,
             inputOf: "l",
-            blend: "replace",
+            plan: "replace",
             covered: false,
             source: "colorizedblit Z, and the one-channel compact zone decode (character-compositing.md:367, :379-383)"
         },
@@ -76,7 +76,7 @@ export class CjsPaperDollTextureRoles
             property: "NormalMap",
             channels: { rgb: "normal (or two-channel: R = X, A = Y, Z rebuilt)" },
             operation: "Simple",
-            blend: "replace",
+            plan: "replace",
             covered: true,
             source: "covered SimpleBlit replacement (character-compositing.md:593); RGB at 4k, LA at base (:337-338)",
             derived: "the coverage is the option's own diffuse: " + DERIVED
@@ -87,7 +87,7 @@ export class CjsPaperDollTextureRoles
             property: "SpecularMap",
             channels: { rgba: "specular (LA at base, RGBA in some variations)" },
             operation: "Simple",
-            blend: "replace",
+            plan: "replace",
             covered: true,
             source: "LA versus RGBA (character-compositing.md:329-330); SpecularMap (shaders.yaml partSlots)",
             derived: "drawn by simpleblit, through the option's diffuse coverage as n; colorize_body_s is a boot's only "
@@ -98,7 +98,7 @@ export class CjsPaperDollTextureRoles
             property: "NormalMap",
             channels: { rg: "signed XY perturbation, (2 * value - 1) * strength / 2 (two-channel: A gives Y)" },
             operation: "Twist",
-            blend: "add",
+            plan: "add",
             covered: false,
             source: "twistnormalblit, two passes ONE/ONE ADD then REV_SUBTRACT, destination alpha kept "
                 + "(character-compositing.md:373, :397)"
@@ -108,7 +108,7 @@ export class CjsPaperDollTextureRoles
             property: "NormalMap",
             channels: { rg: "normal XY, Z rebuilt", b: "coverage" },
             operation: "MaskedNormal",
-            blend: "replace",
+            plan: "replace",
             covered: false,
             source: "maskednormalblit: XY = 2 * rg - 1, alpha = b * strength; SRC_ALPHA/INV_SRC_ALPHA, destination alpha "
                 + "kept (character-compositing.md:372, :396)"
@@ -118,7 +118,7 @@ export class CjsPaperDollTextureRoles
             property: "CutMaskMap",
             channels: { rgb: "black", a: "where the body is cut" },
             operation: "Simple",
-            blend: "replace",
+            plan: "replace",
             covered: false,
             source: "black RGB, variable alpha, drawn through alpha onto a white target (character-compositing.md:341-348); "
                 + "CutMaskMap (shaders.yaml partSlots)",
@@ -130,7 +130,7 @@ export class CjsPaperDollTextureRoles
      * A texture file's role.
      * @param {string} path The file's `res:` path or name, at any tier.
      * @returns {{ path: string, family: string, region: string, suffix: string, tier: string, property: string,
-     *   channels: object, operation: ?string, inputOf?: string, blend: string, covered: boolean, source: string,
+     *   channels: object, operation: ?string, inputOf?: string, plan: string, covered: boolean, source: string,
      *   derived?: string }}
      * @throws {Error} For a name outside `<family>_<region>_<suffix>[<tier>].png`, or a suffix the table does not
      *   source for that family.

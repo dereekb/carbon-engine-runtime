@@ -12,14 +12,16 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
  *
  * An option is a `.type` file, its id the file's name. The type names the part folder and a variation: a variation
  * names a subfolder, and `v0` (or none) is the part folder itself (character-creator-reference.md, augmentations).
- * A variation's maps replace the part folder's of the same name and the part folder's others stay (Graphene 6a47517
- * largeScars.js: "v1 overrides present channels and retains base specular"). Options are listed from the file index;
+ * A variation's maps replace the part folder's of the same name and the part folder's others stay. Derived: this
+ * matches Graphene's working behaviour, today's look (Graphene 6a47517 largeScars.js: "v1 overrides present channels
+ * and retains base specular"); no source states it. Options are listed from the file index;
  * an option's type, maps and metadata (`occludesModifiers`) are read the first time it is applied
  * (`CjsPaperDollComponent.ResolveOption`).
  *
  * A role drawn through a coverage (`covered`) draws through the option's own diffuse alpha, placed at the diffuse's
- * cutout: a scar's specular is a uniform full-placement map that would otherwise cover the whole head (our decision,
- * 2026-10-25; Graphene 6a47517 largeScars.js:46-55).
+ * cutout: a scar's specular is a uniform full-placement map that would otherwise cover the whole head. Derived: our
+ * decision of 2026-10-25, matching Graphene's working behaviour, today's look (Graphene 6a47517 largeScars.js:46-55);
+ * no source states it.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. Moved from Graphene's
  * `surfaceDetails.js`, `freckleOptions.js`, `largeScars.js` and `augmentations.js` (character-structure-and-plugins.md
@@ -148,7 +150,7 @@ export class CjsPaperDollMapDecalSource
             : [];
         const roles = [ ...maps.values() ].map(file => CjsPaperDollTextureRoles.lookup(file));
         // Per region and property, replacements before additions.
-        roles.sort((a, b) => (a.blend === "add") - (b.blend === "add"));
+        roles.sort((a, b) => (a.plan === "add") - (b.plan === "add"));
         const regions = {};
         for (const role of roles)
         {
@@ -158,8 +160,8 @@ export class CjsPaperDollMapDecalSource
         }
         for (const channels of Object.values(regions)) for (const layer of Object.values(channels).flat())
         {
-            // The coverage is the option's diffuse; a part has one diffuse map per region.
-            const owner = layer.role.covered ? channels.DiffuseMap?.[0] ?? null : null;
+            // The coverage is the option's diffuse: one diffuse map per region, or an error.
+            const owner = layer.role.covered ? CjsPaperDollTextureRoles.one(channels.DiffuseMap ?? [], () => true) : null;
             if (owner) layer.region = owner.region;
             layer.effect = owner ? await c.Simple(layer.texture, owner.region, owner.texture, owner.region) : await c[layer.role.operation](layer.texture, layer.region);
         }

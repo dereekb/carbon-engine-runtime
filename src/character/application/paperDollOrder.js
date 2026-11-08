@@ -82,7 +82,10 @@ export const PaperDollTarget = Object.freeze({
 export const PaperDollBlend = Object.freeze({
     /** Composed maps drawn as they are (`comp_<region>_<suffix>`): aging, freckles, scarring, scars, augmentations. */
     DECAL: 1,
-    /** A colourised detail and zone map with a palette: skin, eyes, eyebrows, blush, eye shadow, eyeliner, lipstick. */
+    /**
+     * A colourised detail and zone map with a palette: skin, eyebrows, blush, eye shadow, eyeliner, lipstick; and the
+     * eyes, whose option is a colourised detail or a diffuse drawn as it is.
+     */
     COLORIZE: 2,
     /** A worn item's material: its colourised detail, zone, normal and specular through its coverage. */
     MATERIAL: 3,
