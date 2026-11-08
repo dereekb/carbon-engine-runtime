@@ -649,11 +649,11 @@ export class Tr2TextureALStub extends Tr2DeviceResourceAL
   /**
    * Ours: Carbon's textures have no asynchronous colour reduction; the stub
    * takes none, so a video's average colour stays as it was.
-   * @param {string} _mode Unused.
+   * @param {{ webgl2: number, webgpu: number }} _modes Unused.
    * @param {HTMLVideoElement|null} _video Unused.
    * @returns {null}
    */
-  RequestAverageColor(_mode, _video)
+  RequestAverageColor(_modes, _video)
   {
     return null;
   }

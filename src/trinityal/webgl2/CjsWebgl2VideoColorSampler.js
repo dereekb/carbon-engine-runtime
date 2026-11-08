@@ -11,8 +11,8 @@
 // conversion is affine, so converting the means equals averaging converted
 // pixels, except where single pixels would clamp.
 //
-// Where WebCodecs is missing, or Tr2PlatformInfo.videoAverageColor asks for
-// `approximation`, RequestApproximation averages a small mip of the video
+// Where WebCodecs is missing, or Tr2PlatformInfo.webgl2LightAveraging asks for
+// APPROXIMATION (the default), RequestApproximation averages a small mip of the video
 // texture instead: the frame is blitted into a mipmapped RGBA8 texture, the
 // level about 16 texels wide is read into a pixel-pack buffer behind a fence,
 // and the CPU averages it once the fence signals. Nothing waits on the GPU.

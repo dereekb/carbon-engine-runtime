@@ -108,12 +108,15 @@ test("only approved extension names are exempt from Carbon setting-name checks",
 {
   const approved = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable", "webgpuTextureFormatsTier2" ];
   const ours = settings.GetNames().filter(name => !settings.FindSetting(name).carbon);
-  assert.deepEqual(ours.slice().sort(), [...approved, "characterTextureQuality", "compressUncompressedTextures", "eveSpacePickingFramework", "postprocessDofCarryForegroundBlur", "videoAverageColor"].sort());
-  const video = settings.FindSetting("videoAverageColor");
-  assert.equal(video.owner, Tr2PlatformInfo);
-  assert.deepEqual(video.values, [ "webcodecs", "approximation", "off" ]);
-  assert.deepEqual(video.category, [ "video" ], "category is ours, for menus");
-  assert.equal(settings.GetValue("videoAverageColor"), "webcodecs");
+  assert.deepEqual(ours.slice().sort(), [...approved, "characterTextureQuality", "compressUncompressedTextures", "eveSpacePickingFramework", "postprocessDofCarryForegroundBlur", "webgl2LightAveraging", "webgpuLightAveraging"].sort());
+  const webgl2 = settings.FindSetting("webgl2LightAveraging"), webgpu = settings.FindSetting("webgpuLightAveraging");
+  assert.equal(webgl2.owner, Tr2PlatformInfo);
+  assert.deepEqual(Object.keys(webgl2.enum), [ "OFF", "APPROXIMATION", "WEB_CODEC" ], "each backend offers only its own options");
+  assert.deepEqual(Object.keys(webgpu.enum), [ "OFF", "COMPUTE" ]);
+  assert.deepEqual(webgl2.category, [ "webgl2" ], "category is ours, for menus");
+  assert.deepEqual(webgpu.category, [ "webgpu" ]);
+  assert.equal(settings.GetValue("webgl2LightAveraging"), webgl2.enum.APPROXIMATION);
+  assert.equal(settings.GetValue("webgpuLightAveraging"), webgpu.enum.COMPUTE);
   assert.equal(settings.FindSetting("newBloom").category, null, "a setting with no category always applies");
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);

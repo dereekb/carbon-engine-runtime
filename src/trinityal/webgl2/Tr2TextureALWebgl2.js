@@ -50,7 +50,7 @@
 import { CjsSchema, type } from "#schema";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
 import { canDecodeBlockSlice, decodeBlockSlice } from "#resource/codecs/bcn";
-import { Tr2ALMemoryType } from "#consts/graphics";
+import { Tr2ALMemoryType, Webgl2LightAveraging } from "#consts/graphics";
 import { Tr2DeviceResourceAL } from "../Tr2DeviceResourceAL/index.js";
 import { ALResult } from "../ALResult.js";
 import { Crop, Tr2MsaaDesc, Tr2TextureSubresource } from "../Tr2HalHelperStructures/index.js";
@@ -1369,26 +1369,27 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
   /**
    * Ours: an asynchronous average of this video texture's frame
-   * (CjsWebgl2VideoColorSampler). `webcodecs` averages the frame's planes
-   * copied out through WebCodecs; `approximation` reads back a small mip of
-   * this texture. Neither blocks.
+   * (CjsWebgl2VideoColorSampler). WEB_CODEC averages the frame's planes
+   * copied out through WebCodecs; APPROXIMATION reads back a small mip of
+   * this texture; OFF takes none. Neither waits on the GPU.
    *
    * Fixes CE-235: Carbon converts every video with fixed BT.601 coefficients,
    * applied with Cb and Cr swapped, before averaging; ours converts with the
    * video's own tagged colour space in both modes.
    *
    * @cjs
-   * @param {"webcodecs"|"approximation"} mode How to take it (Tr2PlatformInfo.videoAverageColor).
+   * @param {{ webgl2: number, webgpu: number }} modes Each backend's mode
+   *   (Tr2PlatformInfo.resolveLightAveraging); this reads `webgl2`.
    * @param {HTMLVideoElement|null} video The element this texture is filled from.
-   * @returns {Promise<Float32Array|null>|null} The mean RGBA, or null when this
-   *   texture has no video frame.
+   * @returns {Promise<Float32Array|null>|null} The mean RGBA, or null when OFF or
+   *   this texture has no video frame.
    */
-  RequestAverageColor(mode, video)
+  RequestAverageColor(modes, video)
   {
-    const al = this._videoContext;
-    if (!this.IsValid() || !al || !al.IsValid() || !video) return null;
+    const mode = modes.webgl2, al = this._videoContext;
+    if (mode === Webgl2LightAveraging.OFF || !this.IsValid() || !al || !al.IsValid() || !video) return null;
     this._videoSampler ??= new CjsWebgl2VideoColorSampler();
-    if (mode === "webcodecs")
+    if (mode === Webgl2LightAveraging.WEB_CODEC)
     {
       const promise = this._videoSampler.Request(video);
       if (promise) return promise;

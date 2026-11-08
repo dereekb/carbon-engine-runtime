@@ -20,7 +20,7 @@ import { Tr2DeviceResourceAL } from "../Tr2DeviceResourceAL/index.js";
 //
 // FIELDS ARE PUBLIC AND CARBON-NAMED, for the reason recorded on `CjsWebgpuShaderAL`.
 import { CjsSchema, type } from "#schema";
-import { Tr2ALMemoryType } from "#consts/graphics";
+import { Tr2ALMemoryType, WebgpuLightAveraging } from "#consts/graphics";
 import { ALResult, CopyRegion, Crop, Tr2MsaaDesc, Tr2TextureSubresource } from "#trinityal";
 import { PixelFormat, TextureType, Tr2CpuUsage, Tr2GpuUsage, HasFlag, IsWritable } from "#consts/render-context";
 import { RenderContextALOf } from "../renderContextAL.js";
@@ -995,19 +995,21 @@ export class CjsWebgpuTextureAL extends Tr2DeviceResourceAL
   }
 
   /**
-   * Ours: asynchronously average the existing straight encoded video texture.
-   * The compute reduction is exact and never blocks, so both modes use it.
+   * Ours: asynchronously average the existing straight encoded video texture
+   * with an exact compute reduction (WebgpuLightAveraging.COMPUTE), unless the
+   * WebGPU setting is OFF.
    *
    * Fixes CE-235: Carbon converts every video with fixed BT.601 coefficients,
    * applied with Cb and Cr swapped, before averaging; ours averages the texture
    * the browser converted with the video's own colour space.
    *
-   * @param {"webcodecs"|"approximation"} _mode Either; see above.
+   * @param {{ webgl2: number, webgpu: number }} modes Each backend's mode; this reads `webgpu`.
    * @param {HTMLVideoElement|null} _video Unused: the texture holds the frame.
    * @returns {Promise<Float32Array|null>|null} The mean RGBA, or null.
    */
-  RequestAverageColor(_mode, _video)
+  RequestAverageColor(modes, _video)
   {
+    if (modes.webgpu !== WebgpuLightAveraging.COMPUTE) return null;
     if (!this.IsValid() || this._videoGeneration == null || this._format !== "rgba8unorm") return null;
     if (!this._videoSampler) this._videoSampler = new CjsWebgpuVideoColorSampler(this._webgpu.GetDevice(), this._texture);
     // Busy is a skipped GPU sample, not a request to start a canvas fallback.

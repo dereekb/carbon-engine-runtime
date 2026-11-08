@@ -5,6 +5,7 @@ import { CjsWebGLProbe } from "./CjsWebGLProbe.js";
 import { ResolveDeviceRequirements } from "./deviceLimits.js";
 import { ResolveEffectPath } from "#utils/effectPath";
 import { Tr2VideoAdapter } from "./Tr2VideoAdapter.js";
+import { Webgl2LightAveraging, WebgpuLightAveraging } from "#consts/graphics";
 
 export const PlatformStaticCap = Object.freeze({
     NON_SYNCHRONIZED_LOCKS: 0,
@@ -152,8 +153,8 @@ export class Tr2PlatformInfo
     probeError = null;
 
     /**
-     * Ours: whether the browser has WebCodecs' VideoFrame with copyTo, which the
-     * `webcodecs` video average colour needs.
+     * Ours: whether the browser has WebCodecs' VideoFrame with copyTo, which
+     * WebGL2's WEB_CODEC light averaging needs.
      * @type {boolean}
      */
     webCodecs = false;
@@ -202,29 +203,40 @@ export class Tr2PlatformInfo
     static webgpuFloat32Filterable = true;
 
     /**
-     * Ours: how a playing video's average colour is taken, for the lights
-     * banners and planes derive from it (Carbon averages each decoded frame,
-     * VpxDecoder.cpp:255-272). `webcodecs` averages the frame's planes copied
-     * out through WebCodecs; `approximation` reads back a small mip of the
-     * video texture; both are asynchronous. `off` takes none. Where the
-     * browser has no WebCodecs, `webcodecs` resolves to `approximation`
-     * (resolveVideoAverageColor).
+     * Ours: how the WebGL2 backend takes a playing video's average colour, for
+     * the lights banners and planes derive from it (Carbon averages each
+     * decoded frame, VpxDecoder.cpp:255-272). APPROXIMATION reads back a small
+     * mip of the video texture; WEB_CODEC averages the frame's planes through
+     * WebCodecs, falling back to APPROXIMATION where WebCodecs is missing; OFF
+     * takes none. APPROXIMATION is the default: its 0.6-level difference is
+     * invisible in a light, and WebCodecs costs main-thread spikes.
      */
-    @meta.setting("videoAverageColor", { values: [ "webcodecs", "approximation", "off" ], category: "video" })
-    static videoAverageColor = "webcodecs";
+    @meta.setting("webgl2LightAveraging", { enum: Webgl2LightAveraging, category: "webgl2" })
+    static webgl2LightAveraging = Webgl2LightAveraging.APPROXIMATION;
 
     /**
-     * The video average colour mode in effect: the setting, with `webcodecs`
-     * falling back to `approximation` where WebCodecs is missing.
+     * Ours: how the WebGPU backend takes a playing video's average colour.
+     * COMPUTE is an exact compute reduction of the video texture; OFF takes none.
+     */
+    @meta.setting("webgpuLightAveraging", { enum: WebgpuLightAveraging, category: "webgpu" })
+    static webgpuLightAveraging = WebgpuLightAveraging.COMPUTE;
+
+    /**
+     * Each backend's video average colour mode in effect: the settings, with
+     * WebGL2's WEB_CODEC falling back to APPROXIMATION where WebCodecs is
+     * missing. A texture's backend reads its own.
      *
      * @cjs
      * @param {boolean} webCodecs Whether WebCodecs is available (detectWebCodecs).
-     * @returns {"webcodecs"|"approximation"|"off"} The mode.
+     * @returns {{ webgl2: number, webgpu: number }} A Webgl2LightAveraging and a WebgpuLightAveraging value.
      */
-    static resolveVideoAverageColor(webCodecs)
+    static resolveLightAveraging(webCodecs)
     {
-        const mode = Tr2PlatformInfo.videoAverageColor;
-        return mode === "webcodecs" && !webCodecs ? "approximation" : mode;
+        const webgl2 = Tr2PlatformInfo.webgl2LightAveraging;
+        return { // alloc: one small record per average-colour sample.
+            webgl2: webgl2 === Webgl2LightAveraging.WEB_CODEC && !webCodecs ? Webgl2LightAveraging.APPROXIMATION : webgl2,
+            webgpu: Tr2PlatformInfo.webgpuLightAveraging
+        };
     }
 
     /**

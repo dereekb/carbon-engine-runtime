@@ -8,6 +8,7 @@ import { IBlueEvents } from "../../blue/interfaces/IBlueEvents.js";
 import { CjsSchema } from "#schema";
 import { State } from "./video/enums.js";
 import { Tr2PlatformInfo } from "./Tr2PlatformInfo.js";
+import { Webgl2LightAveraging, WebgpuLightAveraging } from "#consts/graphics";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../trinity/core/context/Tr2RenderContext.js";
 import { BitmapDimensions } from "#imageio";
 import { UpdateVideoTexture, ClearVideoTexture } from "../../trinity/core/Tr2ImageIOHelpers.js";
@@ -232,8 +233,9 @@ export class VideoPlayer
   }
 
   /**
-   * Starts one asynchronous average-colour sample per interval, in the mode
-   * Tr2PlatformInfo.videoAverageColor resolves to; stale clips never publish
+   * Starts one asynchronous average-colour sample per interval, in the modes
+   * Tr2PlatformInfo.webgl2LightAveraging and webgpuLightAveraging resolve to
+   * (the texture's backend reads its own); stale clips never publish
    * colour. Carbon averages each decoded frame as VpxDecoder converts it
    * (VpxDecoder.cpp:255-272); the browser decodes, so the texture's backend
    * takes the average (Tr2TextureAL.RequestAverageColor).
@@ -243,7 +245,7 @@ export class VideoPlayer
    * converted with the video's own tagged colour space, in every mode.
    *
    * @adapted There is no blocking canvas fallback: a backend without an
-   *   asynchronous average, or the `off` mode, leaves the colour as it was.
+   *   asynchronous average, or one set to OFF, leaves the colour as it was.
    * @param {number} now Host time, milliseconds.
    * @param {number} generation The clip generation the sample belongs to.
    */
@@ -257,9 +259,9 @@ export class VideoPlayer
     }
     if (this.averageColorError || this._sampleRequest !== null || now - this._lastSampleTime < this._sampleInterval) return;
     this._lastSampleTime = now;
-    const mode = Tr2PlatformInfo.resolveVideoAverageColor(Tr2PlatformInfo.detectWebCodecs(this._host));
-    if (mode === "off") return;
-    this._RequestGpuAverageColor(generation, mode);
+    const modes = Tr2PlatformInfo.resolveLightAveraging(Tr2PlatformInfo.detectWebCodecs(this._host));
+    if (modes.webgl2 === Webgl2LightAveraging.OFF && modes.webgpu === WebgpuLightAveraging.OFF) return;
+    this._RequestGpuAverageColor(generation, modes);
   }
 
   /**
@@ -267,16 +269,16 @@ export class VideoPlayer
    * result in flight and rejecting results for replaced clips or storage.
    *
    * @param {number} generation The clip generation the sample belongs to.
-   * @param {"webcodecs"|"approximation"} mode How the backend takes it.
+   * @param {{ webgl2: number, webgpu: number }} modes Each backend's mode (Tr2PlatformInfo.resolveLightAveraging).
    * @returns {boolean} Whether a sample was started.
    */
-  _RequestGpuAverageColor(generation, mode)
+  _RequestGpuAverageColor(generation, modes)
   {
     const resource = this.bgraTexture, texture = resource ? resource.GetTexture() : null;
     if (!texture) return false;
     const start = this._host.performance.now();
     let promise;
-    try { promise = texture.RequestAverageColor(mode, this.video); }
+    try { promise = texture.RequestAverageColor(modes, this.video); }
     catch (error) { this.averageColorError = error; return true; }
     if (!promise) return false;
     this.stats.samplingMilliseconds += this._host.performance.now() - start;

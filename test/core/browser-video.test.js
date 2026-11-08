@@ -10,6 +10,7 @@ import { CjsWebgpuTextureAL } from "../../npm/dist/trinityal/webgpu/CjsWebgpuTex
 import { Tr2MsaaDesc, Tr2TextureSubresource } from "../../npm/dist/trinityal/index.js";
 import { Tr2CpuUsage, Tr2GpuUsage } from "../../npm/dist/global/consts/renderContext/index.js";
 import { Tr2PlatformInfo } from "../../npm/dist/core/platform/Tr2PlatformInfo.js";
+import { Webgl2LightAveraging, WebgpuLightAveraging } from "../../npm/dist/global/consts/graphics/index.js";
 
 function fixture()
 {
@@ -50,7 +51,7 @@ function fixture()
       Destroy() {if(valid) counts.destroys++;valid=false;},
       UpdateSubresource() {counts.uploads++;return 0;}, GetDesc: () => desc,
       // Tr2TextureAL.RequestAverageColor: an asynchronous average; this backend answers red.
-      RequestAverageColor(mode, video) { counts.reads++; counts.modes.push(mode); assert.ok(video); return state.answer(mode); } };
+      RequestAverageColor(modes, video) { counts.reads++; counts.modes.push(modes.webgl2); assert.equal(modes.webgpu, Tr2PlatformInfo.webgpuLightAveraging); assert.ok(video); return state.answer(modes); } };
   }};
   const player = new VideoPlayer({host, getRenderContext: () => render});
   const texture = new TriTextureRes();
@@ -75,7 +76,7 @@ test("decoded frames upload once for 100 consumers; media clock, cached light co
   v.frame(2,40);v.frame(3,80);assert.equal(f.counts.reads,1,"no sample inside the interval");
   v.frame(4,130);await settle();v.frame(5,170);
   assert.equal(f.counts.reads,2);
-  assert.deepEqual(f.counts.modes,["approximation","approximation"],"without WebCodecs, webcodecs resolves to approximation");
+  assert.deepEqual(f.counts.modes,[Webgl2LightAveraging.APPROXIMATION,Webgl2LightAveraging.APPROXIMATION],"WebGL2 defaults to APPROXIMATION");
   const light=new Tr2TexturedPointLight();light.texture=f.texture;light.Update();
   assert.equal(f.counts.reads,2,"light consumes cached colour without sampling");
   f.player.Pause();assert.equal(v.paused,true);assert.equal(f.timers.size,0);
@@ -114,20 +115,20 @@ test("old clip callbacks and in-flight samples cannot overwrite the replacement"
   f.player.Destruct();assert.equal(f.revoked.length,2);
 });
 
-test("the videoAverageColor setting: off takes no sample, webcodecs is passed where WebCodecs exists", async t =>
+test("the light-averaging settings: both OFF takes no sample; WEB_CODEC falls back to APPROXIMATION without WebCodecs", async t =>
 {
-  const previous=Tr2PlatformInfo.videoAverageColor;t.after(()=>{Tr2PlatformInfo.videoAverageColor=previous;});
-  Tr2PlatformInfo.videoAverageColor="off";
+  const webgl2=Tr2PlatformInfo.webgl2LightAveraging, webgpu=Tr2PlatformInfo.webgpuLightAveraging;
+  t.after(()=>{Tr2PlatformInfo.webgl2LightAveraging=webgl2;Tr2PlatformInfo.webgpuLightAveraging=webgpu;});
+  Tr2PlatformInfo.webgl2LightAveraging=Webgl2LightAveraging.OFF;Tr2PlatformInfo.webgpuLightAveraging=WebgpuLightAveraging.OFF;
   let f=fixture();f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
   assert.equal(f.counts.reads,0);assert.notDeepEqual(f.texture.GetAverageColor(),[1,0,0,1],"no average is taken");f.player.Destruct();
-  Tr2PlatformInfo.videoAverageColor="webcodecs";
+  Tr2PlatformInfo.webgpuLightAveraging=WebgpuLightAveraging.COMPUTE;Tr2PlatformInfo.webgl2LightAveraging=Webgl2LightAveraging.WEB_CODEC;
   f=fixture();f.host.VideoFrame=class { copyTo() {} };
   f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
-  assert.deepEqual(f.counts.modes,["webcodecs"]);f.player.Destruct();
-  Tr2PlatformInfo.videoAverageColor="approximation";
-  f=fixture();f.host.VideoFrame=class { copyTo() {} };
+  assert.deepEqual(f.counts.modes,[Webgl2LightAveraging.WEB_CODEC]);f.player.Destruct();
+  f=fixture();
   f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
-  assert.deepEqual(f.counts.modes,["approximation"]);f.player.Destruct();
+  assert.deepEqual(f.counts.modes,[Webgl2LightAveraging.APPROXIMATION],"no WebCodecs in this host");f.player.Destruct();
 });
 
 test("autoplay denial waits for host Resume and does not trigger playlist retries", async () =>

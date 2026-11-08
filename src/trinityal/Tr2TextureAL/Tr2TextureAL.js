@@ -154,15 +154,16 @@ export class Tr2TextureAL
    * VpxDecoder.cpp:255-272). Never blocks.
    *
    * @cjs
-   * @param {"webcodecs"|"approximation"} mode How to take it (Tr2PlatformInfo.videoAverageColor).
+   * @param {{ webgl2: number, webgpu: number }} modes Each backend's Webgl2LightAveraging or
+   *   WebgpuLightAveraging value (Tr2PlatformInfo.resolveLightAveraging); a backend reads its own.
    * @param {HTMLVideoElement|null} video The element the texture is filled from.
    * @returns {Promise<ArrayLike<number>|null>|null} The mean RGBA, 0-1 in the video's encoded
-   *   channels, or null when this backend cannot take one.
+   *   channels, or null when this backend takes none.
    */
-  RequestAverageColor(mode, video)
+  RequestAverageColor(modes, video)
   {
     const implementation = this._texture ? this._texture.implementation : null;
-    return implementation ? implementation.RequestAverageColor(mode, video) : null;
+    return implementation ? implementation.RequestAverageColor(modes, video) : null;
   }
 
   /**

@@ -143,19 +143,25 @@ test("Tr2PlatformInfo's properties are accessors over Carbon's getters (Tr2Platf
     }
 });
 
-test("WebCodecs detection and the video average colour mode it resolves", async t =>
+test("WebCodecs detection and the light-averaging modes it resolves", async t =>
 {
-    const previous = Tr2PlatformInfo.videoAverageColor;
-    t.after(() => { Tr2PlatformInfo.videoAverageColor = previous; });
+    const { Webgl2LightAveraging: GL, WebgpuLightAveraging: GPU } = await import("../../../npm/dist/global/consts/graphics/index.js");
+    const previous = Tr2PlatformInfo.webgl2LightAveraging;
+    t.after(() => { Tr2PlatformInfo.webgl2LightAveraging = previous; });
     const withCodecs = { VideoFrame: class { copyTo() {} } };
     assert.equal(Tr2PlatformInfo.detectWebCodecs({}), false);
     assert.equal(Tr2PlatformInfo.detectWebCodecs({ VideoFrame: class {} }), false, "copyTo is required");
     assert.equal(Tr2PlatformInfo.detectWebCodecs(withCodecs), true);
-    assert.equal(Tr2PlatformInfo.videoAverageColor, "webcodecs", "the default");
-    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(true), "webcodecs");
-    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(false), "approximation", "no WebCodecs: the approximation");
-    Tr2PlatformInfo.videoAverageColor = "off";
-    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(true), "off");
+    assert.equal(Tr2PlatformInfo.webgl2LightAveraging, GL.APPROXIMATION, "WebGL2 default");
+    assert.equal(Tr2PlatformInfo.webgpuLightAveraging, GPU.COMPUTE, "WebGPU default");
+    assert.deepEqual(Tr2PlatformInfo.resolveLightAveraging(true), { webgl2: GL.APPROXIMATION, webgpu: GPU.COMPUTE });
+    Tr2PlatformInfo.webgl2LightAveraging = GL.WEB_CODEC;
+    assert.equal(Tr2PlatformInfo.resolveLightAveraging(true).webgl2, GL.WEB_CODEC);
+    assert.equal(Tr2PlatformInfo.resolveLightAveraging(false).webgl2, GL.APPROXIMATION, "no WebCodecs: the approximation");
+    Tr2PlatformInfo.webgl2LightAveraging = GL.OFF;
+    assert.equal(Tr2PlatformInfo.resolveLightAveraging(true).webgl2, GL.OFF);
+    assert.equal(GL.OFF, GPU.OFF);
+    assert.equal(new Set([ ...Object.values(GL), ...Object.values(GPU) ]).size, 4, "only OFF is shared");
     const platform = await Tr2PlatformInfo.Detect({ adapter: null, webgl: false, host: withCodecs });
     assert.equal(platform.GetCapabilities().webCodecs, true);
 });
