@@ -55,6 +55,7 @@ export { CjsPaperDollProjectionSource } from "./composers/CjsPaperDollProjection
 export { CjsPaperDollComposition } from "./composers/CjsPaperDollComposition.js";
 export { CjsPaperDollEyesComposer } from "./composers/CjsPaperDollEyesComposer.js";
 export { CjsPaperDollHeadComposer } from "./composers/CjsPaperDollHeadComposer.js";
+export { CjsPaperDollBodyComposer } from "./composers/CjsPaperDollBodyComposer.js";
 export { CjsPaperDollMakeupCatalog } from "./composers/CjsPaperDollMakeupCatalog.js";
 export { CjsPaperDollMapDecalSource } from "./composers/CjsPaperDollMapDecalSource.js";
 export { CjsPaperDollSkinComposer } from "./composers/CjsPaperDollSkinComposer.js";
