@@ -4,6 +4,7 @@ import { CjsPaperDollScarring } from "./CjsPaperDollScarring.js";
 import { CjsPaperDollFreckles } from "./CjsPaperDollFreckles.js";
 import { CjsPaperDollSkin } from "./CjsPaperDollSkin.js";
 import { meta, type } from "#schema";
+import { blue } from "#blue";
 import { CjsPaperDollArchetype } from "./CjsPaperDollArchetype.js";
 import { CjsPaperDollEyes } from "./CjsPaperDollEyes.js";
 import { CjsPaperDollEyebrows } from "./CjsPaperDollEyebrows.js";
@@ -472,6 +473,23 @@ export class CjsPaperDollDefinition
             if (found.length) return found;
         }
         return [];
+    }
+
+    /**
+     * Every file below a `res:` directory, from the resource index, sorted: Blue's `paths.Filter` walks it through
+     * Carbon's `BluePaths::GetDirectoryContents` (`blue/src/BluePaths.cpp:111-117`), so option and inventory lists
+     * come from the indexed build. The remote file system lists a stored `.black` as `.red`
+     * (`BlueResFileSystemRemote.cpp:23-36`) and character content loads the stored `.black`, so the names are mapped
+     * back before sorting, which orders `.black` before `.gr2` and `.png` as the stored names do.
+     * Ours (moved from Graphene's `resourceListing.js`, character-structure-and-plugins.md R5).
+     * @param {string} directory A lowercase `res:` directory, with or without its trailing slash.
+     * @param {{ Filter: function(string, function(string): boolean): string[] }} [paths] The paths service listed;
+     *   Blue's own by default.
+     * @returns {string[]} Full `res:` paths of every file below it.
+     */
+    static listFiles(directory, paths = blue.paths)
+    {
+        return paths.Filter(directory, () => true).map(path => path.replace(/\.red$/u, ".black")).sort();
     }
 
     /** The collected parts, by member name. Each pass composes its parts by bake rank, not by this order. */

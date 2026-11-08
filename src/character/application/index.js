@@ -50,3 +50,4 @@ export { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 export { CjsPaperDollCompositor } from "./compositor/CjsPaperDollCompositor.js";
 export { CjsPaperDollCompositionTarget } from "./compositor/CjsPaperDollCompositionTarget.js";
 export { CjsPaperDollMaterialLayer } from "./compositor/CjsPaperDollMaterialLayer.js";
+export { CjsPaperDollSkinComposer } from "./composers/CjsPaperDollSkinComposer.js";
