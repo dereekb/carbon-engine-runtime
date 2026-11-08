@@ -61,4 +61,7 @@ export class CjsPaperDollEyebrows extends CjsPaperDollComponent
      */
     static carrier = true;
 
+    /** Its paint draws at full strength: the eyebrows have no weight setting (`CjsPaperDollColorizedSource`). */
+    static weighted = false;
+
 }

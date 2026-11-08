@@ -21,6 +21,12 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
  * configuration and UI decisions, not the engine).
  * An option's maps and colour areas are read the first time it is applied.
  *
+ * An option with a specular map (`s`: lipstick) also draws into the head specular, in the applied palette's specular
+ * colours: the specular colour (colorizedblit of `s`, masked by the detail's alpha, the lip shape) and the gloss
+ * (blitintoalphawithzones of `s`, scaled per colour area by the specular colours' W, into the specular alpha). Moved as
+ * it was from Graphene's `lipstick.js`, where it is read from the shipped shaders; the gloss packing is derived from
+ * their disassembly. An option without one (the male lipstick) draws no specular.
+ *
  * A part with a carrier mesh (`static carrier`: the eyebrows) also gives what the brow carrier draws: the option's
  * colourised detail drawn unblended with its coverage (colorizedcopyblit), and its normal and specular as the mesh's
  * material. The carrier keeps the last applied option while the part is off or an option loads.
@@ -149,13 +155,15 @@ export class CjsPaperDollColorizedSource
                 .map(path => CjsPaperDollColorizedSource.record(path));
             if (!records.length) throw new Error("A " + this.name + " style without palettes " + folder);
             const defaultPalette = records.find(record => record.name === "default")?.path ?? null;
-            this._styles.set(id, { id, folder, records, defaultPalette, paint: null, region: null, skipped: [] });
+            this._styles.set(id, { id, folder, records, defaultPalette, paint: null, region: null, skipped: [], specular: null, gloss: null });
         }
         const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const set = recipe.find(entry => entry.path.startsWith(category + "/")) ?? null;
         const option = set ? set.path.split("/").at(-1) : "";
         if (set && !this._styles.has(option)) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
         const authored = set ? set.GetColors() : null, AUTHORED = CjsPaperDollColorizedSource.authored;
+        // A part whose surface reads its palette's specular colours takes the recipe's own with its colours.
+        if (authored !== null && component.constructor.paletteSpecular) component.SetPaletteSpecular(AUTHORED, [ set.specularColor1, set.specularColor2, set.specularColor3 ]);
         component.Configure([ ...this._styles.values() ].map(style =>
         {
             // The recipe's style starts in the recipe's colours: its default palette is `authored`.
@@ -189,12 +197,19 @@ export class CjsPaperDollColorizedSource
         if (!detailMap || !zoneMap) throw new Error("Incomplete " + this.name + " style " + style.folder);
         const [ detail, zone, initial, colorAreas ] = await Promise.all([
             build.Ready(c.Texture(detailMap.path)), build.Ready(c.Texture(zoneMap.path)),
-            style.defaultPalette !== null ? build.Ready(blue.characterLibrary.FetchPalette(style.defaultPalette)) : { colors: CjsPaperDollColorizedSource.neutral() },
+            style.defaultPalette !== null ? build.Ready(blue.characterLibrary.FetchPalette(style.defaultPalette, { specular: true })) : { colors: CjsPaperDollColorizedSource.neutral(), specularColors: CjsPaperDollColorizedSource.neutral() },
             build.Ready(blue.characterLibrary.FetchMaterialMaskAreas__Zone(zoneMap.path))
         ]);
         build.CheckActive();
         style.region = CjsPaperDollCompositor.crop(detail);
         style.paint = await c.Colorized(detail, style.region, zone, CjsPaperDollCompositor.crop(zone), initial.colors);
+        const specularMap = CjsPaperDollTextureRoles.one(roles, role => role.region === "head" && role.property === "SpecularMap");
+        if (specularMap)
+        {
+            const specular = await build.Ready(c.Texture(specularMap.path)), crop = CjsPaperDollCompositor.crop;
+            style.specular = await c.ColorizedMasked(specular, crop(specular), zone, crop(zone), detail, style.region, initial.specularColors);
+            style.gloss = await c.BlitIntoAlphaWithZones(specular, crop(specular), zone, crop(zone), detail, style.region, Float32Array.of(1, 1, 1, 0));
+        }
         return { colorAreas };
     }
 
@@ -222,9 +237,10 @@ export class CjsPaperDollColorizedSource
         if (!initial) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
         // The recipe's colours (else its colour variation, else the option's default) are `authored`: the default palette
         // of every option without its own. With no recipe entry such an option has no default. PROVISIONAL (Ruru,
-        // 2026-11-09; derived item 19): an option's own default wins over the recipe's colours, which keeps today's brows;
-        // the ruling says a loaded recipe applies what it sets, so the recipe option should take `authored` (a colour-space
-        // check of the recipe's colours against the .color files is pending).
+        // 2026-11-09; derived item 19): in every catalog part (blush as today, eyebrows) an option's own default wins over
+        // the recipe's colours, which keeps today's brows; the ruling says a loaded recipe applies what it sets. The
+        // recipe's colours and the .color files are in one colour space (eye shadow and blush match exactly); the female
+        // recipe's brow colour is a lighter brown of its own, for the operator to decide.
         let authored = null;
         if (set)
         {
@@ -273,7 +289,7 @@ export class CjsPaperDollColorizedSource
         if (!detailMap || !zoneMap) throw new Error("Incomplete " + this.name + " inputs " + option.definition);
         const [ detail, zone ] = await Promise.all([ build.Ready(c.Texture(detailMap.path)), build.Ready(c.Texture(zoneMap.path)) ]);
         const region = CjsPaperDollCompositor.crop(detail), neutral = CjsPaperDollColorizedSource.neutral();
-        const style = { id, region, paint: await c.Colorized(detail, region, zone, CjsPaperDollCompositor.crop(zone), neutral), carrier: null, material: null, skipped: [] };
+        const style = { id, region, paint: await c.Colorized(detail, region, zone, CjsPaperDollCompositor.crop(zone), neutral), carrier: null, material: null, skipped: [], specular: null, gloss: null };
         if (carrier)
         {
             const normalMap = CjsPaperDollTextureRoles.one(roles, role => role.property === "NormalMap");
@@ -301,8 +317,17 @@ export class CjsPaperDollColorizedSource
      */
     GetLayers(value, region, channel)
     {
-        const style = region === "head" && channel === "DiffuseMap" && value.option ? this._styles.get(value.option) : null;
-        if (!style || !style.paint) return [];
+        const style = region === "head" && value.option ? this._styles.get(value.option) : undefined;
+        if (style === undefined || style.paint === null) return [];
+        if (channel === "SpecularMap")
+        {
+            // The specular passes take the applied palette's specular colours; custom colours or no palette draw none.
+            if (style.specular === null || !value.palette || value.specularColors.length < 3) return [];
+            CjsPaperDollMaterialLayer.setColors(style.specular, value.specularColors);
+            style.gloss.SetParameter__Vector4("Color1", Float32Array.of(value.specularColors[0][3], value.specularColors[1][3], value.specularColors[2][3], 0));
+            return [ { effect: style.specular, region: style.region }, { effect: style.gloss, region: style.region } ];
+        }
+        if (channel !== "DiffuseMap") return [];
         CjsPaperDollMaterialLayer.setColors(style.paint, value.colors);
         if (this._weighted) style.paint.SetParameter("Strength", value.weight);
         return [ { effect: style.paint, region: style.region } ];

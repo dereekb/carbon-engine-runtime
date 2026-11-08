@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned lipstick settings: the style, its palette and custom
@@ -19,6 +19,9 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
 
     /** The applied palette's three specular colours (W is the gloss); empty until a palette is applied. */
     _specularColors = [];
+
+    /** The specular colours of the palettes configured with their colours (the recipe's `authored`), by id. */
+    _paletteSpecular = new Map();
 
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
     @type.boolean
@@ -86,6 +89,30 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
         this.Rebuild();
     }
 
+    /**
+     * Registers a configured palette's specular colours (W is the gloss), which no palette file holds: the recipe's
+     * `authored` colours carry the recipe's own (`specularcolors`).
+     * @cjs
+     * @param {string} id The configured palette.
+     * @param {ArrayLike<number>[]} colors Its three specular colours.
+     * @returns {void}
+     */
+    SetPaletteSpecular(id, colors)
+    {
+        this._paletteSpecular.set(id, colors.map(color => Float32Array.from(color)));
+    }
+
+    /**
+     * A configured palette's specular colours, or null for a palette whose file holds them.
+     * @cjs
+     * @param {string} id The palette.
+     * @returns {?Float32Array[]}
+     */
+    GetPaletteSpecularColors(id)
+    {
+        return this._paletteSpecular.get(id) ?? null;
+    }
+
     /** Restores the configured inputs and forgets the applied palette's specular colours. */
     Reset()
     {
@@ -100,6 +127,9 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
     static category = "makeup/lipstick";
 
     static blend = PaperDollBlend.COLORIZE;
+
+    /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.OWN;
 
     static paletteSpecular = true;
 
