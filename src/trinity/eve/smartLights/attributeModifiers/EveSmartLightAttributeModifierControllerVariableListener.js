@@ -23,6 +23,7 @@ import { EveSmartLightAttributeModifierBucket } from "./EveSmartLightAttributeMo
 @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY, "attributeModifiers")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "name")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "attributeMultiplier")
+@be.mapAttribute(be.READ, "active")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "crossFadeDuration")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "crossFadeIntensity")
 @be.mapAttribute(be.READ, "activationValue")
