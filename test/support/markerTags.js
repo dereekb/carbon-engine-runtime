@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
+import { UNSHIPPED_SOURCE_DIRS } from "../../scripts/lib/unshipped-source.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "../../src");
 
@@ -16,13 +17,16 @@ let s_index = null;
 /** @type {Map<string, object>} Parsed source by file. */
 const s_parsed = new Map();
 
-/** Every `.js` file under `dir`. */
+/**
+ * Every `.js` file under `dir`, outside unshipped directories (scripts/lib/unshipped-source.js): a Carbon donor
+ * port declares the same class names as the shipped classes and carries none of their marker tags.
+ */
 function Walk(dir, out = [])
 {
   for (const entry of readdirSync(dir, { withFileTypes: true }))
   {
     const full = join(dir, entry.name);
-    if (entry.isDirectory()) Walk(full, out);
+    if (entry.isDirectory()) { if (!UNSHIPPED_SOURCE_DIRS.has(entry.name)) Walk(full, out); }
     else if (entry.name.endsWith(".js")) out.push(full);
   }
   return out;
