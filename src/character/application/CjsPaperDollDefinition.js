@@ -29,6 +29,7 @@ import { CjsPaperDollHair } from "./CjsPaperDollHair.js";
 import { CjsPaperDollGlasses } from "./CjsPaperDollGlasses.js";
 import { CjsPaperDollEarsLow } from "./CjsPaperDollEarsLow.js";
 import { CjsPaperDollEarsHigh } from "./CjsPaperDollEarsHigh.js";
+import { CjsPaperDollEars } from "./CjsPaperDollEars.js";
 import { CjsPaperDollNose } from "./CjsPaperDollNose.js";
 import { CjsPaperDollLips } from "./CjsPaperDollLips.js";
 import { CjsPaperDollChin } from "./CjsPaperDollChin.js";
@@ -198,6 +199,11 @@ export class CjsPaperDollDefinition
     @meta.mapAttribute(meta.READ)
     @type.object.embed("CjsPaperDollEarsHigh")
     earsHigh = new CjsPaperDollEarsHigh();
+
+    // Ours: the game has no ears location (CjsPaperDollEars).
+    @meta.mapAttribute(meta.READ)
+    @type.object.embed("CjsPaperDollEars")
+    ears = new CjsPaperDollEars();
 
     @meta.mapAttribute(meta.READ)
     @type.object.embed("CjsPaperDollNose")
@@ -469,6 +475,6 @@ export class CjsPaperDollDefinition
     }
 
     /** The collected parts, by member name. Each pass composes its parts by bake rank, not by this order. */
-    static parts = [ "skin", "eyes", "eyebrows", "blush", "freckles", "aging", "scarring", "scars", "tattoo", "augmentations", "bodyAugmentation", "armLeft", "armRight", "eyeshadow", "eyeliner", "lipstick", "bottomUnderwear", "topUnderwear", "bottomMiddle", "topMiddle", "bottomOuter", "feet", "topOuter", "outer", "hair", "beard", "glasses", "earsLow", "earsHigh", "nose", "lips", "chin", "brow", "mask" ];
+    static parts = [ "skin", "eyes", "eyebrows", "blush", "freckles", "aging", "scarring", "scars", "tattoo", "augmentations", "bodyAugmentation", "armLeft", "armRight", "eyeshadow", "eyeliner", "lipstick", "bottomUnderwear", "topUnderwear", "bottomMiddle", "topMiddle", "bottomOuter", "feet", "topOuter", "outer", "hair", "beard", "glasses", "earsLow", "earsHigh", "ears", "nose", "lips", "chin", "brow", "mask" ];
 
 }
