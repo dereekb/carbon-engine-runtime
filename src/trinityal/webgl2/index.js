@@ -22,3 +22,4 @@ export * from "./Tr2PipelineStatsQueryALWebgl2.js";
 export * from "./Tr2CapsALWebgl2.js";
 export * from "./Tr2PipelineStatsDataALWebgl2.js";
 export * from "./Tr2RenderContextALWebgl2.js";
+export * from "./CjsWebgl2VideoColorSampler.js";
