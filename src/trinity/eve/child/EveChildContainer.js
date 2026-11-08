@@ -191,7 +191,7 @@ export class EveChildContainer extends EveChildTransform
    * Animation owner supplying this container's parent bone transforms.
    * Carbon animationOwner (EveChildContainer.h:209).
    *
-   * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
+   * @adapted Carbon's row is READ; ours persists it only so SOF can populate it through values until the SOF build path returns.
    * @type {ITr2GrannyAnimationOwner|null}
    */
   @meta.persist
@@ -202,7 +202,7 @@ export class EveChildContainer extends EveChildTransform
    * Origin mode used to place this child container.
    * Carbon origin (EveChildContainer.h:206).
    *
-   * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
+   * @adapted Carbon's row is READ; ours persists it only so SOF can populate it through values until the SOF build path returns.
    * @type {number}
    */
   @meta.persist

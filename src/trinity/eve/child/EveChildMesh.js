@@ -324,7 +324,7 @@ export class EveChildMesh extends EveChildTransform
    * Origin mode used to place this child mesh.
    * Carbon origin (EveChildMesh.h:288).
    *
-   * @adapted Persisted by the JavaScript values format; Carbon exposes this field read-only.
+   * @adapted Carbon's row is READ; ours persists it only so SOF can populate it through values until the SOF build path returns.
    * @type {number}
    */
   @meta.mapAttribute(meta.PERSIST)
