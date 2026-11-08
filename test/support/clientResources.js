@@ -15,6 +15,31 @@ const TARGET = "eve";
 let pending = null;
 
 /**
+ * `fetch`, retried once when the request fails below HTTP (a reset or refused connection).
+ *
+ * tools-core sets no keep-alive timeout, so Node's 5 s default closes idle sockets. A test that blocks the event
+ * loop for longer (synchronous decoding, posing) never sees the close, and its next request reuses the dead pooled
+ * socket and fails with ECONNRESET. The retry opens a fresh connection. RemoteFileCache keeps Carbon's no-retry
+ * shape; only this host fetch retries.
+ *
+ * @param {string|Request} input The request.
+ * @param {object} [init] Its options.
+ * @returns {Promise<Response>} The response.
+ */
+async function fetchRetryingOnce(input, init)
+{
+  try
+  {
+    return await globalThis.fetch(input, init);
+  }
+  catch (error)
+  {
+    if (!(error instanceof TypeError)) throw error;
+    return globalThis.fetch(input, init);
+  }
+}
+
+/**
  * Composes the client's resources once per process.
  *
  * @returns {Promise<{build: string, cache: RemoteFileCache, Read: (resPath: string) => Promise<Uint8Array>} | {skip: string}>}
@@ -44,7 +69,7 @@ async function compose()
   const index = await fetch(`${SERVER}/${TARGET}/${build}/app/resfileindex.txt`, { signal: AbortSignal.timeout(120000) });
   if (!index.ok) return { skip: `no resfileindex for ${TARGET} build ${build} (${index.status})` };
 
-  const cache = new RemoteFileCache({ localFileSystem: localFileSystem(), fetch: globalThis.fetch });
+  const cache = new RemoteFileCache({ localFileSystem: localFileSystem(), fetch: fetchRetryingOnce });
   cache.verifyContentsOnSave = false;
   cache.verifyContentsOnLoad = false;
   cache.SetServer(SERVER);
