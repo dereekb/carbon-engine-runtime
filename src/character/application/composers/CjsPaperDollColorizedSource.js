@@ -25,7 +25,8 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
  * colours: the specular colour (colorizedblit of `s`, masked by the detail's alpha, the lip shape) and the gloss
  * (blitintoalphawithzones of `s`, scaled per colour area by the specular colours' W, into the specular alpha). Moved as
  * it was from Graphene's `lipstick.js`, where it is read from the shipped shaders; the gloss packing is derived from
- * their disassembly. An option without one (the male lipstick) draws no specular.
+ * their disassembly. An option without one draws no specular: the male lipsticks have no `s` map (content: both male
+ * lipstick folders hold only `colorize_head_l` and `colorize_head_z` with their palettes).
  *
  * A part with a carrier mesh (`static carrier`: the eyebrows) also gives what the brow carrier draws: the option's
  * colourised detail drawn unblended with its coverage (colorizedcopyblit), and its normal and specular as the mesh's
