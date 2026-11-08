@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /** Application-owned ageing settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollAging")
@@ -20,7 +20,7 @@ export class CjsPaperDollAging extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.AGING;
 
-    static passes = PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.SURFACE;
 
     static category = "makeup/aging";
 

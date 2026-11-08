@@ -52,15 +52,14 @@ export const PaperDollLayer = Object.freeze({
 });
 
 /**
- * The doll's update passes, as bits: a part class declares the passes its
- * settings feed as `static passes`. Each pass has its own binding.
+ * The doll's bake targets, as bits: the maps a part's settings are baked into. A part class declares its targets
+ * as `static targets`; each target has its own binding. The foundation (geometry, morphs and base maps) is an input
+ * the archetype resolves, not a target.
  *
  * @readonly
  * @enum {number}
  */
-export const PaperDollPass = Object.freeze({
-    /** The archetype's resolved foundation: geometry, morphs and base maps. */
-    FOUNDATION: 1,
+export const PaperDollTarget = Object.freeze({
     /** The skin colour maps, head and body. */
     SKIN: 2,
     /** Normal and specular contributions. */

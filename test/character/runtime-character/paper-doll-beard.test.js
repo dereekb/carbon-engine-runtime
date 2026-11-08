@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollDefinition, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollDefinition, PaperDollTarget } from "../../../npm/dist/character/index.js";
 
 test("beard toggles preserve the selected style and invalidate head and surface composition", () =>
 {
@@ -15,7 +15,7 @@ test("beard toggles preserve the selected style and invalidate head and surface 
     assert.equal(beard.option, "stubble");
     beard.enabled = true;
     assert.equal(beard.Capture().option, "stubble");
-    assert.ok(doll.GetLayerOrder(PaperDollPass.HEAD).includes("beard"));
-    assert.ok(!doll.GetLayerOrder(PaperDollPass.BODY).includes("beard"));
-    assert.ok(doll.GetLayerOrder(PaperDollPass.SURFACE).includes("beard"));
+    assert.ok(doll.GetLayerOrder(PaperDollTarget.HEAD).includes("beard"));
+    assert.ok(!doll.GetLayerOrder(PaperDollTarget.BODY).includes("beard"));
+    assert.ok(doll.GetLayerOrder(PaperDollTarget.SURFACE).includes("beard"));
 });

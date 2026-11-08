@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned top underwear settings: the garment, its palette and
@@ -53,7 +53,7 @@ export class CjsPaperDollTopUnderwear extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.TOPUNDERWEAR;
 
-    static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.BODY | PaperDollTarget.SURFACE;
 
     static category = "topunderwear";
 

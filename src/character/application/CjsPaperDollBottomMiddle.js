@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned tights (`bottommiddle`) settings: the garment, its palette and custom
@@ -53,7 +53,7 @@ export class CjsPaperDollBottomMiddle extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.BOTTOMMIDDLE;
 
-    static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.BODY | PaperDollTarget.SURFACE;
 
     static category = "bottommiddle";
 

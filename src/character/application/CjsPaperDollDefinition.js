@@ -36,7 +36,7 @@ import { CjsPaperDollLips } from "./CjsPaperDollLips.js";
 import { CjsPaperDollChin } from "./CjsPaperDollChin.js";
 import { CjsPaperDollBrow } from "./CjsPaperDollBrow.js";
 import { CjsPaperDollMask } from "./CjsPaperDollMask.js";
-import { PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * The paper-doll map size tiers, largest first, as `[characterTextureQuality value,
@@ -52,7 +52,7 @@ const TEXTURE_TIERS = [ [ "4k", "_4k" ], [ "2k", "" ], [ "512", "_512" ], [ "256
  * what is built from them (targets, effects, captured passes) belongs to a
  * `CjsPaperDollInstance`.
  *
- * Each part class stamps its bake rank and the passes it feeds; the definition
+ * Each part class stamps its bake rank and the targets it feeds; the definition
  * orders a pass's parts by rank, overrides from `SetLayer` and occlusion, and
  * captures their settings for an instance to apply. Parts and the definition
  * record edits as dirty flags, which the one instance building from it
@@ -249,7 +249,7 @@ export class CjsPaperDollDefinition
 
     /**
      * The passes a layer-rank edit invalidated since the last `ClearDirty`.
-     * @returns {number} `PaperDollPass` bits.
+     * @returns {number} `PaperDollTarget` bits.
      */
     GetDirtyPasses()
     {
@@ -291,7 +291,7 @@ export class CjsPaperDollDefinition
     {
         if (!Number.isFinite(layer)) throw new RangeError("A layer rank must be a finite number");
         this._layers.set(name, layer);
-        this._passDirty |= this[name].constructor.passes;
+        this._passDirty |= this[name].constructor.targets;
     }
 
     /**
@@ -300,7 +300,7 @@ export class CjsPaperDollDefinition
      */
     ResetLayers()
     {
-        for (const name of this._layers.keys()) this._passDirty |= this[name].constructor.passes;
+        for (const name of this._layers.keys()) this._passDirty |= this[name].constructor.targets;
         this._layers.clear();
     }
 
@@ -308,12 +308,12 @@ export class CjsPaperDollDefinition
      * The parts feeding a pass, in bake order; parts with no rank come first,
      * equal ranks keep `parts` order, and an active occluder moves after the
      * active parts it occludes.
-     * @param {PaperDollPass} pass The pass whose parts are ordered.
+     * @param {PaperDollTarget} pass The pass whose parts are ordered.
      * @returns {string[]} The parts' member names, first drawn first.
      */
     GetLayerOrder(pass)
     {
-        const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.passes & pass)
+        const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & pass)
             .sort((a, b) => (this.GetLayer(a) ?? -Infinity) - (this.GetLayer(b) ?? -Infinity) || 0);
         // An active occluder draws after every active part it occludes, so in each shared pass it covers them
         // exactly where its own coverage is: occlusion covers only what it covers.
@@ -375,7 +375,7 @@ export class CjsPaperDollDefinition
      * One pass's captured settings, copied so later edits cannot reach them:
      * `order` lists its parts in bake order, `occluded` the active occlusion
      * targets, then each part's capture under its name.
-     * @param {PaperDollPass} pass The pass being captured.
+     * @param {PaperDollTarget} pass The pass being captured.
      * @param {string[]} names Its parts in bake order, as `GetLayerOrder` returns them.
      * @returns {{order: string[], occluded: string[]}} The capture, with one entry per part name.
      */

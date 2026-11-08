@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned top (`topmiddle`: shirts, tank tops, t-shirts) settings: the garment, its palette, custom
@@ -62,7 +62,7 @@ export class CjsPaperDollTopMiddle extends CjsPaperDollComponent
 
     /**
      * The selected garment and its colours, plus its tuck state (0 while nothing is selected).
-     * @param {PaperDollPass} pass The pass being captured.
+     * @param {PaperDollTarget} pass The pass being captured.
      * @returns {{option: string, colorAreas: number[], colors: Float32Array[], tuck: number}}
      */
     Capture(pass)
@@ -81,7 +81,7 @@ export class CjsPaperDollTopMiddle extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.TOPMIDDLE;
 
-    static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.BODY | PaperDollTarget.SURFACE;
 
     static category = "topmiddle";
 

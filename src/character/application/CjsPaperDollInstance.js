@@ -1,5 +1,5 @@
 import { meta } from "#schema";
-import { PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * One built paper doll character: what was made from a definition. It owns
@@ -50,13 +50,13 @@ export class CjsPaperDollInstance
      */
     RebuildHead()
     {
-        this.RebuildPasses(PaperDollPass.HEAD);
+        this.RebuildPasses(PaperDollTarget.HEAD);
     }
 
     /**
      * Rebuilds passes on the next `Update`, for an option whose inputs finished
      * loading after it was selected (options load on first selection).
-     * @param {number} passes The passes to rebuild, as `PaperDollPass` bits.
+     * @param {number} passes The passes to rebuild, as `PaperDollTarget` bits.
      * @returns {void}
      */
     RebuildPasses(passes)
@@ -150,11 +150,11 @@ export class CjsPaperDollInstance
      * `reads` names a pass whose rebuilt output this one draws over.
      */
     static passOrder = [
-        { pass: PaperDollPass.SKIN, binding: "skin", whenSelected: true, reads: 0 },
-        { pass: PaperDollPass.SURFACE, binding: "surface", whenSelected: true, reads: 0 },
-        { pass: PaperDollPass.EYES, binding: "eyes", whenSelected: false, reads: 0 },
-        { pass: PaperDollPass.HEAD, binding: "head", whenSelected: false, reads: PaperDollPass.SKIN },
-        { pass: PaperDollPass.BODY, binding: "body", whenSelected: false, reads: PaperDollPass.SKIN }
+        { pass: PaperDollTarget.SKIN, binding: "skin", whenSelected: true, reads: 0 },
+        { pass: PaperDollTarget.SURFACE, binding: "surface", whenSelected: true, reads: 0 },
+        { pass: PaperDollTarget.EYES, binding: "eyes", whenSelected: false, reads: 0 },
+        { pass: PaperDollTarget.HEAD, binding: "head", whenSelected: false, reads: PaperDollTarget.SKIN },
+        { pass: PaperDollTarget.BODY, binding: "body", whenSelected: false, reads: PaperDollTarget.SKIN }
     ];
 
 }

@@ -1,5 +1,5 @@
 import { CjsSchema, meta } from "#schema";
-import { PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Engine inputs for one paper-doll part, with prepared option and palette tables.
@@ -175,10 +175,10 @@ export class CjsPaperDollComponent
 
     /**
      * Copies the inputs a pass reads, retaining the existing capture shape.
-     * @param {PaperDollPass} pass The pass being captured.
+     * @param {PaperDollTarget} pass The pass being captured.
      * @returns {{option: string, colorAreas: number[], colors: Float32Array[], palette: string}}
      */
-    Capture(pass = PaperDollPass.HEAD)
+    Capture(pass = PaperDollTarget.HEAD)
     {
         const option = this.enabled ? this.option : "";
         return {
@@ -205,8 +205,8 @@ export class CjsPaperDollComponent
     /** Bake rank among skin layers; null when this part is not a skin layer. */
     static layer = null;
 
-    /** The update passes these inputs feed, as PaperDollPass bits. */
-    static passes = 0;
+    /** The bake targets these inputs feed, as PaperDollTarget bits. */
+    static targets = 0;
 
     /** Whether a foundation shape edit rebuilds this part while selected. */
     static shapeDependent = false;

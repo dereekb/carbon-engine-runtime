@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollEyesComposer, CjsPaperDollMakeupCatalog, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollEyesComposer, CjsPaperDollMakeupCatalog, PaperDollTarget } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
@@ -92,5 +92,5 @@ test("a resolved coloured option draws its colourised diffuse, and its normal an
   assert.deepEqual(Array.from(layers[0].value.FindParameterByName("Color1").value), COLOURS[0].map(Math.fround));
   assert.ok(layers[1].value.normal === true && layers[1].writeRGBA, "normal patch");
   assert.ok(layers[2].value.normal === false && layers[2].writeRGBA, "specular patch");
-  for (const { bound } of consumers) assert.equal(bound.NormalMap, composition.GetOutput(PaperDollPass.EYES, "eyes", "NormalMap"));
+  for (const { bound } of consumers) assert.equal(bound.NormalMap, composition.GetOutput(PaperDollTarget.EYES, "eyes", "NormalMap"));
 });

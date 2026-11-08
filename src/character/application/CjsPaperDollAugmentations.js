@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned face augmentation settings: one authored type, which
@@ -25,7 +25,7 @@ export class CjsPaperDollAugmentations extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.AUGMENTATIONS;
 
-    static passes = PaperDollPass.HEAD | PaperDollPass.BODY | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.HEAD | PaperDollTarget.BODY | PaperDollTarget.SURFACE;
 
     static category = "makeup/augmentations";
 

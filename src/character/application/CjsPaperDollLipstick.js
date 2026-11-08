@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned lipstick settings: the style, its palette and custom
@@ -63,7 +63,7 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
     Capture(pass)
     {
         const state = super.Capture(pass);
-        if (pass !== PaperDollPass.SURFACE) return state;
+        if (pass !== PaperDollTarget.SURFACE) return state;
         const palette = state.option ? this.palette : "";
         return {
             option: state.option,
@@ -95,7 +95,7 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.LIPSTICK;
 
-    static passes = PaperDollPass.HEAD | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.HEAD | PaperDollTarget.SURFACE;
 
     static category = "makeup/lipstick";
 

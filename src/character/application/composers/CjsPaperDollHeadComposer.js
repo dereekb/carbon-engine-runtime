@@ -1,4 +1,4 @@
-import { PaperDollPass } from "../paperDollOrder.js";
+import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 
 /**
@@ -56,19 +56,19 @@ export class CjsPaperDollHeadComposer
         const [ width, height ] = CjsPaperDollComposition.sizeOf(base);
         this._copy = await this._build.Ready(c.Copy(base));
         this.composition.AddOutput({
-            pass: PaperDollPass.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
+            pass: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
             base: () =>
             {
-                this._copy.GetResourceByName("Texture").SetResource(this.composition.GetOutput(PaperDollPass.SKIN, "head", "DiffuseMap"));
+                this._copy.GetResourceByName("Texture").SetResource(this.composition.GetOutput(PaperDollTarget.SKIN, "head", "DiffuseMap"));
                 return this._copy;
             },
             consumers
         });
         this._brow = this.composition.AddOutput({
-            pass: PaperDollPass.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
+            pass: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
             base: brow.base, baseRegion: brow.region, after: "eyebrows", consumers: brow.consumers
         });
-        this.composition.Render(PaperDollPass.HEAD, definition.CapturePass(PaperDollPass.HEAD, definition.GetLayerOrder(PaperDollPass.HEAD)));
+        this.composition.Render(PaperDollTarget.HEAD, definition.CapturePass(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
     }
 
     /**
@@ -87,7 +87,7 @@ export class CjsPaperDollHeadComposer
      */
     Apply(capture)
     {
-        this.composition.Apply(PaperDollPass.HEAD, capture);
+        this.composition.Apply(PaperDollTarget.HEAD, capture);
     }
 
 }

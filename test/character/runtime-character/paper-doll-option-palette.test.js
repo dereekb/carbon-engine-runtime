@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { CjsPaperDollDefinition, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollDefinition, PaperDollTarget } from "../../../npm/dist/character/index.js";
 
 test("component fields are independent engine inputs and schema notification only dirties", () =>
 {
@@ -81,8 +81,8 @@ test("lipstick surface capture keeps its palette with custom diffuse inputs", ()
     component.Configure([{ id: "lip", colorAreas: [1] }], new Map(), { option: "lip" });
     component.customColors = true;
     component.palette = "gloss";
-    assert.equal(component.Capture(PaperDollPass.HEAD).palette, "");
-    assert.deepEqual(component.Capture(PaperDollPass.SURFACE), {
+    assert.equal(component.Capture(PaperDollTarget.HEAD).palette, "");
+    assert.deepEqual(component.Capture(PaperDollTarget.SURFACE), {
         option: "lip", palette: "gloss", colorAreas: [], colors: [], specularColors: []
     });
 });
@@ -121,13 +121,13 @@ test("lipstick's surface capture carries the applied palette's specular colours"
     const component = new CjsPaperDollDefinition().lipstick;
     component.Configure([{ id: "lip", colorAreas: [1] }], new Map(), { option: "lip" });
     component.palette = "red";
-    assert.deepEqual(component.Capture(PaperDollPass.SURFACE).specularColors, []);
+    assert.deepEqual(component.Capture(PaperDollTarget.SURFACE).specularColors, []);
     component.ClearDirty();
     component.SetSpecularColors([0, 1, 2].map(i => Float32Array.of(i, i, i, 1.3)));
     assert.equal(component.IsDirty(), true);
-    const captured = component.Capture(PaperDollPass.SURFACE).specularColors;
+    const captured = component.Capture(PaperDollTarget.SURFACE).specularColors;
     assert.equal(captured.length, 3);
     assert.equal(captured[2][0], 2);
     component.Reset();
-    assert.deepEqual(component.Capture(PaperDollPass.SURFACE).specularColors, []);
+    assert.deepEqual(component.Capture(PaperDollTarget.SURFACE).specularColors, []);
 });

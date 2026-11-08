@@ -1,7 +1,7 @@
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLayer.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
-import { PaperDollPass } from "../paperDollOrder.js";
+import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
 import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 
@@ -86,7 +86,7 @@ export class CjsPaperDollEyesComposer
         {
             const seed = await c.Copy(base[name], CjsPaperDollCompositor.full, name === "NormalMap");
             this.composition.AddOutput({
-                pass: PaperDollPass.EYES, region: "eyes", channel: name, width, height, base: () => seed,
+                pass: PaperDollTarget.EYES, region: "eyes", channel: name, width, height, base: () => seed,
                 consumers: [ resource => { for (const { effect } of consumers) effect.GetResourceByName(name).SetResource(resource); } ]
             });
         }
@@ -138,14 +138,14 @@ export class CjsPaperDollEyesComposer
         const build = this._build, report = build.report.eyes, value = pass.eyes, id = value.option || null;
         build.CheckActive();
         const composed = id !== null && this._prepared.has(id);
-        if (composed) this.composition.Apply(PaperDollPass.EYES, pass);
+        if (composed) this.composition.Apply(PaperDollTarget.EYES, pass);
         else for (let i = 0; i < this._consumers.length; i++)
             for (const name of CHANNELS) this._consumers[i].effect.GetResourceByName(name).SetResource(this._originals[i][name]);
         report.selected = id;
         report.palette = this._component.palette || null;
         report.updates++;
         report.bindings = this._consumers.map(({ effect }) => Object.fromEntries(CHANNELS.map(name => [ name,
-            effect.GetResourceByName(name).GetResource() === (composed ? this.composition.GetOutput(PaperDollPass.EYES, "eyes", name) : this._originals[0][name]) ])));
+            effect.GetResourceByName(name).GetResource() === (composed ? this.composition.GetOutput(PaperDollTarget.EYES, "eyes", name) : this._originals[0][name]) ])));
         this._onChange("eyes " + (id ?? "foundation"));
         this._ReportState();
         report.updatePasses++;

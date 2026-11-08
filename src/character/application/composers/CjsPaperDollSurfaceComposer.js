@@ -1,4 +1,4 @@
-import { PaperDollPass } from "../paperDollOrder.js";
+import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 
 /** The surface outputs' channels, as the consumer effects name them. */
@@ -70,14 +70,14 @@ export class CjsPaperDollSurfaceComposer
         {
             const [ width, height ] = sizes[region + "." + channel];
             this.composition.AddOutput({
-                pass: PaperDollPass.SURFACE, region, channel, width, height, mips: true,
+                pass: PaperDollTarget.SURFACE, region, channel, width, height, mips: true,
                 base: () => this._bases.get(this._definition.archetype.option)[region][channel],
                 consumers: [ resource => { for (const effect of consumers[region]) effect.GetResourceByName(channel).SetResource(resource); } ]
             });
         }
 
         this._build.report.surfaceDetails = {
-            order: definition.GetLayerOrder(PaperDollPass.SURFACE),
+            order: definition.GetLayerOrder(PaperDollTarget.SURFACE),
             orderAuthority: "the paper doll bake order (PaperDollLayer)",
             options: Object.fromEntries([ ...this._decals ].map(([ name, source ]) => [ name, source.Describe() ])),
             updates: 0
@@ -116,7 +116,7 @@ export class CjsPaperDollSurfaceComposer
      */
     Apply(pass)
     {
-        this.composition.Apply(PaperDollPass.SURFACE, pass);
+        this.composition.Apply(PaperDollTarget.SURFACE, pass);
         const report = this._build.report.surfaceDetails;
         // Options prepared since Prepare (each loads on first apply) join the report.
         report.options = Object.fromEntries([ ...this._decals ].map(([ name, source ]) => [ name, source.Describe() ]));

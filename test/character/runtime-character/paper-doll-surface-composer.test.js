@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsCharacterRecipe, CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollTarget } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
@@ -100,7 +100,7 @@ test("Apply draws each output's base, then each part's layers in the capture's o
   assert.deepEqual(kinds, [ [ "base", "twist" ], [ "base", "simple" ], [ "base", "later" ], [ "base", "simple" ] ]);
   assert.equal(compositor.finished.length, 4, "every output's mips");
   assert.deepEqual(Object.keys(head.bound).sort(), [ "NormalMap", "SpecularMap" ]);
-  assert.equal(body.bound.NormalMap, composition.GetOutput(PaperDollPass.SURFACE, "body", "NormalMap"));
+  assert.equal(body.bound.NormalMap, composition.GetOutput(PaperDollTarget.SURFACE, "body", "NormalMap"));
   assert.equal(build.report.surfaceDetails.updates, 1);
   assert.equal(build.report.surfaceDetails.options.aging[0].regions.head.NormalMap[0].path, AGING + "comp_head_tn.png");
   assert.deepEqual(notes, [ "surface details applied" ]);
@@ -111,9 +111,9 @@ test("each apply draws into the other target of every output", async t =>
   const { composition, surface } = await prepared(t);
   const capture = { order: [], scars: { option: "" }, aging: { option: "" }, scarring: { option: "" } };
   surface.Apply(capture);
-  const first = composition.GetOutput(PaperDollPass.SURFACE, "head", "NormalMap");
+  const first = composition.GetOutput(PaperDollTarget.SURFACE, "head", "NormalMap");
   surface.Apply(capture);
-  assert.notEqual(composition.GetOutput(PaperDollPass.SURFACE, "head", "NormalMap"), first);
+  assert.notEqual(composition.GetOutput(PaperDollTarget.SURFACE, "head", "NormalMap"), first);
 });
 
 test("a recipe's entry for a map-decal part turns its option on and prepares it; parts it does not set stay off (operator, 2026-11-08)", async t =>

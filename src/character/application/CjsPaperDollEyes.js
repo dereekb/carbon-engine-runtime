@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollTarget } from "./paperDollOrder.js";
 
 /** Application-owned eye settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollEyes")
@@ -43,7 +43,7 @@ export class CjsPaperDollEyes extends CjsPaperDollComponent
     @meta.ui.description("Iris inner (pupillary zone)")
     color3 = Float32Array.of(.5, .5, .5, 1);
 
-    static passes = PaperDollPass.EYES;
+    static targets = PaperDollTarget.EYES;
 
     static category = "makeup/eyes";
 

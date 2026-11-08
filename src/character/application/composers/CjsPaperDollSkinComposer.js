@@ -2,7 +2,7 @@ import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLayer.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
-import { PaperDollPass } from "../paperDollOrder.js";
+import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 
@@ -116,7 +116,7 @@ export class CjsPaperDollSkinComposer
             // _dev/character-common/material-composer.mjs:174-177), which follows characterTextureQuality.
             const [ width, height ] = CjsPaperDollComposition.sizeOf(base);
             this.composition.AddOutput({
-                pass: PaperDollPass.SKIN, region, channel: "DiffuseMap", width, height,
+                pass: PaperDollTarget.SKIN, region, channel: "DiffuseMap", width, height,
                 base: capture =>
                 {
                     r.baseCopy.SetParameter("AlphaMultiplier", capture.skin.option ? r.skinAlpha : 1);
@@ -147,7 +147,7 @@ export class CjsPaperDollSkinComposer
             updates: 0,
             baseFile: "deteis.base retained as evidence; not multiplied into colours"
         };
-        this.composition.Render(PaperDollPass.SKIN, { order: [ "skin" ], skin: { option: "basic", colors: definition.skin.GetColors() } });
+        this.composition.Render(PaperDollTarget.SKIN, { order: [ "skin" ], skin: { option: "basic", colors: definition.skin.GetColors() } });
     }
 
     /**
@@ -202,13 +202,13 @@ export class CjsPaperDollSkinComposer
     /** The composed body base, the texture resource of the target drawn last. */
     get bodyTexture()
     {
-        return this.composition.GetOutput(PaperDollPass.SKIN, "body", "DiffuseMap");
+        return this.composition.GetOutput(PaperDollTarget.SKIN, "body", "DiffuseMap");
     }
 
     /** The composed head base, the texture resource of the target drawn last. */
     get headTexture()
     {
-        return this.composition.GetOutput(PaperDollPass.SKIN, "head", "DiffuseMap");
+        return this.composition.GetOutput(PaperDollTarget.SKIN, "head", "DiffuseMap");
     }
 
     /**
@@ -218,7 +218,7 @@ export class CjsPaperDollSkinComposer
      */
     Apply(pass)
     {
-        this.composition.Apply(PaperDollPass.SKIN, pass);
+        this.composition.Apply(PaperDollTarget.SKIN, pass);
         const value = pass.skin, report = this._build.report.skin;
         report.selected = this._definition.skin.palette;
         report.enabled = this._definition.skin.enabled;

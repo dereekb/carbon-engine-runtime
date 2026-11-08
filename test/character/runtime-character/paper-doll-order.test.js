@@ -1,7 +1,7 @@
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollDefinition, CjsPaperDollInstance, PaperDollLayer, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollDefinition, CjsPaperDollInstance, PaperDollLayer, PaperDollTarget } from "../../../npm/dist/character/index.js";
 
 /** One instance per bindings object, so repeated updates keep their applied state. */
 const instances = new WeakMap();
@@ -44,15 +44,15 @@ function Bindings()
 test("every collected part declares the passes it feeds", () =>
 {
     const doll = Doll();
-    for (const name of CjsPaperDollDefinition.parts) assert.notEqual(doll[name].constructor.passes, 0, name);
+    for (const name of CjsPaperDollDefinition.parts) assert.notEqual(doll[name].constructor.targets, 0, name);
 });
 
 test("the head pass composes its parts in bake order and hands that order to the binding", () =>
 {
     const doll = Doll();
     const head = [ "tattoo", "eyebrows", "freckles", "blush", "eyeshadow", "eyeliner", "lipstick", "augmentations", "hair", "beard", "scars", "glasses", "earsLow", "earsHigh", "ears", "nose", "lips", "chin", "brow", "mask" ];
-    assert.deepEqual(doll.GetLayerOrder(PaperDollPass.HEAD), head);
-    assert.deepEqual(doll.GetLayerOrder(PaperDollPass.SURFACE), [ "aging", "scarring", "lipstick", "augmentations", "hair", "bodyAugmentation", "beard", "armLeft", "armRight", "scars", "bottomUnderwear", "topUnderwear", "bottomMiddle", "topMiddle", "bottomOuter", "feet", "topOuter", "outer" ]);
+    assert.deepEqual(doll.GetLayerOrder(PaperDollTarget.HEAD), head);
+    assert.deepEqual(doll.GetLayerOrder(PaperDollTarget.SURFACE), [ "aging", "scarring", "lipstick", "augmentations", "hair", "bodyAugmentation", "beard", "armLeft", "armRight", "scars", "bottomUnderwear", "topUnderwear", "bottomMiddle", "topMiddle", "bottomOuter", "feet", "topOuter", "outer" ]);
 
     const bindings = Bindings();
     Update(doll, bindings);
@@ -88,17 +88,17 @@ test("an active occluder draws after the parts it occludes, matched by category 
     doll.bodyAugmentation.Configure([ { id: "suit", path: "makeup/bodyaugmentations/suit", colorAreas: [],
         occludes: [ "topunderwear", "makeup/armleft/cyborgarm_l" ] } ], new Map(), { option: "suit" });
 
-    const order = doll.GetLayerOrder(PaperDollPass.BODY);
+    const order = doll.GetLayerOrder(PaperDollTarget.BODY);
     assert.ok(order.indexOf("bodyAugmentation") > order.indexOf("topUnderwear"), "over the top underwear, by category");
     assert.ok(order.indexOf("bodyAugmentation") > order.indexOf("armLeft"), "over the arm, by path");
 
     CjsSchema.setValues(doll.bodyAugmentation, { enabled: false });
-    const plain = doll.GetLayerOrder(PaperDollPass.BODY);
+    const plain = doll.GetLayerOrder(PaperDollTarget.BODY);
     assert.ok(plain.indexOf("bodyAugmentation") < plain.indexOf("topUnderwear"), "off, it keeps its rank");
 
     CjsSchema.setValues(doll.bodyAugmentation, { enabled: true });
     CjsSchema.setValues(doll.topUnderwear, { enabled: false });
-    const bra = doll.GetLayerOrder(PaperDollPass.BODY);
+    const bra = doll.GetLayerOrder(PaperDollTarget.BODY);
     assert.ok(bra.indexOf("bodyAugmentation") > bra.indexOf("armLeft"), "still over the arm it occludes");
 });
 

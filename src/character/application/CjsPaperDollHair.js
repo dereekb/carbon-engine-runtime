@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned hair settings: the style, two independent swatch picks and
@@ -74,7 +74,7 @@ export class CjsPaperDollHair extends CjsPaperDollComponent
 
     static layer = PaperDollLayer.HAIR;
 
-    static passes = PaperDollPass.HEAD | PaperDollPass.SURFACE;
+    static targets = PaperDollTarget.HEAD | PaperDollTarget.SURFACE;
 
     static category = "hair";
 
