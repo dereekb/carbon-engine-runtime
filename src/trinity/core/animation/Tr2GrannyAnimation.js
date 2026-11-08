@@ -206,8 +206,8 @@ export class Tr2GrannyAnimation extends IRoot
   /** Whether grannyRes was borrowed from the mesh rather than resolved here. */
   _sharedGeometry = false;
 
-  /** @cjs The primary slot lost its resource to expiry and reloads at use. */
-  _grannyNeedsReload = false;
+  /** @cjs Prevents a destroyed controller from reacquiring an expired resource. */
+  _destroyed = false;
 
   /**
    * @cjs Path of a resource given to SetGrannyResource, so it can reload after
@@ -293,37 +293,14 @@ export class Tr2GrannyAnimation extends IRoot
     this.Initialize();
   }
 
-  /** m_grannyRes (TriGrannyResPtr) [READ] */
-  @type.object.ref("TriGrannyRes")
-  get grannyRes()
-  {
-    return this._grannyRes;
-  }
-
   /**
-   * Moves the primary resource's notification link.
-   * @adapted Native targets (Tr2GrannyAnimation.cpp:327-338) use manager links;
-   *   decoded-data fixtures have no resource lifetime and remain unregistered.
+   * m_grannyRes (TriGrannyResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Tr2GrannyAnimation_Blue.cpp:23).
+   * @cjs Also holds borrowed geometry (Carbon's m_geometryRes, see _sharedGeometry)
+   *   and decoded data given directly, which has no lifetime and is never linked.
    */
-  set grannyRes(resource)
-  {
-    if (resource === this._grannyRes) return;
-    const previous = CjsSchema.cast(this._grannyRes, TriGeometryRes) ?? CjsSchema.cast(this._grannyRes, TriGrannyRes);
-    if (previous) blue.resMan.notify.Remove(this, previous);
-    this.Cleanup();
-    this._grannyRes = resource;
-    this._grannyNeedsReload = !!previous && !resource && !this._sharedGeometry;
-    if (previous)
-    {
-      for (const [path, secondary] of this._secondaryResources)
-        if (secondary === previous) blue.resMan.notify.Add(this, previous, this._secondaryResources, path);
-    }
-    const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
-    if (current) blue.resMan.notify.Add(this, current, this, "grannyRes");
-  }
-
-  /** Primary geometry/Granny resource or explicitly supplied decoded data. */
-  _grannyRes = null;
+  @type.object.ref("TriGrannyRes")
+  grannyRes = null;
 
   /** m_eventListener (IBlueEventListenerPtr) [READWRITE] */
   @type.object.ref("IBlueEventListener")
@@ -363,9 +340,8 @@ export class Tr2GrannyAnimation extends IRoot
   {
     if (!this._sharedGeometry && (this.resPath_ || this._resolvedPath))
     {
-      this.grannyRes = this.resPath_ ? blue.resMan.GetResource(this.resPath_, { ex: "raw" }) : null;
+      this._ReplaceGrannyRes(this.resPath_ ? blue.resMan.GetResource(this.resPath_, { ex: "raw" }) : null);
       this._resolvedPath = this.resPath_;
-      this._grannyNeedsReload = false;
     }
     return this.RebuildCachedData();
   }
@@ -381,8 +357,7 @@ export class Tr2GrannyAnimation extends IRoot
   {
     this._sharedGeometry = false;
     this._resolvedPath = "";
-    this.grannyRes = resource ?? null;
-    this._grannyNeedsReload = false;
+    this._ReplaceGrannyRes(resource ?? null);
     const attached = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
     this._attachedPath = attached ? attached.GetPath() : "";
     this._attachedExt = attached ? attached.GetExt() : "";
@@ -416,8 +391,7 @@ export class Tr2GrannyAnimation extends IRoot
     this._resolvedPath = "";
     this._attachedPath = "";
     this._attachedExt = "";
-    this.grannyRes = resource ?? null;
-    this._grannyNeedsReload = false;
+    this._ReplaceGrannyRes(resource ?? null);
     const initialized = this.RebuildCachedData();
     return initialized;
   }
@@ -432,6 +406,63 @@ export class Tr2GrannyAnimation extends IRoot
   ReleaseCachedData(_resource)
   {
     this.Cleanup();
+  }
+
+  /**
+   * Lets go of an expired resource: the rig built from it, then every slot that holds it.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires. A secondary keeps its path with a null value, as
+   *   Carbon's m_secondaryGrannyRes can (cpp:1274), and Update reloads both kinds.
+   * @param {TriGrannyRes|TriGeometryRes} resource The expired resource.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.grannyRes === resource) this.grannyRes = null;
+    for (const [ path, held ] of this._secondaryResources)
+    {
+      if (held === resource) this._secondaryResources.set(path, null);
+    }
+  }
+
+  /**
+   * Replaces the primary resource: stops listening to the old one, cleans up,
+   * holds the new one and listens to it. Carbon does this inline at Initialize
+   * (Tr2GrannyAnimation.cpp:323-339), SetSharedGeometryRes (cpp:283-293) and the
+   * destructor (cpp:99-117).
+   *
+   * @adapted The links live on resMan. notify.Remove drops every link between this
+   *   controller and the resource, so a secondary slot holding the same one is
+   *   linked again. Cleanup runs only when the resource changes, and decoded data
+   *   is held without a link.
+   * @param {TriGrannyRes|TriGeometryRes|object|null} resource The new primary.
+   * @returns {void}
+   */
+  _ReplaceGrannyRes(resource)
+  {
+    if (resource === this.grannyRes) return;
+    const previous = CjsSchema.cast(this.grannyRes, TriGeometryRes) ?? CjsSchema.cast(this.grannyRes, TriGrannyRes);
+    if (previous) blue.resMan.notify.Remove(this, previous);
+    this.Cleanup();
+    this.grannyRes = resource;
+    if (previous)
+    {
+      for (const [ path, secondary ] of this._secondaryResources)
+        if (secondary === previous) blue.resMan.notify.Add(this, previous, this._secondaryResources, path);
+    }
+    const current = CjsSchema.cast(resource, TriGeometryRes) ?? CjsSchema.cast(resource, TriGrannyRes);
+    if (current) blue.resMan.notify.Add(this, current, this, "grannyRes");
+  }
+
+  /**
+   * Whether the primary slot is empty while a path for it stands, as expiry leaves it.
+   * @cjs Borrowed geometry comes back from its mesh, so it never reloads here.
+   * @returns {boolean} Whether Update should reload the primary.
+   */
+  _NeedsGrannyReload()
+  {
+    return !this._destroyed && !this.grannyRes && !this._sharedGeometry && !!(this.resPath_ || this._attachedPath);
   }
 
   /**
@@ -830,7 +861,7 @@ export class Tr2GrannyAnimation extends IRoot
    */
   Update(dt = 0)
   {
-    if (this._RenewResources() || this._grannyNeedsReload) this._ReloadResources();
+    if (this._RenewResources() || this._NeedsGrannyReload()) this._ReloadResources();
     if (!this._initialized || !this.animationEnabled)
     {
       return false;
@@ -913,17 +944,12 @@ export class Tr2GrannyAnimation extends IRoot
    */
   _ReloadResources()
   {
-    if (this._grannyNeedsReload)
+    if (this._NeedsGrannyReload())
     {
-      this._grannyNeedsReload = false;
-
       const path = this.resPath_ || this._attachedPath;
-      if (path)
-      {
-        this.grannyRes = blue.resMan.GetResource(path, { ex: this.resPath_ ? "raw" : this._attachedExt });
-        this._resolvedPath = this.resPath_;
-        if (!this._initialized) this.RebuildCachedData();
-      }
+      this._ReplaceGrannyRes(blue.resMan.GetResource(path, { ex: this.resPath_ ? "raw" : this._attachedExt }));
+      this._resolvedPath = this.resPath_;
+      if (!this._initialized) this.RebuildCachedData();
     }
 
     let reloaded = false;
@@ -2469,8 +2495,8 @@ export class Tr2GrannyAnimation extends IRoot
     for (const resource of this._secondaryResources.values()) blue.resMan.notify.Remove(this, resource);
     this._secondaryResources.clear();
     this._secondaryExts.clear();
-    this.grannyRes = null;
-    this._grannyNeedsReload = false;
+    this._destroyed = true;
+    this._ReplaceGrannyRes(null);
     this._attachedPath = "";
     this._attachedExt = "";
     this._sharedGeometry = false;
