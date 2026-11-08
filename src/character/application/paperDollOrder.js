@@ -4,8 +4,8 @@
  *
  * This is the composition order, not the recipe category order
  * (`CjsCharacterModifierOrder`), which files parts by where they are stored.
- * The ranks are a working order, and are confirmed layer by layer against the game. They are spaced so a layer
- * can be placed between two others without renumbering.
+ * The ranks are confirmed against the game. They are spaced so a layer can be placed between two others without
+ * renumbering.
  *
  * @readonly
  * @enum {number}
@@ -21,32 +21,32 @@ export const PaperDollLayer = Object.freeze({
     FRECKLES: 60,
     BLUSH: 70,
     EYESHADOW: 90,
-    /** The hair painted on the scalp, between eye shadow and eyeliner (the earlier demo's order). Working rank, to confirm in game. */
-    HAIR: 95,
     /** Facial hair over the other skin detail, adjacent to scalp hair. Working rank, to confirm in game. */
     BEARD: 96,
     EYELINER: 100,
     LIPSTICK: 110,
-    /** Over the lipstick (in game) and before every garment; its place against the scars is unconfirmed. */
+    /** Over the lipstick and before every garment. */
     AUGMENTATIONS: 112,
+    /** The hair painted on the scalp, over the face augmentations. */
+    HAIR: 113,
     /** Body augmentations: with the face ones, before every garment. */
     BODYAUGMENTATION: 114,
     ARMLEFT: 116,
     ARMRIGHT: 118,
     SCARS: 120,
-    /** Accessories (glasses, piercings, masks): meshes with their own maps, drawn with the head pass. Working rank. */
+    /** Accessories (glasses, piercings, masks): meshes with their own maps, drawn with the head pass. */
     ACCESSORIES: 125,
     /** Body: over the skin and its freckles; the bra goes over the underpants. */
     BOTTOMUNDERWEAR: 130,
     TOPUNDERWEAR: 140,
-    /** Baked garments over the underwear: tights, then the top over them. Working ranks, to confirm in game. */
+    /** Baked garments over the underwear: tights, then the top over them. */
     BOTTOMMIDDLE: 150,
     TOPMIDDLE: 160,
-    /** Trousers and skirts, over the top: the top tucked in. Working rank, to confirm in game. */
+    /** Trousers and skirts, over the top: the top tucked in. */
     BOTTOMOUTER: 170,
-    /** Shoes and boots, over the bottoms: trousers tucked into boots. Working rank, to confirm in game. */
+    /** Shoes and boots, over the bottoms: trousers tucked into boots. */
     FEET: 180,
-    /** Over-tops (topouter), then outer garments (jackets, suits, robes), over everything else. Working ranks, to confirm in game. */
+    /** Over-tops (topouter), then outer garments (jackets, suits, robes), over everything else. */
     TOPOUTER: 190,
     OUTER: 200
 });
