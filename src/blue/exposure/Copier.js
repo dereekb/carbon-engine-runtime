@@ -206,9 +206,12 @@ export class Copier extends ICopier
     // member with a non-zero size in Carbon and is copied; a property's size is
     // 0, so Copier.cpp:163-177 compares no bytes and never copies it.
     const runtimeNames = new Set();
-    const info = CjsSchema.getSchema(dest.constructor);
-    // Carbon copies in member-table order (Copier.cpp:140-209), which a bag carries (CjsSchema.orderByExposureRows).
-    for (const field of CjsSchema.orderByExposureRows(dest.constructor, [ ...info.members, ...info.properties.filter(property => !property.property) ]))
+    // Carbon copies the member tables along the exposure chain, in member-table order (Copier.cpp:140-209),
+    // which a bag carries (CjsSchema.orderByExposureRows).
+    const levels = CjsSchema.getExposedDeclarations(dest.constructor);
+    const members = levels.flatMap(level => level.members);
+    const properties = levels.flatMap(level => level.properties.filter(property => !property.property));
+    for (const field of CjsSchema.orderByExposureRows(dest.constructor, [ ...members, ...properties ]))
     {
       if (runtimeNames.has(field.name)) continue;
       if (field.type?.runtimeOnly === true)

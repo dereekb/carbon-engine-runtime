@@ -62,13 +62,15 @@ test("transform exposure distinguishes Root from ordinary transforms and inherit
   assert.equal(root.Initialize, EveTransform.prototype.Initialize);
 });
 
+// The last column: whether the exposure holds meshLod. EveRootTransform chains to Tr2Transform
+// (EveRootTransform_Blue.cpp:10), whose table maps mesh but not meshLod, so a copy leaves it out.
 const cases = [
-  [ "EveTransform", EveTransform, true ],
-  [ "EveMissileWarhead", EveMissileWarhead, true ],
-  [ "EveRootTransform", EveRootTransform, false ]
+  [ "EveTransform", EveTransform, true, true ],
+  [ "EveMissileWarhead", EveMissileWarhead, true, true ],
+  [ "EveRootTransform", EveRootTransform, false, false ]
 ];
 
-for (const [ name, Constructor, initializes ] of cases)
+for (const [ name, Constructor, initializes, exposesLod ] of cases)
 {
   test(`${name} Copier completion follows its mapped initializer for a lone LOD mesh`, () =>
   {
@@ -90,7 +92,8 @@ for (const [ name, Constructor, initializes ] of cases)
     else
     {
       assert.equal(copy.mesh, null, "an inherited method alone must not trigger initialization");
-      AssertMeshCopy(copy.meshLod, lod);
+      if (exposesLod) AssertMeshCopy(copy.meshLod, lod);
+      else assert.equal(copy.meshLod, null, "meshLod is not in this class's exposure, so it is not copied");
     }
     assert.equal(source.mesh, null);
     assert.equal(source.meshLod, lod, "copy completion leaves the source graph untouched");
@@ -106,8 +109,12 @@ for (const [ name, Constructor, initializes ] of cases)
 
     assert.ok(copy);
     AssertMeshCopy(copy.mesh, source.mesh);
-    AssertMeshCopy(copy.meshLod, source.meshLod);
-    assert.notEqual(copy.mesh, copy.meshLod);
+    if (exposesLod)
+    {
+      AssertMeshCopy(copy.meshLod, source.meshLod);
+      assert.notEqual(copy.mesh, copy.meshLod);
+    }
+    else assert.equal(copy.meshLod, null, "meshLod is not in this class's exposure, so it is not copied");
     assert.equal(source.mesh.name, "synthetic primary");
     assert.equal(source.meshLod.name, "synthetic lod");
   });

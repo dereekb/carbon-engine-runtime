@@ -63,7 +63,7 @@ const s_classInfo = new WeakMap();
  *
  * Carbon: Be::ClassInfo (blueexposure/include/BlueTypes.h:378-400)
  *
- * @adapted built once from the class's decorator metadata, which stands in for Carbon's exposure macros; `parentClassInfo` follows the registered JS superclass (see `exposeToBlue`).
+ * @adapted built once from the class's decorator metadata, which stands in for Carbon's exposure macros.
  */
 export class ClassInfo
 {
@@ -144,11 +144,9 @@ export class ClassInfo
    * `ExposeToBlue()` (BlueExposureMacrosPython.h:20-67): the class's
    * information, built on the first call and returned from then on.
    *
-   * `parentClassInfo` follows the nearest registered JavaScript superclass,
-   * not `EXPOSURE_CHAINTO`: our metadata inherits members along `extends`, and
-   * 769 of 1459 registered classes declare no chain while their superclass
-   * does have members (measured 2026-11-01). QueryInterface still walks the
-   * exposure chain (`mappedInterfaces`).
+   * `parentClassInfo` follows `EXPOSURE_CHAINTO`, as Carbon's does, never `extends`.
+   * The class's own rows are what it declares, and what unregistered helper
+   * classes between it and its nearest registered JS ancestor declare.
    *
    * @adapted our decorators stand in for the macros. Carbon generates one
    *   `ExposeToBlue` per class from its macros; JavaScript has one static that
@@ -163,7 +161,8 @@ export class ClassInfo
   {
     const schema = CjsSchema.getSchema(Constructor);
     const cached = s_classInfo.get(Constructor);
-    if (cached && cached.schema === schema) return cached.classInfo;
+    // A chain declared after a first lookup changes no schema, so the cache compares the chain too.
+    if (cached && cached.schema === schema && cached.chained === exposureChainTo(Constructor)) return cached.classInfo;
 
     const ci = new ClassInfo();
     ci.classId = schema.className;
@@ -171,8 +170,9 @@ export class ClassInfo
     ci.blue = schema.blue === true;
     for (const Interface of ownMappedInterfaces(Constructor)) ci.interfaceTable.push(CjsSchema.getClassName(Interface));
 
+    const Chained = exposureChainTo(Constructor);
+    ci.parentClassInfo = Chained ? ClassInfo.exposeToBlue(Chained) : null;
     const Parent = ClassInfo._parentClass(Constructor);
-    ci.parentClassInfo = Parent ? ClassInfo.exposeToBlue(Parent) : null;
     for (let parent = ci.parentClassInfo; parent; parent = parent.parentClassInfo)
     {
       for (const entry of parent.memberTable) if (CjsSchema.isFieldHidden(Constructor, entry.meta.key)) ci.hiddenInherited.add(entry.meta.key);
@@ -213,13 +213,13 @@ export class ClassInfo
       }
     }
 
-    s_classInfo.set(Constructor, { schema, classInfo: ci });
+    s_classInfo.set(Constructor, { schema, chained: Chained, classInfo: ci });
     return ci;
   }
 
   /**
-   * The nearest superclass with a registered name, standing in for
-   * `mParentClassInfo` (see `exposeToBlue`). Ours.
+   * The nearest superclass with a registered name, where the class's own rows
+   * end (see `exposeToBlue`). Ours.
    *
    * @cjs
    * @implemented

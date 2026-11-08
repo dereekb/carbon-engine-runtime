@@ -619,7 +619,10 @@ export class BlueClasses extends IBlueClasses
     // An accessor row is a property (blue.property/meta.property, flags derived)
     // or an attribute over the accessor path (its own flags); one carrying only
     // status markers is not exposed.
-    for (const member of CjsSchema.orderByExposureRows(Constructor, [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ]))
+    // Along the exposure chain (TypeInfo.cpp:118-148 walks mMemberTable up mParentClassInfo).
+    const levels = CjsSchema.getExposedDeclarations(Constructor);
+    const declared = [ ...levels.flatMap(level => level.members), ...levels.flatMap(level => level.properties).filter(property => property.property || property.edit) ];
+    for (const member of CjsSchema.orderByExposureRows(Constructor, declared))
     {
       if (completeExposureNames.has(member.name)) continue;
       // PyGetTypeInfo lists what Carbon's EXPOSURE table holds (TypeInfo.cpp:118-148, the mMemberTable walk); our own rows are not in it.

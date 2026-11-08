@@ -111,7 +111,7 @@ test("compiled classes carry one PERSIST lookup, derived first, and their facts"
     { name: "shared", key: "base", type: "float32" },
     { name: "quiet", type: "float32", flags: EDITFLAGS.READWRITE }
   ] });
-  CjsGraph.define(Derived, { name: "PersistDerived", proxy: true, customPersist: true, list: true, abstract: true,
+  CjsGraph.define(Derived, { name: "PersistDerived", chainTo: "PersistBase", proxy: true, customPersist: true, list: true, abstract: true,
     layout: { size: 4, boundaries: [], fields: [] }, members: [
       { name: "shared", key: "derived", type: "float32" },
       { name: "skipped", type: "float32", flags: GraphMemberFlags.RUNTIMEONLY }
@@ -594,7 +594,7 @@ test("a class's presentation is built when asked for, base first, with a host's 
   CjsGraph.define(Base, { name: "UiBase", ui: () => { built++; return { members: { value: { group: "Base", min: 0 } } }; }, members: [
     { name: "value", type: "float32" }
   ] });
-  CjsGraph.define(Ship, { name: "UiShip", ui: () => { built++; return { members: { value: { group: "Ship" }, sun: { group: "Lighting" } } }; }, members: [
+  CjsGraph.define(Ship, { name: "UiShip", chainTo: "UiBase", ui: () => { built++; return { members: { value: { group: "Ship" }, sun: { group: "Lighting" } } }; }, members: [
     { name: "sun", type: "vec3" }, { name: "dirtLevel", type: "float32" }
   ] });
 

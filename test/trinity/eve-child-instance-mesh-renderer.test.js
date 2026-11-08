@@ -242,15 +242,15 @@ test("instance-mesh and smart-light promotions expose maintained exact schemas",
   assert.equal(existsSync("npm/dist/trinity/generated/eve/child/EveChildInstanceMeshRenderer.js"), false);
   assert.equal(existsSync("npm/dist/trinity/generated/eve/smartLights/EveSmartLightMesh.js"), false);
 
+  // Neither table chains, so the Values are each class's own Carbon rows
+  // (EveChildInstanceMeshRenderer_Blue.cpp, EveSmartLightMesh_Blue.cpp:12-45): nothing of EveChildMesh's.
   assert.deepEqual(Object.keys(CjsSchema.getValues(new EveChildInstanceMeshRenderer(), {})).sort(), [
-    "name", "partTag", "ownedLocatorSets", "armorDamageShader", "display", "inheritOverlayEffects", "overlayEffects",
-    "damageOverlay", "mesh", "minScreenSize", "currentScreenSize",
+    "name", "partTag", "display", "mesh", "minScreenSize",
     "rotationConstraint", "staticOffsetRotation", "staticOffsetTranslation",
     "distribution", "staticOffsetScale"
   ].sort());
   assert.deepEqual(Object.keys(CjsSchema.getValues(new EveSmartLightMesh(), {})).sort(), [
-    "name", "ownedLocatorSets", "armorDamageShader", "display", "inheritOverlayEffects", "overlayEffects",
-    "damageOverlay", "mesh", "minScreenSize", "currentScreenSize",
+    "name", "display", "mesh", "minScreenSize", "currentScreenSize",
     "rotationConstraint", "staticOffsetRotation", "staticOffsetTranslation",
     "staticOffsetScale", "shaderParamColorName", "factionColor",
     "useFactionColor", "attributeModifiers", "customColor", "castShadows"

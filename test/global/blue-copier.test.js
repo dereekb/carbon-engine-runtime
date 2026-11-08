@@ -308,6 +308,7 @@ test("same-name inherited members copy derived first without merging declaration
     className: "CopierStoredDerived",
     members: [ { name: "value", key: "derivedValue", type: { kind: "int32" }, edit: { persist: true } } ]
   });
+  CjsSchema.meta.exposureChainTo(CopierStoredBase)(CopierStoredDerived);
   const source = Object.assign(new CopierStoredDerived(), { derivedValue: 2, baseValue: 1 });
   const copy = blue.classes.CopyTo(source, null);
   assert.deepEqual(copy.changes, [ [ "value", 2, 0 ], [ "value", 2, 1 ] ], "Copier.cpp:151-169 walks each native member table");
@@ -446,6 +447,7 @@ test("mapped interface identity survives inherited mappings and other constructo
   CjsSchema.define(CopierMappedBase, { className: "CopierMappedBase", fields: {} });
   class CopierMappedDerived extends CopierMappedBase {}
   CjsSchema.define(CopierMappedDerived, { className: "CopierMappedDerived", fields: {} });
+  CjsSchema.meta.exposureChainTo(CopierMappedBase)(CopierMappedDerived);
   assert.notEqual(AnotherInitializeContract, IInitialize);
   assert.equal(blue.classes.CopyTo(new CopierMappedDerived(), null).initialized, 1);
 });

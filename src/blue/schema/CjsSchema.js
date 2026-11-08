@@ -12,7 +12,7 @@ import {
 } from "./types/carbonTypes.js";
 import { claimAbstractMethods, decorateAbstractMethod, installAbstractMethod, isAbstractMethod } from "../compose/abstract.js";
 import { CJS_CLASS_NAME, getRegisteredClassName, requireRegisteredClassName } from "../compose/className.js";
-import { carbonInheritDecorator, carbonInterfaceDecorator, carbonChainToDecorator, cast, mappedInterfaces, setInterfaceClassResolver } from "../compose/interface.js";
+import { carbonInheritDecorator, carbonInterfaceDecorator, carbonChainToDecorator, cast, exposureChainTo, mappedInterfaces, setInterfaceClassResolver } from "../compose/interface.js";
 import { composeValuesDecorator, createValuesTransport, isExportableField, isTransportedDeclaration, isWritableField } from "../compose/values.js";
 import { blueEnums, CjsBlueEnumRegistry } from "../enums/CjsBlueEnumRegistry.js";
 import { EDITFLAGS } from "../../global/consts/blue.js";
@@ -35,6 +35,8 @@ const CLASS_SCHEMA = new WeakMap();
 const SCHEMA_EXPORTS = new WeakMap();
 const DEFAULT_EXPORTS = new WeakMap();
 const VALUES_DECLARATIONS = new WeakMap();
+/** A class's exposure levels (getExposedDeclarations), kept with the schema they were read from. */
+const EXPOSED_DECLARATIONS = new WeakMap();
 let SCHEMA_GENERATION = 0;
 
 // Statics described by meta.setting, in definition order (see getSettings).
@@ -308,6 +310,47 @@ export class CjsSchema
     static isFieldHidden(Constructor, fieldName)
     {
         return getHiddenInheritedFieldNames(Constructor).has(fieldName);
+    }
+
+    /**
+     * The member and property declarations a class's exposure holds, level by level along its
+     * exposure chain, derived first: Carbon's walk up `mParentClassInfo`, which only
+     * `EXPOSURE_CHAINTO` sets (IRootReaderBase::FindEntry, BlueMemberIterator, Copier). Each level
+     * holds what its class declares itself, and what unregistered helper classes between it and
+     * its nearest registered JS ancestor declare, as `ClassInfo` counts a class's own rows. A
+     * declaration the asking class hides with `hideInherited` is left out.
+     *
+     * The JS facts about a field (its declaration, type, default and hydration) stay along
+     * `extends`, the class's C++ bases.
+     *
+     * @cjs Carbon generates one member table per class; ours are read from decorator metadata.
+     * @param {Function} Constructor The class.
+     * @returns {Array<{type: Function, members: object[], properties: object[]}>} The levels, the class first.
+     */
+    static getExposedDeclarations(Constructor)
+    {
+        const schema = CjsSchema.getSchema(Constructor);
+        const chain = [];
+        for (let type = Constructor; typeof type === "function" && !chain.includes(type); type = exposureChainTo(type)) chain.push(type);
+
+        // A chain declared after a first lookup changes no schema, so the cache compares the chain too.
+        const cached = EXPOSED_DECLARATIONS.get(Constructor);
+        if (cached && cached.schema === schema && cached.chain.length === chain.length && cached.chain.every((type, i) => type === chain[i])) return cached.levels;
+
+        const hidden = getHiddenInheritedFieldNames(Constructor);
+        const levels = [];
+        for (const type of chain)
+        {
+            const own = new Set([ type ]);
+            for (let helper = Object.getPrototypeOf(type); typeof helper === "function" && helper !== Function.prototype && !getRegisteredClassName(helper); helper = Object.getPrototypeOf(helper)) own.add(helper);
+
+            const typeSchema = type === Constructor ? schema : CjsSchema.getSchema(type);
+            const isOwn = field => own.has(field.declaringClass) && (type === Constructor || !hidden.has(field.key ?? field.name));
+            levels.push({ type, members: typeSchema.members.filter(isOwn), properties: typeSchema.properties.filter(isOwn) });
+        }
+
+        EXPOSED_DECLARATIONS.set(Constructor, { schema, chain, levels });
+        return levels;
     }
 
     /** Returns resolved provenance metadata for a named method. */
@@ -2693,23 +2736,24 @@ function importDeclaredValue(value, field)
 function findValuesDeclaration(Constructor, name, storage = false)
 {
     if (typeof Constructor !== "function") return null;
-    const info = CjsSchema.getSchema(Constructor);
-    let selected = VALUES_DECLARATIONS.get(info);
+    const levels = CjsSchema.getExposedDeclarations(Constructor);
+    let selected = VALUES_DECLARATIONS.get(levels);
     if (!selected)
     {
         selected = new Map();
-        for (let owner = Constructor; typeof owner === "function"; owner = Object.getPrototypeOf(owner))
+        // Along the exposure chain, as the readers select (CjsSchema.getExposedDeclarations).
+        for (const level of levels)
         {
-            for (const fields of [info.members, info.properties])
+            for (const fields of [level.members, level.properties])
             {
                 for (const field of fields)
                 {
-                    if (field.declaringClass !== owner || selected.has(field.name) || !isTransportedDeclaration(field)) continue;
+                    if (selected.has(field.name) || !isTransportedDeclaration(field)) continue;
                     selected.set(field.name, field);
                 }
             }
         }
-        VALUES_DECLARATIONS.set(info, selected);
+        VALUES_DECLARATIONS.set(levels, selected);
     }
     if (selected.has(name)) return selected.get(name);
     if (storage)

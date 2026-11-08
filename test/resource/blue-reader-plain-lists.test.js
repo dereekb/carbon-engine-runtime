@@ -144,6 +144,7 @@ CjsSchema.define(FilterOwner, { className: "BlueReaderFilterOwner", fields: {
   cache: { type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } },
   hiddenPersisted: { type: { kind: "string" }, edit: { hidden: true, persist: true, persistOnly: true } }
 } });
+CjsSchema.meta.exposureChainTo(FilterBase)(FilterOwner);
 
 test("plain declared hydration filters runtime-only keys before incoming getters, and throws on unknown and hidden-inherited ones", () =>
 {
@@ -181,7 +182,10 @@ CjsSchema.define(Notified, { className: "BlueReaderPlainNotified", fields: {
 } });
 blue.interface(INotify)(Notified);
 class UnexposedNotify extends Notified {}
-CjsSchema.define(UnexposedNotify, { className: "BlueReaderPlainUnexposedNotify" });
+// No chain, so INotify is not mapped. It maps value itself, as Carbon's table would have to.
+CjsSchema.define(UnexposedNotify, { className: "BlueReaderPlainUnexposedNotify", fields: {
+  value: { type: { kind: "int32" }, edit: { persist: true, notify: true } }
+} });
 blue.interface()(UnexposedNotify);
 
 test("the declared plain branch uses mapped notifications after assignment and rejects method-only exposure", () =>
@@ -223,6 +227,7 @@ class LegacyOwner extends Owner
   SetValues(values, options) { this.legacyCall = { values, options }; }
 }
 CjsSchema.define(LegacyOwner, { className: "BlueReaderPlainLegacyOwner" });
+CjsSchema.meta.exposureChainTo(Owner)(LegacyOwner);
 
 test("a registered SetValues convention keeps its incoming values and legacy hydration options", () =>
 {

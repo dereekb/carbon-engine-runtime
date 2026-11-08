@@ -127,6 +127,7 @@ test("clone keeps a member's concrete class and ignores read-only members", () =
     CjsSchema.defineField(DerivedItem, "extra", "type", { kind: "string" });
     CjsSchema.defineField(DerivedItem, "extra", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(DerivedItem, { className: "CloneDerivedItem" });
+    CjsSchema.meta.exposureChainTo(BaseItem)(DerivedItem);
 
     class Owner {}
     CjsSchema.defineField(Owner, "view", "type", { kind: "rootRef", className: "CloneBaseItem" });
@@ -317,6 +318,7 @@ test("schema.hideInherited removes inherited fields only from the schema surface
             { name: "own", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
+    CjsSchema.meta.exposureChainTo(HideBase)(HideChild);
 
     // A hidden or undeclared key is not a member the reader knows: it throws,
     // as Carbon's readers do (IRootReader.cpp:99-106; operator, 2026-09-27).
@@ -374,6 +376,7 @@ test("schema.hideInherited removes inherited fields only from the schema surface
             { name: "extra", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
+    CjsSchema.meta.exposureChainTo(HideChild)(HideGrandchild);
 
     // There is no unhide: re-declaring "hidden" does not expose it again, so
     // both hidden names throw on the grandchild.
@@ -428,6 +431,7 @@ test("schema.hideInherited registers through Stage-3 metadata and rejects typos"
         kind: "class",
         metadata: childMetadata
     });
+    CjsSchema.meta.exposureChainTo(Stage3HideBase)(Stage3HideChild);
 
     assert.deepEqual(
         CjsSchema.getSchema(Stage3HideChild).fields.map(field => field.name),
@@ -857,6 +861,7 @@ test("GetValues export options control persistence, type tags and refs", () => {
             { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
+    CjsSchema.meta.exposureChainTo(ExportChild)(ExportChildSpecial);
 
     class ExportRoot
     {
@@ -1006,6 +1011,7 @@ test("from and singular imports honor polymorphic _type", () => {
             { name: "extra", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
+    CjsSchema.meta.exposureChainTo(PolyBase)(PolySpecial);
 
     class PolyHost
     {
@@ -1127,6 +1133,7 @@ test("list items honor an explicit _type on input", () => {
             { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
+    CjsSchema.meta.exposureChainTo(MapChild)(MapChildAlt);
 
     class MapHost
     {
@@ -1269,6 +1276,7 @@ test("type.enum and type.hideInherited are the same decorators as their schema.*
     });
     CjsSchema.meta.hideInherited(["dropped"])(HideViaType, { kind: "class", metadata: Object.create(null) });
     CjsSchema.define(HideViaType, { className: "HideViaType" });
+    CjsSchema.meta.exposureChainTo(HideParent)(HideViaType);
 
     const names = CjsSchema.getSchema(HideViaType).fields.map(field => field.name);
     assert.equal(names.includes("kept"), true);

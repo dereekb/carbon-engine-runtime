@@ -205,8 +205,12 @@ CjsSchema.define(InterfaceLifecycleParent, {
 });
 blue.interface(IInitialize, INotify)(InterfaceLifecycleParent);
 
+// Its table ends, so nothing of the parent's is exposed: it maps value again itself, as Carbon's would have to.
 class InterfaceLifecycleEnded extends InterfaceLifecycleParent {}
-CjsSchema.define(InterfaceLifecycleEnded, { className: "InterfaceTableLifecycleEnded" });
+CjsSchema.define(InterfaceLifecycleEnded, {
+  className: "InterfaceTableLifecycleEnded",
+  fields: { value: [type.int32, blue.persist, blue.notify] }
+});
 blue.interface(INotify, InterfaceLifecycleParent)(InterfaceLifecycleEnded);
 
 class InterfaceLifecycleChained extends InterfaceLifecycleParent {}

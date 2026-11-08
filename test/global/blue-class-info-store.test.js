@@ -34,9 +34,10 @@ test("every schema row is found by its exposed name with its flags and key, and 
   for (const { name, type } of registrations)
   {
     const rtti = classes.GetRtti(ClassInfo.exposeToBlue(type));
-    const schema = CjsSchema.getSchema(type);
+    // The rows its exposure holds along the chain; the schema's own lineage follows extends, the bases.
+    const levels = CjsSchema.getExposedDeclarations(type);
     const byName = new Map();
-    for (const row of [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ])
+    for (const row of [ ...levels.flatMap(level => level.members), ...levels.flatMap(level => level.properties).filter(property => property.property || property.edit) ])
     {
       const list = byName.get(row.name) ?? [];
       list.push(row);

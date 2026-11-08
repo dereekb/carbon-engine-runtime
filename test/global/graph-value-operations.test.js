@@ -40,7 +40,7 @@ const leafMembers = [
 ];
 
 CjsGraph.define(Leaf, { name: "GraphValueLeaf", members: leafMembers });
-CjsGraph.define(Special, { name: "GraphValueSpecial", members: [ { name: "extra", type: "float32" } ] });
+CjsGraph.define(Special, { name: "GraphValueSpecial", chainTo: "GraphValueLeaf", members: [ { name: "extra", type: "float32" } ] });
 CjsGraph.define(Row, { name: "GraphValueRow", members: [ { name: "value", type: "float32" } ] });
 CjsGraph.define(Holder, { name: "GraphValueHolder", members: [
   { name: "name", type: "string" },
@@ -655,7 +655,7 @@ test("a definition marked whole takes nothing from its base", () =>
   }
   class Derived extends Base {}
   CjsGraph.define(Base, { name: "GraphValueWholeBase", members: [ { name: "shared", type: "float32" }, { name: "dropped", type: "float32" } ] });
-  CjsGraph.define(Derived, { name: "GraphValueWholeDerived", whole: true, members: [ { name: "shared", type: "float32" } ] });
+  CjsGraph.define(Derived, { name: "GraphValueWholeDerived", chainTo: "GraphValueWholeBase", whole: true, members: [ { name: "shared", type: "float32" } ] });
 
   assert.deepEqual(CjsGraph.get(new Derived(), { full: true }), { shared: 1 });
   assert.equal(CjsGraph.getClassInfo(Derived).compiled.parent, CjsGraph.getClassInfo(Base), "the base is still its parent");
@@ -881,7 +881,7 @@ const watchedMembers = [
 ];
 
 CjsGraph.define(Watched, { name: "GraphWatched", notify: true, members: watchedMembers });
-CjsGraph.define(Started, { name: "GraphStarted", initialize: true, notify: true, members: [] });
+CjsGraph.define(Started, { name: "GraphStarted", chainTo: "GraphWatched", initialize: true, notify: true, members: [] });
 CjsGraph.define(Hooked, { name: "GraphHooked", hook: true, members: [] });
 CjsGraph.define(Bare, { name: "GraphBare", members: [ { name: "value", type: "float32" } ] });
 
@@ -1022,7 +1022,7 @@ test("a default child under a created owner gets Initialize, unless initializeHe
   {
     child = started("held");
   }
-  CjsGraph.define(Owner, { name: "GraphOwner", initialize: true, notify: true, members: [] });
+  CjsGraph.define(Owner, { name: "GraphOwner", chainTo: "GraphStarted", initialize: true, notify: true, members: [] });
 
   assert.deepEqual(told(() => CjsGraph.from(Owner, { name: "owner", child: { quiet: 1 } })), [
     [ "Initialize", "held" ],
@@ -1153,7 +1153,7 @@ test("get filters by flags, and a hidden derived declaration leaves the visible 
     secret = 4;
   }
   CjsGraph.define(Base, { name: "GraphFlagBase", members: [ { name: "value", type: "float32" } ] });
-  CjsGraph.define(Derived, { name: "GraphFlagDerived", members: [ { name: "value", key: "hidden", type: "float32", flags: EDITFLAGS.READWRITE } ] });
+  CjsGraph.define(Derived, { name: "GraphFlagDerived", chainTo: "GraphFlagBase", members: [ { name: "value", key: "hidden", type: "float32", flags: EDITFLAGS.READWRITE } ] });
   CjsGraph.define(Flags, { name: "GraphFlags", members: [
     { name: "shown", type: "float32" },
     { name: "transient", type: "float32", flags: EDITFLAGS.READWRITE },

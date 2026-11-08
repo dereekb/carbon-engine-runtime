@@ -19,7 +19,8 @@ CjsSchema.define(Item, { className: itemName, fields: { value: { type: { kind: "
 blue.interface()(Item);
 
 class WrongItem extends Item {}
-CjsSchema.define(WrongItem, { className: "BlueListReaderWrongItem" });
+// No chain: it is not an Item to the list. It maps value itself, as Carbon's table would have to.
+CjsSchema.define(WrongItem, { className: "BlueListReaderWrongItem", fields: { value: { type: { kind: "int32" }, edit: { persist: true } } } });
 blue.interface()(WrongItem);
 
 class Owner
@@ -425,6 +426,7 @@ test("two declared fields addressing the same IList supersede its earlier pendin
   CjsSchema.define(AliasedOwner, { className: "BlueListReaderAliasedOwner", fields: {
     replacement: { type: { kind: "list", itemType: itemName }, edit: { persist: true } }
   } });
+  CjsSchema.meta.exposureChainTo(Owner)(AliasedOwner);
   const owner = new DictReader().CreateObject({
     _type: "BlueListReaderAliasedOwner",
     items: [ { _ref: "late" } ],
@@ -477,6 +479,7 @@ test("CreateObject failure also cancels this reader's deferred list writes", () 
     }
   }
   CjsSchema.define(CapturedOwner, { className: "BlueListReaderCapturedOwner" });
+  CjsSchema.meta.exposureChainTo(Owner)(CapturedOwner);
   const reader = new DictReader({ importContext: anchors });
   assert.throws(() => reader.CreateObject({ _type: "BlueListReaderCapturedOwner", items: [ { value: 1 }, { _ref: "late" } ], unknown: 1 }), /Invalid attribute/u);
   anchors.register("late", MakeItem(2));

@@ -42,7 +42,7 @@ test("filtering precedes inherited name and edge selection without grouping orde
     { name: "x", key: "baseX", type: "rootRef", edge: { kind: "embed" } },
     { name: "shadow", key: "baseShadow", type: "rootRef", edge: { kind: "embed" } }
   ] });
-  CjsGraph.define(Derived, { name: "WalkDerived", members: [
+  CjsGraph.define(Derived, { name: "WalkDerived", chainTo: "WalkBase", members: [
     { name: "x", key: "hiddenX", type: "rootRef", flags: EDITFLAGS.HIDDEN, edge: { kind: "embed" } },
     { name: "y", type: "rootRef", edge: { kind: "embed" } },
     { name: "shadow", type: "float32" }
@@ -70,7 +70,7 @@ test("explicit struct type, indexed storage and dynamic derived classes resolve 
     { name: "child", type: "rootRef", edge: { kind: "ref", type: Base } }
   ] });
   CjsGraph.define(Base, { name: "WalkTypedBase" });
-  CjsGraph.define(Derived, { name: "WalkTypedDerived" });
+  CjsGraph.define(Derived, { name: "WalkTypedDerived", chainTo: "WalkTypedBase" });
   const child = new Derived(), struct = { child }, root = new Container();
   root.slots = [42, struct];
   const classes = [];

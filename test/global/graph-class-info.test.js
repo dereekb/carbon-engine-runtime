@@ -40,7 +40,7 @@ test("compilation preserves derived precedence and authored member order", () =>
   CjsGraph.define(Base, { name: "GraphOrderBase", members: [
     { name: "shared", key: "baseValue", type: "float32" }, { name: "baseOnly", type: "float32" }
   ] });
-  const info = CjsGraph.define(Derived, { name: "GraphOrderDerived", members: [
+  const info = CjsGraph.define(Derived, { name: "GraphOrderDerived", chainTo: "GraphOrderBase", members: [
     { name: "own", type: "float32" }, { name: "shared", key: "derivedValue", type: "float32" }
   ] });
   const compiled = CjsGraph.getClassInfo(Derived).compiled;
@@ -55,7 +55,7 @@ test("late parent registration and replacement invalidate derived descriptions",
 {
   class Parent {}
   class Child extends Parent {}
-  const info = CjsGraph.define(Child, { name: "GraphLateChild", members: [{ name: "child", type: "float32" }] });
+  const info = CjsGraph.define(Child, { name: "GraphLateChild", chainTo: "GraphLateParent", members: [{ name: "child", type: "float32" }] });
   const first = CjsGraph.getClassInfo(Child).compiled;
   CjsGraph.define(Parent, { name: "GraphLateParent", members: [{ name: "parent", type: "float32" }] });
   assert.equal(info.compiled, first); // Lazy invalidation retains the old immutable snapshot until lookup.
@@ -63,7 +63,7 @@ test("late parent registration and replacement invalidate derived descriptions",
   assert.notEqual(first, second);
   assert.deepEqual(second.members.map(member => member.name), ["child", "parent"]);
 
-  assert.equal(CjsGraph.define(Child, { name: "GraphRenamedChild", members: [{ name: "replacement", type: "float32" }] }), info);
+  assert.equal(CjsGraph.define(Child, { name: "GraphRenamedChild", chainTo: "GraphLateParent", members: [{ name: "replacement", type: "float32" }] }), info);
   assert.throws(() => CjsGraph.getClassInfo("GraphLateChild"), TypeError);
   assert.deepEqual(CjsGraph.getClassInfo(Child).compiled.members.map(member => member.name), ["replacement", "parent"]);
 });
@@ -123,7 +123,7 @@ test("policy can skip a hidden derived candidate without losing the visible base
   class Visible {}
   class Hidden extends Visible {}
   CjsGraph.define(Visible, { name: "GraphVisibleBase", members: [{ name: "x", key: "base", type: "float32" }] });
-  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", members: [{ name: "x", key: "derived", type: "float32", flags: EDITFLAGS.HIDDEN }] });
+  CjsGraph.define(Hidden, { name: "GraphHiddenDerived", chainTo: "GraphVisibleBase", members: [{ name: "x", key: "derived", type: "float32", flags: EDITFLAGS.HIDDEN }] });
   const candidates = CjsGraph.getClassInfo(Hidden).compiled.byName.x;
   assert.deepEqual(candidates.map(member => member.key), ["derived", "base"]);
   assert.equal(candidates.find(member => (member.flags & EDITFLAGS.HIDDEN) === 0).key, "base");

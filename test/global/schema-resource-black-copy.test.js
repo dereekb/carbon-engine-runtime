@@ -50,6 +50,7 @@ CjsSchema.define(ResourceDerived, { className: "ResourceBlackCopyDerived", membe
         key: "_cache", type: { kind: "rootRef", className: "ResourceBlackCopyLeaf", runtimeOnly: true }, edit: {}
     })
 ] });
+CjsSchema.meta.exposureChainTo(ResourceBase)(ResourceDerived);
 
 class ResourceProperty extends ResourceBase
 {
@@ -58,6 +59,7 @@ class ResourceProperty extends ResourceBase
 CjsSchema.define(ResourceProperty, { className: "ResourceBlackCopyProperty", properties: [
     { name: "cache", key: "cache", type: { kind: "rootRef", runtimeOnly: true }, property: { persisted: false } }
 ] });
+CjsSchema.meta.exposureChainTo(ResourceBase)(ResourceProperty);
 
 test("Copier preserves a destination resource and clone keeps its constructor resource", () =>
 {

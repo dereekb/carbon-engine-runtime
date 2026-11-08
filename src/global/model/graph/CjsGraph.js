@@ -208,13 +208,8 @@ export class CjsGraph
     const info = this.getClassInfo(type);
     if (info.compiled.ui !== null) return info.compiled.ui;
 
-    const ui = new CjsGraphClassUIInfo(), owners = [];
-
-    for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
-    {
-      const owner = this._classes.get(prototype.constructor);
-      if (owner) owners.unshift(owner);
-    }
+    // Along the exposure chain, the class it chains to first.
+    const ui = new CjsGraphClassUIInfo(), owners = this._GetExposureChain(info).reverse();
 
     for (const owner of owners)
     {
@@ -1677,6 +1672,23 @@ export class CjsGraph
   }
 
   /**
+   * A class and the classes its exposure chains to, by their declared chainTo names, derived first.
+   * A chain naming a class with no definition ends there.
+   * @cjs Carbon's ClassInfo holds the parent pointer itself.
+   * @param {CjsGraphClassInfo} info The class.
+   * @returns {CjsGraphClassInfo[]} The chain, the class first.
+   */
+  static _GetExposureChain(info)
+  {
+    const chain = [];
+    for (let owner = info; owner && !chain.includes(owner); owner = owner.declared.chainTo ? this._names.get(owner.declared.chainTo) : undefined)
+    {
+      chain.push(owner);
+    }
+    return chain;
+  }
+
+  /**
    * Resolves inherited members without reading or constructing any instance.
    * Modelled on: BlueRttiType::Init (blueexposure/BlueClasses.cpp:82-125).
    * @adapted JS keys replace native offsets; flags are retained, and read by _getMemberTable.
@@ -1690,13 +1702,10 @@ export class CjsGraph
 
     // Preserve candidates in derived-first order. Flags filter BEFORE resolving a name;
     // e.g. a runtime-only derived declaration must not erase a visible base declaration.
-    // The instance prototype chain, the same relation traversal and selection use.
-    // Carbon's FindEntry walks the exposure chain, compiled below as chainTo; the walk moves to it
-    // once every class declares its chain (decorator-upgrade.md, Class names stay string literals).
-    for (let prototype = info.ctor.prototype; prototype; prototype = Object.getPrototypeOf(prototype))
+    // Carbon's FindEntry walks mParentClassInfo, which only EXPOSURE_CHAINTO sets: the declared chainTo,
+    // never the prototype chain, which is the class's bases.
+    for (const owner of this._GetExposureChain(info))
     {
-      const owner = this._classes.get(prototype.constructor);
-      if (!owner) continue;
       if (owner !== info && !parent) parent = owner;
       if (owner !== info && info.declared.whole === true) continue;
 

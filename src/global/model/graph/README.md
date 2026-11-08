@@ -9,7 +9,7 @@ then name, flags, edge and a slot for anything rare. Every walk, reader and writ
 shape. CjsGraphClassInfo retains the compiled members in `declared` and the last derived record in
 `compiled`: the members, `byName`, `persistByName` (derived first, PERSIST only) and the class's
 facts, among them `bases`, its C++ base list, and `chainTo`, the class its exposure table continues
-into. Lookup still walks `extends`. Default values are not cloned or instantiated, and must not later be assigned as shared
+into. Member lookup walks `chainTo`, as Carbon's walks `mParentClassInfo`; the prototype chain is the bases. Default values are not cloned or instantiated, and must not later be assigned as shared
 mutable instance storage.
 
 A compiled member holds: `name`, `key`, `index`, `role`, `type`, `vartype`, `handler`, `direct`,

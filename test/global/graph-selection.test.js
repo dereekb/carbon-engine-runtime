@@ -65,7 +65,7 @@ test("dynamic edges and registered subclasses cannot produce false negative reac
   class Root { typed = null; dynamic = null; }
   CjsGraph.define(Resource, { name: "SelectDynamicResource", resource: true });
   CjsGraph.define(Base, { name: "SelectDynamicBase" });
-  CjsGraph.define(Derived, { name: "SelectDynamicDerived", members: [
+  CjsGraph.define(Derived, { name: "SelectDynamicDerived", chainTo: "SelectDynamicBase", members: [
     { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
   CjsGraph.define(Root, { name: "SelectDynamicRoot", members: [
@@ -143,7 +143,7 @@ test("late registration and redefinition rebuild negative reachability and class
   assert.deepEqual(CjsGraph.select(root, selection, []), []);
   assert.ok(diagnostics.some(row => row.className === "SelectLateRoot" && row.reason === "unregistered target"));
 
-  CjsGraph.define(Derived, { name: "SelectLateDerived", resource: true });
+  CjsGraph.define(Derived, { name: "SelectLateDerived", chainTo: "SelectLateBase", resource: true });
   CjsGraph.define(Later, { name: "SelectLateTarget", resource: true });
   root.child = new Derived();
   root.unresolved = new Later();
@@ -153,7 +153,7 @@ test("late registration and redefinition rebuild negative reachability and class
   CjsGraph.select(root, selection, [], { stats });
   assert.equal(stats.compiledClasses, 0);
 
-  CjsGraph.define(Derived, { name: "SelectLateDerived", resource: false });
+  CjsGraph.define(Derived, { name: "SelectLateDerived", chainTo: "SelectLateBase", resource: false });
   sameIdentities(CjsGraph.select(root, selection, []), [root.unresolved]);
   sameIdentities(CjsGraph.select(root, selection, [], { prune: false }), [root.unresolved]);
 });
@@ -167,7 +167,7 @@ test("selection retains hidden-derived fallback order, weak-edge policy and matc
   CjsGraph.define(Base, { name: "SelectPolicyBase", members: [
     { name: "x", key: "baseX", type: "rootRef", edge: { kind: "ref", type: Resource } }
   ] });
-  CjsGraph.define(Root, { name: "SelectPolicyRoot", resource: true, members: [
+  CjsGraph.define(Root, { name: "SelectPolicyRoot", chainTo: "SelectPolicyBase", resource: true, members: [
     { name: "x", key: "hiddenX", flags: EDITFLAGS.HIDDEN, type: "rootRef", edge: { kind: "ref", type: Resource } },
     { name: "y", type: "rootRef", edge: { kind: "ref", type: Resource } },
     { name: "weak", type: "rootRef", edge: { kind: "weak", type: Resource } }

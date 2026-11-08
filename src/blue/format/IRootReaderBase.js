@@ -387,19 +387,21 @@ export class IRootReaderBase
   static getDictionaryDeclarations(Constructor)
   {
       const schema = CjsSchema.getSchema(Constructor);
+      const levels = CjsSchema.getExposedDeclarations(Constructor);
       const previous = VIEWS.get(Constructor);
-      // getSchema invalidates its identity on schema and registration revisions.
-      if (previous?.schema === schema) return previous;
+      // getSchema invalidates its identity on schema and registration revisions; the levels change with the chain.
+      if (previous?.schema === schema && previous.levels === levels) return previous;
 
       const fields = [];
       const byName = new Map();
-      for (let owner = Constructor; typeof owner === "function"; owner = Object.getPrototypeOf(owner))
+      // FindEntry walks mParentClassInfo, which only EXPOSURE_CHAINTO sets (IRootReaderBase.cpp).
+      for (const level of levels)
       {
-          for (const declarations of [schema.members, schema.properties])
+          for (const declarations of [level.members, level.properties])
           {
               for (const field of declarations)
               {
-                  if (field.declaringClass !== owner || byName.has(field.name) || !isTransportedDeclaration(field)) continue;
+                  if (byName.has(field.name) || !isTransportedDeclaration(field)) continue;
                   byName.set(field.name, field);
                   fields.push(field);
               }
@@ -407,7 +409,7 @@ export class IRootReaderBase
       }
 
       // A class whose exposure is a bag walks in Carbon's member order (CjsSchema.orderByExposureRows); others keep this order.
-      const view = { schema, fields: CjsSchema.orderByExposureRows(Constructor, fields), byName };
+      const view = { schema, levels, fields: CjsSchema.orderByExposureRows(Constructor, fields), byName };
       VIEWS.set(Constructor, view);
       return view;
   }
