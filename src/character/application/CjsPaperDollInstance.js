@@ -3,13 +3,13 @@ import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * One built paper doll character: what was made from a definition. It owns
- * its pass bindings (the prepared compositions, their targets and effects),
- * the skinned objects drawn for it, and the captured settings each pass was
+ * its target bindings (the prepared compositions, their targets and effects),
+ * the skinned objects drawn for it, and the captured settings each target was
  * last built from. Nothing an instance builds is shared with another instance:
  * characters own their state until sharing is proven.
  *
- * `Update` captures each pass from the definition in bake order and calls
- * that pass's binding only when its capture changed. Bindings are synchronous
+ * `Update` captures each target from the definition in bake order and calls
+ * that target's binding only when its capture changed. Bindings are synchronous
  * and run outside a render pass.
  *
  * An application class; no Carbon
@@ -25,7 +25,7 @@ export class CjsPaperDollInstance
 
     _applied = new Map();
 
-    _passDirty = 0;
+    _targetDirty = 0;
 
     _applying = false;
 
@@ -34,7 +34,7 @@ export class CjsPaperDollInstance
 
     /**
      * @param {{foundation: Function, skin: Function, surface: Function, eyes: Function, head: Function, body: Function}} bindings
-     *   Prepared synchronous bindings, one per pass: each receives that pass's capture (the foundation binding the resolved foundation).
+     *   Prepared synchronous bindings, one per target: each receives that target's capture (the foundation binding the resolved foundation).
      * @param {object[]} [objects=[]] The skinned objects drawn for this character.
      */
     constructor(bindings, objects = [])
@@ -44,24 +44,24 @@ export class CjsPaperDollInstance
     }
 
     /**
-     * Rebuilds the head pass on the next `Update`, for a prepared layer whose
+     * Rebuilds the head target on the next `Update`, for a prepared layer whose
      * inputs finished loading after its option was selected.
      * @returns {void}
      */
     RebuildHead()
     {
-        this.RebuildPasses(PaperDollTarget.HEAD);
+        this.RebuildTargets(PaperDollTarget.HEAD);
     }
 
     /**
-     * Rebuilds passes on the next `Update`, for an option whose inputs finished
+     * Rebuilds targets on the next `Update`, for an option whose inputs finished
      * loading after it was selected (options load on first selection).
-     * @param {number} passes The passes to rebuild, as `PaperDollTarget` bits.
+     * @param {number} targets The targets to rebuild, as `PaperDollTarget` bits.
      * @returns {void}
      */
-    RebuildPasses(passes)
+    RebuildTargets(targets)
     {
-        this._passDirty |= passes;
+        this._targetDirty |= targets;
     }
 
     /**
@@ -82,13 +82,13 @@ export class CjsPaperDollInstance
 
     /**
      * Collects the definition's edits once, then applies the foundation and
-     * each pass in `passOrder`, calling a pass's binding only when its captured
-     * settings changed. Successful passes are acknowledged independently;
-     * failed passes retry. Edits made during a binding remain dirty for the
+     * each target in `targetOrder`, calling a target's binding only when its captured
+     * settings changed. Successful targets are acknowledged independently;
+     * failed targets retry. Edits made during a binding remain dirty for the
      * following Update.
      * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings to build from.
      * @returns {boolean} Whether any output was rebuilt.
-     * @throws {Error} Whatever a binding throws; the failed passes are rebuilt on the next Update.
+     * @throws {Error} Whatever a binding throws; the failed targets are rebuilt on the next Update.
      */
     Update(definition)
     {
@@ -98,26 +98,26 @@ export class CjsPaperDollInstance
         const foundation = foundationPending ? archetype.Resolve() : this._appliedFoundation;
         // A geometry-only strength edit must not rebuild skin or cosmetic maps.
         const forced = definition.IsForced();
-        const dirtyPasses = definition.GetDirtyPasses() | this._passDirty;
+        const dirtyTargets = definition.GetDirtyTargets() | this._targetDirty;
         const plans = [];
-        let changedPasses = 0;
-        for (const { pass, binding, whenSelected, reads } of CjsPaperDollInstance.passOrder)
+        let changedTargets = 0;
+        for (const { target, binding, whenSelected, reads } of CjsPaperDollInstance.targetOrder)
         {
-            const names = definition.GetLayerOrder(pass);
-            const previous = this._applied.get(pass) ?? null;
+            const names = definition.GetLayerOrder(target);
+            const previous = this._applied.get(target) ?? null;
             // A shape-dependent part (a tattoo baked from the morphed face) rebuilds on any foundation edit.
             const reshaped = foundationPending && names.some(name => definition[name].constructor.shapeDependent && definition[name].enabled && definition[name].option !== "");
-            const passForced = forced || reshaped || (dirtyPasses & pass) !== 0 || (changedPasses & reads) !== 0;
+            const passForced = forced || reshaped || (dirtyTargets & target) !== 0 || (changedTargets & reads) !== 0;
             const pending = passForced || !previous || names.some(name => definition[name].IsDirty());
-            const state = pending ? definition.CapturePass(pass, names) : previous;
+            const state = pending ? definition.CaptureTarget(target, names) : previous;
             const selected = !whenSelected || names.some(name => state[name].option || (previous !== null && previous[name].option));
             const changed = pending && selected && (passForced || !previous || state.order.join() !== previous.order.join() || state.occluded.join() !== previous.occluded.join() || names.some(name => this._Changed(state[name], previous[name])));
-            if (changed) changedPasses |= pass;
-            plans.push({ pass, binding, names, state, changed });
+            if (changed) changedTargets |= target;
+            plans.push({ target, binding, names, state, changed });
         }
 
         definition.ClearDirty();
-        this._passDirty = 0;
+        this._targetDirty = 0;
         this._applying = true;
         try
         {
@@ -126,35 +126,35 @@ export class CjsPaperDollInstance
             for (const plan of plans)
             {
                 if (plan.changed) this._bindings[plan.binding](plan.state);
-                this._applied.set(plan.pass, plan.state);
+                this._applied.set(plan.target, plan.state);
             }
         }
         catch (error)
         {
             if (foundationPending && this._appliedFoundation !== foundation) archetype.Rebuild();
-            // Do not discard a later pass's pending edits if an earlier apply fails.
-            for (const plan of plans) if (this._applied.get(plan.pass) !== plan.state)
+            // Do not discard a later target's pending edits if an earlier apply fails.
+            for (const plan of plans) if (this._applied.get(plan.target) !== plan.state)
             {
-                this._applied.delete(plan.pass);
+                this._applied.delete(plan.target);
                 for (const name of plan.names) definition[name].Rebuild();
             }
             throw error;
         }
         finally { this._applying = false; }
-        return foundationPending || changedPasses !== 0;
+        return foundationPending || changedTargets !== 0;
     }
 
     /**
-     * The passes after the foundation, in binding order. `whenSelected` skips a
-     * pass while none of its parts has a selection, before or after the edit;
-     * `reads` names a pass whose rebuilt output this one draws over.
+     * The targets after the foundation, in binding order. `whenSelected` skips a
+     * target while none of its parts has a selection, before or after the edit;
+     * `reads` names a target whose rebuilt output this one draws over.
      */
-    static passOrder = [
-        { pass: PaperDollTarget.SKIN, binding: "skin", whenSelected: true, reads: 0 },
-        { pass: PaperDollTarget.SURFACE, binding: "surface", whenSelected: true, reads: 0 },
-        { pass: PaperDollTarget.EYES, binding: "eyes", whenSelected: false, reads: 0 },
-        { pass: PaperDollTarget.HEAD, binding: "head", whenSelected: false, reads: PaperDollTarget.SKIN },
-        { pass: PaperDollTarget.BODY, binding: "body", whenSelected: false, reads: PaperDollTarget.SKIN }
+    static targetOrder = [
+        { target: PaperDollTarget.SKIN, binding: "skin", whenSelected: true, reads: 0 },
+        { target: PaperDollTarget.SURFACE, binding: "surface", whenSelected: true, reads: 0 },
+        { target: PaperDollTarget.EYES, binding: "eyes", whenSelected: false, reads: 0 },
+        { target: PaperDollTarget.HEAD, binding: "head", whenSelected: false, reads: PaperDollTarget.SKIN },
+        { target: PaperDollTarget.BODY, binding: "body", whenSelected: false, reads: PaperDollTarget.SKIN }
     ];
 
 }

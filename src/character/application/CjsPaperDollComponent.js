@@ -174,11 +174,11 @@ export class CjsPaperDollComponent
     }
 
     /**
-     * Copies the inputs a pass reads, retaining the existing capture shape.
-     * @param {PaperDollTarget} pass The pass being captured.
+     * Copies the inputs a target reads, retaining the existing capture shape.
+     * @param {PaperDollTarget} target The target being captured.
      * @returns {{option: string, colorAreas: number[], colors: Float32Array[], palette: string}}
      */
-    Capture(pass = PaperDollTarget.HEAD)
+    Capture(target = PaperDollTarget.HEAD)
     {
         const option = this.enabled ? this.option : "";
         return {
@@ -218,7 +218,7 @@ export class CjsPaperDollComponent
     static optionNamesPalette = false;
 
     /**
-     * Whether a palette also carries specular colours this component's surface pass reads; the UI then hands
+     * Whether a palette also carries specular colours this component's surface target reads; the UI then hands
      * them over with `SetSpecularColors` when it applies a palette.
      */
     static paletteSpecular = false;

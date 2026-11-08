@@ -5,7 +5,7 @@ import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 const CHANNELS = [ "NormalMap", "SpecularMap" ];
 
 /**
- * A paper doll's surface pass, in the composition: the head and body normal and specular maps, each based on the
+ * A paper doll's surface target, in the composition: the head and body normal and specular maps, each based on the
  * selected foundation's own map, with mips. The parts give their layers through their sources on the composition:
  * the map-decal parts' (`CjsPaperDollMapDecalSource.prepareAll`: aging, scarring, scars) and the others' (lipstick,
  * garments, augmentations, hair, beard).
@@ -70,7 +70,7 @@ export class CjsPaperDollSurfaceComposer
         {
             const [ width, height ] = sizes[region + "." + channel];
             this.composition.AddOutput({
-                pass: PaperDollTarget.SURFACE, region, channel, width, height, mips: true,
+                target: PaperDollTarget.SURFACE, region, channel, width, height, mips: true,
                 base: () => this._bases.get(this._definition.archetype.option)[region][channel],
                 consumers: [ resource => { for (const effect of consumers[region]) effect.GetResourceByName(channel).SetResource(resource); } ]
             });
@@ -110,17 +110,17 @@ export class CjsPaperDollSurfaceComposer
     }
 
     /**
-     * The pass's binding (`CjsPaperDollInstance`'s `surface`): draws the captured surface and binds the four maps.
-     * @param {object} pass The surface pass's capture.
+     * The target's binding (`CjsPaperDollInstance`'s `surface`): draws the captured surface and binds the four maps.
+     * @param {object} target The surface target's capture.
      * @returns {void}
      */
-    Apply(pass)
+    Apply(target)
     {
-        this.composition.Apply(PaperDollTarget.SURFACE, pass);
+        this.composition.Apply(PaperDollTarget.SURFACE, target);
         const report = this._build.report.surfaceDetails;
         // Options prepared since Prepare (each loads on first apply) join the report.
         report.options = Object.fromEntries([ ...this._decals ].map(([ name, source ]) => [ name, source.Describe() ]));
-        report.selected = { scars: pass.scars.option, aging: pass.aging.option, scarring: pass.scarring.option };
+        report.selected = { scars: target.scars.option, aging: target.aging.option, scarring: target.scarring.option };
         report.updates++;
         this._onChange("surface details applied");
     }

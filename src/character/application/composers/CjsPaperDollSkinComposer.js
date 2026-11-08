@@ -10,7 +10,7 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 const SHADES = { light: "Light", midlight: "Mid-light", default: "Default", middark: "Mid-dark", dark: "Dark" };
 
 /**
- * A paper doll's skin pass, the first of `CjsPaperDollInstance.passOrder`, in the composition: two outputs (head and
+ * A paper doll's skin target, the first of `CjsPaperDollInstance.targetOrder`, in the composition: two outputs (head and
  * body diffuse), each based on the selected foundation's diffuse, and the skin part's layer source, the skin tone
  * colourised over it.
  *
@@ -116,7 +116,7 @@ export class CjsPaperDollSkinComposer
             // _dev/character-common/material-composer.mjs:174-177), which follows characterTextureQuality.
             const [ width, height ] = CjsPaperDollComposition.sizeOf(base);
             this.composition.AddOutput({
-                pass: PaperDollTarget.SKIN, region, channel: "DiffuseMap", width, height,
+                target: PaperDollTarget.SKIN, region, channel: "DiffuseMap", width, height,
                 base: capture =>
                 {
                     r.baseCopy.SetParameter("AlphaMultiplier", capture.skin.option ? r.skinAlpha : 1);
@@ -212,14 +212,14 @@ export class CjsPaperDollSkinComposer
     }
 
     /**
-     * The pass's binding (`CjsPaperDollInstance`'s `skin`): draws the captured skin and binds the body base.
-     * @param {object} pass The skin pass's capture.
+     * The target's binding (`CjsPaperDollInstance`'s `skin`): draws the captured skin and binds the body base.
+     * @param {object} target The skin target's capture.
      * @returns {void}
      */
-    Apply(pass)
+    Apply(target)
     {
-        this.composition.Apply(PaperDollTarget.SKIN, pass);
-        const value = pass.skin, report = this._build.report.skin;
+        this.composition.Apply(PaperDollTarget.SKIN, target);
+        const value = target.skin, report = this._build.report.skin;
         report.selected = this._definition.skin.palette;
         report.enabled = this._definition.skin.enabled;
         report.colors = value.colors.map(color => Array.from(color));

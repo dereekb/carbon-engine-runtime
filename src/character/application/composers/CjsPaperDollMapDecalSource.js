@@ -7,7 +7,7 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 /**
  * The layer source of a map-decal part (`static blend = PaperDollBlend.DECAL`: aging, freckles, scarring, scars,
  * augmentations), whose options are folders of composed maps (`comp_<region>_<suffix>`). Each of an option's maps draws over the
- * composition output its role feeds (`CjsPaperDollTextureRoles.lookup`: region, property, operation), whichever pass
+ * composition output its role feeds (`CjsPaperDollTextureRoles.lookup`: region, property, operation), whichever target
  * that output belongs to; the roles come from the files the option actually holds.
  *
  * An option is a `.type` file, its id the file's name. The type names the part folder and a variation: a variation

@@ -2,13 +2,13 @@ import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 
 /**
- * A paper doll's head pass, in the composition: two outputs drawn from the parts' sources in the definition's bake
- * order. The head diffuse is the skin pass's head output with every head part's layers over it. The brow target is
+ * A paper doll's head target, in the composition: two outputs drawn from the parts' sources in the definition's bake
+ * order. The head diffuse is the skin target's head output with every head part's layers over it. The brow target is
  * the brow carrier (the eyebrows' unblended colour and coverage, drawn into the brow's cutout) with the layers of the
  * parts after the eyebrows over it, so what covers the brows on the face covers them on the brow mesh too.
  *
  * Both are the size the foundation's head diffuse gives (`CjsPaperDollComposition.sizeOf`), with mips. The first draw
- * is the definition's own state (`CapturePass`), so the outputs are valid before the first apply.
+ * is the definition's own state (`CaptureTarget`), so the outputs are valid before the first apply.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. Moved from Graphene's
  * `headComposition.js` (character-structure-and-plugins.md R5); the name is a working name.
@@ -24,7 +24,7 @@ export class CjsPaperDollHeadComposer
     /** The build served: its waits. */
     _build = null;
 
-    /** The head diffuse's base: a copy of the skin pass's head output. @type {object} */
+    /** The head diffuse's base: a copy of the skin target's head output. @type {object} */
     _copy = null;
 
     /** The brow target's row. @type {object} */
@@ -56,7 +56,7 @@ export class CjsPaperDollHeadComposer
         const [ width, height ] = CjsPaperDollComposition.sizeOf(base);
         this._copy = await this._build.Ready(c.Copy(base));
         this.composition.AddOutput({
-            pass: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
+            target: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
             base: () =>
             {
                 this._copy.GetResourceByName("Texture").SetResource(this.composition.GetOutput(PaperDollTarget.SKIN, "head", "DiffuseMap"));
@@ -65,10 +65,10 @@ export class CjsPaperDollHeadComposer
             consumers
         });
         this._brow = this.composition.AddOutput({
-            pass: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
+            target: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
             base: brow.base, baseRegion: brow.region, after: "eyebrows", consumers: brow.consumers
         });
-        this.composition.Render(PaperDollTarget.HEAD, definition.CapturePass(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
+        this.composition.Render(PaperDollTarget.HEAD, definition.CaptureTarget(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
     }
 
     /**
@@ -81,8 +81,8 @@ export class CjsPaperDollHeadComposer
     }
 
     /**
-     * Draws the head's outputs from the head pass's capture and binds them.
-     * @param {object} capture The head pass's capture: each part's value by name, and the bake order.
+     * Draws the head's outputs from the head target's capture and binds them.
+     * @param {object} capture The head target's capture: each part's value by name, and the bake order.
      * @returns {void}
      */
     Apply(capture)

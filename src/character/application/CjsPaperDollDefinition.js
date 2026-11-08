@@ -49,11 +49,11 @@ const TEXTURE_TIERS = [ [ "4k", "_4k" ], [ "2k", "" ], [ "512", "_512" ], [ "256
 /**
  * Who and what one paper doll character is: its identity, its foundation and
  * part settings, and the order those parts bake in. It holds settings only;
- * what is built from them (targets, effects, captured passes) belongs to a
+ * what is built from them (targets, effects, captured targets) belongs to a
  * `CjsPaperDollInstance`.
  *
  * Each part class stamps its bake rank and the targets it feeds; the definition
- * orders a pass's parts by rank, overrides from `SetLayer` and occlusion, and
+ * orders a target's parts by rank, overrides from `SetLayer` and occlusion, and
  * captures their settings for an instance to apply. Parts and the definition
  * record edits as dirty flags, which the one instance building from it
  * consumes.
@@ -69,7 +69,7 @@ export class CjsPaperDollDefinition
 
     _dirty = true;
 
-    _passDirty = 0;
+    _targetDirty = 0;
 
     /** Authored asset family. Changing it requires rebuilding the whole character instance. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
@@ -227,7 +227,7 @@ export class CjsPaperDollDefinition
     mask = new CjsPaperDollMask();
 
     /**
-     * Forces the selected foundation and every pass on the next build.
+     * Forces the selected foundation and every target on the next build.
      * @returns {void}
      */
     Rebuild()
@@ -238,7 +238,7 @@ export class CjsPaperDollDefinition
     }
 
     /**
-     * Whether the next build must rebuild every pass: `Rebuild` was called, or
+     * Whether the next build must rebuild every target: `Rebuild` was called, or
      * the selected foundation itself changed (a strength edit alone does not).
      * @returns {boolean}
      */
@@ -248,12 +248,12 @@ export class CjsPaperDollDefinition
     }
 
     /**
-     * The passes a layer-rank edit invalidated since the last `ClearDirty`.
+     * The targets a layer-rank edit invalidated since the last `ClearDirty`.
      * @returns {number} `PaperDollTarget` bits.
      */
-    GetDirtyPasses()
+    GetDirtyTargets()
     {
-        return this._passDirty;
+        return this._targetDirty;
     }
 
     /**
@@ -264,7 +264,7 @@ export class CjsPaperDollDefinition
     ClearDirty()
     {
         this._dirty = false;
-        this._passDirty = 0;
+        this._targetDirty = 0;
         this.archetype.ClearDirty();
         for (const name of CjsPaperDollDefinition.parts) this[name].ClearDirty();
     }
@@ -281,7 +281,7 @@ export class CjsPaperDollDefinition
 
     /**
      * Overrides a part's bake rank, to place a layer by eye against the game,
-     * and rebuilds every pass the part feeds. The class rank stays the default.
+     * and rebuilds every target the part feeds. The class rank stays the default.
      * @param {string} name The part's member name.
      * @param {number} layer The rank to compose it at.
      * @returns {void}
@@ -291,31 +291,31 @@ export class CjsPaperDollDefinition
     {
         if (!Number.isFinite(layer)) throw new RangeError("A layer rank must be a finite number");
         this._layers.set(name, layer);
-        this._passDirty |= this[name].constructor.targets;
+        this._targetDirty |= this[name].constructor.targets;
     }
 
     /**
-     * Restores every part's class rank and rebuilds the passes the overrides touched.
+     * Restores every part's class rank and rebuilds the targets the overrides touched.
      * @returns {void}
      */
     ResetLayers()
     {
-        for (const name of this._layers.keys()) this._passDirty |= this[name].constructor.targets;
+        for (const name of this._layers.keys()) this._targetDirty |= this[name].constructor.targets;
         this._layers.clear();
     }
 
     /**
-     * The parts feeding a pass, in bake order; parts with no rank come first,
+     * The parts feeding a target, in bake order; parts with no rank come first,
      * equal ranks keep `parts` order, and an active occluder moves after the
      * active parts it occludes.
-     * @param {PaperDollTarget} pass The pass whose parts are ordered.
+     * @param {PaperDollTarget} target The target whose parts are ordered.
      * @returns {string[]} The parts' member names, first drawn first.
      */
-    GetLayerOrder(pass)
+    GetLayerOrder(target)
     {
-        const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & pass)
+        const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & target)
             .sort((a, b) => (this.GetLayer(a) ?? -Infinity) - (this.GetLayer(b) ?? -Infinity) || 0);
-        // An active occluder draws after every active part it occludes, so in each shared pass it covers them
+        // An active occluder draws after every active part it occludes, so in each shared target it covers them
         // exactly where its own coverage is: occlusion covers only what it covers.
         for (const occluder of [ ...order ])
         {
@@ -372,17 +372,17 @@ export class CjsPaperDollDefinition
     }
 
     /**
-     * One pass's captured settings, copied so later edits cannot reach them:
+     * One target's captured settings, copied so later edits cannot reach them:
      * `order` lists its parts in bake order, `occluded` the active occlusion
      * targets, then each part's capture under its name.
-     * @param {PaperDollTarget} pass The pass being captured.
+     * @param {PaperDollTarget} target The target being captured.
      * @param {string[]} names Its parts in bake order, as `GetLayerOrder` returns them.
      * @returns {{order: string[], occluded: string[]}} The capture, with one entry per part name.
      */
-    CapturePass(pass, names)
+    CaptureTarget(target, names)
     {
         const state = { order: names, occluded: this.GetOccluded() };
-        for (const name of names) state[name] = this[name].Capture(pass);
+        for (const name of names) state[name] = this[name].Capture(target);
         return state;
     }
 
@@ -492,7 +492,7 @@ export class CjsPaperDollDefinition
         return paths.Filter(directory, () => true).map(path => path.replace(/\.red$/u, ".black")).sort();
     }
 
-    /** The collected parts, by member name. Each pass composes its parts by bake rank, not by this order. */
+    /** The collected parts, by member name. Each target composes its parts by bake rank, not by this order. */
     static parts = [ "skin", "eyes", "eyebrows", "blush", "freckles", "aging", "scarring", "scars", "tattoo", "augmentations", "bodyAugmentation", "armLeft", "armRight", "eyeshadow", "eyeliner", "lipstick", "bottomUnderwear", "topUnderwear", "bottomMiddle", "topMiddle", "bottomOuter", "feet", "topOuter", "outer", "hair", "beard", "glasses", "earsLow", "earsHigh", "ears", "nose", "lips", "chin", "brow", "mask" ];
 
 }

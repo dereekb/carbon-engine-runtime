@@ -136,7 +136,7 @@ test("a composition row draws its base into its region and takes only the layers
   const { composition, compositor } = await prepared(t);
   const layer = name => ({ GetLayers: () => [ { effect: name, region: new Float32Array(4) } ] });
   for (const name of [ "a", "eyebrows", "b" ]) composition.SetSource(name, layer(name));
-  composition.AddOutput({ pass: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width: 4, height: 2, base: () => "base", baseRegion: () => Float32Array.of(.5, .5, .25, .25), after: "eyebrows" });
+  composition.AddOutput({ target: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width: 4, height: 2, base: () => "base", baseRegion: () => Float32Array.of(.5, .5, .25, .25), after: "eyebrows" });
   composition.Render(PaperDollTarget.HEAD, { order: [ "a", "eyebrows", "b" ] });
   assert.deepEqual(compositor.draws.map(draw => draw.value), [ "base", "b" ]);
   assert.deepEqual(compositor.draws[0].region, [ .5, .5, .25, .25 ]);
@@ -147,20 +147,20 @@ test("a composition row draws its base into its region and takes only the layers
 test("the head composer sizes both outputs from the foundation's head diffuse, bases the face on the skin's head output and draws its first state", async t =>
 {
   const { composition, compositor, definition } = await prepared(t);
-  const skinRow = composition.AddOutput({ pass: PaperDollTarget.SKIN, region: "head", channel: "DiffuseMap", width: 512, height: 256, base: () => "skin" });
+  const skinRow = composition.AddOutput({ target: PaperDollTarget.SKIN, region: "head", channel: "DiffuseMap", width: 512, height: 256, base: () => "skin" });
   const brow = { effect: "carrier" }, bound = [], browBound = [];
   composition.SetSource("eyebrows", { GetLayers: (value, region) => region === "head" ? [ { effect: "brow paint", region: new Float32Array(4) } ] : [] });
   const head = new CjsPaperDollHeadComposer(composition, { Ready: value => value });
   await head.Prepare(definition, ROOT + "f_head_base.png", [ resource => bound.push(resource) ], {
     base: () => brow, region: () => Float32Array.of(.1, .1, .2, .2), consumers: [ resource => browBound.push(resource) ]
   });
-  const rows = composition._rows.filter(row => row.pass === PaperDollTarget.HEAD);
+  const rows = composition._rows.filter(row => row.target === PaperDollTarget.HEAD);
   assert.deepEqual(rows.map(row => [ row.width, row.height, row.mips, row.after ]), [ [ 512, 1024, true, "" ], [ 512, 1024, true, "eyebrows" ] ]);
   const faceBase = compositor.draws.find(draw => draw.value.kind === "copy");
   assert.equal(faceBase.value.bound, skinRow.buffers[skinRow.active].resource, "the face's base is the skin's head output");
   assert.equal(compositor.draws.filter(draw => draw.value === "brow paint").length, 1, "the brow paint draws on the face, not on the brow target");
   assert.equal(head.GetBrowTexture(), rows[1].buffers[rows[1].active].resource);
   assert.deepEqual([ bound.length, browBound.length ], [ 0, 0 ], "the first draw binds nothing");
-  head.Apply(definition.CapturePass(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
+  head.Apply(definition.CaptureTarget(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
   assert.deepEqual([ bound.length, browBound.length ], [ 1, 1 ]);
 });

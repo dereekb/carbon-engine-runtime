@@ -12,7 +12,7 @@ const CHANNELS = [ "DiffuseMap", "NormalMap", "SpecularMap" ];
 const NEUTRAL = [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1));
 
 /**
- * A paper doll's eyes pass, in the composition: the iris material every EyeShader consumer samples, three outputs
+ * A paper doll's eyes target, in the composition: the iris material every EyeShader consumer samples, three outputs
  * (diffuse, normal, specular) based on the consumers' own maps, and the eyes part's source, the selected option's
  * diffuse (colourised when it has colour areas) and its normal and specular copied in as material data. An option not
  * yet resolved draws nothing: the consumers take their own maps back.
@@ -86,7 +86,7 @@ export class CjsPaperDollEyesComposer
         {
             const seed = await c.Copy(base[name], CjsPaperDollCompositor.full, name === "NormalMap");
             this.composition.AddOutput({
-                pass: PaperDollTarget.EYES, region: "eyes", channel: name, width, height, base: () => seed,
+                target: PaperDollTarget.EYES, region: "eyes", channel: name, width, height, base: () => seed,
                 consumers: [ resource => { for (const { effect } of consumers) effect.GetResourceByName(name).SetResource(resource); } ]
             });
         }
@@ -128,17 +128,17 @@ export class CjsPaperDollEyesComposer
     }
 
     /**
-     * The pass's binding (`CjsPaperDollInstance`'s `eyes`): composes the selected option, or binds the consumers' own
+     * The target's binding (`CjsPaperDollInstance`'s `eyes`): composes the selected option, or binds the consumers' own
      * maps back while it is unresolved.
-     * @param {object} pass The eyes pass's capture.
+     * @param {object} target The eyes target's capture.
      * @returns {void}
      */
-    Apply(pass)
+    Apply(target)
     {
-        const build = this._build, report = build.report.eyes, value = pass.eyes, id = value.option || null;
+        const build = this._build, report = build.report.eyes, value = target.eyes, id = value.option || null;
         build.CheckActive();
         const composed = id !== null && this._prepared.has(id);
-        if (composed) this.composition.Apply(PaperDollTarget.EYES, pass);
+        if (composed) this.composition.Apply(PaperDollTarget.EYES, target);
         else for (let i = 0; i < this._consumers.length; i++)
             for (const name of CHANNELS) this._consumers[i].effect.GetResourceByName(name).SetResource(this._originals[i][name]);
         report.selected = id;
