@@ -1589,6 +1589,40 @@ export class EveChildMesh extends EveChildTransform
   }
 
   /**
+   * Carbon EveChildMesh::PushRtGeometry (EveChildMesh.h:147).
+   *
+   * @notImplemented no ray-tracing manager: Tr2RaytracingManager is generated only
+   * @param {object} rtManager The Tr2RaytracingManager.
+   */
+
+  PushRtGeometry(rtManager)
+  {
+    throw new Error("EveChildMesh.PushRtGeometry is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon EveChildMesh::MarkRtDirty (EveChildMesh.h:148).
+   *
+   * @notImplemented no ray-tracing manager: Tr2RaytracingManager is generated only
+   */
+
+  MarkRtDirty()
+  {
+    throw new Error("EveChildMesh.MarkRtDirty is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon EveChildMesh::IsShadowCastingDirty (EveChildMesh.h:149).
+   *
+   * @notImplemented no ray-tracing manager: Tr2RaytracingManager is generated only
+   */
+
+  IsShadowCastingDirty()
+  {
+    throw new Error("EveChildMesh.IsShadowCastingDirty is not implemented in CarbonEngineJS.");
+  }
+
+  /**
    * Carbon EveChildMesh::GetPerObjectData (cpp:877-921): resets the morph
    * counters, uploads the bone palette to the BoneTransforms ring and stamps
    * [current offset, previous offset, bone count], then hands back this
