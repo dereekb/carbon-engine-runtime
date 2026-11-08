@@ -21,8 +21,6 @@ export const PaperDollLayer = Object.freeze({
     FRECKLES: 60,
     BLUSH: 70,
     EYESHADOW: 90,
-    /** Facial hair over the other skin detail, adjacent to scalp hair. Working rank, to confirm in game. */
-    BEARD: 96,
     EYELINER: 100,
     LIPSTICK: 110,
     /** Over the lipstick and before every garment. */
@@ -31,6 +29,8 @@ export const PaperDollLayer = Object.freeze({
     HAIR: 113,
     /** Body augmentations: with the face ones, before every garment. */
     BODYAUGMENTATION: 114,
+    /** Facial hair, the last face covering: over the scalp hair. To confirm in the browser. */
+    BEARD: 115,
     ARMLEFT: 116,
     ARMRIGHT: 118,
     SCARS: 120,
