@@ -2608,6 +2608,18 @@ export class EveTurretSet extends EveEntity
   }
 
   /**
+   * Carbon EveTurretSet::PushRtGeometry (EveTurretSet.h:166).
+   *
+   * @notImplemented no ray-tracing manager: Tr2RaytracingManager is generated only
+   * @param {object} rtManager The Tr2RaytracingManager.
+   */
+
+  PushRtGeometry(rtManager)
+  {
+    throw new Error("EveTurretSet.PushRtGeometry is not implemented in CarbonEngineJS.");
+  }
+
+  /**
    * Carbon SetupFiringState (EveTurretSet.cpp:2959): JS sampler controls replace
    * Granny animation controls. Renderer-clock and hourly-rebase ownership
    * remain an open required-update gate.
