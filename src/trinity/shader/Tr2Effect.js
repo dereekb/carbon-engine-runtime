@@ -1080,6 +1080,22 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
+   * Lets go of an expired effect resource: what was built from it, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, so the link is already gone, and use reacquires
+   *   from effectFilePath.
+   * @param {Tr2EffectRes} resource The expired resource.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.effectResource !== resource) return;
+    this._ClearPassBindings();
+    this.effectResource = null;
+  }
+
+  /**
    * Carbon's SetEffectPathName (Tr2Effect.cpp:413-417): stores the authored
    * path and initializes, even when the path is unchanged. An unchanged path
    * keeps its acquired effect resource.

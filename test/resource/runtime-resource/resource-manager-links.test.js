@@ -4,6 +4,30 @@ import { BlueAsyncRes, BlueResMan, MotherLode, blue } from "../../../npm/dist/bl
 import { RegisterDataLoader } from "../../support/testDataRes.js";
 import "../../support/frameLoop.js";
 
+/**
+ * An owner that records its callbacks and, as a real holder does, lets go of an
+ * expired resource itself: every own field and every listed Map slot holding it.
+ * @param {Array<Array>} calls Receives each callback and its resource.
+ * @param {object} [fields] The owner's fields.
+ * @param {Map[]} [maps] Maps whose slots the owner holds.
+ * @returns {object}
+ */
+function holder(calls, fields = {}, maps = [])
+{
+  const owner = {
+    ...fields,
+    RebuildCachedData(value) { calls.push(["rebuild", value]); },
+    ReleaseCachedData(value) { calls.push(["release", value]); },
+    RemoveCachedData(value)
+    {
+      calls.push(["remove", value]);
+      for (const key of Object.keys(owner)) if (owner[key] === value) owner[key] = null;
+      for (const map of maps) for (const [ key, held ] of map) if (held === value) map.set(key, null);
+    }
+  };
+  return owner;
+}
+
 /** A manager with deterministic milliseconds, without network or loading work. */
 function fixture()
 {
@@ -12,11 +36,7 @@ function fixture()
   manager.linkExpirySeconds = 1;
   const resource = new BlueAsyncRes();
   const calls = [];
-  const owner = {
-    resource,
-    RebuildCachedData(value) { calls.push(["rebuild", value]); },
-    ReleaseCachedData(value) { calls.push(["release", value]); }
-  };
+  const owner = holder(calls, { resource });
   return { manager, resource, owner, calls, advance(value) { time = value; manager.activityTime = value; } };
 }
 
@@ -32,7 +52,7 @@ test("manager notification tracking is isolated and remains usable after Clear",
   first.manager.Clear();
   first.manager.Clear();
   assert.equal(first.owner.resource, null);
-  assert.deepEqual(first.calls, [["release", resource]]);
+  assert.deepEqual(first.calls, [["remove", resource]]);
   assert.equal(first.manager.notify.GetByResource(resource).length, 0);
   assert.equal(second.owner.resource, resource);
   assert.equal(second.manager.notify.GetByResource(resource).length, 1);
@@ -41,7 +61,7 @@ test("manager notification tracking is isolated and remains usable after Clear",
   first.owner.resource = resource;
   first.manager.notify.Add(first.owner, resource, first.owner, "resource");
   first.manager.notify.RebuildCachedData(resource);
-  assert.deepEqual(first.calls, [["release", resource], ["rebuild", resource]]);
+  assert.deepEqual(first.calls, [["remove", resource], ["rebuild", resource]]);
   assert.deepEqual(second.calls, []);
   first.manager.Clear();
   second.manager.Clear();
@@ -81,7 +101,7 @@ test("manager registration rebuilds prepared resources immediately and remains r
   assert.equal(manager.notify.GetByResource(resource).length, 0);
 });
 
-test("waiting owners rebuild on completion and notification tolerates setter removal", () =>
+test("waiting owners rebuild on completion and notification tolerates link removal", () =>
 {
   const { manager, resource, owner, calls } = fixture();
   manager.notify.Add(owner, resource, owner, "resource");
@@ -97,32 +117,26 @@ test("waiting owners rebuild on completion and notification tolerates setter rem
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
 });
 
-test("link renewal is per owner; expiry calls the accessor and preserves a busy peer", () =>
+test("link renewal is per owner; expiry has the owner let go and preserves a busy peer", () =>
 {
   const state = fixture();
   const { manager, resource, owner, calls } = state;
-  let held = resource;
-  let assigned = 0;
-  Object.defineProperty(owner, "resource", {
-    get() { return held; },
-    set(value) { assigned++; manager.notify.Remove(owner, held); held = value; }
-  });
-  const peer = { resource, RebuildCachedData() {}, ReleaseCachedData() { throw new Error("renewed peer expired"); } };
+  const peer = holder([], { resource });
+  peer.RemoveCachedData = () => { throw new Error("renewed peer expired"); };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(peer, resource, peer, "resource");
   state.advance(900);
   assert.equal(manager.notify.KeepAlive(peer, resource), true);
   state.advance(1100);
   manager.PurgeInactive({ time: 1100 });
-  assert.deepEqual(calls, [["release", resource]]);
-  assert.equal(assigned, 1);
+  assert.deepEqual(calls, [["remove", resource]]);
   assert.equal(owner.resource, null);
   assert.equal(peer.resource, resource);
   assert.equal(manager.notify.GetByResource(resource).length, 1);
   assert.equal(manager.notify.KeepAlive(owner, resource), false);
 });
 
-test("expiry never clears a replacement, including one installed by the release callback", () =>
+test("expiry never touches a replacement, including one the owner installs while letting go", () =>
 {
   const state = fixture();
   const { manager, resource, owner, calls } = state;
@@ -136,7 +150,7 @@ test("expiry never clears a replacement, including one installed by the release 
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
 
   owner.resource = resource;
-  owner.ReleaseCachedData = () => { owner.resource = replacement; };
+  owner.RemoveCachedData = () => { owner.resource = replacement; };
   manager.notify.Add(owner, resource, owner, "resource");
   state.advance(2200);
   manager.PurgeInactive({ time: 2200 });
@@ -149,11 +163,11 @@ test("explicit resource eviction clears every owner before data purge and permit
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Clear(resource);
   assert.equal(owner.resource, null);
-  assert.deepEqual(calls, [["release", resource]]);
+  assert.deepEqual(calls, [["remove", resource]]);
   owner.resource = resource;
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.RebuildCachedData(resource);
-  assert.deepEqual(calls.map(call => call[0]), ["release", "rebuild"]);
+  assert.deepEqual(calls.map(call => call[0]), ["remove", "rebuild"]);
   manager.Clear();
   assert.equal(owner.resource, null);
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
@@ -171,26 +185,37 @@ test("one owner can hold two resources and diagnostic snapshots cannot mutate li
   manager.notify.Clear(resource);
   assert.equal(owner.resource, null);
   assert.equal(owner.other, other);
-  assert.deepEqual(calls, [["release", resource]]);
+  assert.deepEqual(calls, [["remove", resource]]);
   assert.equal(manager.notify.GetByOwner(owner).length, 1);
 });
 
-test("two owner properties sharing one resource release once and both clear despite setter removal", () =>
+test("two owner fields sharing one resource are let go once, and both clear", () =>
 {
   const { manager, resource, owner, calls } = fixture();
-  let first = resource;
-  Object.defineProperty(owner, "resource", {
-    get() { return first; },
-    set(value) { manager.notify.Remove(owner, first); first = value; }
-  });
   owner.other = resource;
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(owner, resource, owner, "other");
   manager.notify.Clear(resource);
   assert.equal(owner.resource, null);
   assert.equal(owner.other, null);
-  assert.deepEqual(calls, [["release", resource]]);
+  assert.deepEqual(calls, [["remove", resource]]);
   assert.equal(manager.notify.GetByResource(resource).length, 0);
+});
+
+test("an owner that keeps an expired resource fails the sweep, naming the slot", () =>
+{
+  const { manager, resource, owner, advance } = fixture();
+  owner.RemoveCachedData = () => {};
+  manager.notify.Add(owner, resource, owner, "resource");
+  advance(1100);
+
+  assert.throws(() => manager.notify.Update(1100), error =>
+  {
+    assert.ok(error instanceof AggregateError);
+    assert.deepEqual(error.errors.map(item => item.message), [ "Resource owner kept  in resource after RemoveCachedData." ]);
+    return true;
+  });
+  assert.equal(manager.notify.GetByOwner(owner).length, 0, "the link still goes");
 });
 
 /** Real asynchronous load queues with synthetic data and a restored global manager. */
@@ -204,11 +229,7 @@ function loadingFixture(t)
   t.after(() => { try { manager.Clear(); } finally { blue.resMan = previous; } });
   const resource = manager.GetResource("res:/owner-links.json");
   const calls = [];
-  const owner = {
-    resource,
-    RebuildCachedData(value) { calls.push(["rebuild", value]); },
-    ReleaseCachedData(value) { calls.push(["release", value]); }
-  };
+  const owner = holder(calls, { resource });
   manager.notify.Add(owner, resource, owner, "resource");
   return { manager, resource, owner, calls, setInput(value) { input = value; } };
 }
@@ -256,7 +277,7 @@ test("manager resource purge clears live owner slots before shutting down the re
   manager.PurgeInactive({ maxIdleFrames: 0, maxIdleMilliseconds: 0 });
   assert.equal(releasedBeforeShutdown, true);
   assert.equal(owner.resource, null);
-  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "release"]);
+  assert.deepEqual(calls.map(call => call[0]), ["rebuild", "remove"]);
   assert.equal(manager.GetResourceStatus(resource).purged, true);
 });
 
@@ -283,56 +304,57 @@ test("IsGood renews each owner dependency even when an earlier dependency is bad
   assert.equal(owner.other, other);
 });
 
-test("map links expire by key and preserve replacements installed before or during cleanup", () =>
+test("map links expire by key and preserve replacements installed before or while letting go", () =>
 {
-  const { manager, resource, owner, calls, advance } = fixture();
+  const { manager, resource, advance } = fixture();
+  const calls = [];
   const replacement = new BlueAsyncRes();
-  const holder = new Map([["first", resource], ["second", resource]]);
-  manager.notify.Add(owner, resource, holder, "first");
-  manager.notify.Add(owner, resource, holder, "second");
-  holder.set("first", replacement);
-  owner.ReleaseCachedData = value => { calls.push(["release", value]); holder.set("second", replacement); };
+  const map = new Map([["first", resource], ["second", resource]]);
+  const owner = holder(calls, {}, [ map ]);
+  manager.notify.Add(owner, resource, map, "first");
+  manager.notify.Add(owner, resource, map, "second");
+  map.set("first", replacement);
+  owner.RemoveCachedData = value => { calls.push(["remove", value]); map.set("second", replacement); };
   advance(1100);
   manager.PurgeInactive({ time: 1100 });
-  assert.equal(holder.get("first"), replacement);
-  assert.equal(holder.get("second"), replacement);
-  assert.deepEqual(calls, [["release", resource]]);
+  assert.equal(map.get("first"), replacement);
+  assert.equal(map.get("second"), replacement);
+  assert.deepEqual(calls, [["remove", resource]]);
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
 
-  holder.set("third", resource);
-  manager.notify.Add(owner, resource, holder, "third");
+  const third = holder([], {}, [ map ]);
+  map.set("third", resource);
+  manager.notify.Add(third, resource, map, "third");
   advance(2200);
   manager.PurgeInactive({ time: 2200 });
-  assert.equal(holder.has("third"), true, "expiry never drops a path");
-  assert.equal(holder.get("third"), null);
+  assert.equal(map.has("third"), true, "expiry never drops a path");
+  assert.equal(map.get("third"), null);
 });
 
-test("a throwing owner still loses its slot, and the sweep finishes every other link", () =>
+test("a throwing owner is reported with the slot it kept, and the sweep finishes every other link", () =>
 {
   const { manager, resource, owner, advance } = fixture();
   const second = new BlueAsyncRes();
-  const other = {
-    resource: second,
-    RebuildCachedData() {},
-    ReleaseCachedData() { throw new Error("second failed"); }
-  };
+  const other = holder([], { resource: second });
+  other.RemoveCachedData = () => { throw new Error("second failed"); };
   const third = new BlueAsyncRes();
-  const last = { resource: third, RebuildCachedData() {}, ReleaseCachedData() {} };
-  owner.ReleaseCachedData = () => { throw new Error("first failed"); };
+  const last = holder([], { resource: third });
+  owner.RemoveCachedData = () => { throw new Error("first failed"); };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(other, second, other, "resource");
   manager.notify.Add(last, third, last, "resource");
   advance(1100);
 
+  const kept = "Resource owner kept  in resource after RemoveCachedData.";
   assert.throws(() => manager.notify.Update(1100), error =>
   {
     assert.ok(error instanceof AggregateError);
-    assert.deepEqual(error.errors.map(item => item.message), [ "first failed", "second failed" ]);
+    assert.deepEqual(error.errors.map(item => item.message), [ "first failed", kept, "second failed", kept ]);
     return true;
   });
 
-  assert.equal(owner.resource, null);
-  assert.equal(other.resource, null);
+  assert.equal(owner.resource, resource, "nothing clears a slot for its owner");
+  assert.equal(other.resource, second);
   assert.equal(last.resource, null);
   assert.equal(manager.notify._targets.length, 0, "compaction still ran");
   assert.equal(manager.notify._targetsByResource.size, 0);
@@ -341,14 +363,14 @@ test("a throwing owner still loses its slot, and the sweep finishes every other 
 test("a throwing owner does not stop Clear from clearing the others", () =>
 {
   const { manager, resource, owner } = fixture();
-  const other = { resource, RebuildCachedData() {}, ReleaseCachedData() {} };
-  owner.ReleaseCachedData = () => { throw new Error("failed"); };
+  const other = holder([], { resource });
+  owner.RemoveCachedData = () => { throw new Error("failed"); };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(other, resource, other, "resource");
 
   assert.throws(() => manager.notify.Clear(resource), AggregateError);
-  assert.equal(owner.resource, null);
   assert.equal(other.resource, null);
+  assert.equal(manager.notify.GetByResource(resource).length, 0);
 });
 
 test("the resource index follows Add and Remove, and dispatch reaches only that resource's owners", () =>
@@ -358,7 +380,8 @@ test("the resource index follows Add and Remove, and dispatch reaches only that 
   const bystander = {
     resource: unrelated,
     RebuildCachedData() { throw new Error("wrong resource"); },
-    ReleaseCachedData() { throw new Error("wrong resource"); }
+    ReleaseCachedData() { throw new Error("wrong resource"); },
+    RemoveCachedData() { throw new Error("wrong resource"); }
   };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(bystander, unrelated, bystander, "resource");

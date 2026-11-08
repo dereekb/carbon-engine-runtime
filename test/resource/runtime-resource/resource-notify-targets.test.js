@@ -132,10 +132,11 @@ test("a skinned model receives geometry notifications and moves its link on rein
   model.GetSkeleton();
   assert.deepEqual(seen, [["rebuild", geometry]]);
 
-  // Initializing again rebuilds from the same resource, as Carbon's AddNotifyTarget does at once.
+  // Initializing again relinks the same resource and rebuilds at once, as Carbon's
+  // RemoveNotifyTarget and AddNotifyTarget do (Tr2SkinnedModel.cpp:213-222): no release.
   model.Initialize();
   model.GetSkeleton();
-  assert.deepEqual(seen, [["rebuild", geometry], ["release", geometry], ["rebuild", geometry]]);
+  assert.deepEqual(seen, [["rebuild", geometry], ["rebuild", geometry]]);
   model.Destruct();
 });
 
@@ -246,26 +247,31 @@ test("Render reacquires an expired internal resource and draws only after its re
   assert.equal(manager.notify.GetByOwner(effect).length, 1);
 });
 
-test("trails move their notification link when rebound", () =>
+test("trails move their notification link when reinitialized", t =>
 {
+  const manager = blue.resMan, original = manager.GetResource;
+  t.after(() => { manager.GetResource = original; });
   const owner = new EveTrailsSet(), first = new TriGeometryRes(), second = new TriGeometryRes();
-  owner.SetGeometryResource(first);
-  assert.equal(blue.resMan.notify.GetByOwner(owner).length, 1);
-  owner.SetGeometryResource(second);
-  assert.equal(blue.resMan.notify.GetByResource(first).length, 0);
-  assert.equal(blue.resMan.notify.GetByResource(second).length, 1);
+  owner.geometryResPath = "res:/trail.gr2";
+  manager.GetResource = () => first;
+  owner.InitializeGeometryResource();
+  assert.equal(manager.notify.GetByOwner(owner).length, 1);
+  manager.GetResource = () => second;
+  owner.InitializeGeometryResource();
+  assert.equal(manager.notify.GetByResource(first).length, 0);
+  assert.equal(manager.notify.GetByResource(second).length, 1);
   owner.Destruct();
-  assert.equal(blue.resMan.notify.GetByOwner(owner).length, 0);
+  assert.equal(manager.notify.GetByOwner(owner).length, 0);
 });
 
 test("remaining geometry owners receive completion, expire and reacquire only while alive", t =>
 {
   const manager = blue.resMan, original = manager.GetResource;
   t.after(() => { manager.GetResource = original; });
-  for (const [owner, slot, path, use] of [
-    [new EveTrailsSet(), "geometryResource", "geometryResPath", value => value.GetBatches(null, null)],
-    [new EveTurretSet(), "geometryResource", "geometryResPath", value => value.UpdateSyncronous(null, null)],
-    [new Tr2GrannyPrimitiveSet(), "grannyRes", "grannyResPath", value => value.GetBatchesImpl(null, null, null, 0)]
+  for (const [owner, slot, path, acquire, use] of [
+    [new EveTrailsSet(), "geometryResource", "geometryResPath", value => value.Initialize(), value => value.GetBatches(null, null)],
+    [new EveTurretSet(), "geometryResource", "geometryResPath", value => value.InitializeGeometryResource(), value => value.UpdateSyncronous(null, null)],
+    [new Tr2GrannyPrimitiveSet(), "grannyRes", "grannyResPath", value => value.SetGrannyResource(), value => value.GetBatchesImpl(null, null, null, 0)]
   ])
   {
     const resource = new TriGeometryRes(), seen = recordCachedData(owner);
@@ -274,7 +280,9 @@ test("remaining geometry owners receive completion, expire and reacquire only wh
     owner.IsGood = () => false;
     if (owner instanceof EveTurretSet) owner.lodLevel = EveTurretSet.LOD.LOD_HIGHEST;
     owner[path] = "res:/fixture.gr2";
-    owner[slot] = resource;
+    acquire(owner);
+    assert.equal(owner[slot], resource);
+    assert.equal(acquisitions, 1);
     finish(resource, true);
     assert.deepEqual(seen, [["rebuild", resource]]);
     manager.notify.Clear(resource);
@@ -282,10 +290,10 @@ test("remaining geometry owners receive completion, expire and reacquire only wh
     assert.equal(manager.notify.GetByOwner(owner).length, 0);
     use(owner);
     assert.equal(owner[slot], resource);
-    assert.equal(acquisitions, 1);
+    assert.equal(acquisitions, 2);
     owner.Destruct();
     use(owner);
-    assert.equal(acquisitions, 1);
+    assert.equal(acquisitions, 2);
     assert.equal(manager.notify.GetByOwner(owner).length, 0);
   }
 });

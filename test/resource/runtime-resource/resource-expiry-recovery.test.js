@@ -10,6 +10,7 @@ import { Tr2Mesh } from "../../../npm/dist/trinity/core/mesh/Tr2Mesh.js";
 import { EveTrailsSet } from "../../../npm/dist/trinity/eve/attachment/booster/EveTrailsSet.js";
 import { EveTurretSet } from "../../../npm/dist/trinity/eve/attachment/turrets/EveTurretSet.js";
 import { Tr2Effect, Tr2EffectRes } from "../../../npm/dist/trinity/shader/index.js";
+import { referencesTo } from "../../support/referencesTo.js";
 
 const PATH = "res:/recovery/fixture.gr2";
 const CLIP = "res:/recovery/clip.gr2";
@@ -165,6 +166,7 @@ for (const fixture of OWNERS)
 
     run.stopPastExpiry();
     assert.equal(owner[fixture.slot], null, "expiry drops the resource");
+    assert.deepEqual(referencesTo(owner, resource), [], "nothing in the object still holds it");
     assert.equal(owner[fixture.path], PATH, "expiry keeps the path");
     assert.deepEqual(values(owner, fixture.slot), before, "values survive expiry");
     assert.equal(run.manager.notify.GetByOwner(owner).length, 0);
@@ -197,6 +199,7 @@ test("Tr2Effect recovers at use after expiry with its values unchanged", t =>
 
   run.stopPastExpiry();
   assert.equal(effect.effectResource, null);
+  assert.deepEqual(referencesTo(effect, resource), [], "nothing in the effect still holds it");
   assert.equal(effect.effectFilePath, "res:/recovery/effect.fx");
   assert.equal(effect.actualEffectFilePath, actual);
 
@@ -236,6 +239,7 @@ test("Tr2GrannyAnimation primary reloads its authored path and rebuilds the rig"
 
   run.stopPastExpiry();
   assert.equal(animation.grannyRes, null);
+  assert.deepEqual(referencesTo(animation, resource), [], "nothing in the animation still holds it");
   assert.equal(animation.resPath, PATH);
   assert.equal(animation.IsInitialized(), false);
 

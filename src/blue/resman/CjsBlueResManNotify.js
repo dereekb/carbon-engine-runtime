@@ -9,10 +9,12 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
  *   link expiry from its owning manager. It owns links, not resource loading or
  *   eviction. Explicit owner teardown still unregisters immediately.
  *
- *   Expiry drops resources, never paths: a path is part of an object's values,
- *   so an expired Map slot keeps its key with a null value (as Carbon's
- *   m_secondaryGrannyRes holds a path with nullptr, Tr2GrannyAnimation.cpp:1274)
- *   and an expired property is set to null. The owner reloads at use.
+ *   Expiry drops resources, never paths: a path is part of an object's values.
+ *   The owner clears its own reference through RemoveCachedData, beside Carbon's
+ *   ReleaseCachedData and RebuildCachedData (IBlueAsyncResNotifyTarget,
+ *   blue/include/BlueAsyncRes.h:23-28), and reloads at use. An expired Map slot
+ *   keeps its key with a null value, as Carbon's m_secondaryGrannyRes holds a path
+ *   with nullptr (Tr2GrannyAnimation.cpp:1274).
  *
  * Native review: BlueAsyncRes.h:23-56 and BlueAsyncRes.cpp:261-368 provide
  * per-resource callbacks; MotherLode.cpp:329-401 handles native last-reference
@@ -57,7 +59,7 @@ export class CjsBlueResManNotify
    * @adapted Links live on the manager and expire because JavaScript cannot
    *   guarantee native destructor unregistration. Explicit teardown must still
    *   remove them. Revisit manager ownership once OnDestruct is guaranteed.
-   * @param {object} owner Owner implementing Carbon's two cached-data handlers.
+   * @param {object} owner Owner implementing Carbon's two cached-data handlers and RemoveCachedData.
    * @param {BlueAsyncRes} resource Resource held by the owner.
    * @param {object|Map} holder Object or map holding the resource.
    * @param {*} key Property name or map key; expiry clears only a matching value.
@@ -242,15 +244,16 @@ export class CjsBlueResManNotify
   }
 
   /**
-   * Releases an expired link and clears its still-matching owner slot.
-   * @cjs Revisit aliveness checks once Destruct exists. Explicit Destruct must
-   *   remove links; expiry only bounds retention for owners that never clean up.
-   *   Assignment deliberately invokes accessors. A callback that replaces the
-   *   property must not have its replacement cleared by this expiry. A failing
-   *   callback is collected, so the slot still clears and the walk continues.
+   * Releases an expired link and has its owner let go of the resource.
+   * @cjs Carbon never expires a resource, so it has no RemoveCachedData. Revisit
+   *   aliveness checks once Destruct exists. Explicit Destruct must remove links;
+   *   expiry only bounds retention for owners that never clean up. The owner
+   *   clears its own slots and what it built from the resource; one that still
+   *   holds it in a linked slot afterwards is reported as a failure. A failing
+   *   callback is collected, so the walk continues.
    * @implemented
    * @param {object} entry Link to expire.
-   * @param {Error[]} failures Receives what the owner's callbacks threw.
+   * @param {Error[]} failures Receives what the owner's callbacks threw, and owners that kept the resource.
    * @returns {void}
    */
   _ExpireLink(entry, failures)
@@ -271,7 +274,7 @@ export class CjsBlueResManNotify
 
     try
     {
-      owner.ReleaseCachedData(resource);
+      owner.RemoveCachedData(resource);
     }
     catch (error)
     {
@@ -281,32 +284,15 @@ export class CjsBlueResManNotify
     for (let i = 0; i < slots.length; i++)
     {
       const slot = slots[i];
-      const holder = slot.holder;
-      const key = slot.key;
-
-      try
+      if ((slot.isMap ? slot.holder.get(slot.key) : slot.holder[slot.key]) === resource)
       {
-        if (slot.isMap)
-        {
-          if (holder.get(key) === resource)
-          {
-            holder.set(key, null);
-          }
-        }
-        else if (holder[key] === resource)
-        {
-          holder[key] = null;
-        }
-      }
-      catch (error)
-      {
-        failures.push(error);
+        failures.push(new Error("Resource owner kept " + resource.GetPath() + " in " + String(slot.key) + " after RemoveCachedData."));
       }
     }
 
-    // A setter can re-register another alias while the remaining slots are
-    // still being cleared. Drop only those new links whose slot is now empty;
-    // keep a callback's genuinely new resource slot intact.
+    // The owner can link the resource again from another slot while letting go.
+    // Drop only those new links whose slot is now empty; keep a genuinely new
+    // resource slot intact.
     const remaining = this._targetsByOwner.get(owner)?.get(resource)?.slice() ?? [];
     for (let i = 0; i < remaining.length; i++)
     {
