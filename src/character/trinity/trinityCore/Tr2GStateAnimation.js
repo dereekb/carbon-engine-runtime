@@ -6,8 +6,14 @@ import { ITr2AnimationUpdater } from "../../../trinity/core/animation/ITr2Animat
 import { type } from "#schema";
 import { BlueList } from "#blue";
 import { Tr2GStateParameter } from "./Tr2GStateParameter.js";
+import { Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
 
-/** Character GState animation record for an external state-machine adapter. */
+/**
+ * Character GState animation: a Granny state graph that drives a skeleton.
+ *
+ * Advancing the graph by itself (transitions, the per-frame update) needs Granny's proprietary GState runtime and is not
+ * supported; loading it, its parameters and its time controls are portable, and the time controls are ported.
+ */
 @be.define({
   name: "Tr2GStateAnimation",
   inherit: [ IInitialize, ITr2AnimationUpdater ],
@@ -215,179 +221,59 @@ export class Tr2GStateAnimation extends IRoot
   }
 
   /**
-   * Carbon method ClearScrub (MAP_METHOD_AND_WRAP).
+   * Carbon ForceChangeToState (Tr2GStateAnimation.cpp:616-619).
    *
-   * @notImplemented
-   */
-  ClearScrub(...args)
-  {
-    throw new Error("Tr2GStateAnimation.ClearScrub is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method ForceChangeToState (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
+   * @notSupported the state machine changes state at its instance time inside Granny's proprietary GState runtime.
    */
   ForceChangeToState(...args)
   {
-    throw new Error("Tr2GStateAnimation.ForceChangeToState is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.ForceChangeToState needs Granny's proprietary GState runtime.");
   }
 
   /**
-   * Carbon method GetActiveMachineElementName (MAP_METHOD_AND_WRAP).
+   * Carbon RequestChangeToState (Tr2GStateAnimation.cpp:621-626).
    *
-   * @notImplemented
+   * @notSupported the state machine's requested transition runs inside Granny's proprietary GState runtime.
+   */
+  RequestChangeToState(...args)
+  {
+    throw new Error("Tr2GStateAnimation.RequestChangeToState needs Granny's proprietary GState runtime.");
+  }
+
+  /**
+   * Carbon StartTransitionByName (Tr2GStateAnimation.cpp:628-631).
+   *
+   * @notSupported the transition runs inside Granny's proprietary GState runtime.
+   */
+  StartTransitionByName(...args)
+  {
+    throw new Error("Tr2GStateAnimation.StartTransitionByName needs Granny's proprietary GState runtime.");
+  }
+
+  /**
+   * Carbon GetActiveMachineElementName (Tr2GStateAnimation.cpp:571-594).
+   *
+   * @notSupported the active node or transition is the state of Granny's proprietary GState runtime as it advances the graph.
    */
   GetActiveMachineElementName(...args)
   {
-    throw new Error("Tr2GStateAnimation.GetActiveMachineElementName is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetActiveMachineElementName needs Granny's proprietary GState runtime.");
   }
 
   /**
-   * Carbon method GetAnimationTime (MAP_METHOD_AND_WRAP).
+   * Carbon InstantiateCharacter (Tr2GStateAnimation.cpp:401-412).
    *
-   * @notImplemented
-   */
-  GetAnimationTime(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetAnimationTime is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetGStateAnimFileRefPaths (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetGStateAnimFileRefPaths(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetGStateAnimFileRefPaths is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetParameter (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetParameter(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetParameter is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetParameterByName (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetParameterByName(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetParameterByName is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetParameterIndexByName (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetParameterIndexByName(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetParameterIndexByName is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetParameterRange (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetParameterRange(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetParameterRange is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetParameters (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetParameters(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetParameters is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetScrubOffset (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetScrubOffset(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetScrubOffset is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetStartStateIdx (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetStartStateIdx(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetStartStateIdx is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetTopLevelNodeNames (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetTopLevelNodeNames(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetTopLevelNodeNames is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetTopLevelParameterNodeNames (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetTopLevelParameterNodeNames(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetTopLevelParameterNodeNames is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method GetTopLevelStateNodeNames (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  GetTopLevelStateNodeNames(...args)
-  {
-    throw new Error("Tr2GStateAnimation.GetTopLevelStateNodeNames is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method InstantiateCharacter (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
+   * @notSupported GStateInstantiateCharacter creates the instance Granny's proprietary GState runtime advances.
    */
   InstantiateCharacter(...args)
   {
-    throw new Error("Tr2GStateAnimation.InstantiateCharacter is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.InstantiateCharacter needs Granny's proprietary GState runtime.");
   }
 
   /**
-   * Carbon method IsFullyLoaded (MAP_METHOD_AND_WRAP).
+   * Carbon LoadModelFromGstate (Tr2GStateAnimation.cpp:384-399).
    *
-   * @notImplemented
-   */
-  IsFullyLoaded(...args)
-  {
-    throw new Error("Tr2GStateAnimation.IsFullyLoaded is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method LoadModelFromGstate (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
   LoadModelFromGstate(...args)
   {
@@ -395,89 +281,69 @@ export class Tr2GStateAnimation extends IRoot
   }
 
   /**
-   * Carbon method PlayFromScrub (MAP_METHOD_AND_WRAP).
+   * Carbon GetGStateAnimFileRefPaths (Tr2GStateAnimation.cpp:414-418).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  PlayFromScrub(...args)
+  GetGStateAnimFileRefPaths(...args)
   {
-    throw new Error("Tr2GStateAnimation.PlayFromScrub is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetGStateAnimFileRefPaths is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method RequestChangeToState (MAP_METHOD_AND_WRAP).
+   * Carbon GetTopLevelNodeNames (Tr2GStateAnimation.cpp:468-479).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  RequestChangeToState(...args)
+  GetTopLevelNodeNames(...args)
   {
-    throw new Error("Tr2GStateAnimation.RequestChangeToState is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetTopLevelNodeNames is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method RequestParameter (MAP_METHOD_AND_WRAP).
+   * Carbon GetTopLevelParameterNodeNames (Tr2GStateAnimation.cpp:482-498).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  RequestParameter(...args)
+  GetTopLevelParameterNodeNames(...args)
   {
-    throw new Error("Tr2GStateAnimation.RequestParameter is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetTopLevelParameterNodeNames is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method RequestParameterByName (MAP_METHOD_AND_WRAP).
+   * Carbon GetTopLevelStateNodeNames (Tr2GStateAnimation.cpp:501-517).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  RequestParameterByName(...args)
+  GetTopLevelStateNodeNames(...args)
   {
-    throw new Error("Tr2GStateAnimation.RequestParameterByName is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetTopLevelStateNodeNames is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method ResetParamsToDefault (MAP_METHOD_AND_WRAP).
+   * Carbon GetParameters (Tr2GStateAnimation.cpp:520-534).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  ResetParamsToDefault(...args)
+  GetParameters(...args)
   {
-    throw new Error("Tr2GStateAnimation.ResetParamsToDefault is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetParameters is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method SetParameter (MAP_METHOD_AND_WRAP).
+   * Carbon GetStartStateIdx (Tr2GStateAnimation.cpp:596-599).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  SetParameter(...args)
+  GetStartStateIdx(...args)
   {
-    throw new Error("Tr2GStateAnimation.SetParameter is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetStartStateIdx is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method SetScrubOffset (MAP_METHOD_AND_WRAP).
+   * Carbon SetStartStateIdx (Tr2GStateAnimation.cpp:601-604).
    *
-   * @notImplemented
-   */
-  SetScrubOffset(...args)
-  {
-    throw new Error("Tr2GStateAnimation.SetScrubOffset is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method SetStartStateByName (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
-   */
-  SetStartStateByName(...args)
-  {
-    throw new Error("Tr2GStateAnimation.SetStartStateByName is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * Carbon method SetStartStateIdx (MAP_METHOD_AND_WRAP).
-   *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
   SetStartStateIdx(...args)
   {
@@ -485,43 +351,271 @@ export class Tr2GStateAnimation extends IRoot
   }
 
   /**
-   * Carbon method StartScrub (MAP_METHOD_AND_WRAP).
+   * Carbon SetStartStateByName (Tr2GStateAnimation.cpp:607-614).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  StartScrub(...args)
+  SetStartStateByName(...args)
   {
-    throw new Error("Tr2GStateAnimation.StartScrub is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.SetStartStateByName is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method StartTransitionByName (MAP_METHOD_AND_WRAP).
+   * Carbon GetParameter (Tr2GStateAnimation.cpp:633-645).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  StartTransitionByName(...args)
+  GetParameter(...args)
   {
-    throw new Error("Tr2GStateAnimation.StartTransitionByName is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.GetParameter is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method StopPlayFromScrub (MAP_METHOD_AND_WRAP).
+   * Carbon SetParameter (Tr2GStateAnimation.cpp:647-654).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  StopPlayFromScrub(...args)
+  SetParameter(...args)
   {
-    throw new Error("Tr2GStateAnimation.StopPlayFromScrub is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.SetParameter is not implemented in CarbonEngineJS.");
   }
 
   /**
-   * Carbon method TogglePauseAnimations (MAP_METHOD_AND_WRAP).
+   * Carbon RequestParameter (Tr2GStateAnimation.cpp:656-668).
    *
-   * @notImplemented
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
    */
-  TogglePauseAnimations(...args)
+  RequestParameter(...args)
   {
-    throw new Error("Tr2GStateAnimation.TogglePauseAnimations is not implemented in CarbonEngineJS.");
+    throw new Error("Tr2GStateAnimation.RequestParameter is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon RequestParameterByName (Tr2GStateAnimation.cpp:670-694).
+   *
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
+   */
+  RequestParameterByName(...args)
+  {
+    throw new Error("Tr2GStateAnimation.RequestParameterByName is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon GetParameterByName (Tr2GStateAnimation.cpp:696-720).
+   *
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
+   */
+  GetParameterByName(...args)
+  {
+    throw new Error("Tr2GStateAnimation.GetParameterByName is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon GetParameterIndexByName (Tr2GStateAnimation.cpp:722-738).
+   *
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
+   */
+  GetParameterIndexByName(...args)
+  {
+    throw new Error("Tr2GStateAnimation.GetParameterIndexByName is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon IsFullyLoaded (Tr2GStateAnimation.cpp:112-115).
+   *
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
+   */
+  IsFullyLoaded(...args)
+  {
+    throw new Error("Tr2GStateAnimation.IsFullyLoaded is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon ResetParamsToDefault (Tr2GStateAnimation.cpp:130-149).
+   *
+   * @notImplemented portable: our .gsf reader (CjsGr2Format.readGsf) decodes the graph, which Graphene's authoredAnimation.js walks for node names, sources and masks; this class does not read it yet.
+   */
+  ResetParamsToDefault(...args)
+  {
+    throw new Error("Tr2GStateAnimation.ResetParamsToDefault is not implemented in CarbonEngineJS.");
+  }
+
+  /**
+   * Carbon PrePhysicsAnimation (Tr2GStateAnimation.cpp:1045-1140): pushes the parameters into the state machine,
+   * advances it by the change in the animation time, and samples it (GStateAdvanceTime, GStateSampleAnimation).
+   *
+   * @notSupported Granny's proprietary GState runtime advances and samples the graph. Graphene plays chosen states' clips through
+   *   Tr2GrannyAnimation instead (authoredAnimation.js), without the graph's transitions.
+   */
+  PrePhysicsAnimation(...args)
+  {
+    throw new Error("Tr2GStateAnimation.PrePhysicsAnimation needs Granny's proprietary GState runtime.");
+  }
+
+  /**
+   * Carbon PostPhysicsAnimation (Tr2GStateAnimation.cpp:1142-1145): empty.
+   *
+   * @implemented
+   * @param {number} _time Blue time in ticks.
+   * @param {mat4} _modelTransform The owner's world transform.
+   * @returns {void}
+   */
+  PostPhysicsAnimation(_time, _modelTransform) {}
+
+  /**
+   * Carbon GetParameterRange (Tr2GStateAnimation.cpp:537-542). Quirk: Carbon looks the node up and returns an
+   * empty list whatever it finds.
+   *
+   * @implemented
+   * @param {string} _paramNode The parameter node's name.
+   * @param {string} _paramName The parameter's name.
+   * @returns {number[]} An empty list.
+   */
+  GetParameterRange(_paramNode, _paramName)
+  {
+    return [];
+  }
+
+  /** m_paused (bool). */
+  _paused = false;
+  /** m_pauseTime (float): the animation time pausing held, in seconds. */
+  _pauseTime = 0;
+  /** m_totalPauseOffset (float): the seconds of renderer animation time spent paused. */
+  _totalPauseOffset = 0;
+  /** m_scrubbing (bool). */
+  _scrubbing = false;
+  /** m_scrub_time (float): the animation time scrubbing started at. */
+  _scrub_time = 0;
+  /** m_scrub_offset (float): the scrub position past _scrub_time. */
+  _scrub_offset = 0;
+  /** m_scrub_playing (bool). */
+  _scrub_playing = false;
+  /** m_scrub_play_offset (float). */
+  _scrub_play_offset = 0;
+
+  /**
+   * Carbon GetAnimationTime (Tr2GStateAnimation.cpp:1255-1273): the held time while paused; while scrubbing, the
+   * scrub position, moving with the clock while it plays; else the renderer's animation clock less the time spent
+   * paused.
+   *
+   * @implemented
+   * @returns {number} Seconds.
+   */
+  GetAnimationTime()
+  {
+    if (this._paused) return this._pauseTime;
+    if (this._scrubbing)
+    {
+      if (this._scrub_playing) return Tr2Renderer.GetAnimationTime() - this._totalPauseOffset + this._scrub_play_offset;
+      return this._scrub_time + this._scrub_offset;
+    }
+    return Tr2Renderer.GetAnimationTime() - this._totalPauseOffset;
+  }
+
+  /**
+   * Carbon StartScrub (Tr2GStateAnimation.cpp:1276-1285).
+   *
+   * @implemented
+   * @returns {void}
+   */
+  StartScrub()
+  {
+    if (this._scrubbing) return;
+    this._scrub_time = this.GetAnimationTime();
+    this._scrub_offset = 0;
+    this._scrubbing = true;
+  }
+
+  /**
+   * Carbon ClearScrub (Tr2GStateAnimation.cpp:1288-1295).
+   *
+   * @implemented
+   * @returns {void}
+   */
+  ClearScrub()
+  {
+    this._scrubbing = false;
+    this._scrub_time = 0;
+    this._scrub_offset = 0;
+    this._scrub_playing = false;
+    this._scrub_play_offset = 0;
+  }
+
+  /**
+   * Carbon PlayFromScrub (Tr2GStateAnimation.cpp:1298-1307). Quirk, reproduced: the offset ADDS the pause offset
+   * (cpp:1305) that GetAnimationTime then subtracts, so after a pause the playing scrub starts twice the paused time
+   * early.
+   *
+   * @implemented
+   * @returns {void}
+   */
+  PlayFromScrub()
+  {
+    if (!this._scrubbing) return;
+    this._scrub_play_offset = this._scrub_time + this._scrub_offset - (Tr2Renderer.GetAnimationTime() + this._totalPauseOffset);
+    this._scrub_playing = true;
+  }
+
+  /**
+   * Carbon StopPlayFromScrub (Tr2GStateAnimation.cpp:1310-1325).
+   *
+   * @implemented
+   * @returns {void}
+   */
+  StopPlayFromScrub()
+  {
+    if (!this._scrubbing || !this._scrub_playing) return;
+    this._scrub_offset = this.GetAnimationTime() - this._scrub_time;
+    this._scrub_playing = false;
+    this._scrub_play_offset = 0;
+  }
+
+  /**
+   * Carbon SetScrubOffset (Tr2GStateAnimation.cpp:1328-1341).
+   *
+   * @implemented
+   * @param {number} scrubOffset Seconds past the scrub start.
+   * @returns {void}
+   */
+  SetScrubOffset(scrubOffset)
+  {
+    if (!this._scrubbing || this._scrub_playing) return;
+    this._scrub_offset = scrubOffset;
+  }
+
+  /**
+   * Carbon GetScrubOffset (Tr2GStateAnimation.cpp:1344-1352).
+   *
+   * @implemented
+   * @returns {number} Seconds past the scrub start; 0 when not scrubbing.
+   */
+  GetScrubOffset()
+  {
+    if (!this._scrubbing) return 0;
+    return this._scrub_offset;
+  }
+
+  /**
+   * Carbon TogglePauseAnimations (Tr2GStateAnimation.cpp:1362-1375): pausing holds the animation time; resuming
+   * adds the time spent paused to the offset GetAnimationTime subtracts.
+   *
+   * @implemented
+   * @param {boolean} pause Whether to pause.
+   * @returns {void}
+   */
+  TogglePauseAnimations(pause)
+  {
+    if (this._paused && !pause)
+    {
+      this._paused = false;
+      this._totalPauseOffset = Tr2Renderer.GetAnimationTime() - this._pauseTime;
+      this._pauseTime = 0;
+    }
+    else if (!this._paused && pause)
+    {
+      this._paused = true;
+      this._pauseTime = Tr2Renderer.GetAnimationTime() - this._totalPauseOffset;
+    }
   }
 
 }
