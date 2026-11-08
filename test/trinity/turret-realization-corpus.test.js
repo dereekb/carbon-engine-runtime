@@ -55,10 +55,13 @@ test("real turret geometry remains READ-accessible and collected but is excluded
   assert.ok(Object.hasOwn(values,"turretEffect"),"ordinary owned graph references remain Values data");
   const incoming=Object.defineProperty({},"geometryResource",{enumerable:true,get(){throw new Error("runtime resource input must not be read");}});
   CjsSchema.setValues(set,incoming);assert.ok(set.geometryResource===resource);
+  // A plain field: the shim shadows it for the copy, then puts the field back as it was.
+  const held=Object.getOwnPropertyDescriptor(set,"geometryResource");
   Object.defineProperty(set,"geometryResource",{configurable:true,get(){throw new Error("Copier must not read the source runtime handle");}});
   let clone;
   try { clone=new Copier().CloneTo(set); }
-  finally { delete set.geometryResource; }
+  finally { Object.defineProperty(set,"geometryResource",held); }
+  assert.ok(set.geometryResource===resource,"the source keeps its geometry");
   assert.ok(clone);t.after(()=>clone.Destruct());
   assert.equal(clone.geometryResPath,geometryPath);
   assert.equal(clone.geometryResource,null,"READ-only LOD is not copied, so the constructor's initial LOD has no loaded handle");

@@ -290,28 +290,12 @@ export class EveTurretSet extends EveEntity
   @type.float32
   bottomClipHeight = 0;
 
-  /** m_geometryResource (TriGeometryResPtr) [READ] */
-  @type.resource("TriGeometryRes")
-  get geometryResource()
-  {
-    return this._geometryResource;
-  }
-
   /**
-   * Moves the geometry notification link and releases the old cached data.
-   * @adapted EveTurretSet.cpp:252-285 uses native targets; ours expire on resMan.
+   * m_geometryResource (TriGeometryResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Eve/Turret/EveTurretSet_Blue.cpp:82).
    */
-  set geometryResource(resource)
-  {
-    if (this._geometryResource === resource) return;
-    if (this._geometryResource) blue.resMan.notify.Remove(this, this._geometryResource);
-    this.Cleanup();
-    this._geometryResource = resource;
-    if (resource) blue.resMan.notify.Add(this, resource, this, "geometryResource");
-  }
-
-  /** Geometry storage behind the notification-aware property. */
-  _geometryResource = null;
+  @type.resource("TriGeometryRes")
+  geometryResource = null;
 
   /** m_maxTrackingTime (float) [READWRITE, PERSIST] */
 
@@ -629,7 +613,11 @@ export class EveTurretSet extends EveEntity
 
     if (this.firingEffect) this.firingEffect.CleanUp();
     this.Cleanup();
-    this.geometryResource = null;
+    if (this.geometryResource)
+    {
+      blue.resMan.notify.Remove(this, this.geometryResource);
+      this.geometryResource = null;
+    }
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
 
     Tr2DeviceResource.prototype.Destruct.call(this);
@@ -1292,12 +1280,17 @@ export class EveTurretSet extends EveEntity
 
   InitializeGeometryResource()
   {
-    this.geometryResource = null;
+    if (this.geometryResource)
+    {
+      blue.resMan.notify.Remove(this, this.geometryResource);
+      this.geometryResource = null;
+    }
     this.Cleanup();
     if (this._destroyed) return;
     if (this.lodLevel !== EveTurretSet.LOD.LOD_DISABLED && this.lodLevel !== EveTurretSet.LOD.LOD_HIGHEST) return;
     if (!this.geometryResPath) return;
     this.geometryResource = blue.resMan.GetResource(this.geometryResPath);
+    if (this.geometryResource) blue.resMan.notify.Add(this, this.geometryResource, this, "geometryResource");
   }
 
   /**
@@ -1890,6 +1883,19 @@ export class EveTurretSet extends EveEntity
   ReleaseCachedData(_resource)
   {
     this.Cleanup();
+  }
+
+  /**
+   * Lets go of an expired geometry: the turret data built from it, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and UpdateSyncronous reacquires from geometryResPath.
+   * @param {TriGeometryRes} resource The expired geometry.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.geometryResource === resource) this.geometryResource = null;
   }
 
   /**
