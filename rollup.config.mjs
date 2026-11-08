@@ -13,11 +13,10 @@ const unpublishedInputs = new Set([
     "src/trinity/generated/eve/EveModularObjectModifier.js"
 ]);
 // Internal direct-import entries retain their exports when a public barrel
-// omits them or their imports alias stays external. The Black and Red reader
-// ports sit beside the live readers until takeover (Blue plan step 7), so no
-// public entry reaches them yet.
+// omits them or their imports alias stays external. CjsBlackRecordReader, the
+// payload-shaped Black record reader beside the live readers, has no public entry.
 const privateInputs = [ "src/trinityal/webgpu/internal.js", "src/blue/blue.js", "src/blue/exposure/be.js",
-    "src/blue/formats/black/BlackReader.js", "src/blue/formats/black/CjsBlackRecordReader.js", "src/blue/formats/yaml/YamlReaderNext.js" ];
+    "src/blue/formats/black/BlackReader.js", "src/blue/formats/black/CjsBlackRecordReader.js" ];
 
 function collectTargets(value, out = [])
 {

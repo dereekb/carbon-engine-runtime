@@ -17,6 +17,13 @@ const BLUE_OBJECT_METADATA_KEY = "__bluemetadata__";
 /**
  * Reads a `.black` stream into a payload or runtime graph.
  *
+ * Not the object route: ResMan builds Black objects with BlackReader
+ * (CjsBlackFormat.createBlackObjectBuilder). This older reader stays for
+ * CjsBlackFormat's payload and json outputs, the plain data SOF's catalog ingest
+ * reads (EveSOF.Create, CjsSofLibraryBuilder) and tools inspect, until SOF ingests
+ * runtime objects as Carbon's EveSOF does. Its runtime mode still answers
+ * CjsBlackFormat.read, readRuntime and createObjectBuilder.
+ *
  * This transport owns the binary buffer, string tables, numeric references,
  * and binary read cursor. `ResetReadState()` clears only per-read graph state;
  * each read entrypoint separately restores the cursor to `dataOffset`.

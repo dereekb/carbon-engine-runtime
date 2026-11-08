@@ -20,6 +20,7 @@ import { CjsBlackReader } from "./core/CjsBlackReader.js";
 const FORMAT_NAME = "CjsBlackFormat";
 
 import { YamlReader } from "../yaml/YamlReader.js";
+import { BlackReader } from "./BlackReader.js";
 
 /**
  * CarbonEngineJS-facing Black format profile.
@@ -350,8 +351,8 @@ export class CjsBlackFormat extends CjsFormat
     /**
      * The builder for one object file: Carbon keeps a reader per file and builds a
      * new object from it on every LoadObject (BlueResMan.cpp:722-773). The reader
-     * follows the bytes, not the extension: a valid Black header gets a BlackReader,
-     * and anything else is read as YAML by a caching YamlReader
+     * follows the bytes, not the extension: a valid Black header gets a caching
+     * BlackReader, and anything else is read as YAML by a caching YamlReader
      * (BlueResMan.cpp:806-840). A .red path normally arrives as compiled Black
      * bytes, since the file system swaps .red for .black (BlueFileUtil.cpp:374-387).
      * @meta.adapted JavaScript builder callback configured by CjsLibrary; a reader
@@ -362,8 +363,14 @@ export class CjsBlackFormat extends CjsFormat
      */
     static createBlackObjectBuilder(bytes, context)
     {
-            if (CjsBlackFormat.probeSupport(bytes)) return CjsBlackFormat.createObjectBuilder(bytes, { emit: "runtime" });
             const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); // alloc: byte view
+            if (CjsBlackFormat.probeSupport(view))
+            {
+                    const black = new BlackReader();
+                    black.SetFileName(context?.path ?? "");
+                    if (!black.ReadForCachingFromStream(view)) throw new Error(`${context?.path ?? "object"}: ${black.GetErrorMessage() || "not a Black object file"}`);
+                    return black;
+            }
             let offset = 0;
             const reader = new YamlReader();
             reader.SetFileName(context?.path ?? "");

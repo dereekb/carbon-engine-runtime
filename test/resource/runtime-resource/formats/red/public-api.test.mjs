@@ -8,6 +8,8 @@ import { YamlReader } from "../../../../../npm/dist/blue/formats/yaml/YamlReader
 import { IInitialize } from "../../../../../npm/dist/blue/exposure/IInitialize.js";
 import { BeObjectMetadata } from "../../../../../npm/dist/blue/services/BlueObjectMetadata.js";
 import "../../../../../npm/dist/blue/values.js";
+// YamlReader asks Blue's class registry (BeClasses) for each class, as Carbon's does.
+import "../../../../../npm/dist/blue/exposure/BlueClasses.js";
 
 class RedContractLeaf
 {

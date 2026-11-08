@@ -1,22 +1,28 @@
 // Source: blue/src/YamlReader.h
 // Source: blue/src/YamlReader.cpp
 // Source: blue/src/YamlReader_Blue.cpp
+//
+// Carbon's YamlReader on Carbon's stream base (IRootReaderBase), step 7 of the Blue
+// plan: members are read by the base's handlers, so a type reads as it does in Black.
+// The reader it replaced is in blue/dropped.
 import { exposure as be } from "#be";
 import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
 import { CjsSchema, type } from "#schema";
-import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { IRootReader } from "../../format/IRootReader.js";
-import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { IBlueObjectBuilder } from "../../interfaces/IBlueObjectBuilder.js";
-import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
 import { ICacheable } from "../../interfaces/ICacheable.js";
+import { IRootReaderBase } from "../black/IRootReaderBase.js";
+import { getWrapperLayout } from "../black/blueMathWrappers.js";
+import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
+import { ClassInfo } from "../../base/ClassInfo.js";
+import { IRootReaderException } from "../../format/IRootReaderException.js";
+import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
-import { INotify } from "../../exposure/INotify.js";
 import { IList } from "../../exposure/IList.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
-import { getClassRegistration } from "../../exposure/classes/registry.js";
-import { mappedInterfaces } from "../../compose/interface.js";
+import { BeClasses } from "../../exposure/classes/registry.js";
+import { cast, mappedInterfaces } from "../../compose/interface.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 
@@ -43,7 +49,7 @@ export class YamlReader extends IRootReaderBase
 
   _pushedEvent = null;
 
-  _fileName = "";
+  _filename = "";
 
   _errorMessage = "";
 
@@ -65,13 +71,14 @@ export class YamlReader extends IRootReaderBase
    * Reads an object, returning null on a reader error. Adapted: host Read
    * fills bytes synchronously; UTF-8 and yaml nodes replace libyaml callbacks.
    *
-   * @adapted
+   * @adapted Reads an object, returning null on a reader error. Adapted: host Read fills bytes synchronously; UTF-8 and yaml nodes replace libyaml callbacks
    * @param {object} stream Stream implementing Read(buffer, size).
    * @returns {object|null} Last root mapping, or null on a reader failure.
    */
 
   ReadFromStream(stream)
   {
+    this._loggedNonFinite = false;
     // CE-213: Carbon keeps its anchor map between streams (YamlReader.cpp:107-155).
     this._dataStream = stream;
     this._cached = false;
@@ -93,7 +100,7 @@ export class YamlReader extends IRootReaderBase
     }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       result = null;
       this._errorMessage = error.message;
     }
@@ -110,13 +117,14 @@ export class YamlReader extends IRootReaderBase
    * Caches parser events for repeated construction and lazy proxies. Adapted:
    * nodes are parsed once; event indices replace native list iterators.
    *
-   * @adapted
+   * @adapted Caches parser events for repeated construction and lazy proxies. Adapted: nodes are parsed once; event indices replace native list iterators
    * @param {object} stream Stream implementing Read(buffer, size).
    * @returns {boolean} Whether a root mapping was cached.
    */
 
   ReadForCachingFromStream(stream)
   {
+    this._loggedNonFinite = false;
     this._ClearCachedEvents();
     this._objectMarkers.length = 0;
     try
@@ -130,7 +138,7 @@ export class YamlReader extends IRootReaderBase
     }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       this._errorMessage = error.message;
       this._ClearCachedEvents();
       return false;
@@ -141,7 +149,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads UTF-8 text; the native output pointer is returned, failures throw.
    *
-   * @adapted
+   * @adapted Reads UTF-8 text; the native output pointer is returned, failures throw
    */
 
   CreateObjectFromString(text)
@@ -162,7 +170,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Returns the output pointer; a failed native Result becomes a reader exception.
    *
-   * @adapted
+   * @adapted Returns the output pointer; a failed native Result becomes a reader exception
    */
 
   CreateObjectFromStream(stream)
@@ -189,7 +197,7 @@ export class YamlReader extends IRootReaderBase
    * @implemented
    */
 
-  SetFileName(name) { this._fileName = name; }
+  SetFileName(name) { this._filename = name; }
 
   /**
    * Controls mapped IInitialize completion after members have been read.
@@ -202,7 +210,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Stores the float32 slice; JavaScript has no synchronous Stackless tasklet yield.
    *
-   * @adapted
+   * @adapted Stores the float32 slice; JavaScript has no synchronous Stackless tasklet yield
    */
 
   SetTimeSlice(value) { this._timeSlice = Math.max(0, Math.fround(value)); }
@@ -210,7 +218,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Returns the native string output parameter.
    *
-   * @adapted
+   * @adapted Returns the native string output parameter
    */
 
   GetErrorMessage() { return this._errorMessage; }
@@ -218,7 +226,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Builds from an event marker. Garbage collection replaces native reference counting.
    *
-   * @adapted
+   * @adapted Builds from an event marker. Garbage collection replaces native reference counting
    */
 
   CreateObject(objectMarker, callingProxy)
@@ -229,7 +237,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Builds synchronously: JavaScript cannot yield a synchronous Stackless tasklet.
    *
-   * @adapted
+   * @adapted Builds synchronously: JavaScript cannot yield a synchronous Stackless tasklet
    */
 
   CreateObjectWithYield(objectMarker, callingProxy)
@@ -248,7 +256,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Preserves Carbon's rough estimate; this is not a JavaScript heap measurement.
    *
-   * @adapted
+   * @adapted Preserves Carbon's rough estimate; this is not a JavaScript heap measurement
    */
 
   GetMemoryUsage() { return 128 + this._eventList.length * 64; }
@@ -256,7 +264,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Cached event indices replace native iterators; Stackless scheduling is unavailable.
    *
-   * @adapted
+   * @adapted Cached event indices replace native iterators; Stackless scheduling is unavailable
    */
 
   _CreateObjectHelper(objectMarker, _callingProxy, _yieldBehavior)
@@ -267,10 +275,10 @@ export class YamlReader extends IRootReaderBase
     this._allowYield = true;
     this._currentEvent = this._objectMarkers[objectMarker];
     this._hasPushedEvent = false;
-    try { return this._ReadIRootClass(); }
+    try { return this.ReadIRootClass(); }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       this._errorMessage = error.message;
       return null;
     }
@@ -336,12 +344,12 @@ export class YamlReader extends IRootReaderBase
   /**
    * Uses the current node's source location instead of libyaml's parser mark.
    *
-   * @adapted
+   * @adapted Uses the current node's source location instead of libyaml's parser mark
    */
 
   _ConstructMessage(message)
   {
-    let prefix = this._fileName;
+    let prefix = this._filename;
     if (this._event?.line) prefix += `${prefix ? ", line " : "Line "}${this._event.line}`;
     return `${prefix ? prefix + ": " : ""}${message}`;
   }
@@ -349,7 +357,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Throws the native reader exception with filename and line context.
    *
-   * @adapted
+   * @adapted Throws the native reader exception with filename and line context
    */
 
   _ReportError(message) { throw new IRootReaderException(this._ConstructMessage(message)); }
@@ -369,7 +377,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Validates the event currently being consumed.
    *
-   * @adapted
+   * @adapted Validates the event currently being consumed
    */
 
   _VerifyEvent(type)
@@ -381,7 +389,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Advances the buffered node events, honoring Carbon's single-event pushback.
    *
-   * @adapted
+   * @adapted Advances the buffered node events, honoring Carbon's single-event pushback
    */
 
   _GetNextEvent()
@@ -414,7 +422,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Buffered parsing has already checked syntax; exhaustion is the end event.
    *
-   * @adapted
+   * @adapted Buffered parsing has already checked syntax; exhaustion is the end event
    */
 
   _IsParserExhausted() { return this._event?.type === "STREAM_END"; }
@@ -422,7 +430,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Releases native cached-event storage through JavaScript garbage collection.
    *
-   * @adapted
+   * @adapted Releases native cached-event storage through JavaScript garbage collection
    */
 
   _ClearCachedEvents()
@@ -483,7 +491,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Returns scalar text, never YAML's inferred boolean/numeric value.
    *
-   * @adapted
+   * @adapted Returns scalar text, never YAML's inferred boolean/numeric value
    */
 
   _ReadScalar()
@@ -496,7 +504,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Returns null at a mapping end; native string output becomes the result.
    *
-   * @adapted
+   * @adapted Returns null at a mapping end; native string output becomes the result
    */
 
   _ReadMemberName()
@@ -508,7 +516,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads the mandatory first type key; C++'s output pointer becomes the return value.
    *
-   * @adapted
+   * @adapted Reads the mandatory first type key; C++'s output pointer becomes the return value
    */
 
   _ReadClassType() { return this._ReadScalar() === "type" ? this._ReadScalar() : null; }
@@ -516,14 +524,14 @@ export class YamlReader extends IRootReaderBase
   /**
    * Exact Blue registration replaces native CLSID lookup and factory resolution.
    *
-   * @adapted
+   * @adapted Exact Blue registration replaces native CLSID lookup and factory resolution
    */
 
   _ReadClsid()
   {
     const name = this._ReadClassType();
     if (name === null) this._ReportError("Type of object is not specified");
-    const registration = getClassRegistration(name);
+    const registration = BeClasses.GetClassRegistration(name);
     if (!registration) this._ReportWarning(`Type '${name}' not found in Blue class registry`);
     return registration;
   }
@@ -531,7 +539,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Preserves the native eight-byte identifier, using BigInt instead of memcpy.
    *
-   * @adapted
+   * @adapted Preserves the native eight-byte identifier, using BigInt instead of memcpy
    */
 
   _ExtractAnchorFromMappingStart() { return YamlReader._AnchorId(this._event.node?.anchor); }
@@ -539,7 +547,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * Creates directly through the registered factory; no values/hydration adapter intervenes.
    *
-   * @adapted
+   * @adapted Creates directly through the registered factory; no values/hydration adapter intervenes
    */
 
   _ReadIRootClassInternal()
@@ -578,10 +586,10 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads null, a class mapping or an already completed object's alias.
    *
-   * @adapted
+   * @adapted Reads null, a class mapping or an already completed object's alias
    */
 
-  _ReadIRootClass()
+  ReadIRootClass()
   {
     this._GetNextEvent();
     if (this._event.type === "MAPPING_START") return this._ReadIRootClassInternal();
@@ -606,10 +614,10 @@ export class YamlReader extends IRootReaderBase
   /**
    * Fills an existing embedded object only when its exact registered type matches.
    *
-   * @adapted
+   * @adapted Fills an existing embedded object only when its exact registered type matches
    */
 
-  _ReadIRoot(instance)
+  ReadIRoot(instance)
   {
     this._GetNextEvent();
     this._VerifyEvent("MAPPING_START");
@@ -617,7 +625,7 @@ export class YamlReader extends IRootReaderBase
     if (!registration) { this._ParseUntilMatchingMappingEnd(); return; }
     if (instance.constructor !== registration.type)
     {
-      this._ReportWarning(`Expected type '${CjsSchema.getClassName(instance.constructor)}' but got '${registration.name}' - skipping it`);
+      this._ReportWarning(`Expected type '${ClassInfo.exposeToBlue(instance.constructor).classId}' but got '${registration.name}' - skipping it`);
       this._ParseUntilMatchingMappingEnd();
       return;
     }
@@ -629,13 +637,14 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads metadata only in native first-member position; preserves native exception recovery.
    *
-   * @adapted
+   * @adapted Reads metadata only in native first-member position; preserves native exception recovery
    */
 
   _ReadMembers(instance)
   {
-    const initialize = YamlReader._QueryInterface(instance, IInitialize);
-    const notify = initialize ? null : YamlReader._QueryInterface(instance, INotify);
+    // instance->ClassType(), as BlackReader.CreateObject explains.
+    const definition = ClassInfo.exposeToBlue(instance.constructor).meta;
+    const notify = !definition.isInitialize && definition.isNotify ? instance : null;
     let first = true;
     for (let name = this._ReadMemberName(); name !== null; name = this._ReadMemberName())
     {
@@ -646,10 +655,10 @@ export class YamlReader extends IRootReaderBase
         continue;
       }
       first = false;
-      try { this.HandleAttribute(name, instance, notify); }
+      try { this.HandleAttribute(name, instance, definition, notify); }
       catch (error)
       {
-        if (!CjsSchema.isInstanceOf("InvalidAttributeException", error)) throw error;
+        if (cast(error, InvalidAttributeException) === null) throw error;
         // CE-208: warns but does NOT call SkipValue (YamlReader.cpp:1369-1376).
         this._ReportWarning(`Error handling attribute '${name}' - skipping it`);
       }
@@ -659,7 +668,7 @@ export class YamlReader extends IRootReaderBase
   /**
    * JS objects are weakly addressable, so every constructed owner can have metadata.
    *
-   * @adapted
+   * @adapted JS objects are weakly addressable, so every constructed owner can have metadata
    */
 
   _ReadMetadata(instance)
@@ -677,128 +686,52 @@ export class YamlReader extends IRootReaderBase
   }
 
   /**
-   * Native FindEntry searches persisted fields; dictionary transport retains its broader view.
-   *
-   * @adapted
-   */
-
-  FindEntry(name, Constructor)
-  {
-    const field = IRootReaderBase.getDictionaryDeclarations(Constructor).byName.get(name);
-    return field && CjsSchema.isFieldExported(field, { persistOnly: true }) ? field : null;
-  }
-
-  /**
-   * Dispatches schema storage descriptors in place of native Be::Var pointer casts.
-   *
-   * @cjs
-   * @adapted
-   */
-
-  _ReadMember(instance, field)
-  {
-    const current = IRootReaderBase.readDictionaryValue(instance, field);
-    const type = field.type;
-    const kind = type?.kind;
-    if (kind === "root")
-    {
-      if (!current) this._ReportError(`Embedded member '${field.name}' has no storage`);
-      this._ReadIRoot(current);
-    }
-    else if (kind === "rootRef" || kind === "rootWeak")
-    {
-      const value = this._ReadIRootClass();
-      if (value && type.className)
-      {
-        const Declared = typeof type.className === "function" ? type.className : CjsSchema.getConstructor(type.className);
-        if (!Declared || !YamlReader._QueryInterface(value, Declared)) this._ReportError("Incorrect type for member");
-      }
-      IRootReaderBase.writeDictionaryValue(instance, field, value);
-    }
-    else if (kind === "structList") this._ReadStructureList(current, type);
-    else if (kind === "list" || kind === "array") this._ReadList(current);
-    else if (kind === "map") this._ReadDict(current);
-    else if (ArrayBuffer.isView(current) && !(current instanceof DataView))
-    {
-      this._ReadFloatArray(current, current.length, type?.scalar === "float64");
-    }
-    else IRootReaderBase.writeDictionaryValue(instance, field, this._ReadDeclaredScalar(kind));
-    return true;
-  }
-
-  /** Bridges the existing base's public virtual to the protected donor method. */
-  ReadBinaryBlock(instance, propertyName) { this._ReadBinaryBlock(instance, propertyName); }
-
-  /** Selects the C++ primitive overload from the declared schema kind, never the incoming value. */
-  _ReadDeclaredScalar(kind)
-  {
-    switch (kind)
-    {
-      case "int8": return this._ReadValue__Int8();
-      case "uint8": return this._ReadValue__UInt8();
-      case "int16": return this._ReadValue__Int16();
-      case "uint16": return this._ReadValue__UInt16();
-      case "int32": case "enum": return this._ReadValue__Int32();
-      case "uint32": return this._ReadValue__UInt32();
-      // A 64-bit member is held as a number while it is a safe integer, as the Black reader holds it (CE-236).
-      case "int64": return YamlReader._StoredInt64(this._ReadValue__Int64());
-      case "uint64": return YamlReader._StoredInt64(this._ReadValue__UInt64());
-      case "boolean": return this._ReadValue__Bool();
-      case "float32": return this._ReadValue__Float();
-      case "float64": return this._ReadValue__Double();
-      case "string": case "path": case "expression": return this._ReadString();
-      case "wstring": case "wpath": return this._ReadWString();
-      default: this._ReportError(`Unsupported declared member type '${kind}'`);
-    }
-  }
-
-  /**
    * atoi's decimal prefix, with explicit native signed 32-bit storage.
    *
-   * @adapted
+   * @adapted atoi's decimal prefix, with explicit native signed 32-bit storage
    */
 
-  _ReadValue__Int32() { return Number(BigInt.asIntN(32, YamlReader._Decimal(this._ReadScalar()))); }
+  ReadValue__Int32() { return Number(BigInt.asIntN(32, YamlReader._Decimal(this._ReadScalar()))); }
 
   /**
    * Windows strtoul's 32-bit saturation and unsigned sign conversion.
    *
-   * @adapted
+   * @adapted Windows strtoul's 32-bit saturation and unsigned sign conversion
    */
 
-  _ReadValue__UInt32() { return Number(YamlReader._Unsigned(this._ReadScalar(), 32)); }
+  ReadValue__UInt32() { return Number(YamlReader._Unsigned(this._ReadScalar(), 32)); }
 
   /**
    * Native atoi followed by uint16 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by uint16 storage conversion
    */
 
-  _ReadValue__UInt16() { return this._ReadValue__Int32() & 65535; }
+  ReadValue__UInt16() { return this.ReadValue__Int32() & 65535; }
 
   /**
    * Native atoi followed by uint8 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by uint8 storage conversion
    */
 
-  _ReadValue__UInt8() { return this._ReadValue__Int32() & 255; }
+  ReadValue__UInt8() { return this.ReadValue__Int32() & 255; }
 
   /**
    * Native atoi followed by int16 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by int16 storage conversion
    */
 
-  _ReadValue__Int16() { return (this._ReadValue__Int32() << 16) >> 16; }
+  ReadValue__Int16() { return (this.ReadValue__Int32() << 16) >> 16; }
 
   /**
    * Native atoi followed by int8 storage conversion.
    *
-   * @adapted
+   * @adapted Native atoi followed by int8 storage conversion
    */
 
-  _ReadValue__Int8() { return (this._ReadValue__Int32() << 24) >> 24; }
+  ReadValue__Int8() { return (this.ReadValue__Int32() << 24) >> 24; }
 
   /**
    * Carbon treats boolean scalar text as atoi != 0, not YAML true/false.
@@ -806,15 +739,15 @@ export class YamlReader extends IRootReaderBase
    * @implemented
    */
 
-  _ReadValue__Bool() { return this._ReadValue__Int32() !== 0; }
+  ReadValue__Bool() { return this.ReadValue__Int32() !== 0; }
 
   /**
    * BigInt retains native signed 64-bit precision; strtoll overflow saturates.
    *
-   * @adapted
+   * @adapted BigInt retains native signed 64-bit precision; strtoll overflow saturates
    */
 
-  _ReadValue__Int64()
+  ReadValue__Int64()
   {
     const value = YamlReader._Decimal(this._ReadScalar());
     return value < -(1n << 63n) ? -(1n << 63n) : value > (1n << 63n) - 1n ? (1n << 63n) - 1n : value;
@@ -823,66 +756,54 @@ export class YamlReader extends IRootReaderBase
   /**
    * BigInt retains native unsigned 64-bit precision.
    *
-   * @adapted
+   * @adapted BigInt retains native unsigned 64-bit precision
    */
 
-  _ReadValue__UInt64() { return YamlReader._Unsigned(this._ReadScalar(), 64); }
-
-  /**
-   * A 64-bit value as the member holds it: a number while it is a safe integer, else the BigInt (CE-236).
-   *
-   * @cjs
-   * @param {bigint} value The value read.
-   * @returns {number|bigint} The stored value.
-   */
-  static _StoredInt64(value)
-  {
-    return value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value;
-  }
+  ReadValue__UInt64() { return YamlReader._Unsigned(this._ReadScalar(), 64); }
 
   /**
    * C locale atof decimal prefixes and nonfinite spellings, using JS binary64.
    *
-   * @adapted
+   * @adapted C locale atof decimal prefixes and nonfinite spellings, using JS binary64
    */
 
-  _ReadValue__Double() { return YamlReader._NativeDouble(this._ReadScalar()); }
+  ReadValue__Double() { return YamlReader._NativeDouble(this._ReadScalar()); }
 
   /**
    * Rounds at the native float assignment.
    *
-   * @adapted
+   * @adapted Rounds at the native float assignment
    */
 
-  _ReadValue__Float() { return Math.fround(this._ReadValue__Double()); }
+  ReadValue__Float() { return Math.fround(this.ReadValue__Double()); }
 
   /**
    * Native shared-string output is a garbage-collected JS string.
    *
-   * @adapted
+   * @adapted Native shared-string output is a garbage-collected JS string
    */
 
-  _ReadValue__BlueSharedString() { return this._ReadString(); }
+  _ReadValue__BlueSharedString() { return this.ReadString(); }
 
   /**
    * Native output storage is supplied by the caller.
    *
-   * @adapted
+   * @adapted Native output storage is supplied by the caller
    */
 
-  _ReadValue__Vector4(value) { this._ReadFloatArray(value, 4); }
+  _ReadValue__Vector4(value) { this.ReadFloatArray(value, 4); }
 
   /**
    * Returns native half bits. BlueStructureList.cpp:559-651's conversion is
    * inlined because its class/helper is not ported. Its 0x7fff nonfinite
    * spelling and subnormal rounding are intentionally not num.toHalfFloat's.
    *
-   * @adapted
+   * @adapted Returns native half bits. BlueStructureList.cpp:559-651's conversion is inlined because its class/helper is not ported. Its 0x7fff nonfinite spelling and subnormal roundi
    */
 
   _ReadFloat16()
   {
-    const value = this._ReadValue__Float();
+    const value = this.ReadValue__Float();
     const sign = value < 0 || Object.is(value, -0) ? 0x8000 : 0;
     if (!Number.isFinite(value)) return sign | 0x7fff;
     if (value === 0) return sign;
@@ -913,10 +834,10 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads scalar strings only in native plain or quoted styles.
    *
-   * @adapted
+   * @adapted Reads scalar strings only in native plain or quoted styles
    */
 
-  _ReadString()
+  ReadString()
   {
     const text = this._ReadScalar();
     const style = this._event.node?.type;
@@ -926,18 +847,18 @@ export class YamlReader extends IRootReaderBase
   /**
    * JS strings already represent wide text; native allocation is garbage-collected.
    *
-   * @adapted
+   * @adapted JS strings already represent wide text; native allocation is garbage-collected
    */
 
-  _ReadWString() { return this._ReadString(); }
+  ReadWString() { return this.ReadString(); }
 
   /**
    * CE-212: fills existing float storage; shorter sequences leave the tail unchanged.
    *
-   * @adapted explicit float64 schema storage keeps its declared precision.
+   * @adapted CE-212: fills existing float storage; shorter sequences leave the tail unchanged
    */
 
-  _ReadFloatArray(values, count, doublePrecision = false)
+  ReadFloatArray(values, count)
   {
     this._GetNextEvent();
     if (this._event.type === "SEQUENCE_START")
@@ -946,7 +867,7 @@ export class YamlReader extends IRootReaderBase
       for (let i = 0; i < count && this._event.type === "SCALAR"; ++i)
       {
         const value = YamlReader._NativeDouble(YamlReader._ScalarText(this._event.node));
-        values[i] = doublePrecision ? value : Math.fround(value);
+        values[i] = Math.fround(value);
         this._GetNextEvent();
       }
       this._VerifyEvent("SEQUENCE_END");
@@ -963,7 +884,7 @@ export class YamlReader extends IRootReaderBase
       if (name === "TriQuaternion") values[3] = 1;
       for (let member = this._ReadMemberName(); member !== null; member = this._ReadMemberName())
       {
-        const value = this._ReadValue__Float();
+        const value = this.ReadValue__Float();
         const index = names.indexOf(member);
         if (index !== -1) values[index] = value;
       }
@@ -974,10 +895,10 @@ export class YamlReader extends IRootReaderBase
   /**
    * Reads the native custom-persistence buffer, preserving Base64's permissive lookup.
    *
-   * @adapted
+   * @adapted Reads the native custom-persistence buffer, preserving Base64's permissive lookup
    */
 
-  _ReadBinaryBlock(persist, name)
+  ReadBinaryBlock(persist, name)
   {
     const text = this._ReadScalar();
     const buffer = persist.AllocateReadBuffer(name, text.length);
@@ -1045,66 +966,101 @@ export class YamlReader extends IRootReaderBase
   }
 
   /**
-   * Native IList population; ordinary object arrays adapt the same ownership rules.
+   * Native IList population.
    *
-   * @adapted
+   * @adapted Native IList population
    */
 
-  _ReadList(list)
+  ReadList(list)
   {
-    const nativeList = YamlReader._QueryInterface(list, IList);
-    if (nativeList) nativeList.Remove(-1);
-    else list.length = 0;
+    list.Remove(-1);
     if (!this._ReadVectorBegin()) this._ReportError("Error reading list");
     const info = {};
-    if (nativeList) { nativeList.GetInfo(info); nativeList.SetNotify(null); }
+    list.GetInfo(info);
+    list.SetNotify(null);
     while (this._ReadVectorNext())
     {
-      const item = this._ReadIRootClass();
-      if (item)
-      {
-        if (nativeList) nativeList.Insert(-1, item);
-        else list.push(item);
-      }
+      const item = this.ReadIRootClass();
+      if (item) list.Insert(-1, item);
     }
     this._ReadVectorEnd();
-    if (nativeList)
+    list.SetNotify(info.notify);
+    if (info.notify) info.notify.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, list);
+  }
+
+  /**
+   * A list member that holds a plain array, adapting the same ownership rules.
+   *
+   * @cjs Carbon's list members are all IList
+   */
+
+  ReadArray(holder, key, entry)
+  {
+    const list = holder[key];
+    list.length = 0;
+    if (!this._ReadVectorBegin()) this._ReportError("Error reading list");
+    while (this._ReadVectorNext())
     {
-      nativeList.SetNotify(info.notify);
-      if (info.notify) info.notify.OnListModified(BLUELISTEVENT.BELIST_LOADFINISHED, 0, 0, null, list);
+      const item = this.ReadIRootClass();
+      if (item) list.push(item);
     }
+    this._ReadVectorEnd();
+    if (entry.isProperty) holder[key] = list;
+  }
+
+  /**
+   * Red has no sets: only members declared as Black sets arrive here.
+   *
+   * @notImplemented
+   */
+
+  ReadSet(holder, key, entry)
+  {
+    this._ReportError(`Unsupported declared member type 'set' for ${entry.name}`);
+  }
+
+  /**
+   * A math member's array; the file holds a sequence.
+   *
+   * @cjs Carbon's member is a TriMatrix or similar object
+   */
+
+  ReadWrapper(value, entry)
+  {
+    this.ReadFloatArray(value, getWrapperLayout(entry.wrapperClass, entry.wrapperKind).elements.length);
   }
 
   /**
    * Alternating string keys and object values; Map replaces native IBlueDict storage.
    *
-   * @adapted
+   * @adapted Alternating string keys and object values; Map replaces native IBlueDict storage
    */
 
-  _ReadDict(dict)
+  ReadDict(holder, key, entry)
   {
+    const dict = holder[key];
     if (!this._ReadVectorBegin()) this._ReportError("Error reading dict");
     while (this._ReadVectorNext())
     {
-      const key = this._ReadString();
-      const value = this._ReadIRootClass();
+      const key = this.ReadString();
+      const value = this.ReadIRootClass();
       if (value) dict.set(key, value);
     }
     this._ReadVectorEnd();
+    if (entry.isProperty) holder[key] = dict;
   }
 
   /**
    * Checks native wire layouts; schema records replace native byte-offset writes.
    *
-   * @adapted
+   * @adapted Checks native wire layouts; schema records replace native byte-offset writes
    */
 
-  _ReadStructureList(list, type)
+  ReadStructureList(holder, key, entry)
   {
-    const itemType = type.itemType;
-    const name = type.className ?? (typeof itemType === "string" ? itemType : itemType?.className);
-    const Constructor = typeof name === "function" ? name : CjsSchema.getConstructor(name);
-    const definition = CjsSchema.getSchema(Constructor).structureDefinition;
+    const list = holder[key];
+    const Constructor = entry.structure.Item;
+    const definition = entry.structure.definition;
     if (!definition) this._ReportError("Structure list has no declared BlueStructureDefinition");
     this._GetNextEvent();
     this._VerifyEvent("MAPPING_START");
@@ -1115,11 +1071,11 @@ export class YamlReader extends IRootReaderBase
     {
       this._ReadVectorBegin();
       this._ReadVectorNext();
-      const member = { name: this._ReadString(), dataType: 0, offset: 0 };
+      const member = { name: this.ReadString(), dataType: 0, offset: 0 };
       this._ReadVectorNext();
-      member.dataType = this._ReadValue__Int32();
+      member.dataType = this.ReadValue__Int32();
       this._ReadVectorNext();
-      member.offset = this._ReadValue__Int32();
+      member.offset = this.ReadValue__Int32();
       this._ReadVectorNext();
       this._ReadVectorEnd();
       wire.push(member);
@@ -1146,12 +1102,13 @@ export class YamlReader extends IRootReaderBase
     this._ReadVectorEnd();
     this._GetNextEvent();
     this._VerifyEvent("MAPPING_END");
+    if (entry.isProperty) holder[key] = list;
   }
 
   /**
    * Type codes choose readers; typed vectors preserve numeric storage while skipping or writing rows.
    *
-   * @adapted
+   * @adapted Type codes choose readers; typed vectors preserve numeric storage while skipping or writing rows
    */
 
   _ReadStructureListItem(definition, item)
@@ -1166,6 +1123,7 @@ export class YamlReader extends IRootReaderBase
         const vectors = new Float32Array(count * 4); // alloc: retained by the record
         if (count > 1) { this._ReadVectorBegin(); this._ReadVectorNext(); }
         for (let i = 0; i < count; ++i) this._ReadValue__Vector4(vectors.subarray(i * 4, i * 4 + 4));
+        this._ReplaceNonFiniteElements(vectors, vectors.length, member.name);
         if (count > 1) { this._ReadVectorNext(); this._ReadVectorEnd(); }
         if (item) item[member.name] = vectors;
         continue;
@@ -1173,13 +1131,13 @@ export class YamlReader extends IRootReaderBase
       let read, Storage;
       switch (scalar)
       {
-        case 0: read = unsigned ? "_ReadValue__UInt8" : "_ReadValue__Int8"; Storage = unsigned ? Uint8Array : Int8Array; break;
-        case 1: read = unsigned ? "_ReadValue__UInt16" : "_ReadValue__Int16"; Storage = unsigned ? Uint16Array : Int16Array; break;
-        case 2: read = unsigned ? "_ReadValue__UInt32" : "_ReadValue__Int32"; Storage = unsigned ? Uint32Array : Int32Array; break;
+        case 0: read = unsigned ? "ReadValue__UInt8" : "ReadValue__Int8"; Storage = unsigned ? Uint8Array : Int8Array; break;
+        case 1: read = unsigned ? "ReadValue__UInt16" : "ReadValue__Int16"; Storage = unsigned ? Uint16Array : Int16Array; break;
+        case 2: read = unsigned ? "ReadValue__UInt32" : "ReadValue__Int32"; Storage = unsigned ? Uint32Array : Int32Array; break;
         case 3: read = "_ReadFloat16"; Storage = Uint16Array; break;
-        case 4: read = "_ReadValue__Float"; Storage = Float32Array; break;
+        case 4: read = "ReadValue__Float"; Storage = Float32Array; break;
         case 5: read = "_ReadValue__BlueSharedString"; break;
-        case 7: read = "_ReadValue__Bool"; Storage = Uint8Array; break;
+        case 7: read = "ReadValue__Bool"; Storage = Uint8Array; break;
         default: this._ReportError("Unsupported type for structured lists");
       }
       if (count > 1) { this._ReadVectorBegin(); this._ReadVectorNext(); }
@@ -1188,6 +1146,7 @@ export class YamlReader extends IRootReaderBase
       for (let index = 0; index < count; ++index)
       {
         value = this[read]();
+        if (typeof value === "number" && value - value !== 0) value = this._ReplaceNonFinite(member.name);
         if (vector) vector[index] = value;
       }
       if (count > 1) { this._ReadVectorNext(); this._ReadVectorEnd(); }
@@ -1271,7 +1230,7 @@ export class YamlReader extends IRootReaderBase
   }
 }
 
-// Explicit registration keeps the public Blue source importable without a decorator transform.
+// Explicit registration keeps the public Blue source importable without a decorator transform (YamlReader_Blue.cpp:11-60).
 CjsSchema.decorateField(YamlReader, "_isStrict", type.boolean, be.mapAttribute(be.READWRITE, "isStrict"));
 CjsSchema.decorateField(YamlReader, "_doInitialize", type.boolean, be.mapAttribute(be.READWRITE, "doInitialize"));
 CjsSchema.decorateMethod(YamlReader, "CreateObjectFromString", be.mapMethodAndWrap());
@@ -1282,5 +1241,3 @@ be.define("YamlReader")(YamlReader);
 be.mapInterface(IRootReader)(YamlReader);
 be.mapInterface(IBlueObjectBuilder)(YamlReader);
 be.mapInterface(ICacheable)(YamlReader);
-be.inherit(IRootReaderBase)(YamlReader);
-

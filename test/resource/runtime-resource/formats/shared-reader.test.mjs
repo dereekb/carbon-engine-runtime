@@ -14,10 +14,10 @@ import {
     CJS_BLACK_VERSION
 } from "../../../../src/blue/formats/black/core/blackConstants.js";
 import { YamlReader } from "../../../../src/blue/formats/yaml/YamlReader.js";
-import { IRootReaderBase } from "../../../../src/blue/format/IRootReaderBase.js";
+import { IRootReaderBase } from "../../../../src/blue/formats/black/IRootReaderBase.js";
 import { CjsYamlReader } from "../../../../src/resource/formats/yaml/core/CjsYamlReader.js";
 
-test("Black retains its hydration backend while YamlReader uses native IRootReaderBase", () =>
+test("the payload Black reader keeps its hydration backend while YamlReader stands on Carbon's stream base", () =>
 {
     assert.equal(CjsBlackReader.prototype instanceof CjsBlueReader, true);
     assert.equal(YamlReader.prototype instanceof IRootReaderBase, true);
