@@ -130,30 +130,12 @@ export class Tr2SkinnedModel extends Tr2Model
   @type.path("TriGeometryRes")
   geometryResPath = "";
 
-  /** m_geometryRes (TriGeometryResPtr) [READ]. @implemented */
-  @type.object.ref("TriGeometryRes")
-  get geometryRes() { return this._geometryRes; }
-
   /**
-   * Moves the cached-skeleton notification to the assigned geometry.
-   * @adapted Tr2SkinnedModel.cpp:202-223 uses native target registration;
-   *   JavaScript uses manager-owned expiring links.
+   * m_geometryRes (TriGeometryResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Tr2SkinnedModel_Blue.cpp:16).
    */
-  set geometryRes(resource)
-  {
-    const previous = this._geometryRes;
-    if (previous === resource) return;
-    if (previous)
-    {
-      blue.resMan.notify.Remove(this, previous);
-      this.ReleaseCachedData(previous);
-    }
-    this._geometryRes = resource;
-    if (resource) blue.resMan.notify.Add(this, resource, this, "geometryRes");
-  }
-
-  /** Geometry storage behind the notification-aware property. */
-  _geometryRes = null;
+  @type.object.ref("TriGeometryRes")
+  geometryRes = null;
 
   /** m_skeletonName (std::string) [READWRITE, NOTIFY, PERSIST] */
 
@@ -189,8 +171,8 @@ export class Tr2SkinnedModel extends Tr2Model
    * Carbon Initialize (Tr2SkinnedModel.cpp:202-223): resets the skeleton and bindings, then acquires the geometry
    * resource, and RebuildCachedData selects the skeleton once it is prepared (at once when it already is).
    *
-   * @adapted The property setter registers an expiring manager link in place
-   *   of Carbon's native resource notify target.
+   * @adapted An expiring manager link replaces Carbon's native resource notify
+   *   target, and the held geometry is dropped before the empty-path test.
    * @returns {boolean} true
    */
 
@@ -199,12 +181,18 @@ export class Tr2SkinnedModel extends Tr2Model
   {
     this._skeletonIx = NO_SKELETON;
     this._areAllMeshesBound = false;
-    this.geometryRes = null;
+    if (this.geometryRes)
+    {
+      blue.resMan.notify.Remove(this, this.geometryRes);
+      this.geometryRes = null;
+    }
     if (!this.geometryResPath)
     {
       return true;
     }
     this.geometryRes = blue.resMan.GetResource(this.geometryResPath);
+    // Rebuilds at once when the geometry is already prepared.
+    if (this.geometryRes) blue.resMan.notify.Add(this, this.geometryRes, this, "geometryRes");
     return true;
   }
 
@@ -233,6 +221,19 @@ export class Tr2SkinnedModel extends Tr2Model
   ReleaseCachedData(_resource = null)
   {
     this._skeletonIx = NO_SKELETON;
+  }
+
+  /**
+   * Lets go of an expired geometry: the selected skeleton, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and use reinitializes from geometryResPath.
+   * @param {TriGeometryRes} resource The expired geometry.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.geometryRes === resource) this.geometryRes = null;
   }
 
   /**
@@ -424,8 +425,12 @@ export class Tr2SkinnedModel extends Tr2Model
   Destruct()
   {
     this._destroyed = true;
-    this.geometryRes = null;
-    this.ReleaseCachedData();
+    this.ReleaseCachedData(this.geometryRes);
+    if (this.geometryRes)
+    {
+      blue.resMan.notify.Remove(this, this.geometryRes);
+      this.geometryRes = null;
+    }
   }
 }
 

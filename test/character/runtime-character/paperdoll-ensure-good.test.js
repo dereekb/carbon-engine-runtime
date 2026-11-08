@@ -97,6 +97,8 @@ test("hidden doll renewal updates the real skinned-model owner lease", t =>
   const manager = managerFor(t), model = new Tr2SkinnedModel(), geometry = new TriGeometryRes();
   t.after(() => model.Destruct());
   model.geometryRes = geometry;
+  // A plain member, so the test makes the link Initialize would.
+  manager.notify.Add(model, geometry, model, "geometryRes");
   const doll = new CjsPaperDoll();
   doll.front = { objects: [{ visualModel: model }] };
   manager.activityTime = 12345;
