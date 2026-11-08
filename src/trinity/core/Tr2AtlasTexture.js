@@ -1,12 +1,13 @@
-import { IRoot } from "../../blue/exposure/IRoot.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2AtlasTexture.h
 // Source: trinity/trinity/Tr2AtlasTexture.cpp
 // Source: trinity/trinity/Tr2AtlasTexture_Blue.cpp
 // Hand-maintained port. Carbon's class is a BlueAsyncRes, an ICacheable and a
-// Tr2DeviceResource; this one is none of them yet. The load path (DoLoad,
-// DoPrepare, OnPrepareResources and the six `*atlas` resource extensions) is
-// left as explicit obligations: see `DoLoad`.
+// Tr2DeviceResource (Tr2AtlasTexture.h:29-32), and so is this one. The load path
+// (_DoLoad, _DoPrepare, _OnPrepareResources and the six `*atlas` resource
+// extensions) is left as explicit obligations: see `_DoLoad`.
+import { BlueAsyncRes } from "../../blue/resman/BlueAsyncRes.js";
+import { Tr2DeviceResource } from "./device/Tr2DeviceResource.js";
 import { type } from "#schema";
 import { ICacheable, IBlueResource } from "#blue";
 import * as CcpLog from "../../global/logging/ccpLog.js";
@@ -20,19 +21,18 @@ import { vec4 } from "#math/vec4";
  * atlas's shared AL texture. When the atlas is full it has its own AL texture
  * (an "outsider") and may be pulled into the atlas later.
  *
- * Not registered as a device resource. Carbon's `Tr2DeviceResource` base
- * registers every instance with `TriDevice` through a raw, non-owning pointer;
- * the JS registry holds strong references, so registering would keep every
- * atlas texture alive forever and the atlas's GC reclamation could never
- * happen. A device reset therefore does not call `ReleaseResources` on atlas
- * textures.
+ * It inherits Tr2DeviceResource as Carbon's does, but nothing registers it with
+ * TriDevice: BlueAsyncRes's IsGood and KeepAlive come first, and the device's are
+ * not installed over them. A device reset therefore does not call
+ * `ReleaseResources` on atlas textures.
  */
 @be.define("Tr2AtlasTexture")
 @be.mapInterface(IBlueResource)
 @be.mapInterface(ICacheable)
 @be.mapICacheableMethods()
-@be.inherit(ICacheable, IBlueResource)
-export class Tr2AtlasTexture extends IRoot
+@be.inherit(ICacheable, Tr2DeviceResource)
+@be.exposureChainTo(BlueAsyncRes)
+export class Tr2AtlasTexture extends BlueAsyncRes
 {
 
   /** m_name (std::string) [READWRITE, PERSIST] */
@@ -119,15 +119,6 @@ export class Tr2AtlasTexture extends IRoot
 
   /** m_textureHeightReciprocal */
   _textureHeightReciprocal = 0;
-
-  /** BlueAsyncRes m_isGood */
-  _isGood = false;
-
-  /** BlueAsyncRes m_isPrepared */
-  _isPrepared = false;
-
-  /** BlueAsyncRes loading state; nothing sets it until the load path is ported. */
-  _isLoading = false;
 
   /** m_isStandAlone */
   _isStandAlone = false;
@@ -342,7 +333,7 @@ export class Tr2AtlasTexture extends IRoot
    * Reloads the texture after a device reset (`Tr2AtlasTexture.cpp:148-157`)
    * through `BlueAsyncRes::Initialize`.
    *
-   * Not implemented: it needs the `BlueAsyncRes` load path, see `DoLoad`.
+   * Not implemented: it needs the `BlueAsyncRes` load path, see `_DoLoad`.
    *
    * @notImplemented
    * @returns {boolean} Never returns.
@@ -387,12 +378,11 @@ export class Tr2AtlasTexture extends IRoot
   /**
    * Reads the image file into `_loadedBitmap` (`Tr2AtlasTexture.cpp:185-205`).
    *
-   * Not implemented, together with `DoPrepare`, `OnPrepareResources`,
+   * Not implemented, together with `_DoPrepare`, `_OnPrepareResources`,
    * `ICacheable` and the `ddsatlas`/`sddatlas`/`pngatlas`/`jpgatlas`/
    * `jpegatlas`/`ecsatlas` extensions (`Tr2AtlasTexture_Blue.cpp:10-22`).
-   * Porting them needs decisions outside this class: `Tr2AtlasTexture` would
-   * have to become a `BlueAsyncRes` (the BlueAsyncRes port), the extensions
-   * would need a registrar composed by whoever builds a resource manager (as
+   * Porting them needs decisions outside this class: the extensions would need
+   * a registrar composed by whoever builds a resource manager (as
    * `CjsLibrary configuration` is), and browser image decoding is
    * asynchronous, so the read moves into a loader as it does for
    * `Tr2ImageRes`. The atlas side (`Tr2TextureAtlas._DoPrepare`) is ported.
@@ -400,21 +390,34 @@ export class Tr2AtlasTexture extends IRoot
    * @notImplemented
    * @returns {number} Never returns.
    */
-  DoLoad()
+  _DoLoad()
   {
-    throw new Error("Tr2AtlasTexture.DoLoad is not implemented in CarbonEngineJS: the BlueAsyncRes load path and *atlas extensions need a resource-manager design decision.");
+    throw new Error("Tr2AtlasTexture._DoLoad is not implemented in CarbonEngineJS: the *atlas extensions need a resource-manager design decision.");
   }
 
   /**
    * Places the loaded bitmap in an atlas or a texture of its own
-   * (`Tr2AtlasTexture.cpp:207-268`). Not implemented; see `DoLoad`.
+   * (`Tr2AtlasTexture.cpp:207-268`). Not implemented; see `_DoLoad`.
    *
    * @notImplemented
    * @returns {boolean} Never returns.
    */
-  DoPrepare()
+  _DoPrepare()
   {
-    throw new Error("Tr2AtlasTexture.DoPrepare is not implemented in CarbonEngineJS: it belongs to the unported BlueAsyncRes load path.");
+    throw new Error("Tr2AtlasTexture._DoPrepare is not implemented in CarbonEngineJS: it belongs to the unported load path, see _DoLoad.");
+  }
+
+  /**
+   * BlueAsyncRes's shutdown hook, which Carbon's `OnShutdown` overrides
+   * (Tr2AtlasTexture.h:81).
+   *
+   * @cjs BlueAsyncRes.Shutdown calls the protected hook; Carbon's override is
+   *   public, so `OnShutdown` keeps its name and this forwards to it.
+   * @returns {void}
+   */
+  _OnShutdown()
+  {
+    this.OnShutdown();
   }
 
   /**
@@ -785,67 +788,12 @@ export class Tr2AtlasTexture extends IRoot
    * Reports atlas readiness and renews a dynamic backing resource.
    *
    * @adapted Dynamic resources must remain alive while their atlas wrapper is used.
+   * @param {object} [owner] Registered owner using derived resource data, as BlueAsyncRes.IsGood takes.
    * @returns {boolean} Whether the texture holds valid pixels.
    */
-  IsGood()
+  IsGood(owner)
   {
     const resourceGood = this._textureRes ? this._textureRes.IsGood() : true;
-    return this._isGood && resourceGood;
-  }
-
-  /**
-   * BlueAsyncRes `IsPrepared`.
-   *
-   * @implemented
-   * @returns {boolean} Whether the texture is prepared.
-   */
-  IsPrepared()
-  {
-    return this._isPrepared;
-  }
-
-  /**
-   * BlueAsyncRes `IsLoading`. Always false until the load path is ported.
-   *
-   * @implemented
-   * @returns {boolean} Whether a load is in flight.
-   */
-  IsLoading()
-  {
-    return this._isLoading;
-  }
-
-  /**
-   * IBlueResource::Initialize, which BlueAsyncRes supplies (IBlueResource.h:14). The atlas texture's path is set by its owner.
-   *
-   * @notImplemented
-   * @param {string} name The resource path.
-   * @param {string} ext The extension.
-   */
-  Initialize(name, ext)
-  {
-    throw new Error("Tr2AtlasTexture.Initialize is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * IBlueResource::GetPath, which BlueAsyncRes supplies (IBlueResource.h:16).
-   *
-   * @notImplemented
-   * @returns {string} The resource path.
-   */
-  GetPath()
-  {
-    throw new Error("Tr2AtlasTexture.GetPath is not implemented in CarbonEngineJS.");
-  }
-
-  /**
-   * IBlueResource::GetExt, which BlueAsyncRes supplies (IBlueResource.h:17).
-   *
-   * @notImplemented
-   * @returns {string} The resource extension.
-   */
-  GetExt()
-  {
-    throw new Error("Tr2AtlasTexture.GetExt is not implemented in CarbonEngineJS.");
+    return BlueAsyncRes.prototype.IsGood.call(this, owner) && resourceGood;
   }
 }
