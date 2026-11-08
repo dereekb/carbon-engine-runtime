@@ -204,6 +204,8 @@ export class EveTrailsSet
   {
     this.ReleaseCachedData(resource);
     if (this.geometryResource === resource) this.geometryResource = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -392,11 +394,8 @@ export class EveTrailsSet
   {
     this._destroyed = true;
     this.Cleanup();
-    if (this.geometryResource)
-    {
-      blue.resMan.notify.Remove(this, this.geometryResource);
-      this.geometryResource = null;
-    }
+    // Carbon ~EveTrailsSet (Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41): RemoveNotifyTarget on the geometry.
+    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 }

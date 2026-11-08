@@ -297,8 +297,9 @@ export class Tr2Effect extends Tr2Material
     for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
     this._ClearPassBindings();
     this.resources.Clear();
-    this.ReleaseCachedData();
-    this._DetachEffectResource();
+    // Carbon ~Tr2Effect (Shader/Tr2Effect.cpp:266-280): ReleaseCachedData( m_effectResource ), then
+    // RemoveNotifyTarget. With no effect resource, RemoveCachedData(null) still releases, as Carbon does.
+    this.RemoveCachedData(this.effectResource);
   }
 
   /**
@@ -908,13 +909,7 @@ export class Tr2Effect extends Tr2Material
    */
   _DetachEffectResource()
   {
-    const resource = this.effectResource;
-    if (!resource) return;
-
-    this.ReleaseCachedData(resource);
-    blue.resMan.notify.Remove(this, resource);
-    this._ClearPassBindings();
-    this.effectResource = null;
+    if (this.effectResource) this.RemoveCachedData(this.effectResource);
   }
 
   /**
@@ -1090,9 +1085,13 @@ export class Tr2Effect extends Tr2Material
   RemoveCachedData(resource)
   {
     this.ReleaseCachedData(resource);
-    if (this.effectResource !== resource) return;
-    this._ClearPassBindings();
-    this.effectResource = null;
+    if (this.effectResource === resource)
+    {
+      this._ClearPassBindings();
+      this.effectResource = null;
+    }
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**

@@ -407,3 +407,51 @@ test("link expiry falls back to the policy, then the default when sweeping is of
   manager.linkExpirySeconds = 5;
   assert.equal(manager.GetLinkExpirySeconds(), 5);
 });
+
+test("notify.Remove for a link that does not exist is a harmless no-op", () =>
+{
+  const { manager, resource, owner } = fixture();
+  const stranger = new BlueAsyncRes();
+  manager.notify.Add(owner, resource, owner, "resource");
+  manager.notify.Remove(owner, stranger);
+  manager.notify.Remove({}, resource);
+  manager.notify.Remove(owner, null);
+  assert.equal(manager.notify.GetByOwner(owner).length, 1, "the real link is untouched");
+  manager.notify.Remove(owner, resource);
+  manager.notify.Remove(owner, resource);
+  assert.equal(manager.notify.GetByOwner(owner).length, 0, "removing twice is harmless");
+});
+
+test("a holder's RemoveCachedData does the whole release: data, slots and link; Destruct uses it", async () =>
+{
+  const { Tr2Mesh } = await import("../../../npm/dist/trinity/core/mesh/Tr2Mesh.js");
+  const { Tr2GrannyTrack } = await import("../../../npm/dist/trinity/curves/track/Tr2GrannyTrack.js");
+  const { TriGeometryRes } = await import("../../../npm/dist/trinity/resources/geometry/TriGeometryRes.js");
+  const notify = blue.resMan.notify;
+  const geometry = new TriGeometryRes(), lowRes = new TriGeometryRes();
+  const mesh = new Tr2Mesh();
+  mesh.SetGeometryRes(geometry);
+  mesh.SetLowResGeometryRes(lowRes);
+  assert.equal(notify.GetByOwner(mesh).length, 2);
+  mesh.RemoveCachedData(geometry);
+  assert.equal(mesh.geometry, null);
+  assert.deepEqual(notify.GetByOwner(mesh).map(link => link.key), [ "lowResGeometry" ], "only the released resource is unlinked");
+  mesh.Destruct();
+  assert.equal(mesh.lowResGeometry, null);
+  assert.equal(notify.GetByOwner(mesh).length, 0, "Destruct releases what is left through RemoveCachedData");
+  const track = new Tr2GrannyTrack();
+  let released = 0;
+  track.ReleaseCachedData = () => { released++; };
+  track.grannyRes = geometry;
+  notify.Add(track, geometry, track, "grannyRes");
+  track.Destruct();
+  assert.equal(released, 1, "Destruct releases through RemoveCachedData");
+  assert.equal(notify.GetByOwner(track).length, 0);
+});
+
+test("a notify target without its own RemoveCachedData gets the generated not-implemented error", async () =>
+{
+  const { IBlueAsyncResNotifyTarget } = await import("../../../npm/dist/blue/interfaces/IBlueAsyncResNotifyTarget.js");
+  class Partial extends IBlueAsyncResNotifyTarget {}
+  assert.throws(() => new Partial().RemoveCachedData(new BlueAsyncRes()), /IBlueAsyncResNotifyTarget\.RemoveCachedData\(resource\) must be implemented/);
+});

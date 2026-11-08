@@ -289,6 +289,8 @@ export class Tr2Mesh extends Tr2MeshBase
     this.ReleaseCachedData(resource);
     if (this.geometry === resource) this.geometry = null;
     if (this.lowResGeometry === resource) this.lowResGeometry = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -566,8 +568,9 @@ export class Tr2Mesh extends Tr2MeshBase
     this._loadFenceGeneration += 1;
     this._loadFenceResource = null;
     this._loadFenceReached = true;
-    this.SetGeometryRes(null);
-    this.SetLowResGeometryRes(null);
+    // Carbon ~Tr2Mesh (Tr2Mesh.cpp:14-24): RemoveNotifyTarget on both geometries.
+    if (this.geometry) this.RemoveCachedData(this.geometry);
+    if (this.lowResGeometry) this.RemoveCachedData(this.lowResGeometry);
   }
 }
 

@@ -150,6 +150,8 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   {
     this.ReleaseCachedData(resource);
     if (this.grannyRes === resource) this.grannyRes = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -420,11 +422,8 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   Destruct()
   {
     this._destroyed = true;
-    if (this.grannyRes)
-    {
-      blue.resMan.notify.Remove(this, this.grannyRes);
-      this.grannyRes = null;
-    }
+    // Carbon ~Tr2GrannyPrimitiveSet (Tr2GrannyPrimitiveSet.cpp:24-33): RemoveNotifyTarget on the granny resource.
+    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
     this.CleanUp();
     Tr2DeviceResource.prototype.Destruct.call(this);
   }

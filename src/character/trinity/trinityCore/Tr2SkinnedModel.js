@@ -234,6 +234,8 @@ export class Tr2SkinnedModel extends Tr2Model
   {
     this.ReleaseCachedData(resource);
     if (this.geometryRes === resource) this.geometryRes = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -425,12 +427,9 @@ export class Tr2SkinnedModel extends Tr2Model
   Destruct()
   {
     this._destroyed = true;
-    this.ReleaseCachedData(this.geometryRes);
-    if (this.geometryRes)
-    {
-      blue.resMan.notify.Remove(this, this.geometryRes);
-      this.geometryRes = null;
-    }
+    // Carbon ~Tr2SkinnedModel (Tr2SkinnedModel.cpp:23-30): ReleaseCachedData( m_geometryRes ), then
+    // RemoveNotifyTarget. With no geometry, RemoveCachedData(null) still releases, as Carbon does.
+    this.RemoveCachedData(this.geometryRes);
   }
 }
 

@@ -424,6 +424,8 @@ export class Tr2GrannyAnimation extends IRoot
     {
       if (held === resource) this._secondaryResources.set(path, null);
     }
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -2492,7 +2494,10 @@ export class Tr2GrannyAnimation extends IRoot
    */
   Destruct()
   {
-    for (const resource of this._secondaryResources.values()) blue.resMan.notify.Remove(this, resource);
+    // Carbon ~Tr2GrannyAnimation (Tr2GrannyAnimation.cpp:99-120): RemoveNotifyTarget on the granny
+    // resource and every secondary one.
+    for (const resource of [ ...this._secondaryResources.values() ]) if (resource) this.RemoveCachedData(resource);
+    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
     this._secondaryResources.clear();
     this._secondaryExts.clear();
     this._destroyed = true;

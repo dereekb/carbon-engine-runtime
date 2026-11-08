@@ -613,11 +613,8 @@ export class EveTurretSet extends EveEntity
 
     if (this.firingEffect) this.firingEffect.CleanUp();
     this.Cleanup();
-    if (this.geometryResource)
-    {
-      blue.resMan.notify.Remove(this, this.geometryResource);
-      this.geometryResource = null;
-    }
+    // Carbon ~EveTurretSet (Eve/Turret/EveTurretSet.cpp:130-145): RemoveNotifyTarget on the geometry.
+    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
 
     Tr2DeviceResource.prototype.Destruct.call(this);
@@ -1896,6 +1893,8 @@ export class EveTurretSet extends EveEntity
   {
     this.ReleaseCachedData(resource);
     if (this.geometryResource === resource) this.geometryResource = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**

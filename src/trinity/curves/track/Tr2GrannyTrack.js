@@ -124,6 +124,8 @@ export class Tr2GrannyTrack extends IRoot
   {
     this.ReleaseCachedData(resource);
     if (this.grannyRes === resource) this.grannyRes = null;
+    // The link goes with the data, so a holder releases a resource in one place (Destruct and expiry alike).
+    blue.resMan.notify.Remove(this, resource);
   }
 
   /**
@@ -209,9 +211,8 @@ export class Tr2GrannyTrack extends IRoot
   Destruct()
   {
     this._destroyed = true;
-    if (!this.grannyRes) return;
-    blue.resMan.notify.Remove(this, this.grannyRes);
-    this.grannyRes = null;
+    // Carbon ~Tr2GrannyTrack (Curves/Tr2GrannyTrack.cpp:14-21): RemoveNotifyTarget on the granny resource.
+    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
   }
 
   /**
