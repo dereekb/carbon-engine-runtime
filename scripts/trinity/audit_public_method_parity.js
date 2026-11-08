@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
 import { isCarbonDecorator, findCarbonMethod } from "./carbon-decorators.js";
 import { headerTypes, memberDeclarations } from "../lib/carbon-header-shape.js";
+import { requireCarbonRoot } from "../lib/carbon-root.js";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -15,7 +16,7 @@ const defaultSchemaRoot = path.resolve(root, "..", "tools-core", ".scratch", "sc
 const schemaRoot = path.resolve(options.schemaRoot ?? process.env.CARBON_SCHEMA_ROOT ?? defaultSchemaRoot);
 // The donor checkout. Access specifiers, nested types and definitions are read
 // from Carbon's own source, never inferred from our spelling.
-const carbonRoot = path.resolve(process.env.CARBON_ROOT ?? path.resolve(root, "..", "..", "carbonengine"));
+const carbonRoot = path.resolve(requireCarbonRoot());
 
 // Names the schema reports as methods that are C++ type keywords (IsPortableMember).
 const CPP_TYPE_KEYWORDS = new Set([ "void", "bool", "char", "short", "int", "long", "float", "double", "signed", "unsigned", "auto", "const" ]);

@@ -46,10 +46,11 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { requireCarbonRoot } from "./lib/carbon-root.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const alRoot = path.join(packageRoot, "src", "trinityal");
-const carbonRoot = process.env.CARBON_ROOT ?? "E:\\carbonengine";
+const carbonRoot = requireCarbonRoot();
 
 /**
  * Divergences already argued at their own site, with the reason recorded.
@@ -444,12 +445,6 @@ function donorNames(jsClass)
 }
 
 
-if (!existsSync(carbonRoot))
-{
-    console.log(`AL parity SKIPPED: no Carbon source at ${carbonRoot}.`);
-    console.log("Set CARBON_ROOT to the donor checkout to run this check.");
-    process.exit(0);
-}
 
 const files = await sourceFiles(alRoot);
 let comparedClasses = 0;

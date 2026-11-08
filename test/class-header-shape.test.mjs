@@ -1,8 +1,8 @@
-import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { requireCarbonRoot } from "../scripts/lib/carbon-root.js";
 import { headerTypes, jsClasses, structDefaults, compareDefaults, literalValue, memberDeclarations } from "../scripts/lib/carbon-header-shape.js";
 
 test("header coverage distinguishes definitions, nested types, forwards and specializations", () =>
@@ -83,8 +83,8 @@ test("constructor overrides and static fields cannot silently prove instance def
     assert.ok(instanceResult.unchecked.includes("JS constructor body requires review"));
 });
 
-const donor = path.join(process.env.CARBON_ROOT ?? fileURLToPath(new URL("../../../carbonengine", import.meta.url)), "trinity/trinityal/Tr2HalHelperStructures.h");
-test("real Carbon sampler: filter, address and comparison zero mutations each fail", { skip: !existsSync(donor) && "Carbon checkout unavailable" }, () =>
+const donor = path.join(requireCarbonRoot(), "trinity/trinityal/Tr2HalHelperStructures.h");
+test("real Carbon sampler: filter, address and comparison zero mutations each fail", () =>
 {
     const type = headerTypes(readFileSync(donor, "utf8")).find(value => value.name === "Tr2SamplerDescription");
     const source = readFileSync(new URL("../src/trinityal/Tr2HalHelperStructures/Tr2SamplerDescription.js", import.meta.url), "utf8");

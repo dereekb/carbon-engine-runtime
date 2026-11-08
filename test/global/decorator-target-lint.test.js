@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { inventoryRuntime } from "../../scripts/lib/decorator-target-inventory.js";
+import { requireCarbonRoot } from "../../scripts/lib/carbon-root.js";
 import { auditDecorators, findingFingerprint, readCarbonReports, shrinkBaseline, run } from "../../scripts/lint-decorator-target.js";
 
 /** A carbon-blue report holding the given class records. */
@@ -149,7 +150,7 @@ test("with no carbon-blue report the audit skips", () =>
     finally { fs.rmSync(root, { recursive: true }); }
 });
 
-const carbonAvailable = fs.existsSync(process.env.CARBON_ROOT ?? "E:/carbonengine");
+const carbonAvailable = fs.existsSync(requireCarbonRoot());
 const fieldFacts = readCarbonReports([ report(
     { name: "Child", bases: [ "EveSpaceObjectChild" ], blue: { exposures: [ { name: "Child" } ], properties: [
         { name: "partTag", macro: "MAP_PROPERTY_READONLY", getter: "GetPartTag" }, { name: "wide", macro: "MAP_PROPERTY_READONLY", getter: "GetWidth" } ] } },

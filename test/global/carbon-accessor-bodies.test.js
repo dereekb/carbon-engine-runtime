@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 import { checkAccessorBodies } from "../../scripts/lib/carbon-accessor-bodies.js";
+import { requireCarbonRoot } from "../../scripts/lib/carbon-root.js";
 
-const available = fs.existsSync(process.env.CARBON_ROOT ?? "E:/carbonengine");
+const available = fs.existsSync(requireCarbonRoot());
 
 test("a getter and setter that only read and write one member pass", { skip: !available }, () =>
 {

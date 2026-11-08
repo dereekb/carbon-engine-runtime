@@ -1,18 +1,13 @@
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
 import { sourceIndex, baselineProblems } from "./lib/carbon-source-index.js";
+import { requireCarbonRoot } from "./lib/carbon-root.js";
 import { compareDefaults, literalValue } from "./lib/carbon-header-shape.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const carbonRoot = process.env.CARBON_ROOT ?? fileURLToPath(new URL("../../../carbonengine", import.meta.url));
-if (!existsSync(carbonRoot))
-{
-    console.log("Struct defaults SKIPPED: set CARBON_ROOT to the Carbon source checkout.");
-}
-else
+const carbonRoot = requireCarbonRoot();
 {
     const { sources, classes } = await sourceIndex(root, carbonRoot);
     const cppConstants = {};

@@ -1,15 +1,10 @@
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sourceIndex, baselineProblems } from "./lib/carbon-source-index.js";
+import { requireCarbonRoot } from "./lib/carbon-root.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const carbonRoot = process.env.CARBON_ROOT ?? fileURLToPath(new URL("../../../carbonengine", import.meta.url));
-if (!existsSync(carbonRoot))
-{
-    console.log("Donor coverage SKIPPED: set CARBON_ROOT to the Carbon source checkout.");
-}
-else
+const carbonRoot = requireCarbonRoot();
 {
     const { sources, classes, problems } = await sourceIndex(root, carbonRoot);
     let total = 0;

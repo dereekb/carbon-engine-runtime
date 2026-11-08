@@ -5,8 +5,9 @@
 // side effect) means the JavaScript field is not the property and the row stays out.
 import fs from "node:fs";
 import path from "node:path";
+import { requireCarbonRoot } from "./carbon-root.js";
 
-const carbonRoot = () => (process.env.CARBON_ROOT ?? "E:/carbonengine").replace(/\\/g, "/").replace(/\/$/, "");
+const carbonRoot = () => requireCarbonRoot().replace(/\\/g, "/").replace(/\/$/, "");
 const text = new Map();
 const read = file => { if (!text.has(file)) text.set(file, fs.readFileSync(file, "utf8")); return text.get(file); };
 

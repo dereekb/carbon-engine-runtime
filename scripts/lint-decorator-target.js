@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { inventoryRuntime } from "./lib/decorator-target-inventory.js";
 import { checkAccessorBodies } from "./lib/carbon-accessor-bodies.js";
+import { requireCarbonRoot } from "./lib/carbon-root.js";
 
 // Two checks against Carbon's headers and exposure blocks that no other lint makes:
 //
@@ -182,7 +183,7 @@ export function run(argv)
         console.log(JSON.stringify(report));return report;
     }
     const carbon=readCarbonReports(reports.map(file=>JSON.parse(fs.readFileSync(file,"utf8"))));
-    const accessorBodies=fs.existsSync(process.env.CARBON_ROOT??"E:/carbonengine");
+    const accessorBodies=fs.existsSync(requireCarbonRoot());
     const findings=auditDecorators(inventoryRuntime(root,{markers:args.get("--markers")??"both"}),carbon,{accessorBodies});
     const baselinePath=path.join(root,"scripts/baselines/decorator-target.json");
     let previous=fs.existsSync(baselinePath)?JSON.parse(fs.readFileSync(baselinePath,"utf8")):null;

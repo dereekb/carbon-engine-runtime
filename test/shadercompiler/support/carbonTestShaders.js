@@ -1,25 +1,25 @@
 // Reads the HLSL sources embedded in Carbon's own shader compiler tests
 // (trinity/shadercompiler/tests/*.cpp, raw string literals), from the local
-// Carbon checkout. The sources stay in Carbon's repository; when the checkout
-// is absent the tests that use them skip.
+// Carbon checkout. The sources stay in Carbon's repository; a missing checkout
+// fails, as every Carbon-backed check does.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { requireCarbonRoot } from "../../../scripts/lib/carbon-root.js";
 
-// A Carbon checkout named carbonengine beside the organization checkout,
-// unless CARBON_SHADERCOMPILER_TESTS names the tests directory.
-const TESTS_DIR = process.env.CARBON_SHADERCOMPILER_TESTS ??
-    resolve(fileURLToPath(new URL("../../../../../carbonengine/trinity/shadercompiler/tests", import.meta.url)));
+// The tests directory in the CARBON_ROOT checkout, unless CARBON_SHADERCOMPILER_TESTS names one.
+const TESTS_DIR = process.env.CARBON_SHADERCOMPILER_TESTS ?? join(requireCarbonRoot(), "trinity/shadercompiler/tests");
 
 /**
- * Why the Carbon-backed tests skip, or false when they can run.
+ * Checks the Carbon-backed tests can run. They never skip: a missing checkout fails.
  *
- * @returns {string|false} The skip reason.
+ * @returns {false} No skip reason, so callers passing it as `skip` run the test.
+ * @throws {Error} When the tests directory is missing.
  */
 export function carbonTestsSkipReason()
 {
-    return existsSync(TESTS_DIR) ? false : `Carbon checkout not found at ${TESTS_DIR} (set CARBON_SHADERCOMPILER_TESTS)`;
+    if (!existsSync(TESTS_DIR)) throw new Error(`Carbon shader compiler tests not found at ${TESTS_DIR}: set CARBON_ROOT or CARBON_SHADERCOMPILER_TESTS.`);
+    return false;
 }
 
 /**

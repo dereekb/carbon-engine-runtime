@@ -20,15 +20,15 @@
 //   node scripts/lint-enum-parity.js --write    re-record the baseline
 //   node scripts/lint-enum-parity.js <Name>     look one enum up in both trees
 import { parse } from "@babel/parser";
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { headerEnums, jsProvenance } from "./lib/carbon-header-shape.js";
+import { requireCarbonRoot } from "./lib/carbon-root.js";
 import { sourceIndex, filesUnder, baselineProblems } from "./lib/carbon-source-index.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const carbonRoot = process.env.CARBON_ROOT ?? fileURLToPath(new URL("../../../carbonengine", import.meta.url));
+const carbonRoot = requireCarbonRoot();
 
 // A C++ idiom that pads the underlying type to 32 bits. It names no state, and
 // JavaScript numbers have no width to force, so it is never ported.
@@ -134,11 +134,6 @@ function jsKeyFor(member, jsMembers)
     return null;
 }
 
-if (!existsSync(carbonRoot))
-{
-    console.log("Enum parity SKIPPED: set CARBON_ROOT to the Carbon source checkout.");
-}
-else
 {
     const { sources } = await sourceIndex(root, carbonRoot);
 
