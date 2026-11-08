@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
+import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition, PaperDollPaletteKind } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
@@ -57,13 +57,17 @@ async function configured(t, entries)
   return { definition, source };
 }
 
-test("the swatch rule lists each style with its own palettes; a style with swatches is picked by swatch", async t =>
+test("each style lists its own palettes as raw records: name, kind and the areas each sets; the default is default.color only", async t =>
 {
   const { definition } = await configured(t, null);
   const [ first, second ] = definition.eyeshadow.GetOptions();
-  assert.deepEqual(first.palettes.map(record => record.label), [ "Aqua", "Blue" ]);
-  assert.deepEqual(first.secondaryPalettes.map(record => record.label), [ "Aqua", "Blue" ]);
-  assert.equal(first.defaultPalette, SHADOW + "eyeshadow_01/aqua_a.color", "the first by label without default.color");
+  assert.deepEqual(first.palettes.map(record => [ record.name, record.kind, record.areas ]),
+    [ [ "aqua_a", PaperDollPaletteKind.AREA_1, [ 1 ] ], [ "blue_a", PaperDollPaletteKind.AREA_1, [ 1 ] ] ]);
+  assert.deepEqual(first.secondaryPalettes.map(record => [ record.name, record.kind, record.areas ]),
+    [ [ "aqua_bc", PaperDollPaletteKind.AREAS_2_3, [ 2, 3 ] ], [ "blue_bc", PaperDollPaletteKind.AREAS_2_3, [ 2, 3 ] ] ]);
+  assert.equal(first.defaultPalette, undefined, "no default.color: no default (the menu's first is the UI's)");
+  assert.equal(first.defaultSecondaryPalette, undefined);
+  assert.deepEqual(second.palettes.map(record => [ record.name, record.kind ]), [ [ "default", PaperDollPaletteKind.WHOLE ], [ "red", PaperDollPaletteKind.WHOLE ] ]);
   assert.equal(second.defaultPalette, SHADOW + "eyeshadow_02/default.color");
   assert.equal(definition.eyeshadow.enabled, false, "no recipe entry: off");
   assert.equal(definition.eyeshadow.option, "");
@@ -79,6 +83,7 @@ test("a recipe entry turns its style on at its weight, with its colours as the s
   const option = component.GetOptions().find(value => value.id === "eyeshadow_01");
   assert.equal(option.defaultPalette, CjsPaperDollColorizedSource.authored);
   assert.equal(option.defaultSecondaryPalette, undefined, "the recipe's colours fill all three areas");
+  assert.equal(option.palettes.find(record => record.path === CjsPaperDollColorizedSource.authored).kind, PaperDollPaletteKind.WHOLE);
   assert.deepEqual(component.GetPaletteColors(CjsPaperDollColorizedSource.authored).map(color => Array.from(color, value => Math.round(value * 10) / 10)),
     [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ]);
   assert.equal(component.GetOptions().find(value => value.id === "eyeshadow_02").defaultPalette, SHADOW + "eyeshadow_02/default.color");

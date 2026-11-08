@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned eyeliner settings: the style, its palette, custom
@@ -88,7 +88,7 @@ export class CjsPaperDollEyeliner extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
-    /** How its options and palettes are listed (`CjsPaperDollColorizedSource`): each style's own palettes, by swatch. */
-    static menu = "swatches";
+    /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.OWN;
 
 }

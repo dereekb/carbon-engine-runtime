@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /** Application-owned blush settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollBlush")
@@ -81,7 +81,7 @@ export class CjsPaperDollBlush extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
-    /** How its options and palettes are listed (`CjsPaperDollColorizedSource`): the makeup catalog, palettes merged by value. */
-    static menu = "catalog";
+    /** Where its palette files live: the category's catalog (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.CATALOG;
 
 }

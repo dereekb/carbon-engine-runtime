@@ -6,9 +6,6 @@ import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 
-/** The skin palettes' shade names, as the creator labels them (`<bloodline>_<shade>.color`). */
-const SHADES = { light: "Light", midlight: "Mid-light", default: "Default", middark: "Mid-dark", dark: "Dark" };
-
 /**
  * A paper doll's skin target, the first of `CjsPaperDollInstance.targetOrder`, in the composition: two outputs (head and
  * body diffuse), each based on the selected foundation's diffuse, and the skin part's layer source, the skin tone
@@ -83,8 +80,8 @@ export class CjsPaperDollSkinComposer
         const records = [];
         for (const path of paletteFiles)
         {
-            const name = path.slice(root.length, -".color".length), [ bloodline, shade ] = name.split("_");
-            records.push({ path, label: name === "default" ? "Neutral" : bloodline[0].toUpperCase() + bloodline.slice(1) + " · " + (SHADES[shade] ?? shade) });
+            // A raw record: the panel labels it (Graphene paletteMenus.js).
+            records.push({ path, name: path.slice(root.length, -".color".length) });
         }
         records.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -133,7 +130,7 @@ export class CjsPaperDollSkinComposer
             id: "basic",
             colorAreas: [ ...areas ].sort(),
             defaultPalette: root + "deteis_default.color",
-            palettes: records.map(({ path, label }) => ({ path, label }))
+            palettes: records.map(({ path, name }) => ({ path, name }))
         } ], new Map(), { option: "basic" });
         build.report.skin = {
             build: "resource index",

@@ -45,7 +45,7 @@ export { CjsPaperDollLips } from "./CjsPaperDollLips.js";
 export { CjsPaperDollChin } from "./CjsPaperDollChin.js";
 export { CjsPaperDollBrow } from "./CjsPaperDollBrow.js";
 export { CjsPaperDollMask } from "./CjsPaperDollMask.js";
-export { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+export { PaperDollBlend, PaperDollLayer, PaperDollPaletteKind, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 export { CjsPaperDollCompositor } from "./compositor/CjsPaperDollCompositor.js";
 export { CjsPaperDollCompositionTarget } from "./compositor/CjsPaperDollCompositionTarget.js";

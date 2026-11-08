@@ -94,3 +94,34 @@ export const PaperDollBlend = Object.freeze({
     /** A mesh with its own maps; nothing composed: accessories. */
     MESH: 5
 });
+
+/**
+ * Where a colourised part's palette files live: each option's own folder, or the category's catalog (the options'
+ * folders and the category's `colors/`). Each part class declares one as `static palettes`; which palettes a menu
+ * shows, and how it labels them, is the UI's.
+ *
+ * @readonly
+ * @enum {number}
+ */
+export const PaperDollPalettes = Object.freeze({
+    /** Each option's own `.color` files (eye shadow, eyeliner). */
+    OWN: 1,
+    /** The category's catalog: every option's `.color` files and the category's `colors/` (blush, eyebrows). */
+    CATALOG: 2
+});
+
+/**
+ * Which colour areas a palette file sets. Derived (as in the game's creator, not a source): `<name>_a.color` sets
+ * area 1, `<name>_bc.color` areas 2 and 3; any other palette all three.
+ *
+ * @readonly
+ * @enum {number}
+ */
+export const PaperDollPaletteKind = Object.freeze({
+    /** Areas 1 to 3. */
+    WHOLE: 1,
+    /** Area 1 (`_a`). */
+    AREA_1: 2,
+    /** Areas 2 and 3 (`_bc`). */
+    AREAS_2_3: 3
+});

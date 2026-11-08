@@ -51,4 +51,11 @@ export class CjsPaperDollEyebrows extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
+
+    /**
+     * Its option also dresses the brow carrier mesh: the option's normal and specular are that mesh's material, and its
+     * colourised detail drawn unblended (with its coverage) is the carrier's colour (`CjsPaperDollColorizedSource`).
+     */
+    static carrier = true;
+
 }

@@ -50,35 +50,30 @@ async function configured(t, entries = [])
   return { definition, source };
 }
 
-test("the catalog rule merges every option's palettes by value into one menu", async t =>
+test("the catalog lists every option's palettes as raw records, unmerged; an option's default is its own default only", async t =>
 {
   const { definition } = await configured(t);
   const [ first, second ] = definition.blush.GetOptions();
-  assert.deepEqual(first.palettes.map(record => record.path).sort(), [ BLUSH + "colors/peach.color", BLUSH + "colors/rose.color" ].sort(),
-    "blush_02's default is rose's colours, so it aliases rose");
-  assert.equal(second.defaultPalette, BLUSH + "colors/rose.color", "an option's own default, aliased to the merged palette");
+  assert.deepEqual(first.palettes.map(record => record.name).sort(), [ "peach", "rose" ]);
+  assert.deepEqual(second.palettes.map(record => record.name).sort(), [ "default", "peach", "rose" ], "equal colours are not merged here: the menu's");
+  assert.equal(first.defaultPalette, undefined, "no own default and no recipe: none");
+  assert.equal(second.defaultPalette, BLUSH + "blush_02/default.color");
   assert.equal(definition.blush.enabled, false, "no recipe entry: off");
   assert.equal(definition.blush.weight, 0, "no recipe entry: weight 0");
 });
 
-test("a recipe entry turns its option on at its weight; its colours are the default of options without their own", async t =>
+test("a recipe entry turns its option on at its weight; its colours are the recipe option's default and that of options without their own", async t =>
 {
-  const { definition, source } = await configured(t, [ { category: "makeup", path: "makeup/blush/blush_01", colors: "[(0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0)]", weight: .06 } ]);
+  const { definition, source } = await configured(t, [ { category: "makeup", path: "makeup/blush/blush_02", colors: "[(0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0)]", weight: .06 } ]);
   const blush = definition.blush;
   assert.equal(blush.enabled, true);
-  assert.equal(blush.option, "blush_01");
+  assert.equal(blush.option, "blush_02");
   assert.equal(blush.weight, .06);
   const [ first, second ] = blush.GetOptions();
-  assert.equal(first.defaultPalette, CjsPaperDollColorizedSource.authored, "no menu palette has the recipe's colours");
-  assert.equal(second.defaultPalette, BLUSH + "colors/rose.color");
-  assert.ok(first.palettes.some(record => record.path === CjsPaperDollColorizedSource.authored && record.label === "Authored colours"));
-  assert.ok(source.IsPrepared("blush_01"), "the recipe's option draws from the first apply");
-  assert.deepEqual(first.colorAreas, [ 1, 2 ]);
-});
-
-test("recipe colours equal to a menu palette select it instead of adding authored", async t =>
-{
-  const { definition } = await configured(t, [ { category: "makeup", path: "makeup/blush/blush_01", colors: "[(0.6, 0.0, 0.0, 1.0), (0.6, 0.0, 0.0, 1.0), (0.6, 0.0, 0.0, 1.0)]", weight: 1 } ]);
-  assert.equal(definition.blush.GetOptions()[0].defaultPalette, BLUSH + "colors/peach.color");
-  assert.ok(!definition.blush.GetOptions()[0].palettes.some(record => record.path === CjsPaperDollColorizedSource.authored));
+  assert.equal(second.defaultPalette, CjsPaperDollColorizedSource.authored, "the recipe's option, over its own default.color");
+  assert.equal(first.defaultPalette, CjsPaperDollColorizedSource.authored, "an option without its own");
+  assert.ok(first.palettes.some(record => record.path === CjsPaperDollColorizedSource.authored));
+  assert.equal(Math.round(blush.GetPaletteColors(CjsPaperDollColorizedSource.authored)[0][0] * 10) / 10, .9);
+  assert.ok(source.IsPrepared("blush_02"), "the recipe's option draws from the first apply");
+  await assert.rejects(configured(t, [ { category: "makeup", path: "makeup/blush/blush_01", colors: "", weight: Number.NaN } ]), /Invalid blush recipe entry/, "a weight that is not a number");
 });

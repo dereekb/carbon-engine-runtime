@@ -87,7 +87,7 @@ test("Prepare configures the skin from the folder's palettes and the regions' co
   assert.deepEqual(values, { option: "basic" });
   assert.equal(options[0].defaultPalette, ROOT + "deteis_default.color");
   assert.deepEqual(options[0].colorAreas, [ 1, 2, 3 ], "the union of head and body areas");
-  assert.deepEqual(options[0].palettes.map(value => value.label), [ "Neutral", "Deteis · Default", "Deteis · Light" ], "nested palettes are left out");
+  assert.deepEqual(options[0].palettes.map(value => value.name), [ "default", "deteis_default", "deteis_light" ], "raw records, nested palettes left out; the panel labels them");
   assert.deepEqual(fetched, [ [ ROOT + "deteis_default.color", { pattern: "reject" } ] ], "only the initial palette is read");
   assert.equal(build.report.skin.regions.body.detail, ROOT + "colorize_body_l.png", "the setting's tier, falling back to the unsuffixed map");
   // Head then body: the base copy cleared into the target, then the colourised layer over the detail's cutout.
