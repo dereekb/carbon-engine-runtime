@@ -413,6 +413,17 @@ export class CjsPaperDollDefinition
     static characterTextureQuality = "4k";
 
     /**
+     * Ours: whether breast motion is localised by moving skin weight off the
+     * LeftLung and RightLung joints onto Spine3, in memory, by a falloff from
+     * each breast's centre (CjsBreastWeightFalloff). Off by default: the files'
+     * own weights. Read when a character is built and whenever it is changed,
+     * which re-uploads the meshes already drawn. Carbon registers no such
+     * setting (non-carbon-extensions.md § Breast weight falloff).
+     */
+    @meta.setting("characterBreastWeightFalloff", { applies: meta.setting.ALWAYS, category: "characters" })
+    static characterBreastWeightFalloff = false;
+
+    /**
      * A `.png` map path's stem and tier suffix: `.../colorize_body_l_4k.png` gives
      * `.../colorize_body_l` and `_4k`; an unsuffixed file gives an empty suffix.
      * Ours, with the tiers of `characterTextureQuality` (non-carbon-extensions.md

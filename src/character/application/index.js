@@ -4,6 +4,7 @@ export { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
 export { CjsPaperDollInstance } from "./CjsPaperDollInstance.js";
 export { CjsPaperDollManager } from "./CjsPaperDollManager.js";
 export { CjsCharacterBackdrops } from "./CjsCharacterBackdrops.js";
+export { CjsBreastWeightFalloff } from "./CjsBreastWeightFalloff.js";
 export { CjsPaperDollEyes } from "./CjsPaperDollEyes.js";
 export { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
 export { CjsPaperDollEyebrows } from "./CjsPaperDollEyebrows.js";
