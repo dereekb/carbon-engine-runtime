@@ -185,25 +185,30 @@ export class CjsPaperDollTextureRoles
     }
 
     /**
-     * The `.png` map names (tier dropped) directly in a garment option's folders that its picked maps do not use: the
-     * maps it does not draw, for the build report.
+     * The `.png` map names (tier dropped) directly in a garment option's folders that its picked maps do not use, for
+     * the build report, in two lists: `overridden`, names a rule draws that a better map hid (a later folder, a worse
+     * tier or a later name for the same map); and `unruled`, names no rule draws, which wait for a ruling.
      * @param {string[]} folders The option's folders.
      * @param {string[]} files The listed files below them.
      * @param {Array<?string>} used The picked map paths.
-     * @returns {string[]} Each as `<folder>/<name>`, relative to the part folder's parent.
+     * @returns {{ overridden: string[], unruled: string[] }} Each as `<folder>/<name>`, relative to the part folder's
+     *   parent.
      */
     static garmentSkipped(folders, files, used)
     {
         const stems = new Set(used.filter(Boolean).map(path => CjsPaperDollDefinition.splitTier(path)[0]));
-        const root = folders.at(-1).slice(0, folders.at(-1).slice(0, -1).lastIndexOf("/") + 1), skipped = new Set();
+        const part = folders.at(-1).slice(0, -1).split("/").at(-1);
+        const ruled = new Set(Object.values(CjsPaperDollTextureRoles.garment).flat().map(name => name.replace("<part>", part)));
+        const root = folders.at(-1).slice(0, folders.at(-1).slice(0, -1).lastIndexOf("/") + 1), overridden = new Set(), unruled = new Set();
         for (const folder of folders)
             for (const file of files)
                 if (file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"))
                 {
                     const [ stem ] = CjsPaperDollDefinition.splitTier(file);
-                    if (!stems.has(stem)) skipped.add(stem.slice(root.length));
+                    if (stems.has(stem)) continue;
+                    (ruled.has(stem.slice(folder.length)) ? overridden : unruled).add(stem.slice(root.length));
                 }
-        return [ ...skipped ];
+        return { overridden: [ ...overridden ], unruled: [ ...unruled ] };
     }
 
     /**

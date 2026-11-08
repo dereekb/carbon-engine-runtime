@@ -129,7 +129,8 @@ test("maps follow today's precedence: folder, then tier, then name; undrawn name
   assert.equal(normal.effect, "normal " + TOP + "shirtaf01_n.png");
   assert.deepEqual(source.GetLayers(value, "head", "DiffuseMap"), []);
   assert.deepEqual(source.GetCutMaskPaths(value), [ TOP + "v1/comp_body_m.png", ROOT + "dependants/masktuck/standard/comp_body_m.png" ]);
-  assert.deepEqual(source.Describe()[0].skipped.sort(), [ "shirtaf01/colorize_body_z", "shirtaf01/comp_body_s", "shirtaf01/v1/comb_body_s" ], "a map a better one hides, and names no rule draws");
+  assert.deepEqual(source.Describe()[0].skipped, { overridden: [ "shirtaf01/colorize_body_z", "shirtaf01/comp_body_s" ], unruled: [ "shirtaf01/v1/comb_body_s" ] },
+    "maps a better one hides, apart from names no rule draws");
   assert.deepEqual(build.errors, []);
 });
 

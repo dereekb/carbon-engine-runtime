@@ -13,7 +13,11 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
  * specular first, then its own normal and specular. Its maps are named by `CjsPaperDollTextureRoles.garment`.
  *
  * Options, from the part's folder (`static category`): one per first-level folder for the underwear
- * (`static optionPerFolder`; each folder holds one `.type` per bloodline that wears it), else one per `.type`.
+ * (`static optionPerFolder`; each folder holds one `.type` per bloodline that wears it), else one per `.type`. The
+ * folder rule loses nothing (content, resource index of build 3670638, both sexes): every one of the 37 underwear
+ * `.type`s names its own folder as its part, no variation, and the colour variant `default`, and every underwear
+ * folder ships `default.color`, which the folder rule starts on. One folder's single `.type` names no bloodline
+ * (`topunderwear/topzh/types/topzh.type`), so the bloodline default never picks it.
  * Palettes: the `.color` files directly in the option's first-level folder (`PaperDollPalettes.OWN`). An option's
  * `.type` names its variation (a subfolder holding its maps, ahead of the part folder's) and colour variant (its
  * default palette); its metadata (the first folder's `metadata.yaml`) its dependants, what it occludes and its colour
@@ -122,6 +126,9 @@ export class CjsPaperDollMaterialSource
             const base = typePath.slice(0, typePath.indexOf("/types/") + 1), id = typePath.slice(typePath.lastIndexOf("/") + 1, -".type".length);
             this._options.set(id, option(id, base, typePath, []));
         }
+        // READS UI TEXT, awaiting a bloodline id: the bloodline is the last word of the archetype option's label, which
+        // the host builds from the head folder's name (`head/<race>_<bloodline>`); no content record gives it yet (the
+        // same gap as the skin's `deteis_default`).
         const archetype = definition.archetype, bloodline = (archetype.GetOptions().find(value => value.id === archetype.option)?.label ?? "").split(" ").at(-1).toLowerCase();
         const values = [ ...this._options.values() ];
         const selected = type.optionPerFolder ? values.find(value => value.bloodlines.includes(bloodline)) ?? values[0] ?? null : null;
@@ -344,7 +351,8 @@ export class CjsPaperDollMaterialSource
     }
 
     /**
-     * The loaded options, for the build report: each option's maps and the map names in its folders it does not draw.
+     * The loaded options, for the build report: each option's maps, and the map names in its folders it does not draw
+     * (`skipped`: `overridden` by a better map, or `unruled`, waiting for a ruling).
      * @returns {object[]}
      */
     Describe()
