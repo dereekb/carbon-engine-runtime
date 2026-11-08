@@ -48,27 +48,13 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   @type.boolean
   renderSolid = false;
 
-  /** The ordinary geometry factory supplies TriGeometryRes, replacing the raw SDK handle. */
-  @type.object.ref("TriGeometryRes")
-  get grannyRes()
-  {
-    return this._grannyRes;
-  }
-
   /**
-   * Moves the resource notification, retaining geometry until replacement completes.
-   * @adapted Tr2GrannyPrimitiveSet.cpp:214-237 uses native targets; ours live on resMan.
+   * m_grannyRes (TriGrannyResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Tr2GrannyPrimitiveSet_Blue.cpp:16).
+   * The ordinary geometry factory supplies TriGeometryRes, replacing the raw SDK handle.
    */
-  set grannyRes(resource)
-  {
-    if (this._grannyRes === resource) return;
-    if (this._grannyRes) blue.resMan.notify.Remove(this, this._grannyRes);
-    this._grannyRes = resource;
-    if (resource) blue.resMan.notify.Add(this, resource, this, "grannyRes");
-  }
-
-  /** Resource storage behind the notification-aware property. */
-  _grannyRes = null;
+  @type.object.ref("TriGeometryRes")
+  grannyRes = null;
 
   @type.float32Array
   _points = new Float32Array(0); // alloc: initially empty, owned variable-length geometry cache.
@@ -128,15 +114,18 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
 
   SetGrannyResource()
   {
-    this.grannyRes = null;
-    if (this._destroyed) return;
-    if (!this.grannyResPath)
+    if (this.grannyRes)
     {
-      this.ReleaseCachedData(null);
-      return;
+      blue.resMan.notify.Remove(this, this.grannyRes);
+      this.grannyRes = null;
     }
-    // Assignment registers the manager link and rebuilds if already prepared.
-    this.grannyRes = blue.resMan.GetResource(this.grannyResPath);
+    if (this._destroyed) return;
+
+    if (this.grannyResPath) this.grannyRes = blue.resMan.GetResource(this.grannyResPath);
+    else this.ReleaseCachedData(this.grannyRes);
+
+    // Rebuilds at once when the resource is already prepared.
+    if (this.grannyRes) blue.resMan.notify.Add(this, this.grannyRes, this, "grannyRes");
   }
 
   /**
@@ -148,6 +137,19 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   ReleaseCachedData(resource)
   {
     if (resource === this.grannyRes) this.CleanUp();
+  }
+
+  /**
+   * Lets go of an expired resource: what was built from it, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and GetBatchesImpl reacquires from grannyResPath.
+   * @param {TriGeometryRes} resource The expired resource.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.grannyRes === resource) this.grannyRes = null;
   }
 
   /**
@@ -418,7 +420,11 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   Destruct()
   {
     this._destroyed = true;
-    this.grannyRes = null;
+    if (this.grannyRes)
+    {
+      blue.resMan.notify.Remove(this, this.grannyRes);
+      this.grannyRes = null;
+    }
     this.CleanUp();
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
