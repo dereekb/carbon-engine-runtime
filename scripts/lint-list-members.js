@@ -17,6 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
 import traverseModule from "@babel/traverse";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const traverse = traverseModule.default ?? traverseModule;
 
@@ -86,7 +87,7 @@ function scan(directory)
     return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry =>
     {
         const file = path.join(directory, entry.name);
-        if (entry.isDirectory()) return [ "dropped", "generated" ].includes(entry.name) ? [] : scan(file);
+        if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) return [ "dropped", "generated" ].includes(entry.name) ? [] : scan(file);
         if (!file.endsWith(".js")) return [];
 
         const source = fs.readFileSync(file, "utf8");

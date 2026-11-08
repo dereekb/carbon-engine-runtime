@@ -47,6 +47,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { requireCarbonRoot } from "./lib/carbon-root.js";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const alRoot = path.join(packageRoot, "src", "trinityal");
@@ -185,7 +186,7 @@ async function sourceFiles(directory)
     {
         const full = path.join(directory, entry.name);
 
-        if (entry.isDirectory()) files.push(...await sourceFiles(full));
+        if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files.push(...await sourceFiles(full));
         else if (entry.name.endsWith(".js")) files.push(full);
     }
 

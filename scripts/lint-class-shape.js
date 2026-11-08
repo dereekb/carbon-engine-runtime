@@ -44,6 +44,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = path.join(packageRoot, "src");
@@ -101,7 +102,7 @@ async function sourceFiles(directory)
     {
         const full = path.join(directory, entry.name);
 
-        if (entry.isDirectory()) files.push(...await sourceFiles(full));
+        if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files.push(...await sourceFiles(full));
         else if (entry.name.endsWith(".js")) files.push(full);
     }
 

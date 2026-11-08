@@ -16,6 +16,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { MARKER_TAGS } from "./lib/decorator-target-inventory.js";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const list = process.argv.includes("--list");
@@ -69,7 +70,7 @@ async function SourceFiles(dir)
   for (const entry of await readdir(dir, { withFileTypes: true }))
   {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...await SourceFiles(full));
+    if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files.push(...await SourceFiles(full));
     else if (entry.name.endsWith(".js")) files.push(full);
   }
   return files;

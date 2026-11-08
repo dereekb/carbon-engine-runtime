@@ -11,6 +11,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { builtinModules } from "node:module";
 import { dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const DEFAULT_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const NODE_BUILTINS = new Set(builtinModules.map(name => name.replace(/^node:/u, "")));
@@ -40,7 +41,7 @@ async function sourceFiles(directory)
     for (const entry of await readdir(directory, { withFileTypes: true }))
     {
         const path = join(directory, entry.name);
-        if (entry.isDirectory()) found.push(...await sourceFiles(path));
+        if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) found.push(...await sourceFiles(path));
         else if (entry.name.endsWith(".js")) found.push(path);
     }
     return found;

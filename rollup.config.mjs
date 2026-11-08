@@ -3,6 +3,7 @@ import json from "@rollup/plugin-json";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isUnshippedSource } from "./scripts/lib/unshipped-source.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
@@ -58,7 +59,9 @@ const input = Array.from(new Set([
     ...collectTargets(manifest.exports).flatMap(expandTarget),
     ...privateInputs
 ]))
-    .filter(target => target.startsWith("src/") && target.endsWith(".js") && !unpublishedInputs.has(target));
+    // An export wildcard matches nested directories too, so `./src/character/*.js` would reach the
+    // git-ignored donor ports (scripts/lib/unshipped-source.js).
+    .filter(target => target.startsWith("src/") && target.endsWith(".js") && !unpublishedInputs.has(target) && !isUnshippedSource(target));
 
 function packageName(id)
 {

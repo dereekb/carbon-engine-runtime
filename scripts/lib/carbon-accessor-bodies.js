@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { requireCarbonRoot } from "./carbon-root.js";
+import { UNSHIPPED_SOURCE_DIRS } from "./unshipped-source.js";
 
 const carbonRoot = () => requireCarbonRoot().replace(/\\/g, "/").replace(/\/$/, "");
 const text = new Map();
@@ -34,7 +35,7 @@ function files(dir, out = [])
     for (const e of fs.readdirSync(dir, { withFileTypes: true }))
     {
         const p = dir + "/" + e.name;
-        if (e.isDirectory()) { if (e.name !== ".git") files(p, out); }
+        if (e.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(e.name)) { if (e.name !== ".git") files(p, out); }
         else if (/\.(h|cpp|inl)$/.test(e.name)) out.push(p);
     }
     return out;

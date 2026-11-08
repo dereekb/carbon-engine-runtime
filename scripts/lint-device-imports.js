@@ -20,6 +20,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot = path.join(root, "src");
@@ -42,7 +43,7 @@ function files(directory, found = [])
   for (const entry of fs.readdirSync(directory, { withFileTypes: true }))
   {
     const file = path.join(directory, entry.name);
-    if (entry.isDirectory()) files(file, found);
+    if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files(file, found);
     else if (entry.name.endsWith(".js")) found.push(file);
   }
   return found;

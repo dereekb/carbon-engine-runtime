@@ -6,6 +6,7 @@ import { parse } from "@babel/parser";
 import { isCarbonDecorator, findCarbonMethod } from "./carbon-decorators.js";
 import { headerTypes, memberDeclarations } from "../lib/carbon-header-shape.js";
 import { requireCarbonRoot } from "../lib/carbon-root.js";
+import { UNSHIPPED_SOURCE_DIRS } from "../lib/unshipped-source.js";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -598,7 +599,7 @@ async function GetCarbonSources(directory)
   {
     if (entry.name === ".git" || entry.name === "node_modules") continue;
     const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...await GetCarbonSources(entryPath));
+    if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files.push(...await GetCarbonSources(entryPath));
     else if (entry.isFile() && /\.(?:c|cc|cpp|cxx|h|hpp|inl)$/iu.test(entry.name)) files.push(entryPath);
   }
   return files;
@@ -744,7 +745,7 @@ async function GetFiles(directory, extension)
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name)))
   {
     const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...await GetFiles(entryPath, extension));
+    if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) files.push(...await GetFiles(entryPath, extension));
     else if (entry.isFile() && entry.name.endsWith(extension)) files.push(entryPath);
   }
   return files;

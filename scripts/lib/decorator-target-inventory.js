@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { parse } from "@babel/parser";
 import { classDonorComments } from "./carbon-donor-comments.js";
+import { UNSHIPPED_SOURCE_DIRS } from "./unshipped-source.js";
 const slash = s => s.replaceAll("\\", "/");
 const hash = s => crypto.createHash("sha256").update(s).digest("hex");
 function files(dir, extensions, excluded = new Set([".git", "node_modules", "npm", "dist"])) {
@@ -11,7 +12,7 @@ function files(dir, extensions, excluded = new Set([".git", "node_modules", "npm
     for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
         if (excluded.has(item.name)) continue;
         const p = path.join(dir, item.name);
-        if (item.isDirectory()) { for (const child of files(p, extensions, excluded)) result.push(child); }
+        if (item.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(item.name)) { for (const child of files(p, extensions, excluded)) result.push(child); }
         else if (extensions.some(x => p.endsWith(x))) result.push(p);
     }
     return result.sort();

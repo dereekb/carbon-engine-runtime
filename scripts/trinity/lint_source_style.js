@@ -4,6 +4,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
 import { isCarbonDecorator } from "./carbon-decorators.js";
+import { UNSHIPPED_SOURCE_DIRS } from "../lib/unshipped-source.js";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -38,7 +39,7 @@ async function GetJavaScriptFiles(directory)
     {
         const entryPath = path.join(directory, entry.name);
 
-        if (entry.isDirectory())
+        if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name))
         {
             files.push(...await GetJavaScriptFiles(entryPath));
         }

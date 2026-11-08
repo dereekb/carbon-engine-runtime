@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { parse } from "@babel/parser";
+import { UNSHIPPED_SOURCE_DIRS } from "./lib/unshipped-source.js";
 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -129,7 +130,7 @@ async function GetJavaScriptFiles(directory)
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name)))
   {
     const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) found.push(...await GetJavaScriptFiles(entryPath));
+    if (entry.isDirectory() && !UNSHIPPED_SOURCE_DIRS.has(entry.name)) found.push(...await GetJavaScriptFiles(entryPath));
     else if (entry.isFile() && entry.name.endsWith(".js")) found.push(entryPath);
   }
 
