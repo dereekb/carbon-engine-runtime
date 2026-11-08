@@ -45,39 +45,16 @@ export class Tr2GrannyTrack extends IRoot
   @type.float32
   duration = 0;
 
-  /** m_grannyRes (TriGrannyResPtr) [READ] */
-  @type.object.ref("TriGrannyRes")
-  get grannyRes()
-  {
-    return this._grannyRes;
-  }
-
   /**
-   * Moves the notification link with the resource.
-   * @adapted Tr2GrannyTrack.cpp:88-106 uses native targets; ours live on resMan.
-   *   A decoded source assigned directly has no lifetime and stays unregistered.
+   * m_grannyRes (TriGrannyResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Curves/Tr2GrannyTrack_Blue.cpp:17).
+   * @cjs Also holds a decoded source assigned directly, which has no lifetime and is never linked.
    */
-  set grannyRes(resource)
-  {
-    if (resource === this._grannyRes) return;
+  @type.object.ref("TriGrannyRes")
+  grannyRes = null;
 
-    const previous = this._grannyLink;
-    if (previous) blue.resMan.notify.Remove(this, previous);
-
-    this._grannyRes = resource;
-    this._grannyLink = CjsSchema.cast(resource, TriGrannyRes);
-    this._grannyNeedsReload = !!previous && !resource;
-    if (this._grannyLink) blue.resMan.notify.Add(this, this._grannyLink, this, "grannyRes");
-  }
-
-  /** Resource storage behind the notification-aware property. */
-  _grannyRes = null;
-
-  /** @cjs The TriGrannyRes this track is linked to, null for a decoded source. */
-  _grannyLink = null;
-
-  /** @cjs The resource expired while the path stands, so use reloads it. */
-  _grannyNeedsReload = false;
+  /** @cjs Prevents a destroyed track from reacquiring an expired resource. */
+  _destroyed = false;
 
 
   @type.string
@@ -137,6 +114,19 @@ export class Tr2GrannyTrack extends IRoot
   }
 
   /**
+   * Lets go of an expired resource: the tracks built from it, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and UpdateValue reacquires from grannyResPath.
+   * @param {TriGrannyRes} resource The expired resource.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.grannyRes === resource) this.grannyRes = null;
+  }
+
+  /**
    * Carbon RebuildCachedData (Tr2GrannyTrack.cpp:78-84): binds the tracks once
    * the resource is good.
    *
@@ -163,16 +153,16 @@ export class Tr2GrannyTrack extends IRoot
   {
     this.ResetTracks();
     this.duration = 0;
-    this.grannyRes = null;
-    this._grannyNeedsReload = false;
-
-    if (!this.grannyResPath)
+    if (this.grannyRes)
     {
-      this.ReleaseCachedData(this.grannyRes);
-      return;
+      blue.resMan.notify.Remove(this, this.grannyRes);
+      this.grannyRes = null;
     }
 
-    this.grannyRes = blue.resMan.GetResource(this.grannyResPath, { ex: "raw" });
+    if (this.grannyResPath) this.grannyRes = blue.resMan.GetResource(this.grannyResPath, { ex: "raw" });
+    else this.ReleaseCachedData(this.grannyRes);
+
+    if (this.grannyRes) blue.resMan.notify.Add(this, this.grannyRes, this, "grannyRes");
   }
 
   /**
@@ -184,8 +174,9 @@ export class Tr2GrannyTrack extends IRoot
 
   UpdateValue(time)
   {
-    if (this._grannyNeedsReload) this.SetGrannyResource();
-    if (this._grannyLink) this._grannyLink.IsGood(this);
+    if (!this.grannyRes && this.grannyResPath && !this._destroyed) this.SetGrannyResource();
+    const resource = CjsSchema.cast(this.grannyRes, TriGrannyRes);
+    if (resource) resource.IsGood(this);
 
     if (!this.TracksReady())
     {
@@ -217,8 +208,10 @@ export class Tr2GrannyTrack extends IRoot
    */
   Destruct()
   {
+    this._destroyed = true;
+    if (!this.grannyRes) return;
+    blue.resMan.notify.Remove(this, this.grannyRes);
     this.grannyRes = null;
-    this._grannyNeedsReload = false;
   }
 
   /**
@@ -234,7 +227,8 @@ export class Tr2GrannyTrack extends IRoot
       return;
     }
     // Carbon reads m_grannyRes->GetGrannyFile() (Tr2GrannyTrack.cpp:116).
-    const source = CjsGrannyCurves.getTrackSource(this._grannyLink ? this._grannyLink.GetGrannyFile() : this.grannyRes);
+    const resource = CjsSchema.cast(this.grannyRes, TriGrannyRes);
+    const source = CjsGrannyCurves.getTrackSource(resource ? resource.GetGrannyFile() : this.grannyRes);
     if (!source)
     {
       return;

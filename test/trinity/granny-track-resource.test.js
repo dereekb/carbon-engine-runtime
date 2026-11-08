@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { blue, BlueResMan, MotherLode } from "../../npm/dist/blue/index.js";
 import { TriGrannyRes } from "../../npm/dist/resource/index.js";
 import { Tr2GrannyVectorTrack } from "../../npm/dist/trinity/curves/track/Tr2GrannyVectorTrack.js";
+import { referencesTo } from "../support/referencesTo.js";
 
 const PATH = "res:/track/fixture.gr2";
 
@@ -141,6 +142,27 @@ test("continued use renews the link", t =>
   }
 
   assert.equal(value.grannyRes, run.resource);
+  value.Destruct();
+});
+
+test("expiry leaves nothing in the track holding the resource, and use reacquires it", t =>
+{
+  const run = harness(t);
+  const value = track();
+  value.Initialize();
+  run.finish();
+  assert.equal(value.grannyRes, run.resource);
+
+  run.advance(5000);
+  assert.deepEqual(referencesTo(value, run.resource), []);
+  assert.equal(value.grannyResPath, PATH);
+  assert.equal(run.manager.notify.GetByOwner(value).length, 0);
+
+  const count = run.requests.length;
+  value.UpdateValue(1);
+  assert.equal(run.requests.length, count + 1);
+  assert.equal(value.grannyRes, run.resource);
+  assert.equal(run.manager.notify.GetByOwner(value).length, 1);
   value.Destruct();
 });
 
