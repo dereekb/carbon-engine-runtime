@@ -11,6 +11,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * stays verbatim beside the producer-qualified texture path and provenance.
  */
 @meta.define("CjsCharacterMaterialProfile")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterMaterialProfile extends CjsCharacterRecord
 {
 

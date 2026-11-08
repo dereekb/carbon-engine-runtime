@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned ageing settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollAging")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollAging extends CjsPaperDollComponent
 {
 

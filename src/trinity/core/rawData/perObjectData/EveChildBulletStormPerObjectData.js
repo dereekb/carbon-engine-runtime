@@ -20,6 +20,7 @@ import { meta } from "#schema";
  * A bullet storm's transform, effect info and up to ten world-space target positions.
  */
 @meta.carbon("EveChildBulletStormPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveChildBulletStormPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

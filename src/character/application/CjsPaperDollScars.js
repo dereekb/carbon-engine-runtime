@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned large scar settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollScars")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollScars extends CjsPaperDollComponent
 {
 

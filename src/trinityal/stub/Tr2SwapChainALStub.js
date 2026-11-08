@@ -186,3 +186,4 @@ export class Tr2SwapChainALStub extends Tr2DeviceResourceAL
 // author's to declare, never a checker's to guess.
 // States against stub/Tr2SwapChainALStub.cpp:11-58 and .h:22-32: a 4x4 B8G8R8X8 render-target back buffer (STUB_BACK_BUFFER_SIZE).
 CjsSchema.meta.define("Tr2SwapChainALStub")(Tr2SwapChainALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2SwapChainALStub);

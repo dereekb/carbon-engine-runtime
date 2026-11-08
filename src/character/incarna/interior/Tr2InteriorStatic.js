@@ -48,6 +48,7 @@ import { Tr2ShaderMaterial } from "../shader/Tr2ShaderMaterial.js";
 @be.mapInterface(ITr2InteriorDynamic)
 @be.mapInterface(ITr2Pickable)
 @be.mapInterface(ITr2BoundingBox)
+@meta.exposureChainTo(IRoot)
 export class Tr2InteriorStatic extends IRoot
 {
 

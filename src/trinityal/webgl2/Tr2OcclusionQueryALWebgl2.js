@@ -207,3 +207,4 @@ CjsSchema.decorateMethod(Tr2OcclusionQueryALWebgl2, "Begin");
 CjsSchema.decorateMethod(Tr2OcclusionQueryALWebgl2, "End");
 CjsSchema.decorateMethod(Tr2OcclusionQueryALWebgl2, "GetPixelCount");
 CjsSchema.meta.define("Tr2OcclusionQueryALWebgl2")(Tr2OcclusionQueryALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2OcclusionQueryALWebgl2);

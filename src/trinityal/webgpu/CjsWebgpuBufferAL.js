@@ -675,3 +675,4 @@ export class CjsWebgpuBufferAL extends Tr2DeviceResourceAL
 // author's to declare, never a checker's to guess.
 // Donor: metal/Tr2BufferALMetal.mm (plain WRITE family, with dx11 as the recorded choices). Create keeps Metal's refusals (zero count, immutable without data, READ with WRITE_OFTEN) and makes a GPUBuffer with a retained shadow copy. MapForWriting/UnmapForWriting/UpdateBuffer work on that shadow and upload the changed range with queue.writeBuffer (the deliberate second family); the map methods return { result, data }, MapForReading answers one frame late, and UnmapForReading frees nothing. The heap-index getters return 0xffffffff (WebGPU has no heap). Describe writes memoryClass and sizeInBytes, and SetName does not store the name.
 CjsSchema.meta.define("CjsWebgpuBufferAL")(CjsWebgpuBufferAL);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(CjsWebgpuBufferAL);

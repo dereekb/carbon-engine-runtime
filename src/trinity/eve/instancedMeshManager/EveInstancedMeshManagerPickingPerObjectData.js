@@ -17,6 +17,7 @@ import { Tr2PerObjectData } from "../../core/rawData/perObjectData/Tr2PerObjectD
  * Carbon: PickingPerObjectData (trinity/trinity/Eve/EveInstancedMeshManager.cpp:23)
  */
 @meta.carbon("EveInstancedMeshManagerPickingPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveInstancedMeshManagerPickingPerObjectData extends Tr2PerObjectData
 {
 

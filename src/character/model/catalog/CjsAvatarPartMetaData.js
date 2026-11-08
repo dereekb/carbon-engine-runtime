@@ -13,6 +13,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * `modifierLocation` relationships only when a join is exact.
  */
 @meta.define({ className: "CjsAvatarPartMetaData", aliases: [ "paperDoll.AvatarPartMetaData" ] })
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsAvatarPartMetaData extends CjsCharacterRecord
 {
 

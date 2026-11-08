@@ -919,3 +919,4 @@ CjsSchema.decorateMethod(Tr2BufferALWebgl2, "CreateStagingBuffer");
 CjsSchema.decorateMethod(Tr2BufferALWebgl2, "MapForWriting");
 CjsSchema.decorateMethod(Tr2BufferALWebgl2, "UnmapForWriting");
 CjsSchema.meta.define("Tr2BufferALWebgl2")(Tr2BufferALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2BufferALWebgl2);

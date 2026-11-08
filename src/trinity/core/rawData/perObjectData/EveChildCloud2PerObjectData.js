@@ -11,6 +11,7 @@ import { Tr2PerObjectData } from "./Tr2PerObjectData.js";
  * Carbon: EveChildCloudPerObjectData (trinity/trinity/Eve/SpaceObject/Children/EveChildCloud2.cpp:26)
  */
 @meta.carbon("EveChildCloud2PerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveChildCloud2PerObjectData extends Tr2PerObjectData
 {
   data = null;

@@ -10,6 +10,7 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2Rende
 
 /** Carbon `Tr2RingIndexBuffer`: the ring as an index buffer. */
 @meta.carbon("Tr2RingIndexBuffer")
+@meta.exposureChainTo(Tr2DynamicRingBuffer)
 export class Tr2RingIndexBuffer extends Tr2DynamicRingBuffer
 {
   /** _indexSize */

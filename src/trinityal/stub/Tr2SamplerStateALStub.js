@@ -154,3 +154,4 @@ export class Tr2SamplerStateALStub extends Tr2DeviceResourceAL
 CjsSchema.decorateField(Tr2SamplerStateALStub, "_isValid", type.boolean);
 // States against stub/Tr2SamplerStateALStub.cpp:11-39 and .h:23-26. Create and Destroy are adapted: this port keeps the description (GetDescription) where Carbon's stub ignores it.
 CjsSchema.meta.define("Tr2SamplerStateALStub")(Tr2SamplerStateALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2SamplerStateALStub);

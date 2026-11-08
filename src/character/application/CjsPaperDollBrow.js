@@ -3,6 +3,7 @@ import { CjsPaperDollAccessory } from "./CjsPaperDollAccessory.js";
 
 /** Application-owned brow piercing (`accessories/brow`); see `CjsPaperDollAccessory`. */
 @meta.define("CjsPaperDollBrow")
+@meta.exposureChainTo(CjsPaperDollAccessory)
 export class CjsPaperDollBrow extends CjsPaperDollAccessory
 {
 

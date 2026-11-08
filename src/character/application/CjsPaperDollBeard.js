@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned facial-hair settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollBeard")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollBeard extends CjsPaperDollComponent
 {
 

@@ -16,6 +16,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * being the dependant as authored. The host knows each garment's states.
  */
 @meta.define("CjsPaperDollTopMiddle")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollTopMiddle extends CjsPaperDollComponent
 {
 

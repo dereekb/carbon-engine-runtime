@@ -349,3 +349,4 @@ CjsSchema.decorateField(Tr2BufferALStub, "_desc", type.rawStruct("Tr2BufferDescr
 CjsSchema.decorateField(Tr2BufferALStub, "_buffer", type.uint8Array);
 // States against stub/Tr2BufferALStub.cpp:22-171 and .h:21-24. The three Map methods are adapted: the pointer out-parameter comes back with the result as { result, data }, and the ranged read returns the sub-range where Carbon returns the start of the whole buffer.
 CjsSchema.meta.define("Tr2BufferALStub")(Tr2BufferALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2BufferALStub);

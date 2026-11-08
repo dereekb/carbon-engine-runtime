@@ -4024,3 +4024,4 @@ export class CjsMusicEngine extends ICjsMusicEngine
 }
 
 CjsSchema.meta.define("CjsMusicEngine")(CjsMusicEngine);
+CjsSchema.meta.exposureChainTo(ICjsMusicEngine)(CjsMusicEngine);

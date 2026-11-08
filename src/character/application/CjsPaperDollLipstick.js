@@ -13,6 +13,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * 3646012 lipstick_01 to _03 use colour area 1, and _04 and _05 use areas 1 and 2.
  */
 @meta.define("CjsPaperDollLipstick")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollLipstick extends CjsPaperDollComponent
 {
 

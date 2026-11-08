@@ -34,6 +34,7 @@ import { EveSpaceObjectChild } from "./EveSpaceObjectChild.js";
  * its parent's each frame.
  */
 @meta.carbon("EveChildTransform")
+@meta.exposureChainTo(EveSpaceObjectChild)
 export class EveChildTransform extends EveSpaceObjectChild
 {
   @type.vec3

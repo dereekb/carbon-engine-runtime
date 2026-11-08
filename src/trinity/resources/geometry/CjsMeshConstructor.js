@@ -104,3 +104,4 @@ export function RegisterMeshConstructor(resourceManager)
 
 // Imperative metadata keeps native resource source imports valid ESM.
 meta.define("CjsMeshConstructor")(CjsMeshConstructor);
+meta.exposureChainTo(IBlueDynamicResourceConstructor)(CjsMeshConstructor);

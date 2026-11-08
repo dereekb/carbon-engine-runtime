@@ -170,3 +170,4 @@ CjsSchema.decorateField(Tr2ShaderProgramALStub, "_isValid", type.boolean);
 CjsSchema.decorateField(Tr2ShaderProgramALStub, "_registerMap", type.rawStruct("Tr2RegisterMapAL"));
 // States against stub/Tr2ShaderProgramALStub.cpp:11-68 and .h:20-26. Create is adapted: it also keeps the shaders (GetShaders), which Carbon's stub does not.
 CjsSchema.meta.define("Tr2ShaderProgramALStub")(Tr2ShaderProgramALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ShaderProgramALStub);

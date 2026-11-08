@@ -92,3 +92,4 @@ CjsSchema.decorateMethod(Tr2ReadbackALStub, "Describe");
 CjsSchema.decorateMethod(Tr2ReadbackALStub, "GetMemoryClass");
 CjsSchema.decorateMethod(Tr2ReadbackALStub, "IsValid");
 CjsSchema.meta.define("Tr2ReadbackALStub")(Tr2ReadbackALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ReadbackALStub);

@@ -181,3 +181,4 @@ CjsSchema.decorateField(Tr2FenceALStub, "_isValid", type.boolean);
 CjsSchema.decorateField(Tr2FenceALStub, "_hasFence", type.boolean);
 // States against stub/Tr2FenceALStub.cpp:14-76 and .h:25-31; IsReached is adapted: the bool& comes back with the result as { result, isReached }. Destroy also runs the base resource's Destroy, which is the unregistering Carbon's Tr2DeviceResourceAL template does.
 CjsSchema.meta.define("Tr2FenceALStub")(Tr2FenceALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2FenceALStub);

@@ -292,4 +292,5 @@ CjsSchema.meta.define(TnyOutlineHelper, {
   className: "TnyOutlineHelper",
   methods: Object.fromEntries(["Validate", "Execute", "Destruct", "_LoadEffects", "_Modes", "_EnsureMask", "_Composite"].map(name => [name, []]))
 });
+CjsSchema.meta.exposureChainTo(ITr2RenderNode)(TnyOutlineHelper);
 

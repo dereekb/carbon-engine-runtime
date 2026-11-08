@@ -78,3 +78,4 @@ CjsSchema.meta.define(CjsTexturePipelineStepPack, {
     Execute: []
   }
 });
+CjsSchema.meta.exposureChainTo(Tr2TexturePipelineStepPack)(CjsTexturePipelineStepPack);

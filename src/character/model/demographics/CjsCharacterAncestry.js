@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Character-creation ancestry record linked to its owning bloodline. */
 @meta.define("CjsCharacterAncestry")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterAncestry extends CjsCharacterRecord
 {
 

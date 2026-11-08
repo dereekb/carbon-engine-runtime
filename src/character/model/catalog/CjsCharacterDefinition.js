@@ -11,6 +11,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * that a decoded JSON value cannot represent. Null means text was not supplied.
  */
 @meta.define("CjsCharacterDefinition")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterDefinition extends CjsCharacterRecord
 {
 

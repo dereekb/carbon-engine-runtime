@@ -48,3 +48,4 @@ export class CjsAudioBackendGlobalReaders extends ICjsAudioGlobalReaders
 }
 
 CjsSchema.meta.define("CjsAudioBackendGlobalReaders")(CjsAudioBackendGlobalReaders);
+CjsSchema.meta.exposureChainTo(ICjsAudioGlobalReaders)(CjsAudioBackendGlobalReaders);

@@ -135,3 +135,4 @@ CjsSchema.decorateMethod(Tr2ResourceSetALStub, "Create");
 // States: Tr2ResourceSetALStub.cpp:21-48. Destroy is adapted: Carbon only clears the valid flag, this also releases the description,
 // the program and the registered base resource, which a garbage-collected port has to drop explicitly.
 CjsSchema.meta.define("Tr2ResourceSetALStub")(Tr2ResourceSetALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ResourceSetALStub);

@@ -165,3 +165,4 @@ CjsSchema.decorateField(Tr2OcclusionQueryALStub, "_isValid", type.boolean);
 CjsSchema.decorateField(Tr2OcclusionQueryALStub, "_isRunning", type.boolean);
 // States against stub/Tr2OcclusionQueryALStub.cpp:14-72 and .h:25-28; GetPixelCount is adapted: the uint32& count comes back with the result as { result, count }. Destroy also runs the base resource's Destroy.
 CjsSchema.meta.define("Tr2OcclusionQueryALStub")(Tr2OcclusionQueryALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2OcclusionQueryALStub);

@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Shared head/body skin palette, independent of foundation shape strength. */
 @meta.define("CjsPaperDollSkin")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollSkin extends CjsPaperDollComponent
 {
 

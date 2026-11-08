@@ -10,6 +10,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * missing one rather than assume the catalog is populated.
  */
 @meta.define("CjsCharacterRecipeProfile")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterRecipeProfile extends CjsCharacterRecord
 {
 

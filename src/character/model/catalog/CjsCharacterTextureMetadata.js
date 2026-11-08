@@ -13,6 +13,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * a texture. Composition consumes the loaded texture resource's native cutout.
  */
 @meta.define("CjsCharacterTextureMetadata")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterTextureMetadata extends CjsCharacterRecord
 {
 

@@ -24,6 +24,7 @@ import { meta, type } from "#schema";
  * @adapted
  */
 @meta.define("Tr2HighLevelShader")
+@meta.exposureChainTo(IRoot)
 export class Tr2HighLevelShader extends IRoot
 {
 

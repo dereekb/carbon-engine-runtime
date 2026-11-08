@@ -267,3 +267,4 @@ CjsSchema.decorateMethod(Tr2VertexLayoutALWebgl2, "Create");
 CjsSchema.decorateMethod(Tr2VertexLayoutALWebgl2, "SetLayout");
 // States against dx11/Tr2VertexLayoutALDx11.cpp and .h:22-26. Donor: the dx11 body of the same Carbon class. Destroy/IsValid/GetMemoryClass/Describe are the same contract on GL objects; SetName stores the name but sets no native debug label, which WebGL has no call for.
 CjsSchema.meta.define("Tr2VertexLayoutALWebgl2")(Tr2VertexLayoutALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2VertexLayoutALWebgl2);

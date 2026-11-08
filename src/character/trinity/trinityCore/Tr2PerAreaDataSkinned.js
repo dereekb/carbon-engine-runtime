@@ -10,6 +10,7 @@ import { Tr2PerObjectDataSkinned, TR2_MAX_BONES_PER_MESHAREA } from "./Tr2PerObj
 
 /** A mesh area's copied joint palette and reference to its object's shared data. */
 @meta.carbon("Tr2PerAreaDataSkinned")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class Tr2PerAreaDataSkinned extends Tr2PerObjectData
 {
   /** m_jointCount. */

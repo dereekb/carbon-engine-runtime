@@ -185,3 +185,4 @@ CjsSchema.decorateMethod(Tr2PipelineStatsQueryALWebgl2, "GetLabel");
 CjsSchema.decorateMethod(Tr2PipelineStatsQueryALWebgl2, "GetDescription");
 CjsSchema.decorateMethod(Tr2PipelineStatsQueryALWebgl2, "GetValue");
 CjsSchema.meta.define("Tr2PipelineStatsQueryALWebgl2")(Tr2PipelineStatsQueryALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2PipelineStatsQueryALWebgl2);

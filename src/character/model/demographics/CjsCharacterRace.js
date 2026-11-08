@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Character-creation race record with authored localization and starting-skill identities. */
 @meta.define("CjsCharacterRace")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterRace extends CjsCharacterRecord
 {
 

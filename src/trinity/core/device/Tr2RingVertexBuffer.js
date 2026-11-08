@@ -10,6 +10,7 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2Rende
 
 /** Carbon `Tr2RingVertexBuffer`: the ring as a vertex buffer. */
 @meta.carbon("Tr2RingVertexBuffer")
+@meta.exposureChainTo(Tr2DynamicRingBuffer)
 export class Tr2RingVertexBuffer extends Tr2DynamicRingBuffer
 {
   /**

@@ -13,6 +13,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * `GetControls` only as the selected item's zone map uses them.
  */
 @meta.define("CjsPaperDollAccessory")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollAccessory extends CjsPaperDollComponent
 {
 

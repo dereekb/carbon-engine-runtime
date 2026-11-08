@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Authored portrait resource classified by its source category and optional type identity. */
 @meta.define("CjsCharacterPortraitResource")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterPortraitResource extends CjsCharacterRecord
 {
 

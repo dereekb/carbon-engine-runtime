@@ -222,3 +222,4 @@ CjsSchema.decorateMethod(Tr2GpuTimerALWebgl2, "End");
 CjsSchema.decorateMethod(Tr2GpuTimerALWebgl2, "GetTime");
 // States against dx11/Tr2GpuTimerALDx11.cpp and .h. Donor: the dx11 body of the same Carbon class. Destroy/IsValid/GetMemoryClass/Describe are the same contract on GL objects; SetName stores the name but sets no native debug label, which WebGL has no call for.
 CjsSchema.meta.define("Tr2GpuTimerALWebgl2")(Tr2GpuTimerALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2GpuTimerALWebgl2);

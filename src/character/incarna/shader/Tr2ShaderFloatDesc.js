@@ -16,6 +16,7 @@ import { meta, type } from "#schema";
  * @adapted
  */
 @meta.define("Tr2ShaderFloatDesc")
+@meta.exposureChainTo(IRoot)
 export class Tr2ShaderFloatDesc extends IRoot
 {
 

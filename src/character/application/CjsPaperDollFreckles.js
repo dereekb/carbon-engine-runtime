@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned freckle settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollFreckles")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollFreckles extends CjsPaperDollComponent
 {
 

@@ -12,6 +12,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * `GetControls` only as the selected garment's zone map uses them.
  */
 @meta.define("CjsPaperDollBodyAugmentation")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollBodyAugmentation extends CjsPaperDollComponent
 {
 

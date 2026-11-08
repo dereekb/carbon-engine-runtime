@@ -15,6 +15,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * style's zone map uses them.
  */
 @meta.define("CjsPaperDollHair")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollHair extends CjsPaperDollComponent
 {
 

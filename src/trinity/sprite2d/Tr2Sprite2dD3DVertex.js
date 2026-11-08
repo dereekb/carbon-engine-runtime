@@ -8,6 +8,7 @@ import { vec4 } from "#math/vec4";
 
 /** Extends a Sprite2D vertex with the clip, glow, transform, blend, tiling, and outline data consumed by the renderer. */
 @meta.carbon("Tr2Sprite2dD3DVertex")
+@meta.exposureChainTo(Tr2Sprite2dVertexBase)
 export class Tr2Sprite2dD3DVertex extends Tr2Sprite2dVertexBase
 {
 

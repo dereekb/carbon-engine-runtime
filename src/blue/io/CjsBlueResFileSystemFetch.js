@@ -497,3 +497,4 @@ CjsSchema.meta.define(CjsBlueResFileSystemFetch, {
     GetStreamFromPath: []
   }
 });
+CjsSchema.meta.exposureChainTo(IBlueResFileSystem)(CjsBlueResFileSystemFetch);

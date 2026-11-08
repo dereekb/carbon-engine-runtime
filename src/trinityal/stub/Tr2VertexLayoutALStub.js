@@ -136,3 +136,4 @@ export class Tr2VertexLayoutALStub extends Tr2DeviceResourceAL
 // author's to declare, never a checker's to guess.
 // States against stub/Tr2VertexLayoutALStub.cpp:11-38 and .h:20-32. Create is adapted: it keeps a copy of the definition's items, not a Tr2VertexDefinition copy.
 CjsSchema.meta.define("Tr2VertexLayoutALStub")(Tr2VertexLayoutALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2VertexLayoutALStub);

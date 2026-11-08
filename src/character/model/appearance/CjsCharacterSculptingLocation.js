@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Authored sculpt-control location naming its weight category and prefix. */
 @meta.define("CjsCharacterSculptingLocation")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterSculptingLocation extends CjsCharacterRecord
 {
 

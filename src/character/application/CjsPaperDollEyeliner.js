@@ -11,6 +11,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * `GetControls` only as the selected style's zone map uses them.
  */
 @meta.define("CjsPaperDollEyeliner")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollEyeliner extends CjsPaperDollComponent
 {
 

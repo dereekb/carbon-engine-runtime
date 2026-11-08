@@ -21,6 +21,7 @@ import { meta } from "#schema";
  * A decal's vertex and pixel blocks.
  */
 @meta.carbon("EveDecalPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveDecalPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

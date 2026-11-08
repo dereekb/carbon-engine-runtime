@@ -13,6 +13,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * are refused until their zones are qualified.
  */
 @meta.define("CjsPaperDollTattoo")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollTattoo extends CjsPaperDollComponent
 {
 

@@ -1144,3 +1144,4 @@ export class CjsBlackReader extends CjsBlueReader
 meta.inherit(IBlueObjectBuilder)(CjsBlackReader, { kind: "class" });
 
 CjsSchema.meta.define("CjsBlackReader")(CjsBlackReader);
+CjsSchema.meta.exposureChainTo(CjsBlueReader)(CjsBlackReader);

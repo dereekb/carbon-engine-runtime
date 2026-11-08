@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned eyebrow settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollEyebrows")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollEyebrows extends CjsPaperDollComponent
 {
 

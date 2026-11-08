@@ -325,3 +325,4 @@ export class CjsWwiseSoundEngineStub extends ICjsWwiseSoundEngine
 }
 
 CjsSchema.meta.define("CjsWwiseSoundEngineStub")(CjsWwiseSoundEngineStub);
+CjsSchema.meta.exposureChainTo(ICjsWwiseSoundEngine)(CjsWwiseSoundEngineStub);

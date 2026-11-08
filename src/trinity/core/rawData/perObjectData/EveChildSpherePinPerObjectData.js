@@ -22,6 +22,7 @@ import { meta } from "#schema";
  * The child sphere pin's block, bound to both registers.
  */
 @meta.carbon("EveChildSpherePinPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveChildSpherePinPerObjectData extends Tr2PerObjectData
 {
   /** The payload, bound to both per-object registers. */

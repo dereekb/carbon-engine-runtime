@@ -20,6 +20,7 @@ import { meta } from "#schema";
  * A warhead's transform block.
  */
 @meta.carbon("EveMissileWarheadPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveMissileWarheadPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

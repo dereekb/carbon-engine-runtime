@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Authored character resource with explicit gender, type, and clothing-category rules. */
 @meta.define("CjsCharacterResource")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterResource extends CjsCharacterRecord
 {
 

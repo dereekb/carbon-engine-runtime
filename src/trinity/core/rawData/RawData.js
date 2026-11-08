@@ -619,3 +619,4 @@ export class RawData extends CjsConstantPayload
 }
 
 CjsSchema.meta.define("RawData")(RawData);
+CjsSchema.meta.exposureChainTo(CjsConstantPayload)(RawData);

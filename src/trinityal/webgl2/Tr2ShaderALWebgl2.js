@@ -305,3 +305,4 @@ CjsSchema.decorateField(Tr2ShaderALWebgl2, "_type", type.int32);
 CjsSchema.decorateMethod(Tr2ShaderALWebgl2, "Create");
 // States against dx11/Tr2ShaderALDx11.cpp. ReleaseShader/IsValid/GetType/GetSignature are dx11's with GL shader objects. Destroy is adapted: it also clears the bytecode, signature and stage block, which dx11 keeps. GetBytecode is adapted: the Tr2ShaderBytecodeAL& comes back with the result as { result, bytecode }. Describe is adapted: it writes type and name but not dx11's shader and size keys. SetName stores the name with no native debug label.
 CjsSchema.meta.define("Tr2ShaderALWebgl2")(Tr2ShaderALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ShaderALWebgl2);

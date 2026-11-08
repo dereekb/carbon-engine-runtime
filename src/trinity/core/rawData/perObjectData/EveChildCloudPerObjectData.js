@@ -4,6 +4,7 @@ import { Tr2PerObjectData } from "./Tr2PerObjectData.js";
 
 /** Legacy cloud constants, uploaded to the non-pixel shader stages. */
 @meta.carbon("EveChildCloudPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveChildCloudPerObjectData extends Tr2PerObjectData
 {
   data = null;

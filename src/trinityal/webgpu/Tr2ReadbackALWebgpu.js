@@ -117,3 +117,4 @@ CjsSchema.decorateMethod(Tr2ReadbackALWebgpu, "Destroy");
 CjsSchema.decorateMethod(Tr2ReadbackALWebgpu, "Describe");
 CjsSchema.decorateMethod(Tr2ReadbackALWebgpu, "GetMemoryClass");
 CjsSchema.meta.define("Tr2ReadbackALWebgpu")(Tr2ReadbackALWebgpu);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ReadbackALWebgpu);

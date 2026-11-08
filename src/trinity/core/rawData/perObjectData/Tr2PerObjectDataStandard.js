@@ -34,6 +34,7 @@ import { meta } from "#schema";
  * Per-object data with both a vertex and a pixel payload.
  */
 @meta.carbon("Tr2PerObjectDataStandard")
+@meta.exposureChainTo(Tr2PerObjectDataPSBuffer)
 export class Tr2PerObjectDataStandard extends Tr2PerObjectDataPSBuffer
 {
   /** The vertex payload, in the shape this object was leased for. */

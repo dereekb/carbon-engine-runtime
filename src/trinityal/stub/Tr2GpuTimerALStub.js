@@ -141,3 +141,4 @@ export class Tr2GpuTimerALStub extends Tr2DeviceResourceAL
 CjsSchema.decorateField(Tr2GpuTimerALStub, "_isValid", type.boolean);
 // States against stub/Tr2GpuTimerALStub.cpp (Create/Destroy/IsValid/Begin/End/GetTime/SetName) and .h (GetMemoryClass = AL_MEMORY_VIDEO). Destroy also runs the base resource's Destroy.
 CjsSchema.meta.define("Tr2GpuTimerALStub")(Tr2GpuTimerALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2GpuTimerALStub);

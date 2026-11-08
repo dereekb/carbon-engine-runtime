@@ -273,3 +273,4 @@ CjsSchema.decorateMethod(Tr2ConstantBufferALWebgl2, "Lock");
 CjsSchema.decorateMethod(Tr2ConstantBufferALWebgl2, "Unlock");
 // States against dx11/Tr2ConstantBufferALDx11.cpp. Donor: the dx11 body of the same Carbon class. Destroy/IsValid/GetMemoryClass/Describe are the same contract on GL objects; SetName stores the name but sets no native debug label, which WebGL has no call for.
 CjsSchema.meta.define("Tr2ConstantBufferALWebgl2")(Tr2ConstantBufferALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ConstantBufferALWebgl2);

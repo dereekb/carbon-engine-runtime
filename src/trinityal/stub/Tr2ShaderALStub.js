@@ -200,3 +200,4 @@ CjsSchema.decorateField(Tr2ShaderALStub, "_bytecode", type.uint8Array);
 CjsSchema.decorateField(Tr2ShaderALStub, "_signature", type.rawStruct("Tr2ShaderSignatureAL"));
 // States against stub/Tr2ShaderALStub.cpp:14-70 and .h:32-40. Create is adapted: it keeps the signature, which Carbon's stub ignores. GetBytecode is adapted: the Tr2ShaderBytecodeAL& comes back with the result as { result, bytecode }.
 CjsSchema.meta.define("Tr2ShaderALStub")(Tr2ShaderALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ShaderALStub);

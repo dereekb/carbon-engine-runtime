@@ -1568,4 +1568,5 @@ CjsSchema.decorateMethod(Tr2TextureALWebgl2, "UpdateSubresource");
 CjsSchema.decorateMethod(Tr2TextureALWebgl2, "CopySubresourceRegion");
 CjsSchema.decorateMethod(Tr2TextureALWebgl2, "Resolve");
 CjsSchema.meta.define("Tr2TextureALWebgl2")(Tr2TextureALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2TextureALWebgl2);
 

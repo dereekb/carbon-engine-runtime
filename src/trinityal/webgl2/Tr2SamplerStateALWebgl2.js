@@ -321,3 +321,4 @@ CjsSchema.decorateField(Tr2SamplerStateALWebgl2, "_name", type.string);
 CjsSchema.decorateMethod(Tr2SamplerStateALWebgl2, "Create");
 // States against dx11/Tr2SamplerStateALDx11.cpp. GetIndexInHeap is 0xffffffff, as dx11. Donor: the dx11 body of the same Carbon class. Destroy/IsValid/GetMemoryClass/Describe are the same contract on GL objects; SetName stores the name but sets no native debug label, which WebGL has no call for.
 CjsSchema.meta.define("Tr2SamplerStateALWebgl2")(Tr2SamplerStateALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2SamplerStateALWebgl2);

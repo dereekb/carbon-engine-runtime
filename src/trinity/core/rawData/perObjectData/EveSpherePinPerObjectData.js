@@ -22,6 +22,7 @@ import { meta } from "#schema";
  * A sphere pin's transform, position, rotation and colour, bound to both registers.
  */
 @meta.carbon("EveSpherePinPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveSpherePinPerObjectData extends Tr2PerObjectData
 {
   /** The payload, bound to both per-object registers. */

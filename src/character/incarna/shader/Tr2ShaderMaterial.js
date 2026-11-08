@@ -32,6 +32,7 @@ const libraryLoads = new WeakMap();
  * @adapted converted to a Tr2Effect, not bound as a device resource
  */
 @meta.define("Tr2ShaderMaterial")
+@meta.exposureChainTo(IRoot)
 export class Tr2ShaderMaterial extends IRoot
 {
 

@@ -21,6 +21,7 @@ import { meta } from "#schema";
  * A booster set's vertex and pixel blocks.
  */
 @meta.carbon("EveBoosterSetPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveBoosterSetPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

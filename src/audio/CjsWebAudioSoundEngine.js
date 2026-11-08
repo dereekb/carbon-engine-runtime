@@ -9975,3 +9975,4 @@ function EvaluateCrossfadeGain(from, to, progress, mode)
 }
 
 CjsSchema.meta.define("CjsWebAudioSoundEngine")(CjsWebAudioSoundEngine);
+CjsSchema.meta.exposureChainTo(ICjsWwiseSoundEngine)(CjsWebAudioSoundEngine);

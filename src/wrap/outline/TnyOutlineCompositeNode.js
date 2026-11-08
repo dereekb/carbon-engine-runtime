@@ -43,3 +43,4 @@ CjsSchema.meta.define(TnyOutlineCompositeNode, {
   className: "TnyOutlineCompositeNode",
   methods: { Validate: [], Execute: [] }
 });
+CjsSchema.meta.exposureChainTo(ITr2RenderNode)(TnyOutlineCompositeNode);

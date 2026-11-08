@@ -60,6 +60,7 @@ const ROLES = {
  * the source again.
  */
 @meta.define("CjsIncarnaTextureConstructor")
+@meta.exposureChainTo(IBlueDynamicResourceConstructor)
 export class CjsIncarnaTextureConstructor extends IBlueDynamicResourceConstructor
 {
 

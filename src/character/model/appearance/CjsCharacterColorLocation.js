@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Authored color-control location and its supported scalar controls. */
 @meta.define("CjsCharacterColorLocation")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterColorLocation extends CjsCharacterRecord
 {
 

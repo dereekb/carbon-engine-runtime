@@ -435,6 +435,7 @@ export class Tr2VariableStore
  * Carbon: Tr2GlobalVariableStore (trinity/trinity/Tr2VariableStore.cpp:450)
  */
 @meta.carbon("Tr2GlobalVariableStore")
+@meta.exposureChainTo(Tr2VariableStore)
 export class Tr2GlobalVariableStore extends Tr2VariableStore
 {
   /**

@@ -10,6 +10,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * allow-list or deny-list meaning.
  */
 @meta.define("CjsCharacterPartType")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterPartType extends CjsCharacterRecord
 {
 

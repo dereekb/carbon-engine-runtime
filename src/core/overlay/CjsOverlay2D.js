@@ -160,3 +160,4 @@ CjsSchema.meta.define(CjsOverlay2D, {
   className: "CjsOverlay2D",
   methods: Object.fromEntries([ "Sync", "AddDrawer", "RemoveDrawer", "Render", "OnTick", "Destruct" ].map(name => [ name, [] ]))
 });
+CjsSchema.meta.exposureChainTo(IBlueEvents)(CjsOverlay2D);

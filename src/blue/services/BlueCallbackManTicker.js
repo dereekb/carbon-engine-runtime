@@ -64,3 +64,4 @@ export class BlueCallbackManTicker extends IBlueEvents
 }
 
 CjsSchema.meta.define("BlueCallbackManTicker")(BlueCallbackManTicker);
+CjsSchema.meta.exposureChainTo(IBlueEvents)(BlueCallbackManTicker);

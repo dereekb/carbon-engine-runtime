@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned scarring settings (the creator's Complexion "Scarring": relief and shine only); edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollScarring")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollScarring extends CjsPaperDollComponent
 {
 

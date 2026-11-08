@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Named avatar-behavior resource record with its authored gender selector. */
 @meta.define("CjsCharacterAvatarBehavior")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterAvatarBehavior extends CjsCharacterRecord
 {
 

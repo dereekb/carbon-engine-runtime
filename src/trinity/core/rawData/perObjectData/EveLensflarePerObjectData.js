@@ -22,6 +22,7 @@ import { meta } from "#schema";
  * A lensflare's block, bound to both per-object registers.
  */
 @meta.carbon("EveLensflarePerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveLensflarePerObjectData extends Tr2PerObjectData
 {
   /** The payload, bound to both per-object registers. */

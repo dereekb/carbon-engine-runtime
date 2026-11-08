@@ -4,6 +4,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned blush settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollBlush")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollBlush extends CjsPaperDollComponent
 {
 

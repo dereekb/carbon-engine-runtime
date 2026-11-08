@@ -159,3 +159,4 @@ export class Tr2ReadbackALWebgl2 extends Tr2DeviceResourceAL
 CjsSchema.decorateMethod(Tr2ReadbackALWebgl2, "Map");
 CjsSchema.decorateMethod(Tr2ReadbackALWebgl2, "Destroy");
 CjsSchema.meta.define("Tr2ReadbackALWebgl2")(Tr2ReadbackALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ReadbackALWebgl2);

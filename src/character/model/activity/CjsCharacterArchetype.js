@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Transparent activity-archetype record retained by the character source document. */
 @meta.define("CjsCharacterArchetype")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterArchetype extends CjsCharacterRecord
 {
 

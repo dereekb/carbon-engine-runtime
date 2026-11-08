@@ -4,6 +4,7 @@ import { PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned eye settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollEyes")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollEyes extends CjsPaperDollComponent
 {
 

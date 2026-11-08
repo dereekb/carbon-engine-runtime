@@ -9,6 +9,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * choose a source for rendering.
  */
 @meta.define("CjsCharacterPartSource")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterPartSource extends CjsCharacterRecord
 {
 

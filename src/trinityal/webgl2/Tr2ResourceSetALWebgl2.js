@@ -466,3 +466,4 @@ CjsSchema.decorateField(Tr2ResourceSetALWebgl2, "_stages", type.array({ kind: "r
 CjsSchema.decorateMethod(Tr2ResourceSetALWebgl2, "Create");
 // States against dx11/Tr2ResourceSetALDx11.cpp (Destroy clears the stages, UAVs and flags; SetName stores the name, with no native object to label).
 CjsSchema.meta.define("Tr2ResourceSetALWebgl2")(Tr2ResourceSetALWebgl2);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ResourceSetALWebgl2);

@@ -21,6 +21,7 @@ import { meta } from "#schema";
  * A turret set's vertex and pixel blocks.
  */
 @meta.carbon("EveTurretSetPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveTurretSetPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

@@ -183,3 +183,4 @@ export class Tr2ConstantBufferALStub extends Tr2DeviceResourceAL
 CjsSchema.decorateField(Tr2ConstantBufferALStub, "_shadowCopy", type.uint8Array);
 // States against stub/Tr2ConstantBufferALStub.cpp:11-74 and .h:22-26. Create is adapted: it copies initialData into the shadow copy where Carbon's stub only sizes it, and does not log the immutable-without-data error. Lock is adapted: the void** comes back with the result as { result, data }.
 CjsSchema.meta.define("Tr2ConstantBufferALStub")(Tr2ConstantBufferALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2ConstantBufferALStub);

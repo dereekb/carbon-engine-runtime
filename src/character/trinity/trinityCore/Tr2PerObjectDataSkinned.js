@@ -15,6 +15,7 @@ export const TR2_MAX_BONES_PER_MESHAREA = 69;
 
 /** Shared world/mirror and pixel data; the area supplies the remapped palette. */
 @meta.carbon("Tr2PerObjectDataSkinned")
+@meta.exposureChainTo(Tr2PerObjectDataPSBuffer)
 export class Tr2PerObjectDataSkinned extends Tr2PerObjectDataPSBuffer
 {
   /** Native VS allocation: 207 joint registers, world, one unwritten register, mirror. */

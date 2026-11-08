@@ -20,6 +20,7 @@ import { meta } from "#schema";
  * The static-particle field's per-draw block.
  */
 @meta.carbon("EveSceneStaticParticlesPerObjectData")
+@meta.exposureChainTo(Tr2PerObjectData)
 export class EveSceneStaticParticlesPerObjectData extends Tr2PerObjectData
 {
   /** The vertex payload. */

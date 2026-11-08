@@ -178,3 +178,4 @@ export class Tr2PipelineStatsQueryALStub extends Tr2DeviceResourceAL
 // author's to declare, never a checker's to guess.
 // States against stub/Tr2PipelineStatsQueryALStub.cpp:9-70 and .h:35-38. GetStats is adapted: the Tr2PipelineStatsDataAL& comes back with the result as { result, data }. GetValueCount, GetLabel, GetDescription and GetValue are adapted: they read the data array (empty from the stub), where Carbon's stub returns 0 and empty strings without looking.
 CjsSchema.meta.define("Tr2PipelineStatsQueryALStub")(Tr2PipelineStatsQueryALStub);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(Tr2PipelineStatsQueryALStub);

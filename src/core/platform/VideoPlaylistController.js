@@ -200,6 +200,7 @@ export class VideoPlaylistController extends IBlueDynamicResourceConstructor
 }
 
 CjsSchema.meta.define("VideoPlaylistController")(VideoPlaylistController);
+CjsSchema.meta.exposureChainTo(IBlueDynamicResourceConstructor)(VideoPlaylistController);
 
 /**
  * Register host policy for dynamic playlist names. Shuffle once, then loop in

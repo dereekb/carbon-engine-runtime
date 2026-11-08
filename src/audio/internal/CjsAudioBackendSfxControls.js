@@ -159,3 +159,4 @@ export class CjsAudioBackendSfxControls extends ICjsSfxControls
 }
 
 CjsSchema.meta.define("CjsAudioBackendSfxControls")(CjsAudioBackendSfxControls);
+CjsSchema.meta.exposureChainTo(ICjsSfxControls)(CjsAudioBackendSfxControls);

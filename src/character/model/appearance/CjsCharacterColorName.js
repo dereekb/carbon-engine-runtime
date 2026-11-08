@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Authored appearance-color name and hair-color classification. */
 @meta.define("CjsCharacterColorName")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterColorName extends CjsCharacterRecord
 {
 

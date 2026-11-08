@@ -3,6 +3,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Source-backed paper-doll appearance, portrait pose, and expression record. */
 @meta.define("CjsCharacterPaperdoll")
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsCharacterPaperdoll extends CjsCharacterRecord
 {
 

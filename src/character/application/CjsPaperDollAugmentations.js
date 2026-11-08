@@ -9,6 +9,7 @@ import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
  * specular, so they feed the head, body and surface passes.
  */
 @meta.define("CjsPaperDollAugmentations")
+@meta.exposureChainTo(CjsPaperDollComponent)
 export class CjsPaperDollAugmentations extends CjsPaperDollComponent
 {
 

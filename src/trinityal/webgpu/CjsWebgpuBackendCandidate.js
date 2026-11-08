@@ -93,3 +93,4 @@ export class CjsWebgpuBackendCandidate extends CjsBackendCandidate
 
 
 CjsSchema.meta.define("CjsWebgpuBackendCandidate")(CjsWebgpuBackendCandidate);
+CjsSchema.meta.exposureChainTo(CjsBackendCandidate)(CjsWebgpuBackendCandidate);

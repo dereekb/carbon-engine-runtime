@@ -11,6 +11,7 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * missing one rather than assume the catalog is populated.
  */
 @meta.define({ className: "CjsProjectedDecal", aliases: [ "paperDoll.ProjectedDecal", "eve.client.script.paperDoll.projectedDecals.ProjectedDecal" ] })
+@meta.exposureChainTo(CjsCharacterRecord)
 export class CjsProjectedDecal extends CjsCharacterRecord
 {
 

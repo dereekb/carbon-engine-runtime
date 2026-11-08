@@ -288,3 +288,4 @@ export class DictWriter extends IRootWriter
 }
 
 CjsSchema.meta.define(DictWriter, { className: "DictWriter" });
+CjsSchema.meta.exposureChainTo(IRootWriter)(DictWriter);

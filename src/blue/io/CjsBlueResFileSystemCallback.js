@@ -108,3 +108,4 @@ CjsSchema.meta.define(CjsBlueResFileSystemCallback, {
     GetStreamFromPath: []
   }
 });
+CjsSchema.meta.exposureChainTo(IBlueResFileSystem)(CjsBlueResFileSystemCallback);

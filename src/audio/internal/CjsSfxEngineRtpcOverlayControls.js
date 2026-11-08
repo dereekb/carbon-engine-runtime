@@ -136,3 +136,4 @@ export class CjsSfxEngineRtpcOverlayControls extends ICjsSfxControls
 }
 
 CjsSchema.meta.define("CjsSfxEngineRtpcOverlayControls")(CjsSfxEngineRtpcOverlayControls);
+CjsSchema.meta.exposureChainTo(ICjsSfxControls)(CjsSfxEngineRtpcOverlayControls);
