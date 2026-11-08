@@ -80,26 +80,14 @@ test("a layer override reorders and rebuilds only the passes the part feeds, and
     assert.throws(() => doll.SetLayer("blush", NaN), RangeError);
 });
 
-test("an active occluder draws after the parts it occludes, matched by category or path", () =>
+test("occlusion does not reorder: an occluder keeps its rank (the occluded part is dropped by the walk instead)", () =>
 {
     const doll = Doll();
     doll.topUnderwear.Configure([ { id: "bikini", path: "topunderwear/bikini", colorAreas: [] } ], new Map(), { option: "bikini" });
-    doll.armLeft.Configure([ { id: "arm", path: "makeup/armleft/cyborgarm_l", colorAreas: [] } ], new Map(), { option: "arm" });
     doll.bodyAugmentation.Configure([ { id: "suit", path: "makeup/bodyaugmentations/suit", colorAreas: [],
-        occludes: [ "topunderwear", "makeup/armleft/cyborgarm_l" ] } ], new Map(), { option: "suit" });
-
+        occludes: [ "topunderwear" ] } ], new Map(), { option: "suit" });
     const order = doll.GetLayerOrder(PaperDollTarget.BODY);
-    assert.ok(order.indexOf("bodyAugmentation") > order.indexOf("topUnderwear"), "over the top underwear, by category");
-    assert.ok(order.indexOf("bodyAugmentation") > order.indexOf("armLeft"), "over the arm, by path");
-
-    CjsSchema.setValues(doll.bodyAugmentation, { enabled: false });
-    const plain = doll.GetLayerOrder(PaperDollTarget.BODY);
-    assert.ok(plain.indexOf("bodyAugmentation") < plain.indexOf("topUnderwear"), "off, it keeps its rank");
-
-    CjsSchema.setValues(doll.bodyAugmentation, { enabled: true });
-    CjsSchema.setValues(doll.topUnderwear, { enabled: false });
-    const bra = doll.GetLayerOrder(PaperDollTarget.BODY);
-    assert.ok(bra.indexOf("bodyAugmentation") > bra.indexOf("armLeft"), "still over the arm it occludes");
+    assert.ok(order.indexOf("bodyAugmentation") < order.indexOf("topUnderwear"), "its own rank, before the top underwear");
 });
 
 test("the captured occlusion targets name geometry the doll does not collect", () =>

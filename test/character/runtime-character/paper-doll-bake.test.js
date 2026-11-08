@@ -14,7 +14,7 @@ function wearing(options)
   return definition;
 }
 
-test("a worn part another's occludesModifiers names is suppressed; it leaves the body and surface lists only", () =>
+test("a part another's occludesModifiers names is suppressed and leaves every target's bake", () =>
 {
   const definition = wearing({
     outer: { id: "coat", path: "outer/coat", occludes: [ "topmiddle", "hair" ] },
@@ -28,12 +28,12 @@ test("a worn part another's occludesModifiers names is suppressed; it leaves the
   assert.deepEqual(body.order, body.lists.order, "the capture's order is the ready list");
   assert.ok("topMiddle" in body, "a suppressed part's settings stay in the capture");
   assert.ok(!CjsPaperDollInstance.ready(definition, PaperDollTarget.SURFACE).lists.order.includes("topMiddle"));
-  // Hair is not baked into the body: suppressed, it still bakes (today's hair does not skip).
-  assert.ok(CjsPaperDollInstance.ready(definition, PaperDollTarget.HEAD).lists.order.includes("hair"));
-  assert.ok(CjsPaperDollInstance.ready(definition, PaperDollTarget.SURFACE).lists.order.includes("hair"));
+  // Occlusion drops everywhere (operator, 2026-11-09): the hood's hair leaves the head and the surface too.
+  assert.ok(!CjsPaperDollInstance.ready(definition, PaperDollTarget.HEAD).lists.order.includes("hair"));
+  assert.ok(!CjsPaperDollInstance.ready(definition, PaperDollTarget.SURFACE).lists.order.includes("hair"));
 });
 
-test("the walk runs from the roots, keeps a cycle active, and leaves decal parts out", () =>
+test("the walk runs from the roots, keeps a cycle active, and takes every part: a face paint drops the beard", () =>
 {
   const chain = wearing({
     outer: { id: "a", path: "outer/a", occludes: [ "topouter" ] },
@@ -46,11 +46,17 @@ test("the walk runs from the roots, keeps a cycle active, and leaves decal parts
     topOuter: { id: "b", path: "topouter/b", occludes: [ "outer" ] }
   });
   assert.deepEqual(CjsPaperDollInstance.suppress(cycle), { suppressed: [], cyclic: [ "topOuter", "outer" ].sort((x, y) => cycle.constructor.parts.indexOf(x) - cycle.constructor.parts.indexOf(y)) });
-  // A face augmentation occluding the beard is drawn over it (GetLayerOrder), not suppressed.
+  // A face augmentation occluding the beard drops it from the head bake; a part whose option names no path is matched
+  // by its category (a helmet naming `makeup` drops the eye shadow).
   const paint = wearing({ augmentations: { id: "p", path: "makeup/augmentations/p", occludes: [ "beard" ] }, beard: { id: "b", path: "beard/b", occludes: [] } });
-  assert.deepEqual(CjsPaperDollInstance.suppress(paint).suppressed, []);
-  const head = CjsPaperDollInstance.ready(paint, PaperDollTarget.HEAD).lists.order;
-  assert.ok(head.indexOf("augmentations") > head.indexOf("beard"));
+  assert.deepEqual(CjsPaperDollInstance.suppress(paint).suppressed, [ "beard" ]);
+  assert.ok(!CjsPaperDollInstance.ready(paint, PaperDollTarget.HEAD).lists.order.includes("beard"));
+  const helmet = new CjsPaperDollDefinition();
+  helmet.outer.Configure([ { id: "v", path: "outer/vanguard", occludes: [ "makeup" ] } ], new Map(), { option: "v" });
+  helmet.outer.enabled = true;
+  helmet.eyeshadow.Configure([ { id: "e" } ], new Map(), { option: "e" });
+  helmet.eyeshadow.enabled = true;
+  assert.deepEqual(CjsPaperDollInstance.suppress(helmet).suppressed, [ "eyeshadow" ]);
 });
 
 test("the head's brow list is the parts after the eyebrows", () =>
@@ -62,7 +68,7 @@ test("the head's brow list is the parts after the eyebrows", () =>
   assert.equal(CjsPaperDollInstance.ready(definition, PaperDollTarget.BODY).lists.brow, undefined, "only the head has a brow list");
 });
 
-test("an unresolved option is not walked until it resolves; the beard is kept out of the walk", async () =>
+test("an unresolved option is not walked until it resolves; the beard is walked", async () =>
 {
   const definition = new CjsPaperDollDefinition();
   let release;
@@ -75,11 +81,11 @@ test("an unresolved option is not walked until it resolves; the beard is kept ou
   definition.beard.enabled = true;
   definition.mask.Configure([ { id: "m", path: "accessories/masks/m", occludes: [ "beard" ] } ], new Map(), { option: "m" });
   definition.mask.enabled = true;
-  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [], "the unresolved coat is not a node; the beard is not walked");
+  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "beard" ], "the unresolved coat is not a node; the mask drops the beard");
   const resolved = definition.outer.ResolveOption("coat");
   release({ occludes: [ "topmiddle" ], colorAreas: [] });
   await resolved;
-  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "topMiddle" ]);
+  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "beard", "topMiddle" ]);
 });
 
 test("a resolution in flight when the part is configured again does not mark the new configuration resolved", async () =>

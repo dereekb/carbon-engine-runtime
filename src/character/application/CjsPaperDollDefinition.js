@@ -306,32 +306,15 @@ export class CjsPaperDollDefinition
 
     /**
      * The parts feeding a target, in bake order; parts with no rank come first,
-     * equal ranks keep `parts` order, and an active occluder moves after the
-     * active parts it occludes.
+     * equal ranks keep `parts` order. Occlusion does not reorder: an occluded
+     * part leaves the bake (`CjsPaperDollInstance.suppress`; operator, 2026-11-09).
      * @param {PaperDollTarget} target The target whose parts are ordered.
      * @returns {string[]} The parts' member names, first drawn first.
      */
     GetLayerOrder(target)
     {
-        const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & target)
+        return CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & target)
             .sort((a, b) => (this.GetLayer(a) ?? -Infinity) - (this.GetLayer(b) ?? -Infinity) || 0);
-        // An active occluder draws after every active part it occludes, so in each shared target it covers them
-        // exactly where its own coverage is: occlusion covers only what it covers. AWAITING THE OPERATOR'S RULING
-        // (2026-11-09): this draws the occluder over what it occludes (a face augmentation over the beard), where the
-        // suppression walk drops the occluded part (CjsPaperDollInstance.suppress, garments); which one is the bake rule.
-        for (const occluder of [ ...order ])
-        {
-            const targets = this._Occludes(occluder);
-            if (!targets.length) continue;
-            const at = order.indexOf(occluder);
-            const last = order.reduce((found, name, index) => name !== occluder && this._IsOccludedBy(name, targets) ? index : found, -1);
-            if (last > at)
-            {
-                order.splice(at, 1);
-                order.splice(last, 0, occluder);
-            }
-        }
-        return order;
     }
 
     /**
@@ -345,21 +328,6 @@ export class CjsPaperDollDefinition
         const part = this[name];
         if (!part.enabled || !part.option) return [];
         return part.GetOptions().find(option => option.id === part.option)?.occludes ?? [];
-    }
-
-    /**
-     * Whether a part's selected option matches an occlusion target, by its
-     * class's recipe category or its option's path.
-     * @param {string} name The part's member name.
-     * @param {string[]} targets Occlusion targets of one occluder.
-     * @returns {boolean} False while the part is off or has no selection.
-     */
-    _IsOccludedBy(name, targets)
-    {
-        const part = this[name];
-        if (!part.enabled || !part.option) return false;
-        const path = part.GetOptions().find(option => option.id === part.option)?.path ?? "";
-        return targets.some(target => target === part.constructor.category || CjsPaperDollDefinition.occludes([ target ], path));
     }
 
     /**

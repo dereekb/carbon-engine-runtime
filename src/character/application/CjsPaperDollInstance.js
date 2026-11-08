@@ -1,7 +1,7 @@
 import { meta } from "#schema";
 import { CjsCharacterAppearanceResolver } from "../model/resolution/CjsCharacterAppearanceResolver.js";
 import { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
-import { PaperDollBlend, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * One built paper doll character: what was made from a definition. It owns
@@ -153,12 +153,6 @@ export class CjsPaperDollInstance
     }
 
     /**
-     * The part kept out of the suppression walk: the beard, a node of neither earlier walk. Awaiting the operator's
-     * ruling on occlusion (2026-11-09).
-     */
-    static unwalked = "beard";
-
-    /**
      * The last update's suppression walk, for the mesh side (fitting, carriers): the suppressed parts and the parts a
      * cycle kept active, by member name.
      * @returns {{ suppressed: string[], cyclic: string[] }}
@@ -169,18 +163,17 @@ export class CjsPaperDollInstance
     }
 
     /**
-     * Which worn parts are suppressed: runtime's suppression walk (`CjsCharacterAppearanceResolver.resolveSuppressions`)
-     * over every active part with a worn item (blend MATERIAL or MESH: garments, arms, body augmentation, hair,
-     * accessories) whose option is resolved, an edge where one's `occludesModifiers` names another's category or option
-     * path. Suppression runs from the roots; a cycle stays active. An unresolved option is not walked until its
-     * resolution rebuilds the part, as the earlier walks took only resolved items.
+     * Which parts are suppressed: runtime's suppression walk (`CjsCharacterAppearanceResolver.resolveSuppressions`)
+     * over every active part whose option is resolved, an edge where one's `occludesModifiers` names another's category
+     * or option path. Suppression runs from the roots; a cycle stays active. An unresolved option is not walked until its
+     * resolution rebuilds the part, as the earlier walks took only resolved items. A suppressed part leaves every
+     * target's bake (`ready`): occlusion drops, everywhere (operator, 2026-11-09).
      *
-     * The walk's parts are today's two walks joined (the body pass's garments, the fitting's garments, hair and
-     * accessories), and the result is theirs: in the content no hair or accessory occludes a garment, and the face
-     * augmentations (DECAL) are not walked. The beard (MATERIAL) is kept out: it was a node of neither earlier walk
-     * (masks occlude it in the content). AWAITING THE OPERATOR'S RULING (2026-11-09): whether occlusion drops a part
-     * (this walk, the body today) or draws the occluder over it (`CjsPaperDollDefinition.GetLayerOrder`, the head
-     * today), and for which targets.
+     * A part's path is its option's content path where the option states one (decals, garments, hair, beard,
+     * accessories), else its category: the colourised parts, eyes, skin and tattoos, which the content's occluders name
+     * only by category or a folder above it (`makeup`, `makeup/eyebrows`, `tattoo`). What a part occludes is its
+     * option's `occludesModifiers`, none where the option states none: no colourised, eye, skin or tattoo metadata names
+     * any (content, resource index of build 3670638).
      * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
      * @returns {{ suppressed: string[], cyclic: string[] }} The suppressed parts and the parts a cycle kept active.
      */
@@ -188,14 +181,12 @@ export class CjsPaperDollInstance
     {
         const worn = CjsPaperDollDefinition.parts.filter(name =>
         {
-            const part = definition[name], blend = part.constructor.blend;
-            return (blend === PaperDollBlend.MATERIAL || blend === PaperDollBlend.MESH) && name !== CjsPaperDollInstance.unwalked
-                && part.enabled && part.option !== "" && part.IsResolved(part.option);
+            const part = definition[name];
+            return part.enabled && part.option !== "" && part.IsResolved(part.option);
         }).map(name =>
         {
             const part = definition[name], option = part.GetOptions().find(value => value.id === part.option);
-            // A resolved worn option states what it occludes (an empty list when its metadata names nothing).
-            return { name, category: part.constructor.category, path: option.path, occludes: option.occludes };
+            return { name, category: part.constructor.category, path: option.path ?? part.constructor.category, occludes: option.occludes ?? [] };
         });
         const edges = new Map();
         for (const target of worn) for (const by of worn)
@@ -210,10 +201,9 @@ export class CjsPaperDollInstance
 
     /**
      * A target's ready capture: each part's settings (`CaptureTarget`), the suppression walk, and the ready lists the
-     * composition draws. `order` is the bake order without the suppressed parts the target drops: a suppressed part
-     * baked into the body leaves the body and surface lists, as the body pass dropped it; other suppressed parts still
-     * bake (hair and accessories did not skip). The head's `brow` list is the parts after the eyebrows: what covers the
-     * brows on the face covers them on the brow mesh.
+     * composition draws. `order` is the bake order without the suppressed parts: an occluded part leaves every target's
+     * bake (operator, 2026-11-09). The head's `brow` list is the parts after the eyebrows: what covers the brows on the
+     * face covers them on the brow mesh.
      * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
      * @param {number} target The target, a `PaperDollTarget` bit.
      * @param {string[]} [names] Its parts in bake order; `GetLayerOrder`'s by default.
@@ -224,8 +214,7 @@ export class CjsPaperDollInstance
     static ready(definition, target, names = definition.GetLayerOrder(target), suppression = CjsPaperDollInstance.suppress(definition))
     {
         const state = definition.CaptureTarget(target, names);
-        const drops = target === PaperDollTarget.BODY || target === PaperDollTarget.SURFACE;
-        const order = names.filter(name => !(drops && suppression.suppressed.includes(name) && definition[name].constructor.targets & PaperDollTarget.BODY));
+        const order = names.filter(name => !suppression.suppressed.includes(name));
         const brow = order.indexOf("eyebrows");
         state.order = order;
         state.lists = target === PaperDollTarget.HEAD ? { order, brow: brow === -1 ? [] : order.slice(brow + 1) } : { order };
