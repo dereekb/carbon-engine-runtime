@@ -20,7 +20,7 @@ const SHARED_FORMAT_MODULES = new Set([
     "global/consts/blue.js",
     "global/consts/ccpLog.js",
     "resource/format/workerOptions.js",
-    "global/model/graph/GraphTypes.js",
+    "global/model/graph/graphTypes.js",
     "global/logging/CcpLogChannel_t.js",
     "global/logging/ccpLog.js",
     "resource/format/CjsFormat.js",

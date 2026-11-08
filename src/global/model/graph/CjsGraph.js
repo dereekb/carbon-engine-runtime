@@ -1,7 +1,7 @@
 import { BLUELISTEVENT, EDITFLAGS } from "../../consts/blue.js";
 import { CjsGraphClassInfo } from "./CjsGraphClassInfo.js";
 import { CjsGraphClassUIInfo } from "./CjsGraphClassUIInfo.js";
-import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphMemberFlags, GraphOperation, VARTYPE } from "./GraphTypes.js";
+import { GRAPH_METADATA_KEY, GRAPH_TYPES, GRAPH_WRAPPERS, GraphMemberFlags, GraphOperation, VARTYPE } from "./graphTypes.js";
 import { getGraphHandler } from "./types/index.js";
 
 /**

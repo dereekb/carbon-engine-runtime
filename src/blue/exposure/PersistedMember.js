@@ -4,7 +4,7 @@
 // kind and the structure layout are recorded here, beside the Carbon row
 // (Blue plan step 6 compiles them at registration).
 import { CjsSchema } from "#schema";
-import { VARTYPE } from "../../global/model/graph/GraphTypes.js";
+import { VARTYPE } from "../../global/model/graph/graphTypes.js";
 import { EDITFLAGS } from "../../global/consts/blue.js";
 
 /**

@@ -7,7 +7,7 @@
 // - nothing is constructed, and neither Initialize nor notification runs;
 // - a member holds no storage yet, so arrays and nested records are created;
 // - an object met again is a `{ _ref }` marker, and the object it means gets `_id`.
-import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
+import { VARTYPE } from "../../../global/model/graph/graphTypes.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { BlackReader } from "./BlackReader.js";

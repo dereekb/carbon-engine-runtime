@@ -169,6 +169,6 @@ handles. These are static assembled graphs, not running combat scenes. External 
 and controller references remain unexpanded; dynamically created runtime content and
 GPU preparation are not covered. Production schemas and resource enumeration are unchanged.
 
-GraphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
+graphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
 The handlers are under types/. CjsGraphRoot will be added with working
 operation forwards; there are no speculative no-op graph methods here.

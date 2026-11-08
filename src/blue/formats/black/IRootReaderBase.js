@@ -20,7 +20,7 @@
 // may hold plain JavaScript storage, so the compiled entry says what it is and
 // the cast decides only between a mapped IList and a plain array.
 import * as CcpLog from "../../../global/logging/ccpLog.js";
-import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
+import { VARTYPE } from "../../../global/model/graph/graphTypes.js";
 import { cast, mappedInterfaces } from "../../compose/interface.js";
 import { IList } from "../../exposure/IList.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";

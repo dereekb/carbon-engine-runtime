@@ -1,7 +1,7 @@
 # Value handlers
 
 One handler per storage kind. What differs between types is data, in `GRAPH_TYPES`
-(`GraphTypes.js`), and a compiled member carries that data flat: its length, its integer width
+(`graphTypes.js`), and a compiled member carries that data flat: its length, its integer width
 and sign, its array class. So `vec3`, `color` and `mat4` are entries on `CjsGraphTypeFloatArray`,
 and `int8` and `uint32` are entries on `CjsGraphTypeLong`. A new type name exists only if it
 changes a default, a widget or a meaning. Measured on real files, this is twice as fast as a
