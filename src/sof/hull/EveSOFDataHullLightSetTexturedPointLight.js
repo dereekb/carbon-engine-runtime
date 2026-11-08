@@ -13,6 +13,7 @@ import { EveSOFDataHullLightSetItem } from "./EveSOFDataHullLightSetItem.js";
 @be.mapInterface(EveSOFDataHullLightSetItem)
 @meta.hideInherited(["lightColor"])
 @be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.mapAttributeWithChooser(be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags", "flags")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "position")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "boneIndex")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "radius")

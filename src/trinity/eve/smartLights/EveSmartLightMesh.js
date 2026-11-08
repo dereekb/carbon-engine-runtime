@@ -45,6 +45,7 @@ import { IEveSmartLightGroupAttributeModifier } from "./attributeModifiers/IEveS
 @be.mapAttribute(be.READWRITE | be.PERSIST, "name")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "display")
 @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY, "mesh")
+@be.mapAttributeWithChooser(be.READWRITE | be.PERSIST | be.ENUM, "trinity.EveChildInstanceMeshRenderer.RotationalConstraints", "rotationConstraint")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "staticOffsetTranslation")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "staticOffsetRotation")
 @be.mapAttribute(be.READWRITE | be.PERSIST, "staticOffsetScale")

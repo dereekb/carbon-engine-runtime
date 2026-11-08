@@ -22,6 +22,7 @@ const AXIS_COLORS = Object.freeze({
 
 /** An interactive scaling manipulator that turns pointer drags along a selected axis into a scale. */
 @be.define("Tr2ScalingTool")
+@be.exposureChainTo(Tr2ManipulationTool)
 export class Tr2ScalingTool extends Tr2ManipulationTool
 {
   _initialLength = 1;

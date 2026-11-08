@@ -10,6 +10,9 @@ import { Tr2AudioStretchBase } from "./Tr2AudioStretchBase.js";
 @be.define("Tr2AudioStretchAuto")
 @be.mapInterface(Tr2AudioStretchBase)
 @be.mapInterface(ITr2Audio)
+@be.mapAttribute(be.READWRITE | be.PERSIST, "sourceEmitter")
+@be.mapAttribute(be.READWRITE | be.PERSIST, "destinationEmitter")
+@be.mapAttribute(be.READWRITE | be.PERSIST, "stretchEmitter")
 export class Tr2AudioStretchAuto extends Tr2AudioStretchBase
 {
 

@@ -15,6 +15,7 @@ import { vec4 } from "#math/vec4";
  */
 @be.define("Tr2Sprite2dVertex")
 @be.inherit(IRoot)
+@be.mapAttribute(be.READWRITE | be.PERSIST, "position")
 export class Tr2Sprite2dVertex extends Tr2Sprite2dVertexBase
 {
 

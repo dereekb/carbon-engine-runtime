@@ -14,27 +14,41 @@ import { Tr2PointLight } from "./Tr2PointLight.js";
  * Point light that projects a texture, adding the texture path and its resolved
  * resource to the point-light attribute set and updating dynamically.
  */
-@be.define("Tr2TexturedPointLight")
-@be.mapInterface(Tr2Light)
-@be.mapInterface(IInitialize)
-@be.mapInterface(INotify)
-@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
-@be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY, "lightProfilePath")
-@be.mapAttribute(be.READ, "lightProfile")
+@be.define({
+  name: "Tr2TexturedPointLight",
+  // Tr2TexturedPointLight_Blue.cpp:11-49, in Carbon's order. The table does not chain,
+  // so it maps the point light's rows again, and so does this one.
+  interfaces: [ Tr2Light, IInitialize, INotify ],
+  members: [
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "flags", be.READWRITE | be.PERSIST, "trinity.Tr2LightFlags" ],
+    [ be.ATTR, "position", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "boneIndex", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "radius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "innerRadius", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "color", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "brightness", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "noiseAmplitude", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseFrequency", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "noiseOctaves", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "texturePath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "texture", be.READ ],
+    [ be.ATTR_CHOOSER, "castsShadows", be.READWRITE | be.PERSIST | be.NOTIFY | be.ENUM, "trinity.PerLightShadowSetting" ],
+    [ be.ATTR, "isVolumetric", be.READWRITE | be.NOTIFY | be.PERSIST ],
+    [ be.ATTR, "lightProfilePath", be.READWRITE | be.PERSIST | be.NOTIFY ],
+    [ be.ATTR, "lightProfile", be.READ ]
+  ]
+})
 export class Tr2TexturedPointLight extends Tr2PointLight
 {
-  @be.mapAttribute(be.READ)
   @type.object.ref("TriTextureRes")
   texture = null;
 
-  // Carbon maps this row into the embedded LightData m_lightData
-  // (Tr2Light.h:102), an attribute over that path; the point light's rows are
-  // inherited (Tr2TexturedPointLight_Blue.cpp:17-37 repeats them).
-
-  /** m_lightData.texturePath (std::wstring) [READWRITE, PERSIST, NOTIFY] (Tr2TexturedPointLight_Blue.cpp:33). */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
-
-
+  /**
+   * m_lightData.texturePath (std::wstring) [READWRITE, PERSIST, NOTIFY]: an attribute over the
+   * embedded LightData (Tr2Light.h:102), so an accessor here.
+   */
   @type.wpath("TriTextureRes")
   get texturePath()
   {
