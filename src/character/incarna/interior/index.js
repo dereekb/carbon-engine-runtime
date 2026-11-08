@@ -1,3 +1,4 @@
+export * from "./Tr2InteriorCell.js";
 export * from "./Tr2InteriorFlare.js";
 export * from "./Tr2InteriorFlareData.js";
 export * from "./Tr2InteriorParticleObject.js";

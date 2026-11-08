@@ -25,6 +25,20 @@ export class CjsTr2PerObjectLayout
    * writes those lanes without adding a nested layout mechanism.
    */
   static interiorStructConfig = Object.freeze({
+    /**
+     * Interior/Tr2InteriorConstantBufferFormats.h:50-56. Its Carbon filler is
+     * Tr2InteriorStatic::GetPerObjectDataWithLightSet (Interior/Tr2InteriorStatic.cpp:239-289
+     * at trinity 24d033fa~1): the world matrix and the light-map UV placement.
+     */
+    vs: {
+      struct: "Tr2InteriorPerObjectVSData",
+      fields: {
+        WorldMat: { type: Types.MATRIX4, default: IDENTITY },
+        uvLinearTransform: { type: Types.VECTOR4 },
+        uvTranslation: { type: Types.VECTOR2 },
+        padding: { type: Types.VECTOR2 }
+      }
+    },
     ps: {
       struct: "Tr2InteriorPerObjectPSData",
       fields: {

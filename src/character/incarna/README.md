@@ -5,13 +5,17 @@ declares. Its content still names them: a captain's quarters walkway piece is a
 `Tr2InteriorStatic` whose mesh areas hold `Tr2ShaderMaterial`s. The classes
 here let that content load.
 
-Carbon's git history still holds some of them: `Tr2ShaderMaterial` to trinity
-a198e5da~1, and `Tr2InteriorFlare`, `Tr2InteriorFlareData` and
-`Tr2InteriorParticleObject` to 71329945~1. Those take their members and flags
-from that source, and each says so at its head; a class found there no longer
-needs guessing. `Tr2InteriorStatic` (24d033fa~1) and the shader library classes
-(a198e5da~1) also have donors there, but are still reconstructed from Black records
-and not yet compared; each head names its donor. For these and the rest:
+Carbon's git history still holds some of them:
+
+- `Tr2InteriorStatic` and `Tr2InteriorCell` to trinity 24d033fa~1;
+- `Tr2ShaderMaterial` to a198e5da~1;
+- `Tr2InteriorFlare`, `Tr2InteriorFlareData` and `Tr2InteriorParticleObject`
+  to 71329945~1.
+
+Those take their members, flags and methods from that source, and each says so
+at its head. The shader library classes (a198e5da~1) also have donors there,
+but are still reconstructed from Black records and not yet compared; each head
+names its donor. For these reconstructed classes:
 
 - Its members, and their order, are those the records write. Its JSDoc names
   the records.
@@ -24,7 +28,8 @@ and not yet compared; each head names its donor. For these and the rest:
 
 | Class | Records | Behaviour |
 |---|---|---|
-| `Tr2InteriorStatic` | interior kit pieces | Draws its `detailMeshes` in a `Tr2InteriorScene`, modelled on `Tr2InteriorPlaceable`. Its `transform` is ours; the records carry no placement. On `Initialize` it replaces each area's `Tr2ShaderMaterial` with the `Tr2Effect` it becomes. |
+| `Tr2InteriorCell` | none in build 1142708 | Carbon's: one room's statics, its light maps and reflection map, and a variable store of its own, parented to the global store. A `Tr2InteriorScene` holds cells in `cells` and draws their statics. Its spherical-harmonic probes and its light and dynamic membership tests are not ported. |
+| `Tr2InteriorStatic` | interior kit pieces | Carbon's: placed by `worldPosition` and `rotation` in its cell's space, bounded by its own geometry, and bound under its cell's store. On `Initialize` it also replaces each area's `Tr2ShaderMaterial` with the `Tr2Effect` it becomes; situation selection is not ported. |
 | `Tr2InteriorFlare`, `Tr2InteriorFlareData` | interior flares | Data only: nothing draws them yet. |
 | `Tr2InteriorParticleObject` | interior particles | Data only: nothing draws it yet. |
 | `Tr2ShaderMaterial` | the effect of an Incarna mesh area | Read, then converted: `CreateEffect` moves its parameters into a `Tr2Effect` whose path comes from the shader library, `res:/graphics/shaders/compiled/dx11/<source>.fxt`. The material itself never draws (`IsGood()` false). |

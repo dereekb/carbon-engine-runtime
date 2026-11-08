@@ -4,10 +4,11 @@ import test from "node:test";
 import { blue } from "../../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { CjsBlackReader } from "../../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
-import { ITr2Interior, ITr2InteriorDynamic, Tr2HighLevelShader, Tr2InteriorScene, Tr2InteriorStatic, Tr2ShaderFloat4Desc, Tr2ShaderManager, Tr2ShaderMaterial, Tr2ShaderPermuteTag, Tr2ShaderTexDesc } from "../../../npm/dist/character/index.js";
+import { ITr2Interior, ITr2InteriorDynamic, Tr2HighLevelShader, Tr2InteriorCell, Tr2InteriorScene, Tr2InteriorStatic, Tr2ShaderFloat4Desc, Tr2ShaderManager, Tr2ShaderMaterial, Tr2ShaderPermuteTag, Tr2ShaderTexDesc } from "../../../npm/dist/character/index.js";
 import { Tr2Effect, Tr2FloatParameter, TriTextureParameter } from "../../../npm/dist/trinity/shader/index.js";
-import { ITr2Renderable, Tr2Mesh, Tr2MeshArea, Tr2RenderContext_GetMainThreadRenderContext, TriPoolAllocator } from "../../../npm/dist/trinity/index.js";
+import { ITr2Pickable, ITr2Renderable, Tr2Mesh, Tr2MeshArea, Tr2RenderContext_GetMainThreadRenderContext, TriPoolAllocator } from "../../../npm/dist/trinity/index.js";
 import { TriRenderBatchAccumulator } from "../../../npm/dist/trinity/core/batch/TriRenderBatch/TriRenderBatchAccumulator.js";
+import { Tr2VariableStore } from "../../../npm/dist/trinity/core/variable/Tr2VariableStore.js";
 import { TriGeometryRes } from "../../../npm/dist/resource/index.js";
 import { Tr2RenderContextALStub } from "../../../npm/dist/trinityal/index.js";
 import { SharedGeometryBuffer } from "../../../npm/dist/trinity/core/mesh/TriGeometryResAllocations.js";
@@ -63,18 +64,135 @@ test("a walkway record hydrates the Incarna static and its shader material in fi
   assert.deepEqual(reader.reports, []);
 });
 
-test("the static passes the interior scene's interface checks and joins its dynamics", t =>
+test("the static is Carbon's: an interior renderable that is picked, never a dynamic", t =>
 {
-  const { scene } = renderSetup(t), value = staticWith([ mesh(0) ]);
+  renderSetup(t);
+  const value = staticWith([ mesh(0) ]);
 
-  assert.equal(blue.classes.QueryThisInterface(value, ITr2InteriorDynamic, Tr2InteriorStatic), value);
   assert.equal(CjsSchema.cast(value, ITr2Interior), value);
   assert.equal(CjsSchema.cast(value, ITr2Renderable), value);
+  assert.equal(CjsSchema.cast(value, ITr2Pickable), value);
+  assert.equal(CjsSchema.cast(value, ITr2InteriorDynamic), null, "it reaches the scene through a cell, not as a dynamic");
+
+  // Carbon's defaults (Interior/Tr2InteriorStatic.cpp:19-44 at trinity 24d033fa~1).
+  assert.deepEqual([ ...value.worldPosition ], [ 0, 0, 0 ]);
+  assert.deepEqual([ ...value.rotation ], [ 0, 0, 0, 1 ]);
+  assert.deepEqual([ ...value.uvLinearTransform ], [ 1, 0, 0, 1 ]);
+  assert.deepEqual([ ...value.uvTranslation ], [ 0, 0 ]);
+  assert.equal(value.display, true);
+  assert.equal(value.depthOffset, 0);
+  assert.deepEqual([ ...value.worldTransform ], [ ...mat4.create() ]);
+
+  value.SetInstanceData([ 2, 0, 0, 3 ], [ 0.25, 0.5 ], 7);
+  assert.deepEqual([ ...value.uvLinearTransform ], [ 2, 0, 0, 3 ]);
+  assert.deepEqual([ ...value.uvTranslation ], [ 0.25, 0.5 ]);
+});
+
+test("the transform follows worldPosition and rotation, and bounds are the geometry's meshes", t =>
+{
+  renderSetup(t, { "res:/graphics/test/piece.gr2": geometryOf([ 0, 10 ]) });
+  const value = staticWith([ mesh(0) ]);
+  value.geometryResPath = "res:/graphics/test/piece.gr2";
+  value.rotation.set([ 0, 0, Math.SQRT1_2, Math.SQRT1_2 ]);
+  value.worldPosition.set([ 100, 0, 0 ]);
+  assert.equal(value.Initialize(), true);
+
+  const expected = mat4.fromRotationTranslation(mat4.create(), value.rotation, value.worldPosition);
+  assertClose([ ...value.GetWorldTransform() ], [ ...expected ]);
+
+  const min = [ 0, 0, 0 ], max = [ 0, 0, 0 ];
+  assert.equal(value.GetBoundingBox(min, max), true);
+  assert.deepEqual([ ...min, ...max ], [ 0, -1, -1, 12, 1, 1 ], "the union of the geometry's two meshes");
+  assert.equal(value.GetWorldBoundingBox(min, max), true);
+  assertClose([ ...min, ...max ], [ 99, 0, -1, 101, 12, 1 ]);
+
+  value.worldPosition.set([ 0, 0, 0 ]);
+  value.OnModified("worldPosition");
+  value.GetWorldBoundingBox(min, max);
+  assertClose([ ...min, ...max ], [ -1, 0, -1, 1, 12, 1 ], "a moved piece rebuilds its world box");
+});
+
+test("per-object data carries the world matrix and the light-map UV placement", t =>
+{
+  renderSetup(t);
+  const value = staticWith([ mesh(0) ]);
+  value.SetInstanceData([ 2, 0, 0, 3 ], [ 0.25, 0.5 ], 0);
+  const transform = mat4.fromTranslation(mat4.create(), [ 5, 6, 7 ]);
+
+  const accumulator = new TriRenderBatchAccumulator().SetTriPoolAllocator(new TriPoolAllocator().RegisterCatalog());
+  const data = value.GetPerObjectDataWithPerInstanceLighting(accumulator, null, transform);
+  assertClose(Array.from(data.vs.Get("WorldMat")), Array.from(mat4.transpose(mat4.create(), transform)));
+  assert.deepEqual(Array.from(data.vs.Get("uvLinearTransform")), [ 2, 0, 0, 3 ]);
+  assert.deepEqual(Array.from(data.vs.Get("uvTranslation")), [ 0.25, 0.5 ]);
+});
+
+test("a cell's statics bind their effects under the cell's own store, which falls through to the global one", t =>
+{
+  renderSetup(t);
+  const cell = new Tr2InteriorCell(), piece = mesh(0), value = staticWith([ piece ]);
+  const effect = new Tr2Effect();
+  piece.opaquePrepassAreas.push(area(effect));
+
+  assert.equal(cell.GetVariableStore().GetParentVariableStore(), Tr2VariableStore.globalStore());
+  for (const name of [ "ReflectionMap", "IrradianceMap", "DirectionalIrradianceMap" ])
+  {
+    assert.ok(cell.GetVariableStore().FindLocalVariable(name), `${name} is the cell's own`);
+  }
+
+  cell.AddStatic(value);
+  assert.equal(value.GetParentCell(), cell);
+  assert.equal(effect.GetVariableStore(), cell.GetVariableStore());
+
+  cell.RemoveStatic(value);
+  assert.equal(value.GetParentCell(), null);
+  assert.equal(cell.statics.length, 0);
+});
+
+test("a cell's light maps go into its own store and leave the global store alone", t =>
+{
+  renderSetup(t);
+  const global = Tr2VariableStore.globalStore().FindLocalVariable("IrradianceMap");
+  const before = global ? global.GetValue() : null;
+  const cell = new Tr2InteriorCell();
+
+  cell.irradianceTexturePath = "res:/graphics/test/cell_rad.dds";
+  cell.OnModified("irradianceTexturePath");
+  cell.reflectionMapPath = "res:/graphics/test/cube.dds";
+  cell.OnModified("reflectionMapPath");
+  cell.Update(1);
+
+  const store = cell.GetVariableStore();
+  assert.equal(store.FindLocalVariable("IrradianceMap").GetValue(), cell.irradianceTexture);
+  assert.equal(store.FindLocalVariable("ReflectionMap").GetValue(), cell.reflectionMap);
+  assert.ok(cell.irradianceTexture && cell.reflectionMap);
+  const after = Tr2VariableStore.globalStore().FindLocalVariable("IrradianceMap");
+  assert.equal(after ? after.GetValue() : null, before);
+});
+
+test("the scene reaches a cell's statics: its box grows by them and a pick query finds them", t =>
+{
+  const { scene } = renderSetup(t, { "res:/graphics/test/piece.gr2": geometryOf([ 0 ]) });
+  const value = staticWith([ mesh(0) ]);
+  value.geometryResPath = "res:/graphics/test/piece.gr2";
+  value.worldPosition.set([ 0, 0, 5 ]);
+  value.Initialize();
+  const cell = new Tr2InteriorCell();
+  cell.AddStatic(value);
 
   const s = scene();
-  s.AddDynamic(value);
-  assert.equal(s.dynamics.FindKey(value) !== -1, true);
-  assert.equal(s._dynamicsPendingLoad.includes(value), false, "bounds are ready, so the static is not left pending");
+  s.cells.Insert(-1, cell);
+  s.Update(1, 1);
+  const min = [ 0, 0, 0 ], max = [ 0, 0, 0 ];
+  assert.equal(cell.GetBoundingBox(min, max), true);
+  assertClose([ ...min, ...max ], [ 0, -1, 4, 2, 1, 6 ]);
+
+  // The pick query resolves the scene's visibility; the frustum test itself is the static's own.
+  const asked = [];
+  t.mock.method(value, "IsInFrustum", (_frustum, objectToWorld) => { asked.push(objectToWorld); return true; });
+  const picked = s.GetPickingObjectsToRender([ 0, 0, -1 ]);
+  assert.equal(asked.length, 1, "the scene asked the cell's static");
+  assert.ok(picked.includes(value), "the static is visible through its cell");
+  assert.equal(s.dynamics.length, 0);
 });
 
 test("an opaque request also draws the prepass areas, and only the opaque request does", t =>
@@ -88,25 +206,6 @@ test("an opaque request also draws the prepass areas, and only the opaque reques
   assert.equal(opaqueBatches.length, 2, "the opaque area and the prepass area; the area still holding Tr2ShaderMaterial is skipped");
   assert.equal(batchesOf(value, TriBatchType.TRIBATCHTYPE_OPAQUE_PREPASS).length, 1, "a direct prepass request is not doubled");
   assert.equal(batchesOf(value, TriBatchType.TRIBATCHTYPE_TRANSPARENT).length, 0);
-});
-
-test("bounds and per-object data follow the static's own transform", t =>
-{
-  renderSetup(t);
-  const value = staticWith([ mesh(0), mesh(10) ]);
-  mat4.fromRotationTranslation(value.transform, [ 0, 0, Math.SQRT1_2, Math.SQRT1_2 ], [ 100, 0, 0 ]);
-
-  const min = [ 0, 0, 0 ], max = [ 0, 0, 0 ];
-  assert.equal(value.GetLocalBoundingBox(min, max), true);
-  assert.deepEqual([ ...min, ...max ], [ 0, -1, -1, 12, 1, 1 ]);
-  assert.equal(value.GetWorldBoundingBox(min, max), true);
-  assertClose([ ...min, ...max ], [ 99, 0, -1, 101, 12, 1 ]);
-
-  const accumulator = new TriRenderBatchAccumulator().SetTriPoolAllocator(new TriPoolAllocator().RegisterCatalog());
-  const data = value.GetPerObjectDataWithPerInstanceLighting(accumulator, null, value.transform);
-  const transposed = mat4.transpose(mat4.create(), value.transform);
-  assertClose(Array.from(data.vs.Get("WorldMat")), Array.from(transposed));
-  assert.equal(data.vs.Get("WorldMat")[1], transposed[1], "a basis element, not only the translation, is transposed");
 });
 
 // The record shape of build 1142708's res:/graphics/shaders/shaderdescriptions.black,
@@ -243,12 +342,17 @@ function settled()
   return new Promise(resolve => setImmediate(resolve));
 }
 
-function renderSetup(t)
+/**
+ * Installs a stub render context and resource manager. `geometries` maps a
+ * path to the resource GetResource answers with; without it the stub answers
+ * every path with a fresh resource of its kind.
+ */
+function renderSetup(t, geometries = null)
 {
   const context = Tr2RenderContext_GetMainThreadRenderContext(), oldAL = context.GetRenderContextAL(), oldManager = blue.resMan;
   const oldView = Tr2Renderer.GetViewTransform().slice();
   const al = new Tr2RenderContextALStub(); al.CreateDevice(); al.BeginScene(); context.SetRenderContextAL(al);
-  blue.resMan = new StubResMan(); Tr2Renderer.SetViewTransform(mat4.create());
+  blue.resMan = new StubResMan(geometries ? path => geometries[path] ?? null : null); Tr2Renderer.SetViewTransform(mat4.create());
   const scenes = [];
   t.after(() =>
   {
@@ -281,6 +385,20 @@ function mesh(x)
   const value = new Tr2Mesh();
   value.SetGeometryRes(resource);
   return value;
+}
+
+/** A prepared geometry with one mesh per x, each spanning [x, x + 2] by [-1, 1] by [-1, 1]. */
+function geometryOf(xs)
+{
+  const resource = new TriGeometryRes();
+  resource.ReadCMFFile({ meshes: xs.map(x => ({
+    bounds: { min: [ x, -1, -1 ], max: [ x + 2, 1, 1 ] },
+    decl: [ { usage: "Position", usageIndex: 0, type: "Float32", elementCount: 3, offset: 0 } ],
+    vertex: { position: [ x, 0, 0, x + 2, 0, 0, x, 1, 0 ] },
+    indices: [ { faces: [ 0, 1, 2 ] } ], areas: [ { firstElement: 0, elementCount: 1 } ]
+  })) });
+  prepareResourceFixture(resource);
+  return resource;
 }
 
 function area(material)

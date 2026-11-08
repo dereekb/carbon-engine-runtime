@@ -51,6 +51,7 @@ import { TriProjection } from "../../../trinity/core/view/TriProjection.js";
 import { Tr2InteriorLightSource } from "./Tr2InteriorLightSource.js";
 import { Tr2SkinnedObject } from "../trinityCore/Tr2SkinnedObject.js";
 import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
+import { Tr2InteriorCell } from "../../incarna/interior/Tr2InteriorCell.js";
 
 /** RenderShadows' light up vector (cpp:744). */
 const Z_UP = vec3.fromValues(0, 0, 1);
@@ -119,6 +120,10 @@ export class Tr2InteriorScene extends ITr2PickableScene
   OnListModified(event, _key = 0, _key2 = 0, value = null, list = null)
   {
     if (list === this.lights) this.SetupShadowMaps();
+    // Incarna's scene dirtied every light and dynamic when its cells changed, so each re-tested its cell
+    // membership (Interior/Tr2InteriorScene.cpp:270-283 at trinity 24d033fa~1). That membership is not
+    // ported, so a cell change has nothing to dirty.
+    else if (list === this.cells) return;
     else if (list === this.dynamics && !(event & BLUELISTEVENT.BELIST_LOADING) && value)
     {
       const dynamic = CjsSchema.cast(value, ITr2InteriorDynamic);
@@ -150,6 +155,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
     this._pickBuffer.SetClearColor(0);
     this.dynamics.SetNotify(this);
     this.lights.SetNotify(this);
+    this.cells.SetNotify(this);
 
     const store = Tr2VariableStore.globalStore();
     const { vec3_0, vec4_0 } = Tr2InteriorScene.scratch;
@@ -234,6 +240,18 @@ export class Tr2InteriorScene extends ITr2PickableScene
 
   @type.list("ITr2InteriorDynamic")
   dynamics = new BlueList(ITr2InteriorDynamic);
+
+  /**
+   * m_cells (PTr2InteriorCellVector) [READWRITE, PERSIST, NOTIFY]: "List of all
+   * cells in the scene". Each Tr2InteriorCell holds the statics of one room;
+   * the scene draws them through their cells.
+   *
+   * Incarna: retired from current Carbon. Donor: Interior/Tr2InteriorScene_Blue.cpp:410
+   * at trinity 24d033fa~1, removed in 24d033fa with Tr2InteriorCell.
+   */
+  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
+  @type.list("Tr2InteriorCell")
+  cells = new BlueList(Tr2InteriorCell, { className: "Tr2InteriorCell" });
 
   /** m_lights (PITr2InteriorLightVector) [READ, PERSIST, NOTIFY] */
   @be.mapAttribute(be.READ | be.PERSIST | be.NOTIFY)
@@ -671,10 +689,13 @@ export class Tr2InteriorScene extends ITr2PickableScene
   @be.mapMethodAndWrap()
   RebuildSceneData()
   {
+    // Incarna's scene rebuilt its cells first (Interior/Tr2InteriorScene.cpp:2339-2346 at trinity 24d033fa~1).
+    for (const cell of this.cells) cell.RebuildInternalData();
     this._dynamicsPendingLoad.length = 0;
     for (const dynamic of this.dynamics)
     {
       dynamic.RemoveFromScene();
+      for (const cell of this.cells) cell.RemoveDynamic(dynamic);
       if (!dynamic.AddToScene(this._apexScene) && !this._dynamicsPendingLoad.includes(dynamic))
         this._dynamicsPendingLoad.push(dynamic);
     }
@@ -699,6 +720,8 @@ export class Tr2InteriorScene extends ITr2PickableScene
     }
 
     dynamic.RemoveFromScene();
+    // Incarna's scene also took it out of every cell (Interior/Tr2InteriorScene.cpp:1311-1315 at trinity 24d033fa~1).
+    for (const cell of this.cells) cell.RemoveDynamic(dynamic);
     this.dynamics.Remove(index);
 
     const pending = this._dynamicsPendingLoad.indexOf(dynamic);
@@ -727,6 +750,8 @@ export class Tr2InteriorScene extends ITr2PickableScene
       CcpLog.CCP_LOGERR("Tr2InteriorScenel::RemoveLightSource() - interiorLightSource not found in the scene!");
       return;
     }
+    // Incarna's scene also took it out of every cell (Interior/Tr2InteriorScene.cpp:1248-1252 at trinity 24d033fa~1).
+    for (const cell of this.cells) cell.RemoveLight(lightSource);
     this.lights.Remove(index);
     this.SetupShadowMaps();
   }
@@ -762,6 +787,10 @@ export class Tr2InteriorScene extends ITr2PickableScene
 
     for (let i = 0; i < this.curveSets.length; i++) this.curveSets[i].Update__RealTimeSimTime(realTime, simTime);
 
+    // Incarna's scene updated its cells' boxes here, "so lights and dynamics can add on the first Update call"
+    // (Interior/Tr2InteriorScene.cpp:357-364 at trinity 24d033fa~1).
+    for (const cell of this.cells) cell.UpdateBoundingBox();
+
     const added = [];
     for (let i = 0; i < this._dynamicsPendingLoad.length; i++)
     {
@@ -772,6 +801,10 @@ export class Tr2InteriorScene extends ITr2PickableScene
       const index = this._dynamicsPendingLoad.indexOf(added[i]);
       if (index !== -1) this._dynamicsPendingLoad.splice(index, 1);
     }
+
+    // Incarna's cells then updated their statics and republished their maps (cpp:393-400 at trinity 24d033fa~1).
+    // Its UpdateLights, UpdateDynamics and UpdateCells, which tested lights and dynamics against cells, are not ported.
+    for (const cell of this.cells) cell.Update(simTime);
 
     for (let i = 0; i < this.lights.length; i++) this.lights[i].Update(simTime);
   }
@@ -874,6 +907,10 @@ export class Tr2InteriorScene extends ITr2PickableScene
     vec3.set(vec3_0, mat4_0[12], mat4_0[13], mat4_0[14]);
     frustum_1.DeriveFrustum(view, vec3_0, projection, viewport_0);
     this._OnQueryBegin();
+    // Incarna's scene tested every cell's statics first (Interior/Tr2InteriorScene.cpp:582-596 at trinity 24d033fa~1).
+    for (const cell of this.cells)
+      for (const interiorStatic of cell.statics)
+        if (interiorStatic.IsInFrustum(frustum_1, mat4_1)) this._OnInstanceVisible(interiorStatic, mat4_1);
     for (const dynamic of this.dynamics)
       if (dynamic.IsInFrustum(frustum_1, mat4_1)) this._OnInstanceVisible(dynamic, mat4_1);
     for (const light of this.lights)
@@ -1279,6 +1316,8 @@ export class Tr2InteriorScene extends ITr2PickableScene
   OnModified(name)
   {
     if (IsMatch(name, "backgroundCubemapPath")) this.SetBackgroundCubemapResPath();
+    // Incarna's scene passed the visualize method to its cells (Interior/Tr2InteriorScene.cpp:244-250 at trinity 24d033fa~1).
+    if (IsMatch(name, "visualizeMethod")) for (const cell of this.cells) cell.SetVisualizeMethod(this.visualizeMethod);
     if (IsMatch(name, "shadowSize") || IsMatch(name, "shadowCount")) this.SetupShadowMaps();
     return true;
   }
