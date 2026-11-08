@@ -24,6 +24,9 @@ export class CjsPaperDollComponent
     /** Each option's resolution in flight or done, by id; a failed one is forgotten so it can be retried. */
     _resolving = new Map();
 
+    /** The options whose resolution finished, by id. */
+    _resolved = new Set();
+
     enabled = true;
 
     option = "";
@@ -73,6 +76,7 @@ export class CjsPaperDollComponent
         ]));
         this._resolve = resolve;
         this._resolving = new Map();
+        this._resolved = new Set();
         this._defaultOption = option;
         this.Reset();
     }
@@ -94,6 +98,7 @@ export class CjsPaperDollComponent
             const operation = this._resolve(id).then(fields =>
             {
                 Object.assign(record, fields, { colorAreas: [...new Set(fields.colorAreas ?? [])].sort() });
+                this._resolved.add(id);
                 this.Rebuild();
                 return record;
             });
@@ -101,6 +106,18 @@ export class CjsPaperDollComponent
             operation.catch(() => { if (resolving.get(id) === operation) resolving.delete(id); });
         }
         return this._resolving.get(id);
+    }
+
+    /**
+     * Whether an option's record is complete: its resolution finished, or the component has no resolver (every
+     * option arrived fully described).
+     * @cjs
+     * @param {string} id The option's id.
+     * @returns {boolean}
+     */
+    IsResolved(id)
+    {
+        return !this._resolve || this._resolved.has(id);
     }
 
     /** The component's declared colour inputs used by the selected option. */

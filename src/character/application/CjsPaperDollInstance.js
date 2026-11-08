@@ -153,6 +153,12 @@ export class CjsPaperDollInstance
     }
 
     /**
+     * The part kept out of the suppression walk: the beard, a node of neither earlier walk. Awaiting the operator's
+     * ruling on occlusion (2026-11-09).
+     */
+    static unwalked = "beard";
+
+    /**
      * The last update's suppression walk, for the mesh side (fitting, carriers): the suppressed parts and the parts a
      * cycle kept active, by member name.
      * @returns {{ suppressed: string[], cyclic: string[] }}
@@ -164,13 +170,15 @@ export class CjsPaperDollInstance
 
     /**
      * Which worn parts are suppressed: runtime's suppression walk (`CjsCharacterAppearanceResolver.resolveSuppressions`)
-     * over every active part with a worn item (blend MATERIAL or MESH: garments, arms, body augmentation, hair, beard,
-     * accessories), an edge where one's `occludesModifiers` names another's category or option path. Suppression runs
-     * from the roots; a cycle stays active.
+     * over every active part with a worn item (blend MATERIAL or MESH: garments, arms, body augmentation, hair,
+     * accessories) whose option is resolved, an edge where one's `occludesModifiers` names another's category or option
+     * path. Suppression runs from the roots; a cycle stays active. An unresolved option is not walked until its
+     * resolution rebuilds the part, as the earlier walks took only resolved items.
      *
      * The walk's parts are today's two walks joined (the body pass's garments, the fitting's garments, hair and
      * accessories), and the result is theirs: in the content no hair or accessory occludes a garment, and the face
-     * augmentations (DECAL) are not walked. AWAITING THE OPERATOR'S RULING (2026-11-09): whether occlusion drops a part
+     * augmentations (DECAL) are not walked. The beard (MATERIAL) is kept out: it was a node of neither earlier walk
+     * (masks occlude it in the content). AWAITING THE OPERATOR'S RULING (2026-11-09): whether occlusion drops a part
      * (this walk, the body today) or draws the occluder over it (`CjsPaperDollDefinition.GetLayerOrder`, the head
      * today), and for which targets.
      * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
@@ -181,12 +189,13 @@ export class CjsPaperDollInstance
         const worn = CjsPaperDollDefinition.parts.filter(name =>
         {
             const part = definition[name], blend = part.constructor.blend;
-            return (blend === PaperDollBlend.MATERIAL || blend === PaperDollBlend.MESH) && part.enabled && part.option !== "";
+            return (blend === PaperDollBlend.MATERIAL || blend === PaperDollBlend.MESH) && name !== CjsPaperDollInstance.unwalked
+                && part.enabled && part.option !== "" && part.IsResolved(part.option);
         }).map(name =>
         {
             const part = definition[name], option = part.GetOptions().find(value => value.id === part.option);
-            // An option not yet resolved has no occlusion targets yet; its resolution rebuilds the part.
-            return { name, category: part.constructor.category, path: option.path, occludes: option.occludes ?? [] };
+            // A resolved worn option states what it occludes (an empty list when its metadata names nothing).
+            return { name, category: part.constructor.category, path: option.path, occludes: option.occludes };
         });
         const edges = new Map();
         for (const target of worn) for (const by of worn)

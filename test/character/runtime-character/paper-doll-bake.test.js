@@ -61,3 +61,23 @@ test("the head's brow list is the parts after the eyebrows", () =>
   assert.ok(lists.brow.length > 0 && !lists.brow.includes("eyebrows"));
   assert.equal(CjsPaperDollInstance.ready(definition, PaperDollTarget.BODY).lists.brow, undefined, "only the head has a brow list");
 });
+
+test("an unresolved option is not walked until it resolves; the beard is kept out of the walk", async () =>
+{
+  const definition = new CjsPaperDollDefinition();
+  let release;
+  const resolution = new Promise(resolve => { release = resolve; });
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => resolution });
+  definition.outer.enabled = true;
+  definition.topMiddle.Configure([ { id: "shirt", path: "topmiddle/shirt", occludes: [] } ], new Map(), { option: "shirt" });
+  definition.topMiddle.enabled = true;
+  definition.beard.Configure([ { id: "b", path: "beard/b", occludes: [] } ], new Map(), { option: "b" });
+  definition.beard.enabled = true;
+  definition.mask.Configure([ { id: "m", path: "accessories/masks/m", occludes: [ "beard" ] } ], new Map(), { option: "m" });
+  definition.mask.enabled = true;
+  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [], "the unresolved coat is not a node; the beard is not walked");
+  const resolved = definition.outer.ResolveOption("coat");
+  release({ occludes: [ "topmiddle" ], colorAreas: [] });
+  await resolved;
+  assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "topMiddle" ]);
+});
