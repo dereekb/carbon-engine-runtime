@@ -40,21 +40,12 @@ const INSTANCE_VERTEX_SIZE = 16;
 export class EveTrailsSet
 {
 
-  /** m_geometryResource (TriGeometryResPtr) [READ] */
+  /**
+   * m_geometryResource (TriGeometryResPtr) [READ]
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet_Blue.cpp:22).
+   */
   @type.object.ref("TriGeometryRes")
-  get geometryResource()
-  {
-    return this._geometryResource;
-  }
-
-  /** @implemented Routes property assignment through the resource binding. */
-  set geometryResource(resource)
-  {
-    this.SetGeometryResource(resource);
-  }
-
-  /** Resource storage behind the notification-aware property. */
-  _geometryResource = null;
+  geometryResource = null;
 
   /** m_fadeSpeed (float) [READWRITE, PERSIST] */
 
@@ -120,12 +111,16 @@ export class EveTrailsSet
 
   InitializeGeometryResource()
   {
+    if (this.geometryResource)
+    {
+      blue.resMan.notify.Remove(this, this.geometryResource);
+      this.geometryResource = null;
+    }
     this.Cleanup();
-    this.geometryResource = null;
     if (this._destroyed) return;
-    this.geometryResource = this.geometryResPath
-      ? blue.resMan.GetResource(this.geometryResPath)
-      : null;
+    if (this.geometryResPath) this.geometryResource = blue.resMan.GetResource(this.geometryResPath);
+    // Rebuilds at once when the mesh is already prepared.
+    if (this.geometryResource) blue.resMan.notify.Add(this, this.geometryResource, this, "geometryResource");
   }
 
   /**
@@ -196,6 +191,19 @@ export class EveTrailsSet
   ReleaseCachedData(_resource)
   {
     this.Cleanup();
+  }
+
+  /**
+   * Lets go of an expired mesh: the declaration built from it, then the reference.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and GetBatches reacquires from geometryResPath.
+   * @param {TriGeometryRes} resource The expired mesh.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.geometryResource === resource) this.geometryResource = null;
   }
 
   /**
@@ -365,19 +373,6 @@ export class EveTrailsSet
     return this.fadeSpeed;
   }
 
-  /**
-   * Binds a resolved trail geometry resource directly, rebuilding when it has
-   * loaded; for hosts that resolve the mesh themselves.
-   */
-  SetGeometryResource(resource)
-  {
-    if (this.geometryResource === resource) return;
-    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
-    this.Cleanup();
-    this._geometryResource = resource ?? null;
-    if (this.geometryResource) blue.resMan.notify.Add(this, this.geometryResource, this, "geometryResource");
-  }
-
   /** The trail placements as copies, for diagnostics. */
   GetTrailData()
   {
@@ -397,7 +392,11 @@ export class EveTrailsSet
   {
     this._destroyed = true;
     this.Cleanup();
-    this.geometryResource = null;
+    if (this.geometryResource)
+    {
+      blue.resMan.notify.Remove(this, this.geometryResource);
+      this.geometryResource = null;
+    }
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 }
