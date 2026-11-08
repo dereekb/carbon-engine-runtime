@@ -80,4 +80,7 @@ export class CjsPaperDollHair extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.MATERIAL;
 
+    /** It has a secondary palette (`secondaryPalette`). */
+    static secondaryPalettes = true;
+
 }

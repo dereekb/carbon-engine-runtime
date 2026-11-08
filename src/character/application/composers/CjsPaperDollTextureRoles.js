@@ -82,7 +82,7 @@ export class CjsPaperDollTextureRoles
             covered: false,
             source: "the colorizedblit Z decode (character-compositing.md:367, :379-383); every head tattoo folder holds one "
                 + "`comp_head_z` beside its `projection.proj` (resource index)",
-            derived: "the zone of the head tattoo's bake, which is its colourised detail (no source states it): matches "
+            derived: "PROVISIONAL (Ruru, 2026-11-09): the zone of the head tattoo's bake, which is its colourised detail (no source states it): matches "
                 + "Graphene's working behaviour, today's look (Graphene 5a7e30d tattoos.js); every head tattoo's is a 16x16 "
                 + "map of one texel selecting colour area 1 everywhere (all 115, both sexes)"
         },

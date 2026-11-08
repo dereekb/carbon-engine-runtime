@@ -19,10 +19,10 @@ const FILES = [
   ROOT + "tattoo/armleft/sleeve01/sleeve01.proj"
 ];
 
-function services(t, entries)
+function services(t, entries, files = FILES)
 {
   const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
+  cache.AddFileIndex(files.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
   const paths = new BluePaths();
   paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "male", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
@@ -40,9 +40,9 @@ class StubCompositor
   async Colorized(detail, region, zone) { const effect = new Tr2Effect(); Object.assign(effect, { detail, zone, recorded: {} }); effect.SetParameter__Vector4 = (name, value) => { effect.recorded[name] = Array.from(value); }; return effect; }
 }
 
-async function configured(t, entries = [])
+async function configured(t, entries = [], files = FILES)
 {
-  services(t, entries);
+  services(t, entries, files);
   const build = { content: { root: ROOT, recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition(), compositor = new StubCompositor();
   const source = new CjsPaperDollProjectionSource(compositor, build, "tattoo");
@@ -92,4 +92,9 @@ test("a recipe's tattoo comes on in the recipe's colours", async t =>
   assert.equal(definition.tattoo.option, "tattoofacem02");
   assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacem02").defaultPalette, CjsPaperDollColorizedSource.authored);
   assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacea01").defaultPalette, HEAD + "colors/default_a.color");
+});
+
+test("a build without the default ink throws, as the content always ships it", async t =>
+{
+  await assert.rejects(configured(t, [], FILES.filter(path => !path.endsWith("/default_a.color"))), /Missing default tattoo palette/);
 });

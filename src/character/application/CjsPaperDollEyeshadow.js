@@ -109,4 +109,7 @@ export class CjsPaperDollEyeshadow extends CjsPaperDollComponent
     /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
     static palettes = PaperDollPalettes.OWN;
 
+    /** It has a secondary palette (`secondaryPalette`). */
+    static secondaryPalettes = true;
+
 }

@@ -241,4 +241,10 @@ export class CjsPaperDollComponent
      */
     static paletteSpecular = false;
 
+    /**
+     * Whether the part has a secondary palette (`secondaryPalette`: the areas-2-and-3 swatch of eye shadow and hair),
+     * which the UI starts on a second swatch.
+     */
+    static secondaryPalettes = false;
+
 }

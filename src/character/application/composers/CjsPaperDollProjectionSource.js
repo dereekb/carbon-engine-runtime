@@ -18,7 +18,8 @@ import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
  * reported by `Describe`: `tattooface01` (a `projection.proj` alone) and `tattoofacetest` (a projection and a zone).
  * The arm folders (`tattoo/armleft/`, `tattoo/armright/`) project onto the body and are not composed here. An option's
  * default palette is the content's: `colors/default_a.color`, the `default` palette by the kind rule
- * (`CjsPaperDollColorizedSource.record`).
+ * (`CjsPaperDollColorizedSource.record`); every build ships it, and a build without it throws (as Graphene's
+ * `tattoos.js` did).
  *
  * The source owns the bake target and every option's paint over it. The bake draw itself (the head mesh drawn with
  * the shipped `skinnedavatartattoobaking` effect from the option's projection) is the host's until the instance owns
@@ -35,7 +36,10 @@ export class CjsPaperDollProjectionSource
 
     static className = "CjsPaperDollProjectionSource";
 
-    /** The bake target's size: moved as it was from Graphene's `tattoos.js` (the head atlas's 2:1). */
+    /**
+     * The bake target's size. Derived: no source states it; moved as it was from Graphene's `tattoos.js` (today's look),
+     * the head atlas's 2:1.
+     */
     static bakeWidth = 2048;
 
     /** The bake target's height. */
@@ -122,6 +126,7 @@ export class CjsPaperDollProjectionSource
             .map(file => file.slice(root.length, -"/projection.proj".length));
         const palettes = files.filter(file => file.startsWith(root + "colors/") && file.endsWith(".color")).map(path => CjsPaperDollColorizedSource.record(path));
         const defaultPalette = palettes.find(record => record.name.replace(/_a$/u, "") === "default" && record.kind === PaperDollPaletteKind.AREA_1)?.path ?? null;
+        if (defaultPalette === null) throw new Error("Missing default " + this.name + " palette " + root + "colors/default_a.color");
         const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const set = recipe.find(entry => entry.path.startsWith(category + "/head/")) ?? null;
         const option = set ? set.path.split("/").at(-1) : "";
@@ -130,10 +135,10 @@ export class CjsPaperDollProjectionSource
         this._bake = this._compositor.TargetTexture(CjsPaperDollProjectionSource.bakeWidth, CjsPaperDollProjectionSource.bakeHeight);
         component.Configure([ ...this._options.keys() ].sort().map(id =>
         {
-            const recipe = authored !== null && id === option, initial = recipe ? AUTHORED : defaultPalette;
+            const recipe = authored !== null && id === option;
             return {
                 id,
-                ...(initial !== null ? { defaultPalette: initial } : {}),
+                defaultPalette: recipe ? AUTHORED : defaultPalette,
                 palettes: recipe ? [ ...palettes, CjsPaperDollColorizedSource.record(AUTHORED) ] : palettes
             };
         }), new Map(authored !== null ? [ [ AUTHORED, authored ] ] : []), { option, resolve: id => this._Resolve(this._options.get(id)) });
@@ -188,7 +193,9 @@ export class CjsPaperDollProjectionSource
 
     /**
      * The captured option's paint for the head diffuse, in the captured colours over its bake; none elsewhere, for no
-     * option, while the option's maps or bake inputs load, or before the host installs its bake.
+     * option, while the option's maps or bake inputs load, or before the host installs its bake. It calls the host's
+     * baker, a GPU draw into the bake target, as a side effect; the baker's cache (option and face shape) holds that to
+     * one draw per change, so a recompose without one draws nothing new.
      * @param {{ option: string, colors: Float32Array[] }} value The part's capture.
      * @param {string} region The output's region.
      * @param {string} channel The output's channel.
