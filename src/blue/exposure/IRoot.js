@@ -2,7 +2,7 @@
 // Source: blueexposure/include/BlueClass.h:31-161 (RootQIImpl, RootRefLock: the bodies Carbon wraps around a class).
 import { CjsSchema } from "#schema/CjsSchema";
 import { BeClasses } from "./classes/registry.js";
-import { ClassInfo } from "./ClassInfo.js";
+import { ClassInfo } from "../base/ClassInfo.js";
 
 /**
  * Carbon's `IRoot`: the interface every Blue object implements. Carbon's is

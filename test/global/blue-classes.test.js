@@ -5,6 +5,7 @@ import { blue, BlueClasses } from "../../src/blue/index.js";
 import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import * as CcpLog from "../../src/global/logging/ccpLog.js";
 import * as classRegistry from "../../src/blue/exposure/classes/registry.js";
+import { ClassInfo } from "../../src/blue/base/ClassInfo.js";
 
 const { ClassRegistrarNullFactory, getClassRegistrationRevision } = classRegistry;
 
@@ -55,8 +56,9 @@ test("abstract definitions preserve distinct existing canonical and alias factor
   try
   {
     assert.equal(getClassRegistrationRevision(), before + 1, "only the free alias changes revision");
-    assert.deepEqual(blue.classes.GetClassRegistration(canonical.name), canonical);
-    assert.deepEqual(blue.classes.GetClassRegistration(alias.name), alias);
+    // A registration carries its class's ClassInfo (Carbon's ClassRegistration::mType).
+    assert.deepEqual(blue.classes.GetClassRegistration(canonical.name), { ...canonical, classInfo: ClassInfo.exposeToBlue(ExistingCanonical) });
+    assert.deepEqual(blue.classes.GetClassRegistration(alias.name), { ...alias, classInfo: ClassInfo.exposeToBlue(ExistingAlias) });
     assert.strictEqual(blue.classes.CreateInstance(canonical.name), canonicalResult);
     assert.strictEqual(blue.classes.CreateInstance(alias.name), aliasResult);
     assert.equal(blue.classes.CreateInstance("AbstractFreeAlias"), null);
@@ -65,7 +67,7 @@ test("abstract definitions preserve distinct existing canonical and alias factor
     assert.strictEqual(CjsSchema.getConstructor(canonical.name), ExistingCanonical);
     assert.strictEqual(CjsSchema.getConstructor(alias.name), ExistingAlias);
     assert.deepEqual(blue.classes.GetClassRegistration("AbstractFreeAlias"), {
-      name: "AbstractFreeAlias", type: Abstract, createFn: ClassRegistrarNullFactory, flags: 1,
+      name: "AbstractFreeAlias", type: Abstract, createFn: ClassRegistrarNullFactory, flags: 1, classInfo: ClassInfo.exposeToBlue(Abstract),
     });
     blue.classes.RegisterClasses([{name: "AbstractFreeAlias", type: ExistingAlias, createFn: alias.createFn, flags: 16}]);
     assert.equal(getClassRegistrationRevision(), before + 1);
@@ -216,7 +218,7 @@ test("duplicates through either facade keep the first whole registration and log
     CjsSchema.setConstructor("AtomicFirst", Other);
     second.RegisterClasses([ { name: "AtomicFirst", type: Other, createFn: () => null, flags: 16 } ]);
     assert.equal(CjsSchema.getConstructor("AtomicFirst"), Unschemed);
-    assert.deepEqual(second.GetClassRegistration("AtomicFirst"), { name: "AtomicFirst", type: Unschemed, createFn: factory, flags: 1 });
+    assert.deepEqual(second.GetClassRegistration("AtomicFirst"), { name: "AtomicFirst", type: Unschemed, createFn: factory, flags: 1, classInfo: ClassInfo.exposeToBlue(Unschemed) });
     assert.equal(second.CreateInstance("AtomicFirst"), made);
 
     CjsSchema.setConstructor("SchemaFirst", Unschemed);

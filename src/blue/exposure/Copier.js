@@ -39,6 +39,7 @@
 // Carbon only then.
 import * as CcpLog from "../../global/logging/ccpLog.js";
 import { CjsSchema } from "#schema";
+import { ClassInfo } from "../base/ClassInfo.js";
 import { cloneCarbonValue, coerceCarbonMathInto, coerceCarbonTypedArrayInto } from "../schema/types/index.js";
 import { ICopier } from "./ICopier.js";
 import { hasOwnInterfaceTable, mappedInterfaces } from "../compose/interface.js";
@@ -206,12 +207,20 @@ export class Copier extends ICopier
     // member with a non-zero size in Carbon and is copied; a property's size is
     // 0, so Copier.cpp:163-177 compares no bytes and never copies it.
     const runtimeNames = new Set();
-    // Carbon copies the member tables along the exposure chain, in member-table order (Copier.cpp:140-209),
-    // which a bag carries (CjsSchema.orderByExposureRows).
-    const levels = CjsSchema.getExposedDeclarations(dest.constructor);
-    const members = levels.flatMap(level => level.members);
-    const properties = levels.flatMap(level => level.properties.filter(property => !property.property));
-    for (const field of CjsSchema.orderByExposureRows(dest.constructor, [ ...members, ...properties ]))
+    // Carbon copies the member tables along the exposure chain, in member-table order (Copier.cpp:140-209).
+    const fields = [];
+    const ci = ClassInfo.exposeToBlue(dest.constructor);
+    for (let level = ci; level; level = level.parentClassInfo)
+    {
+      for (const row of level.memberTable)
+      {
+        if (level !== ci && ci.hiddenInherited.has(row.meta.key)) continue;
+        const declaration = level.declarationOf(row);
+        if (declaration.role === "property" && declaration.property) continue;
+        fields.push(declaration);
+      }
+    }
+    for (const field of fields)
     {
       if (runtimeNames.has(field.name)) continue;
       if (field.type?.runtimeOnly === true)

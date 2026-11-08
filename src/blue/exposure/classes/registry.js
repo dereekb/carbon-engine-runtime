@@ -23,7 +23,9 @@ let revision = 0;
  * Native ClassRegistration supplies one type, factory and flag word atomically.
  * JavaScript uses its constructor as type information and its trimmed name as
  * the class id; no Function.name lookup or construction policy is inferred.
- * @param {{name: string, type: Function, createFn?: Function, flags?: number}} registration Entry.
+ * `classInfo` is Carbon's `mType`, the class's compiled ClassInfo; the schema's
+ * `registerClassInfo` supplies it, and this leaf only carries it.
+ * @param {{name: string, type: Function, createFn?: Function, flags?: number, classInfo?: object}} registration Entry.
  * @returns {boolean} True when registered; a duplicate logs and returns false.
  */
 export function registerClass(registration)
@@ -48,7 +50,8 @@ export function registerClass(registration)
         name: className,
         type,
         createFn: createFn ?? (() => new type()),
-        flags: flags ?? 0
+        flags: flags ?? 0,
+        classInfo: registration.classInfo ?? null
     });
     revision += 1;
     return true;
@@ -70,7 +73,7 @@ export function unregisterClass(name)
 /**
  * Returns a record copy so callers cannot replace authoritative entry fields.
  * @param {string} name Explicit class name.
- * @returns {{name: string, type: Function, createFn: Function, flags: number}|null} Entry or null.
+ * @returns {{name: string, type: Function, createFn: Function, flags: number, classInfo: object|null}|null} Entry or null.
  */
 export function getClassRegistration(name)
 {
@@ -93,7 +96,7 @@ export function getRegisteredConstructor(name)
 /**
  * Copies of every registration, in registration order: the walk Carbon's
  * BlueClasses makes over `m_classes` (BlueClasses_Blue.cpp:88-104, 175-189).
- * @returns {Array<{name: string, type: Function, createFn: Function, flags: number}>} Entries.
+ * @returns {Array<{name: string, type: Function, createFn: Function, flags: number, classInfo: object|null}>} Entries.
  */
 export function getClassRegistrations()
 {

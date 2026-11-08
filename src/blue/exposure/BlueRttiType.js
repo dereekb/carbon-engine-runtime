@@ -39,7 +39,7 @@ export class BlueRttiType
   /**
    * `BlueRttiType( const Be::ClassInfo* ci )` (BlueClasses.cpp:74-77).
    *
-   * @param {import("./ClassInfo.js").ClassInfo} ci The class.
+   * @param {import("../base/ClassInfo.js").ClassInfo} ci The class.
    */
   constructor(ci)
   {
@@ -54,7 +54,7 @@ export class BlueRttiType
    *
    * @adapted parent rows the class hides with `hideInherited` are left out
    *   too (ours, see ClassInfo), and no offsets are kept (see the class).
-   * @param {import("./ClassInfo.js").ClassInfo} ci The class.
+   * @param {import("../base/ClassInfo.js").ClassInfo} ci The class.
    */
   Init(ci)
   {

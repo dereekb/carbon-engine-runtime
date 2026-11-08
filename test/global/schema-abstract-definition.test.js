@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
 import * as classRegistry from "../../src/blue/exposure/classes/registry.js";
+import { ClassInfo } from "../../src/blue/base/ClassInfo.js";
 
 const { ClassRegistrarNullFactory, getClassRegistrationRevision } = classRegistry;
 
@@ -44,7 +45,7 @@ for (const [route, define] of routes)
       for (const registeredName of [name, alias, secondAlias])
       {
         assert.deepEqual(registry.GetClassRegistration(registeredName), {
-          name: registeredName, type: Abstract, createFn: ClassRegistrarNullFactory, flags: 1,
+          name: registeredName, type: Abstract, createFn: ClassRegistrarNullFactory, flags: 1, classInfo: ClassInfo.exposeToBlue(Abstract),
         });
         assert.strictEqual(CjsSchema.getConstructor(registeredName), Abstract);
         assert.equal(registry.FindClsid(registeredName), registeredName);

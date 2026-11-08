@@ -44,6 +44,22 @@ export function setInterfaceClassResolver(resolveClass)
     resolveInterfaceClass = resolveClass;
 }
 
+let exposureChanged = () => {};
+
+/**
+ * Supplies the schema's recompile, called with a class whose bases, mapped
+ * interfaces or chain a decorator has just changed. Compose cannot import the
+ * schema; a change after registration (a module-bottom call) must still reach
+ * the class's compiled ClassInfo.
+ *
+ * @param {function(Function): void} listener Called with the changed class.
+ * @returns {void}
+ */
+export function setExposureChangeListener(listener)
+{
+    exposureChanged = listener;
+}
+
 /** Members every class already answers, which a contract must never overwrite. */
 const OBJECT_MEMBERS = new Set(Object.getOwnPropertyNames(Object.prototype));
 
@@ -325,6 +341,7 @@ export function carbonInheritDecorator(Contracts, onInstalled = null)
         Object.defineProperty(Constructor, BASES, { value: [ ...baseList(Constructor), ...bases ], configurable: true });
 
         for (const Contract of bases) installInterface(Constructor, Contract, onInstalled);
+        exposureChanged(Constructor);
     };
 }
 
@@ -541,6 +558,7 @@ export function carbonInterfaceDecorator(Interfaces, sourceOrder = false)
         {
             for (const Interface of mapped) table.interfaces.add(Interface);
         }
+        exposureChanged(value);
     };
 }
 
@@ -566,6 +584,7 @@ export function carbonChainToDecorator(Parent)
         if (table.chainTo) throw new TypeError("carbon.chainTo may be declared once per class.");
         ResolveInterfaceTable(value, new Set(), { Constructor: value, table: { interfaces: table.interfaces, chainTo: Parent } });
         table.chainTo = Parent;
+        exposureChanged(value);
     };
 }
 

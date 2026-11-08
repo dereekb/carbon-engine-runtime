@@ -11,8 +11,7 @@ const { CjsSchema } = await ImportDist("blue/schema/CjsSchema.js");
 const { getClassRegistrations } = await ImportDist("blue/exposure/classes/registry.js");
 const { ClassInfo, BlueClasses } = await ImportDist("blue/index.js");
 const { getCarbonTypeDefinition } = await ImportDist("blue/schema/types/carbonTypes.js");
-const { PersistedMember } = await ImportDist("blue/exposure/PersistedMember.js");
-const declaredMemberType = type => PersistedMember.declaredMemberType(type);
+const { declaredMemberType, getEditFlags } = await ImportDist("blue/schema/compileClassInfo.js");
 
 const classes = new BlueClasses();
 const registrations = getClassRegistrations();
@@ -50,7 +49,7 @@ test("every schema row is found by its exposed name with its flags and key, and 
     {
       // The row Carbon's RTTI takes for a name is its first that is not hidden.
       const value = rtti.FindAttribute(rowName);
-      const row = list.find(entry => !(ClassInfo._varEntryOf(type, entry).editFlags & HIDDEN));
+      const row = list.find(entry => !(getEditFlags(entry) & HIDDEN));
       if (!row)
       {
         if (value) problems.push(`${name}.${rowName}: hidden, but found`);
@@ -61,7 +60,7 @@ test("every schema row is found by its exposed name with its flags and key, and 
         problems.push(`${name}.${rowName}: missing`);
         continue;
       }
-      const flags = ClassInfo._varEntryOf(type, row).editFlags;
+      const flags = getEditFlags(row);
       if (value.var.editFlags !== flags) problems.push(`${name}.${rowName}: flags ${value.var.editFlags}, schema ${flags}`);
       if (value.var.meta.key !== (row.key ?? row.name)) problems.push(`${name}.${rowName}: key ${value.var.meta.key}, schema ${row.key}`);
     }

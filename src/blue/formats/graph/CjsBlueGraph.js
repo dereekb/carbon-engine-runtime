@@ -4,7 +4,7 @@
 import * as graph from "../../../global/model/graph/index.js";
 import { CjsSchema } from "#schema";
 import { baseList, exposureChainTo, mappedInterfaces } from "../../compose/interface.js";
-import { getDeclaredEditFlags } from "../../exposure/ClassInfo.js";
+import { getDeclaredEditFlags } from "../../schema/compileClassInfo.js";
 import { ICustomPersist } from "../../exposure/ICustomPersist.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
 import { IList } from "../../exposure/IList.js";

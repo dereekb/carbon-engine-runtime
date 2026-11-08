@@ -18,7 +18,8 @@ import { blueEnums, CjsBlueEnumRegistry } from "../enums/CjsBlueEnumRegistry.js"
 import { EDITFLAGS } from "../../global/consts/blue.js";
 import { TriSettingNames } from "../../global/consts/trinity.js";
 import { CjsUnusedMethodError } from "../../global/utils/errors/CjsUnusedMethodError.js";
-import { registerClass, unregisterClass, getRegisteredConstructor, getClassRegistrationRevision, ClassRegistrarNullFactory } from "../exposure/classes/registry.js";
+import { unregisterClass, getRegisteredConstructor, getClassRegistrationRevision, ClassRegistrarNullFactory } from "../exposure/classes/registry.js";
+import { classInfoOf, compileClassInfo, installClassInfoCompile, recompileClassInfo, registerClassInfo } from "./compileClassInfo.js";
 
 
 // Compose stays below Blue; supply the existing registration lookup for lazy IRoot entries.
@@ -434,7 +435,7 @@ export class CjsSchema
      */
     static setConstructor(name, Constructor)
     {
-        registerClass({ name, type: Constructor });
+        registerClassInfo({ name, type: Constructor });
         return this;
     }
 
@@ -681,6 +682,20 @@ export class CjsSchema
      * @param {string|Array<string>} [options.namespaces] Restricts exported metadata namespaces.
      * @returns {CjsClassInfo} Shared per-class record.
      */
+    /**
+     * The class's export as `getSchema` gives it, with each enum and chooser left as
+     * the name it declares: ClassInfo's compile reads it at registration, when a
+     * class-static enum set at module bottom has not registered yet. The compiled
+     * row resolves the name on first read (VarEntry.chooserTable).
+     *
+     * @param {Function} Constructor A registered class.
+     * @returns {object} Its export, enums unresolved.
+     */
+    static getDeclaredSchema(Constructor)
+    {
+        return buildClassInfo(Constructor, null, false);
+    }
+
     static getSchema(Constructor, options = {})
     {
         const namespaces = normalizeNamespaces(options.namespaces);
@@ -2505,6 +2520,8 @@ function defineClassMetadata(Constructor, definition)
     buildStructureDefinition(schema);
     registerClassMetadata(Constructor, schema);
     sealClassSchema(Constructor, schema);
+    // The one compile of the class's ClassInfo, into the object its registration carries.
+    compileClassInfo(Constructor);
 }
 
 /**
@@ -2667,6 +2684,8 @@ function defineMemberMetadata(Constructor, listKey, mapKey, name, namespace, val
     {
         const effective = schema.effectiveMethodsByName.get(name);
         schema.effectiveMethodsByName.set(name, mergeMemberMetadata(effective ? { ...effective } : { name }, item));
+        // A method row mapped after define (one above `@be.define`, or an interface's decorateMethod call) enters mPyMethodTable.
+        recompileClassInfo(Constructor);
     }
 }
 
@@ -2991,15 +3010,16 @@ function mergeMemberMetadata(target, source)
  * @property {object} [structureDefinition] Native struct offsets and stride. @impl JavaScript class-info extension.
  * @property {boolean} [abstract] This class's explicit registration policy, never inherited. Existing name registrations may retain another factory.
  */
-function buildClassInfo(Constructor, namespaces)
+function buildClassInfo(Constructor, namespaces, resolveEnums = true)
 {
+    const enrich = resolveEnums ? enrichEnumField : exported => exported;
     const schema = CLASS_SCHEMA.get(Constructor);
     const fields = [];
     const methods = [];
 
     for (const field of getEffectiveFields(Constructor))
     {
-        fields.push(enrichEnumField(exportField(field, namespaces), Constructor));
+        fields.push(enrich(exportField(field, namespaces), Constructor));
     }
 
     // Methods are exported from this class only, while fields resolve through
@@ -3022,9 +3042,9 @@ function buildClassInfo(Constructor, namespaces)
         className: CjsSchema.getClassName(Constructor),
         fields,
         members: getCanonicalDeclarations(Constructor, "member").map(entry =>
-            enrichEnumField(exportCanonicalDeclaration(entry, namespaces), entry.declaringClass)),
+            enrich(exportCanonicalDeclaration(entry, namespaces), entry.declaringClass)),
         properties: getCanonicalDeclarations(Constructor, "property").map(entry =>
-            enrichEnumField(exportCanonicalDeclaration(entry, namespaces), entry.declaringClass))
+            enrich(exportCanonicalDeclaration(entry, namespaces), entry.declaringClass))
     };
 
     if (schema?.structureDefinition) result.structureDefinition = schema.structureDefinition;
@@ -3543,9 +3563,11 @@ function registerClassMetadata(Constructor, schema)
     const refusesConstruction = schema.abstract === true || schema.interface === true;
     const createFn = refusesConstruction ? ClassRegistrarNullFactory : undefined;
     const flags = refusesConstruction ? 1 : 0;
+    // ClassRegistration::mType: the class's ClassInfo, filled once the schema is sealed (defineClassMetadata).
+    const classInfo = classInfoOf(Constructor);
     for (const name of [ schema.className, ...(schema.aliases || []) ])
     {
-        registerClass({ name, type: Constructor, createFn, flags });
+        registerClassInfo({ name, type: Constructor, createFn, flags, classInfo });
     }
 }
 
@@ -3937,6 +3959,9 @@ function describeValuesInput(value)
     const name = value.constructor ? getRegisteredClassName(value.constructor) : null;
     return name ? `an instance of ${name}` : "an object without Object.prototype";
 }
+
+// The ClassInfo compile reads the schema; it must have it before the first define below.
+installClassInfoCompile(CjsSchema);
 
 // Install provenance here, after the schema exists. The registry core cannot
 // import schema: both Blue and schema need its storage during module loading.

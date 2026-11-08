@@ -2,7 +2,7 @@ import { EDITFLAGS } from "../../src/global/consts/blue.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsGraph, CjsGraphClassInfo, CjsGraphTypeFloat, VARTYPE } from "../../src/global/model/graph/index.js";
-import { VarEntry } from "../../src/blue/exposure/VarEntry.js";
+import { VarEntry } from "../../src/blue/base/VarEntry.js";
 
 
 test("source declarations and compiled members share one stable class record", () =>

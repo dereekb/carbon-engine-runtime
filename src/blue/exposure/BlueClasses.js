@@ -35,14 +35,15 @@ import { exposure as be } from "#be";
 // ProcessAllPendingDeletes, Copy, Find, GetTypeInfo, GetPersistedClassesReport),
 // blueexposure/TypeInfo.cpp:66-190 (PyGetTypeInfo), blueexposure/Find.cpp:147-246
 // (FindSingle, PyFindImpl).
-import { registerClass, unregisterClass, getClassRegistration, getClassRegistrations, BeClasses, setBeClasses } from "./classes/registry.js";
+import { unregisterClass, getClassRegistration, getClassRegistrations, BeClasses, setBeClasses } from "./classes/registry.js";
 import { CjsSchema, meta } from "#schema";
 import { getCarbonTypeDefinition, inferCarbonTypeFromCpp } from "../schema/types/carbonTypes.js";
 import { mappedInterfaces, ownMappedInterfaces, exposureChainTo } from "../compose/interface.js";
 import { IBlueClasses } from "./IBlueClasses.js";
 import { BlueRttiType } from "./BlueRttiType.js";
 import { Copier } from "./Copier.js";
-import { ClassInfo, getEditFlags } from "./ClassInfo.js";
+import { ClassInfo } from "../base/ClassInfo.js";
+import { registerClassInfo } from "../schema/compileClassInfo.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 
@@ -315,7 +316,7 @@ export class BlueClasses extends IBlueClasses
    * and kept on the class info.
    *
    * @implemented
-   * @param {import("./ClassInfo.js").ClassInfo} ci The class information, from `ClassInfo.exposeToBlue(Class)`.
+   * @param {import("../base/ClassInfo.js").ClassInfo} ci The class information, from `ClassInfo.exposeToBlue(Class)`.
    * @returns {BlueRttiType} The class's RTTI.
    */
   GetRtti(ci)
@@ -564,7 +565,7 @@ export class BlueClasses extends IBlueClasses
    * @adapted Carbon inserts into its own `m_classes` and `m_classesByName`
    *   maps keyed by `Be::Clsid`. Here a class id is its name, and the table is
    *   the registry leaf's (`classes/registry.js`), so declarations can register
-   *   before the registry instance exists; `registerClass` does the check, the
+   *   before the registry instance exists; `registerClassInfo` adds the ClassInfo and `registerClass` does the check, the
    *   log and the insert.
    * @param {{name: string, type: Function, createFn?: Function, flags?: number}} registration
    *   The entry: its name, its class, an optional factory and its
@@ -573,7 +574,7 @@ export class BlueClasses extends IBlueClasses
    */
   _RegisterSingleClass(registration)
   {
-    registerClass(registration);
+    registerClassInfo(registration);
   }
 
   /**
@@ -609,18 +610,23 @@ export class BlueClasses extends IBlueClasses
   }
 
   /**
-   * `PyGetTypeInfo` (TypeInfo.cpp:66-190) for a class.
+   * `PyGetTypeInfo` (TypeInfo.cpp:66-190) for a class: a projection of its
+   * ClassInfo and each one along `mParentClassInfo`.
    *
+   * @adapted the member type is the schema type kind, not Carbon's numeric
+   *   `Be::VarType` (see GetTypeInfo). A complete row's name is listed once,
+   *   the class's own first, where Carbon's dict keeps the last row written; an
+   *   older declaration without an exposure record is overwritten by a later one.
    * @param {Function} Constructor The class.
    * @param {number} flags IRoot flags; only the autovar bit is read.
    * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.
    */
   static _typeInfo(Constructor, flags)
   {
-    const schema = CjsSchema.getSchema(Constructor);
+    const ci = ClassInfo.exposeToBlue(Constructor);
     const classInfo = {
       module: "",
-      classname: schema.className,
+      classname: ci.classId,
       // Carbon's EXPOSURE_BEGIN doc string is a separate question; our class prose lives in the JSDoc.
       description: "",
       autovar: flags & 0x1 ? 1 : 0,
@@ -630,57 +636,35 @@ export class BlueClasses extends IBlueClasses
     const interfaces = {};
     for (const Interface of mappedInterfaces(Constructor)) interfaces[CjsSchema.getClassName(Interface)] = 0;
 
+    // TypeInfo.cpp:118-148 walks mMemberTable up mParentClassInfo.
     const members = {};
     const completeExposureNames = new Set();
-    // An accessor row is a property (blue.property/meta.property, flags derived)
-    // or an attribute over the accessor path (its own flags); one carrying only
-    // status markers is not exposed.
-    // Along the exposure chain (TypeInfo.cpp:118-148 walks mMemberTable up mParentClassInfo).
-    const levels = CjsSchema.getExposedDeclarations(Constructor);
-    const declared = [ ...levels.flatMap(level => level.members), ...levels.flatMap(level => level.properties).filter(property => property.property || property.edit) ];
-    for (const member of CjsSchema.orderByExposureRows(Constructor, declared))
+    for (let level = ci; level; level = level.parentClassInfo)
     {
-      if (completeExposureNames.has(member.name)) continue;
-      // PyGetTypeInfo lists what Carbon's EXPOSURE table holds (TypeInfo.cpp:118-148, the mMemberTable walk); our own rows are not in it.
-      if (member.exposure?.origin === "ours") continue;
-      if (member.exposure) completeExposureNames.add(member.name);
-      const type = member.type;
-      const reference = type && (type.kind === "rootRef" || type.kind === "rootWeak") ? type.className : null;
-      // A member declared with no Blue flags has no edit record: Carbon's mEditFlags 0.
-      const editflags = getEditFlags(member);
-      // PyGetChooserInfo (TypeInfo.cpp:28-68) reads mChooserTable whatever the
-      // edit flags say: a `chooser` declaration (MAP_ATTRIBUTE_WITH_CHOOSER
-      // without ENUM) reports its table and sets no bit; otherwise an enum's
-      // registered chooser.
-      const chooser = member.exposure
-        ? member.exposure.chooser ? member.chooser.entries : null
-        : member.chooser ? member.chooser.entries : member.enum && member.enum.chooser;
-      members[member.name] = {
-        type: getCarbonTypeDefinition(type).kind,
-        iid_name: typeof reference === "function" ? CjsSchema.getClassName(reference) : reference || "",
-        iid_ver: 0,
-        description: member.jessica && member.jessica.description ? member.jessica.description : "",
-        editflags,
-        min: null,
-        max: null,
-        choosers: chooser ? chooser.map(item => [ item.name, item.value, item.description || "" ]) : null
-      };
-    }
-
-    const methods = {};
-    for (let type = Constructor; type; type = exposureChainTo(type))
-    {
-      for (const method of CjsSchema.getSchema(type).methods || [])
+      for (const row of level.memberTable)
       {
-        // PyGetTypeInfo walks the class's PyMethodDef table, which only the MAP_METHOD* macros fill (blueexposure/TypeInfo.cpp:155-160): a method
-        // belongs when it carries an exposure record of Carbon's (class-level rows and aliases included), never the legacy origin stamp or one of ours.
-        if (method.exposure && method.exposure.origin !== "ours")
-        {
-          methods[method.exposure?.name ?? method.name] = "";
-          for (const alias of method.exposure?.aliases ?? []) methods[alias.name ?? method.name] = "";
-        }
+        if (level !== ci && ci.hiddenInherited.has(row.meta.key)) continue;
+        // PyGetTypeInfo lists what Carbon's EXPOSURE table holds; our own rows are not in it.
+        if (!row.meta.blue || completeExposureNames.has(row.name)) continue;
+        const member = level.declarationOf(row);
+        if (member.exposure) completeExposureNames.add(row.name);
+        members[row.name] = {
+          type: getCarbonTypeDefinition(member.type).kind,
+          iid_name: row.iid ?? "",
+          iid_ver: 0,
+          description: row.description,
+          editflags: row.editFlags,
+          min: null,
+          max: null,
+          // PyGetChooserInfo (TypeInfo.cpp:28-68) reads mChooserTable whatever the edit flags say.
+          choosers: row.chooserTable
+        };
       }
     }
+
+    // The PyMethodDef table, which only the MAP_METHOD* macros fill (TypeInfo.cpp:155-160).
+    const methods = {};
+    for (const method of ci.pyMethodTable) if (method.blue) methods[method.name] = "";
 
     return [ classInfo, interfaces, members, methods ];
   }

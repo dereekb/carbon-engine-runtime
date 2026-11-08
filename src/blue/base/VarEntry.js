@@ -1,11 +1,11 @@
 // Source: blueexposure/include/BlueTypes.h:321-375 (Be::VarEntry)
-import { VARTYPE } from "../../global/model/graph/graphTypes.js";
+import { VARTYPE } from "../../global/consts/blue.js";
 
 /**
  * One row of a class's member table: Carbon's `Be::VarEntry`, which
  * `MAP_ATTRIBUTE` and `MAP_PROPERTY*` push into the table `EXPOSURE_BEGIN`
- * starts (BlueExposureMacrosPython.h:35). Built once per class by
- * `ClassInfo.exposeToBlue` from the decorator metadata.
+ * starts (BlueExposureMacrosPython.h:35). Filled once per class by the
+ * schema's compile at registration (`compileClassInfo`).
  *
  * Adapted: Carbon's `mOffset` and `mSize` locate the member's bytes in the
  * object; a JavaScript member is located by its property key, so `meta.key` stands
@@ -28,8 +28,7 @@ export class VarEntry
   name = "";
 
   /**
-   * `mType`: the member's VARTYPE, from its declared type
-   * (`PersistedMember.declaredMemberType`); INVALID for a type with none.
+   * `mType`: the member's VARTYPE, from its declared type; INVALID for a type with none.
    *
    * @implemented
    */
@@ -67,11 +66,66 @@ export class VarEntry
   editFlags = 0;
 
   /**
-   * `mChooserTable`: `[name, value, description]` rows, or null.
+   * `mChooserTable`: `[name, value, description]` rows, or null. A chooser that
+   * names its enum is resolved on first read: the enum may register after the class.
    *
    * @implemented
+   * @returns {Array<Array<*>>|null} The rows.
    */
-  chooserTable = null;
+  get chooserTable()
+  {
+    if (this._chooserSource !== null)
+    {
+      const { entries, enumType, required } = this._chooserSource;
+      const resolved = entries ?? (enumType === null ? null : VarEntry.chooserResolver(enumType, required));
+      this._chooserTable = resolved ? resolved.map(item => [ item.name, item.value, item.description || "" ]) : null;
+      this._chooserSource = null;
+    }
+    return this._chooserTable;
+  }
+
+  set chooserTable(rows)
+  {
+    this._chooserTable = rows;
+    this._chooserSource = null;
+  }
+
+  /**
+   * Ours: the rows, once resolved.
+   *
+   * @cjs
+   * @type {Array<Array<*>>|null}
+   */
+  _chooserTable = null;
+
+  /**
+   * Ours: where the rows come from until first read: given entries, or an enum by name.
+   *
+   * @cjs
+   * @type {{entries: (object[]|null), enumType: (string|null), required: boolean}|null}
+   */
+  _chooserSource = null;
+
+  /**
+   * Ours: records where `chooserTable` comes from, resolved on its first read.
+   *
+   * @cjs
+   * @param {object[]|null} entries The chooser's `{ name, value, description }` entries, when declared inline.
+   * @param {string|null} enumType Otherwise the registered enum that supplies them.
+   * @param {boolean} required Whether that enum must register a chooser.
+   */
+  setChooserSource(entries, enumType, required)
+  {
+    this._chooserSource = { entries, enumType, required };
+  }
+
+  /**
+   * Ours: the schema's lookup of an enum's chooser entries by name. Null until the schema loads.
+   *
+   * @cjs
+   * @type {((enumType: string, required: boolean) => (object[]|null))|null}
+   */
+  static chooserResolver = null;
 
   /**
    * `mGetProperty`: the property's getter, or null for an attribute.
@@ -96,4 +150,3 @@ export class VarEntry
   static className = "VarEntry";
 
 }
-

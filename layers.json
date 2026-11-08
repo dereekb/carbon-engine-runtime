@@ -150,8 +150,18 @@
     "blue/compose": {
       "mayImport": []
     },
+    "blue/base": {
+      "mayImport": [
+        "global/consts"
+      ],
+      "why": [
+        "Blue's passive type records (ClassInfo, VarEntry, ClassInfoMeta, PersistedMember): what the schema compiles",
+        "each class into at registration. They import only constants, so every Blue layer can hold them."
+      ]
+    },
     "blue/schema": {
       "mayImport": [
+        "blue/base",
         "blue/enums",
         "blue/exposure/classes",
         "blue/compose",
@@ -215,6 +225,7 @@
     },
     "blue/exposure": {
       "mayImport": [
+        "blue/base",
         "global/model/graph",
         "global/consts",
         "blue/exposure/classes",
@@ -237,6 +248,7 @@
     },
     "blue": {
       "mayImport": [
+        "blue/base",
         "global/consts",
         "global/model/graph",
         "blue/enums",

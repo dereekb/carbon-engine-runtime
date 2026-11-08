@@ -10,7 +10,7 @@ import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
 import { IRootReaderBase } from "../black/IRootReaderBase.js";
 import { getWrapperLayout } from "../black/blueMathWrappers.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
-import { ClassInfo } from "../../exposure/ClassInfo.js";
+import { ClassInfo } from "../../base/ClassInfo.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
