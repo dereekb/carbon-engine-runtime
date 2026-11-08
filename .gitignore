@@ -15,3 +15,6 @@ CLAUDE.md
 
 # Local WebGPU demo and comic-preview workspace (operator, 2026-10-12).
 /_dev/
+
+# Carbon character, interior and Wod classes ported side by side for comparison; never committed, imported or exported.
+/src/character/carbon-donor/
