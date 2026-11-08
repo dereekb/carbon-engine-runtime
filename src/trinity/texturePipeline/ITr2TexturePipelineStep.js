@@ -26,7 +26,9 @@ export class ITr2TexturePipelineStep extends IRoot
    * @param {object} params The pipeline's parameters.
    * @returns {boolean} Whether the step succeeded.
    */
-  Execute(bitmap, inputs, params) {}
+  Execute(bitmap, inputs, params)
+  {
+  }
 }
 
 CjsSchema.decorateMethod(ITr2TexturePipelineStep, "Execute", meta.abstract);

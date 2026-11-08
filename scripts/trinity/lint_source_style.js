@@ -112,6 +112,24 @@ function GetDeclarationLine(member)
 }
 
 /**
+ * Whether a decorator is a definition bag: `define` called with an object
+ * literal (`@be.define({ ... })`, `@meta.define({ ... })`). A bag holds a
+ * class's whole definition, one row per line, so it spans lines by design;
+ * every other decorator occupies one.
+ *
+ * @param {object} decorator Babel decorator node.
+ * @returns {boolean} Whether it is a definition bag.
+ */
+function IsDefinitionBag(decorator)
+{
+    const expression = decorator.expression;
+    if (expression?.type !== "CallExpression" || expression.arguments.length !== 1) return false;
+    if (expression.arguments[0].type !== "ObjectExpression") return false;
+    const callee = expression.callee;
+    return callee?.type === "MemberExpression" && !callee.computed && callee.property?.name === "define";
+}
+
+/**
  * Checks the house rules that ordinary formatters cannot safely enforce.
  *
  * @param {string} file
@@ -154,7 +172,7 @@ function LintFile(file, source)
             const decorator = decorators[index];
             const nextLine = decorators[index + 1]?.loc.start.line ?? declarationLine;
 
-            if (decorator.loc.start.line !== decorator.loc.end.line)
+            if (decorator.loc.start.line !== decorator.loc.end.line && !IsDefinitionBag(decorator))
             {
                 errors.push(`${relativeFile}:${decorator.loc.start.line}: decorator must occupy one line`);
             }
