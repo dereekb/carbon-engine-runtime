@@ -13,6 +13,12 @@ import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
  * Both are the size the foundation's body diffuse gives (`CjsPaperDollComposition.sizeOf`), with mips. The first draw
  * is the definition's own state (`CjsPaperDollInstance.ready`), so the outputs are valid before the first apply.
  *
+ * Moved from Graphene's `bodyComposition.js` without a change of look, which rests on two content facts (resource index
+ * of build 3670638, every face augmentation and freckles option on both sexes, the variation folder over the part
+ * folder): each has at most one body diffuse map (`comp_body_d` or a `_l` detail), so drawing every body DiffuseMap
+ * layer equals the old first-layer pick; and none holds a cut mask (`comp_*_m`), so their sources add nothing to the
+ * cut mask.
+ *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. Moved from Graphene's
  * `bodyComposition.js` (character-structure-and-plugins.md R5); the name is a working name.
  */
