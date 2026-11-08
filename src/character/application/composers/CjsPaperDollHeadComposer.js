@@ -1,3 +1,4 @@
+import { CjsPaperDollInstance } from "../CjsPaperDollInstance.js";
 import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 
@@ -8,7 +9,8 @@ import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
  * parts after the eyebrows over it, so what covers the brows on the face covers them on the brow mesh too.
  *
  * Both are the size the foundation's head diffuse gives (`CjsPaperDollComposition.sizeOf`), with mips. The first draw
- * is the definition's own state (`CaptureTarget`), so the outputs are valid before the first apply.
+ * is the definition's own state (`CjsPaperDollInstance.ready`), so the outputs are valid before the first apply. The
+ * brow target draws the capture's `brow` list, which the paper doll hands over.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. Moved from Graphene's
  * `headComposition.js` (character-structure-and-plugins.md R5); the name is a working name.
@@ -66,9 +68,9 @@ export class CjsPaperDollHeadComposer
         });
         this._brow = this.composition.AddOutput({
             target: PaperDollTarget.HEAD, region: "head", channel: "DiffuseMap", width, height, mips: true,
-            base: brow.base, baseRegion: brow.region, after: "eyebrows", consumers: brow.consumers
+            base: brow.base, baseRegion: brow.region, list: "brow", consumers: brow.consumers
         });
-        this.composition.Render(PaperDollTarget.HEAD, definition.CaptureTarget(PaperDollTarget.HEAD, definition.GetLayerOrder(PaperDollTarget.HEAD)));
+        this.composition.Render(PaperDollTarget.HEAD, CjsPaperDollInstance.ready(definition, PaperDollTarget.HEAD));
     }
 
     /**

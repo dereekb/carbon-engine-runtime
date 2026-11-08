@@ -90,7 +90,7 @@ test("Apply draws each output's base, then each part's layers in the capture's o
   consumers.body.push(body);
   const later = { GetLayers: (value, region, channel) => region === "body" && channel === "NormalMap" ? [ { effect: "later", region: new Float32Array(4) } ] : [] };
   composition.SetSource("bottomOuter", later);
-  surface.Apply({ order: [ "aging", "bottomOuter" ], aging: { option: "aging_01" }, bottomOuter: { option: "x" }, scars: { option: "" }, scarring: { option: "" } });
+  surface.Apply({ order: [ "aging", "bottomOuter" ], lists: { order: [ "aging", "bottomOuter" ] }, aging: { option: "aging_01" }, bottomOuter: { option: "x" }, scars: { option: "" }, scarring: { option: "" } });
 
   const byTarget = new Map();
   for (const draw of compositor.draws) byTarget.set(draw.target, [ ...(byTarget.get(draw.target) ?? []), draw ]);
@@ -109,7 +109,7 @@ test("Apply draws each output's base, then each part's layers in the capture's o
 test("each apply draws into the other target of every output", async t =>
 {
   const { composition, surface } = await prepared(t);
-  const capture = { order: [], scars: { option: "" }, aging: { option: "" }, scarring: { option: "" } };
+  const capture = { order: [], lists: { order: [] }, scars: { option: "" }, aging: { option: "" }, scarring: { option: "" } };
   surface.Apply(capture);
   const first = composition.GetOutput(PaperDollTarget.SURFACE, "head", "NormalMap");
   surface.Apply(capture);

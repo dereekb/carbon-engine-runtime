@@ -316,7 +316,9 @@ export class CjsPaperDollDefinition
         const order = CjsPaperDollDefinition.parts.filter(name => this[name].constructor.targets & target)
             .sort((a, b) => (this.GetLayer(a) ?? -Infinity) - (this.GetLayer(b) ?? -Infinity) || 0);
         // An active occluder draws after every active part it occludes, so in each shared target it covers them
-        // exactly where its own coverage is: occlusion covers only what it covers.
+        // exactly where its own coverage is: occlusion covers only what it covers. AWAITING THE OPERATOR'S RULING
+        // (2026-11-09): this draws the occluder over what it occludes (a face augmentation over the beard), where the
+        // suppression walk drops the occluded part (CjsPaperDollInstance.suppress, garments); which one is the bake rule.
         for (const occluder of [ ...order ])
         {
             const targets = this._Occludes(occluder);

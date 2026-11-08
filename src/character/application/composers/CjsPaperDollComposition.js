@@ -5,8 +5,9 @@ import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js"
  * row: a target, a region and a channel, a base drawn first, then each part's layers in the definition's bake order
  * (`CjsPaperDollInstance` captures it as `order`), then the mip chain, then the output binds to its consumers. A row
  * draws into the other of its two targets each time, so a target its consumers still sample is never drawn into.
- * A row may draw its base into a region of the target only (`baseRegion`), and may take only the layers of the parts
- * after one part in the order (`after`): the brow target is the brow carrier with what is drawn over the brows.
+ * A row may draw its base into a region of the target only (`baseRegion`). The parts a row draws are a ready list the
+ * paper doll hands over in the capture (`CjsPaperDollInstance.ready`: `lists`, by name; a row names its list, `order`
+ * by default): the compositor decides nothing about parts and orders nothing.
  *
  * Parts give their layers through sources (`SetSource`), one per definition part: an object whose
  * `GetLayers(value, region, channel)` returns the `{ effect, region, writeRGBA? }` draws for a captured value, or
@@ -45,17 +46,17 @@ export class CjsPaperDollComposition
     /**
      * Adds an output. Its two targets are made now, at the given size.
      * @param {{ target: number, region: string, channel: string, width: number, height: number, mips?: boolean,
-     *   base: function(object): object, baseRegion?: ?function(object): Float32Array, after?: string,
+     *   base: function(object): object, baseRegion?: ?function(object): Float32Array, list?: string,
      *   consumers?: Array<function(object): void> }} row The output: its target bit, region and channel; its size; whether
      *   it carries a mip chain; `base(capture)`, the effect drawn first into the cleared target; `baseRegion(capture)`,
-     *   where it is drawn (the whole target when absent); `after`, the part whose later layers alone it takes (every
-     *   part's when empty); and the consumers its texture resource is handed to after each draw.
+     *   where it is drawn (the whole target when absent); `list`, the capture's ready list it draws (`order` by
+     *   default); and the consumers its texture resource is handed to after each draw.
      * @returns {object} The row.
      */
-    AddOutput({ target, region, channel, width, height, mips = false, base, baseRegion = null, after = "", consumers = [] })
+    AddOutput({ target, region, channel, width, height, mips = false, base, baseRegion = null, list = "order", consumers = [] })
     {
         const buffers = [ this.compositor.TargetTexture(width, height, mips), this.compositor.TargetTexture(width, height, mips) ];
-        const row = { target, region, channel, width, height, mips, base, baseRegion, after, consumers, buffers, active: 0 };
+        const row = { target, region, channel, width, height, mips, base, baseRegion, list, consumers, buffers, active: 0 };
         this._rows.push(row);
         return row;
     }
@@ -95,11 +96,11 @@ export class CjsPaperDollComposition
 
     /**
      * Draws every output of a target from its capture without binding it: the base into the cleared target, each part's
-     * layers in the capture's bake order (a row with `after`, only the parts after that one), then the mip chain.
+     * layers in the order of its ready list, then the mip chain.
      * @param {number} target The target bit.
      * @param {{ order: string[] }} capture The target's capture: each part's value by name, and the bake order.
      * @returns {object[]} The rows drawn.
-     * @throws {Error} For a row taking the layers after a part the order does not hold.
+     * @throws {Error} For a row whose ready list the capture does not hold.
      */
     Render(target, capture)
     {
@@ -109,11 +110,10 @@ export class CjsPaperDollComposition
             if (row.target !== target) continue;
             const next = 1 - row.active, buffer = row.buffers[next];
             c.Draw(buffer.target, row.width, row.height, row.base(capture), row.baseRegion ? row.baseRegion(capture) : CjsPaperDollCompositor.full, true);
-            const first = row.after ? capture.order.indexOf(row.after) + 1 : 0;
-            if (row.after && !first) throw Error("Composition row after " + row.after + ", which the order does not hold");
-            for (let i = first; i < capture.order.length; i++)
+            const names = capture.lists[row.list];
+            if (!names) throw Error("The capture holds no ready list " + row.list);
+            for (const name of names)
             {
-                const name = capture.order[i];
                 const source = this._sources.get(name);
                 if (!source) continue;
                 // A layer that is material data (`writeRGBA`) writes all four channels within its cutout.
@@ -128,8 +128,8 @@ export class CjsPaperDollComposition
     }
 
     /**
-     * An output's texture resource: the target drawn last. A row taking only later layers (`after`) is not an output
-     * of its region and channel; its consumers take it.
+     * An output's texture resource: the target drawn last. A row drawing another list than `order` (the brow target)
+     * is not an output of its region and channel; its consumers take it.
      * @param {number} target The target bit.
      * @param {string} region The region.
      * @param {string} channel The channel.
@@ -138,7 +138,7 @@ export class CjsPaperDollComposition
      */
     GetOutput(target, region, channel)
     {
-        const row = this._rows.find(value => value.target === target && value.region === region && value.channel === channel && !value.after);
+        const row = this._rows.find(value => value.target === target && value.region === region && value.channel === channel && value.list === "order");
         if (!row) throw Error(`No composition output ${region}.${channel} in target ${target}`);
         return row.buffers[row.active].resource;
     }

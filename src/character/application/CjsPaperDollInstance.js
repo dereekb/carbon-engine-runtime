@@ -1,5 +1,7 @@
 import { meta } from "#schema";
-import { PaperDollTarget } from "./paperDollOrder.js";
+import { CjsCharacterAppearanceResolver } from "../model/resolution/CjsCharacterAppearanceResolver.js";
+import { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
+import { PaperDollBlend, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * One built paper doll character: what was made from a definition. It owns
@@ -8,9 +10,11 @@ import { PaperDollTarget } from "./paperDollOrder.js";
  * last built from. Nothing an instance builds is shared with another instance:
  * characters own their state until sharing is proven.
  *
- * `Update` captures each target from the definition in bake order and calls
- * that target's binding only when its capture changed. Bindings are synchronous
- * and run outside a render pass.
+ * `Update` decides what each target bakes and calls that target's binding only when it changed: it collects the
+ * target's parts in bake order (`GetLayerOrder`), applies the bake rules (suppression, below) and hands the binding a
+ * ready capture: each part's settings, `lists` (the ready lists the composition draws, `order` and for the head
+ * `brow`), `suppressed` and `cyclic`. The compositor draws only those lists. Bindings are synchronous and run outside a
+ * render pass.
  *
  * An application class; no Carbon
  * donor.
@@ -28,6 +32,9 @@ export class CjsPaperDollInstance
     _targetDirty = 0;
 
     _applying = false;
+
+    /** The last update's suppression walk: the suppressed parts and the parts a cycle kept active. */
+    _suppression = { suppressed: [], cyclic: [] };
 
     /** The skinned objects drawn for this character, added to a scene by its manager. */
     objects = [];
@@ -99,6 +106,7 @@ export class CjsPaperDollInstance
         // A geometry-only strength edit must not rebuild skin or cosmetic maps.
         const forced = definition.IsForced();
         const dirtyTargets = definition.GetDirtyTargets() | this._targetDirty;
+        const suppression = this._suppression = CjsPaperDollInstance.suppress(definition);
         const plans = [];
         let changedTargets = 0;
         for (const { target, binding, whenSelected, reads } of CjsPaperDollInstance.targetOrder)
@@ -109,9 +117,9 @@ export class CjsPaperDollInstance
             const reshaped = foundationPending && names.some(name => definition[name].constructor.shapeDependent && definition[name].enabled && definition[name].option !== "");
             const passForced = forced || reshaped || (dirtyTargets & target) !== 0 || (changedTargets & reads) !== 0;
             const pending = passForced || !previous || names.some(name => definition[name].IsDirty());
-            const state = pending ? definition.CaptureTarget(target, names) : previous;
+            const state = pending ? CjsPaperDollInstance.ready(definition, target, names, suppression) : previous;
             const selected = !whenSelected || names.some(name => state[name].option || (previous !== null && previous[name].option));
-            const changed = pending && selected && (passForced || !previous || state.order.join() !== previous.order.join() || state.occluded.join() !== previous.occluded.join() || names.some(name => this._Changed(state[name], previous[name])));
+            const changed = pending && selected && (passForced || !previous || state.lists.order.join() !== previous.lists.order.join() || state.occluded.join() !== previous.occluded.join() || names.some(name => this._Changed(state[name], previous[name])));
             if (changed) changedTargets |= target;
             plans.push({ target, binding, names, state, changed });
         }
@@ -142,6 +150,79 @@ export class CjsPaperDollInstance
         }
         finally { this._applying = false; }
         return foundationPending || changedTargets !== 0;
+    }
+
+    /**
+     * The last update's suppression walk, for the mesh side (fitting, carriers): the suppressed parts and the parts a
+     * cycle kept active, by member name.
+     * @returns {{ suppressed: string[], cyclic: string[] }}
+     */
+    GetSuppression()
+    {
+        return this._suppression;
+    }
+
+    /**
+     * Which worn parts are suppressed: runtime's suppression walk (`CjsCharacterAppearanceResolver.resolveSuppressions`)
+     * over every active part with a worn item (blend MATERIAL or MESH: garments, arms, body augmentation, hair, beard,
+     * accessories), an edge where one's `occludesModifiers` names another's category or option path. Suppression runs
+     * from the roots; a cycle stays active.
+     *
+     * The walk's parts are today's two walks joined (the body pass's garments, the fitting's garments, hair and
+     * accessories), and the result is theirs: in the content no hair or accessory occludes a garment, and the face
+     * augmentations (DECAL) are not walked. AWAITING THE OPERATOR'S RULING (2026-11-09): whether occlusion drops a part
+     * (this walk, the body today) or draws the occluder over it (`CjsPaperDollDefinition.GetLayerOrder`, the head
+     * today), and for which targets.
+     * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
+     * @returns {{ suppressed: string[], cyclic: string[] }} The suppressed parts and the parts a cycle kept active.
+     */
+    static suppress(definition)
+    {
+        const worn = CjsPaperDollDefinition.parts.filter(name =>
+        {
+            const part = definition[name], blend = part.constructor.blend;
+            return (blend === PaperDollBlend.MATERIAL || blend === PaperDollBlend.MESH) && part.enabled && part.option !== "";
+        }).map(name =>
+        {
+            const part = definition[name], option = part.GetOptions().find(value => value.id === part.option);
+            // An option not yet resolved has no occlusion targets yet; its resolution rebuilds the part.
+            return { name, category: part.constructor.category, path: option.path, occludes: option.occludes ?? [] };
+        });
+        const edges = new Map();
+        for (const target of worn) for (const by of worn)
+        {
+            if (by === target || !by.occludes.some(path => path === target.category || CjsPaperDollDefinition.occludes([ path ], target.path))) continue;
+            if (!edges.has(target)) edges.set(target, []);
+            edges.get(target).push({ owner: by, rules: new Set([ "occludesModifiers" ]) });
+        }
+        const { cyclic, applied } = CjsCharacterAppearanceResolver.resolveSuppressions(worn, edges);
+        return { suppressed: [ ...applied.keys() ].map(item => item.name).sort(), cyclic: cyclic.map(item => item.name) };
+    }
+
+    /**
+     * A target's ready capture: each part's settings (`CaptureTarget`), the suppression walk, and the ready lists the
+     * composition draws. `order` is the bake order without the suppressed parts the target drops: a suppressed part
+     * baked into the body leaves the body and surface lists, as the body pass dropped it; other suppressed parts still
+     * bake (hair and accessories did not skip). The head's `brow` list is the parts after the eyebrows: what covers the
+     * brows on the face covers them on the brow mesh.
+     * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
+     * @param {number} target The target, a `PaperDollTarget` bit.
+     * @param {string[]} [names] Its parts in bake order; `GetLayerOrder`'s by default.
+     * @param {{ suppressed: string[], cyclic: string[] }} [suppression] The walk; `suppress`'s by default.
+     * @returns {object} The capture: each part's settings by name, `order` (the ready order), `lists`, `suppressed`,
+     *   `cyclic` and `occluded`.
+     */
+    static ready(definition, target, names = definition.GetLayerOrder(target), suppression = CjsPaperDollInstance.suppress(definition))
+    {
+        const state = definition.CaptureTarget(target, names);
+        const drops = target === PaperDollTarget.BODY || target === PaperDollTarget.SURFACE;
+        const order = names.filter(name => !(drops && suppression.suppressed.includes(name) && definition[name].constructor.targets & PaperDollTarget.BODY));
+        const brow = order.indexOf("eyebrows");
+        state.order = order;
+        state.lists = target === PaperDollTarget.HEAD ? { order, brow: brow === -1 ? [] : order.slice(brow + 1) } : { order };
+        state.suppressed = suppression.suppressed;
+        state.cyclic = suppression.cyclic;
+        return state;
     }
 
     /**

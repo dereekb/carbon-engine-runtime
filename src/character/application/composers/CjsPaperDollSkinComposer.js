@@ -147,7 +147,7 @@ export class CjsPaperDollSkinComposer
             updates: 0,
             baseFile: "deteis.base retained as evidence; not multiplied into colours"
         };
-        this.composition.Render(PaperDollTarget.SKIN, { order: [ "skin" ], skin: { option: "basic", colors: definition.skin.GetColors() } });
+        this.composition.Render(PaperDollTarget.SKIN, { order: [ "skin" ], lists: { order: [ "skin" ] }, skin: { option: "basic", colors: definition.skin.GetColors() } });
     }
 
     /**

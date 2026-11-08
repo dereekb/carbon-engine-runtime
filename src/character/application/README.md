@@ -8,7 +8,7 @@ Palette editing, local choices and saving belong to the UI.
 `CjsPaperDoll` owns a `CjsPaperDollDefinition` and the built
 `CjsPaperDollInstance` drawn as its `front`. `CjsPaperDollManager` owns the
 collection of dolls. A definition holds the foundation, part inputs and bake
-ordering; an instance owns prepared pass bindings, drawn objects and its last
+ordering; an instance owns prepared target bindings, drawn objects and its last
 captures. The reserved `back` instance is not built by this integration.
 
 ## Inputs and notification
@@ -40,7 +40,7 @@ also owns remembered manual colours and initial/reset palette application.
 
 ## Capture and building
 
-`Capture(pass)` retains `{ option, colors, colorAreas, palette }`. Colours are
+`Capture(target)` retains `{ option, colors, colorAreas, palette }`. Colours are
 copied so later edits cannot change a capture. Disabled or unselected parts
 capture empty option, areas and palette; custom mode suppresses the ordinary
 palette identity. Blush, eyeliner and eyeshadow append weight, zero while
@@ -48,16 +48,18 @@ unselected. Top-middle appends tuck, also zero while unselected. Lipstick's
 surface capture retains its palette even with custom diffuse colours and
 contains empty colour/area lists.
 
-Call `doll.Update()` outside a render pass. Its front instance collects the
-definition and invokes prepared synchronous bindings in foundation, skin,
-surface, eyes, head and body order. Capture comparisons avoid rebuilding
-unchanged effective inputs. Completed passes are acknowledged independently;
-failed passes retry and edits made during a binding remain pending. Resource
+Call `doll.Update()` outside a render pass. Its front instance decides what each
+bake target draws: it collects the definition, applies the suppression walk and
+hands each binding a ready capture (its `lists`, which the composition draws as
+given), in foundation, skin, surface, eyes, head and body order. Capture
+comparisons avoid rebuilding unchanged effective inputs. Completed targets are
+acknowledged independently; failed targets retry and edits made during a binding
+remain pending. Resource
 acquisition, asynchronous preparation and texture target ownership remain in
 the adapter and bindings.
 
-`Rebuild()` requests pending work; instance `RebuildPasses()` forces specified
-passes when prepared resources finish loading. The definition keeps layer-rank
+`Rebuild()` requests pending work; instance `RebuildTargets()` forces specified
+targets when prepared resources finish loading. The definition keeps layer-rank
 overrides and orders active occluders after the contributors they cover.
 
 ## Foundation and shape

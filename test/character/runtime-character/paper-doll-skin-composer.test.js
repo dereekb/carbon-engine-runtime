@@ -100,11 +100,11 @@ test("Apply draws into the other target each time, binds the body base and repor
 {
   const { skin, compositor, body, build, notes } = await prepared(t);
   const first = skin.bodyTexture;
-  skin.Apply({ order: [ "skin" ], skin: { option: "basic", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], lists: { order: [ "skin" ] }, skin: { option: "basic", colors: PALETTE } });
   assert.notEqual(skin.bodyTexture, first);
   assert.equal(body[0].bound, skin.bodyTexture);
   assert.deepEqual(Array.from(compositor.draws.at(-1).value.FindParameterByName("Color1").value), PALETTE[0].map(Math.fround));
-  skin.Apply({ order: [ "skin" ], skin: { option: "", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], lists: { order: [ "skin" ] }, skin: { option: "", colors: PALETTE } });
   assert.equal(skin.bodyTexture, first, "two targets, alternating");
   assert.equal(compositor.draws.at(-1).clear, true, "no option: the base only");
   assert.equal(compositor.draws.at(-1).value.FindParameterByName("AlphaMultiplier").GetValue(), 1);
@@ -122,7 +122,7 @@ test("a foundation is copied once, selected for the next apply, and an unprepare
   skin.SelectFoundation("b");
   assert.equal(build.report.skin.foundation, "b");
   assert.equal(build.report.skin.regions.head.base, "res:/b_head_d.dds");
-  skin.Apply({ order: [ "skin" ], skin: { option: "basic", colors: PALETTE } });
+  skin.Apply({ order: [ "skin" ], lists: { order: [ "skin" ] }, skin: { option: "basic", colors: PALETTE } });
   assert.equal(compositor.draws.at(-2).value.source.path, "res:/b_body_d.dds");
   assert.throws(() => skin.SelectFoundation("c"), /Unprepared skin foundation c/);
   composition.Destruct();

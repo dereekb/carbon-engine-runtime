@@ -76,7 +76,7 @@ test("the eyes' three outputs are the consumers' diffuse size; an unresolved opt
   const { composition, eyes, consumers, maps, build } = await prepared(t);
   assert.deepEqual(composition._rows.map(row => [ row.channel, row.width, row.height ]), [ [ "DiffuseMap", 1024, 512 ], [ "NormalMap", 1024, 512 ], [ "SpecularMap", 1024, 512 ] ]);
   consumers[0].bound.DiffuseMap = "elsewhere";
-  eyes.Apply({ order: [ "eyes" ], eyes: { option: "eyes_01", colors: COLOURS } });
+  eyes.Apply({ order: [ "eyes" ], lists: { order: [ "eyes" ] }, eyes: { option: "eyes_01", colors: COLOURS } });
   assert.equal(consumers[0].bound.DiffuseMap, maps.DiffuseMap, "eyes_01 is not resolved yet");
   assert.equal(build.report.eyes.selected, "eyes_01");
 });
@@ -85,7 +85,7 @@ test("a resolved coloured option draws its colourised diffuse, and its normal an
 {
   const { composition, compositor, definition, eyes, consumers } = await prepared(t);
   await definition.eyes.ResolveOption("eyes_01");
-  eyes.Apply({ order: [ "eyes" ], eyes: { option: "eyes_01", colors: COLOURS } });
+  eyes.Apply({ order: [ "eyes" ], lists: { order: [ "eyes" ] }, eyes: { option: "eyes_01", colors: COLOURS } });
   const layers = compositor.draws.filter(draw => !draw.clear);
   assert.equal(layers.length, 3);
   assert.ok(layers[0].value.colorized && !layers[0].writeRGBA);
