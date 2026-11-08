@@ -18,3 +18,5 @@ export class InvalidAttributeException extends IRootReaderException
 }
 
 CjsSchema.meta.carbon("InvalidAttributeException")(InvalidAttributeException);
+// Carbon gives InvalidAttributeException no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(IRootReaderException)(InvalidAttributeException);

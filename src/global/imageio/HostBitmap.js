@@ -1494,3 +1494,5 @@ export class HostBitmap extends BitmapDimensions
 // _GenerateMipLevel.
 // States against HostBitmap.cpp:645-1175. Adapted (each is a deliberate divergence from Carbon's defect, listed in the docs as a divergence to revisit): Downsample2x2 counts the true mip count (issue 12), RotateFaceClockwise needs exactly one mip (issue 17), ConvertToVolume refuses block-compressed input (issue 16), GenerateMipMaps validates and keeps the mip count on refusal (issue 13). ConvertCrossmapToCubemap (874-953) and the private GenerateMipLevel (1132-1167) are Carbon's.
 CjsSchema.meta.carbon("HostBitmap")(HostBitmap);
+// Carbon gives HostBitmap no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(BitmapDimensions)(HostBitmap);

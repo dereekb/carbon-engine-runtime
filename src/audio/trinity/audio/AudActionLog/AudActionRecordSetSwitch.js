@@ -44,3 +44,5 @@ export class AudActionRecordSetSwitch extends AudActionRecord
 }
 
 CjsSchema.meta.carbon("AudActionRecordSetSwitch")(AudActionRecordSetSwitch);
+// Carbon gives AudActionRecordSetSwitch no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(AudActionRecord)(AudActionRecordSetSwitch);

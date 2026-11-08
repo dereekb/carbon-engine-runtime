@@ -48,3 +48,5 @@ export class DocumentParameter extends VersionedParameter
 }
 
 CjsSchema.meta.carbon("DocumentParameter")(DocumentParameter);
+// Carbon gives DocumentParameter no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(VersionedParameter)(DocumentParameter);

@@ -201,3 +201,5 @@ CjsSchema.decorateField(TriRenderBatchAccumulator, "gdprBatches", type.array(Tr2
 // States: TriRenderBatch.h:319-410. Commit is adapted: it stores the batch itself rather than a copy and returns whether it was accepted. Finalize is
 // adapted: one partition routine serves both sort types and Array.sort is always stable, where Carbon picks sort or stable_sort.
 CjsSchema.meta.carbon("TriRenderBatchAccumulator")(TriRenderBatchAccumulator);
+// Carbon gives TriRenderBatchAccumulator no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(ITriRenderBatchAccumulator)(TriRenderBatchAccumulator);

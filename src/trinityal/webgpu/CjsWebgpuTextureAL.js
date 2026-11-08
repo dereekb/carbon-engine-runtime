@@ -1131,3 +1131,4 @@ CjsSchema.decorateMethod(CjsWebgpuTextureAL, "UpdateSubresource");
 // Donor: metal/Tr2TextureALMetal.mm (Resolve 1100-1140, GetSharedHandle, heap indices, Describe, memory class). Resolve copies the single-sample case as Metal does and returns E_FAIL for MSAA, which WebGPU resolves through a render-pass resolve target (adapted). GetSharedHandle is notSupported: WebGPU has no shared handle. The heap-index getters return 0xffffffff (WebGPU has no heap). GetMemoryClass is AL_MEMORY_VIDEO where Metal says MANAGED. Describe writes memoryClass only.
 
 CjsSchema.meta.define("CjsWebgpuTextureAL")(CjsWebgpuTextureAL);
+CjsSchema.meta.exposureChainTo(Tr2DeviceResourceAL)(CjsWebgpuTextureAL);

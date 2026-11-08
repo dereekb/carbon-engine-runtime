@@ -44,3 +44,5 @@ export class AudActionRecordExecuteActionOnPlayingID extends AudActionRecord
 }
 
 CjsSchema.meta.carbon("AudActionRecordExecuteActionOnPlayingID")(AudActionRecordExecuteActionOnPlayingID);
+// Carbon gives AudActionRecordExecuteActionOnPlayingID no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(AudActionRecord)(AudActionRecordExecuteActionOnPlayingID);

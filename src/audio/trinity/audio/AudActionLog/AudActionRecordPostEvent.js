@@ -48,3 +48,5 @@ export class AudActionRecordPostEvent extends AudActionRecord
 }
 
 CjsSchema.meta.carbon("AudActionRecordPostEvent")(AudActionRecordPostEvent);
+// Carbon gives AudActionRecordPostEvent no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(AudActionRecord)(AudActionRecordPostEvent);

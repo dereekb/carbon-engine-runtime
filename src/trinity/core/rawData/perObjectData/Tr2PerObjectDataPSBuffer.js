@@ -121,3 +121,5 @@ export class Tr2PerObjectDataPSBuffer extends Tr2PerObjectData
 }
 
 CjsSchema.meta.carbon("Tr2PerObjectDataPSBuffer")(Tr2PerObjectDataPSBuffer);
+// Carbon gives Tr2PerObjectDataPSBuffer no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(Tr2PerObjectData)(Tr2PerObjectDataPSBuffer);

@@ -48,3 +48,5 @@ export class AudActionRecordSetRTPC extends AudActionRecord
 }
 
 CjsSchema.meta.carbon("AudActionRecordSetRTPC")(AudActionRecordSetRTPC);
+// Carbon gives AudActionRecordSetRTPC no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(AudActionRecord)(AudActionRecordSetRTPC);

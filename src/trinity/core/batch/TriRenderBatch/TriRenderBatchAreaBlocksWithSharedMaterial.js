@@ -56,3 +56,5 @@ CjsSchema.decorateField(TriRenderBatchAreaBlocksWithSharedMaterial, "shaderMater
 CjsSchema.decorateField(TriRenderBatchAreaBlocksWithSharedMaterial, "areaBlockVector", type.array(TriRenderBatchAreaBlock));
 // States: TriRenderBatch.cpp:61-73, statement for statement.
 CjsSchema.meta.carbon("TriRenderBatchAreaBlocksWithSharedMaterial")(TriRenderBatchAreaBlocksWithSharedMaterial);
+// Carbon gives TriRenderBatchAreaBlocksWithSharedMaterial no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(TriRenderBatchAreaBlock)(TriRenderBatchAreaBlocksWithSharedMaterial);

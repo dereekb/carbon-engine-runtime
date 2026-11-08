@@ -56,3 +56,5 @@ export function RegisterSolidColorTexture(resourceManager)
 }
 
 CjsSchema.meta.carbon("SolidColorTextureConstructor")(SolidColorTextureConstructor);
+// Carbon gives SolidColorTextureConstructor no ClassInfo, so this chain is ours.
+CjsSchema.meta.exposureChainTo(IBlueDynamicResourceConstructor)(SolidColorTextureConstructor);

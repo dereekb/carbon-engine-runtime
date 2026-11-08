@@ -3957,6 +3957,7 @@ CjsSchema.meta.define("CjsSchema")(CjsSchema);
 CjsSchema.meta.define(CjsError, { className: "CjsError" });
 
 CjsSchema.meta.define(CjsUnusedMethodError, { className: "CjsUnusedMethodError" });
+CjsSchema.meta.exposureChainTo(CjsError)(CjsUnusedMethodError);
 
 /** Carbon's EDITFLAGS; masks are included for native table comparisons. */
 function exposureConstants()
