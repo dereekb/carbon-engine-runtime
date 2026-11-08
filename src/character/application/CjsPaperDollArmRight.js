@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned right arm augmentation settings: one authored type (a variation and
@@ -58,6 +58,9 @@ export class CjsPaperDollArmRight extends CjsPaperDollComponent
     static category = "makeup/armright";
 
     static blend = PaperDollBlend.MATERIAL;
+
+    /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.OWN;
 
     static optionNamesPalette = true;
 

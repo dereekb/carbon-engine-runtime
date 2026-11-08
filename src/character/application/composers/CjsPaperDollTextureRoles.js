@@ -142,6 +142,71 @@ export class CjsPaperDollTextureRoles
     };
 
     /**
+     * The garment map names (the MATERIAL parts with the body target), by the map they give: each map is the first
+     * name found searching the option's folders in order (its variation's, then its part's), then the size tiers
+     * (`CjsPaperDollDefinition.tierOrder`), then these names in order; `<part>` is the part folder's name. A name these
+     * lists do not hold is not drawn.
+     *
+     * Derived, every entry (no source states them; Carbon ships no paper doll): today's look, Graphene d2b1306
+     * `bodyComposition.js` `mapPaths` and `maskPaths`, reproduced with their exact precedence. The garment map naming
+     * table lists every name the garment folders hold, what today draws, and the names that wait for a ruling
+     * (`comb_body_s`, `comp_body_mn`, `<part>_d`, `colorize_body_d`, `colorize_body_n`, `_tn`, `<part>_body_n`/`_s` and
+     * part-name mismatches); none of those is drawn.
+     */
+    static garment = {
+        /** The diffuse source: a colourise detail, or an authored diffuse drawn as it is. */
+        detail: [ "colorize_body_l", "comp_body_l", "comp_body_d", "_l" ],
+        /** The colourise detail's zone map. */
+        zone: [ "colorize_body_z" ],
+        /** The normal, drawn through the detail's coverage. */
+        normal: [ "comp_body_n", "<part>_n", "_n" ],
+        /** The specular, drawn through the detail's coverage. */
+        specular: [ "comp_body_s", "<part>_s", "_s", "colorize_body_s" ],
+        /** The body cut mask: the first folder's, then each dependant folder's (`maskPaths`). */
+        cutMask: [ "comp_body_m" ]
+    };
+
+    /**
+     * A garment option's maps by the garment names (`garment`), with today's precedence: folder, then tier, then name.
+     * @param {string[]} folders The option's folders, most specific first, each ending in "/"; the last is the part's.
+     * @param {string[]} files The listed files below them.
+     * @returns {{ detail: ?string, zone: ?string, normal: ?string, specular: ?string, cutMask: ?string }} Each map's
+     *   path; null when no folder holds one.
+     */
+    static pickGarmentMaps(folders, files)
+    {
+        const part = folders.at(-1).slice(0, -1).split("/").at(-1), tiers = CjsPaperDollDefinition.tierOrder(), maps = {};
+        for (const [ key, names ] of Object.entries(CjsPaperDollTextureRoles.garment))
+        {
+            const stems = names.map(name => name.replace("<part>", part));
+            maps[key] = folders.flatMap(folder => tiers.flatMap(tier => stems.map(stem => folder + stem + tier + ".png"))).find(path => files.includes(path)) ?? null;
+        }
+        return maps;
+    }
+
+    /**
+     * The `.png` map names (tier dropped) directly in a garment option's folders that its picked maps do not use: the
+     * maps it does not draw, for the build report.
+     * @param {string[]} folders The option's folders.
+     * @param {string[]} files The listed files below them.
+     * @param {Array<?string>} used The picked map paths.
+     * @returns {string[]} Each as `<folder>/<name>`, relative to the part folder's parent.
+     */
+    static garmentSkipped(folders, files, used)
+    {
+        const stems = new Set(used.filter(Boolean).map(path => CjsPaperDollDefinition.splitTier(path)[0]));
+        const root = folders.at(-1).slice(0, folders.at(-1).slice(0, -1).lastIndexOf("/") + 1), skipped = new Set();
+        for (const folder of folders)
+            for (const file of files)
+                if (file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"))
+                {
+                    const [ stem ] = CjsPaperDollDefinition.splitTier(file);
+                    if (!stems.has(stem)) skipped.add(stem.slice(root.length));
+                }
+        return [ ...skipped ];
+    }
+
+    /**
      * A texture file's role.
      * @param {string} path The file's `res:` path or name, at any tier.
      * @returns {{ path: string, family: string, region: string, suffix: string, tier: string, property: string,

@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned top (`topmiddle`: shirts, tank tops, t-shirts) settings: the garment, its palette, custom
@@ -86,6 +86,9 @@ export class CjsPaperDollTopMiddle extends CjsPaperDollComponent
     static category = "topmiddle";
 
     static blend = PaperDollBlend.MATERIAL;
+
+    /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.OWN;
 
     static optionNamesPalette = true;
 

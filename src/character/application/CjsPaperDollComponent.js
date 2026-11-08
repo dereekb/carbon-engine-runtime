@@ -247,4 +247,10 @@ export class CjsPaperDollComponent
      */
     static secondaryPalettes = false;
 
+    /**
+     * Whether each first-level folder of the part is one option (the underwear: each folder holds one `.type` per
+     * bloodline that wears it), rather than each `.type` (`CjsPaperDollMaterialSource`).
+     */
+    static optionPerFolder = false;
+
 }
