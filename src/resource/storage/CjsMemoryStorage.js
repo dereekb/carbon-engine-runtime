@@ -155,3 +155,4 @@ export class CjsMemoryStorage extends CjsStorageBackend
 }
 
 CjsSchema.meta.define("CjsMemoryStorage")(CjsMemoryStorage);
+CjsSchema.meta.exposureChainTo(CjsStorageBackend)(CjsMemoryStorage);

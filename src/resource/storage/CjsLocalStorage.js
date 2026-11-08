@@ -256,3 +256,4 @@ function assertJson(value, seen = new Set())
 }
 
 CjsSchema.meta.define("CjsLocalStorage")(CjsLocalStorage);
+CjsSchema.meta.exposureChainTo(CjsStorageBackend)(CjsLocalStorage);

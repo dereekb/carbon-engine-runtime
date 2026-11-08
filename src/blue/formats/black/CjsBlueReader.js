@@ -751,3 +751,4 @@ export class CjsBlueReader extends CjsReader
 }
 
 CjsSchema.meta.define("CjsBlueReader")(CjsBlueReader);
+CjsSchema.meta.exposureChainTo(CjsReader)(CjsBlueReader);

@@ -243,3 +243,4 @@ export class CjsIndexedDBStorage extends CjsStorageBackend
 }
 
 CjsSchema.meta.define("CjsIndexedDBStorage")(CjsIndexedDBStorage);
+CjsSchema.meta.exposureChainTo(CjsStorageBackend)(CjsIndexedDBStorage);

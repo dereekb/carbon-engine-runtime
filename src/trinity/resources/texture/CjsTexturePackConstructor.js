@@ -165,4 +165,5 @@ export function RegisterTexturePack(resourceManager)
 }
 
 CjsSchema.meta.define("CjsTexturePackConstructor")(CjsTexturePackConstructor);
+CjsSchema.meta.exposureChainTo(IBlueDynamicResourceConstructor)(CjsTexturePackConstructor);
 

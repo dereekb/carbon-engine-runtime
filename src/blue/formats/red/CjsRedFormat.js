@@ -100,4 +100,5 @@ export class CjsRedFormat extends CjsFormat
 }
 
 CjsSchema.meta.define("CjsRedFormat")(CjsRedFormat);
+CjsSchema.meta.exposureChainTo(CjsFormat)(CjsRedFormat);
 

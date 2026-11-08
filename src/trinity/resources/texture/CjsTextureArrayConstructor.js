@@ -107,4 +107,5 @@ export function RegisterTextureArray(resourceManager)
 }
 
 CjsSchema.meta.define("CjsTextureArrayConstructor")(CjsTextureArrayConstructor);
+CjsSchema.meta.exposureChainTo(IBlueDynamicResourceConstructor)(CjsTextureArrayConstructor);
 

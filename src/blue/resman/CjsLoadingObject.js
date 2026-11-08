@@ -51,3 +51,4 @@ export class CjsLoadingObject extends BlueAsyncRes
 }
 
 CjsSchema.meta.define("CjsLoadingObject")(CjsLoadingObject);
+CjsSchema.meta.exposureChainTo(BlueAsyncRes)(CjsLoadingObject);

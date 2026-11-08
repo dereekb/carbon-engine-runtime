@@ -353,3 +353,4 @@ class Bc7BitReader extends CjsBitReader
 }
 
 CjsSchema.meta.define("Bc7BitReader")(Bc7BitReader);
+CjsSchema.meta.exposureChainTo(CjsBitReader)(Bc7BitReader);

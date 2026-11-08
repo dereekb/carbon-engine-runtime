@@ -376,6 +376,7 @@ export class CjsAudioRes extends BlueAsyncRes
 }
 
 CjsSchema.meta.define("CjsAudioRes")(CjsAudioRes);
+CjsSchema.meta.exposureChainTo(BlueAsyncRes)(CjsAudioRes);
 
 
 
