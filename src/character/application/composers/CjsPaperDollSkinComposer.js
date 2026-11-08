@@ -88,7 +88,8 @@ export class CjsPaperDollSkinComposer
         }
         records.sort((a, b) => a.path.localeCompare(b.path));
 
-        const areas = new Set(), roles = CjsPaperDollTextureRoles.readFolder(root, files);
+        const areas = new Set(), { roles, skipped } = CjsPaperDollTextureRoles.readFolder(root, files);
+        if (skipped.length) throw new Error("Skin tone maps the role lookup does not name: " + skipped.join(", "));
         for (const region of [ "head", "body" ])
         {
             // The region's colourised detail and the zone map its colourising reads.

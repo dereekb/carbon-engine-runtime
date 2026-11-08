@@ -81,4 +81,7 @@ export class CjsPaperDollBlush extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
+    /** How its options and palettes are listed (`CjsPaperDollColorizedSource`): the makeup catalog, palettes merged by value. */
+    static menu = "catalog";
+
 }

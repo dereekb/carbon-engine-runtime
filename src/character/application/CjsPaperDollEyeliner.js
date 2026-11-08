@@ -88,4 +88,7 @@ export class CjsPaperDollEyeliner extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
+    /** How its options and palettes are listed (`CjsPaperDollColorizedSource`): each style's own palettes, by swatch. */
+    static menu = "swatches";
+
 }
