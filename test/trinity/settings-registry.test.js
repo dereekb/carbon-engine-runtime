@@ -129,6 +129,7 @@ test("only approved extension names are exempt from Carbon setting-name checks",
     assert.equal(entry.owner, Tr2PlatformInfo);
     assert.equal(entry.applies, meta.setting.CREATE);
     assert.equal(entry.carbon, false);
+    assert.deepEqual(entry.category, [ "webgpu" ], "WebGPU-only, for menus");
   }
 });
 

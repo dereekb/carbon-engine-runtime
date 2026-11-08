@@ -169,11 +169,11 @@ export class Tr2PlatformInfo
      * storage. Carbon also stages whole volume mips (MetalWorkQueue.mm:1145-1161;
      * Tr2TextureALDx12.cpp:743-776). This is not a total GPU memory budget.
      */
-    @meta.setting("webgpuMaxBufferSize", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuMaxBufferSize", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuMaxBufferSize = 512 * 1024 * 1024;
 
     /** WebGPU-only preference for native BC DDS sampling; next WebGPU device. */
-    @meta.setting("webgpuTextureCompressionBC", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuTextureCompressionBC", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuTextureCompressionBC = true;
 
     /**
@@ -182,15 +182,15 @@ export class Tr2PlatformInfo
      * CjsWebgpuTextureAL.Create path retains BC3 bytes and requires both BC
      * features. R8 VTA volumes do not use either compression feature.
      */
-    @meta.setting("webgpuTextureCompressionBCSliced3D", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuTextureCompressionBCSliced3D", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuTextureCompressionBCSliced3D = true;
 
     /** WebGPU-only preference for read-write float storage textures, which reflection fog reads back; next WebGPU device. */
-    @meta.setting("webgpuTextureFormatsTier2", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuTextureFormatsTier2", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuTextureFormatsTier2 = true;
 
     /** WebGPU-only preference for partial edge BC blocks on the next WebGPU device. */
-    @meta.setting("webgpuTextureCompressionUnaligned", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuTextureCompressionUnaligned", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuTextureCompressionUnaligned = true;
 
     /**
@@ -199,7 +199,7 @@ export class Tr2PlatformInfo
      * (Tr2ShadowMap.cpp:228-248,278-291; Tr2SamplerStateALDx11.cpp:35-39).
      * The backend's r32float depth copy requires this optional capability.
      */
-    @meta.setting("webgpuFloat32Filterable", { applies: meta.setting.CREATE })
+    @meta.setting("webgpuFloat32Filterable", { applies: meta.setting.CREATE, category: "webgpu" })
     static webgpuFloat32Filterable = true;
 
     /**
