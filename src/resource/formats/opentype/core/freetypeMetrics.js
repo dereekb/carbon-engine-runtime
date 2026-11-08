@@ -5,7 +5,7 @@
 // Only the paths Carbon reaches are kept: pixel sizes (FT_Set_Pixel_Sizes),
 // FT_KERNING_DEFAULT, and FT_RENDER_MODE_NORMAL.
 
-import { freetypeScales } from "./hintCff.js";
+import { HintMap } from "./HintMap.js";
 
 /**
  * FT_MulFix: a * b / 65536, rounded half away from zero.
@@ -80,7 +80,7 @@ export function freetypeSizeMetrics(font, xPpem, yPpem)
         }
     }
 
-    const { yScale26Dot6 } = freetypeScales(xPpem, yPpem, font.unitsPerEm);
+    const { yScale26Dot6 } = HintMap.freetypeScales(xPpem, yPpem, font.unitsPerEm);
     return {
         ascender: PixCeil(MulFix(ascender, yScale26Dot6)),
         descender: PixFloor(MulFix(descender, yScale26Dot6)),
@@ -111,7 +111,7 @@ export function freetypeKerning(font, leftGlyph, rightGlyph, xPpem, yPpem)
     }
     if (value === 0) return 0;
 
-    let x = MulFix(value, freetypeScales(xPpem, yPpem, font.unitsPerEm).xScale26Dot6);
+    let x = MulFix(value, HintMap.freetypeScales(xPpem, yPpem, font.unitsPerEm).xScale26Dot6);
     if (xPpem < 25) x = MulDiv(x, xPpem, 25);
     return PixRound(x);
 }

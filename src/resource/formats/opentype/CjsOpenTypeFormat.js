@@ -1,7 +1,7 @@
 import { CjsFormat } from "../../format/CjsFormat.js";
 import { readOpenType, lookupGlyphIndex, isOpenType, glyphCodePoints } from "./core/readSfnt.js";
 import { readCharstring } from "./core/readCharstring.js";
-import { hintCffGlyph, freetypeScales } from "./core/hintCff.js";
+import { HintMap } from "./core/HintMap.js";
 import { freetypeSizeMetrics, freetypeKerning, freetypeBitmapBox } from "./core/freetypeMetrics.js";
 
 /**
@@ -125,20 +125,20 @@ export class CjsOpenTypeFormat extends CjsFormat
     /**
      * Hints a CFF glyph at a pixel size as FreeType's Adobe engine does with
      * FT_LOAD_DEFAULT: y snapped by the font's hints, x scaled, advance
-     * rounded. Ported from FreeType; see core/hintCff.js.
+     * rounded. Ported from FreeType; see core/HintMap.js.
      *
      * @param {import("./core/readSfnt.js").CjsOpenTypeFont} font A parsed font with CFF outlines.
      * @param {import("./core/readCharstring.js").CjsCffGlyph} glyph The glyph from readGlyph.
      * @param {number} xPpem Pixels per em along x (FT_Set_Pixel_Sizes width).
      * @param {number} yPpem Pixels per em along y (FT_Set_Pixel_Sizes height).
      * @param {Map<number, object>} [bluesCache] Blue zones by font DICT, reused across glyphs at this size.
-     * @returns {import("./core/hintCff.js").CjsHintedGlyph} The outline in pixels, y up, and the advance.
+     * @returns {import("./core/HintMap.js").CjsHintedGlyph} The outline in pixels, y up, and the advance.
      * @throws {TypeError} When the font has no CFF outlines.
      */
     static hintGlyph(font, glyph, xPpem, yPpem, bluesCache)
     {
         if (!font.cff) throw new TypeError(`OpenType font: ${font.outlineFormat} outlines are not hinted.`);
-        return hintCffGlyph(font.cff, glyph, freetypeScales(xPpem, yPpem, font.unitsPerEm), bluesCache);
+        return HintMap.hintCffGlyph(font.cff, glyph, HintMap.freetypeScales(xPpem, yPpem, font.unitsPerEm), bluesCache);
     }
 
     /**

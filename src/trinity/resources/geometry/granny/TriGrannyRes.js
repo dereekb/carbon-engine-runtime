@@ -10,7 +10,7 @@ import { readGr2Sections } from "../../../../resource/formats/gr2/core/reader.js
 import { assertResourcePayloadObject, resourcePayloadError } from "../../resourceBoundary.js";
 import { Failed } from "../../../../trinityal/ALResult.js";
 import { TriGeometryRes } from "../TriGeometryRes.js";
-import { GrannyGetTotalTypeSize } from "../../../utilities/GeometryUtils.js";
+import { GrannyGetTotalTypeSize } from "../../../utilities/geometryUtils.js";
 import { CjsCmfFormat } from "../../../../resource/formats/cmf/index.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../../core/context/Tr2RenderContext.js";
 import { Tr2GrannyIntersectionResult } from "./Tr2GrannyIntersectionResult.js";

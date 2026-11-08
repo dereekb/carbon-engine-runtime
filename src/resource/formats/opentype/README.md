@@ -37,9 +37,9 @@ The reader is written from the specifications:
 - Adobe Technical Note #5177, *The Type 2 Charstring Format*.
 - The OpenType specification (Microsoft Typography).
 
-The hinter (`core/hintCff.js`) is ported from the Adobe CFF engine in
+The hinter (`core/HintMap.js`) is ported from the Adobe CFF engine in
 FreeType's `src/psaux` (copyright 2007-2014 Adobe Systems Incorporated), and
 the font-size scaling from FreeType's base code. Portions of this software are
 copyright © The FreeType Project (https://freetype.org). All rights reserved.
 They are used under the FreeType License, included as [`FTL.TXT`](FTL.TXT);
-the changes from the original are listed at the top of `core/hintCff.js`.
+the changes from the original are listed at the top of `core/HintMap.js`.

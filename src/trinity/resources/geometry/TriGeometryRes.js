@@ -32,7 +32,7 @@ import { TriJointBinding } from "./TriJointBinding.js";
 import { BuildFromGrannyVertexDecl } from "../../core/vertex/vertexUsage.js";
 import { Tr2VertexUsageCode } from "../../core/vertex/usageCode.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
-import { ConvertDataToVector3, GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTypeSize } from "../../utilities/GeometryUtils.js";
+import { ConvertDataToVector3, GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTypeSize } from "../../utilities/geometryUtils.js";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import {
   assertResourcePayloadArray,

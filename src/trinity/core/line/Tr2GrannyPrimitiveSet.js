@@ -18,7 +18,7 @@ import { Tr2Renderer } from "../Tr2Renderer.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
 import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
-import { GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTypeSize } from "../../utilities/GeometryUtils.js";
+import { GetMeshVertexPosition, GetVertexPositionOffsetAndType, GrannyGetTotalTypeSize } from "../../utilities/geometryUtils.js";
 import { TriGeometryRes } from "#trinity/resources/geometry";
 
 /** Granny/CMF debug geometry rendered as colored triangle edges, solids, or picking triangles. */

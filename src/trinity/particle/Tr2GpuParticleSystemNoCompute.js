@@ -13,6 +13,7 @@ import { PER_OBJECT_VS } from "../core/Tr2Renderer.js";
 import { Tr2RenderUtils } from "../core/Tr2RenderUtils.js";
 import { Tr2Effect } from "../shader/Tr2Effect.js";
 import { Tr2EffectStateManager } from "../shader/Tr2EffectStateManager.js";
+import { FullTargetTriangle } from "./FullTargetTriangle.js";
 
 /** Bytes of one RGBA32UI texel. */
 const TEXEL_SIZE = 16;
@@ -43,20 +44,6 @@ const DRAW_CB_SIZE = 16;
 
 /** Byte offset of the seed and params index in a packed EmitterGpu. */
 const EMITTER_SEED_OFFSET = 60;
-
-/** Draws one full-target triangle from the vertex index, for the update and emit passes. */
-class FullTargetTriangle
-{
-  static className = "FullTargetTriangle";
-
-  /** @param {object} renderContext The Tr2RenderContext. */
-  SubmitGeometry(renderContext)
-  {
-    renderContext.SetTopology(Topology.TOP_TRIANGLES);
-    renderContext.GetEffectStateManager().ApplyVertexDeclaration(Tr2EffectStateManager.NullDeclaration);
-    renderContext.DrawInstanced(3, 1, 0, 0);
-  }
-}
 
 /** The system's state textures, passes and ring cursor where there is no compute. */
 export class Tr2GpuParticleSystemNoCompute

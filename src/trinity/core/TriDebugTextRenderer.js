@@ -15,7 +15,7 @@ import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { RenderingMode } from "#consts/graphics";
 import { ALResult, Tr2TextureAL, Tr2TextureSubresource, Tr2BitmapDimensions } from "#trinityal";
 import { Tr2Renderer } from "./Tr2Renderer.js";
-import { s_charHeight, s_charOffsets, s_charPixels, s_charPixelsArraySizes, s_charWidths } from "./TriDebugTextRendererBitmaps.js";
+import { s_charHeight, s_charOffsets, s_charPixels, s_charPixelsArraySizes, s_charWidths } from "./triDebugTextRendererBitmaps.js";
 
 /** TriDebugFontStyle (blue/include/ITr2DebugRenderer2.h:26-34). */
 export const TriDebugFontStyle = {
