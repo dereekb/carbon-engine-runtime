@@ -112,6 +112,26 @@ test("the transform follows worldPosition and rotation, and bounds are the geome
   assertClose([ ...min, ...max ], [ -1, 0, -1, 1, 12, 1 ], "a moved piece rebuilds its world box");
 });
 
+test("an expired geometry link is reacquired on use, so the piece stays visible", t =>
+{
+  const geometry = geometryOf([ 0 ]);
+  renderSetup(t, { "res:/graphics/test/piece.gr2": geometry });
+  const value = staticWith([ mesh(0) ]);
+  value.geometryResPath = "res:/graphics/test/piece.gr2";
+  value.Initialize();
+  const frustum = { IsBoxVisible__BoundsMinMax: () => true };
+  assert.equal(value.IsInFrustum(frustum, mat4.create()), true);
+
+  // What the resource manager does when the piece's link idles out.
+  value.RemoveCachedData(geometry);
+  assert.equal(value.geometry, null);
+  const requests = blue.resMan.requests.length;
+
+  assert.equal(value.IsInFrustum(frustum, mat4.create()), true, "culling reacquires the geometry");
+  assert.equal(value.geometry, geometry);
+  assert.equal(blue.resMan.requests.length, requests + 1);
+});
+
 test("per-object data carries the world matrix and the light-map UV placement", t =>
 {
   renderSetup(t);

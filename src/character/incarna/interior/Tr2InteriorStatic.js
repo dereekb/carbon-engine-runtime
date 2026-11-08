@@ -183,21 +183,23 @@ export class Tr2InteriorStatic extends IRoot
    * piece's geometry, in its own space. False until the geometry is good, or
    * when a mesh has no box.
    *
-   * @implemented
+   * @adapted asks through GetGeometryResource, which renews the piece's link to
+   *   its geometry and reacquires an expired one, as every resource holder here does.
    * @param {vec3} minBounds Receives the minimum corner.
    * @param {vec3} maxBounds Receives the maximum corner.
    * @returns {boolean} Whether the box is known.
    */
   GetBoundingBox(minBounds, maxBounds)
   {
-    if (!this.geometry || !this.geometry.IsGood()) return false;
+    const geometry = this.GetGeometryResource();
+    if (!geometry || !geometry.IsGood(this)) return false;
 
     const { vec3_0, vec3_1, vec3_2, vec3_3 } = Tr2InteriorStatic.scratch;
     vec3.set(vec3_0, Infinity, Infinity, Infinity);
     vec3.set(vec3_1, -Infinity, -Infinity, -Infinity);
-    for (let i = 0; i < this.geometry.GetMeshCount(); i++)
+    for (let i = 0; i < geometry.GetMeshCount(); i++)
     {
-      if (!this.geometry.GetBoundingBox(i, vec3_2, vec3_3)) return false;
+      if (!geometry.GetBoundingBox(i, vec3_2, vec3_3)) return false;
       vec3.min(vec3_0, vec3_0, vec3_2);
       vec3.max(vec3_1, vec3_1, vec3_3);
     }
@@ -213,14 +215,15 @@ export class Tr2InteriorStatic extends IRoot
    * Carbon quirk, reproduced: it answers true even when the geometry is not
    * ready, and then leaves the bounds untouched (cpp:130).
    *
-   * @implemented
+   * @adapted asks through GetGeometryResource, which renews or reacquires the geometry link.
    * @param {vec3} minBounds Receives the minimum corner.
    * @param {vec3} maxBounds Receives the maximum corner.
    * @returns {boolean} Always true.
    */
   GetWorldBoundingBox(minBounds, maxBounds)
   {
-    if (this.geometry && this.geometry.IsGood())
+    const geometry = this.GetGeometryResource();
+    if (geometry && geometry.IsGood(this))
     {
       vec3.copy(minBounds, this._worldBoundingBox.min);
       vec3.copy(maxBounds, this._worldBoundingBox.max);
@@ -590,14 +593,16 @@ export class Tr2InteriorStatic extends IRoot
    * Carbon IsInFrustum (cpp:399-407): false until the geometry is good; writes
    * the transform and tests the world box.
    *
-   * @implemented
+   * @adapted asks through GetGeometryResource, so the scene's per-frame culling
+   *   is what keeps the piece's geometry link alive.
    * @param {object} frustum The TriFrustum.
    * @param {mat4} objectToWorld Receives the piece's transform.
    * @returns {boolean} Whether the piece is visible.
    */
   IsInFrustum(frustum, objectToWorld)
   {
-    if (!this.geometry || !this.geometry.IsGood()) return false;
+    const geometry = this.GetGeometryResource();
+    if (!geometry || !geometry.IsGood(this)) return false;
     mat4.copy(objectToWorld, this._transform);
     return frustum.IsBoxVisible__BoundsMinMax(this._worldBoundingBox.min, this._worldBoundingBox.max);
   }
@@ -605,13 +610,14 @@ export class Tr2InteriorStatic extends IRoot
   /**
    * Carbon AddToCell (cpp:410-438): grows the parent cell's box by the piece's.
    *
-   * @implemented
+   * @adapted asks through GetGeometryResource, which renews or reacquires the geometry link.
    * @returns {number} A CullResult.
    */
   AddToCell()
   {
-    if (!this.geometry) return CullResult.CULLRES_FAILED;
-    if (this.geometry.IsLoading()) return CullResult.CULLRES_NOTREADY;
+    const geometry = this.GetGeometryResource();
+    if (!geometry) return CullResult.CULLRES_FAILED;
+    if (geometry.IsLoading()) return CullResult.CULLRES_NOTREADY;
 
     const { vec3_0, vec3_1 } = Tr2InteriorStatic.scratch;
     if (!this.GetBoundingBox(vec3_0, vec3_1)) return CullResult.CULLRES_FAILED;
@@ -682,11 +688,16 @@ export class Tr2InteriorStatic extends IRoot
   /**
    * Carbon GetGeometryResource (cpp:496-504).
    *
-   * @implemented
+   * @adapted the resource manager expires a holder's link when the holder stops
+   *   using the resource, and RemoveCachedData then drops `geometry`. As
+   *   Tr2Mesh.GetGeometryResource does, an expired geometry is reacquired from
+   *   `geometryResPath` here, on use; Carbon's reference-counted pointer never
+   *   expires.
    * @returns {object|null} The TriGeometryRes.
    */
   GetGeometryResource()
   {
+    if (!this.geometry && this.geometryResPath) this.InitializeGeometryResource();
     return this.geometry;
   }
 
