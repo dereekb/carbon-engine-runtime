@@ -94,11 +94,12 @@ export class CjsPaperDollComponent
         if (!record || !this._resolve) return Promise.resolve(record);
         if (!this._resolving.has(id))
         {
-            const resolving = this._resolving;
+            // Captured now: a resolution still in flight when the component is configured again marks the old sets.
+            const resolving = this._resolving, resolved = this._resolved;
             const operation = this._resolve(id).then(fields =>
             {
                 Object.assign(record, fields, { colorAreas: [...new Set(fields.colorAreas ?? [])].sort() });
-                this._resolved.add(id);
+                resolved.add(id);
                 this.Rebuild();
                 return record;
             });

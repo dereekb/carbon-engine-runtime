@@ -81,3 +81,16 @@ test("an unresolved option is not walked until it resolves; the beard is kept ou
   await resolved;
   assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "topMiddle" ]);
 });
+
+test("a resolution in flight when the part is configured again does not mark the new configuration resolved", async () =>
+{
+  const definition = new CjsPaperDollDefinition();
+  let release;
+  const resolution = new Promise(resolve => { release = resolve; });
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => resolution });
+  const pending = definition.outer.ResolveOption("coat");
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => new Promise(() => {}) });
+  release({ occludes: [], colorAreas: [] });
+  await pending;
+  assert.equal(definition.outer.IsResolved("coat"), false);
+});

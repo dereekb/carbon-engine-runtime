@@ -149,15 +149,18 @@ export class CjsPaperDollTextureRoles
     }
 
     /**
-     * The maps a folder holds directly, one per name at the character texture quality, each with its role.
+     * The composed maps a folder holds directly (`comp_` and `colorize_` names), one per name at the character texture
+     * quality, each with its role. A map named otherwise is not a composed map and is not read (`aa_female_head_s` in
+     * eyeshadow_02); a composed name the lookup does not source throws.
      * @param {string} folder The folder's `res:` path, ending in "/".
      * @param {string[]} files The listed files.
      * @returns {Array<ReturnType<typeof CjsPaperDollTextureRoles.lookup>>} The maps' roles.
-     * @throws {Error} For a map name the lookup does not source.
+     * @throws {Error} For a composed map name the lookup does not source.
      */
     static readFolder(folder, files)
     {
-        const maps = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"));
+        const maps = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png")
+            && /^(comp|colorize)_/u.test(file.slice(folder.length)));
         const names = [ ...new Set(maps.map(file => CjsPaperDollDefinition.splitTier(file)[0])) ];
         return names.map(stem => CjsPaperDollTextureRoles.lookup(CjsPaperDollDefinition.pickTier(stem + ".png", maps)));
     }
