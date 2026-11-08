@@ -647,12 +647,13 @@ export class Tr2TextureALStub extends Tr2DeviceResourceAL
   }
 
   /**
-   * Ours: Carbon's textures have no asynchronous colour reduction. Only the
-   * WebGPU backend implements one (CjsWebgpuTextureAL.RequestAverageColor);
-   * null here selects the browser's CPU fallback.
+   * Ours: Carbon's textures have no asynchronous colour reduction; the stub
+   * takes none, so a video's average colour stays as it was.
+   * @param {string} _mode Unused.
+   * @param {HTMLVideoElement|null} _video Unused.
    * @returns {null}
    */
-  RequestAverageColor()
+  RequestAverageColor(_mode, _video)
   {
     return null;
   }

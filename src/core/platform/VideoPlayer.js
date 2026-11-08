@@ -7,6 +7,7 @@ import { IBlueEvents } from "../../blue/interfaces/IBlueEvents.js";
 // Resource paths and playlist policy remain with VideoPlaylistController.
 import { CjsSchema } from "#schema";
 import { State } from "./video/enums.js";
+import { Tr2PlatformInfo } from "./Tr2PlatformInfo.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../trinity/core/context/Tr2RenderContext.js";
 import { BitmapDimensions } from "#imageio";
 import { UpdateVideoTexture, ClearVideoTexture } from "../../trinity/core/Tr2ImageIOHelpers.js";
@@ -55,10 +56,6 @@ export class VideoPlayer
 
   _listeners = [];
 
-  _canvas = null;
-
-  _context = null;
-
   _paused = false;
 
   _lastSampleTime = -Infinity;
@@ -76,12 +73,6 @@ export class VideoPlayer
    * @type {object|null}
    */
   _host = null;
-
-  /**
-   * Average-colour sample edge length in pixels; set by the constructor.
-   * @type {number}
-   */
-  _sampleSize = 0;
 
   /**
    * Minimum milliseconds between average-colour samples; set by the constructor.
@@ -115,14 +106,12 @@ export class VideoPlayer
   _averageTexture = null;
 
   /** Browser host injection keeps imports headless and permits deterministic lifecycle tests. */
-  constructor({ host = globalThis, sampleSize = 32, sampleInterval = 125, stallTimeout = 15000,
+  constructor({ host = globalThis, sampleInterval = 125, stallTimeout = 15000,
     getRenderContext = Tr2RenderContext_GetMainThreadRenderContext, withSound = false } = {})
   {
-    if (!Number.isInteger(sampleSize) || sampleSize < 1 || sampleSize > 256
-      || !Number.isFinite(sampleInterval) || sampleInterval < 1
+    if (!Number.isFinite(sampleInterval) || sampleInterval < 1
       || !Number.isFinite(stallTimeout) || stallTimeout < 1) throw new RangeError("Invalid video sampling or timeout options");
     this._host = host;
-    this._sampleSize = sampleSize;
     this._sampleInterval = sampleInterval;
     this._stallTimeout = stallTimeout;
     this._getRenderContext = getRenderContext;
@@ -242,7 +231,22 @@ export class VideoPlayer
     return true;
   }
 
-  /** One deferred, bounded readback per shared player; stale clips never publish colour. */
+  /**
+   * Starts one asynchronous average-colour sample per interval, in the mode
+   * Tr2PlatformInfo.videoAverageColor resolves to; stale clips never publish
+   * colour. Carbon averages each decoded frame as VpxDecoder converts it
+   * (VpxDecoder.cpp:255-272); the browser decodes, so the texture's backend
+   * takes the average (Tr2TextureAL.RequestAverageColor).
+   *
+   * Fixes CE-235: Carbon converts every video with fixed BT.601 coefficients,
+   * applied with Cb and Cr swapped, before averaging; ours averages colours
+   * converted with the video's own tagged colour space, in every mode.
+   *
+   * @adapted There is no blocking canvas fallback: a backend without an
+   *   asynchronous average, or the `off` mode, leaves the colour as it was.
+   * @param {number} now Host time, milliseconds.
+   * @param {number} generation The clip generation the sample belongs to.
+   */
   _RequestAverageColor(now, generation)
   {
     const storage = this.bgraTexture ? this.bgraTexture.GetTexture() : null;
@@ -253,56 +257,26 @@ export class VideoPlayer
     }
     if (this.averageColorError || this._sampleRequest !== null || now - this._lastSampleTime < this._sampleInterval) return;
     this._lastSampleTime = now;
-    if (this._RequestGpuAverageColor(generation)) return;
-    this._sampleRequest = this._host.requestAnimationFrame(() =>
-    {
-      if (generation !== this._generation) return;
-      this._sampleRequest = null;
-      const video = this.video, texture = this.bgraTexture;
-      if (!video || !texture || video.readyState < 2) return;
-      const start = this._host.performance.now();
-      try
-      {
-        if (!this._canvas)
-        {
-          this._canvas = this._host.document.createElement("canvas");
-          this._canvas.width = this._canvas.height = this._sampleSize;
-          this._context = this._canvas.getContext("2d", { alpha: true, willReadFrequently: true, colorSpace: "srgb" });
-          if (!this._context) throw new Error("Video average colour requires a 2D canvas");
-          this._context.imageSmoothingEnabled = true;
-          this._context.imageSmoothingQuality = "high";
-        }
-        const size = this._sampleSize, context = this._context;
-        context.clearRect(0, 0, size, size);
-        context.drawImage(video, 0, 0, size, size);
-        const data = context.getImageData(0, 0, size, size).data;
-        let r = 0, g = 0, b = 0, a = 0;
-        for (let i = 0; i < data.length; i += 4)
-        {
-          r += data[i]; g += data[i + 1]; b += data[i + 2]; a += data[i + 3];
-        }
-        // VpxDecoder.cpp:254-272 averages straight encoded channels, without
-        // gamma, smoothing or alpha weighting. Canvas returns straight sRGB,
-        // but resampling is premultiplied: mixed alpha and hidden RGB are an
-        // approximation. Browser YUV conversion also differs from Carbon's
-        // fixed coefficients. These limits are measured by the video probe.
-        const divisor = data.length / 4 * 255;
-        if (generation === this._generation) texture.SetAverageColor(r / divisor, g / divisor, b / divisor, a / divisor);
-        this.stats.samples++;
-      }
-      catch (error) { this.averageColorError = error; }
-      finally { this.stats.samplingMilliseconds += this._host.performance.now() - start; }
-    });
+    const mode = Tr2PlatformInfo.resolveVideoAverageColor(Tr2PlatformInfo.detectWebCodecs(this._host));
+    if (mode === "off") return;
+    this._RequestGpuAverageColor(generation, mode);
   }
 
-  /** Use the AL capability when present, keeping one asynchronous result and rejecting replaced storage. */
-  _RequestGpuAverageColor(generation)
+  /**
+   * Asks the texture's backend for an asynchronous average, keeping one
+   * result in flight and rejecting results for replaced clips or storage.
+   *
+   * @param {number} generation The clip generation the sample belongs to.
+   * @param {"webcodecs"|"approximation"} mode How the backend takes it.
+   * @returns {boolean} Whether a sample was started.
+   */
+  _RequestGpuAverageColor(generation, mode)
   {
     const resource = this.bgraTexture, texture = resource ? resource.GetTexture() : null;
     if (!texture) return false;
     const start = this._host.performance.now();
     let promise;
-    try { promise = texture.RequestAverageColor(); }
+    try { promise = texture.RequestAverageColor(mode, this.video); }
     catch (error) { this.averageColorError = error; return true; }
     if (!promise) return false;
     this.stats.samplingMilliseconds += this._host.performance.now() - start;
@@ -481,7 +455,6 @@ export class VideoPlayer
   {
     const resource = this.bgraTexture;
     if (!resource) return;
-    if (typeof this._sampleRequest === "number") this._host.cancelAnimationFrame(this._sampleRequest);
     this._sampleRequest = null;
     ClearVideoTexture(resource, this._getRenderContext());
     resource.SetAverageColor(0, 0, 0, 0);
@@ -509,7 +482,6 @@ export class VideoPlayer
   SetBgraTexture(texture)
   {
     if (texture === this._bgraTexture) return;
-    if (typeof this._sampleRequest === "number") this._host.cancelAnimationFrame(this._sampleRequest);
     this._sampleRequest = null;
     this._texture = null;
     this._uploadedSource = null;
@@ -567,7 +539,6 @@ export class VideoPlayer
   {
     this._generation++;
     this._ClearWatchdog();
-    if (typeof this._sampleRequest === "number") this._host.cancelAnimationFrame(this._sampleRequest);
     this._sampleRequest = null;
     if (this.video)
     {
@@ -597,7 +568,6 @@ export class VideoPlayer
   Destruct()
   {
     this._ReleaseMedia();
-    this._canvas = this._context = null;
     this.bgraTexture = null;
     this.onStateChange = this.onError = this.onCreateTextures = null;
     this._state = State.UNINITIALIZED;

@@ -108,7 +108,13 @@ test("only approved extension names are exempt from Carbon setting-name checks",
 {
   const approved = [ "webgpuMaxBufferSize", "webgpuTextureCompressionBC", "webgpuTextureCompressionBCSliced3D", "webgpuTextureCompressionUnaligned", "webgpuFloat32Filterable", "webgpuTextureFormatsTier2" ];
   const ours = settings.GetNames().filter(name => !settings.FindSetting(name).carbon);
-  assert.deepEqual(ours.slice().sort(), [...approved, "characterTextureQuality", "compressUncompressedTextures", "eveSpacePickingFramework", "postprocessDofCarryForegroundBlur"].sort());
+  assert.deepEqual(ours.slice().sort(), [...approved, "characterTextureQuality", "compressUncompressedTextures", "eveSpacePickingFramework", "postprocessDofCarryForegroundBlur", "videoAverageColor"].sort());
+  const video = settings.FindSetting("videoAverageColor");
+  assert.equal(video.owner, Tr2PlatformInfo);
+  assert.deepEqual(video.values, [ "webcodecs", "approximation", "off" ]);
+  assert.deepEqual(video.category, [ "video" ], "category is ours, for menus");
+  assert.equal(settings.GetValue("videoAverageColor"), "webcodecs");
+  assert.equal(settings.FindSetting("newBloom").category, null, "a setting with no category always applies");
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);
   assert.equal(settings.GetValue("characterTextureQuality"), "4k");
@@ -129,6 +135,9 @@ test("meta.setting takes any name, on static fields only", () =>
   assert.equal(typeof described, "function", "a name Carbon lacks is ours, not an error");
   assert.throws(() => meta.setting("newBloom", { applies: "sometimes" }), TypeError);
   assert.throws(() => meta.setting("newBloom", { enum: {}, values: [] }), TypeError);
+  assert.throws(() => meta.setting("newBloom", { category: "" }), TypeError);
+  assert.throws(() => meta.setting("newBloom", { category: [ "webgl2", 3 ] }), TypeError);
+  assert.equal(typeof meta.setting("demoCategorised", { category: [ "webgl2", "post" ] }), "function");
   // What the decorator receives for an instance field.
   assert.throws(() => meta.setting("debugLODShader")(undefined, { kind: "field", static: false, name: "debugLODShader" }), TypeError);
 });

@@ -151,6 +151,13 @@ export class Tr2PlatformInfo
      */
     probeError = null;
 
+    /**
+     * Ours: whether the browser has WebCodecs' VideoFrame with copyTo, which the
+     * `webcodecs` video average colour needs.
+     * @type {boolean}
+     */
+    webCodecs = false;
+
     #staticCaps = new Map();
 
     static StaticCap = PlatformStaticCap;
@@ -193,6 +200,45 @@ export class Tr2PlatformInfo
      */
     @meta.setting("webgpuFloat32Filterable", { applies: meta.setting.CREATE })
     static webgpuFloat32Filterable = true;
+
+    /**
+     * Ours: how a playing video's average colour is taken, for the lights
+     * banners and planes derive from it (Carbon averages each decoded frame,
+     * VpxDecoder.cpp:255-272). `webcodecs` averages the frame's planes copied
+     * out through WebCodecs; `approximation` reads back a small mip of the
+     * video texture; both are asynchronous. `off` takes none. Where the
+     * browser has no WebCodecs, `webcodecs` resolves to `approximation`
+     * (resolveVideoAverageColor).
+     */
+    @meta.setting("videoAverageColor", { values: [ "webcodecs", "approximation", "off" ], category: "video" })
+    static videoAverageColor = "webcodecs";
+
+    /**
+     * The video average colour mode in effect: the setting, with `webcodecs`
+     * falling back to `approximation` where WebCodecs is missing.
+     *
+     * @cjs
+     * @param {boolean} webCodecs Whether WebCodecs is available (detectWebCodecs).
+     * @returns {"webcodecs"|"approximation"|"off"} The mode.
+     */
+    static resolveVideoAverageColor(webCodecs)
+    {
+        const mode = Tr2PlatformInfo.videoAverageColor;
+        return mode === "webcodecs" && !webCodecs ? "approximation" : mode;
+    }
+
+    /**
+     * Whether a realm has WebCodecs' VideoFrame with copyTo.
+     *
+     * @cjs
+     * @param {object} [host] The realm, the global one by default.
+     * @returns {boolean} Whether it does.
+     */
+    static detectWebCodecs(host = globalThis)
+    {
+        const VideoFrameClass = host?.VideoFrame;
+        return typeof VideoFrameClass === "function" && typeof VideoFrameClass.prototype?.copyTo === "function";
+    }
 
     // Carbon selects a backend by which shared library the launcher loads, so
     // its static caps always describe exactly one backend. Ours are probed at
@@ -237,6 +283,7 @@ export class Tr2PlatformInfo
         this.adapter = values.adapter ?? null;
         this.webgl = values.webgl ?? null;
         this.probeError = values.probeError ?? null;
+        this.webCodecs = values.webCodecs ?? false;
         for (const name of Object.keys(PlatformStaticCap)) this.#staticCaps.set(name, values.staticCaps?.[name] === true);
     }
 
@@ -357,7 +404,8 @@ export class Tr2PlatformInfo
             taa: this.GetStaticCap(PlatformStaticCap.TAA),
             webgpuFeatures: adapter?.features ?? [],
             webgpuLimits: adapter?.limits ?? {},
-            lowPerformance: this.IsLowPerformance()
+            lowPerformance: this.IsLowPerformance(),
+            webCodecs: this.webCodecs
         };
     }
 
@@ -507,6 +555,7 @@ export class Tr2PlatformInfo
                 webgl,
                 backend,
                 probeError: probeError ?? webgl.probeError,
+                webCodecs: Tr2PlatformInfo.detectWebCodecs(options.host),
                 staticCaps: { ...webgl.GetStaticCaps(), TAA: options.taa === true }
             });
         }
@@ -542,6 +591,7 @@ export class Tr2PlatformInfo
             webgl,
             backend,
             probeError,
+            webCodecs: Tr2PlatformInfo.detectWebCodecs(options.host),
             staticCaps
         });
     }

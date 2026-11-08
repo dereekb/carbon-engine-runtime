@@ -148,11 +148,21 @@ export class Tr2TextureAL
     return ALResult.E_FAIL;
   }
 
-  /** Ours: optional asynchronous video colour reduction; null selects the browser fallback. */
-  RequestAverageColor()
+  /**
+   * Ours: an asynchronous average of a video texture's current frame, for the
+   * lights VideoPlayer feeds (Carbon averages each frame as it decodes it,
+   * VpxDecoder.cpp:255-272). Never blocks.
+   *
+   * @cjs
+   * @param {"webcodecs"|"approximation"} mode How to take it (Tr2PlatformInfo.videoAverageColor).
+   * @param {HTMLVideoElement|null} video The element the texture is filled from.
+   * @returns {Promise<ArrayLike<number>|null>|null} The mean RGBA, 0-1 in the video's encoded
+   *   channels, or null when this backend cannot take one.
+   */
+  RequestAverageColor(mode, video)
   {
     const implementation = this._texture ? this._texture.implementation : null;
-    return implementation ? implementation.RequestAverageColor() : null;
+    return implementation ? implementation.RequestAverageColor(mode, video) : null;
   }
 
   /**

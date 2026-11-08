@@ -142,3 +142,20 @@ test("Tr2PlatformInfo's properties are accessors over Carbon's getters (Tr2Platf
         assert.equal(MarkerTag("Tr2PlatformInfo", method), "adapted", method);
     }
 });
+
+test("WebCodecs detection and the video average colour mode it resolves", async t =>
+{
+    const previous = Tr2PlatformInfo.videoAverageColor;
+    t.after(() => { Tr2PlatformInfo.videoAverageColor = previous; });
+    const withCodecs = { VideoFrame: class { copyTo() {} } };
+    assert.equal(Tr2PlatformInfo.detectWebCodecs({}), false);
+    assert.equal(Tr2PlatformInfo.detectWebCodecs({ VideoFrame: class {} }), false, "copyTo is required");
+    assert.equal(Tr2PlatformInfo.detectWebCodecs(withCodecs), true);
+    assert.equal(Tr2PlatformInfo.videoAverageColor, "webcodecs", "the default");
+    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(true), "webcodecs");
+    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(false), "approximation", "no WebCodecs: the approximation");
+    Tr2PlatformInfo.videoAverageColor = "off";
+    assert.equal(Tr2PlatformInfo.resolveVideoAverageColor(true), "off");
+    const platform = await Tr2PlatformInfo.Detect({ adapter: null, webgl: false, host: withCodecs });
+    assert.equal(platform.GetCapabilities().webCodecs, true);
+});

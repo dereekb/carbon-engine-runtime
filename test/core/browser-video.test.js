@@ -9,14 +9,15 @@ import { Tr2TexturedPointLight, TriTextureParameter } from "../../npm/dist/trini
 import { CjsWebgpuTextureAL } from "../../npm/dist/trinityal/webgpu/CjsWebgpuTextureAL.js";
 import { Tr2MsaaDesc, Tr2TextureSubresource } from "../../npm/dist/trinityal/index.js";
 import { Tr2CpuUsage, Tr2GpuUsage } from "../../npm/dist/global/consts/renderContext/index.js";
+import { Tr2PlatformInfo } from "../../npm/dist/core/platform/Tr2PlatformInfo.js";
 
 function fixture()
 {
   let id = 0, now = 0;
   const raf = new Map(), timers = new Map(), videos = [], revoked = [];
-  const pixels = new Uint8ClampedArray(32 * 32 * 4);
-  for (let i = 0; i < pixels.length; i += 4) pixels.set([255, 0, 0, 255], i);
-  const counts = { allocations: 0, uploads: 0, reads: 0, destroys: 0, canvases: 0 };
+  const counts = { allocations: 0, uploads: 0, reads: 0, destroys: 0, modes: [] };
+  // What the backend's average answers; a test may swap it for a pending promise.
+  const state = { answer: () => Promise.resolve(new Float32Array([1,0,0,1])) };
   const host = {
     Blob, URL: {createObjectURL: () => "blob:" + ++id, revokeObjectURL: url => revoked.push(url)},
     performance: {now: () => now++},
@@ -25,12 +26,7 @@ function fixture()
     setTimeout: (fn, ms) => { timers.set(++id, {fn, ms}); return id; },
     clearTimeout: key => timers.delete(key),
     document: {createElement(type) {
-      if (type === "canvas")
-      {
-        counts.canvases++;
-        return { getContext: () => ({ clearRect() {}, drawImage() {},
-          getImageData() { counts.reads++; return {data:pixels}; } }) };
-      }
+      if (type === "canvas") throw new Error("the player must not make a canvas: there is no blocking fallback");
       const listeners = new Map(), frames = new Map();
       const video = { currentTime: 0, duration: 12, videoWidth: 640, videoHeight: 360, readyState: 2,
         listeners, frames, playError: null, paused: true,
@@ -53,32 +49,33 @@ function fixture()
     return { IsValid: () => valid, GetMemoryClass: () => 1, SetName() {},
       Destroy() {if(valid) counts.destroys++;valid=false;},
       UpdateSubresource() {counts.uploads++;return 0;}, GetDesc: () => desc,
-      // Tr2TextureAL.RequestAverageColor: null selects the browser fallback.
-      RequestAverageColor: () => null };
+      // Tr2TextureAL.RequestAverageColor: an asynchronous average; this backend answers red.
+      RequestAverageColor(mode, video) { counts.reads++; counts.modes.push(mode); assert.ok(video); return state.answer(mode); } };
   }};
   const player = new VideoPlayer({host, getRenderContext: () => render});
   const texture = new TriTextureRes();
   texture.Initialize("dynamic:/color/0,0,0,1", "");
   player.bgraTexture = texture;
   const flush = () => {const work=[...raf.values()];raf.clear();for(const fn of work) fn(now);};
-  return {host,player,texture,render,videos,raf,timers,revoked,counts,pixels,flush};
+  return {host,player,texture,render,videos,raf,timers,revoked,counts,flush,state};
 }
 const settle = async () => { for(let i=0;i<8;i++) await Promise.resolve(); };
 
-test("decoded frames upload once for 100 consumers; media clock, cached light colour and bounded readback", () =>
+test("decoded frames upload once for 100 consumers; media clock, cached light colour and bounded readback", async () =>
 {
   const f=fixture();f.player.Create(new Uint8Array([1]));
   const v=f.videos[0];assert.equal(v.muted,true);assert.equal(v.playsInline,true);
   // Carbon media_time is uint64_t nanoseconds (VideoPlayer_Blue.cpp:88-91).
   v.currentTime=2.5;assert.equal(f.player.GetMediaTime(),2_500_000_000);
   f.player.Seek(1_250_000_000);assert.equal(v.currentTime,1.25);
-  v.frame(1,0);f.flush();
+  v.frame(1,0);await settle();
   assert.deepEqual(f.texture.GetAverageColor(),[1,0,0,1]);
   for(let i=0;i<100;i++) {RealizeTexture(f.texture,f.render);f.texture.GetAverageColor();}
   assert.equal(f.counts.uploads,1);assert.equal(f.counts.reads,1);assert.equal(f.counts.allocations,1);
-  v.frame(2,40);v.frame(3,80);assert.equal(f.raf.size,0);
-  v.frame(4,130);v.frame(5,270);assert.equal(f.raf.size,1);f.flush();
-  assert.equal(f.counts.reads,2);assert.equal(f.counts.canvases,1);
+  v.frame(2,40);v.frame(3,80);assert.equal(f.counts.reads,1,"no sample inside the interval");
+  v.frame(4,130);await settle();v.frame(5,170);
+  assert.equal(f.counts.reads,2);
+  assert.deepEqual(f.counts.modes,["approximation","approximation"],"without WebCodecs, webcodecs resolves to approximation");
   const light=new Tr2TexturedPointLight();light.texture=f.texture;light.Update();
   assert.equal(f.counts.reads,2,"light consumes cached colour without sampling");
   f.player.Pause();assert.equal(v.paused,true);assert.equal(f.timers.size,0);
@@ -103,16 +100,34 @@ test("dimension changes and resource recreation upload current frame without per
   f.player.Destruct();
 });
 
-test("old clip callbacks and deferred samples cannot overwrite the replacement", () =>
+test("old clip callbacks and in-flight samples cannot overwrite the replacement", async () =>
 {
-  const f=fixture();f.player.Create(new Uint8Array([1]));const old=f.videos[0];
-  old.frame(1,0);const sample=f.raf.values().next().value, callback=old.frames.values().next().value;
-  f.texture.SetAverageColor(0,0,1,1);
-  f.player.Create(new Uint8Array([2]));sample();callback(200,{presentedFrames:2});
-  assert.deepEqual(f.texture.GetAverageColor(),[0,0,1,1]);assert.equal(f.counts.reads,0);
+  const f=fixture();let finish;f.state.answer=()=>new Promise(done=>finish=done);
+  f.player.Create(new Uint8Array([1]));const old=f.videos[0];
+  old.frame(1,0);const callback=old.frames.values().next().value;
+  assert.equal(f.counts.reads,1);f.texture.SetAverageColor(0,0,1,1);
+  f.player.Create(new Uint8Array([2]));finish(new Float32Array([1,0,0,1]));callback(200,{presentedFrames:2});await settle();
+  assert.deepEqual(f.texture.GetAverageColor(),[0,0,1,1],"the old clip's sample is discarded");
   assert.equal(old.frames.size,0);assert.equal(old.listeners.size,0);
-  f.videos[1].frame(1,0);f.flush();assert.deepEqual(f.texture.GetAverageColor(),[1,0,0,1]);
+  f.state.answer=()=>Promise.resolve(new Float32Array([1,0,0,1]));
+  f.videos[1].frame(1,0);await settle();assert.deepEqual(f.texture.GetAverageColor(),[1,0,0,1]);
   f.player.Destruct();assert.equal(f.revoked.length,2);
+});
+
+test("the videoAverageColor setting: off takes no sample, webcodecs is passed where WebCodecs exists", async t =>
+{
+  const previous=Tr2PlatformInfo.videoAverageColor;t.after(()=>{Tr2PlatformInfo.videoAverageColor=previous;});
+  Tr2PlatformInfo.videoAverageColor="off";
+  let f=fixture();f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
+  assert.equal(f.counts.reads,0);assert.notDeepEqual(f.texture.GetAverageColor(),[1,0,0,1],"no average is taken");f.player.Destruct();
+  Tr2PlatformInfo.videoAverageColor="webcodecs";
+  f=fixture();f.host.VideoFrame=class { copyTo() {} };
+  f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
+  assert.deepEqual(f.counts.modes,["webcodecs"]);f.player.Destruct();
+  Tr2PlatformInfo.videoAverageColor="approximation";
+  f=fixture();f.host.VideoFrame=class { copyTo() {} };
+  f.player.Create(new Uint8Array([1]));f.videos[0].frame(1,0);await settle();
+  assert.deepEqual(f.counts.modes,["approximation"]);f.player.Destruct();
 });
 
 test("autoplay denial waits for host Resume and does not trigger playlist retries", async () =>
@@ -196,7 +211,7 @@ test("WebGPU external frame upload uses straight sRGB copy and leaves byte uploa
 
 test("GPU colour reads coalesce and discard completed results from replaced clips and storage", async () =>
 {
-  const f=fixture();f.player.Create(new Uint8Array([1]));const v=f.videos[0];v.frame(1,0);f.flush();
+  const f=fixture();f.player.Create(new Uint8Array([1]));const v=f.videos[0];v.frame(1,0);await settle();
   let resolve, requests=0;
   const texture=f.texture.GetTexture();
   texture.RequestAverageColor=()=>{requests++;return new Promise(done=>{resolve=done;});};
@@ -231,9 +246,9 @@ test("Carbon player methods use media nanoseconds, expose unknown alpha, clear a
 });
 
 
-test("colour backend failures preserve playback and retry only after texture recreation", () =>
+test("colour backend failures preserve playback and retry only after texture recreation", async () =>
 {
-  const f=fixture();f.player.Create(new Uint8Array([1]));const v=f.videos[0];v.frame(1,0);f.flush();
+  const f=fixture();f.player.Create(new Uint8Array([1]));const v=f.videos[0];v.frame(1,0);await settle();
   let requests=0;f.texture.GetTexture().RequestAverageColor=()=>{requests++;throw new Error("sampling failed");};
   v.frame(2,150);v.frame(3,300);assert.equal(requests,1);
   assert.match(f.player.averageColorError.message,/sampling failed/);assert.equal(f.player.error,null);

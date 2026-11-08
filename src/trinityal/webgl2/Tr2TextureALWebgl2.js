@@ -57,6 +57,7 @@ import { Crop, Tr2MsaaDesc, Tr2TextureSubresource } from "../Tr2HalHelperStructu
 import { RenderContextALOf } from "../renderContextAL.js";
 import { CopyRegion } from "../stub/Tr2TextureALStub.js";
 import { Tr2ReadbackALWebgl2 } from "./Tr2ReadbackALWebgl2.js";
+import { CjsWebgl2VideoColorSampler } from "./CjsWebgl2VideoColorSampler.js";
 import {
   Tr2ColorSpace,
   GetBlockByteSize,
@@ -314,6 +315,12 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
 
   /** The other colour space's texture, built on first request; see the head comment. */
   _twin = null;
+
+  /** Ours: the video average-colour sampler, made on the first RequestAverageColor. */
+  _videoSampler = null;
+
+  /** Ours: the render context the last video frame was uploaded through, whose framebuffer the approximation rebinds. */
+  _videoContext = null;
 
   /** What shaders sample in place of this depth while it stays attached; see `CopyDepthForSampling`. */
   _depthCopy = null;
@@ -767,6 +774,9 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
     // Carbon Tr2BufferALDx11.cpp:185, Tr2TextureALDx11.cpp:833: released storage leaves the counters.
     this._memory.Reset();
     const gl = this._gl;
+    if (this._videoSampler) this._videoSampler.Destruct();
+    this._videoSampler = null;
+    this._videoContext = null;
 
     if (gl)
     {
@@ -1145,6 +1155,7 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
       const gl = this._gl;
       if (this._target !== gl.TEXTURE_2D || region.HasBox() || region.startMipLevel !== 0
         || this._layout.compressed || this._layout.type !== gl.UNSIGNED_BYTE) return ALResult.E_INVALIDARG;
+      this._videoContext = al;
       // NO GL STATE IS READ BACK, since `getParameter` waits for the GPU process.
       // Every AL upload leaves unpack state at WebGL's defaults (straight alpha,
       // no flip, browser colour conversion, no unpack buffer), so only the
@@ -1357,14 +1368,33 @@ export class Tr2TextureALWebgl2 extends Tr2DeviceResourceAL
   }
 
   /**
-   * Ours: Carbon's textures have no asynchronous colour reduction. Only the
-   * WebGPU backend implements one (CjsWebgpuTextureAL.RequestAverageColor);
-   * null here selects the browser's CPU fallback.
-   * @returns {null}
+   * Ours: an asynchronous average of this video texture's frame
+   * (CjsWebgl2VideoColorSampler). `webcodecs` averages the frame's planes
+   * copied out through WebCodecs; `approximation` reads back a small mip of
+   * this texture. Neither blocks.
+   *
+   * Fixes CE-235: Carbon converts every video with fixed BT.601 coefficients,
+   * applied with Cb and Cr swapped, before averaging; ours converts with the
+   * video's own tagged colour space in both modes.
+   *
+   * @cjs
+   * @param {"webcodecs"|"approximation"} mode How to take it (Tr2PlatformInfo.videoAverageColor).
+   * @param {HTMLVideoElement|null} video The element this texture is filled from.
+   * @returns {Promise<Float32Array|null>|null} The mean RGBA, or null when this
+   *   texture has no video frame.
    */
-  RequestAverageColor()
+  RequestAverageColor(mode, video)
   {
-    return null;
+    const al = this._videoContext;
+    if (!this.IsValid() || !al || !al.IsValid() || !video) return null;
+    this._videoSampler ??= new CjsWebgl2VideoColorSampler();
+    if (mode === "webcodecs")
+    {
+      const promise = this._videoSampler.Request(video);
+      if (promise) return promise;
+    }
+    return this._videoSampler.RequestApproximation(this._gl, this._texture, this._desc.GetWidth(), this._desc.GetHeight(),
+      () => al._RebindFramebuffer(), video.ownerDocument?.defaultView ?? globalThis);
   }
 
   /**

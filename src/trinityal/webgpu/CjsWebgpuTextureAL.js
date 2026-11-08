@@ -994,8 +994,19 @@ export class CjsWebgpuTextureAL extends Tr2DeviceResourceAL
     return NO_HEAP_INDEX;
   }
 
-  /** Ours: asynchronously average the existing straight encoded video texture. */
-  RequestAverageColor()
+  /**
+   * Ours: asynchronously average the existing straight encoded video texture.
+   * The compute reduction is exact and never blocks, so both modes use it.
+   *
+   * Fixes CE-235: Carbon converts every video with fixed BT.601 coefficients,
+   * applied with Cb and Cr swapped, before averaging; ours averages the texture
+   * the browser converted with the video's own colour space.
+   *
+   * @param {"webcodecs"|"approximation"} _mode Either; see above.
+   * @param {HTMLVideoElement|null} _video Unused: the texture holds the frame.
+   * @returns {Promise<Float32Array|null>|null} The mean RGBA, or null.
+   */
+  RequestAverageColor(_mode, _video)
   {
     if (!this.IsValid() || this._videoGeneration == null || this._format !== "rgba8unorm") return null;
     if (!this._videoSampler) this._videoSampler = new CjsWebgpuVideoColorSampler(this._webgpu.GetDevice(), this._texture);
