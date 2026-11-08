@@ -79,6 +79,7 @@ test("persisted property-only and legacy accessor declarations call through thei
   assert.throws(() => read(live, { actual: 8 }), /Invalid attribute/);
   class Legacy extends Live {}
   CjsSchema.define(Legacy, { className: identity(), fields: [scalar("extra")] });
+  CjsSchema.meta.exposureChainTo(Live)(Legacy);
   const legacy = new Legacy();
   read(legacy, { publicValue: 2, extra: 7 });
   assert.equal(legacy.extra, 7);

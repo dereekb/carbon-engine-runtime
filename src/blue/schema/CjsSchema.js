@@ -4148,7 +4148,8 @@ function exposureBagDecorator(bag, blue)
         }
         finally { delete schema.rowsInSourceOrder; }
         RejectAfterRegistration(Constructor, "exposure rows");
-        getOrCreateClassSchema(Constructor).exposureRows = rows;
+        // A bag with no rows records none, so it compiles as the same class declared without a bag would.
+        if (rows.length) getOrCreateClassSchema(Constructor).exposureRows = rows;
         if (blue) carbonInterfaceDecorator([])(Constructor, context);
         define(Constructor, context);
     };

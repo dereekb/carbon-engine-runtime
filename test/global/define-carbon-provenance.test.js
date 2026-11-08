@@ -99,3 +99,19 @@ test("retired donor definition options fail before registering a class", () =>
       assert.equal(CjsSchema.getConstructor(className), null);
     }
 });
+
+test("meta.define({ carbon }) compiles as meta.carbon does", () =>
+{
+  const Decorated = Shape(), Bagged = Shape();
+  for (const Constructor of [ Decorated, Bagged ])
+  {
+    CjsSchema.decorateField(Constructor, "position", type.float32, meta.persist);
+    CjsSchema.decorateField(Constructor, "count", type.uint32);
+  }
+  meta.carbon([ "CarbonFormDecorated", "CarbonFormShared" ])(Decorated);
+  meta.define({ name: "CarbonFormBagged", carbon: [ "CarbonFormBagged", "CarbonFormShared" ] })(Bagged);
+
+  assert.deepEqual(CjsSchema.getSchema(Decorated).carbon, [ "CarbonFormDecorated", "CarbonFormShared" ]);
+  assert.deepEqual(CjsSchema.getSchema(Bagged).carbon, [ "CarbonFormBagged", "CarbonFormShared" ]);
+  assert.deepEqual(Anonymous(Bagged), Anonymous(Decorated));
+});
