@@ -20,15 +20,15 @@ export class Tr2ControllerExpression
    * ShipMaxSpeed and server-time terms read the three settings below instead
    * of the owner and the frame clock.
    */
-  @meta.setting("controllerFunctionOverrideEnabled")
+  @meta.setting("controllerFunctionOverrideEnabled", { category: "controllers" })
   static controllerFunctionOverrideEnabled = false;
 
   /** g_controllerShipSpeed (cpp:19, :24): ShipSpeed while overriding. */
-  @meta.setting("controllerShipSpeed")
+  @meta.setting("controllerShipSpeed", { category: "controllers" })
   static controllerShipSpeed = 0;
 
   /** g_controllerShipMaxSpeed (cpp:20, :25): ShipMaxSpeed while overriding. */
-  @meta.setting("controllerShipMaxSpeed")
+  @meta.setting("controllerShipMaxSpeed", { category: "controllers" })
   static controllerShipMaxSpeed = 1;
 
   /**
@@ -36,7 +36,7 @@ export class Tr2ControllerExpression
    * Blue ticks on the runtime epoch, as every Blue time here; Carbon's is
    * absolute FILETIME (see CcpTime.timeToFileTime).
    */
-  @meta.setting("controllerServerTime")
+  @meta.setting("controllerServerTime", { category: "controllers" })
   static controllerServerTime = 0;
 
   /** Compiled JavaScript parser program; not persisted. */

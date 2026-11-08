@@ -350,23 +350,23 @@ export class EveBoosterSet2 extends EveEntity
   }
 
   /** Carbon g_eveSpaceObjectTrailsEnabled (cpp:31-32), a registered engine setting: trails update and draw. */
-  @meta.setting("eveSpaceObjectTrailsEnabled")
+  @meta.setting("eveSpaceObjectTrailsEnabled", { category: "trails" })
   static eveSpaceObjectTrailsEnabled = true;
 
   /** g_eveSpaceObjectTrailsMinLength (cpp:34-35): below this trail length, in metres, a trail is not drawn. */
-  @meta.setting("eveSpaceObjectTrailsMinLength")
+  @meta.setting("eveSpaceObjectTrailsMinLength", { category: "trails" })
   static eveSpaceObjectTrailsMinLength = 200;
 
   /** g_eveSpaceObjectTrailsMinLengthFade (cpp:36-37): the length over which a trail fades in above the minimum. */
-  @meta.setting("eveSpaceObjectTrailsMinLengthFade")
+  @meta.setting("eveSpaceObjectTrailsMinLengthFade", { category: "trails" })
   static eveSpaceObjectTrailsMinLengthFade = 1000;
 
   /** g_eveSpaceObjectTrailsMaxLength (cpp:39-40): above this trail length a trail is not drawn. */
-  @meta.setting("eveSpaceObjectTrailsMaxLength")
+  @meta.setting("eveSpaceObjectTrailsMaxLength", { category: "trails" })
   static eveSpaceObjectTrailsMaxLength = 50000;
 
   /** g_eveSpaceObjectTrailsMaxLengthFade (cpp:41-42): the length over which a trail fades out below the maximum. */
-  @meta.setting("eveSpaceObjectTrailsMaxLengthFade")
+  @meta.setting("eveSpaceObjectTrailsMaxLengthFade", { category: "trails" })
   static eveSpaceObjectTrailsMaxLengthFade = 20000;
 
   /**

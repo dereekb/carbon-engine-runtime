@@ -220,7 +220,7 @@ export class TriTextureRes extends BlueAsyncRes
 
 
   /** Optional DDS worker encoding for subsequent immutable sampled texture loads. */
-  @meta.setting("compressUncompressedTextures", { applies: meta.setting.LOAD })
+  @meta.setting("compressUncompressedTextures", { applies: meta.setting.LOAD, category: "textures" })
   static compressUncompressedTextures = false;
 
   /** Diagnostic for the currently published bitmap's optional load compression. */

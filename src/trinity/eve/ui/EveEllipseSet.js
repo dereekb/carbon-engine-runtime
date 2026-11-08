@@ -980,7 +980,7 @@ export class EveEllipseSet extends EveChildTransform
    * "ellipseRibbonEffectPath"): the effect __init__ creates for a set with
    * none; empty by default, so no effect is created.
    */
-  @meta.setting("ellipseRibbonEffectPath", { applies: meta.setting.CREATE })
+  @meta.setting("ellipseRibbonEffectPath", { applies: meta.setting.CREATE, category: "ui" })
   static ellipseRibbonEffectPath = "";
 
   /** Carbon's anonymous-namespace EllipseVertex (cpp:18-23), the ribbon vertex record. */

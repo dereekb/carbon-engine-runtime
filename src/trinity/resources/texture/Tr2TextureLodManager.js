@@ -77,7 +77,7 @@ export class Tr2TextureLodManager extends IRoot
    *
    * @implemented
    */
-  @meta.setting("textureLodGpuBudget")
+  @meta.setting("textureLodGpuBudget", { category: "textures" })
   static textureLodGpuBudget = 300 * 1024 * 1024;
 
   /**
@@ -86,7 +86,7 @@ export class Tr2TextureLodManager extends IRoot
    *
    * @implemented
    */
-  @meta.setting("textureLodCpuBudget")
+  @meta.setting("textureLodCpuBudget", { category: "textures" })
   static textureLodCpuBudget = 200 * 1024 * 1024;
 
   /**
@@ -95,7 +95,7 @@ export class Tr2TextureLodManager extends IRoot
    *
    * @implemented
    */
-  @meta.setting("textureLodChanges")
+  @meta.setting("textureLodChanges", { category: "textures" })
   static textureLodChanges = 4;
 
   /**
@@ -104,7 +104,7 @@ export class Tr2TextureLodManager extends IRoot
    *
    * @implemented
    */
-  @meta.setting("textureLoadRequests")
+  @meta.setting("textureLoadRequests", { category: "textures" })
   static textureLoadRequests = 2;
 
   /**

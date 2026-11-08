@@ -277,7 +277,7 @@ export class Tr2PrimitiveSet extends IRoot
     }
   }
 
-  @meta.setting("primitiveDistanceScaleMultiplier")
+  @meta.setting("primitiveDistanceScaleMultiplier", { category: "scene detail" })
   static primitiveDistanceScaleMultiplier = 1 / 7;
 
   static scratch = { vec3_0: vec3.create(), vec4_0: vec4.create() };

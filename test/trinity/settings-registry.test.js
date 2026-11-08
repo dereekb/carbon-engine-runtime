@@ -113,11 +113,12 @@ test("only approved extension names are exempt from Carbon setting-name checks",
   assert.equal(webgl2.owner, Tr2PlatformInfo);
   assert.deepEqual(Object.keys(webgl2.enum), [ "OFF", "APPROXIMATION", "WEB_CODEC" ], "each backend offers only its own options");
   assert.deepEqual(Object.keys(webgpu.enum), [ "OFF", "COMPUTE" ]);
-  assert.deepEqual(webgl2.category, [ "webgl2" ], "category is ours, for menus");
-  assert.deepEqual(webgpu.category, [ "webgpu" ]);
+  assert.deepEqual(webgl2.category, [ "video", "webgl2" ], "category is ours, for menus");
+  assert.deepEqual(webgpu.category, [ "video", "webgpu" ]);
   assert.equal(settings.GetValue("webgl2LightAveraging"), webgl2.enum.APPROXIMATION);
   assert.equal(settings.GetValue("webgpuLightAveraging"), webgpu.enum.COMPUTE);
-  assert.equal(settings.FindSetting("newBloom").category, null, "a setting with no category always applies");
+  assert.deepEqual(settings.FindSetting("newBloom").category, [ "post-processing" ]);
+  assert.ok(settings.GetNames().every(name => settings.FindSetting(name).category?.length), "every engine setting has a category");
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);
   assert.equal(settings.GetValue("characterTextureQuality"), "4k");

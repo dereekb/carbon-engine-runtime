@@ -408,7 +408,7 @@ export class CjsPaperDollDefinition
      * controls in client code; Carbon registers no such setting. The setting
      * registry records this non-Carbon name with carbon: false.
      */
-    @meta.setting("characterTextureQuality", { applies: meta.setting.CREATE, values: [ "4k", "2k", "512", "256" ] })
+    @meta.setting("characterTextureQuality", { applies: meta.setting.CREATE, values: [ "4k", "2k", "512", "256" ], category: "characters" })
     static characterTextureQuality = "4k";
 
     /**

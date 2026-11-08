@@ -24,7 +24,7 @@ export class TriPerlinCurve extends ITriScalarFunction
    * "expressionCurveFakeRandom" setting, default false): a deterministic
    * random for expression previews. It is held here, on its only reader.
    */
-  @meta.setting("expressionCurveFakeRandom")
+  @meta.setting("expressionCurveFakeRandom", { category: "controllers" })
   static expressionCurveFakeRandom = false;
 
   /** Reads the shared Carbon TriRand state through the compatibility API. */

@@ -211,14 +211,14 @@ export class Tr2PlatformInfo
      * takes none. APPROXIMATION is the default: its 0.6-level difference is
      * invisible in a light, and WebCodecs costs main-thread spikes.
      */
-    @meta.setting("webgl2LightAveraging", { enum: Webgl2LightAveraging, category: "webgl2" })
+    @meta.setting("webgl2LightAveraging", { enum: Webgl2LightAveraging, category: [ "video", "webgl2" ] })
     static webgl2LightAveraging = Webgl2LightAveraging.APPROXIMATION;
 
     /**
      * Ours: how the WebGPU backend takes a playing video's average colour.
      * COMPUTE is an exact compute reduction of the video texture; OFF takes none.
      */
-    @meta.setting("webgpuLightAveraging", { enum: WebgpuLightAveraging, category: "webgpu" })
+    @meta.setting("webgpuLightAveraging", { enum: WebgpuLightAveraging, category: [ "video", "webgpu" ] })
     static webgpuLightAveraging = WebgpuLightAveraging.COMPUTE;
 
     /**

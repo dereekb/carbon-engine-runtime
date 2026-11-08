@@ -926,7 +926,7 @@ export class EveSpaceObject2 extends EveEntity
    * Scale factor converting hull radius into the secondary-lighting cutoff.
    * @type {number}
    */
-  @meta.setting("secondaryLightingRadiusCutoffFactor")
+  @meta.setting("secondaryLightingRadiusCutoffFactor", { category: "lighting" })
   static secondaryLightingRadiusCutoffFactor = 0.3;
 
   /** Scratch for the per-frame shader-data fill; never allocate in it.

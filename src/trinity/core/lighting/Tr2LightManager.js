@@ -261,7 +261,7 @@ export class Tr2LightManager
    * exercises the ported path (the tests do), and shipping behaviour is
    * unchanged while it stays false.
    */
-  @meta.setting("useDynamicLightsShadows")
+  @meta.setting("useDynamicLightsShadows", { category: "lighting" })
   static useDynamicLightsShadows = false;
 
   /** The atlas-settings derivation, exposed for tests (Carbon cpp:92-122). */

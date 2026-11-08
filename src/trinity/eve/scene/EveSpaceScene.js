@@ -734,7 +734,7 @@ export class EveSpaceScene
   }
 
   /** g_lensflaresInReflections (cpp:115-116): draw lens flares into ULTRA reflections. */
-  @meta.setting("lensflaresInReflections")
+  @meta.setting("lensflaresInReflections", { category: "lighting" })
   static lensflaresInReflections = true;
 
   /** RenderReflectionPass's per-face DepthMap provider and matrices. */
@@ -4914,35 +4914,35 @@ export class EveSpaceScene
 
   /** g_eveSpaceSceneGammaBrightness (TRI_REGISTER_SETTING "eveSpaceSceneGammaBrightness",
    * cpp:102-103): the tonemapper's OutputGamma and the per-frame GammaBrightness. */
-  @meta.setting("eveSpaceSceneGammaBrightness")
+  @meta.setting("eveSpaceSceneGammaBrightness", { category: "lighting" })
   static eveSpaceSceneGammaBrightness = 1;
 
   /** g_eveSpaceSceneDynamicLighting ("eveSpaceSceneDynamicLighting", cpp:109-110): local lights, off as Carbon ships it. */
-  @meta.setting("eveSpaceSceneDynamicLighting")
+  @meta.setting("eveSpaceSceneDynamicLighting", { category: "lighting" })
   static eveSpaceSceneDynamicLighting = false;
 
   /** g_enablePostProcessDebugging ("enablePostProcessDebugging", cpp:118-119): records how the post-process attributes combined. */
-  @meta.setting("enablePostProcessDebugging")
+  @meta.setting("enablePostProcessDebugging", { category: "debugging" })
   static enablePostProcessDebugging = false;
 
   /** g_eveSpaceSceneVisibilityThreshold ("eveSpaceSceneVisibilityThreshold", cpp:75-76), in pixels. */
-  @meta.setting("eveSpaceSceneVisibilityThreshold")
+  @meta.setting("eveSpaceSceneVisibilityThreshold", { category: "scene detail" })
   static eveSpaceSceneVisibilityThreshold = 5;
 
   /** g_eveSpaceSceneLowDetailThreshold ("eveSpaceSceneLowDetailThreshold", cpp:81, 87). */
-  @meta.setting("eveSpaceSceneLowDetailThreshold")
+  @meta.setting("eveSpaceSceneLowDetailThreshold", { category: "scene detail" })
   static eveSpaceSceneLowDetailThreshold = 100;
 
   /** g_eveSpaceSceneMediumDetailThreshold ("eveSpaceSceneMediumDetailThreshold", cpp:82, 88). */
-  @meta.setting("eveSpaceSceneMediumDetailThreshold")
+  @meta.setting("eveSpaceSceneMediumDetailThreshold", { category: "scene detail" })
   static eveSpaceSceneMediumDetailThreshold = 400;
 
   /** g_eveSpaceSceneHighDetailThreshold ("eveSpaceSceneHighDetailThreshold", cpp:83, 89). */
-  @meta.setting("eveSpaceSceneHighDetailThreshold")
+  @meta.setting("eveSpaceSceneHighDetailThreshold", { category: "scene detail" })
   static eveSpaceSceneHighDetailThreshold = 800;
 
   /** g_eveSpaceSceneLODFactor ("eveSpaceSceneLODFactor", cpp:84, 90). */
-  @meta.setting("eveSpaceSceneLODFactor")
+  @meta.setting("eveSpaceSceneLODFactor", { category: "scene detail" })
   static eveSpaceSceneLODFactor = 1;
 
   static ShadowQuality = ShadowQuality;
@@ -5025,5 +5025,5 @@ export class EveSpaceScene
 new TriSettingsRegistrar("eveReflectionSetting", {
   get eveReflectionSetting() { return EntityComponents.getReflectionSetting(); },
   set eveReflectionSetting(value) { EntityComponents.setReflectionSetting(value); }
-}, "eveReflectionSetting", { enum: ReflectionSetting, carbon: true });
+}, "eveReflectionSetting", { enum: ReflectionSetting, carbon: true, category: [ "lighting" ] });
 

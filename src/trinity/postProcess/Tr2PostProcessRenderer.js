@@ -1665,7 +1665,7 @@ export class Tr2PostProcessRenderer extends IRoot
 
 
   /** g_newBloom ("newBloom", cpp:23-24): the bloom a new renderer starts with. */
-  @meta.setting("newBloom", { applies: meta.setting.CREATE })
+  @meta.setting("newBloom", { applies: meta.setting.CREATE, category: "post-processing" })
   static newBloom = true;
 
   // CARBON'S ANONYMOUS-NAMESPACE HELPERS (cpp:31-150, 301-509).

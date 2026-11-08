@@ -49,7 +49,7 @@ export class Tr2RenderContext
    * it with shipped float-output effects produces an expected pipeline mismatch.
    * The setting registry records this non-Carbon name with carbon: false.
    */
-  @meta.setting("eveSpacePickingFramework", { values: ["objectId", "pointer"] })
+  @meta.setting("eveSpacePickingFramework", { values: ["objectId", "pointer"], category: "picking" })
   static eveSpacePickingFramework = "objectId";
 
   _diagnostics = [];

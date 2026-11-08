@@ -489,7 +489,7 @@ export class TriFrustum
 
   /** g_frustumCullingDisabled (TRI_REGISTER_SETTING "frustumCullingDisabled",
    * cpp:9-10) - debug escape hatch that forces every sphere test to pass. */
-  @meta.setting("frustumCullingDisabled")
+  @meta.setting("frustumCullingDisabled", { category: "debugging" })
   static frustumCullingDisabled = false;
 
   static #boxCenterScratch = vec3.create();

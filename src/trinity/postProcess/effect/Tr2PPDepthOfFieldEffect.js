@@ -93,7 +93,7 @@ export class Tr2PPDepthOfFieldEffect extends Tr2PPEffect
    * the `postprocessDofEnabled` setting: depth of field for every post process.
    * Off, as in Carbon; the client turns it on.
    */
-  @meta.setting("postprocessDofEnabled")
+  @meta.setting("postprocessDofEnabled", { category: "post-processing" })
   static postprocessDofEnabled = false;
 
   /**
@@ -106,7 +106,7 @@ export class Tr2PPDepthOfFieldEffect extends Tr2PPEffect
    *
    * @cjs
    */
-  @meta.setting("postprocessDofCarryForegroundBlur")
+  @meta.setting("postprocessDofCarryForegroundBlur", { category: "post-processing" })
   static postprocessDofCarryForegroundBlur = false;
 
   static Shape = { Disk: 0, Triangle: 1, Rectangle: 2, Pentagon: 3, Hexagon: 4, Heart: 5 };

@@ -1632,7 +1632,7 @@ export class Tr2ParticleSystem
    * Carbon s_maxParticleCount (cpp:20-21), the "cpuMaxParticleCount"
    * setting: the global capacity above which dynamic systems get no buffers.
    */
-  @meta.setting("cpuMaxParticleCount")
+  @meta.setting("cpuMaxParticleCount", { category: "particles" })
   static cpuMaxParticleCount = 1024 * 512;
 
   /** Carbon Tr2ParticleSystem::RandCheap (Tr2ParticleSystem.h:145). */
