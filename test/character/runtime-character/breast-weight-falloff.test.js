@@ -187,3 +187,24 @@ test("a character's CMF mesh is reweighted in its channels, uploaded packed, and
   assert.deepEqual(geometry.mesh.vertex.blendWeight, before.weights);
   assert.deepEqual(geometry.mesh.vertex.blendIndice, before.indices);
 });
+
+test("the falloff follows its radius settings", t =>
+{
+  const settings = CjsPaperDollDefinition;
+  t.after(() => { settings.characterBreastWeightFalloffInner = 0.05; settings.characterBreastWeightFalloffOuter = 0.12; });
+  const collarbone = () => grannyMesh([ "LeftLung", "Spine3" ], [ [ [ 0.08, 1.46, 0.11 ], [ [ "LeftLung", 51 ], [ "Spine3", 204 ] ] ] ]);
+  const centres = new Map([ [ "LeftLung", Float64Array.from(CENTRE) ] ]);
+
+  assert.equal(settings.characterBreastWeightFalloffInner, 0.05);
+  assert.equal(settings.characterBreastWeightFalloffOuter, 0.12);
+  settings.characterBreastWeightFalloffInner = 0.2;
+  settings.characterBreastWeightFalloffOuter = 0.3;
+  const kept = collarbone();
+  assert.equal(CjsBreastWeightFalloff.reweight(setsOf([ kept ])[0], centres), false, "0.17 m is within a 0.2 m inner radius");
+
+  settings.characterBreastWeightFalloffInner = 0.05;
+  settings.characterBreastWeightFalloffOuter = 0.05;
+  const cut = collarbone();
+  CjsBreastWeightFalloff.reweight(setsOf([ cut ])[0], centres);
+  assert.deepEqual(influences(cut, 0), { Spine3: 255 }, "an outer radius at the inner one is a hard edge");
+});

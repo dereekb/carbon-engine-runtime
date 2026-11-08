@@ -2,6 +2,7 @@
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../trinity/core/context/Tr2RenderContext.js";
 import { TriGeometryRes } from "../../trinity/resources/geometry/TriGeometryRes.js";
 import { GrannyGetTotalTypeSize } from "../../trinity/utilities/geometryUtils.js";
+import { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
 
 /**
  * Localises breast motion by moving skin weight off the chest joints, in memory.
@@ -12,7 +13,9 @@ import { GrannyGetTotalTypeSize } from "../../trinity/utilities/geometryUtils.js
  * those joints therefore moves the whole patch. This pass scales each
  * vertex's lung weight by a smooth falloff from that side's breast centre
  * and gives the rest to `Spine3`, which the lung joints hang from. Inside
- * `innerRadius` the weight is kept whole; beyond `outerRadius` it is gone.
+ * the inner radius the weight is kept whole; beyond the outer radius it is gone
+ * (`characterBreastWeightFalloffInner` and `characterBreastWeightFalloffOuter`,
+ * 5 cm and 12 cm by default).
  *
  * It works on the vertices of every mesh bound to a lung joint, the body's
  * and any garment's, before or after their first upload: a CMF mesh's
@@ -31,12 +34,6 @@ import { GrannyGetTotalTypeSize } from "../../trinity/utilities/geometryUtils.js
 export class CjsBreastWeightFalloff
 {
   static className = "CjsBreastWeightFalloff";
-
-  /** Distance from a breast centre, in metres, inside which a vertex keeps its whole lung weight. */
-  static innerRadius = 0.05;
-
-  /** Distance from a breast centre, in metres, beyond which a vertex keeps no lung weight. */
-  static outerRadius = 0.12;
 
   /** The joints whose weight falls off, and the joint that takes what they lose. */
   static joints = Object.freeze([ "LeftLung", "RightLung" ]);
@@ -151,7 +148,9 @@ export class CjsBreastWeightFalloff
   static reweight(set, centres)
   {
     const target = set.bindings.indexOf(CjsBreastWeightFalloff.target);
-    const { innerRadius, outerRadius } = CjsBreastWeightFalloff;
+    const innerRadius = CjsPaperDollDefinition.characterBreastWeightFalloffInner;
+    // An outer radius at or inside the inner one is a hard edge at the inner radius.
+    const outerRadius = Math.max(CjsPaperDollDefinition.characterBreastWeightFalloffOuter, innerRadius + 1e-6);
     let moved = false;
     for (let vertex = 0; vertex < set.count; vertex++)
     {

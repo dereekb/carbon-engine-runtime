@@ -424,6 +424,22 @@ export class CjsPaperDollDefinition
     static characterBreastWeightFalloff = false;
 
     /**
+     * Ours: the breast weight falloff's inner radius, in metres. A vertex within
+     * it of its breast centre keeps its whole lung weight. Read when the
+     * falloff is applied; a change applies it again (CjsBreastWeightFalloff).
+     */
+    @meta.setting("characterBreastWeightFalloffInner", { applies: meta.setting.ALWAYS, category: "characters" })
+    static characterBreastWeightFalloffInner = 0.05;
+
+    /**
+     * Ours: the breast weight falloff's outer radius, in metres. A vertex beyond
+     * it of its breast centre keeps no lung weight. Read when the falloff is
+     * applied; a change applies it again (CjsBreastWeightFalloff).
+     */
+    @meta.setting("characterBreastWeightFalloffOuter", { applies: meta.setting.ALWAYS, category: "characters" })
+    static characterBreastWeightFalloffOuter = 0.12;
+
+    /**
      * A `.png` map path's stem and tier suffix: `.../colorize_body_l_4k.png` gives
      * `.../colorize_body_l` and `_4k`; an unsuffixed file gives an empty suffix.
      * Ours, with the tiers of `characterTextureQuality` (non-carbon-extensions.md
