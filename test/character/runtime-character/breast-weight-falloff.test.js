@@ -54,6 +54,40 @@ function geometryOf(meshes)
 
 const CENTRE = [ 0.08, 1.29, 0.11 ];
 
+/** The vertex sets of Granny meshes, as the pass reads them. */
+function setsOf(meshes)
+{
+  return CjsBreastWeightFalloff.vertexSets(geometryOf(meshes));
+}
+
+/** A loaded CMF geometry in a character's layout: Float32 positions and weights, UInt16 indices, one LOD on the GPU. */
+function cmfGeometryOf(bindings, vertices)
+{
+  const vertex = { position: [], blendWeight: [], blendIndice: [] };
+  for (const [ position, influences ] of vertices)
+  {
+    vertex.position.push(...position);
+    for (let slot = 0; slot < 4; slot++)
+    {
+      vertex.blendWeight.push(influences[slot] ? influences[slot][1] : 0);
+      vertex.blendIndice.push(influences[slot] ? bindings.indexOf(influences[slot][0]) : 0);
+    }
+  }
+  const mesh = {
+    decl: [ { usage: "Position", usageIndex: 0, type: "Float32", elementCount: 3, offset: 0 },
+      { usage: "BoneIndices", usageIndex: 0, type: "UInt16", elementCount: 4, offset: 12 },
+      { usage: "BoneWeights", usageIndex: 0, type: "Float32", elementCount: 4, offset: 20 } ],
+    boneBindings: bindings.map(name => ({ name })), vertex, lods: [ {} ]
+  };
+  const uploads = [];
+  const lod = { originalLodIndex: 0, allocationsValid: true, vertexAllocation: { Update: bytes => uploads.push(bytes.slice()) } };
+  return {
+    mesh, uploads,
+    IsGood: () => true, IsUsingCMF: () => true, GetCMFData: () => ({ meshes: [ mesh ] }),
+    GetMeshCount: () => 1, GetMeshLod__LodIndex: (meshIndex, lodIndex) => (lodIndex === 0 ? lod : null)
+  };
+}
+
 test("the falloff is off by default", () =>
 {
   assert.equal(CjsPaperDollDefinition.characterBreastWeightFalloff, false);
@@ -66,7 +100,7 @@ test("each breast centre is its joint's weighted centroid, the weight squared", 
     [ [ 0.0, 1.5, 0.0 ], [ [ "LeftLung", 51 ], [ "Spine3", 204 ] ] ],
     [ [ -0.1, 1.3, 0.1 ], [ [ "RightLung", 255 ] ] ]
   ]);
-  const centres = CjsBreastWeightFalloff.centres([ mesh ]);
+  const centres = CjsBreastWeightFalloff.centres(setsOf([ mesh ]));
   // A 0.2 weight counts 0.04 against the full vertex's 1.
   const expected = [ 0.1 / 1.04, (1.3 + 1.5 * 0.04) / 1.04, 0.1 / 1.04 ];
   centres.get("LeftLung").forEach((value, axis) => assert.ok(Math.abs(value - expected[axis]) < 1e-6));
@@ -82,7 +116,7 @@ test("lung weight is kept near the centre and moves onto Spine3 away from it, ea
     // Halfway through the falloff, with no Spine3 slot: the free slot takes Spine3.
     [ [ 0.08, 1.29 + 0.085, 0.11 ], [ [ "LeftLung", 200 ], [ "LeftShoulder", 55 ] ] ]
   ]);
-  assert.equal(CjsBreastWeightFalloff.reweight(mesh, new Map([ [ "LeftLung", Float64Array.from(CENTRE) ] ])), true);
+  assert.equal(CjsBreastWeightFalloff.reweight(setsOf([ mesh ])[0], new Map([ [ "LeftLung", Float64Array.from(CENTRE) ] ])), true);
 
   assert.deepEqual(influences(mesh, 0), { LeftLung: 102, Spine3: 153 });
   assert.deepEqual(influences(mesh, 1), { Spine3: 204, LeftShoulder: 51 });
@@ -94,7 +128,7 @@ test("a mesh without Spine3 gives the lost weight to its largest other influence
   const mesh = grannyMesh([ "LeftLung", "Spine2", "LeftShoulder" ], [
     [ [ 0.08, 1.46, 0.11 ], [ [ "LeftLung", 55 ], [ "Spine2", 150 ], [ "LeftShoulder", 50 ] ] ]
   ]);
-  CjsBreastWeightFalloff.reweight(mesh, new Map([ [ "LeftLung", Float64Array.from(CENTRE) ] ]));
+  CjsBreastWeightFalloff.reweight(setsOf([ mesh ])[0], new Map([ [ "LeftLung", Float64Array.from(CENTRE) ] ]));
   assert.deepEqual(influences(mesh, 0), { Spine2: 205, LeftShoulder: 50 });
 });
 
@@ -130,4 +164,26 @@ test("objects share a geometry once, and a mesh without geometry is skipped", ()
   assert.equal(CjsBreastWeightFalloff.applyToObjects(objects, true), 1);
   assert.equal(geometry.uploads.length, 1);
   CjsBreastWeightFalloff.applyToObjects(objects, false);
+});
+
+test("a character's CMF mesh is reweighted in its channels, uploaded packed, and restored", () =>
+{
+  const geometry = cmfGeometryOf([ "LeftLung", "Spine3" ], [
+    [ CENTRE, [ [ "LeftLung", 1 ] ] ], [ CENTRE, [ [ "LeftLung", 1 ] ] ], [ CENTRE, [ [ "LeftLung", 1 ] ] ],
+    [ [ 0.08, 1.46, 0.11 ], [ [ "LeftLung", 0.2 ], [ "Spine3", 0.8 ] ] ]
+  ]);
+  const before = { weights: geometry.mesh.vertex.blendWeight.slice(), indices: geometry.mesh.vertex.blendIndice.slice() };
+
+  assert.equal(CjsBreastWeightFalloff.applyToGeometry(geometry, true), 1);
+  const { blendWeight: weights } = geometry.mesh.vertex;
+  assert.deepEqual(weights.slice(0, 4), [ 1, 0, 0, 0 ], "the breast keeps its weight");
+  assert.ok(Math.abs(weights[12]) < 1e-9 && Math.abs(weights[13] - 1) < 1e-9, "the collarbone's lung weight is now Spine3's");
+  assert.equal(geometry.uploads.length, 1);
+  // The fourth vertex's BoneWeights, packed at offset 20 of a 36-byte vertex.
+  const view = new DataView(geometry.uploads[0].buffer, geometry.uploads[0].byteOffset);
+  assert.ok(Math.abs(view.getFloat32(3 * 36 + 20, true)) < 1e-6 && Math.abs(view.getFloat32(3 * 36 + 24, true) - 1) < 1e-6);
+
+  assert.equal(CjsBreastWeightFalloff.applyToGeometry(geometry, false), 1);
+  assert.deepEqual(geometry.mesh.vertex.blendWeight, before.weights);
+  assert.deepEqual(geometry.mesh.vertex.blendIndice, before.indices);
 });

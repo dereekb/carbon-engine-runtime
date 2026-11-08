@@ -14,16 +14,17 @@ import { GrannyGetTotalTypeSize } from "../../trinity/utilities/geometryUtils.js
  * and gives the rest to `Spine3`, which the lung joints hang from. Inside
  * `innerRadius` the weight is kept whole; beyond `outerRadius` it is gone.
  *
- * It works on the decoded Granny vertices of every mesh bound to a lung
- * joint, the body's and any garment's, before or after their first upload.
- * Files are untouched: the original bytes are kept, and turning the pass off
- * writes them back. Each breast centre is the weighted centroid of its
- * joint's influence across the geometry, in bind pose, with the weight
+ * It works on the vertices of every mesh bound to a lung joint, the body's
+ * and any garment's, before or after their first upload: a CMF mesh's
+ * channels (how character geometry is built) or a Granny mesh's bytes. Files
+ * are untouched: the original weights and indices are kept, and turning the
+ * pass off writes them back. Each breast centre is the weighted centroid of
+ * its joint's influence across the geometry, in bind pose, with the weight
  * squared so the breast outweighs the fringe.
  *
  * Whether it runs is `CjsPaperDollDefinition.characterBreastWeightFalloff`,
  * off by default. Geometry resources are shared, so the pass applies to every
- * character drawing the same file.
+ * character drawing the same geometry.
  *
  * Not Carbon's: non-carbon-extensions.md § Breast weight falloff.
  */
@@ -41,7 +42,7 @@ export class CjsBreastWeightFalloff
   static joints = Object.freeze([ "LeftLung", "RightLung" ]);
   static target = "Spine3";
 
-  /** Each Granny vertex block's original bytes, while the pass holds it changed. */
+  /** Each vertex set's original weights and indices, by the object holding its data, while the pass holds it changed. */
   static _originals = new WeakMap();
 
   /**
@@ -49,7 +50,7 @@ export class CjsBreastWeightFalloff
    *
    * @param {Iterable<object>} objects Skinned objects with a `visualModel`.
    * @param {boolean} enabled Whether the weights fall off (true) or are the files' own (false).
-   * @returns {number} How many Granny meshes changed.
+   * @returns {number} How many vertex sets changed.
    */
   static applyToObjects(objects, enabled)
   {
@@ -69,71 +70,65 @@ export class CjsBreastWeightFalloff
   }
 
   /**
-   * Applies or removes the pass on one geometry's Granny meshes, and uploads
-   * any LOD already on the GPU again.
+   * Applies or removes the pass on one geometry's vertex sets, and uploads any
+   * LOD already on the GPU again.
    *
    * @param {TriGeometryRes} geometry A loaded geometry.
    * @param {boolean} enabled Whether the weights fall off.
-   * @returns {number} How many Granny meshes changed.
+   * @returns {number} How many vertex sets changed.
    */
   static applyToGeometry(geometry, enabled)
   {
-    if (!geometry.IsGood() || geometry.IsUsingCMF()) return 0;
-    const meshes = geometry.GetGrannyInfo()?.Meshes ?? [];
-    const centres = enabled ? CjsBreastWeightFalloff.centres(meshes) : null;
-    const changedMeshes = new Set();
-    for (let index = 0; index < meshes.length; index++)
+    if (!geometry.IsGood()) return 0;
+    const sets = CjsBreastWeightFalloff.vertexSets(geometry);
+    const centres = enabled ? CjsBreastWeightFalloff.centres(sets) : null;
+    let changed = 0;
+    for (const set of sets)
     {
-      const vertices = meshes[index].PrimaryVertexData?.Vertices;
-      if (!vertices) continue;
-      const original = CjsBreastWeightFalloff._originals.get(vertices);
+      const original = CjsBreastWeightFalloff._originals.get(set.key);
       if (!enabled)
       {
         if (!original) continue;
-        vertices.bytes.set(original);
-        CjsBreastWeightFalloff._originals.delete(vertices);
-        changedMeshes.add(index);
-        continue;
+        set.restore(original);
+        CjsBreastWeightFalloff._originals.delete(set.key);
       }
-      if (original) continue;
-      const copy = vertices.bytes.slice();
-      if (CjsBreastWeightFalloff.reweight(meshes[index], centres))
+      else
       {
-        CjsBreastWeightFalloff._originals.set(vertices, copy);
-        changedMeshes.add(index);
+        if (original) continue;
+        const copy = set.snapshot();
+        if (!CjsBreastWeightFalloff.reweight(set, centres)) continue;
+        CjsBreastWeightFalloff._originals.set(set.key, copy);
       }
+      set.changed = true;
+      changed++;
     }
-    if (changedMeshes.size) CjsBreastWeightFalloff._Upload(geometry, meshes, changedMeshes);
-    return changedMeshes.size;
+    if (changed) CjsBreastWeightFalloff._Upload(geometry, sets);
+    return changed;
   }
 
   /**
-   * Each lung joint's breast centre across a geometry's meshes: the centroid
-   * of the positions it weights, each weighted by its weight squared.
+   * Each lung joint's breast centre across vertex sets: the centroid of the
+   * positions it weights, each weighted by its weight squared.
    *
-   * @param {object[]} meshes Granny meshes.
+   * @param {object[]} sets From `vertexSets`.
    * @returns {Map<string, Float64Array>} Centre by joint name, for joints that weight anything.
    */
-  static centres(meshes)
+  static centres(sets)
   {
     const sums = new Map();
-    for (const mesh of meshes)
+    for (const set of sets)
     {
-      const layout = CjsBreastWeightFalloff.layout(mesh);
-      if (!layout) continue;
-      const { view, stride, count, position, weights, indices, bindings } = layout;
-      for (let vertex = 0; vertex < count; vertex++)
+      for (let vertex = 0; vertex < set.count; vertex++)
       {
-        const base = vertex * stride;
         for (let slot = 0; slot < 4; slot++)
         {
-          const name = bindings[view.getUint8(base + indices + slot)];
+          const name = set.bindings[set.getIndex(vertex, slot)];
           if (!CjsBreastWeightFalloff.joints.includes(name)) continue;
-          const weight = view.getUint8(base + weights + slot) / 255;
+          const weight = set.getWeight(vertex, slot) / set.unit;
           if (!weight) continue;
           const w2 = weight * weight;
           const sum = sums.get(name) ?? sums.set(name, new Float64Array(4)).get(name);
-          for (let axis = 0; axis < 3; axis++) sum[axis] += view.getFloat32(base + position + axis * 4, true) * w2;
+          for (let axis = 0; axis < 3; axis++) sum[axis] += set.position(vertex, axis) * w2;
           sum[3] += w2;
         }
       }
@@ -144,46 +139,43 @@ export class CjsBreastWeightFalloff
   }
 
   /**
-   * Moves one mesh's lung weight onto the target joint by the falloff, in
-   * place. A vertex keeps four influences summing to 255: the lost weight goes
+   * Moves a vertex set's lung weight onto the target joint by the falloff, in
+   * place. A vertex keeps four influences and its total: the lost weight goes
    * to the vertex's target slot, else an empty slot given the target joint,
-   * else, when the mesh does not bind the target, its largest other influence.
+   * else, when the set does not bind the target, its largest other influence.
    *
-   * @param {object} mesh A Granny mesh.
+   * @param {object} set From `vertexSets`.
    * @param {Map<string, Float64Array>} centres From `centres`.
    * @returns {boolean} Whether any weight moved.
    */
-  static reweight(mesh, centres)
+  static reweight(set, centres)
   {
-    const layout = CjsBreastWeightFalloff.layout(mesh);
-    if (!layout) return false;
-    const { view, stride, count, position, weights, indices, bindings } = layout;
-    const target = bindings.indexOf(CjsBreastWeightFalloff.target);
+    const target = set.bindings.indexOf(CjsBreastWeightFalloff.target);
     const { innerRadius, outerRadius } = CjsBreastWeightFalloff;
     let moved = false;
-    for (let vertex = 0; vertex < count; vertex++)
+    for (let vertex = 0; vertex < set.count; vertex++)
     {
-      const base = vertex * stride;
       for (let slot = 0; slot < 4; slot++)
       {
-        const centre = centres.get(bindings[view.getUint8(base + indices + slot)]);
-        const weight = view.getUint8(base + weights + slot);
+        const centre = centres.get(set.bindings[set.getIndex(vertex, slot)]);
+        const weight = set.getWeight(vertex, slot);
         if (!centre || !weight) continue;
         let squared = 0;
         for (let axis = 0; axis < 3; axis++)
         {
-          const d = view.getFloat32(base + position + axis * 4, true) - centre[axis];
+          const d = set.position(vertex, axis) - centre[axis];
           squared += d * d;
         }
         const t = Math.min(Math.max((Math.sqrt(squared) - innerRadius) / (outerRadius - innerRadius), 0), 1);
-        const kept = Math.round(weight * (1 - t * t * (3 - 2 * t)));
+        const scaled = weight * (1 - t * t * (3 - 2 * t));
+        const kept = set.unit === 1 ? scaled : Math.round(scaled);
         const lost = weight - kept;
         if (!lost) continue;
-        const into = CjsBreastWeightFalloff._Receiver(view, base, weights, indices, slot, target);
+        const into = CjsBreastWeightFalloff._Receiver(set, vertex, slot, target);
         if (into < 0) continue;
-        view.setUint8(base + weights + slot, kept);
-        if (target >= 0 && view.getUint8(base + weights + into) === 0) view.setUint8(base + indices + into, target);
-        view.setUint8(base + weights + into, view.getUint8(base + weights + into) + lost);
+        set.setWeight(vertex, slot, kept);
+        if (target >= 0 && set.getWeight(vertex, into) === 0) set.setIndex(vertex, into, target);
+        set.setWeight(vertex, into, set.getWeight(vertex, into) + lost);
         moved = true;
       }
     }
@@ -193,44 +185,107 @@ export class CjsBreastWeightFalloff
   /**
    * The slot that takes a vertex's lost lung weight, or -1 for none.
    *
-   * @param {DataView} view Vertex bytes.
-   * @param {number} base The vertex's byte offset.
-   * @param {number} weights BoneWeights' offset in a vertex.
-   * @param {number} indices BoneIndices' offset in a vertex.
+   * @param {object} set From `vertexSets`.
+   * @param {number} vertex The vertex.
    * @param {number} from The losing slot.
    * @param {number} target The target joint's binding index, or -1.
    * @returns {number} The receiving slot.
    */
-  static _Receiver(view, base, weights, indices, from, target)
+  static _Receiver(set, vertex, from, target)
   {
     if (target >= 0)
     {
       for (let slot = 0; slot < 4; slot++)
-        if (slot !== from && view.getUint8(base + weights + slot) && view.getUint8(base + indices + slot) === target) return slot;
-      for (let slot = 0; slot < 4; slot++) if (slot !== from && view.getUint8(base + weights + slot) === 0) return slot;
+        if (slot !== from && set.getWeight(vertex, slot) && set.getIndex(vertex, slot) === target) return slot;
+      for (let slot = 0; slot < 4; slot++) if (slot !== from && set.getWeight(vertex, slot) === 0) return slot;
     }
     let largest = -1;
     for (let slot = 0; slot < 4; slot++)
     {
       if (slot === from) continue;
-      const weight = view.getUint8(base + weights + slot);
-      if (weight && (largest < 0 || weight > view.getUint8(base + weights + largest))) largest = slot;
+      const weight = set.getWeight(vertex, slot);
+      if (weight && (largest < 0 || weight > set.getWeight(vertex, largest))) largest = slot;
     }
     return largest;
   }
 
   /**
-   * Where a Granny mesh keeps what the pass reads: Real32 positions, four
-   * NormalUInt8 weights and four UInt8 binding indices. Null for any other
-   * layout, or a mesh not bound to a lung joint.
+   * A geometry's vertex sets bound to a lung joint: one per CMF mesh LOD that
+   * holds its own channels (else one for the mesh's), or one per Granny mesh.
+   * Each gives positions, four weights and four binding indices per vertex,
+   * the binding names, the weight unit (1 for CMF's floats, 255 for Granny's
+   * normalised bytes), and how to snapshot and restore its weights.
+   *
+   * @param {TriGeometryRes} geometry The geometry.
+   * @returns {object[]} The vertex sets.
+   */
+  static vertexSets(geometry)
+  {
+    const sets = [];
+    const bound = bindings => CjsBreastWeightFalloff.joints.some(name => bindings.includes(name));
+    if (geometry.IsUsingCMF())
+    {
+      for (const [ meshIndex, mesh ] of (geometry.GetCMFData()?.meshes ?? []).entries())
+      {
+        const bindings = (mesh.boneBindings ?? []).map(binding => binding.name);
+        if (!bound(bindings)) continue;
+        const holders = new Set([ ...(mesh.lods ?? []).map(lod => lod.vertex).filter(Boolean) ]);
+        if (!holders.size || (mesh.lods ?? []).some(lod => !lod.vertex)) holders.add(mesh.vertex);
+        for (const channels of holders)
+        {
+          const set = CjsBreastWeightFalloff._CmfSet(channels, bindings, meshIndex);
+          if (set) sets.push(set);
+        }
+      }
+      return sets;
+    }
+    for (const [ meshIndex, mesh ] of (geometry.GetGrannyInfo()?.Meshes ?? []).entries())
+    {
+      const bindings = (mesh.BoneBindings ?? []).map(binding => binding.BoneName);
+      if (!bound(bindings)) continue;
+      const set = CjsBreastWeightFalloff._GrannySet(mesh, bindings, meshIndex);
+      if (set) sets.push(set);
+    }
+    return sets;
+  }
+
+  /**
+   * A CMF channel set's accessor, or null without positions, four weights and four indices.
+   *
+   * @param {object} channels The `vertex` channels: `position`, `blendWeight`, `blendIndice`.
+   * @param {string[]} bindings Bone binding names.
+   * @param {number} meshIndex The CMF mesh.
+   * @returns {object|null} The vertex set.
+   */
+  static _CmfSet(channels, bindings, meshIndex)
+  {
+    const { position, blendWeight: weights, blendIndice: indices } = channels ?? {};
+    if (!position || !weights || !indices) return null;
+    const count = position.length / 3;
+    if (weights.length !== count * 4 || indices.length !== count * 4) return null;
+    return {
+      key: channels, kind: "cmf", meshIndex, bindings, count, unit: 1, changed: false,
+      position: (vertex, axis) => position[vertex * 3 + axis],
+      getWeight: (vertex, slot) => weights[vertex * 4 + slot],
+      setWeight: (vertex, slot, value) => { weights[vertex * 4 + slot] = value; },
+      getIndex: (vertex, slot) => indices[vertex * 4 + slot],
+      setIndex: (vertex, slot, value) => { indices[vertex * 4 + slot] = value; },
+      snapshot: () => ({ weights: Array.from(weights), indices: Array.from(indices) }),
+      restore: ({ weights: w, indices: i }) => { for (let k = 0; k < w.length; k++) { weights[k] = w[k]; indices[k] = i[k]; } }
+    };
+  }
+
+  /**
+   * A Granny mesh's accessor over its interleaved bytes, or null unless it
+   * holds Real32 positions, four NormalUInt8 weights and four UInt8 indices.
    *
    * @param {object} mesh A Granny mesh.
-   * @returns {object|null} The view, stride, count, member offsets and binding names.
+   * @param {string[]} bindings Bone binding names.
+   * @param {number} meshIndex The Granny mesh.
+   * @returns {object|null} The vertex set.
    */
-  static layout(mesh)
+  static _GrannySet(mesh, bindings, meshIndex)
   {
-    const bindings = (mesh.BoneBindings ?? []).map(binding => binding.BoneName);
-    if (!CjsBreastWeightFalloff.joints.some(name => bindings.includes(name))) return null;
     const vertices = mesh.PrimaryVertexData?.Vertices;
     if (!vertices?.bytes) return null;
     const offsets = {};
@@ -240,39 +295,61 @@ export class CjsBreastWeightFalloff
       offsets[member.name] = { offset, type: member.type, width: member.arrayWidth };
       offset += GrannyGetTotalTypeSize(member);
     }
-    const { Position: position, BoneWeights: weights, BoneIndices: indices } = offsets;
-    if (!position || position.type !== GRANNY_REAL32 || position.width !== 3) return null;
-    if (!weights || weights.type !== GRANNY_NORMAL_UINT8 || weights.width !== 4) return null;
-    if (!indices || indices.type !== GRANNY_UINT8 || indices.width !== 4) return null;
-    const bytes = vertices.bytes;
+    const { Position: p, BoneWeights: w, BoneIndices: i } = offsets;
+    if (!p || p.type !== GRANNY_REAL32 || p.width !== 3) return null;
+    if (!w || w.type !== GRANNY_NORMAL_UINT8 || w.width !== 4) return null;
+    if (!i || i.type !== GRANNY_UINT8 || i.width !== 4) return null;
+    const bytes = vertices.bytes, stride = vertices.stride;
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     return {
-      view: new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), stride: vertices.stride, count: vertices.count,
-      position: position.offset, weights: weights.offset, indices: indices.offset, bindings
+      key: vertices, kind: "granny", meshIndex, bindings, count: vertices.count, unit: 255, changed: false,
+      position: (vertex, axis) => view.getFloat32(vertex * stride + p.offset + axis * 4, true),
+      getWeight: (vertex, slot) => bytes[vertex * stride + w.offset + slot],
+      setWeight: (vertex, slot, value) => { bytes[vertex * stride + w.offset + slot] = value; },
+      getIndex: (vertex, slot) => bytes[vertex * stride + i.offset + slot],
+      setIndex: (vertex, slot, value) => { bytes[vertex * stride + i.offset + slot] = value; },
+      snapshot: () => bytes.slice(),
+      restore: original => bytes.set(original)
     };
   }
 
   /**
-   * Uploads each changed Granny mesh again to the LODs already built from it.
-   * A LOD not yet on the GPU takes the changed bytes at its first draw.
+   * Uploads each changed mesh again to the LODs already built from it, packed
+   * as their first upload was (TriGeometryResAllocations). A LOD not yet on
+   * the GPU takes the changed data at its first draw.
    *
    * @param {TriGeometryRes} geometry The geometry.
-   * @param {object[]} meshes Its Granny meshes.
-   * @param {Set<number>} changed Indices of the changed Granny meshes.
+   * @param {object[]} sets Its vertex sets, `changed` marking those to upload.
    * @returns {void}
    */
-  static _Upload(geometry, meshes, changed)
+  static _Upload(geometry, sets)
   {
     const context = Tr2RenderContext_GetMainThreadRenderContext();
+    const changed = new Set(sets.filter(set => set.changed).map(set => set.meshIndex));
+    const cmf = geometry.IsUsingCMF();
+    const cmfMeshes = cmf ? geometry.GetCMFData()?.meshes ?? [] : null;
+    const grannyMeshes = cmf ? null : geometry.GetGrannyInfo()?.Meshes ?? [];
     for (let meshIndex = 0; meshIndex < geometry.GetMeshCount(); meshIndex++)
     {
       for (let lodIndex = 0; ; lodIndex++)
       {
         const lod = geometry.GetMeshLod__LodIndex(meshIndex, lodIndex);
         if (!lod) break;
-        if (!lod.allocationsValid || !changed.has(lod.grannyMeshIndex)) continue;
-        const vertices = meshes[lod.grannyMeshIndex].PrimaryVertexData.Vertices;
-        const packed = TriGeometryRes.alignStride({ bytes: vertices.bytes, stride: vertices.stride, count: vertices.count });
-        lod.vertexAllocation.Update(packed.bytes, context);
+        if (!lod.allocationsValid) continue;
+        if (cmf)
+        {
+          if (!changed.has(meshIndex)) continue;
+          const mesh = cmfMeshes[meshIndex];
+          const packed = TriGeometryRes.packLodGeometry(mesh, mesh.lods?.length ? lod.originalLodIndex : 0);
+          lod.vertexAllocation.Update(packed.vertex.bytes, context);
+        }
+        else
+        {
+          if (!changed.has(lod.grannyMeshIndex)) continue;
+          const vertices = grannyMeshes[lod.grannyMeshIndex].PrimaryVertexData.Vertices;
+          const packed = TriGeometryRes.alignStride({ bytes: vertices.bytes, stride: vertices.stride, count: vertices.count });
+          lod.vertexAllocation.Update(packed.bytes, context);
+        }
       }
     }
   }
