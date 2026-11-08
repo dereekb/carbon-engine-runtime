@@ -4271,11 +4271,16 @@ export class EveSOF extends IRoot
             // Hull lights emit Carbon's Blue rows, which map into the light's
             // embedded LightData m_lightData (Tr2PointLight_Blue.cpp:18-34);
             // the light's accessors write them into that record. The packed-set
-            // light items above emit their structs' nested lightData. startTime
-            // carries the injected buildTime, matching Carbon's
-            // GetCurrentTime() stamp at build.
+            // light items above emit their structs' nested lightData.
+            // @adapted startTime, type and isDynamic are not in any light's exposure
+            //   (Tr2Light_Blue.cpp maps none, and the point and spot tables end without a
+            //   chain), so the values leave them to construction, as Carbon's do:
+            //   Tr2Light.cpp:89 stamps startTime from the frame time, and each class's
+            //   constructor sets type and isDynamic (Tr2PointLight.cpp:11,
+            //   Tr2SpotLight.cpp:13, Tr2TexturedPointLight.cpp:12-13). SOF builds values,
+            //   not lights, so a caller wanting the deterministic buildTime sets startTime
+            //   on each light after constructing.
             const lightFields = {
-              startTime: this.buildTime,
               flags: Number(item.flags ?? 1),
               position: Array.from(position),
               rotation: Array.from(rotation),
@@ -4299,11 +4304,7 @@ export class EveSOF extends IRoot
             {
               lightFields.texturePath = String(item.texturePath ?? "");
             }
-            rootFields.lights.push(document.AddNode(lightKind.className, {
-              ...lightFields,
-              type: lightKind.type,
-              ...(lightKind.isDynamic ? { isDynamic: true } : {})
-            }));
+            rootFields.lights.push(document.AddNode(lightKind.className, lightFields));
           }
         }
       }

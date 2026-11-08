@@ -3416,6 +3416,8 @@ test("SOF emits and operationally hydrates Carbon haze sets with SOF6 lights", {
       return super.Initialize();
     }
   }
+  // Exposure follows the chain, so the tracking subclass chains to what it extends.
+  CjsSchema.meta.exposureChainTo(trinity.EveHazeSet)(TrackingEveHazeSet);
   // The registry is first-wins: the tracking class replaces EveHazeSet for
   // this hydration only.
   CjsSchema.deleteConstructor("EveHazeSet");
@@ -3682,8 +3684,9 @@ test("SOF emits and hydrates visible Carbon hull light types with cumulative hul
     "Tr2SpotLight",
     "Tr2PointLight",
   ]);
-  assert.deepEqual(lights.map(node => node.type), [1, 1, 2, 1]);
-  assert.equal(lights[1].isDynamic, true);
+  // No light's exposure holds type or isDynamic (Tr2Light_Blue.cpp maps none, and the point and spot
+  // tables end without a chain), so the values leave them to each class's constructor, as Carbon's do.
+  assert.equal(lights.some(node => Object.hasOwn(node, "type") || Object.hasOwn(node, "isDynamic")), false);
 
   // Hull lights carry Carbon's Blue rows by name; the light's accessors write
   // them into its embedded LightData. No nested lightData bag.
@@ -3707,6 +3710,7 @@ test("SOF emits and hydrates visible Carbon hull light types with cumulative hul
   const trinity = await import(new URL("../../../npm/dist/trinity/index.js", import.meta.url));
   const audioTrinity = await import(new URL("../../../npm/dist/audio/trinity/index.js", import.meta.url));
   const hydrated = { root: CjsSchema.from(document._type, document) };
+  assert.deepEqual(hydrated.root.lights.map(light => light.type), [1, 1, 2, 1]);
   assert.equal(getRegisteredClassName(hydrated.root.lights[0].GetLightData().constructor), "LightData");
   assert.deepEqual(Array.from(hydrated.root.lights[0].GetLightData().position), [1, 2, 3]);
   assert.equal(hydrated.root.lights[1].isDynamic, true);
@@ -6183,10 +6187,11 @@ test("resPathInsert existence goes through BePaths, as Carbon's FileExists does"
   assert.equal((await diffuse(adapted, "rifter:minmatar:minmatar")), "res:/x/ship_d.dds", "resFileIndex overrides paths");
 });
 
-test("SOF stamps the injected buildTime as every light's startTime", async () => {
+test("SOF stamps the injected buildTime on nested light data, and leaves hull lights to construction", async () => {
   // Carbon initializes m_lightData.startTime from GetCurrentTime() at build,
   // phase-offsetting noise flicker; the injected buildTime seam reproduces
-  // that with a deterministic default of zero.
+  // that with a deterministic default of zero where SOF writes a light's data.
+  // A hull light's startTime is in no exposure, so its constructor stamps it.
   const makeData = () => {
     const data = createData();
     data.hull[0].spriteSets = [{
@@ -6223,7 +6228,7 @@ test("SOF stamps the injected buildTime as every light's startTime", async () =>
   const deterministic = new EveSOF();
   assert.equal(deterministic.dataMgr.SetData(makeData()), true);
   const zeroTimes = findStartTimes((await deterministic.BuildFromDNA("rifter:minmatar:minmatar")));
-  assert.ok(zeroTimes.length >= 1, "expected light emissions with startTime");
+  assert.equal(zeroTimes.some(([type]) => !type.endsWith(".lightData")), false, "hull lights carry no startTime");
   assert.ok(zeroTimes.every(([, value]) => value === 0));
 
   const clocked = (await new EveSOF().Register({ buildTime: 42.5 }));
