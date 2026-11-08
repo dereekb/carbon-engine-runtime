@@ -463,8 +463,21 @@ function chain(words, cursor)
   return result;
 }
 
+/** Sets Tr2Renderer's view and projection for one test, restoring them after. */
+function withCamera(t, view, projection)
+{
+  const oldView = Float32Array.from(Tr2Renderer.GetViewTransform()), oldProjection = Float32Array.from(Tr2Renderer.GetProjectionTransform());
+  Tr2Renderer.SetViewTransform(view);
+  Tr2Renderer.SetProjectionTransform(projection);
+  t.after(() => { Tr2Renderer.SetViewTransform(oldView); Tr2Renderer.SetProjectionTransform(oldProjection); });
+}
+
+const IDENTITY = [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ];
+
 test("non-compute lists preserve native zero IDs, three heads and particle filtering", async t =>
 {
+  // An identity camera: both lights' spheres cover the whole NDC square.
+  withCamera(t, IDENTITY, IDENTITY);
   const context = recordingContext({ compute: false });
   const manager = await preparedManager(context);
   await recordCompute(t, context.log, () => { throw new Error("CPU list must not dispatch"); });
@@ -498,4 +511,46 @@ test("non-compute lists preserve native zero IDs, three heads and particle filte
   context.GetEffectStateManager = () => ({ renderTargetWidth: 1000000, renderTargetHeight: 1000000 });
   assert.equal(manager.UpdateLists(null, context), false, "oversized headers fail and clear stale lights");
   assert.ok(new Uint32Array(context.buffers.at(-1).GetBytes().buffer).every(value => value === 0));
+});
+
+test("non-compute lists cull each tile against its side planes, drop lights behind the camera, and share equal sets", async t =>
+{
+  // Carbon DoUpdateLists' job (Tr2LightManager.cpp:401-435) without the depth range.
+  Tr2Renderer.SetViewTransform(IDENTITY);
+  Tr2Renderer.SetPerspectiveProjection__FovAspect(Math.PI / 2, 1, 1000, 2);
+  const projection = Float32Array.from(Tr2Renderer.GetProjectionTransform());
+  withCamera(t, IDENTITY, projection);
+  // Ahead is whichever view-space z gives a positive clip w.
+  const ahead = projection[11] ? 50 * Math.sign(projection[11]) : 50, w = projection[11] * ahead + projection[15];
+  const xAt = ndc => (ndc * w - projection[8] * ahead - projection[12]) / projection[0];
+  const context = recordingContext({ compute: false, width: 64, height: 32 });
+  const manager = await preparedManager(context);
+  await recordCompute(t, context.log, () => { throw new Error("CPU list must not dispatch"); });
+  manager.AddPointLight([ xAt(-0.75), 0, ahead ], 1, [ 1, 1, 1 ]);
+  manager.AddPointLight([ xAt(-0.75), 0, -ahead ], 1, [ 1, 1, 1 ]);
+  manager.AddPointLight([ 0, 0, 0 ], 5000, [ 1, 1, 1 ], 0, Tr2LightManager.FLAG_AFFECTS_SURFACES | Tr2LightManager.FLAG_AFFECTS_PARTICLES);
+  manager.ResolveLightData();
+  assert.equal(manager.GetLightCount(), 3);
+  const index = z => [ 0, 1, 2 ].find(i => manager._packed[i * 12 + 2] === Math.fround(z) && manager._packed[i * 12 + 3] === 1);
+  const left = index(ahead), behind = index(-ahead), all = [ 0, 1, 2 ].find(i => manager._packed[i * 12 + 3] === 5000);
+  assert.equal(manager.UpdateLists(null, context), true);
+  const words = new Uint32Array(context.buffers.at(-1).GetBytes().buffer);
+  for (let tile = 0; tile < 8; tile++)
+  {
+    const column = tile % 4, expected = column === 0 ? [ left, all ].sort() : [ all ];
+    assert.deepEqual(chain(words, words[tile * 3]).sort(), expected, `tile ${tile} opaque`);
+    assert.deepEqual(chain(words, words[tile * 3 + 1]).sort(), expected, "depth-expanded is the same list without a depth range");
+    assert.deepEqual(chain(words, words[tile * 3 + 2]), [ all ], "particles: only the particle light");
+    assert.equal(chain(words, words[tile * 3]).includes(behind), false, "a sphere behind the camera meets no tile");
+  }
+  assert.equal(words[3 * 3 + 2], words[3 * 3], "equal sets share one chain");
+  assert.equal(words.length, 24 + 2 * 3, "two distinct sets: three nodes after eight tiles' headers");
+  const bytes = context.buffers.at(-1).GetBytes().slice();
+  assert.equal(manager.UpdateLists(null, context), true);
+  assert.deepEqual(context.buffers.at(-1).GetBytes(), bytes, "unchanged inputs do not rebuild");
+  manager._packed[left * 12] = xAt(0.75);
+  assert.equal(manager.UpdateLists(null, context), true);
+  const moved = new Uint32Array(context.buffers.at(-1).GetBytes().buffer);
+  assert.deepEqual(chain(moved, moved[3 * 3]).sort(), [ left, all ].sort(), "a moved light rebuilds into its new column");
+  assert.deepEqual(chain(moved, moved[0]), [ all ]);
 });

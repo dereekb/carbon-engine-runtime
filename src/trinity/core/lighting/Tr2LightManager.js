@@ -29,6 +29,7 @@ import { CjsSchema, meta, type } from "#schema";
 import { num } from "#math/num";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
+import { vec4 } from "#math/vec4";
 import { PixelFormat, ShaderType } from "#consts/render-context";
 import { Tr2LightFlags } from "#consts/graphics";
 import { ShadowQuality } from "../../generated/trinityCore/enums.js";
@@ -201,11 +202,27 @@ export class Tr2LightManager
   /** @adapted Temporary non-compute list producer; see _UpdateCpuLightLists. */
   _cpuLightLists = false;
 
-  /** Retained list topology; positions/colours do not change its conservative membership. */
+  /** The flags the CPU lists were built with, one per light. */
   _cpuListFlags = new Uint16Array(0);
   _cpuListWidth = 0;
   _cpuListHeight = 0;
   _cpuListDirty = true;
+
+  /** The view and projection the CPU lists were built with; a change rebuilds them. */
+  _cpuListView = new Float32Array(16);
+  _cpuListProjection = new Float32Array(16);
+
+  /** Each light's position and radius the CPU lists were built with, four floats a light. */
+  _cpuListSpheres = new Float32Array(0);
+
+  /** Scratch for the CPU lists: tile side planes, tile and run bitsets, run maps and node chains. */
+  _cpuListScratch = {
+    columnPlanes: new Float64Array(0), rowPlanes: new Float64Array(0),
+    columnBits: new Uint32Array(0), rowBits: new Uint32Array(0), particleBits: new Uint32Array(0), setBits: new Uint32Array(0),
+    columnRun: new Int32Array(0), rowRun: new Int32Array(0), runHeads: new Uint32Array(0),
+    nodes: new Uint32Array(0), chainBits: new Uint32Array(0), chainHead: new Uint32Array(0), chainNext: new Int32Array(0),
+    chains: new Map()
+  };
 
   // Non-Carbon: bumped by ResolveLightData so the AL can skip re-uploads.
   _revision = 0;
@@ -897,7 +914,7 @@ export class Tr2LightManager
 
   static _instance = null;
 
-  static scratch = { words4_0: new Uint32Array(4) };
+  static scratch = { words4_0: new Uint32Array(4), vec4_0: vec4.create(), vec4_1: vec4.create(), vec4_2: vec4.create(), vec4_3: vec4.create() };
 
   /**
    * Carbon SetVariableStore (cpp:214-218): the globals name this manager's buffers.
@@ -1082,15 +1099,26 @@ export class Tr2LightManager
   }
 
   /**
-   * Not Carbon: ccpwgl's CPU light chain for backends without compute; native
-   * depth-tile culling parity to be revisited. Carbon DoUpdateLists
-   * (trinity/trinity/Tr2LightManager.cpp:401-440) dispatches depth-aware compute.
-   * Here every tile shares conservative chains. The shipped computelightlists
-   * Main body writes three heads: opaque, depth-expanded, and particles. Without
-   * depth rejection the first two share all records; the third only particle flags.
-   * Nodes retain native ZERO-based light IDs; zero terminates node pointers only.
-   * The pixel shaders still perform their own light volume/flag tests.
-   * @adapted Native head/node layout, deliberately no depth-tile culling.
+   * The job of Carbon's DoUpdateLists (Tr2LightManager.cpp:401-435) on the CPU,
+   * for backends without compute. computelightlists runs one group per 16x16
+   * tile and links into the tile's heads the lights whose sphere meets the
+   * tile's frustum; this does the same against each tile's four side planes,
+   * built from the inverse projection as PerFrameData passes it (cpp:410-411).
+   * The index buffer keeps the shipped head/node layout the pixel shaders walk:
+   * three heads per tile (opaque, depth-expanded, particles), then nodes of
+   * (light index, next node), where a zero next ends the list.
+   *
+   * HOW IT STAYS CHEAP: a tile's side planes are its column's two planes and
+   * its row's two planes, so each light passes a contiguous range of columns and
+   * of rows. A tile's set is its column set AND its row set, held as bitsets;
+   * runs of equal columns and rows are paired once, and tiles with the same set
+   * share one node chain. The lists are rebuilt only when the view, the
+   * projection, the target size, or a light's sphere or flags change.
+   *
+   * @adapted WebGL2 has no compute, so the tiles are culled on the CPU WITHOUT
+   *   computelightlists' per-tile depth range from DepthMap (cpp:422): the
+   *   opaque and depth-expanded heads are the same conservative list. The pixel
+   *   shaders still make their own light volume and flag tests.
    * @param {Tr2RenderContext} renderContext Destination buffer's context.
    * @returns {boolean} Whether a complete, bounded list is available.
    */
@@ -1099,21 +1127,84 @@ export class Tr2LightManager
     const esm = renderContext.GetEffectStateManager();
     const width = esm.renderTargetWidth, height = esm.renderTargetHeight;
     if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1) return false;
-    const tiles = Math.ceil(width / TILE_WIDTH) * Math.ceil(height / TILE_HEIGHT);
+    const tilesX = Math.ceil(width / TILE_WIDTH), tilesY = Math.ceil(height / TILE_HEIGHT), tiles = tilesX * tilesY;
+    if (tiles * 3 > INDEX_BUFFER_SIZE || tilesX > 0xFFFF || tilesY > 0xFFFF) return false;
     const count = this._packedCount;
-    let particles = 0;
-    let changed = this._cpuListDirty || width !== this._cpuListWidth || height !== this._cpuListHeight
-      || this._cpuListFlags.length !== count;
-    for (let i = 0; i < count; i++)
+    const view = Tr2Renderer.GetViewTransform(), projection = Tr2Renderer.GetProjectionTransform();
+    if (!this._CpuLightListInputsChanged(width, height, count, view, projection)) return true;
+
+    const scratch = this._CpuLightListScratch(tilesX, tilesY, count);
+    const lightWords = (count + 31) >>> 5;
+    Tr2LightManager._TileSidePlanes(scratch.columnPlanes, tilesX, width, TILE_WIDTH, true);
+    Tr2LightManager._TileSidePlanes(scratch.rowPlanes, tilesY, height, TILE_HEIGHT, false);
+    this._MarkLightTiles(scratch, tilesX, tilesY, count, lightWords, view, projection);
+
+    // Runs of columns (and rows) with the same light set.
+    const columnRuns = Tr2LightManager._BitsetRuns(scratch.columnBits, scratch.columnRun, tilesX, lightWords);
+    const rowRuns = Tr2LightManager._BitsetRuns(scratch.rowBits, scratch.rowRun, tilesY, lightWords);
+    scratch.runHeads = Tr2LightManager._Grow(scratch.runHeads, columnRuns * rowRuns * 2);
+
+    // Each (row run, column run) pair's set, and the chain it shares with every
+    // equal set: sets are found by a hash of their words, checked word by word.
+    const chains = scratch.chains;
+    chains.clear();
+    let nodeWords = 0, chainCount = 0;
+    const set = scratch.setBits, headerWords = tiles * 3;
+    const addChain = () =>
     {
-      const flags = this._LightFlags(i);
-      if (flags & Tr2LightManager.FLAG_AFFECTS_PARTICLES) particles++;
-      if (this._cpuListFlags[i] !== flags) changed = true;
+      let hash = 0, empty = true;
+      for (let w = 0; w < lightWords; w++)
+      {
+        if (set[w]) empty = false;
+        hash = Math.imul(hash ^ set[w], 0x01000193) >>> 0;
+      }
+      if (empty) return 0;
+      for (let chain = chains.get(hash) ?? -1; chain >= 0; chain = scratch.chainNext[chain])
+      {
+        let same = true;
+        for (let w = 0; same && w < lightWords; w++) same = scratch.chainBits[chain * lightWords + w] === set[w];
+        if (same) return scratch.chainHead[chain];
+      }
+      let bits = 0;
+      for (let w = 0; w < lightWords; w++) bits += Tr2LightManager._PopCount(set[w]);
+      if (headerWords + nodeWords + bits * 2 > INDEX_BUFFER_SIZE) return -1;
+      scratch.nodes = Tr2LightManager._Grow(scratch.nodes, nodeWords + bits * 2);
+      scratch.chainBits = Tr2LightManager._Grow(scratch.chainBits, (chainCount + 1) * lightWords);
+      scratch.chainHead = Tr2LightManager._Grow(scratch.chainHead, chainCount + 1);
+      scratch.chainNext = Tr2LightManager._Grow(scratch.chainNext, chainCount + 1);
+      scratch.chainBits.set(set.subarray(0, lightWords), chainCount * lightWords);
+      scratch.chainNext[chainCount] = chains.get(hash) ?? -1;
+      chains.set(hash, chainCount);
+      const head = headerWords + nodeWords;
+      scratch.chainHead[chainCount++] = head;
+      for (let w = 0; w < lightWords; w++)
+      {
+        for (let word = set[w]; word; word &= word - 1)
+        {
+          const light = (w << 5) + (31 - Math.clz32(word & -word));
+          scratch.nodes[nodeWords] = light;
+          scratch.nodes[nodeWords + 1] = --bits ? headerWords + nodeWords + 2 : 0;
+          nodeWords += 2;
+        }
+      }
+      return head;
+    };
+    for (let row = 0; row < rowRuns; row++)
+    {
+      for (let column = 0; column < columnRuns; column++)
+      {
+        const pair = (row * columnRuns + column) * 2;
+        for (let w = 0; w < lightWords; w++) set[w] = scratch.columnBits[scratch.columnRun[tilesX + column] * lightWords + w] & scratch.rowBits[scratch.rowRun[tilesY + row] * lightWords + w];
+        const opaque = addChain();
+        for (let w = 0; w < lightWords; w++) set[w] &= scratch.particleBits[w];
+        const particle = addChain();
+        if (opaque < 0 || particle < 0) return false;
+        scratch.runHeads[pair] = opaque;
+        scratch.runHeads[pair + 1] = particle;
+      }
     }
-    if (!changed) return true;
-    const headerWords = tiles * 3;
-    const required = headerWords + 2 * (count + particles);
-    if (!Number.isSafeInteger(required) || required > INDEX_BUFFER_SIZE) return false;
+
+    const required = Math.max(1, headerWords + nodeWords);
     if (this._indexBuffer.GetCount() < required)
     {
       if (!Succeeded(this._indexBuffer.Create(required, 4, Tr2GpuStructuredBuffer.CreationFlag.CPU_WRITABLE, renderContext))) return false;
@@ -1122,36 +1213,238 @@ export class Tr2LightManager
     const buffer = this._indexBuffer.GetGpuBuffer(0);
     const { result, data } = buffer.MapForWriting(renderContext);
     if (!Succeeded(result)) return false;
-    const words = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4);
-    words.fill(0);
-    const head = count ? headerWords : 0;
-    const particleHead = particles ? headerWords + count * 2 : 0;
-    for (let tile = 0; tile < tiles; tile++)
+    const words = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4); // alloc: word view of the mapping.
+    for (let y = 0; y < tilesY; y++)
     {
-      words[tile * 3] = head;
-      words[tile * 3 + 1] = head;
-      words[tile * 3 + 2] = particleHead;
-    }
-    let particle = 0;
-    for (let i = 0; i < count; i++)
-    {
-      const node = headerWords + i * 2;
-      words[node] = i;
-      words[node + 1] = i + 1 < count ? node + 2 : 0;
-      if (this._LightFlags(i) & Tr2LightManager.FLAG_AFFECTS_PARTICLES)
+      const rowRun = scratch.rowRun[y];
+      for (let x = 0; x < tilesX; x++)
       {
-        const entry = particleHead + particle++ * 2;
-        words[entry] = i;
-        words[entry + 1] = particle < particles ? entry + 2 : 0;
+        const tile = (y * tilesX + x) * 3, pair = (rowRun * columnRuns + scratch.columnRun[x]) * 2;
+        words[tile] = words[tile + 1] = scratch.runHeads[pair];
+        words[tile + 2] = scratch.runHeads[pair + 1];
       }
     }
+    words.set(scratch.nodes.subarray(0, nodeWords), headerWords);
+    words.fill(0, headerWords + nodeWords);
     buffer.UnmapForWriting(renderContext);
-    if (this._cpuListFlags.length !== count) this._cpuListFlags = new Uint16Array(count); // alloc: variable-length flags, replaced only when the count changes.
-    for (let i = 0; i < count; i++) this._cpuListFlags[i] = this._LightFlags(i);
-    this._cpuListWidth = width;
-    this._cpuListHeight = height;
     this._cpuListDirty = false;
     return true;
+  }
+
+  /**
+   * Whether the CPU light lists must be rebuilt, recording the inputs they are
+   * about to be built with.
+   *
+   * @param {number} width Target width.
+   * @param {number} height Target height.
+   * @param {number} count Packed light count.
+   * @param {mat4} view This frame's view transform.
+   * @param {mat4} projection This frame's projection transform.
+   * @returns {boolean} Whether anything the lists depend on changed.
+   */
+  _CpuLightListInputsChanged(width, height, count, view, projection)
+  {
+    let changed = this._cpuListDirty || width !== this._cpuListWidth || height !== this._cpuListHeight
+      || this._cpuListFlags.length !== count;
+    for (let i = 0; i < 16; i++)
+    {
+      if (this._cpuListView[i] !== Math.fround(view[i]) || this._cpuListProjection[i] !== Math.fround(projection[i])) changed = true;
+    }
+    if (this._cpuListSpheres.length !== count * 4)
+    {
+      this._cpuListSpheres = new Float32Array(count * 4); // alloc: one sphere per light, replaced only when the count changes.
+      this._cpuListFlags = new Uint16Array(count); // alloc: one flag word per light, replaced only when the count changes.
+      changed = true;
+    }
+    for (let i = 0; i < count; i++)
+    {
+      const f = i * FLOATS_PER_LIGHT;
+      for (let k = 0; k < 4; k++)
+      {
+        if (this._cpuListSpheres[i * 4 + k] !== this._packed[f + k]) { this._cpuListSpheres[i * 4 + k] = this._packed[f + k]; changed = true; }
+      }
+      const flags = this._LightFlags(i);
+      if (this._cpuListFlags[i] !== flags) { this._cpuListFlags[i] = flags; changed = true; }
+    }
+    this._cpuListView.set(view);
+    this._cpuListProjection.set(projection);
+    this._cpuListWidth = width;
+    this._cpuListHeight = height;
+    return changed;
+  }
+
+  /**
+   * The CPU lists' scratch, grown to this frame's tile and light counts.
+   *
+   * @param {number} tilesX Tile columns.
+   * @param {number} tilesY Tile rows.
+   * @param {number} count Packed light count.
+   * @returns {object} The scratch, cleared where it accumulates.
+   */
+  _CpuLightListScratch(tilesX, tilesY, count)
+  {
+    const scratch = this._cpuListScratch, grow = Tr2LightManager._Grow, lightWords = (count + 31) >>> 5;
+    scratch.columnPlanes = grow(scratch.columnPlanes, (tilesX + 1) * 4);
+    scratch.rowPlanes = grow(scratch.rowPlanes, (tilesY + 1) * 4);
+    scratch.columnBits = grow(scratch.columnBits, tilesX * lightWords);
+    scratch.rowBits = grow(scratch.rowBits, tilesY * lightWords);
+    scratch.particleBits = grow(scratch.particleBits, lightWords);
+    scratch.setBits = grow(scratch.setBits, lightWords);
+    scratch.columnRun = grow(scratch.columnRun, tilesX * 2);
+    scratch.rowRun = grow(scratch.rowRun, tilesY * 2);
+    scratch.columnBits.fill(0, 0, tilesX * lightWords);
+    scratch.rowBits.fill(0, 0, tilesY * lightWords);
+    scratch.particleBits.fill(0, 0, lightWords);
+    return scratch;
+  }
+
+  /**
+   * Sets each light's bit in the columns and rows its sphere meets, and in
+   * the particle mask. A sphere wholly behind the camera meets no tile.
+   *
+   * @param {object} scratch The CPU lists' scratch.
+   * @param {number} tilesX Tile columns.
+   * @param {number} tilesY Tile rows.
+   * @param {number} count Packed light count.
+   * @param {number} lightWords Words per light bitset.
+   * @param {mat4} view This frame's view transform.
+   * @param {mat4} projection This frame's projection transform.
+   */
+  _MarkLightTiles(scratch, tilesX, tilesY, count, lightWords, view, projection)
+  {
+    // The clip w gradient, in view space: a sphere whose largest w is not positive is behind the camera.
+    const wx = projection[3], wy = projection[7], wz = projection[11], ww = projection[15];
+    const wGradient = Math.hypot(wx, wy, wz);
+    for (let i = 0; i < count; i++)
+    {
+      const f = i * FLOATS_PER_LIGHT, px = this._packed[f], py = this._packed[f + 1], pz = this._packed[f + 2], radius = this._packed[f + 3];
+      const x = view[0] * px + view[4] * py + view[8] * pz + view[12];
+      const y = view[1] * px + view[5] * py + view[9] * pz + view[13];
+      const z = view[2] * px + view[6] * py + view[10] * pz + view[14];
+      if (wx * x + wy * y + wz * z + ww + radius * wGradient <= 0) continue;
+      const bit = 1 << (i & 31), word = i >>> 5;
+      const columns = Tr2LightManager._SphereTileRange(scratch.columnPlanes, tilesX, x, y, z, radius);
+      if (columns < 0) continue;
+      const rows = Tr2LightManager._SphereTileRange(scratch.rowPlanes, tilesY, x, y, z, radius);
+      if (rows < 0) continue;
+      for (let c = columns >>> 16; c <= (columns & 0xFFFF); c++) scratch.columnBits[c * lightWords + word] |= bit;
+      for (let r = rows >>> 16; r <= (rows & 0xFFFF); r++) scratch.rowBits[r * lightWords + word] |= bit;
+      if (this._LightFlags(i) & Tr2LightManager.FLAG_AFFECTS_PARTICLES) scratch.particleBits[word] |= bit;
+    }
+  }
+
+  /**
+   * The tile side planes along one axis, in view space: plane `b` lies on
+   * tile boundary `b` as (unit normal, offset), the normal facing the next
+   * tile. Three points on each boundary, at two depths, come from the inverse
+   * projection, as computelightlists builds its tile frusta from
+   * PerFrameData.projInverse; so a perspective plane passes through the eye and
+   * an orthographic one does not.
+   *
+   * @param {Float64Array} planes Receives (tiles + 1) planes, four values each.
+   * @param {number} tileCount Tiles along the axis.
+   * @param {number} size Pixels along the axis.
+   * @param {number} tileSize Pixels per tile.
+   * @param {boolean} columns True for columns (x), false for rows (y, top down).
+   */
+  static _TileSidePlanes(planes, tileCount, size, tileSize, columns)
+  {
+    const inverse = Tr2Renderer.GetInverseProjectionTransform();
+    const { vec4_0: a, vec4_1: b, vec4_2: c, vec4_3: inside } = Tr2LightManager.scratch;
+    // Two depths inside both clip conventions' NDC range ([0, 1] and [-1, 1]).
+    const unproject = (out, ndcX, ndcY, ndcZ = 0.25) =>
+    {
+      vec4.set(out, ndcX, ndcY, ndcZ, 1);
+      vec4.transformMat4(out, out, inverse);
+      return vec4.scale(out, out, 1 / out[3]);
+    };
+    for (let boundary = 0; boundary <= tileCount; boundary++)
+    {
+      const ndc = Math.min(boundary * tileSize, size) / size * 2 - 1;
+      // Rows count down the screen, so increasing row is decreasing NDC y.
+      const step = 1e-3;
+      if (columns) { unproject(a, ndc, -1); unproject(b, ndc, 1); unproject(c, ndc, -1, 0.75); unproject(inside, ndc + step, 0); }
+      else { unproject(a, -1, -ndc); unproject(b, 1, -ndc); unproject(c, -1, -ndc, 0.75); unproject(inside, 0, -ndc - step); }
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      const length = Math.hypot(nx, ny, nz) || 1;
+      nx /= length; ny /= length; nz /= length;
+      let d = -(nx * a[0] + ny * a[1] + nz * a[2]);
+      if (nx * inside[0] + ny * inside[1] + nz * inside[2] + d < 0) { nx = -nx; ny = -ny; nz = -nz; d = -d; }
+      planes[boundary * 4] = nx; planes[boundary * 4 + 1] = ny; planes[boundary * 4 + 2] = nz; planes[boundary * 4 + 3] = d;
+    }
+  }
+
+  /**
+   * The first and last tile along one axis whose two side planes a sphere
+   * meets, packed as `first << 16 | last`, or -1 for none.
+   *
+   * @param {Float64Array} planes The axis' side planes.
+   * @param {number} tileCount Tiles along the axis.
+   * @param {number} x View-space centre x.
+   * @param {number} y View-space centre y.
+   * @param {number} z View-space centre z.
+   * @param {number} radius Sphere radius.
+   * @returns {number} The packed range, or -1.
+   */
+  static _SphereTileRange(planes, tileCount, x, y, z, radius)
+  {
+    let first = -1, last = -1;
+    let before = planes[0] * x + planes[1] * y + planes[2] * z + planes[3];
+    for (let tile = 0; tile < tileCount; tile++)
+    {
+      const p = (tile + 1) * 4, after = planes[p] * x + planes[p + 1] * y + planes[p + 2] * z + planes[p + 3];
+      if (before >= -radius && after <= radius)
+      {
+        if (first < 0) first = tile;
+        last = tile;
+      }
+      before = after;
+    }
+    return first < 0 ? -1 : (first << 16) | last;
+  }
+
+  /**
+   * Maps each column (or row) to a run of equal light sets, and writes each
+   * run's first column after the map, at `runOf[count + run]`.
+   *
+   * @param {Uint32Array} bits Per-column bitsets.
+   * @param {Int32Array} runOf Receives the run per column, then each run's column.
+   * @param {number} count Columns or rows.
+   * @param {number} lightWords Words per bitset.
+   * @returns {number} The number of runs.
+   */
+  static _BitsetRuns(bits, runOf, count, lightWords)
+  {
+    let runs = 0;
+    for (let i = 0; i < count; i++)
+    {
+      let same = i > 0;
+      for (let w = 0; same && w < lightWords; w++) same = bits[i * lightWords + w] === bits[(i - 1) * lightWords + w];
+      if (!same) runOf[count + runs++] = i;
+      runOf[i] = runs - 1;
+    }
+    return runs;
+  }
+
+  /** The number of set bits in a 32-bit word. */
+  static _PopCount(word)
+  {
+    word -= (word >>> 1) & 0x55555555;
+    word = (word & 0x33333333) + ((word >>> 2) & 0x33333333);
+    return (((word + (word >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
+  }
+
+  /**
+   * A typed array of at least `length` elements: `array` itself when it is
+   * long enough, else a larger one of its type holding `array`'s contents.
+   */
+  static _Grow(array, length)
+  {
+    if (array.length >= length) return array;
+    const grown = new array.constructor(Math.max(length, array.length * 2)); // alloc: scratch grows to the largest frame seen, then is reused.
+    grown.set(array);
+    return grown;
   }
 
   /**
