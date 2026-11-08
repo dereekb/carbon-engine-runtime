@@ -2,6 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { blue } from "../../../npm/dist/blue/index.js";
 import { CjsCharacterBackdrops, Tr2InteriorScene } from "../../../npm/dist/character/index.js";
+import { InitializeTrinityStub } from "../../support/trinityStub.js";
+
+// Character builds Trinity objects, so Trinity runs, on the stub backend.
+InitializeTrinityStub();
 
 test("the backdrop list is the creator's backgrounds without their thumbnails, numbered first", t =>
 {

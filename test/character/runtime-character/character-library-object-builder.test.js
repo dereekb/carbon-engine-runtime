@@ -5,6 +5,10 @@ import {
     CjsCharacterPost, CjsCharacterScalarPost, CjsCharacterPose,
     CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene
 } from "../../../npm/dist/character/index.js";
+import { InitializeTrinityStub } from "../../support/trinityStub.js";
+
+// Character builds Trinity objects, so Trinity runs, on the stub backend.
+InitializeTrinityStub();
 
 function Builder(source, kind)
 {
