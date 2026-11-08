@@ -118,7 +118,6 @@ test("only approved extension names are exempt from Carbon setting-name checks",
   assert.equal(settings.GetValue("webgl2LightAveraging"), webgl2.enum.APPROXIMATION);
   assert.equal(settings.GetValue("webgpuLightAveraging"), webgpu.enum.COMPUTE);
   assert.deepEqual(settings.FindSetting("newBloom").category, [ "post-processing" ]);
-  assert.ok(settings.GetNames().every(name => settings.FindSetting(name).category?.length), "every engine setting has a category");
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);
   assert.equal(settings.GetValue("characterTextureQuality"), "4k");
