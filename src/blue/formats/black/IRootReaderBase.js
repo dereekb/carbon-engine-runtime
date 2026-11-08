@@ -19,14 +19,14 @@
 // structure list (IRootReader.cpp:160-187). Ours mostly can too, but a member
 // may hold plain JavaScript storage, so the compiled entry says what it is and
 // the cast decides only between a mapped IList and a plain array.
-import { CjsSchema } from "#schema";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
-import { mappedInterfaces } from "../../compose/interface.js";
+import { cast, mappedInterfaces } from "../../compose/interface.js";
 import { IList } from "../../exposure/IList.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
-import { BLACK_DESTINATION } from "./CjsBlackDefinitions.js";
+import { BLACK_DESTINATION } from "../../exposure/PersistedMember.js";
+import { getWrapperLayout } from "./blueMathWrappers.js";
 
 const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 
@@ -144,7 +144,7 @@ export class IRootReaderBase
      * property is written through its setter, which Fixes CE-179
      * @param {string} attributeName The attribute's name.
      * @param {object} instance The object being read.
-     * @param {import("./CjsBlackDefinitions.js").BlackDefinition} definition The object's compiled class.
+     * @param {object} definition The object's compiled class.
      * @param {object|null} notify The object as INotify, or null to send no notification.
      * @throws {InvalidAttributeException} When the class has no PERSIST member of that name.
      * @throws {IRootReaderException} When the member has no handler, or its value cannot be read.
@@ -190,7 +190,7 @@ export class IRootReaderBase
             }
             catch (exc)
             {
-                if (CjsSchema.cast(exc, IRootReaderException) === null) throw exc;
+                if (cast(exc, IRootReaderException) === null) throw exc;
                 throw new IRootReaderException(`${attributeName}: ${exc.message}`);
             }
         }
@@ -358,7 +358,7 @@ export class IRootReaderBase
 
             case BLACK_DESTINATION.WRAPPER:
                 this.ReadWrapper(value, entry);
-                this._ReplaceNonFiniteElements(value, entry.wrapperElements.length, entry.name);
+                this._ReplaceNonFiniteElements(value, getWrapperLayout(entry.wrapperClass, entry.wrapperKind).elements.length, entry.name);
                 break;
 
             default:
@@ -538,7 +538,7 @@ export class IRootReaderBase
      * @adapted one compiled lookup per class stands in for Carbon's walk of the member tables, and JavaScript has no
      * offset to return
      * @param {string} name The attribute's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackDefinition} type The class.
+     * @param {object} type The class.
      * @returns {object|null} The member's compiled entry, or null.
      */
     FindEntry(name, type)

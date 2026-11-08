@@ -7,12 +7,15 @@
 // - nothing is constructed, and neither Initialize nor notification runs;
 // - a member holds no storage yet, so arrays and nested records are created;
 // - an object met again is a `{ _ref }` marker, and the object it means gets `_id`.
-import { CjsSchema } from "#schema";
 import { VARTYPE } from "../../../global/model/graph/GraphTypes.js";
 import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { BlackReader } from "./BlackReader.js";
-import { BLACK_DESTINATION, CjsBlackDefinitions } from "./CjsBlackDefinitions.js";
+import { cast } from "../../compose/interface.js";
+import { BeClasses } from "../../exposure/classes/registry.js";
+import { ClassInfo } from "../../exposure/ClassInfo.js";
+import { BLACK_DESTINATION } from "../../exposure/PersistedMember.js";
+import { getWrapperLayout } from "./blueMathWrappers.js";
 import { IRootReaderBase } from "./IRootReaderBase.js";
 
 /** The record field that names the class. */
@@ -59,7 +62,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {string} attributeName The attribute's name.
      * @param {object} instance The record.
-     * @param {import("./CjsBlackDefinitions.js").BlackDefinition} definition The record's class.
+     * @param {object} definition The record's class.
      * @param {object|null} notify Not used: a record has no notifications.
      * @throws {InvalidAttributeException} When the class has no PERSIST member of that name.
      * @throws {IRootReaderException} When the member has no handler, or its value cannot be read.
@@ -75,7 +78,7 @@ export class CjsBlackRecordReader extends BlackReader
 
         if (entry.type === VARTYPE.BINARYBLOCK)
         {
-            instance[entry.name] = this._ReadBinaryBlockValue(definition, entry);
+            instance[entry.name] = this._ReadBinaryBlockValue(instance[TYPE_FIELD], entry);
             return;
         }
 
@@ -92,7 +95,7 @@ export class CjsBlackRecordReader extends BlackReader
         }
         catch (exc)
         {
-            if (CjsSchema.cast(exc, IRootReaderException) === null) throw exc;
+            if (cast(exc, IRootReaderException) === null) throw exc;
             throw new IRootReaderException(`${attributeName}: ${exc.message}`);
         }
     }
@@ -101,13 +104,13 @@ export class CjsBlackRecordReader extends BlackReader
      * Decodes a binary block through a new instance of its owner, because only the class can
      * decode its bytes, and returns the member that holds the result.
      *
-     * @param {import("./CjsBlackDefinitions.js").BlackDefinition} definition The owner's class.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The block's member.
+     * @param {string} typeName The owner's class name, as the file gives it.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The block's member.
      * @returns {*} The decoded member.
      */
-    _ReadBinaryBlockValue(definition, entry)
+    _ReadBinaryBlockValue(typeName, entry)
     {
-        const instance = new definition.Constructor();
+        const instance = BeClasses.CreateInstanceFromName(typeName);
         this.ReadBinaryBlock(instance, entry.name);
         return instance[entry.key];
     }
@@ -155,12 +158,15 @@ export class CjsBlackRecordReader extends BlackReader
 
         const typeName = this.ReadString();
 
-        const definition = CjsBlackDefinitions.fromName(typeName);
+        // The class's ClassInfo from the injected registry, as BlackReader reads one; nothing is constructed.
+        const registration = BeClasses.GetClassRegistration(typeName);
 
-        if (definition === null)
+        if (registration === null)
         {
             throw new IRootReaderException(`Failed to create an instance of ${typeName}`);
         }
+
+        const definition = ClassInfo.exposeToBlue(registration.type).meta;
 
         const record = Object.create(null);
         record[TYPE_FIELD] = typeName;
@@ -175,7 +181,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     HandlePropertyFloatArray(holder, key, entry)
     {
@@ -193,7 +199,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     HandlePropertyInt64(holder, key, entry)
     {
@@ -205,7 +211,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     HandlePropertyUInt64(holder, key, entry)
     {
@@ -217,7 +223,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     HandlePropertyIRootPtr(holder, key, entry)
     {
@@ -230,7 +236,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     HandlePropertyIRoot(holder, key, entry)
     {
@@ -252,7 +258,7 @@ export class CjsBlackRecordReader extends BlackReader
 
             case BLACK_DESTINATION.WRAPPER:
             {
-                const value = entry.wrapperDefaults.slice();
+                const value = getWrapperLayout(entry.wrapperClass, entry.wrapperKind).defaults.slice();
                 this._ReadWrapperElements(value, entry);
                 this._ReplaceNonFiniteElements(value, value.length, entry.name);
                 holder[key] = value;
@@ -269,7 +275,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     ReadArray(holder, key, entry)
     {
@@ -289,7 +295,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      */
     ReadDict(holder, key, entry)
     {
@@ -310,7 +316,7 @@ export class CjsBlackRecordReader extends BlackReader
      *
      * @param {object} holder The record.
      * @param {string} key The member's name.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the records do not fit the layout.
      */
     ReadStructureList(holder, key, entry)

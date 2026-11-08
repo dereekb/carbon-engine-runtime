@@ -28,8 +28,8 @@ export class VarEntry
   name = "";
 
   /**
-   * `mType`: INVALID until populated. The existing ClassInfo adapter still
-   * supplies legacy type names; its numeric VARTYPE migration is separate.
+   * `mType`: the member's VARTYPE, from its declared type
+   * (`PersistedMember.declaredMemberType`); INVALID for a type with none.
    *
    * @implemented
    */

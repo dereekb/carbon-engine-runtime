@@ -1,4 +1,5 @@
 import { BLUELISTEVENT } from "#consts/blue";
+import { BLUE_MATH_WRAPPERS as WRAPPERS, getWrapperLayout } from "../blueMathWrappers.js";
 import { CjsSchema } from "#schema";
 import { applyStructRecordMember, getReaderMemberValue } from "#schema/hydration";
 import {
@@ -12,22 +13,6 @@ const FLOAT_ARRAY_KINDS = new Set([
     CARBON_TYPE.QUATERNION, CARBON_TYPE.MATRIX3, CARBON_TYPE.MATRIX4
 ]);
 
-/**
- * Carbon's Blue math wrappers: each persists its value's elements as FLOAT members
- * (TriMatrix_Blue.cpp:18-33, TriVector_Blue.cpp, TriQuaternion_Blue.cpp,
- * TriColor_Blue.cpp) and constructs with the given defaults (TriMatrix.cpp:72-90,
- * TriVector.cpp:203-206, TriQuaternion.cpp:53-56, TriColor.cpp:164-167).
- */
-const WRAPPERS = {
-    TriMatrix: {
-        kinds: [ "mat4", "matrix4" ],
-        elements: [ "_11", "_12", "_13", "_14", "_21", "_22", "_23", "_24", "_31", "_32", "_33", "_34", "_41", "_42", "_43", "_44" ],
-        defaults: [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]
-    },
-    TriVector: { kinds: [ "vec3", "vector3" ], elements: [ "x", "y", "z" ], defaults: [ 0, 0, 0 ] },
-    TriQuaternion: { kinds: [ "quat", "quaternion" ], elements: [ "x", "y", "z", "w" ], defaults: [ 0, 0, 0, 1 ] },
-    TriColor: { kinds: [ "color" ], elements: [ "r", "g", "b", "a" ], defaults: [ 0, 0, 0, 0 ] }
-};
 
 /**
  * Static set of read and skip routines that decode or skip individual Black
@@ -435,10 +420,7 @@ export class CjsBlackPropertyReaders
      */
     static getWrapperLayout(className, kind)
     {
-        const layout = Object.hasOwn(WRAPPERS, className) ? WRAPPERS[className] : null;
-        if (!layout) throw new TypeError(`${className} is not a Blue math wrapper.`);
-        if (!layout.kinds.includes(kind)) throw new TypeError(`${className} holds ${layout.kinds[0]}, not ${kind}.`);
-        return layout;
+        return getWrapperLayout(className, kind);
     }
 
     /**

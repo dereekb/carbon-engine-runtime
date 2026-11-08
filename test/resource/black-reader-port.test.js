@@ -275,6 +275,8 @@ test("ReadList goes through the list's own methods, silently, then says load fin
         constructor() { super(); this.list.SetNotify(new Observer()); }
     }
     CjsSchema.define(Wired, { className: "BlackPortWired" });
+    // Its members are Owner's, reached as Carbon reaches a parent's: through EXPOSURE_CHAINTO.
+    be.exposureChainTo(Owner)(Wired);
     blue.interface(INotify)(Wired);
 
     const f = new Fixture();

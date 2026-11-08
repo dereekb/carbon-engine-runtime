@@ -740,8 +740,9 @@ export class YamlReader extends IRootReaderBase
       case "uint16": return this._ReadValue__UInt16();
       case "int32": case "enum": return this._ReadValue__Int32();
       case "uint32": return this._ReadValue__UInt32();
-      case "int64": return this._ReadValue__Int64();
-      case "uint64": return this._ReadValue__UInt64();
+      // A 64-bit member is held as a number while it is a safe integer, as the Black reader holds it (CE-236).
+      case "int64": return YamlReader._StoredInt64(this._ReadValue__Int64());
+      case "uint64": return YamlReader._StoredInt64(this._ReadValue__UInt64());
       case "boolean": return this._ReadValue__Bool();
       case "float32": return this._ReadValue__Float();
       case "float64": return this._ReadValue__Double();
@@ -826,6 +827,18 @@ export class YamlReader extends IRootReaderBase
    */
 
   _ReadValue__UInt64() { return YamlReader._Unsigned(this._ReadScalar(), 64); }
+
+  /**
+   * A 64-bit value as the member holds it: a number while it is a safe integer, else the BigInt (CE-236).
+   *
+   * @cjs
+   * @param {bigint} value The value read.
+   * @returns {number|bigint} The stored value.
+   */
+  static _StoredInt64(value)
+  {
+    return value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value;
+  }
 
   /**
    * C locale atof decimal prefixes and nonfinite spellings, using JS binary64.

@@ -1,9 +1,10 @@
 // Source: blueexposure/include/BlueTypes.h:378-400 (Be::ClassInfo)
 // Source: blueexposure/include/BlueExposureMacrosPython.h:20-67 (ExposeToBlue, EXPOSURE_BEGIN_IMP, EXPOSURE_END_IMPL)
 import { CjsSchema } from "#schema";
-import { getCarbonTypeDefinition } from "../schema/types/carbonTypes.js";
 import { ownMappedInterfaces, exposureChainTo } from "../compose/interface.js";
 import { VarEntry } from "./VarEntry.js";
+import { ClassInfoMeta } from "./ClassInfoMeta.js";
+import { PersistedMember } from "./PersistedMember.js";
 import { EDITFLAGS } from "../../global/consts/blue.js";
 
 /** Be::EDITFLAGS bits, keyed by the schema's edit flag names. */
@@ -141,6 +142,57 @@ export class ClassInfo
   hiddenInherited = new Set();
 
   /**
+   * Ours: the class this information describes. Carbon's `ClassInfo` is the
+   * class's own static; here it is built from the class.
+   *
+   * @cjs
+   * @type {Function|null}
+   */
+  _type = null;
+
+  /**
+   * Ours: each own row's declaration, for the record `meta` builds.
+   *
+   * @cjs
+   * @type {Map<VarEntry, object>}
+   */
+  _declarations = new Map();
+
+  /**
+   * Ours, built on first use: the persisted members as the readers read
+   * them, and the interfaces they ask about (`ClassInfoMeta`). Carbon's
+   * readers take the same from the C++ member types and `BlueCastPtr`.
+   *
+   * @cjs
+   * @type {ClassInfoMeta|null}
+   */
+  _meta = null;
+
+  /**
+   * Ours: the readers' record of this class (`ClassInfoMeta`).
+   *
+   * @cjs
+   * @returns {ClassInfoMeta} The record.
+   */
+  get meta()
+  {
+    if (this._meta === null) this._meta = new ClassInfoMeta(this, this._type);
+    return this._meta;
+  }
+
+  /**
+   * Ours: the declaration an own row was built from.
+   *
+   * @cjs
+   * @param {VarEntry} row A row of `memberTable`.
+   * @returns {object} The schema's member or property record.
+   */
+  declarationOf(row)
+  {
+    return this._declarations.get(row);
+  }
+
+  /**
    * `ExposeToBlue()` (BlueExposureMacrosPython.h:20-67): the class's
    * information, built on the first call and returned from then on.
    *
@@ -165,6 +217,7 @@ export class ClassInfo
     if (cached && cached.schema === schema && cached.chained === exposureChainTo(Constructor)) return cached.classInfo;
 
     const ci = new ClassInfo();
+    ci._type = Constructor;
     ci.classId = schema.className;
     ci.iid = schema.className;
     ci.blue = schema.blue === true;
@@ -192,7 +245,9 @@ export class ClassInfo
       // complete rows under one name are both kept, as both are in Carbon's table.
       if (seen.has(member.name) && !member.exposure) continue;
       if (member.exposure) seen.add(member.name);
-      ci.memberTable.push(ClassInfo._varEntryOf(Constructor, member));
+      const row = ClassInfo._varEntryOf(Constructor, member);
+      ci.memberTable.push(row);
+      ci._declarations.set(row, member);
     }
 
     // mPyMethodTable holds the class's methods and its parents' along the exposure chain, the walk PyGetTypeInfo makes
@@ -255,7 +310,7 @@ export class ClassInfo
     const reference = type && (type.kind === "rootRef" || type.kind === "rootWeak") ? type.className : null;
     entry.name = member.name;
     entry.meta.key = member.key ?? member.name;
-    entry.type = getCarbonTypeDefinition(type).kind;
+    entry.type = PersistedMember.declaredMemberType(type).type;
     entry.iid = typeof reference === "function" ? CjsSchema.getClassName(reference) : reference || null;
     entry.description = member.jessica && member.jessica.description ? member.jessica.description : "";
     // An older declaration without an exposure record is in Blue's view, as PyGetTypeInfo lists it today.

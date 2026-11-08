@@ -42,7 +42,7 @@ import { mappedInterfaces, ownMappedInterfaces, exposureChainTo } from "../compo
 import { IBlueClasses } from "./IBlueClasses.js";
 import { BlueRttiType } from "./BlueRttiType.js";
 import { Copier } from "./Copier.js";
-import { getEditFlags } from "./ClassInfo.js";
+import { ClassInfo, getEditFlags } from "./ClassInfo.js";
 import * as CcpLog from "../../global/logging/ccpLog.js";
 
 
@@ -193,6 +193,22 @@ export class BlueClasses extends IBlueClasses
   Get(typeName)
   {
     return this.GetClassRegistration(typeName)?.type ?? null;
+  }
+
+  /**
+   * The class information of the class registered under a name. Blue throws
+   * when it has no such class: a caller asking by name needs the class.
+   *
+   * @cjs A thin wrapper over GetClassRegistration and the class's ClassInfo.
+   * @param {string} typeName Class name.
+   * @returns {ClassInfo} The class information.
+   * @throws {TypeError} When no class is registered under the name.
+   */
+  GetInfo(typeName)
+  {
+    const registration = this.GetClassRegistration(typeName);
+    if (!registration) throw new TypeError(`Blue has no class named ${typeName}`);
+    return ClassInfo.exposeToBlue(registration.type);
   }
 
   /**

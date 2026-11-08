@@ -7,17 +7,18 @@
 // takes its name and its registration. Only member dispatch differs from YamlReader:
 // the base's handlers replace _ReadMember, so a type reads as it does in Black.
 import { parseAllDocuments, isMap, isSeq, isScalar, isAlias } from "yaml";
-import { CjsSchema } from "#schema";
 import { IRootReaderBase } from "../black/IRootReaderBase.js";
-import { CjsBlackDefinitions } from "../black/CjsBlackDefinitions.js";
+import { getWrapperLayout } from "../black/blueMathWrappers.js";
+import { InvalidAttributeException } from "../../format/InvalidAttributeException.js";
+import { ClassInfo } from "../../exposure/ClassInfo.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { IBlueObjectProxy } from "../../interfaces/IBlueObjectProxy.js";
 import { IInitialize } from "../../exposure/IInitialize.js";
 import { IList } from "../../exposure/IList.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
-import { getClassRegistration } from "../../exposure/classes/registry.js";
-import { mappedInterfaces } from "../../compose/interface.js";
+import { BeClasses } from "../../exposure/classes/registry.js";
+import { cast, mappedInterfaces } from "../../compose/interface.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 
@@ -95,7 +96,7 @@ export class YamlReaderNext extends IRootReaderBase
     }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       result = null;
       this._errorMessage = error.message;
     }
@@ -133,7 +134,7 @@ export class YamlReaderNext extends IRootReaderBase
     }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       this._errorMessage = error.message;
       this._ClearCachedEvents();
       return false;
@@ -273,7 +274,7 @@ export class YamlReaderNext extends IRootReaderBase
     try { return this.ReadIRootClass(); }
     catch (error)
     {
-      if (!CjsSchema.isInstanceOf("IRootReaderException", error)) throw error;
+      if (cast(error, IRootReaderException) === null) throw error;
       this._errorMessage = error.message;
       return null;
     }
@@ -526,7 +527,7 @@ export class YamlReaderNext extends IRootReaderBase
   {
     const name = this._ReadClassType();
     if (name === null) this._ReportError("Type of object is not specified");
-    const registration = getClassRegistration(name);
+    const registration = BeClasses.GetClassRegistration(name);
     if (!registration) this._ReportWarning(`Type '${name}' not found in Blue class registry`);
     return registration;
   }
@@ -620,7 +621,7 @@ export class YamlReaderNext extends IRootReaderBase
     if (!registration) { this._ParseUntilMatchingMappingEnd(); return; }
     if (instance.constructor !== registration.type)
     {
-      this._ReportWarning(`Expected type '${CjsSchema.getClassName(instance.constructor)}' but got '${registration.name}' - skipping it`);
+      this._ReportWarning(`Expected type '${ClassInfo.exposeToBlue(instance.constructor).classId}' but got '${registration.name}' - skipping it`);
       this._ParseUntilMatchingMappingEnd();
       return;
     }
@@ -637,7 +638,8 @@ export class YamlReaderNext extends IRootReaderBase
 
   _ReadMembers(instance)
   {
-    const definition = CjsBlackDefinitions.get(instance.constructor);
+    // instance->ClassType(), as BlackReader.CreateObject explains.
+    const definition = ClassInfo.exposeToBlue(instance.constructor).meta;
     const notify = !definition.isInitialize && definition.isNotify ? instance : null;
     let first = true;
     for (let name = this._ReadMemberName(); name !== null; name = this._ReadMemberName())
@@ -652,7 +654,7 @@ export class YamlReaderNext extends IRootReaderBase
       try { this.HandleAttribute(name, instance, definition, notify); }
       catch (error)
       {
-        if (!CjsSchema.isInstanceOf("InvalidAttributeException", error)) throw error;
+        if (cast(error, InvalidAttributeException) === null) throw error;
         // CE-208: warns but does NOT call SkipValue (YamlReader.cpp:1369-1376).
         this._ReportWarning(`Error handling attribute '${name}' - skipping it`);
       }
@@ -1021,7 +1023,7 @@ export class YamlReaderNext extends IRootReaderBase
 
   ReadWrapper(value, entry)
   {
-    this.ReadFloatArray(value, entry.wrapperElements.length);
+    this.ReadFloatArray(value, getWrapperLayout(entry.wrapperClass, entry.wrapperKind).elements.length);
   }
 
   /**
@@ -1054,7 +1056,7 @@ export class YamlReaderNext extends IRootReaderBase
   {
     const list = holder[key];
     const Constructor = entry.structure.Item;
-    const definition = CjsSchema.getSchema(Constructor).structureDefinition;
+    const definition = entry.structure.definition;
     if (!definition) this._ReportError("Structure list has no declared BlueStructureDefinition");
     this._GetNextEvent();
     this._VerifyEvent("MAPPING_START");

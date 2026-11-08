@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
 import { test } from "node:test";
 import { VARTYPE } from "../../npm/dist/global/model/graph/index.js";
 import { blue } from "../../npm/dist/blue/index.js";
@@ -11,16 +10,16 @@ import { ImportAllDistModules } from "../support/allDistClasses.js";
 await ImportAllDistModules();
 CjsBlueGraph.register(blue.classes);
 
-// Step 7's adapter reaches dist only once the Black port is an entry point.
-const adapter = new URL("../../npm/dist/blue/formats/black/CjsBlackDefinitions.js", import.meta.url);
-const { BLACK_DESTINATION, CjsBlackDefinitions } = existsSync(adapter) ? await import(adapter) : {};
+// What the readers read: each class's ClassInfo record (ClassInfoMeta, of PersistedMember entries).
+const { ClassInfo } = await import("../../npm/dist/blue/exposure/ClassInfo.js");
+const { BLACK_DESTINATION } = await import("../../npm/dist/blue/exposure/PersistedMember.js");
 
 const DESTINATIONS = BLACK_DESTINATION && {
   [BLACK_DESTINATION.LIST]: "list", [BLACK_DESTINATION.ARRAY]: "array", [BLACK_DESTINATION.SET]: "set",
   [BLACK_DESTINATION.DICT]: "dict", [BLACK_DESTINATION.STRUCTURELIST]: "structureList", [BLACK_DESTINATION.WRAPPER]: "wrapper"
 };
 
-/** What Black's adapter says, in the compiled definition's terms. */
+/** What the readers' record says, in the compiled definition's terms. */
 function expected(entry)
 {
   return {
@@ -44,20 +43,18 @@ function compiled(member)
   };
 }
 
-test("every persisted member compiles to what Black's adapter says it is", { skip: !CjsBlackDefinitions && "The Black port is not in dist." }, () =>
+test("every persisted member compiles to what the readers' ClassInfo record says it is", () =>
 {
   const differences = [];
   let compared = 0;
 
   for (const { name, type } of getClassRegistrations())
   {
-    const entries = CjsBlackDefinitions.get(type).entries;
+    const entries = ClassInfo.exposeToBlue(type).meta.entries;
     const members = CjsGraph.getClassInfo(type).compiled.persistByName;
 
     for (const [ member, entry ] of entries)
     {
-      // A derived row with no PERSIST hides the base's: the adapter keeps one row per name.
-      if (name === "EveSmartLightAttributeModifierControllerVariableListener" && member === "active") continue;
 
       const definition = members[member];
       if (!definition)

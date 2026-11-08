@@ -10,6 +10,9 @@ await ImportAllDistModules();
 const { CjsSchema } = await ImportDist("blue/schema/CjsSchema.js");
 const { getClassRegistrations } = await ImportDist("blue/exposure/classes/registry.js");
 const { ClassInfo, BlueClasses } = await ImportDist("blue/index.js");
+const { getCarbonTypeDefinition } = await ImportDist("blue/schema/types/carbonTypes.js");
+const { PersistedMember } = await ImportDist("blue/exposure/PersistedMember.js");
+const declaredMemberType = type => PersistedMember.declaredMemberType(type);
 
 const classes = new BlueClasses();
 const registrations = getClassRegistrations();
@@ -75,6 +78,7 @@ test("the Blue view is PyGetTypeInfo's members and methods", () =>
     const ci = ClassInfo.exposeToBlue(type);
     const [ , , members, methods ] = BlueClasses._typeInfo(type, 0);
     const blueRows = new Map();
+    const rowLevels = new Map();
     const rowCount = new Map();
     for (let level = ci; level; level = level.parentClassInfo)
     {
@@ -82,7 +86,7 @@ test("the Blue view is PyGetTypeInfo's members and methods", () =>
       {
         if (!entry.meta.blue || (level !== ci && ci.hiddenInherited.has(entry.meta.key))) continue;
         rowCount.set(entry.name, (rowCount.get(entry.name) ?? 0) + 1);
-        if (!blueRows.has(entry.name)) blueRows.set(entry.name, entry);
+        if (!blueRows.has(entry.name)) { blueRows.set(entry.name, entry); rowLevels.set(entry, level); }
       }
     }
     for (const [ memberName, info ] of Object.entries(members))
@@ -95,7 +99,10 @@ test("the Blue view is PyGetTypeInfo's members and methods", () =>
       }
       // PyGetTypeInfo keeps one row per name; where Carbon maps a name twice the flags of either may be reported.
       if (rowCount.get(memberName) === 1 && entry.editFlags !== info.editflags) problems.push(`${name}.${memberName}: flags ${entry.editFlags}, typeinfo ${info.editflags}`);
-      if (entry.type !== info.type) problems.push(`${name}.${memberName}: type ${entry.type}, typeinfo ${info.type}`);
+      // mType is the VARTYPE; PyGetTypeInfo reports the declaration's carbon type kind.
+      const declared = rowLevels.get(entry).declarationOf(entry).type;
+      if (entry.type !== declaredMemberType(declared).type) problems.push(`${name}.${memberName}: type ${entry.type}, declared ${declaredMemberType(declared).type}`);
+      if (getCarbonTypeDefinition(declared).kind !== info.type) problems.push(`${name}.${memberName}: kind ${getCarbonTypeDefinition(declared).kind}, typeinfo ${info.type}`);
       if ((entry.iid ?? "") !== info.iid_name) problems.push(`${name}.${memberName}: iid ${entry.iid}, typeinfo ${info.iid_name}`);
       if (JSON.stringify(entry.chooserTable) !== JSON.stringify(info.choosers)) problems.push(`${name}.${memberName}: chooser differs`);
     }

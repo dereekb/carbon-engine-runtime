@@ -8,19 +8,21 @@
 // (scripts/resource/blackBuildCorpus.js).
 //
 // A declared class is read because its definition exists: nothing here names a
-// class, and no class supplies reader code. `CjsBlackDefinitions` is the only
-// thing that looks at the schema.
+// class, and no class supplies reader code. It asks the injected Blue for each
+// class and its ClassInfo, and reads no schema.
 //
 // Yielding is not ported: there are no tasklets, so CreateObjectWithYield is
 // CreateObject and a read runs to the end.
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
 import { IRootReader } from "../../format/IRootReader.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
 import { IBlueObjectBuilder } from "../../interfaces/IBlueObjectBuilder.js";
 import { ICacheable } from "../../interfaces/ICacheable.js";
 import { BLUELISTEVENT } from "#consts/blue";
-import { CjsBlackDefinitions } from "./CjsBlackDefinitions.js";
+import { cast } from "../../compose/interface.js";
+import { BeClasses } from "../../exposure/classes/registry.js";
+import { ClassInfo } from "../../exposure/ClassInfo.js";
+import { getWrapperLayout } from "./blueMathWrappers.js";
 import { IRootReaderBase } from "./IRootReaderBase.js";
 
 /** The file's magic value (BlackReader.cpp:53). */
@@ -191,7 +193,7 @@ export class BlackReader extends IRootReaderBase
         }
         catch (exc)
         {
-            if (CjsSchema.cast(exc, IRootReaderException) === null) throw exc;
+            if (cast(exc, IRootReaderException) === null) throw exc;
             this._errorMessage = exc.message;
             return false;
         }
@@ -389,7 +391,7 @@ export class BlackReader extends IRootReaderBase
         catch (exc)
         {
             if (exc.name === "RangeError") this._errorMessage = "Reading out of bounds";
-            else if (CjsSchema.cast(exc, IRootReaderException) !== null) this._errorMessage = exc.message;
+            else if (cast(exc, IRootReaderException) !== null) this._errorMessage = exc.message;
             else
             {
                 this._referenceMap.clear();
@@ -434,14 +436,18 @@ export class BlackReader extends IRootReaderBase
 
         const typeName = this.ReadString();
 
-        const definition = CjsBlackDefinitions.fromName(typeName);
+        // Carbon creates through the injected registry (BlackReader.cpp:347); without Blue there is no library.
+        const instance = BeClasses.CreateInstanceFromName(typeName);
 
-        if (definition === null)
+        if (instance === null)
         {
             throw new IRootReaderException(`Failed to create an instance of ${typeName}`);
         }
 
-        const instance = new definition.Constructor();
+        // Carbon reads members through instance->ClassType() (IRootReader.cpp:58). IRoot.ClassType returns
+        // ClassInfo.exposeToBlue(this.constructor), and 213 Blue classes do not extend IRoot yet, so the reader
+        // asks for it directly: the port's current state (needs-owner.md), not a JavaScript limitation.
+        const definition = ClassInfo.exposeToBlue(instance.constructor).meta;
 
         if (definition.isProxy)
         {
@@ -491,7 +497,7 @@ export class BlackReader extends IRootReaderBase
      *
      * @adapted `definition` stands in for `instance->ClassType()`, which the reader already holds
      * @param {object} instance The object.
-     * @param {import("./CjsBlackDefinitions.js").BlackDefinition} definition Its compiled class.
+     * @param {object} definition Its compiled class.
      * @param {number} streamEnd Where its data ends.
      */
     ReadMembers(instance, definition, streamEnd)
@@ -606,7 +612,7 @@ export class BlackReader extends IRootReaderBase
      * @cjs Carbon's list members are all IList; these are the ones still being converted
      * @param {object} holder The object holding the member.
      * @param {string|number} key The member's place in the holder.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the member holds something else.
      */
     ReadArray(holder, key, entry)
@@ -642,7 +648,7 @@ export class BlackReader extends IRootReaderBase
      * @cjs Carbon has no set member
      * @param {object} holder The object holding the member.
      * @param {string|number} key The member's place in the holder.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the member holds something else.
      */
     ReadSet(holder, key, entry)
@@ -678,7 +684,7 @@ export class BlackReader extends IRootReaderBase
      * @adapted a member's dictionary is a JavaScript Map, created if the member holds none
      * @param {object} holder The object holding the member.
      * @param {string|number} key The member's place in the holder.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the member holds something else.
      */
     ReadDict(holder, key, entry)
@@ -714,7 +720,7 @@ export class BlackReader extends IRootReaderBase
      * data written before Carbon appended members (Locator.partTag, trinity a9a60056). The rest keep their defaults.
      * @param {object} holder The object holding the member.
      * @param {string|number} key The member's place in the holder.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the records do not fit the layout.
      */
     ReadStructureList(holder, key, entry)
@@ -788,12 +794,12 @@ export class BlackReader extends IRootReaderBase
      *
      * @cjs Carbon's member is a TriMatrix, TriVector or similar object; ours is its typed array
      * @param {Float32Array} value The member's array.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the member does not hold an array of the right length.
      */
     ReadWrapper(value, entry)
     {
-        const elements = entry.wrapperElements;
+        const elements = getWrapperLayout(entry.wrapperClass, entry.wrapperKind).elements;
         if (!ArrayBuffer.isView(value) || value.length !== elements.length)
         {
             throw new IRootReaderException(`Member does not hold ${elements.length} floats`);
@@ -807,12 +813,12 @@ export class BlackReader extends IRootReaderBase
      *
      * @cjs Carbon's are the members of a TriMatrix, TriVector or similar object
      * @param {Float32Array|number[]} value The array.
-     * @param {import("./CjsBlackDefinitions.js").BlackEntry} entry The member's compiled entry.
+     * @param {import("../../exposure/PersistedMember.js").PersistedMember} entry The member's compiled entry.
      * @throws {IRootReaderException} When the file holds another class, or a member it does not have.
      */
     _ReadWrapperElements(value, entry)
     {
-        const elements = entry.wrapperElements;
+        const elements = getWrapperLayout(entry.wrapperClass, entry.wrapperKind).elements;
 
         const dataSize = this.ReadValue__UInt32();
         const streamEnd = this._curData + dataSize;
@@ -849,7 +855,8 @@ export class BlackReader extends IRootReaderBase
 
         this.ReadString();
 
-        const definition = CjsBlackDefinitions.get(obj.constructor);
+        // obj->ClassType(), as in CreateObject above.
+        const definition = ClassInfo.exposeToBlue(obj.constructor).meta;
 
         this.ReadMembers(obj, definition, startPos + dataSize);
 
@@ -1054,10 +1061,10 @@ export class BlackReader extends IRootReaderBase
 }
 
 // Explicit registration keeps the public Blue source importable without a decorator transform.
-CjsSchema.decorateMethod(BlackReader, "CreateObjectFromStream", be.mapMethodAndWrap());
-CjsSchema.decorateMethod(BlackReader, "CreateObjectFromFile", be.mapMethodAndWrap());
-CjsSchema.decorateMethod(BlackReader, "GetVersionsSupported", be.mapMethodAndWrap());
-CjsSchema.exposure.mapICacheableMethods()(BlackReader);
+be.mapMethodAndWrap()(BlackReader.prototype, "CreateObjectFromStream");
+be.mapMethodAndWrap()(BlackReader.prototype, "CreateObjectFromFile");
+be.mapMethodAndWrap()(BlackReader.prototype, "GetVersionsSupported");
+be.mapICacheableMethods()(BlackReader);
 be.define("BlackReader")(BlackReader);
 be.mapInterface(IRootReader)(BlackReader);
 be.mapInterface(IBlueObjectBuilder)(BlackReader);

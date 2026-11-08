@@ -13,6 +13,8 @@ const SHARED_FORMAT_MODULES = new Set([
     "blue/exposure/IRoot.js",
     "blue/exposure/ClassInfo.js",
     "blue/exposure/VarEntry.js",
+    "blue/exposure/ClassInfoMeta.js",
+    "blue/exposure/PersistedMember.js",
     "blue/exposure/classes/registry.js",
     "blue/compose/interface.js",
     "global/consts/blue.js",
