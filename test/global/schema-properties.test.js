@@ -98,8 +98,8 @@ test("values read and write a persisted property through its accessors and skip 
   assert.ok(fresh.calls.includes("SetTarget"));
 
   // DictReader::FindEntry matches a property only on PERSIST (DictReader.cpp:706).
-  assert.throws(() => new DictReader().ReadInto(fresh, { scale: 2 }), /Invalid attribute/);
-  assert.throws(() => new DictReader().ReadInto(fresh, { itemCount: 2 }), /Invalid attribute/);
+  assert.throws(() => new DictReader({ strict: true }).ReadInto(fresh, { scale: 2 }), /Invalid attribute/);
+  assert.throws(() => new DictReader({ strict: true }).ReadInto(fresh, { itemCount: 2 }), /Invalid attribute/);
   assert.equal(fresh._scale, 1);
 });
 

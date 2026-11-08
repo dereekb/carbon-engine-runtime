@@ -1079,12 +1079,10 @@ test("SOF extension bucket exposes only Carbon's Blue-mapped fields", () => {
   assert.deepEqual(Object.keys(CjsSchema.getValues(bucket)).sort(), ["depletionCounters", "name", "placements"]);
 
   // A hidden field is not a member the values reader knows, so naming one
-  // throws, as Carbon's readers throw for a member a class does not expose
-  // (IRootReader.cpp:99-106); direct JavaScript access to the inherited
-  // properties keeps working.
-  assert.throws(() => CjsSchema.setValues(bucket, { name: "updated", locatorSetName: "rejected" }), /Invalid attribute: locatorSetName/u);
-  assert.throws(() => CjsSchema.setValues(bucket, { enabled: false }), /Invalid attribute: enabled/u);
-  CjsSchema.setValues(bucket, { name: "updated" });
+  // skips it with a warning, as YamlReader does (YamlReader.cpp:1367-1376);
+  // direct JavaScript access to the inherited properties keeps working.
+  CjsSchema.setValues(bucket, { name: "updated", locatorSetName: "skipped" });
+  CjsSchema.setValues(bucket, { enabled: false });
   assert.equal(bucket.name, "updated");
   assert.equal(bucket.locatorSetName, "plain-js-value");
   assert.equal(bucket.enabled, true);

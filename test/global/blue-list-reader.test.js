@@ -441,7 +441,7 @@ test("two declared fields addressing the same IList supersede its earlier pendin
 
 test("a later unrelated member error cancels stale deferred list callbacks", () =>
 {
-  const anchors = CreateAnchorTable(), reader = new DictReader({ importContext: anchors });
+  const anchors = CreateAnchorTable(), reader = new DictReader({ importContext: anchors, strict: true });
   const { owner, list, observer } = Setup();
   assert.throws(() => reader.ReadInto(owner, { items: [ { value: 1 }, { _ref: "late" } ], unknown: 1 }), /Invalid attribute/u);
   anchors.register("late", MakeItem(2));
@@ -480,7 +480,7 @@ test("CreateObject failure also cancels this reader's deferred list writes", () 
   }
   CjsSchema.define(CapturedOwner, { className: "BlueListReaderCapturedOwner" });
   CjsSchema.meta.exposureChainTo(Owner)(CapturedOwner);
-  const reader = new DictReader({ importContext: anchors });
+  const reader = new DictReader({ importContext: anchors, strict: true });
   assert.throws(() => reader.CreateObject({ _type: "BlueListReaderCapturedOwner", items: [ { value: 1 }, { _ref: "late" } ], unknown: 1 }), /Invalid attribute/u);
   anchors.register("late", MakeItem(2));
   anchors.finalize();

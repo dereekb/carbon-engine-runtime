@@ -59,7 +59,8 @@ test("dictionary reads and writes use boosters backing storage and its exposed n
     assert.equal(Object.keys(values).filter(name => name === "boosters").length, 1);
   }
   const second = new EveBoosterSet2();
-  const read = values => new DictReader().ReadInto(ship, values, null);
+  // Strict: an attribute the class does not expose fails the read, as Carbon's DictReader does.
+  const read = values => new DictReader({ strict: true }).ReadInto(ship, values, null);
   assert.deepEqual([ ...read({ boosters: second }) ], [ "boosters" ]);
   assert.equal(ship._boosters, second);
   assert.deepEqual([ ...read({ boosters: null }) ], [ "boosters" ]);

@@ -244,7 +244,8 @@ export class CjsBlueReader extends CjsReader
             // identities, and mapped NOTIFY follows each declared write.
             // Black has already constructed its object references;
             // the existing whole-graph finalizer still owns initialization.
-            const reader = new DictReader({ declarations: true, initialize: false });
+            // Strict: Carbon's BlackReader fails a load on an attribute the class does not expose (BlackReader.cpp:437, :287).
+            const reader = new DictReader({ declarations: true, initialize: false, strict: true });
             const declaredValues = {};
             for (const name of Object.keys(values))
             {

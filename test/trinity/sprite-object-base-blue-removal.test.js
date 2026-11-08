@@ -79,7 +79,7 @@ test("declared dictionary notification and inherited transform notify reach nati
  parent.isDirty=value.isDirty=false;new DictReader({declarations:true}).ReadInto(value,{rotation:0.5});assert.equal(value.rotation,0.5);assert.equal(parent.isDirty,true);assert.equal(value.isDirty,true);assert.deepEqual(notifications,["displayX","rotation"]);
  parent.isDirty=value.isDirty=false;new DictReader({declarations:true}).ReadInto(value,{name:"label"});assert.equal(parent.isDirty,false);assert.equal(value.isDirty,false);
  // display is a MAP_PROPERTY, not PERSIST: the dictionary does not carry it (DictReader.cpp:706).
- assert.throws(()=>new DictReader({declarations:true}).ReadInto(value,{display:false}),/Invalid attribute/);
+ assert.throws(()=>new DictReader({declarations:true,strict:true}).ReadInto(value,{display:false}),/Invalid attribute/);
  value.display=false;assert.equal(value.display,false);assert.equal(parent.isDirty,true);
 });
 

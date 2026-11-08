@@ -10,7 +10,8 @@ import { registerClass, unregisterClass } from "../../npm/dist/blue/exposure/cla
 
 let sequence = 0;
 const name = () => `DeclaredConstruction${++sequence}`;
-const reader = options => new DictReader({ declarations: true, ...options });
+// Strict: an attribute the class does not expose fails the read, as Carbon's DictReader does.
+const reader = options => new DictReader({ declarations: true, strict: true, ...options });
 const define = (Constructor, fields = {}, interfaces = []) => {
   if (interfaces.length) CjsSchema.be.interface(...interfaces)(Constructor, { kind: "class" });
   const className = name();

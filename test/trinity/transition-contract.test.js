@@ -158,12 +158,12 @@ test("the READ-only property has no assignment route and dictionary input refuse
   });
   transition.OnModified = () => { notifications++; throw new Error("READ-only input must not notify"); };
   // MAP_PROPERTY_READONLY is not PERSIST, so DictReader::FindEntry never matches it (DictReader.cpp:706).
-  assert.throws(() => new DictReader({ declarations: true }).ReadInto(transition, { isConditionValid: false }, transition), /Invalid attribute/);
+  assert.throws(() => new DictReader({ declarations: true, strict: true }).ReadInto(transition, { isConditionValid: false }, transition), /Invalid attribute/);
   assert.equal(destinationReads, 0);
   assert.equal(notifications, 0);
   assert.equal(transition.condition, "1");
   assert.equal(transition._program, null);
-  assert.throws(() => new DictReader({ declarations: true }).CreateObject({ name: "from", condition: "1", isConditionValid: false }, Type), /Invalid attribute/);
+  assert.throws(() => new DictReader({ declarations: true, strict: true }).CreateObject({ name: "from", condition: "1", isConditionValid: false }, Type), /Invalid attribute/);
   const created = new DictReader({ declarations: true }).CreateObject({ name: "from", condition: "1" }, Type);
   assert.equal(created.name, "from");
   assert.equal(created.isConditionValid, true);

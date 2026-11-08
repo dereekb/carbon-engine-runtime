@@ -70,8 +70,14 @@ test("dictionary editing diffs writes and suppresses notifications without queue
   CjsSchema.setValues(record, { value: 5 });
   assert.deepEqual(record.calls, ["value", "value"]);
   assert.equal(record.__state.dirty, false);
-  assert.throws(() => CjsSchema.setValues(record, { value: 6, unknown: 1 }), /Invalid attribute/);
+  // The unknown key is skipped with a warning; the known one still applies, and the read completes.
+  CjsSchema.setValues(record, { value: 6, unknown: 1 });
+  assert.equal(Object.hasOwn(record, "unknown"), false);
   assert.equal(record.value, 6);
+  assert.equal(record.__state.dirty, false);
+  // Strict, the unknown key fails the read after the known one applied, and the record stays dirty.
+  assert.throws(() => CjsSchema.setValues(record, { value: 7, unknown: 1 }, { strict: true }), /Invalid attribute/);
+  assert.equal(record.value, 7);
   assert.equal(record.__state.dirty, true);
 });
 

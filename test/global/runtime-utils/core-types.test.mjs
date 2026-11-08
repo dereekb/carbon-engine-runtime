@@ -320,10 +320,10 @@ test("schema.hideInherited removes inherited fields only from the schema surface
     });
     CjsSchema.meta.exposureChainTo(HideBase)(HideChild);
 
-    // A hidden or undeclared key is not a member the reader knows: it throws,
-    // as Carbon's readers do (IRootReader.cpp:99-106; operator, 2026-09-27).
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(HideChild), { hidden: "hidden-loaded" }), /Invalid attribute: hidden/u);
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(HideChild), { unknown: "rejected" }), /Invalid attribute: unknown/u);
+    // A hidden or undeclared key is not a member the values reader knows: it is
+    // skipped with a warning, as YamlReader does (YamlReader.cpp:1367-1376).
+    assert.equal(CjsSchema.from(CjsSchema.getClassName(HideChild), { hidden: "hidden-loaded" }).hidden, "hidden-default");
+    assert.equal(Object.hasOwn(CjsSchema.from(CjsSchema.getClassName(HideChild), { unknown: "rejected" }), "unknown"), false);
 
     const child = CjsSchema.from(CjsSchema.getClassName(HideChild), {
         visible: "visible-loaded",
@@ -338,7 +338,9 @@ test("schema.hideInherited removes inherited fields only from the schema surface
     assert.equal(child instanceof HideChild, true);
     assert.equal(child instanceof HideBase, true);
     assert.equal(Object.getPrototypeOf(HideChild.prototype), HideBase.prototype);
-    assert.throws(() => CjsSchema.setValues(child, { hidden: "still-rejected" }), /Invalid attribute: hidden/u);
+    const hiddenBefore = child.hidden;
+    CjsSchema.setValues(child, { hidden: "still-skipped" });
+    assert.equal(child.hidden, hiddenBefore, "a hidden key is skipped");
 
     for (const options of [
         {},
@@ -379,9 +381,10 @@ test("schema.hideInherited removes inherited fields only from the schema surface
     CjsSchema.meta.exposureChainTo(HideChild)(HideGrandchild);
 
     // There is no unhide: re-declaring "hidden" does not expose it again, so
-    // both hidden names throw on the grandchild.
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(HideGrandchild), { hidden: "cannot-unhide" }), /Invalid attribute: hidden/u);
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(HideGrandchild), { secondHidden: "also-hidden" }), /Invalid attribute: secondHidden/u);
+    // both hidden names are skipped on the grandchild.
+    const fresh = new HideGrandchild();
+    assert.equal(CjsSchema.from(CjsSchema.getClassName(HideGrandchild), { hidden: "cannot-unhide" }).hidden, fresh.hidden);
+    assert.equal(CjsSchema.from(CjsSchema.getClassName(HideGrandchild), { secondHidden: "also-hidden" }).secondHidden, fresh.secondHidden);
     const grandchild = CjsSchema.from(CjsSchema.getClassName(HideGrandchild), { extra: "extra-loaded" });
 
     assert.equal(grandchild.hidden, "grandchild-hidden");
@@ -736,8 +739,11 @@ test("hydrates canonical model fields and lists without constructing raw objects
         children: [{ label: "two" }],
         payload: { native: 7 }
     });
-    assert.throws(() => CjsSchema.from(CjsSchema.getClassName(CanonicalParent), { reference: { name: "root" } }), /Invalid attribute: name on IRoot/u,
-        "a typed member does not keep a plain object it cannot build (operator, 2026-09-26)");
+    // A typed member does not keep a plain object (operator, 2026-09-26): it builds its class, and a
+    // key that class does not expose is skipped with a warning.
+    const unknownReference = CjsSchema.from(CjsSchema.getClassName(CanonicalParent), { reference: { name: "root" } }).reference;
+    assert.notEqual(Object.getPrototypeOf(unknownReference), Object.prototype, "the reference is built, not kept plain");
+    assert.equal(Object.hasOwn(unknownReference, "name"), false);
     const existingChild = CjsSchema.from(CjsSchema.getClassName(CanonicalChild), { label: "existing" });
     const referencingParent = CjsSchema.from(CjsSchema.getClassName(CanonicalParent), {
         child: existingChild,

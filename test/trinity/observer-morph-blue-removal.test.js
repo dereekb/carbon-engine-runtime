@@ -53,7 +53,7 @@ test("native audio cast controls mute/event dispatch and actual container propag
 test("observer dictionary hydration and copying preserve value storage without serializing mute",()=>{
  const observer=new DictReader({declarations:true}).CreateObject({_type:"TriObserverLocal",name:"locator",position:[1,2,3],front:[1,0,0]});observer.mute=true;assert.equal(observer.mute,true);
  // MAP_PROPERTY mute is not PERSIST, so DictReader::FindEntry never matches it (DictReader.cpp:706).
- assert.throws(()=>new DictReader({declarations:true}).CreateObject({_type:"TriObserverLocal",mute:true}),/Invalid attribute/);
+ assert.throws(()=>new DictReader({declarations:true,strict:true}).CreateObject({_type:"TriObserverLocal",mute:true}),/Invalid attribute/);
  const copy=new TriObserverLocal();blue.classes.CopyTo(observer,copy);assert.equal(copy.name,"locator");assert.deepEqual([...copy.position],[1,2,3]);assert.equal(copy.mute,false);const written=new DictWriter().WriteObject(observer,{}, {persistOnly:true});assert.equal(Object.hasOwn(written,"mute"),false);
 });
 

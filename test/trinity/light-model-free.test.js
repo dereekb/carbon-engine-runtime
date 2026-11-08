@@ -18,10 +18,13 @@ test("real chain point light reads into its embedded LightData and carries no va
   assert.equal(Object.hasOwn(CjsSchema.getValues(flat), "lightData"), false);
   assert.equal("GetValues" in flat, false);
   assert.equal("SetValues" in flat, false, "Carbon classes carry no values methods of ours (operator, 2026-10-17)");
-  // lightData is not a Blue member, so the pre-flatten nested shape is rejected
-  // on every values route now that no class-owned normalizer folds it.
-  assert.throws(() => CjsSchema.from("Tr2PointLight", { lightData: { radius: values.radius } }), /Invalid attribute/);
-  assert.throws(() => ReadValues(new Tr2PointLight(), { lightData: { radius: values.radius } }), /Invalid attribute/);
+  // lightData is not a Blue member, so the pre-flatten nested shape is skipped
+  // with a warning on every values route now that no class-owned normalizer folds it.
+  const defaultRadius = new Tr2PointLight().radius;
+  assert.equal(CjsSchema.from("Tr2PointLight", { lightData: { radius: values.radius } }).radius, defaultRadius);
+  const skipped = new Tr2PointLight();
+  ReadValues(skipped, { lightData: { radius: values.radius } });
+  assert.equal(skipped.radius, defaultRadius);
   assert.deepEqual(mappedInterfaces(Tr2Light), new Set([ExposureRoot, Tr2Light]));
   for (const Type of [Tr2PointLight, Tr2SpotLight, Tr2TexturedPointLight])
     assert.deepEqual(mappedInterfaces(Type), new Set([ExposureRoot, Type, Tr2Light, IInitialize, INotify]));

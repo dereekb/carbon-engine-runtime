@@ -15,8 +15,7 @@ import { exposure as be } from "#be";
 // are read exactly where Carbon reads the originals.
 //
 // WHAT FOLLOWS CARBON:
-// - keys are the SOURCE's, walked in order (`ReadMembers`, :147-186), and a key
-//   naming no member throws `InvalidAttributeException`;
+// - keys are the SOURCE's, walked in order (`ReadMembers`, :147-186);
 // - an object pointer member takes an anchored object, or a new one of the
 //   class the bag names (or the member declares) - `ReadIRootClass`;
 // - an embedded (struct) member is read into the object it already holds;
@@ -24,6 +23,10 @@ import { exposure as be } from "#be";
 //   INotify receives OnModified(member) for NOTIFY members (:151-158).
 //
 // WHAT DOES NOT, declared (see the research page `blue-values-engine.md`):
+// - a key naming no member the class exposes is skipped with one warning, as
+//   YamlReader does (YamlReader.cpp:1367-1376). Carbon's DictReader lets the
+//   InvalidAttributeException fail the read (DictReader.cpp:25-40). A wrong type
+//   for an exposed member still throws, as Carbon's readers do.
 // - completion waits until shared references resolve, then initializes newly
 //   created dependencies before their parents (rather than during recursion).
 // - `_id` registers BEFORE the object's members are read, and a `{ _ref }` to
@@ -47,6 +50,8 @@ import { normalizeCarbonValue } from "../../schema/types/index.js";
 import { IRoot } from "../../exposure/IRoot.js";
 import { IRootReaderBase } from "../../format/IRootReaderBase.js";
 import { IRootReaderException } from "../../format/IRootReaderException.js";
+import * as CcpLog from "../../../global/logging/ccpLog.js";
+import { LogType } from "../../../global/consts/ccpLog.js";
 import { BeObjectMetadata } from "../../services/BlueObjectMetadata.js";
 import { BLUE_OBJECT_METADATA_KEY } from "../../interfaces/IBlueObjectMetadata.js";
 import { getClassRegistration } from "../../exposure/classes/registry.js";
@@ -113,12 +118,17 @@ export class DictReader extends IRootReaderBase
   /** Per-call metadata-key matching plans; never retained on the edited graph. */
   _listPatches = null;
 
+  /** @cjs The class and attribute names this reader has already warned it skipped. */
+  _skipped = new Set();
+
   /**
    * @param {object} [options] `importContext` to share an anchor table across
    *   legacy reads; anything else is passed to a class's own `from`.
    * @param {boolean} [options.declarations=false] Use isolated declaration-driven construction.
    * @param {boolean} [options.liveLists=false] A Values edit: see _ReadLiveList.
    * @param {boolean} [options.initialize=true] Initialize owned declared objects after references resolve.
+   * @param {boolean} [options.strict=false] YamlReader's strict mode (YamlReader.cpp:382-393): an attribute the
+   *   class does not expose throws InvalidAttributeException instead of being skipped with a warning.
    * @param {Function|null} [populate=null] Optional values-service population policy.
    */
   constructor(options = {}, populate = null)
@@ -318,6 +328,27 @@ export class DictReader extends IRootReaderBase
   }
 
   /**
+   * Leaves out an attribute the class does not expose, and warns once per class and name.
+   * Modelled on: YamlReader::ReadMembers (blue/src/YamlReader.cpp:1367-1376).
+   *
+   * @adapted Carbon's DictReader lets the InvalidAttributeException fail the read; values
+   *   bags follow YamlReader, so a bag written by an older runtime still loads. The warning
+   *   goes to the blue module channel with the values reader as its subtitle.
+   * @param {string} name The attribute.
+   * @param {object} instance The object being read into.
+   * @returns {void}
+   */
+  _SkipAttribute(name, instance)
+  {
+    const className = CjsSchema.getClassName(instance.constructor);
+    const key = `${className}.${name}`;
+    if (this._skipped.has(key)) return;
+    this._skipped.add(key);
+    CcpLog.LogFuncChannel(CcpLog.GetModuleChannel("blue"), LogType.LOGTYPE_WARN, { subtitle: "values" },
+      "Error handling attribute '%s' on %s - skipping it", name, className);
+  }
+
+  /**
    * Reads every key of the current source into the object (`ReadMembers`,
    * :147-186), skipping the reserved keys.
    *
@@ -344,7 +375,14 @@ export class DictReader extends IRootReaderBase
       // Runtime-only declarations still claim their exposed names/aliases,
       // but even reading an incoming getter would transport resource state.
       const field = this.FindEntry(name, instance.constructor);
-      if (field?.type?.runtimeOnly === true) continue;
+      if (!field)
+      {
+        // Strict, HandleAttribute throws Carbon's InvalidAttributeException for the missing entry.
+        if (this._options.strict === true) this.HandleAttribute(name, instance, notify);
+        this._SkipAttribute(name, instance);
+        continue;
+      }
+      if (field.type?.runtimeOnly === true) continue;
 
       this._currentSource = source[name];
       this._contextStack.push(name);

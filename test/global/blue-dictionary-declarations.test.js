@@ -7,7 +7,8 @@ import { DictWriter } from "../../src/blue/formats/graph/DictWriter.js";
 let sequence = 0;
 const identity = () => `DictionaryDeclarations${++sequence}`;
 const scalar = (name, key = name, extra = {}) => ({ name, key, type: { kind: "int32" }, ...extra });
-const read = (target, values, notify = null) => new DictReader().ReadInto(target, values, notify);
+// Strict: an attribute the class does not expose fails the read, as Carbon's DictReader does.
+const read = (target, values, notify = null) => new DictReader({ strict: true }).ReadInto(target, values, notify);
 const write = (target, options = {}) => new DictWriter().WriteObject(target, {}, options);
 
 test("same-owner stored members use exposed names without calling paired live accessors", () => {
