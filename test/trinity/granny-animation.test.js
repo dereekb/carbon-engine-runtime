@@ -6,6 +6,8 @@ import { GrannyBoneOffset } from "../../npm/dist/trinity/core/index.js";
 import { MarkerTag } from "../support/markerTags.js";
 import { blue, BlueResMan } from "../../npm/dist/blue/index.js";
 import { TriGrannyRes } from "../../npm/dist/resource/index.js";
+import { TriDevice } from "../../npm/dist/trinity/core/device/TriDevice.js";
+import { trinity } from "../../npm/dist/trinity/index.js";
 
 
 const identity3 = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -294,10 +296,17 @@ test("Tr2GrannyAnimation freezes a negative-speed clip, and handles paused and m
   animation.PlayAnimation("Move", true, 0, 0, 1, false);
   animation.Update(0.5);
   assert.ok(Math.abs(animation.GetMeshBoneMatrixList()[3] - 2.5) < 1e-6);
-  animation.TogglePauseAnimations(true);
-  animation.Update(1);
-  assert.ok(Math.abs(animation.GetMeshBoneMatrixList()[3] - 2.5) < 1e-6);
-  animation.TogglePauseAnimations(false);
+  // Pausing reads the renderer's animation clock (Tr2GrannyAnimation.cpp:2013-2031).
+  const previousDevice = trinity.device;
+  trinity.device = new TriDevice();
+  try
+  {
+    animation.TogglePauseAnimations(true);
+    animation.Update(1);
+    assert.ok(Math.abs(animation.GetMeshBoneMatrixList()[3] - 2.5) < 1e-6);
+    animation.TogglePauseAnimations(false);
+  }
+  finally { trinity.device = previousDevice; }
 
   animation.AddAnimationLayer("upper", 0.5);
   animation.AddAnimationLayerBone("upper", "Child");

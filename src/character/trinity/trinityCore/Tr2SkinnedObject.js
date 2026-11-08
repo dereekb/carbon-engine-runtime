@@ -7,7 +7,7 @@ import { color } from "#math/color";
 import { ITr2SkinnedObject } from "./ITr2SkinnedObject.js";
 // Source: trinity/trinity/Tr2SkinnedObject.h
 import { type } from "#schema";
-import { IsMatch, IListNotify, INotify } from "#blue";
+import { CcpTime, IsMatch, IListNotify, INotify } from "#blue";
 import { IWorldPosition } from "../../../trinity/core/IWorldPosition.js";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
@@ -581,6 +581,51 @@ export class Tr2SkinnedObject extends IRoot
   GetSkeletonTag()
   {
     return this._skeletonTag;
+  }
+
+  /**
+   * Carbon PrePhysicsUpdate (Tr2SkinnedObject.h:43, cpp:60-81): once per update period, and only with a visual
+   * model on a skeleton, runs the animation updater's PrePhysicsAnimation with the object's transform.
+   *
+   * @implemented
+   * @param {number} time Blue time in ticks.
+   * @returns {void}
+   */
+  PrePhysicsUpdate(time)
+  {
+    const deltaTime = time - this._lastUpdateTime;
+    if (CcpTime.timeAsFloat(deltaTime) < this.updatePeriod) return;
+    if (!this.visualModel || !this.visualModel.GetSkeleton()) return;
+    if (this.animationUpdater) this.animationUpdater.PrePhysicsAnimation(time, this.transform);
+  }
+
+  /**
+   * Carbon PostPhysicsUpdate (Tr2SkinnedObject.h:44, cpp:83-128): once per update period, updates the curve sets;
+   * then, with a visual model on a skeleton, runs the animation updater's PostPhysicsAnimation, the bones, the
+   * world-transform updater, and drops the visual model when the LOD helper unloads it.
+   *
+   * @implemented
+   * @param {number} time Blue time in ticks.
+   * @param {object|null} apexScene The Tr2ApexScene; always null, as Apex is not ported.
+   * @returns {void}
+   */
+  PostPhysicsUpdate(time, apexScene)
+  {
+    const deltaTime = time - this._lastUpdateTime;
+    if (CcpTime.timeAsFloat(deltaTime) < this.updatePeriod) return;
+    this._lastUpdateTime = time;
+
+    for (let i = 0; i < this.curveSets.length; i++) this.curveSets[i].Update(CcpTime.timeAsDouble(time));
+
+    if (!this.visualModel || !this.visualModel.GetSkeleton()) return;
+    if (this.animationUpdater) this.animationUpdater.PostPhysicsAnimation(time, this.transform);
+    this.UpdateBones(time, apexScene);
+
+    // cpp:112-115.
+    if (this.worldTransformUpdater) this.worldTransformUpdater.UpdateTransform(time, this.transform);
+
+    // cpp:120-123.
+    if (this.lod.UnloadLodIfNeeded(time, deltaTime)) this.visualModel = null;
   }
 
   /**

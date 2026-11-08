@@ -22,6 +22,7 @@ import { CjsCmfFormat } from "#resource/formats/cmf";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { GrannyBoneOffset } from "./GrannyBoneOffset.js";
 import { Tr2GrannyAnimationLayer } from "./Tr2GrannyAnimationLayer.js";
+import { Tr2Renderer } from "../Tr2Renderer.js";
 
 
 /** Carbon's Tr2GrannyAnimationLayer( defaultBoneWeight, layerWeight ) constructor (Tr2GrannyAnimationLayer.cpp:54-75). */
@@ -228,7 +229,20 @@ export class Tr2GrannyAnimation extends IRoot
 
   _morphSample = new Float32Array(1);
 
+  /** Carbon m_paused (Tr2GrannyAnimation.h:238). */
   _paused = false;
+
+  /** Carbon m_pauseTime (h:239): the animation time pausing held, in seconds. */
+  _pauseTime = 0;
+
+  /** Carbon m_totalPauseOffset (h:240): the seconds of renderer animation time spent paused. */
+  _totalPauseOffset = 0;
+
+  /**
+   * The animation time PrePhysicsAnimation last sampled at, in seconds, or null before its first sample. Our layers
+   * advance by the change in it (see PrePhysicsAnimation); Carbon's cmf players hold start times instead.
+   */
+  _lastSampleTime = null;
 
   /**
    * Carbon m_poseModifier (Tr2GrannyAnimation.h:230): a NON-OWNING
@@ -851,24 +865,94 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /**
-   * Advances CPU animation controls and rebuilds browser bone matrices.
+   * Carbon PrePhysicsAnimation (ITr2AnimationUpdater.h, Tr2GrannyAnimation.cpp:1693-1760): samples every layer at
+   * the animation time (GetAnimationTime: the renderer's animation clock less the time spent paused), then the
+   * aiming bone, the pose modifier, the bone offsets and the world transforms.
    *
-   * @adapted Carbon's CMF PrePhysicsAnimation (Tr2GrannyAnimation.cpp:1693-1745)
-   *   driven by an explicit delta instead of Tr2Renderer's animation clock. The
-   *   pose is PERSISTENT, as in Carbon: it is rest-posed once at setup
-   *   (cpp:624) and sampling writes only bones of active animations
-   *   (cmf AnimationSequencer::Sample, mesh/src/cmf/animation.cpp:810-819), so a
-   *   bone nothing animates keeps its last value - an aimed bone keeps its aim
-   *   after DisableAimBone.
+   * @adapted Our layers hold each request's elapsed time where Carbon's cmf players hold start times, so the layers
+   *   advance by the change in GetAnimationTime() since this controller last sampled, which samples them at the
+   *   same absolute time. The change is taken across the device clock's hourly recentre, where Carbon rebases its
+   *   players (TriDevice.cpp:823-826): see _AnimationTimeSince. Carbon passes
+   *   modelTransform only to UpdateDebugRenderer, which is not ported.
+   * @param {number} _time Blue time in ticks; Carbon's body reads the animation clock instead.
+   * @param {mat4} _modelTransform The owner's world transform.
+   * @returns {void}
+   */
+  PrePhysicsAnimation(_time, _modelTransform)
+  {
+    const animationTime = this._GetAnimationTime();
+    const deltaTime = this._lastSampleTime === null ? 0 : this._AnimationTimeSince(this._lastSampleTime);
+    if (this._Sample(deltaTime)) this._lastSampleTime = animationTime;
+  }
+
+  /**
+   * Seconds of this controller's animation time since an earlier reading of it, across the device clock's hourly
+   * recentre: the difference is handed to the device's own wrap (Tr2Renderer.GetAnimationTimeElapsed) as an
+   * elapsed time ending now.
+   *
+   * @cjs Our layers advance by differences of the clock; Carbon's players are rebased at the recentre instead.
+   * @param {number} earlier An earlier _GetAnimationTime() reading.
+   * @returns {number} Seconds, never negative across one recentre.
+   */
+  _AnimationTimeSince(earlier)
+  {
+    return Tr2Renderer.GetAnimationTimeElapsed(Tr2Renderer.GetAnimationTime() - (this._GetAnimationTime() - earlier));
+  }
+
+  /**
+   * Carbon PostPhysicsAnimation (Tr2GrannyAnimation.cpp:1831-1834): empty.
+   *
+   * @implemented
+   * @param {number} _time Blue time in ticks.
+   * @param {mat4} _modelTransform The owner's world transform.
+   * @returns {void}
+   */
+  PostPhysicsAnimation(_time, _modelTransform) {}
+
+  /**
+   * Carbon GetAnimationTime (Tr2GrannyAnimation.h:237, cpp:2004-2011): while paused, the time pausing held; else
+   * the renderer's animation clock less the time spent paused.
+   *
+   * @implemented
+   * @returns {number} Seconds.
+   */
+  _GetAnimationTime()
+  {
+    if (this._paused) return this._pauseTime;
+    return Tr2Renderer.GetAnimationTime() - this._totalPauseOffset;
+  }
+
+  /**
+   * Advances CPU animation controls by an explicit delta and rebuilds browser bone matrices.
+   *
+   * @adapted The space objects' animation updaters still call this with their frame delta (EveSpaceObject2,
+   *   EveChildMesh), where Carbon calls PrePhysicsAnimation on the animation clock; it samples as
+   *   PrePhysicsAnimation does. A controller is driven by one or the other, never both.
+   * @param {number} [dt=0] Seconds to advance; none while paused.
+   * @returns {boolean} Whether the controller sampled.
    */
   Update(dt = 0)
+  {
+    return this._Sample(this._paused ? 0 : Math.max(0, Number(dt) || 0));
+  }
+
+  /**
+   * The body of Carbon's CMF PrePhysicsAnimation (Tr2GrannyAnimation.cpp:1693-1760), advancing the layers by
+   * deltaTime first. The pose is PERSISTENT, as in Carbon: it is rest-posed once at setup (cpp:624) and sampling
+   * writes only bones of active animations (cmf AnimationSequencer::Sample, mesh/src/cmf/animation.cpp:810-819), so
+   * a bone nothing animates keeps its last value - an aimed bone keeps its aim after DisableAimBone.
+   *
+   * @cjs Shared by PrePhysicsAnimation and Update.
+   * @param {number} deltaTime Seconds the layers advance.
+   * @returns {boolean} Whether the controller sampled: false until initialized, or while animation is disabled.
+   */
+  _Sample(deltaTime)
   {
     if (this._RenewResources() || this._NeedsGrannyReload()) this._ReloadResources();
     if (!this._initialized || !this.animationEnabled)
     {
       return false;
     }
-    const deltaTime = this._paused ? 0 : Math.max(0, Number(dt) || 0);
     this._advanceLayer(this._baseLayer, deltaTime);
     for (const layer of this._getOrderedLayers())
     {
@@ -1602,13 +1686,27 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /**
-   * Carbon method TogglePauseAnimations (MAP_METHOD_AND_WRAP).
+   * Carbon TogglePauseAnimations (MAP_METHOD_AND_WRAP, Tr2GrannyAnimation.cpp:2013-2031): pausing holds the
+   * animation time; resuming adds the time spent paused to the offset GetAnimationTime subtracts.
    *
-   * @implemented
+   * @adapted Carbon also toggles each layer's own pause (cpp:2027-2030), which only its cmf players read; our
+   *   layers sample at the owner's time, so the owner's pause is theirs.
+   * @param {boolean} pause Whether to pause.
+   * @returns {void}
    */
   TogglePauseAnimations(pause)
   {
-    this._paused = !!pause;
+    if (this._paused && !pause)
+    {
+      this._paused = false;
+      this._totalPauseOffset = Tr2Renderer.GetAnimationTime() - this._pauseTime;
+      this._pauseTime = 0;
+    }
+    else if (!this._paused && pause)
+    {
+      this._paused = true;
+      this._pauseTime = Tr2Renderer.GetAnimationTime() - this._totalPauseOffset;
+    }
   }
 
   /**
@@ -2110,6 +2208,12 @@ export class Tr2GrannyAnimation extends IRoot
       clearWhenDone: !!clearWhenDone,
       held: false
     };
+    // Carbon starts a player at the animation time it is played. The next PrePhysicsAnimation advances the layers
+    // by everything since the last sample, so the part before this play is taken off first.
+    if (this._lastSampleTime !== null)
+    {
+      request.elapsed -= this._AnimationTimeSince(this._lastSampleTime);
+    }
     // A finite clear-when-done play pins its stop at play time
     // (Tr2GrannyAnimationLayer.cpp:257-260), so a later EndAnimation or
     // enqueue leaves it where it is. Quirk CE-169: Carbon adds the delay

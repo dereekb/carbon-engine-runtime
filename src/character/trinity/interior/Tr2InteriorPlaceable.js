@@ -8,7 +8,9 @@ import { ITr2BoundingBox } from "#interfaces/ITr2BoundingBox";
 // Source: trinity/trinity/Interior/Tr2InteriorPlaceable.cpp
 // Source: trinity/trinity/Interior/Tr2InteriorPlaceable_Blue.cpp
 import { type } from "#schema";
-import { blue, IInitialize, INotify, IsMatch, BlueClasses } from "#blue";
+import { blue, CcpTime, IInitialize, INotify, IsMatch, BlueClasses } from "#blue";
+import { Tr2VariableStore } from "../../../trinity/core/variable/Tr2VariableStore.js";
+import { TriVariableContentType } from "../../../trinity/generated/trinityCore/enums.js";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { WodPlaceableRes } from "../wod/WodPlaceableRes.js";
 import { mat4 } from "#math/mat4";
@@ -114,6 +116,79 @@ export class Tr2InteriorPlaceable extends IRoot
 
   /** Monotonic request identity prevents superseded asynchronous publication. */
   _loadRequest = 0;
+
+  /** m_cellReflectionMaps[2] (TriTextureResPtr): the current and previous per-cell reflection maps (Tr2InteriorPlaceable.h). */
+  _cellReflectionMaps = [ null, null ];
+
+  /** m_cellReflectionTime (float): seconds since the last per-cell reflection map change. */
+  _cellReflectionTime = 0;
+
+  /** m_previousUpdateTime (Be::Time): the time of the previous PostPhysicsUpdate, in Blue ticks. */
+  _previousUpdateTime = 0;
+
+  /** m_transitionFinished (bool): whether the one-second reflection swap has happened. */
+  _transitionFinished = false;
+
+  /**
+   * Carbon: Tr2InteriorPlaceable::Tr2InteriorPlaceable (Tr2InteriorPlaceable.cpp:24-55): creates the local
+   * variable store, with no parent, and registers the three per-cell reflection variables.
+   *
+   * @adapted The registrations state their TriVariableContentType, as Tr2VariableStore.RegisterVariableInternal
+   *   requires (C++ deduces it from the argument type). The wodInteriorPlaceablesAlive statistic is not ported.
+   */
+  constructor()
+  {
+    super();
+    this.variableStore = new Tr2VariableStore();
+    this.variableStore.RegisterVariableInternal("CellReflectionMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, null);
+    this.variableStore.RegisterVariableInternal("CellReflection2ndMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, null);
+    this.variableStore.RegisterVariableInternal("CellReflectionInterpolation", TriVariableContentType.TRIVARIABLE_FLOAT, 0);
+  }
+
+  /**
+   * Carbon: Tr2InteriorPlaceable::PrePhysicsUpdate (Tr2InteriorPlaceable.cpp:143-145): empty.
+   *
+   * @implemented
+   * @param {number} _time Blue time in ticks.
+   * @returns {void}
+   */
+  PrePhysicsUpdate(_time) {}
+
+  /**
+   * Carbon: Tr2InteriorPlaceable::PostPhysicsUpdate (Tr2InteriorPlaceable.cpp:147-170): updates the resource's
+   * curve sets, then the per-cell reflection blend. After one second the pair swaps once, so a placeable settles on
+   * one map, and the three variables are republished into the local store.
+   *
+   * @implemented
+   * @param {number} time Blue time in ticks.
+   * @param {object|null} _apexScene Physics scene; always null.
+   * @returns {void}
+   */
+  PostPhysicsUpdate(time, _apexScene)
+  {
+    if (this.placeableRes)
+    {
+      const curveSets = this.placeableRes.GetCurveSets();
+      for (let i = 0; i < curveSets.length; i++) curveSets[i].Update(CcpTime.timeAsDouble(time));
+    }
+
+    this._cellReflectionTime += CcpTime.timeAsFloat(time - this._previousUpdateTime);
+    if (this._cellReflectionTime > 1.0)
+    {
+      // cpp:159: one reflection map per placeable.
+      if (!this._transitionFinished)
+      {
+        const maps = this._cellReflectionMaps;
+        [ maps[0], maps[1] ] = [ maps[1], maps[0] ];
+        this._transitionFinished = true;
+      }
+    }
+    const store = this.variableStore;
+    store.RegisterVariableInternal("CellReflectionMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, this._cellReflectionMaps[0]);
+    store.RegisterVariableInternal("CellReflection2ndMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, this._cellReflectionMaps[1]);
+    store.RegisterVariableInternal("CellReflectionInterpolation", TriVariableContentType.TRIVARIABLE_FLOAT, this._cellReflectionTime);
+    this._previousUpdateTime = time;
+  }
 
   /**
    * Starts the native resource load after persisted fields have been populated.

@@ -6,7 +6,7 @@ import { ITr2Pickable } from "../../../trinity/core/ITr2Pickable.js";
 import { ITr2BoundingBox } from "#interfaces/ITr2BoundingBox";
 // Source: trinity/trinity/Interior/Tr2IntSkinnedObject.h
 import { type } from "#schema";
-import { IInitialize, INotify } from "#blue";
+import { CcpTime, IInitialize, INotify } from "#blue";
 import { Tr2SkinnedObject } from "../trinityCore/Tr2SkinnedObject.js";
 import { Tr2PerObjectDataSkinned, TR2_MAX_BONES_PER_MESHAREA } from "../trinityCore/Tr2PerObjectDataSkinned.js";
 import { Tr2PerAreaDataSkinned } from "../trinityCore/Tr2PerAreaDataSkinned.js";
@@ -328,35 +328,36 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
   }
 
   /**
-   * Carbon: Tr2IntSkinnedObject::PrePhysicsUpdate (Tr2IntSkinnedObject.cpp:68-71).
+   * Carbon: Tr2IntSkinnedObject::PrePhysicsUpdate (Tr2IntSkinnedObject.cpp:68-71): the base's.
    *
-   * Not implemented: Carbon's body only forwards to Tr2SkinnedObject::PrePhysicsUpdate
-   * (Tr2SkinnedObject.cpp), which Tr2SkinnedObject does not carry yet.
-   *
-   * @notImplemented
-   * @param {number} _time Blue time in ticks.
+   * @implemented
+   * @param {number} time Blue time in ticks.
    * @returns {void}
    */
-  PrePhysicsUpdate(_time)
+  PrePhysicsUpdate(time)
   {
-    throw new Error("Tr2IntSkinnedObject.PrePhysicsUpdate requires the unported Tr2SkinnedObject.PrePhysicsUpdate.");
+    super.PrePhysicsUpdate(time);
   }
 
   /**
-   * Carbon: Tr2IntSkinnedObject::PostPhysicsUpdate (Tr2IntSkinnedObject.cpp:73-82).
+   * Carbon: Tr2IntSkinnedObject::PostPhysicsUpdate (Tr2IntSkinnedObject.cpp:73-82): the base's, then republishes
+   * the per-cell reflection maps into the local store and advances their blend by the time since the previous call.
    *
-   * Not implemented: it begins with Tr2SkinnedObject::PostPhysicsUpdate (Tr2SkinnedObject.cpp),
-   * which Tr2SkinnedObject does not carry yet; the reflection-variable republish that follows
-   * (cpp:77-81) cannot run ahead of it and is written when the base lands.
-   *
-   * @notImplemented
-   * @param {number} _time Blue time in ticks.
-   * @param {object|null} _apexScene Physics scene.
+   * @implemented
+   * @param {number} time Blue time in ticks.
+   * @param {object|null} apexScene Physics scene; always null.
    * @returns {void}
    */
-  PostPhysicsUpdate(_time, _apexScene)
+  PostPhysicsUpdate(time, apexScene)
   {
-    throw new Error("Tr2IntSkinnedObject.PostPhysicsUpdate requires the unported Tr2SkinnedObject.PostPhysicsUpdate.");
+    super.PostPhysicsUpdate(time, apexScene);
+
+    const store = this.variableStore;
+    store.RegisterVariableInternal("CellReflectionMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, this._cellReflectionMaps[0]);
+    store.RegisterVariableInternal("CellReflection2ndMap", TriVariableContentType.TRIVARIABLE_TEXTURE_RES, this._cellReflectionMaps[1]);
+    this._cellReflectionTime += CcpTime.timeAsFloat(time - this._previousUpdateTime);
+    store.RegisterVariableInternal("CellReflectionInterpolation", TriVariableContentType.TRIVARIABLE_FLOAT, this._cellReflectionTime);
+    this._previousUpdateTime = time;
   }
 
   /**

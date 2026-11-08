@@ -63,5 +63,5 @@ test("Tr2IntSkinnedObject reflection maps and apex scene membership", () =>
 
   assert.equal(object.IsBoundingBoxReady(), false);
   assert.equal(object.AddToScene(null), false);
-  assert.throws(() => object.PostPhysicsUpdate(0, null), /Tr2SkinnedObject/);
+  assert.doesNotThrow(() => object.PostPhysicsUpdate(0, null), "the base update returns early without a visual model");
 });
