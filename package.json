@@ -310,7 +310,7 @@
   ],
   "scripts": {
     "audit:decorator-target": "node scripts/lint-decorator-target.js",
-    "build:npm": "node scripts/build-npm.js && rollup -c && rollup -c rollup.workers.config.mjs && node scripts/build-min.js",
+    "build:npm": "node scripts/build-npm-staged.js",
     "shaders:overlay": "node scripts/shadercompiler/update-overlay.mjs",
     "lint": "node scripts/run-lint.js",
     "lint:carbon-methods": "node scripts/trinity/lint-native-method-parity.js",

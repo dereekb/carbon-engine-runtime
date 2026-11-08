@@ -10,16 +10,18 @@ import { fileURLToPath } from "node:url";
 import { shared } from "./rollup.browser-shared.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
-const destination = path.join(root, "npm/dist/workers");
+// npm/dist, or the staging directory build-npm-staged.js swaps in at the end.
+const dist = `${process.env.CJS_NPM_OUT || "npm"}/dist`;
+const destination = path.join(root, dist, "workers");
 
 /** The worker bundles, by output file name, and the built module each is bundled from. */
 export const WORKER_BUNDLES = Object.freeze({
-    "resource.worker.bundle.js": "npm/dist/blue/worker/CjsResManWorker.js",
-    "gr2.worker.bundle.js": "npm/dist/resource/formats/gr2/CjsGr2Format.js",
-    "dds.worker.bundle.js": "npm/dist/resource/formats/dds/CjsDdsFormat.js",
-    "dds-compression.worker.bundle.js": "npm/dist/resource/codecs/bcn/compressionWorker.js",
-    "image-decode.worker.bundle.js": "npm/dist/resource/imageio/imageDecodeCallbacks.js",
-    "callback-man.worker.bundle.js": "npm/dist/blue/worker/blueCallbackManWorkerEntry.js"
+    "resource.worker.bundle.js": `${dist}/blue/worker/CjsResManWorker.js`,
+    "gr2.worker.bundle.js": `${dist}/resource/formats/gr2/CjsGr2Format.js`,
+    "dds.worker.bundle.js": `${dist}/resource/formats/dds/CjsDdsFormat.js`,
+    "dds-compression.worker.bundle.js": `${dist}/resource/codecs/bcn/compressionWorker.js`,
+    "image-decode.worker.bundle.js": `${dist}/resource/imageio/imageDecodeCallbacks.js`,
+    "callback-man.worker.bundle.js": `${dist}/blue/worker/blueCallbackManWorkerEntry.js`
 });
 
 /**

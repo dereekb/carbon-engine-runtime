@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const npmRoot = path.join(root, "npm");
+// The output root: npm/, or the staging directory build-npm-staged.js swaps in at the end.
+const npmRoot = path.join(root, process.env.CJS_NPM_OUT || "npm");
 
 function rewriteTargets(value)
 {
@@ -98,4 +99,4 @@ await fs.cp(path.join(root, "docs"), path.join(npmRoot, "docs"), { recursive: tr
 await fs.cp(path.join(root, "format-notices"), path.join(npmRoot, "format-notices"), { recursive: true });
 await fs.cp(path.join(root, "migration"), path.join(npmRoot, "migration"), { recursive: true });
 
-console.log("combined runtime npm metadata refreshed -> npm/");
+console.log(`combined runtime npm metadata refreshed -> ${path.relative(root, npmRoot)}/`);

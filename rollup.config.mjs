@@ -73,7 +73,8 @@ export default {
     input,
     external: id => id.startsWith("#") || id.startsWith("node:") || dependencies.has(packageName(id)),
     output: {
-        dir: "npm/dist",
+        // npm/dist, or the staging directory build-npm-staged.js swaps in at the end.
+        dir: `${process.env.CJS_NPM_OUT || "npm"}/dist`,
         format: "esm",
         preserveModules: true,
         preserveModulesRoot: "src",

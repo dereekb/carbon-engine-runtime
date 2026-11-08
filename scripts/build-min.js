@@ -9,7 +9,8 @@ import { minifyOptions } from "./minify-options.js";
 import { transformAsync } from "@babel/core";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dist = path.join(root, "npm/dist");
+// npm/dist, or the staging directory build-npm-staged.js swaps in at the end.
+const dist = path.join(root, process.env.CJS_NPM_OUT || "npm", "dist");
 const outfile = path.join(dist, "carbonenginejs.min.js");
 await build({
     ...minifyOptions,

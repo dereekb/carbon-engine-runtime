@@ -2,6 +2,8 @@ node_modules/
 coverage/
 dist/
 npm/
+npm.staging/
+npm.previous/
 AGENTS.md
 CLAUDE.md
 .agents/
