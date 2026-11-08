@@ -89,7 +89,7 @@ import * as CcpLog from "../../global/logging/ccpLog.js";
 import { Tr2ResourceSetAL } from "../Tr2ResourceSetAL/Tr2ResourceSetAL.js";
 import { PixelFormat, RenderState, ShaderType, Topology, Tr2CpuUsage, Tr2GpuUsage, Tr2LoadAction, Tr2StoreAction, UpscalingResult, UpscalingSetting, UpscalingTechnique } from "#consts/render-context";
 import { Tr2ColorAttachment, Tr2ConstantUsageAL, Tr2DepthAttachment, Tr2VertexLayoutALStub, resolveBindingPlan, ALResult, Failed, Tr2DrawUPHelper } from "#trinityal";
-import { CjsWebgpuWorkQueue, EncoderType } from "./core/CjsWebgpuWorkQueue.js";
+import { CjsWebgpuWorkQueue, DEPTH_WRITING_PIPELINES, EncoderType } from "./core/CjsWebgpuWorkQueue.js";
 import { RegisterBindingUse } from "./core/bindingIndex.js";
 import { CjsWebgpuMipGenerator } from "./core/CjsWebgpuMipGenerator.js";
 import { CjsWebgpuBufferAL } from "./CjsWebgpuBufferAL.js";
@@ -99,7 +99,7 @@ import { CjsWebgpuDevice } from "./CjsWebgpuDevice.js";
 import { CARBON_BACKEND_ADDRESS_MODES_SYMBOL } from "#resource/format";
 import { CjsWebgpuSamplerStateAL } from "./CjsWebgpuSamplerStateAL.js";
 import { CjsWebgpuResourceSetAL } from "./CjsWebgpuResourceSetAL.js";
-import { CjsWebgpuTextureAL } from "./CjsWebgpuTextureAL.js";
+import { CjsWebgpuTextureAL, DEPTH_SHADOW_VIEWS } from "./CjsWebgpuTextureAL.js";
 import { CjsWebgpuConstantArena } from "./core/CjsWebgpuConstantArena.js";
 import { CjsWebgpuUtils } from "./core/CjsWebgpuUtils.js";
 import { TOPOLOGIES } from "./core/topology.js";
@@ -1296,14 +1296,12 @@ export class CjsWebgpuRenderContextAL
   SetDepthStencil(depthStencil)
   {
     if (depthStencil && !depthStencil.IsValid()) depthStencil = null;
-    const previous = this._depthStencil;
 
     this._Record(this._workQueue.SetDepthAttachment(depthStencil ? depthStencil.TrinityALImpl_GetObject() : null));
 
-    // Unbinding ends the pass that wrote the depth, so a sampled depth
-    // texture's float shadow is refreshed here (CjsWebgpuTextureAL._depthShadow).
-    if (previous && !this._SameTarget(previous, depthStencil)) this._Record(this._workQueue.CopyDepthShadow(previous.TrinityALImpl_GetObject()));
-
+    // A sampled depth's float shadow is not copied at unbind: the work queue
+    // copies it before the draw or dispatch that reads it, when the depth has
+    // changed (CjsWebgpuWorkQueue._RefreshDepthShadows).
     if (!this._SameTarget(this._depthStencil, depthStencil)) this._pipelineDirty = true;
 
     const next = depthStencil ? new Tr2TextureAL({ copy: depthStencil }) : null;
@@ -2286,6 +2284,7 @@ export class CjsWebgpuRenderContextAL
       const key = keyParts.join("|");
       const cached = this._bindGroups.get(key) ?? null;
       let bindGroup = cached?.bindGroup ?? null;
+      let depthShadows = cached?.depthShadows ?? null;
 
       if (cached) cached.frame = this._frameNumber;
       else
@@ -2302,13 +2301,20 @@ export class CjsWebgpuRenderContextAL
           layout: layouts[group],
           entries: resolved
         });
-        this._bindGroups.set(key, { bindGroup, frame: this._frameNumber });
+        // The depth textures whose float shadow this group reads, so the work
+        // queue can copy them before it is used (CjsWebgpuWorkQueue._RefreshDepthShadows).
+        for (const { resource } of resolved)
+        {
+          const shadowed = resource && typeof resource === "object" ? DEPTH_SHADOW_VIEWS.get(resource) : undefined;
+          if (shadowed) (depthShadows ??= []).push(shadowed);
+        }
+        this._bindGroups.set(key, { bindGroup, frame: this._frameNumber, depthShadows });
         // A destroyed texture or buffer drops the groups binding it
         // (bindingIndex.js); the age sweep in EndScene catches the rest.
         for (const object of boundObjects) RegisterBindingUse(object, this._bindGroups, key);
       }
 
-      this._workQueue.SetBindGroup(group, bindGroup, dynamicOffsets);
+      this._workQueue.SetBindGroup(group, bindGroup, dynamicOffsets, depthShadows);
     }
 
     return true;
@@ -2794,7 +2800,10 @@ export class CjsWebgpuRenderContextAL
     };
 
     CjsWebgpuDevice.renderPipelinesCreated += 1;
-    return this._webgpu.GetDevice().createRenderPipeline(descriptor);
+    const pipeline = this._webgpu.GetDevice().createRenderPipeline(descriptor);
+    // A draw through it changes the attached depth, so its float shadow goes stale (CjsWebgpuWorkQueue._NoteDepthWrite).
+    if (recipe.depthStencil?.depthWriteEnabled) DEPTH_WRITING_PIPELINES.add(pipeline);
+    return pipeline;
   }
 
   /**
@@ -3299,13 +3308,13 @@ export class CjsWebgpuRenderContextAL
   /**
    * Binds depth read-only, so it can be sampled while still testing.
    *
-   * TURNING IT ON REFRESHES THE BOUND DEPTH'S FLOAT SHADOW. Carbon enables it
-   * exactly where a pass is about to read the depth it has written with the
-   * depth still bound: SSAO, the light lists, the lens-flare queries
-   * (EveSpaceSceneRenderDriver.cpp:365, 543, 589). Shaders here read the
-   * r32float shadow (`CjsWebgpuTextureAL._depthShadow`), which otherwise
-   * refreshes only when the depth is unbound (`SetDepthStencil`), so without
-   * this they read the previous frame's depth. The copy ends the open pass.
+   * Carbon enables it exactly where a pass is about to read the depth it has
+   * written with the depth still bound: SSAO, the light lists, the lens-flare
+   * queries (EveSpaceSceneRenderDriver.cpp:365, 543, 589). Shaders here read
+   * the r32float shadow (`CjsWebgpuTextureAL._depthShadow`), which the work
+   * queue copies before the first draw or dispatch that binds it after the
+   * depth changed (`CjsWebgpuWorkQueue._RefreshDepthShadows`), so turning
+   * this on copies nothing itself.
    *
    * The flag itself is STORED, NOT YET APPLIED. WebGPU expresses it as
    * `depthReadOnly` on the render-pass descriptor, which `_Descriptor`
@@ -3317,8 +3326,6 @@ export class CjsWebgpuRenderContextAL
    */
   SetReadOnlyDepth(enable)
   {
-    if (enable && !this._readOnlyDepth && this._depthStencil) this._Record(this._workQueue.CopyDepthShadow(this._depthStencil.TrinityALImpl_GetObject()));
-
     this._readOnlyDepth = !!enable;
   }
 

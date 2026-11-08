@@ -70,6 +70,17 @@ export const EncoderType = Object.freeze({
 
 
 /**
+ * Render pipelines whose depth-stencil state writes depth. The render context
+ * adds each one it creates with `depthWriteEnabled`, so a draw through one
+ * marks the attached depth's float shadow out of date. Ours: see
+ * `_RefreshDepthShadows`.
+ *
+ * @type {WeakSet<GPURenderPipeline>}
+ */
+export const DEPTH_WRITING_PIPELINES = new WeakSet();
+
+
+/**
  * Owns the encoder lifetime for one frame, as Carbon's `MetalWorkQueue` does.
  *
  * DEVICE-FREE, for the reason Carbon's stub backend is: the rules are the part
@@ -106,6 +117,16 @@ export class CjsWebgpuWorkQueue
 
   /** m_currentRenderPassDescriptor.depthAttachment */
   _depthAttachment = null;
+
+  /**
+   * Depth textures whose float shadow matches their depth: copied since the
+   * depth was last cleared or written. Ours, as the shadow is (see
+   * `_RefreshDepthShadows`).
+   *
+   * @cjs
+   * @type {WeakSet<object>}
+   */
+  _freshDepthShadows = new WeakSet();
 
   /**
    * The encoder currently open.
@@ -443,7 +464,12 @@ export class CjsWebgpuWorkQueue
    * pass leaves its discard hint for the next transparent draw, discarding
    * that draw's color; a pending clear must also precede the sampled copy.
    *
-   * @param {object} texture The depth `Tr2TextureAL` that was just unbound.
+   * The render context no longer calls this: draws and dispatches refresh the
+   * shadows they bind (`_RefreshDepthShadows`). It stays for a caller that
+   * must refresh one outright.
+   *
+   * @cjs
+   * @param {object} texture The depth `Tr2TextureAL` to copy.
    * @returns {object[]} The transitions this required.
    */
   CopyDepthShadow(texture)
@@ -452,10 +478,79 @@ export class CjsWebgpuWorkQueue
 
     if (this._pendingRenderPassHint || this._pendingClear) this._GetRenderEncoder(false);
     this._ReleaseEncoder();
-
-    if (texture.EncodeDepthShadowCopy(this._commandEncoder)) this._events.push({ type: "copy-depth-shadow" });
+    this._EncodeDepthShadowCopy(texture);
 
     return this._Drain();
+  }
+
+  /**
+   * Copies the float shadows the pending bind groups read whose depth has
+   * changed since their last copy, before the draw or dispatch that reads
+   * them.
+   *
+   * @adapted WebGPU cannot view depth32float as the r32float D3D's shader
+   *   view gives (CjsWebgpuTextureAL._depthShadow), so the depth is copied into
+   *   a float shadow. Copying at every depth unbind cost 11 whole-texture copies
+   *   a frame at 3840x1890, the 16384x4096 shadow cascade among them, whether
+   *   anything read them or not (about 5-6 ms of GPU a frame). A shadow is
+   *   copied only when a bind group about to be used holds it and its depth was
+   *   cleared or written since, so an unread depth is never copied.
+   * Copies run outside passes: the open encoder ends first, after any pending
+   * clear or hint has run (see CopyDepthShadow), and the draw reopens a pass
+   * that loads what the last one stored.
+   */
+  _RefreshDepthShadows()
+  {
+    let stale = null;
+
+    for (const entry of this._pending.bindGroups)
+    {
+      for (const texture of entry?.depthShadows ?? [])
+      {
+        if (!this._freshDepthShadows.has(texture)) (stale ??= new Set()).add(texture);
+      }
+    }
+
+    // A pending clear of the attached depth runs before the read, so it makes
+    // that depth's shadow stale too.
+    const depth = this._depthAttachment?.texture ?? null;
+    const pending = MergeHintOverClear(this._pendingRenderPassHint, this._pendingClear);
+    if (depth && pending?.depth?.load === Tr2LoadAction.CLEAR)
+    {
+      for (const entry of this._pending.bindGroups)
+      {
+        if (entry?.depthShadows?.includes(depth)) (stale ??= new Set()).add(depth);
+      }
+    }
+
+    if (!stale || !this._inFrame || !this._commandEncoder) return;
+
+    if (this._pendingRenderPassHint || this._pendingClear) this._GetRenderEncoder(false);
+    this._ReleaseEncoder();
+
+    for (const texture of stale) this._EncodeDepthShadowCopy(texture);
+  }
+
+  /**
+   * Encodes one shadow copy on the command encoder and records it current.
+   *
+   * @cjs
+   * @param {object} texture The depth `Tr2TextureAL`.
+   */
+  _EncodeDepthShadowCopy(texture)
+  {
+    if (texture.EncodeDepthShadowCopy(this._commandEncoder)) this._events.push({ type: "copy-depth-shadow" });
+    this._freshDepthShadows.add(texture);
+  }
+
+  /**
+   * Marks the attached depth's shadow stale when the next draw writes depth.
+   *
+   * @cjs
+   */
+  _NoteDepthWrite()
+  {
+    if (this._depthAttachment && DEPTH_WRITING_PIPELINES.has(this._pending.pipeline)) this._freshDepthShadows.delete(this._depthAttachment.texture);
   }
 
   /**
@@ -522,7 +617,9 @@ export class CjsWebgpuWorkQueue
   {
     if (!this._inFrame) fail("a dispatch outside a frame");
 
-    const events = this._currentEncoderType === EncoderType.COMPUTE ? [] : this.SetCurrentEncoder(EncoderType.COMPUTE);
+    this._RefreshDepthShadows();
+
+    const events =this._currentEncoderType === EncoderType.COMPUTE ? [] : this.SetCurrentEncoder(EncoderType.COMPUTE);
 
     this._events.push(...events, event);
 
@@ -718,10 +815,16 @@ export class CjsWebgpuWorkQueue
    *
    * @param {number} index The group index.
    * @param {object} bindGroup A `GPUBindGroup`.
+   * @param {number[]|null} [dynamicOffsets] Its dynamic offsets.
+   * @param {object[]|null} [depthShadows] The depth textures whose float shadow it binds (`_RefreshDepthShadows`).
    */
-  SetBindGroup(index, bindGroup, dynamicOffsets = null)
+  SetBindGroup(index, bindGroup, dynamicOffsets = null, depthShadows = null)
   {
-    this._pending.bindGroups[index] = { bindGroup, dynamicOffsets: dynamicOffsets?.length ? dynamicOffsets.slice() : null };
+    this._pending.bindGroups[index] = {
+      bindGroup,
+      dynamicOffsets: dynamicOffsets?.length ? dynamicOffsets.slice() : null,
+      depthShadows: depthShadows?.length ? depthShadows : null
+    };
   }
 
   /**
@@ -1017,9 +1120,11 @@ export class CjsWebgpuWorkQueue
   {
     if (!this._inFrame) fail("a draw outside a frame");
 
-    if (this._currentEncoderType === EncoderType.RENDER && !this._pendingRenderPassHint) return;
+    this._RefreshDepthShadows();
 
-    this._GetRenderEncoder();
+    if (this._currentEncoderType !== EncoderType.RENDER || this._pendingRenderPassHint) this._GetRenderEncoder();
+
+    this._NoteDepthWrite();
   }
 
   /**
@@ -1044,6 +1149,9 @@ export class CjsWebgpuWorkQueue
     this._passCount += 1;
     this._currentEncoderType = EncoderType.RENDER;
     this._events.push({ type: "open", encoderType: EncoderType.RENDER, attachments });
+
+    // A depth clear changes the depth, so its float shadow is out of date (_RefreshDepthShadows).
+    if (this._depthAttachment && attachments?.depth?.loadOp === "clear") this._freshDepthShadows.delete(this._depthAttachment.texture);
 
     if (this._commandEncoder)
     {

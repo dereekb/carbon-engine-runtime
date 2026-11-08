@@ -1010,7 +1010,7 @@ test("ClearUav zeroes a buffer with clearBuffer, outside any pass, and refuses w
   assert.equal(log.length, 4);
 });
 
-test("unbinding a sampled depth stencil refreshes its float shadow after its pass ends", () =>
+test("unbinding a sampled depth stencil copies nothing: a read refreshes its float shadow", () =>
 {
   const { al, passes } = composedWithPasses();
   const log = [];
@@ -1031,16 +1031,13 @@ test("unbinding a sampled depth stencil refreshes its float shadow after its pas
   al.DrawIndexedInstanced(3, 1, 0, 0, 0);
   al.SetDepthStencil(null);
 
-  assert.deepEqual(log, [ "copy after 1 pass(es)" ]);
-  assert.equal(al.DrainTransitions().some(event => event.type === "copy-depth-shadow"), true);
-
-  // Rebinding the same depth is not an unbind.
-  al.SetDepthStencil(depth);
-  al.SetDepthStencil(depth);
-  assert.equal(log.length, 1);
+  // CjsWebgpuWorkQueue._RefreshDepthShadows copies before the draw that binds it.
+  assert.deepEqual(log, []);
+  assert.equal(al.DrainTransitions().some(event => event.type === "copy-depth-shadow"), false);
+  assert.equal(passes.length, 1);
 });
 
-test("turning read-only depth on refreshes the bound depth's float shadow", () =>
+test("turning read-only depth on copies nothing: a read refreshes the float shadow", () =>
 {
   const { al, passes } = composedWithPasses();
   const log = [];
@@ -1061,19 +1058,9 @@ test("turning read-only depth on refreshes the bound depth's float shadow", () =
   al.DrawIndexedInstanced(3, 1, 0, 0, 0);
   al.SetReadOnlyDepth(true);
 
-  assert.deepEqual(log, [ "copy after 1 pass(es)" ]);
-  assert.equal(al.GetReadOnlyDepth(), true);
-
-  // Already read-only, or turned off: no copy.
-  al.SetReadOnlyDepth(true);
-  al.SetReadOnlyDepth(false);
-  assert.equal(log.length, 1);
-
-  // Nothing bound: nothing to refresh.
-  al.SetDepthStencil(null);
-  log.length = 0;
-  al.SetReadOnlyDepth(true);
   assert.deepEqual(log, []);
+  assert.equal(al.GetReadOnlyDepth(), true);
+  assert.equal(passes.length, 1, "the open pass is not ended");
 });
 
 test("Clear honours Carbon's flags and clears one colour slot", () =>

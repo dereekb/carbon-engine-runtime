@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { CjsWebgpuDevice } from "../../../npm/dist/trinityal/webgpu/index.js";
-import { CjsWebgpuRenderContextAL, CjsWebgpuTextureAL, CjsWebgpuUtils } from "../../../npm/dist/trinityal/webgpu/internal.js";
+import { CjsWebgpuRenderContextAL, CjsWebgpuTextureAL, CjsWebgpuUtils, DEPTH_SHADOW_VIEWS } from "../../../npm/dist/trinityal/webgpu/internal.js";
 import { BlueResMan, TriTextureRes, MotherLode } from "../../../npm/dist/resource/index.js";
 import { DescribeBitmap, RealizeTexture } from "../../../npm/dist/trinity/core/Tr2ImageIOHelpers.js";
 import { Tr2BaseDeviceResourceAL, Tr2TextureAL, ALResult, Tr2BitmapDimensions, Tr2MsaaDesc, Tr2SubresourceData } from "../../../npm/dist/trinityal/index.js";
@@ -365,6 +365,8 @@ test("a sampled depth texture is read through an r32float shadow copied via a ro
   assert.equal(depth.GetDeviceTextureView("2d", 0, "depth"), depthView);
   assert.equal(depth.GetDeviceTextureView(), floatView);
   assert.equal(depth.GetDeviceRenderTargetView(0).textureFormat, "depth32float", "attached as itself");
+  assert.equal(DEPTH_SHADOW_VIEWS.get(floatView), depth, "a shadow view names the depth it shadows");
+  assert.equal(DEPTH_SHADOW_VIEWS.has(depthView), false, "the native depth view is not a shadow");
 
   const copies = [];
   const encoder = {

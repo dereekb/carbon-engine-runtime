@@ -34,6 +34,17 @@ import { CjsWebgpuDevice } from "./CjsWebgpuDevice.js";
 
 const NO_HEAP_INDEX = 0xffffffff;
 
+/**
+ * Each view of a depth texture's r32float shadow, mapped to the texture it
+ * shadows. A bind group holding one of these reads the shadow, so the work
+ * queue refreshes the shadow before that bind group's draw or dispatch
+ * (`CjsWebgpuWorkQueue._RefreshDepthShadows`). Ours: D3D and Metal sample
+ * depth through a view and have no shadow to keep current.
+ *
+ * @type {WeakMap<GPUTextureView, CjsWebgpuTextureAL>}
+ */
+export const DEPTH_SHADOW_VIEWS = new WeakMap();
+
 /** Carbon texture type to WebGPU's view dimension for the texture as a whole. */
 const VIEW_DIMENSION_OF_TYPE = Object.freeze({
   [TextureType.TEX_TYPE_2D]: "2d",
@@ -315,8 +326,9 @@ export class CjsWebgpuTextureAL extends Tr2DeviceResourceAL
    * No view can reinterpret depth32float as r32float and a texture-to-texture
    * copy needs matching formats, so the depth goes through a buffer:
    * `EncodeDepthShadowCopy` copies depth into it and on into this texture,
-   * which is what the shader view returns. The context encodes that copy
-   * whenever the depth stencil is unbound, which is when its pass has ended.
+   * which is what the shader view returns. The work queue encodes that copy
+   * just before a draw or dispatch binds the shadow, and only when the depth
+   * has been written since the last copy (`CjsWebgpuWorkQueue._RefreshDepthShadows`).
    */
   _depthShadow = null;
 
@@ -452,6 +464,7 @@ export class CjsWebgpuTextureAL extends Tr2DeviceResourceAL
         ...(srgb ? { format: this._srgbFormat } : {})
       });
       this._views.set(key, view);
+      if (useShadow) DEPTH_SHADOW_VIEWS.set(view, this);
     }
 
     return view;

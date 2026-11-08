@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CjsWebgpuWorkQueue, EncoderType } from "../../../npm/dist/trinityal/webgpu/internal.js";
+import { CjsWebgpuWorkQueue, DEPTH_WRITING_PIPELINES, EncoderType } from "../../../npm/dist/trinityal/webgpu/internal.js";
 import { Tr2ColorAttachment, Tr2DepthAttachment } from "../../../npm/dist/trinityal/index.js";
 import { Tr2LoadAction, Tr2StoreAction } from "../../../npm/dist/global/consts/renderContext/index.js";
 
@@ -564,5 +564,101 @@ test("a pass opened for a draw retains DONT_CARE load and store actions", () =>
     assert.equal(attachment.loadOp, "clear");
     assert.equal(attachment.storeOp, "discard");
   }
+  queue.EndFrame();
+});
+
+
+// A depth texture's float shadow is copied only before a draw or dispatch that
+// binds it, and only when the depth was cleared or written since the last copy
+// (_RefreshDepthShadows). The frame below is the space scene's shape.
+function shadowFrame()
+{
+  const log = [];
+  const queue = started();
+  const pass = () => ({ setPipeline() {}, setBindGroup() {}, draw() { log.push("draw"); }, end() { log.push("end"); } });
+  queue.SetCommandEncoder({
+    beginRenderPass() { log.push("pass"); return pass(); },
+    beginComputePass() { log.push("compute"); return { setPipeline() {}, setBindGroup() {}, dispatchWorkgroups() { log.push("dispatch"); }, end() { log.push("end"); } }; }
+  }, attachments => attachments);
+  const depth = (name) => ({ name, EncodeDepthShadowCopy() { log.push(`copy ${name}`); return true; } });
+  const writes = {}, reads = {};
+  DEPTH_WRITING_PIPELINES.add(writes);
+  return { queue, log, depth, writes, reads };
+}
+
+test("a depth shadow is copied before the first read after a write, once", () =>
+{
+  const { queue, log, depth, writes, reads } = shadowFrame();
+  const scene = depth("scene");
+
+  queue.SetDepthAttachment(scene);
+  queue.SetRenderPipeline(writes);
+  queue.DrawPrimitives(3, 1, 0, 0);
+  assert.deepEqual(log, [ "pass", "draw" ], "a write copies nothing");
+
+  // A read with the depth still bound (read-only depth): the pass ends, the
+  // copy runs, and the draw reopens a pass.
+  queue.SetRenderPipeline(reads);
+  queue.SetBindGroup(0, {}, null, [ scene ]);
+  queue.DrawPrimitives(3, 1, 0, 0);
+  assert.deepEqual(log.slice(2), [ "end", "copy scene", "pass", "draw" ]);
+
+  // Nothing wrote since: further reads, in this pass or a compute pass, copy nothing.
+  queue.DrawPrimitives(3, 1, 0, 0);
+  queue.SetComputePipeline({});
+  queue.DispatchThreadgroups(1, 1, 1);
+  assert.equal(log.filter(entry => entry.startsWith("copy")).length, 1);
+  queue.EndFrame();
+});
+
+test("a depth nothing reads is never copied, however often it is written", () =>
+{
+  const { queue, log, depth, writes } = shadowFrame();
+  const cascade = depth("cascade");
+
+  queue.SetDepthAttachment(cascade);
+  queue.SetRenderPipeline(writes);
+  for (let i = 0; i < 4; i++) queue.DrawPrimitives(3, 1, 0, 0);
+  queue.SetDepthAttachment(null);
+  queue.EndFrame();
+
+  assert.equal(log.some(entry => entry.startsWith("copy")), false);
+});
+
+test("a depth clear makes the shadow stale; a non-writing draw does not", () =>
+{
+  const { queue, log, depth, reads } = shadowFrame();
+  const scene = depth("scene");
+
+  // First read: never copied, so it copies.
+  queue.SetDepthAttachment(scene);
+  queue.SetRenderPipeline(reads);
+  queue.SetBindGroup(0, {}, null, [ scene ]);
+  queue.DrawPrimitives(3, 1, 0, 0);
+  // A draw that does not write depth leaves it current.
+  queue.DrawPrimitives(3, 1, 0, 0);
+  assert.equal(log.filter(entry => entry === "copy scene").length, 1);
+
+  // A pending depth clear runs before the read, then the copy.
+  queue.RenderPassHint([ keep() ], new Tr2DepthAttachment(Tr2LoadAction.CLEAR, Tr2StoreAction.STORE, 0));
+  queue.DrawPrimitives(3, 1, 0, 0);
+  const tail = log.slice(log.lastIndexOf("draw", log.length - 2) + 1);
+  assert.deepEqual(tail, [ "end", "pass", "end", "copy scene", "pass", "draw" ], "the clear's pass, then the copy, then the read");
+  queue.EndFrame();
+});
+
+test("a dispatch reading a written depth copies it before the compute pass opens", () =>
+{
+  const { queue, log, depth, writes } = shadowFrame();
+  const scene = depth("scene");
+
+  queue.SetDepthAttachment(scene);
+  queue.SetRenderPipeline(writes);
+  queue.DrawPrimitives(3, 1, 0, 0);
+  queue.SetComputePipeline({});
+  queue.SetBindGroup(0, {}, null, [ scene ]);
+  queue.DispatchThreadgroups(8, 8, 1);
+
+  assert.deepEqual(log, [ "pass", "draw", "end", "copy scene", "compute", "dispatch" ]);
   queue.EndFrame();
 });
