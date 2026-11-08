@@ -39,47 +39,24 @@ export class Tr2Mesh extends Tr2MeshBase
   @type.boolean
   deferGeometryLoad = false;
 
-  /** The primary geometry resource. @implemented */
+  /**
+   * m_geometryResource (TriGeometryResPtr) [READ]: the primary geometry.
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Tr2Mesh_Blue.cpp:63).
+   */
   @be.mapAttribute(be.READ)
   @type.object.ref("TriGeometryRes")
-  get geometry()
-  {
-    return this._geometry;
-  }
+  geometry = null;
 
-  /** @implemented Assign through Carbon's resource setter. */
-  set geometry(resource)
-  {
-    this.SetGeometryRes(resource);
-  }
-
-  /** Geometry storage behind the notification-aware property. */
-  _geometry = null;
-
-  /** m_lowResGeometryResource: the stand-in rendered while the authored mesh loads. @implemented */
-  @be.mapAttribute(be.READ)
-  /** Carbon: m_lowResGeometryResource (trinity/trinity/Tr2Mesh.h:93).
+  /**
+   * m_lowResGeometryResource (TriGeometryResPtr): the stand-in rendered while the
+   * authored mesh loads. Not exposed to Blue.
+   * Carbon: m_lowResGeometryResource (trinity/trinity/Tr2Mesh.h:93).
    */
   @type.object.ref("TriGeometryRes")
-  get lowResGeometry()
-  {
-    return this._lowResGeometry;
-  }
-
-  /** @implemented Assign through Carbon's low-detail resource setter. */
-  set lowResGeometry(resource)
-  {
-    this.SetLowResGeometryRes(resource);
-  }
-
-  /** Low-detail storage behind the notification-aware property. */
-  _lowResGeometry = null;
+  lowResGeometry = null;
 
   /** @cjs Prevents a destroyed mesh from reacquiring expired resources. */
   _destroyed = false;
-
-  /** @cjs A cleared path-backed slot can reacquire after its manager link expires. */
-  _geometryNeedsReload = false;
 
   /**
    * Reads the mesh load fence through its native property target.
@@ -242,10 +219,9 @@ export class Tr2Mesh extends Tr2MeshBase
    */
   SetGeometryRes(resource)
   {
-    const previous = this._geometry;
+    const previous = this.geometry;
     if (previous) blue.resMan.notify.Remove(this, previous);
-    this._geometry = resource ?? null;
-    this._geometryNeedsReload = !!previous && !this._geometry && !!this.geometryResPath;
+    this.geometry = resource ?? null;
     if (previous && this.lowResGeometry === previous)
       blue.resMan.notify.Add(this, previous, this, "lowResGeometry");
     if (this.geometry) blue.resMan.notify.Add(this, this.geometry, this, "geometry");
@@ -283,9 +259,9 @@ export class Tr2Mesh extends Tr2MeshBase
 
   SetLowResGeometryRes(resource)
   {
-    const previous = this._lowResGeometry;
+    const previous = this.lowResGeometry;
     if (previous) blue.resMan.notify.Remove(this, previous);
-    this._lowResGeometry = resource ?? null;
+    this.lowResGeometry = resource ?? null;
     if (previous && this.geometry === previous)
       blue.resMan.notify.Add(this, previous, this, "geometry");
     if (this.lowResGeometry) blue.resMan.notify.Add(this, this.lowResGeometry, this, "lowResGeometry");
@@ -299,6 +275,20 @@ export class Tr2Mesh extends Tr2MeshBase
 
   ReleaseCachedData(_resource)
   {
+  }
+
+  /**
+   * Lets go of an expired geometry in every slot that holds it.
+   * @cjs Carbon never expires a resource, so it has no such callback. resMan calls
+   *   this when the link expires, and GetGeometryResource reacquires from geometryResPath.
+   * @param {TriGeometryRes} resource The expired geometry.
+   * @returns {void}
+   */
+  RemoveCachedData(resource)
+  {
+    this.ReleaseCachedData(resource);
+    if (this.geometry === resource) this.geometry = null;
+    if (this.lowResGeometry === resource) this.lowResGeometry = null;
   }
 
   /**
@@ -326,7 +316,7 @@ export class Tr2Mesh extends Tr2MeshBase
   GetGeometryResource()
   {
     if (this._destroyed) return null;
-    if (this._geometryNeedsReload && !this._loadFenceResource && !this.deferGeometryLoad)
+    if (!this.geometry && this.geometryResPath && !this._loadFenceResource && !this.deferGeometryLoad)
       this.InitializeGeometryResource();
     const geometry = this.geometry;
     const good = geometry ? geometry.IsGood(this) : false;
@@ -568,7 +558,7 @@ export class Tr2Mesh extends Tr2MeshBase
   /**
    * Carbon destructor (Tr2Mesh.cpp:14-22): releases both geometry slots.
    *
-   * @adapted Clears manager links through the resource setters.
+   * @adapted Clears manager links through Carbon's two resource setters.
    */
   Destruct()
   {

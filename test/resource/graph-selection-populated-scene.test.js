@@ -133,9 +133,9 @@ function resourceSlots(ctor)
         slots.push(["_envMapTextureRes", TriTextureRes, "envMapResPath"], ["_staticEnvMapTextureRes", TriTextureRes, "envMapResPath"]);
     }
     if (ctor === Tr2Mesh || Tr2Mesh.prototype.isPrototypeOf(ctor.prototype))
-        slots.push(["_geometry", TriGeometryRes, "geometryResPath"], ["_lowResGeometry", TriGeometryRes, null]);
+        slots.push(["geometry", TriGeometryRes, "geometryResPath"], ["lowResGeometry", TriGeometryRes, null]);
     if (ctor === Tr2InstancedMesh) slots.push(["_loadedGeometryResource", TriGeometryRes, "instanceGeometryResPath"]);
-    if (ctor === EveTrailsSet) slots.push(["_geometryResource", TriGeometryRes, "geometryResPath"]);
+    if (ctor === EveTrailsSet) slots.push(["geometryResource", TriGeometryRes, "geometryResPath"]);
     // Attachment records hold profiles but currently do not acquire them themselves.
     const attachmentLight = ["EveBannerLight", "EveHazeSetLight", "EveSpotlightLight"].includes(CjsSchema.getClassName(ctor));
     if (ctor === Tr2Light || Tr2Light.prototype.isPrototypeOf(ctor.prototype) || attachmentLight)
