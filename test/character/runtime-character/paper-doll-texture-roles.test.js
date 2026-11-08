@@ -16,6 +16,10 @@ test("CjsPaperDollTextureRoles reads region, suffix, tier, property and operatio
   assert.equal(CjsPaperDollTextureRoles.lookup("comp_body_m_512.png").property, "CutMaskMap");
   assert.equal(CjsPaperDollTextureRoles.lookup("comp_head_mn.png").operation, "MaskedNormal");
   assert.equal(CjsPaperDollTextureRoles.lookup("colorize_acc_l.png").operation, "Colorized");
+  // A family's own role: the tattoo zone is an input of the bake, not of an `l` map.
+  const tattoo = CjsPaperDollTextureRoles.lookup(ROOT + "tattoo/head/tattoofacea01/comp_head_z.png");
+  assert.deepEqual([ tattoo.family, tattoo.suffix, tattoo.operation, tattoo.inputOf ], [ "comp", "z", null, null ]);
+  assert.match(tattoo.derived, /5a7e30d/);
 });
 
 test("CjsPaperDollTextureRoles cites a source for every role", () =>
@@ -27,6 +31,6 @@ test("CjsPaperDollTextureRoles cites a source for every role", () =>
 test("CjsPaperDollTextureRoles throws for a name it does not source", () =>
 {
   // Unknown suffix, a known suffix under a family it is not sourced for, an unknown region, a non-png, a bare name.
-  for (const name of [ "comp_head_q.png", "comp_head_z.png", "colorize_body_n_4k.png", "comp_face_d.png", "comp_head_d_256.dds", "normal_n.png" ])
+  for (const name of [ "comp_head_q.png", "colorize_head_tn.png", "colorize_body_n_4k.png", "comp_face_d.png", "comp_head_d_256.dds", "normal_n.png" ])
     assert.throws(() => CjsPaperDollTextureRoles.lookup(name), /paper doll texture/, name);
 });

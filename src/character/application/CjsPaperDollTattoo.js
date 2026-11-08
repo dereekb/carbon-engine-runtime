@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /**
  * Application-owned head tattoo settings: the projected profile, its ink
@@ -59,6 +59,9 @@ export class CjsPaperDollTattoo extends CjsPaperDollComponent
     static category = "tattoo";
 
     static blend = PaperDollBlend.PROJECTION;
+
+    /** Where its palette files live: the category's `colors/` (`PaperDollPalettes`; `tattoo/head/colors/`). */
+    static palettes = PaperDollPalettes.CATALOG;
 
     static shapeDependent = true;
 

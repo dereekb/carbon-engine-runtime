@@ -106,7 +106,7 @@ export const PaperDollBlend = Object.freeze({
 export const PaperDollPalettes = Object.freeze({
     /** Each option's own `.color` files (eye shadow, eyeliner). */
     OWN: 1,
-    /** The category's catalog: every option's `.color` files and the category's `colors/` (blush, eyebrows). */
+    /** The category's catalog: every option's `.color` files and the category's `colors/` (blush, eyebrows; tattoos, whose options have none). */
     CATALOG: 2
 });
 

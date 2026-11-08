@@ -51,6 +51,7 @@ export { CjsPaperDollCompositor } from "./compositor/CjsPaperDollCompositor.js";
 export { CjsPaperDollCompositionTarget } from "./compositor/CjsPaperDollCompositionTarget.js";
 export { CjsPaperDollMaterialLayer } from "./compositor/CjsPaperDollMaterialLayer.js";
 export { CjsPaperDollColorizedSource } from "./composers/CjsPaperDollColorizedSource.js";
+export { CjsPaperDollProjectionSource } from "./composers/CjsPaperDollProjectionSource.js";
 export { CjsPaperDollComposition } from "./composers/CjsPaperDollComposition.js";
 export { CjsPaperDollEyesComposer } from "./composers/CjsPaperDollEyesComposer.js";
 export { CjsPaperDollHeadComposer } from "./composers/CjsPaperDollHeadComposer.js";

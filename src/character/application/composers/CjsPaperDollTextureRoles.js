@@ -36,7 +36,8 @@ export class CjsPaperDollTextureRoles
      * over what is under it) or `add` (added to it); one part's layers on one property draw replacements first, then
      * additions (character-compositing.md:593, `PlanNormal`). `covered`: drawn through the same option's diffuse
      * coverage when the option has a diffuse. `source`: where each fact is read. `derived`: the facts no source states,
-     * which match the working behaviour of our own earlier code (today's look) and wait for a ruling.
+     * which match the working behaviour of our own earlier code (today's look) and wait for a ruling. A key
+     * `<family>_<suffix>` is a role for that family alone, read before the suffix's own (`comp_z`).
      */
     static table = {
         d: {
@@ -70,6 +71,20 @@ export class CjsPaperDollTextureRoles
             plan: "replace",
             covered: false,
             source: "colorizedblit Z, and the one-channel compact zone decode (character-compositing.md:367, :379-383)"
+        },
+        comp_z: {
+            families: [ "comp" ],
+            property: "DiffuseMap",
+            channels: { r: "colour area 1 weight", g: "colour area 2 weight", b: "colour area 3 weight", a: "where colourising applies" },
+            operation: null,
+            inputOf: null,
+            plan: "replace",
+            covered: false,
+            source: "the colorizedblit Z decode (character-compositing.md:367, :379-383); every head tattoo folder holds one "
+                + "`comp_head_z` beside its `projection.proj` (resource index)",
+            derived: "the zone of the head tattoo's bake, which is its colourised detail (no source states it): matches "
+                + "Graphene's working behaviour, today's look (Graphene 5a7e30d tattoos.js); every head tattoo's is a 16x16 "
+                + "map of one texel selecting colour area 1 everywhere (all 115, both sexes)"
         },
         n: {
             families: [ "comp" ],
@@ -130,7 +145,7 @@ export class CjsPaperDollTextureRoles
      * A texture file's role.
      * @param {string} path The file's `res:` path or name, at any tier.
      * @returns {{ path: string, family: string, region: string, suffix: string, tier: string, property: string,
-     *   channels: object, operation: ?string, inputOf?: string, plan: string, covered: boolean, source: string,
+     *   channels: object, operation: ?string, inputOf?: ?string, plan: string, covered: boolean, source: string,
      *   derived?: string }}
      * @throws {Error} For a name outside `<family>_<region>_<suffix>[<tier>].png`, or a suffix the table does not
      *   source for that family.
@@ -143,7 +158,7 @@ export class CjsPaperDollTextureRoles
         if (!match) throw new Error("Not a paper doll texture name: " + path);
         const [ , family, region, suffix ] = match;
         if (!CjsPaperDollTextureRoles.regions.includes(region)) throw new Error("Unknown paper doll texture region " + region + ": " + path);
-        const role = CjsPaperDollTextureRoles.table[suffix];
+        const role = CjsPaperDollTextureRoles.table[family + "_" + suffix] ?? CjsPaperDollTextureRoles.table[suffix];
         if (!role || !role.families.includes(family)) throw new Error("Unknown paper doll texture role " + family + "_" + suffix + ": " + path);
         return { path, family, region, suffix, tier, ...role };
     }
