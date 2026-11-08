@@ -1,0 +1,57 @@
+# Character part areas: each paper doll model's meshes and areas, by role; resource index 3670638.
+# Family: areas
+# Source pattern: res:/graphics/character/<sex>/paperdoll/**/*.black (LOD models excluded), both sexes, and the
+#   geometry (.gr2) each mesh names.
+# Files: 482 .black read, 0 failed; 594 meshes; 727 areas.
+# Binding: a mesh draws the gr2 mesh at its meshIndex (Tr2MeshBase.cpp:154, :224), an area the triangle group at its
+#   index (Tr2MeshBase.cpp:283, :414). Mesh names and list order are not the key.
+# role: the area's shader with the x of its MaterialLibraryID and Material2LibraryID parameters (absent = the effect
+#   does not set it).
+# arrayOf: no effect a character part names declares an ArrayOf* parameter (shaders.yaml, 24 effects).
+roles:
+  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 348, uv: body, kind: cloth }
+  - { shader: skinnedavatarbrdfdoublelinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 139, uv: body, kind: skin }
+  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 14, uv: body, kind: skin }
+  - { shader: skinnedavatarhair_detailed.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 144, uv: hair, kind: hair }
+  - { shader: skinnedavatarhair.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 6, uv: hair, kind: hair }
+  - { shader: skinnedavatarbrdf.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 43, uv: identity, kind: own textures }
+  - { shader: skinnedavatarbrdf.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 1, uv: identity, kind: own textures }
+  - { shader: glassshader.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 18, uv: acc, kind: glass }
+  - { shader: eyeshader.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 6, uv: head, kind: eyes }
+  - { shader: portraitbasic.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 8, kind: portrait }
+# Effects named C_Skin* that are not skin by role (skinnedavatarbrdf.fx, no Material2LibraryID):
+skinNamedOwnTextures:
+  - female/paperdoll/dependants/sleeveslower/longflowing_01/longflowing_01.black TorsoShape C_SkinShiny_Decal
+  - male/paperdoll/accessories/browbase/cc/cc.black EyeBrows_headUvShape pasted__C_SkinShiny_EyeLashes
+# Models without geometry (a bare Tr2Effect): every beard (10).
+# Meshes whose meshIndex and gr2 disagree (572 of 594 bind cleanly):
+binding:
+  indexPastGr2:
+    - female/paperdoll/outer/robef01/robef01.black RobeShape1 2 (gr2: robeShape)
+    - female/paperdoll/outer/robef01/robef01.black Torso5Shape 1 (gr2: robeShape)
+    - female/paperdoll/hair/hair_medium_hp_01/hair_medium_hp_01.black pieceShape1 2 (gr2: HairMeshShape, hairornamentShape)
+    - male/paperdoll/hair/headwear_cap_m01/headwear_cap_m01.black Cap1Shape 3 (gr2: CapShape)
+    - male/paperdoll/hair/headwear_cap_m01/headwear_cap_m01.black Male_Head_AverageShape 1 (gr2: CapShape)
+    - male/paperdoll/hair/headwear_cap_m01/headwear_cap_m01.black CapShape 2 (gr2: CapShape)
+    - male/paperdoll/topouter/shirtmilm01/shirtmilm01.black Neck_RenamedShape 1 (gr2: TopTuckingShape)
+  nameDiffers:
+    - female/paperdoll/accessories/masks/mask_f/mask_f.black ChinShape 0 -> MaskTightShape
+    - female/paperdoll/hair/hair_medium_hp_01/hair_medium_hp_01.black polySurfaceShape3 1 -> hairornamentShape
+    - female/paperdoll/outer/jacketalf_01/del/jacketalf_01.black C_S2_JacketALFShape 0 -> TrenchCoatShape
+    - female/paperdoll/outer/robef01/robef01.black TorsoShape 0 -> robeShape (areas to index 2, gr2 mesh has 1 group)
+    - male/paperdoll/hair/headwear_cap_m01/headwear_cap_m01.black OriginalShape 0 -> CapShape
+    - male/paperdoll/outer/jacketformalmilm01/jacketformalmilm01.black JacketFormalMilM01Shape 0 -> jacketShape
+    - male/paperdoll/outer/jacketformalmilm01/v1/jacketformalmilm01.black JacketFormalMilM01Shape 0 -> JacketShape
+    - male/paperdoll/outer/jacketformalmilm01/v2/jacketformalmilm01.black JacketFormalMilM01Shape 0 -> JacketShape
+    - male/paperdoll/outer/jacketformalmilm01/v3/jacketformalmilm01.black JacketFormalMilM01Shape 0 -> jacketShape
+    - male/paperdoll/outer/vanguardm01/vanguardm01.black VanguardM01Shape 0 -> JacketVanguardM01Shape
+    - male/paperdoll/feet/shoescorpbusinessm01/shoescorpbusinessm01.black ShoesCorpBusinessM01Shape 0 -> Socks2Shape (named mesh is gr2 1)
+    - male/paperdoll/feet/shoescorpbusinessm01/shoescorpbusinessm01.black FeetShape 1 -> ShoesCorpBusinessM01Shape (named mesh is gr2 2)
+  gr2NotInIndex:
+    - male/paperdoll/accessories/piercings/earring03/earring03.black
+    - male/paperdoll/accessories/piercings/stud02/stud02.black
+    - male/paperdoll/accessories/piercings/stud10/stud10.black
+# Option folders (<category>/<name>, or <category>/<sub>/<name> for accessories, makeup, tattoo, dependants), both sexes:
+#   bake = composed maps (comp_|colorize_|comb_<region>_<suffix>, or garment-named _n/_s/_l/_d/_tn); geometry = an area
+#   whose role is not skin; carrier = skin areas only, no maps.
+options: { total: 765, bakeOnly: 367, geometryOnly: 155, both: 188, skinCarrierOnly: 54, neither: 1 }
