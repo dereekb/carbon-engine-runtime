@@ -27,7 +27,7 @@ import { Tr2ShaderProgramAL } from "../../trinityal/Tr2ShaderProgramAL/index.js"
 // an entirely unimplemented class reports clean. Do not read a green audit as
 // evidence that this file is finished.
 
-import { RenderingMode, TriStorageFlags } from "#consts/graphics";
+import { RenderingMode, TriStorageFlags, Webgl2ProgramLinking } from "#consts/graphics";
 import {
   BlendMode,
   BlendOperation,
@@ -39,6 +39,8 @@ import {
 import { Tr2VertexDefinition } from "../core/vertex/Tr2VertexDefinition/index.js";
 import { Tr2RenderStateSetup } from "#resource/shader";
 import { Failed } from "../../trinityal/ALResult.js";
+import * as CcpLog from "../../global/logging/ccpLog.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../core/context/Tr2RenderContext.js";
 import { Tr2VariableStore } from "../core/variable/Tr2VariableStore.js";
 import { TriVariableContentType } from "../generated/trinityCore/enums.js";
 
@@ -354,6 +356,21 @@ function failState(message)
 export class Tr2EffectStateManager
 {
 
+  /**
+   * Ours: when WebGL2 links an effect's shader programs. FIRST_USE (the
+   * default) links each at its first draw; EFFECT_READ starts every program's
+   * link while the effect is read, as Carbon creates them
+   * (Tr2EffectStateManager.cpp:572-574). See registerShaderHandles.
+   */
+  @meta.setting("webgl2ProgramLinking", { enum: Webgl2ProgramLinking, category: "webgl2" })
+  static webgl2ProgramLinking = Webgl2ProgramLinking.FIRST_USE;
+
+  /** Ours: programs started at effect read whose link has not finished: `{ program, effect }`. */
+  static _pendingLinks = [];
+
+  /** Ours: the timer polling _pendingLinks, or null when none is pending. */
+  static _pendingLinkTimer = null;
+
   /** m_renderContext (Tr2RenderContext&) */
   @type.rawStruct("Tr2RenderContext")
   renderContext = null;
@@ -608,11 +625,24 @@ export class Tr2EffectStateManager
    * a device nor makes the reflection graph device-dependent, and interning is
    * idempotent: re-stamping the same shader yields the same handles.
    *
-   * THAT LOSES CARBON'S FAILURE PATH. Carbon creates the program while reading
-   * and a refused Create fails the read, naming the effect
-   * (Tr2EffectStateManager.cpp:572-574, Tr2EffectDescription.cpp:651-656). Ours
-   * creates at first apply, per context (GetShaderProgram), so a refused program
-   * only logs and skips its draws, and the effect still reports good.
+   * Carbon creates the program while reading and a refused Create fails the
+   * read, naming the effect (Tr2EffectStateManager.cpp:572-574,
+   * Tr2EffectDescription.cpp:651-656). Ours creates per context
+   * (GetShaderProgram), when webgl2ProgramLinking says:
+   *
+   * - FIRST_USE (default): at the program's first draw. A refused program logs
+   *   once and skips its draws; the effect still reads good.
+   * - EFFECT_READ: here, on the main thread's context. With
+   *   KHR_parallel_shader_compile every link starts now and none is waited for,
+   *   so a refusal cannot fail the read: it is reported, naming the effect, as
+   *   soon as the driver knows (_PollPendingLinks). Without the extension a
+   *   refusal is known now and reported now. The effect still reads good.
+   *
+   * @adapted Linking at read is a setting, defaulting to first use. Measured
+   *   on a scene of five hulls and three clouds (107 programs, 61 drawn), with
+   *   synchronous linking: a cold start took 2.8 s at first use and 4.9 s at
+   *   read, a warm one 46 ms and 71 ms. A refusal is reported rather than
+   *   failing the read, because parallel linking learns of it later.
    *
    * Program members are collected in the pass's retained file order, not by
    * stage type, because Carbon indexes its handle array by position while
@@ -621,9 +651,10 @@ export class Tr2EffectStateManager
    * because that ordering is authored rather than derivable.
    *
    * @param {object} shader Resolved `Tr2Shader`.
+   * @param {string} [effectPath] The effect being read, for a refusal report under EFFECT_READ.
    * @returns {object} The same shader, stamped.
    */
-  static registerShaderHandles(shader)
+  static registerShaderHandles(shader, effectPath = "")
   {
     const techniques = shader?.GetEffect()?.techniques ?? [];
 
@@ -662,7 +693,81 @@ export class Tr2EffectStateManager
     // (Tr2Shader.cpp:235-240); until they exist the key is unavoidably zero.
     shader?.ProcessEffect();
 
+    if (Tr2EffectStateManager.webgl2ProgramLinking === Webgl2ProgramLinking.EFFECT_READ)
+    {
+      Tr2EffectStateManager._LinkAtRead(techniques, effectPath);
+    }
+
     return shader;
+  }
+
+  /**
+   * Ours: starts every pass's program on the main thread's context, for
+   * webgl2ProgramLinking EFFECT_READ. A refusal known now is reported now; a
+   * link still running is polled until it is good or refused.
+   *
+   * @cjs
+   * @param {object[]} techniques The effect's techniques.
+   * @param {string} effectPath The effect, for the report.
+   */
+  static _LinkAtRead(techniques, effectPath)
+  {
+    const context = Tr2RenderContext_GetMainThreadRenderContext();
+    if (!context) return;
+    const esm = context.GetEffectStateManager();
+    for (const technique of techniques)
+    {
+      for (const pass of technique?.passes ?? [])
+      {
+        const program = esm.GetShaderProgram(pass.shaderProgram);
+        if (!program || !program.IsValid()) Tr2EffectStateManager._ReportRefusedLink(effectPath);
+        else if (!program.IsGood()) Tr2EffectStateManager._pendingLinks.push({ program, effect: effectPath });
+      }
+    }
+    Tr2EffectStateManager._SchedulePendingLinks();
+  }
+
+  /**
+   * Ours: polls the links EFFECT_READ started, without waiting: a good one is
+   * dropped, a refused one (no longer valid) is reported.
+   *
+   * @cjs
+   */
+  static _PollPendingLinks()
+  {
+    Tr2EffectStateManager._pendingLinkTimer = null;
+    const pending = Tr2EffectStateManager._pendingLinks;
+    for (let i = pending.length - 1; i >= 0; i--)
+    {
+      const { program, effect } = pending[i];
+      if (program.IsGood()) pending.splice(i, 1);
+      else if (!program.IsValid())
+      {
+        pending.splice(i, 1);
+        Tr2EffectStateManager._ReportRefusedLink(effect);
+      }
+    }
+    Tr2EffectStateManager._SchedulePendingLinks();
+  }
+
+  /** Ours: polls again shortly while any link started at read is pending. */
+  static _SchedulePendingLinks()
+  {
+    if (Tr2EffectStateManager._pendingLinkTimer !== null || !Tr2EffectStateManager._pendingLinks.length) return;
+    Tr2EffectStateManager._pendingLinkTimer = globalThis.setTimeout(Tr2EffectStateManager._PollPendingLinks, 16);
+  }
+
+  /**
+   * Ours: reports a program refused while its effect was read. The backend has
+   * already logged why; this names the effect, as Carbon's failed read does
+   * (Tr2EffectDescription.cpp:651-656).
+   *
+   * @cjs
+   * @param {string} effectPath The effect.
+   */
+  static _ReportRefusedLink(effectPath)
+  {
+    CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("trinity"), "Effect '%s': a shader program was refused while reading it; its passes draw nothing", effectPath || "(unnamed)");
   }
 
   /**

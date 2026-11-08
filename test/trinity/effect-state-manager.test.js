@@ -373,3 +373,51 @@ test("stamping makes the shader sort value non-zero", async () =>
   Tr2EffectStateManager.registerShaderHandles(shader);
   assert.notEqual(shader.sortValue, 0);
 });
+
+test("webgl2ProgramLinking: FIRST_USE links nothing at read; EFFECT_READ starts every program and reports refusals naming the effect", async t =>
+{
+  const { Tr2RenderContext_GetMainThreadRenderContext } = await import("../../npm/dist/trinity/core/index.js");
+  const { Webgl2ProgramLinking } = await import("../../npm/dist/global/consts/graphics/index.js");
+  const CcpLog = await import("../../npm/dist/global/logging/ccpLog.js");
+  const esm = Tr2RenderContext_GetMainThreadRenderContext().GetEffectStateManager();
+  const previous = Tr2EffectStateManager.webgl2ProgramLinking, getProgram = esm.GetShaderProgram;
+  t.after(() =>
+  {
+    Tr2EffectStateManager.webgl2ProgramLinking = previous;
+    esm.GetShaderProgram = getProgram;
+    if (Tr2EffectStateManager._pendingLinkTimer !== null) clearTimeout(Tr2EffectStateManager._pendingLinkTimer);
+    Tr2EffectStateManager._pendingLinkTimer = null;
+    Tr2EffectStateManager._pendingLinks.length = 0;
+  });
+  reset();
+  const asked = [];
+  const linking = { valid: true, good: false };
+  const linkingProgram = { IsValid: () => linking.valid, IsGood: () => linking.good };
+  esm.GetShaderProgram = handle => { asked.push(handle); return handle === 1 ? null : linkingProgram; };
+
+  assert.equal(Tr2EffectStateManager.webgl2ProgramLinking, Webgl2ProgramLinking.FIRST_USE, "the default");
+  Tr2EffectStateManager.registerShaderHandles(shaderOver([ stagedPass(body(1), body(2)) ]), "res:/first.fx");
+  assert.deepEqual(asked, [], "FIRST_USE links at the first draw");
+
+  Tr2EffectStateManager.webgl2ProgramLinking = Webgl2ProgramLinking.EFFECT_READ;
+  const errors = CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR);
+  Tr2EffectStateManager.registerShaderHandles(shaderOver([ stagedPass(body(1), body(2)), stagedPass(body(3), body(4)) ]), "res:/second.fx");
+  assert.deepEqual(asked, [ 0, 1 ], "every pass's program starts at read");
+  assert.equal(CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR) - errors, 1, "a refusal known at read is reported at read");
+  assert.match(CcpLog.GetLastErrorMessage(), /Effect 'res:\/second\.fx': a shader program was refused/u);
+  assert.equal(Tr2EffectStateManager._pendingLinks.length, 1, "the program still linking is polled");
+
+  Tr2EffectStateManager._PollPendingLinks();
+  assert.equal(Tr2EffectStateManager._pendingLinks.length, 1, "still linking: nothing reported");
+  linking.valid = false;
+  Tr2EffectStateManager._PollPendingLinks();
+  assert.equal(Tr2EffectStateManager._pendingLinks.length, 0);
+  assert.equal(CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR) - errors, 2, "a link refused later is reported once known");
+
+  linking.valid = true;
+  Tr2EffectStateManager.registerShaderHandles(shaderOver([ stagedPass(body(1), body(2)) ]), "res:/third.fx");
+  linking.good = true;
+  Tr2EffectStateManager._PollPendingLinks();
+  assert.equal(Tr2EffectStateManager._pendingLinks.length, 0);
+  assert.equal(CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR) - errors, 2, "a good link is dropped silently");
+});

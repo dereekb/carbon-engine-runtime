@@ -262,6 +262,17 @@ export class CjsWebgpuShaderProgramAL
   }
 
   /**
+   * Ours: WebGPU programs need no link, so a valid program is ready.
+   *
+   * @cjs
+   * @returns {boolean} Whether the program is valid.
+   */
+  IsGood()
+  {
+    return this.IsValid();
+  }
+
+  /**
    * The identity a pipeline cache keys this program under.
    *
    * @returns {string|null} A stable string, or null before Create.

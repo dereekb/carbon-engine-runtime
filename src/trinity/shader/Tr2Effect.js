@@ -1006,7 +1006,7 @@ export class Tr2Effect extends Tr2Material
       // resource layer cannot reach Trinity's tables, so the stamp happens here
       // on the first rebuild that resolves a shader. Interning is idempotent,
       // so a rebuild that re-resolves the same permutation is a no-op.
-      if (shader !== null) Tr2EffectStateManager.registerShaderHandles(shader);
+      if (shader !== null) Tr2EffectStateManager.registerShaderHandles(shader, this.actualEffectFilePath || this.effectFilePath);
     }
     this.lodTextureParameters = [];
     // Carbon initialises the flag here and every rule below only ever CLEARS

@@ -341,7 +341,7 @@ test("with parallel linking a failed link or compile is permanently not good and
     state.done = true;
     assert.equal(program.IsGood(), false);
     assert.equal(program.IsGood(), false);
-    assert.equal(program.IsValid(), true, "it stays a program, never good");
+    assert.equal(program.IsValid(), false, "a failed program is reset, as one refused at Create is");
     assert.equal(CcpLog.GetLogCounter(CcpLog.LogType.LOGTYPE_ERR) - before, 1, "logged once");
     assert.match(CcpLog.GetLastErrorMessage(), /WebGL2 refused a shader program: link failed/u);
     // A stage that failed to compile reports through the program's log.

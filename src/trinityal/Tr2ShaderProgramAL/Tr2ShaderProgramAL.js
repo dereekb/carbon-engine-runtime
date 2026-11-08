@@ -119,6 +119,19 @@ export class Tr2ShaderProgramAL
   }
 
   /**
+   * Ours: whether the program has finished linking and can draw. Only WebGL2
+   * links in parallel (KHR_parallel_shader_compile), so elsewhere this is
+   * IsValid. Never waits.
+   *
+   * @cjs
+   * @returns {boolean} Whether the program is ready.
+   */
+  IsGood()
+  {
+    return this._program.implementation.IsGood();
+  }
+
+  /**
    * The implementation's memory class (`Tr2ShaderProgramAL.cpp:50-53`).
    *
    * @implemented

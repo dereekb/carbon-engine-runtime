@@ -4,3 +4,4 @@ export * from "./textureDimensions.js";
 export * from "./trinityEnums.js";
 export * from "./tr2PickType.js";
 export * from "./lightAveraging.js";
+export * from "./programLinking.js";

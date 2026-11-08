@@ -259,8 +259,9 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
    * Ours: whether the program has finished linking and can draw. With
    * KHR_parallel_shader_compile it polls the driver without waiting
    * (`COMPLETION_STATUS_KHR`) and finishes the link the first time it is
-   * done; a failed link is permanently not good, and logs once. Without the
-   * extension the link finished in Create.
+   * done; a failed link is permanently not good, and logs once. A failed
+   * program is also reset, so it is no longer valid, as one refused at Create
+   * is not. Without the extension the link finished in Create.
    *
    * @cjs
    * @returns {boolean} Whether the program is linked and laid out.
@@ -273,9 +274,8 @@ export class Tr2ShaderProgramALWebgl2 extends Tr2DeviceResourceAL
     if (Failed(this._FinishLink()))
     {
       // Permanently not good: the refusal is logged once, in _FinishLink.
+      this._Reset();
       this._linkState = LINK_FAILED;
-      this._gl.deleteProgram(this._program);
-      this._program = null;
     }
     return this._linkState === LINK_GOOD;
   }

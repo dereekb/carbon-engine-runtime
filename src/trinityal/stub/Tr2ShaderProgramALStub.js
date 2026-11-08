@@ -108,6 +108,17 @@ export class Tr2ShaderProgramALStub extends Tr2DeviceResourceAL
   }
 
   /**
+   * Ours: the stub links nothing in parallel, so a valid program is ready.
+   *
+   * @cjs
+   * @returns {boolean} Whether the program is valid.
+   */
+  IsGood()
+  {
+    return this.IsValid();
+  }
+
+  /**
    * The linked shaders.
    *
    * @returns {object[]} The `Tr2ShaderAL` values, in the order they were given.
