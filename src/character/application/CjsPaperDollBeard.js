@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned facial-hair settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollBeard")
@@ -48,5 +48,7 @@ export class CjsPaperDollBeard extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD | PaperDollPass.SURFACE;
 
     static category = "beard";
+
+    static blend = PaperDollBlend.MATERIAL;
 
 }

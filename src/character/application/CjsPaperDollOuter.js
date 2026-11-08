@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned outer garment (`outer`) settings: the
@@ -58,6 +58,8 @@ export class CjsPaperDollOuter extends CjsPaperDollComponent
     static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
 
     static category = "outer";
+
+    static blend = PaperDollBlend.MATERIAL;
 
     static optionNamesPalette = true;
 

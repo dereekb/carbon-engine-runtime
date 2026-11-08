@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned head tattoo settings: the projected profile, its ink
@@ -57,6 +57,8 @@ export class CjsPaperDollTattoo extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD;
 
     static category = "tattoo";
+
+    static blend = PaperDollBlend.PROJECTION;
 
     static shapeDependent = true;
 

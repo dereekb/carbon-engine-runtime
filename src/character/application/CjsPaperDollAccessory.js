@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned accessory settings, shared by every accessory location
@@ -57,6 +57,8 @@ export class CjsPaperDollAccessory extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD;
 
     static category = "";
+
+    static blend = PaperDollBlend.MESH;
 
     static optionNamesPalette = true;
 

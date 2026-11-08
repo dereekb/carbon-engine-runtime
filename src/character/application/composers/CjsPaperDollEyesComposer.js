@@ -3,9 +3,10 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollPass } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
+import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 
-/** The eye material's channels, and the option map each is drawn from. */
-const CHANNELS = { DiffuseMap: "comp_head_d", NormalMap: "comp_head_n", SpecularMap: "comp_head_s" };
+/** The eye material's channels: the effect properties its outputs feed. */
+const CHANNELS = [ "DiffuseMap", "NormalMap", "SpecularMap" ];
 
 /** The colourise colours before a selection's own arrive: neutral grey. */
 const NEUTRAL = [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1));
@@ -76,12 +77,12 @@ export class CjsPaperDollEyesComposer
         if (!consumers.length) throw new Error("No EyeShader consumers");
         this._consumers = consumers;
         this._onChange = onChange;
-        this._originals = consumers.map(({ effect }) => Object.fromEntries(Object.keys(CHANNELS).map(name => [ name, effect.GetResourceByName(name).GetResource() ])));
+        this._originals = consumers.map(({ effect }) => Object.fromEntries(CHANNELS.map(name => [ name, effect.GetResourceByName(name).GetResource() ])));
         const base = this._originals[0];
-        for (const original of this._originals) for (const name of Object.keys(CHANNELS)) if (original[name] !== base[name]) throw new Error("Eye consumers need separate composition foundations");
+        for (const original of this._originals) for (const name of CHANNELS) if (original[name] !== base[name]) throw new Error("Eye consumers need separate composition foundations");
         // The outputs are the consumers' diffuse map's size.
         const width = base.DiffuseMap.width, height = base.DiffuseMap.height;
-        for (const name of Object.keys(CHANNELS))
+        for (const name of CHANNELS)
         {
             const seed = await c.Copy(base[name], CjsPaperDollCompositor.full, name === "NormalMap");
             this.composition.AddOutput({
@@ -139,11 +140,11 @@ export class CjsPaperDollEyesComposer
         const composed = id !== null && this._prepared.has(id);
         if (composed) this.composition.Apply(PaperDollPass.EYES, pass);
         else for (let i = 0; i < this._consumers.length; i++)
-            for (const name of Object.keys(CHANNELS)) this._consumers[i].effect.GetResourceByName(name).SetResource(this._originals[i][name]);
+            for (const name of CHANNELS) this._consumers[i].effect.GetResourceByName(name).SetResource(this._originals[i][name]);
         report.selected = id;
         report.palette = this._component.palette || null;
         report.updates++;
-        report.bindings = this._consumers.map(({ effect }) => Object.fromEntries(Object.keys(CHANNELS).map(name => [ name,
+        report.bindings = this._consumers.map(({ effect }) => Object.fromEntries(CHANNELS.map(name => [ name,
             effect.GetResourceByName(name).GetResource() === (composed ? this.composition.GetOutput(PaperDollPass.EYES, "eyes", name) : this._originals[0][name]) ])));
         this._onChange("eyes " + (id ?? "foundation"));
         this._ReportState();
@@ -161,24 +162,31 @@ export class CjsPaperDollEyesComposer
     {
         const c = this.composition.compositor;
         if (option.metadata?.dependantModifiers?.length) throw new Error("Unresolved eye dependencies " + option.definition);
-        const channels = Object.fromEntries(await Promise.all(Object.entries(option.channels).map(async ([ name, value ]) => [ name,
-            await c.Texture(CjsPaperDollDefinition.pickTier(value.path, CjsPaperDollDefinition.listFiles(value.path.slice(0, value.path.lastIndexOf("/") + 1)))) ])));
-        const coloured = !!channels.colorize_head_l;
-        if (coloured === !!channels.comp_head_d || coloured !== !!channels.colorize_head_z) throw new Error("Ambiguous diffuse inputs " + option.definition);
+        // The option's maps by role (CjsPaperDollTextureRoles): a diffuse drawn as it is or colourised through its zone
+        // map, and the normal and specular copied in as patches.
+        const roles = Object.values(option.channels).map(value => CjsPaperDollTextureRoles.lookup(
+            CjsPaperDollDefinition.pickTier(value.path, CjsPaperDollDefinition.listFiles(value.path.slice(0, value.path.lastIndexOf("/") + 1)))));
+        const one = match => CjsPaperDollTextureRoles.one(roles, match);
+        const detailRole = one(role => role.property === "DiffuseMap" && role.operation !== null), zoneRole = one(role => role.inputOf === "l");
+        const coloured = detailRole?.operation === "Colorized";
+        if (!detailRole || coloured !== !!zoneRole) throw new Error("Ambiguous diffuse inputs " + option.definition);
         if (option.metadata?.numColorAreas === 0 && coloured) throw new Error("Colour metadata conflicts with channel inputs");
-        for (const name of [ "comp_head_n", "comp_head_s" ]) if (!channels[name]) throw new Error("Incomplete eye material " + option.definition);
-        const detail = channels.colorize_head_l ?? channels.comp_head_d, region = CjsPaperDollCompositor.crop(detail);
+        const patchRoles = { NormalMap: one(role => role.property === "NormalMap"), SpecularMap: one(role => role.property === "SpecularMap") };
+        if (!patchRoles.NormalMap || !patchRoles.SpecularMap) throw new Error("Incomplete eye material " + option.definition);
+        const [ detail, zone, ...patchTextures ] = await Promise.all([ detailRole, zoneRole, patchRoles.NormalMap, patchRoles.SpecularMap ]
+            .map(role => role ? c.Texture(role.path) : null));
+        const region = CjsPaperDollCompositor.crop(detail);
         const paint = coloured
-            ? await c.Colorized(detail, region, channels.colorize_head_z, CjsPaperDollCompositor.crop(channels.colorize_head_z), NEUTRAL)
+            ? await c.Colorized(detail, region, zone, CjsPaperDollCompositor.crop(zone), NEUTRAL)
             : await c.Simple(detail, region);
         const patches = {};
-        for (const name of [ "NormalMap", "SpecularMap" ])
+        for (const [ index, name ] of [ "NormalMap", "SpecularMap" ].entries())
         {
-            const resource = channels[CHANNELS[name]];
+            const resource = patchTextures[index];
             patches[name] = { effect: await c.Copy(resource, CjsPaperDollCompositor.crop(resource), name === "NormalMap"), region: CjsPaperDollCompositor.crop(resource) };
         }
-        const colorAreas = coloured ? await c.ColorAreas(detail, channels.colorize_head_z) : [];
-        this._prepared.set(option.id, { option, coloured, channels, paint, region, patches, colorAreas });
+        const colorAreas = coloured ? await c.ColorAreas(detail, zone) : [];
+        this._prepared.set(option.id, { option, coloured, roles, paint, region, patches, colorAreas });
         return { colorAreas };
     }
 

@@ -45,13 +45,14 @@ export { CjsPaperDollLips } from "./CjsPaperDollLips.js";
 export { CjsPaperDollChin } from "./CjsPaperDollChin.js";
 export { CjsPaperDollBrow } from "./CjsPaperDollBrow.js";
 export { CjsPaperDollMask } from "./CjsPaperDollMask.js";
-export { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+export { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 export { CjsPaperDollCompositor } from "./compositor/CjsPaperDollCompositor.js";
 export { CjsPaperDollCompositionTarget } from "./compositor/CjsPaperDollCompositionTarget.js";
 export { CjsPaperDollMaterialLayer } from "./compositor/CjsPaperDollMaterialLayer.js";
 export { CjsPaperDollComposition } from "./composers/CjsPaperDollComposition.js";
 export { CjsPaperDollEyesComposer } from "./composers/CjsPaperDollEyesComposer.js";
+export { CjsPaperDollHeadComposer } from "./composers/CjsPaperDollHeadComposer.js";
 export { CjsPaperDollMakeupCatalog } from "./composers/CjsPaperDollMakeupCatalog.js";
 export { CjsPaperDollMapDecalSource } from "./composers/CjsPaperDollMapDecalSource.js";
 export { CjsPaperDollSkinComposer } from "./composers/CjsPaperDollSkinComposer.js";

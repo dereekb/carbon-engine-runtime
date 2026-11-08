@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned large scar settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollScars")
@@ -23,5 +23,7 @@ export class CjsPaperDollScars extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD | PaperDollPass.SURFACE;
 
     static category = "scars";
+
+    static blend = PaperDollBlend.DECAL;
 
 }

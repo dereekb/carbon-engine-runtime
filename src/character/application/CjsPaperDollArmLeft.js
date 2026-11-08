@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned left arm augmentation settings: one authored type (a variation and
@@ -56,6 +56,8 @@ export class CjsPaperDollArmLeft extends CjsPaperDollComponent
     static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
 
     static category = "makeup/armleft";
+
+    static blend = PaperDollBlend.MATERIAL;
 
     static optionNamesPalette = true;
 

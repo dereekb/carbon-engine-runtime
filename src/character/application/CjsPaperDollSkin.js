@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Shared head/body skin palette, independent of foundation shape strength. */
 @meta.define("CjsPaperDollSkin")
@@ -48,5 +48,7 @@ export class CjsPaperDollSkin extends CjsPaperDollComponent
     static passes = PaperDollPass.SKIN;
 
     static category = "skintone";
+
+    static blend = PaperDollBlend.COLORIZE;
 
 }

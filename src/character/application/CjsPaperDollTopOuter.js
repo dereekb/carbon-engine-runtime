@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned topouter garment (`topouter`) settings: the
@@ -58,6 +58,8 @@ export class CjsPaperDollTopOuter extends CjsPaperDollComponent
     static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
 
     static category = "topouter";
+
+    static blend = PaperDollBlend.MATERIAL;
 
     static optionNamesPalette = true;
 

@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned eyeliner settings: the style, its palette, custom
@@ -85,5 +85,7 @@ export class CjsPaperDollEyeliner extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD;
 
     static category = "makeup/eyeliner";
+
+    static blend = PaperDollBlend.COLORIZE;
 
 }

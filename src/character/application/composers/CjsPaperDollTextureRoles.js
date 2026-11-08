@@ -18,6 +18,9 @@ import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
+/** The note on a derived fact: our own earlier code's behaviour, which the screenshots keep. */
+const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a47517 ";
+
 export class CjsPaperDollTextureRoles
 {
 
@@ -29,8 +32,11 @@ export class CjsPaperDollTextureRoles
     /**
      * Each suffix's role. `families`: the name prefixes it is sourced for. `property`: the effect texture parameter
      * the composed map feeds. `channels`: what the file's channels hold. `operation`: the `CjsPaperDollCompositor`
-     * method that draws it, or null for an input of another role's operation (`inputOf`). `covered`: drawn through
-     * the same option's diffuse coverage when the option has a diffuse. `source`: where each fact is read.
+     * method that draws it, or null for an input of another role's operation (`inputOf`). `blend`: `replace` (drawn
+     * over what is under it) or `add` (added to it); one part's layers on one property draw replacements first, then
+     * additions (character-compositing.md:593, `PlanNormal`). `covered`: drawn through the same option's diffuse
+     * coverage when the option has a diffuse. `source`: where each fact is read. `derived`: the facts no source states,
+     * which match the working behaviour of our own earlier code (today's look) and wait for a ruling.
      */
     static table = {
         d: {
@@ -38,18 +44,22 @@ export class CjsPaperDollTextureRoles
             property: "DiffuseMap",
             channels: { rgb: "colour", a: "coverage" },
             operation: "Simple",
+            blend: "replace",
             covered: false,
             source: "simpleblit: RGB = Texture.rgb, SRC_ALPHA/INV_SRC_ALPHA (character-compositing.md:370, :395); "
-                + "DiffuseMap (shaders.yaml partSlots); painted through its own alpha (Graphene 6a47517 augmentations.js:13)"
+                + "DiffuseMap (shaders.yaml partSlots)",
+            derived: "its alpha is coverage: " + DERIVED + "augmentations.js:13)"
         },
         l: {
             families: [ "colorize", "comp" ],
             property: "DiffuseMap",
             channels: { rgb: "detail, multiplied by the colour areas", a: "coverage (UseMask 0 keeps the detail's alpha)" },
             operation: "Colorized",
+            blend: "replace",
             covered: false,
-            source: "colorizedblit D (character-compositing.md:367, :395); drawn as it is (Simple) without a zone map or "
-                + "palette (CjsPaperDollCompositor.CreateMaterialLayer); comp_body_l is a garment detail (Graphene 6a47517 bodyComposition.js:74)"
+            source: "colorizedblit D (character-compositing.md:367, :395)",
+            derived: "drawn as it is (Simple) without a zone map or palette (CjsPaperDollCompositor.CreateMaterialLayer); "
+                + "comp_body_l is a garment detail: " + DERIVED + "bodyComposition.js:74)"
         },
         z: {
             families: [ "colorize" ],
@@ -57,6 +67,7 @@ export class CjsPaperDollTextureRoles
             channels: { r: "colour area 1 weight", g: "colour area 2 weight", b: "colour area 3 weight", a: "where colourising applies" },
             operation: null,
             inputOf: "l",
+            blend: "replace",
             covered: false,
             source: "colorizedblit Z, and the one-channel compact zone decode (character-compositing.md:367, :379-383)"
         },
@@ -65,9 +76,10 @@ export class CjsPaperDollTextureRoles
             property: "NormalMap",
             channels: { rgb: "normal (or two-channel: R = X, A = Y, Z rebuilt)" },
             operation: "Simple",
+            blend: "replace",
             covered: true,
-            source: "covered SimpleBlit replacement (character-compositing.md:593); RGB at 4k, LA at base (:337-338); "
-                + "drawn through the detail's coverage (CjsPaperDollCompositor.CreateMaterialLayer coverage; Graphene 6a47517 "
+            source: "covered SimpleBlit replacement (character-compositing.md:593); RGB at 4k, LA at base (:337-338)",
+            derived: "the coverage is the option's own diffuse: " + DERIVED
                 + "bodyComposition.js:146, hairSupport.js:144, beardSupport.js:67, augmentations.js:14)"
         },
         s: {
@@ -75,36 +87,42 @@ export class CjsPaperDollTextureRoles
             property: "SpecularMap",
             channels: { rgba: "specular (LA at base, RGBA in some variations)" },
             operation: "Simple",
+            blend: "replace",
             covered: true,
-            source: "simpleblit (Graphene 6a47517 surfaceDetails.js:60); LA versus RGBA (character-compositing.md:329-330); "
-                + "drawn through the detail's coverage as n; colorize_body_s is a boot's only specular (bodyComposition.js:63)"
+            source: "LA versus RGBA (character-compositing.md:329-330); SpecularMap (shaders.yaml partSlots)",
+            derived: "drawn by simpleblit, through the option's diffuse coverage as n; colorize_body_s is a boot's only "
+                + "specular: " + DERIVED + "surfaceDetails.js:60, bodyComposition.js:63)"
         },
         tn: {
             families: [ "comp" ],
             property: "NormalMap",
             channels: { rg: "signed XY perturbation, (2 * value - 1) * strength / 2 (two-channel: A gives Y)" },
             operation: "Twist",
+            blend: "add",
             covered: false,
             source: "twistnormalblit, two passes ONE/ONE ADD then REV_SUBTRACT, destination alpha kept "
-                + "(character-compositing.md:373, :397); Graphene 6a47517 surfaceDetails.js:60"
+                + "(character-compositing.md:373, :397)"
         },
         mn: {
             families: [ "comp" ],
             property: "NormalMap",
             channels: { rg: "normal XY, Z rebuilt", b: "coverage" },
             operation: "MaskedNormal",
+            blend: "replace",
             covered: false,
             source: "maskednormalblit: XY = 2 * rg - 1, alpha = b * strength; SRC_ALPHA/INV_SRC_ALPHA, destination alpha "
-                + "kept (character-compositing.md:372, :396); Graphene 6a47517 largeScars.js:38"
+                + "kept (character-compositing.md:372, :396)"
         },
         m: {
             families: [ "comp" ],
             property: "CutMaskMap",
             channels: { rgb: "black", a: "where the body is cut" },
             operation: "Simple",
+            blend: "replace",
             covered: false,
-            source: "black RGB, variable alpha, drawn through alpha onto a white target (character-compositing.md:341-348; "
-                + "Graphene 6a47517 bodyComposition.js:149, :335); CutMaskMap (shaders.yaml partSlots)"
+            source: "black RGB, variable alpha, drawn through alpha onto a white target (character-compositing.md:341-348); "
+                + "CutMaskMap (shaders.yaml partSlots)",
+            derived: "the white target and a simpleblit: " + DERIVED + "bodyComposition.js:149, :335)"
         }
     };
 
@@ -112,7 +130,8 @@ export class CjsPaperDollTextureRoles
      * A texture file's role.
      * @param {string} path The file's `res:` path or name, at any tier.
      * @returns {{ path: string, family: string, region: string, suffix: string, tier: string, property: string,
-     *   channels: object, operation: ?string, inputOf?: string, covered: boolean, source: string }}
+     *   channels: object, operation: ?string, inputOf?: string, blend: string, covered: boolean, source: string,
+     *   derived?: string }}
      * @throws {Error} For a name outside `<family>_<region>_<suffix>[<tier>].png`, or a suffix the table does not
      *   source for that family.
      */
@@ -127,6 +146,34 @@ export class CjsPaperDollTextureRoles
         const role = CjsPaperDollTextureRoles.table[suffix];
         if (!role || !role.families.includes(family)) throw new Error("Unknown paper doll texture role " + family + "_" + suffix + ": " + path);
         return { path, family, region, suffix, tier, ...role };
+    }
+
+    /**
+     * The maps a folder holds directly, one per name at the character texture quality, each with its role.
+     * @param {string} folder The folder's `res:` path, ending in "/".
+     * @param {string[]} files The listed files.
+     * @returns {Array<ReturnType<typeof CjsPaperDollTextureRoles.lookup>>} The maps' roles.
+     * @throws {Error} For a map name the lookup does not source.
+     */
+    static readFolder(folder, files)
+    {
+        const maps = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"));
+        const names = [ ...new Set(maps.map(file => CjsPaperDollDefinition.splitTier(file)[0])) ];
+        return names.map(stem => CjsPaperDollTextureRoles.lookup(CjsPaperDollDefinition.pickTier(stem + ".png", maps)));
+    }
+
+    /**
+     * The one map among roles that matches, or null.
+     * @param {Array<ReturnType<typeof CjsPaperDollTextureRoles.lookup>>} roles The maps' roles.
+     * @param {function(object): boolean} match The test.
+     * @returns {?ReturnType<typeof CjsPaperDollTextureRoles.lookup>}
+     * @throws {Error} For more than one match.
+     */
+    static one(roles, match)
+    {
+        const found = roles.filter(match);
+        if (found.length > 1) throw new Error("Ambiguous paper doll maps " + found.map(role => role.path).join(", "));
+        return found[0] ?? null;
     }
 
 }

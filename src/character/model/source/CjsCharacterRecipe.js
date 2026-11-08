@@ -25,4 +25,14 @@ export class CjsCharacterRecipe
     @type.list("unknown")
     value = [];
 
+    /**
+     * The ordered modifier records, without the leading sex string.
+     * @cjs
+     * @returns {Array<import("./CjsCharacterRecipeModifier.js").CjsCharacterRecipeModifier>}
+     */
+    GetModifiers()
+    {
+        return typeof this.value[0] === "string" ? this.value.slice(1) : this.value;
+    }
+
 }

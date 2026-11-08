@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned blush settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollBlush")
@@ -78,5 +78,7 @@ export class CjsPaperDollBlush extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD;
 
     static category = "makeup/blush";
+
+    static blend = PaperDollBlend.COLORIZE;
 
 }

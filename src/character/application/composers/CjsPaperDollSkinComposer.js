@@ -4,6 +4,7 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollPass } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
+import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
 
 /** The skin palettes' shade names, as the creator labels them (`<bloodline>_<shade>.color`). */
 const SHADES = { light: "Light", midlight: "Mid-light", default: "Default", middark: "Mid-dark", dark: "Dark" };
@@ -87,13 +88,17 @@ export class CjsPaperDollSkinComposer
         }
         records.sort((a, b) => a.path.localeCompare(b.path));
 
-        const areas = new Set();
+        const areas = new Set(), roles = CjsPaperDollTextureRoles.readFolder(root, files);
         for (const region of [ "head", "body" ])
         {
+            // The region's colourised detail and the zone map its colourising reads.
+            const detailMap = CjsPaperDollTextureRoles.one(roles, role => role.region === region && role.operation === "Colorized");
+            const zoneMap = CjsPaperDollTextureRoles.one(roles, role => role.region === region && role.inputOf === "l");
+            if (!detailMap || !zoneMap) throw new Error("Incomplete skin tone maps for the " + region);
             const [ base, detail, zone ] = await Promise.all([
                 c.Texture(foundation.bindings[region].DiffuseMap),
-                c.Texture(CjsPaperDollDefinition.pickTier(root + "colorize_" + region + "_l.png", files)),
-                c.Texture(CjsPaperDollDefinition.pickTier(root + "colorize_" + region + "_z.png", files))
+                c.Texture(detailMap.path),
+                c.Texture(zoneMap.path)
             ]);
             const colorAreas = await c.ColorAreas(detail, zone);
             const skinAlpha = CjsPaperDollSkinComposer.medianAlpha(detail);
@@ -102,7 +107,8 @@ export class CjsPaperDollSkinComposer
             // detail's alpha, which is uniform (50/255, within 2, over the whole head and body detail), set as the
             // current base copy's alpha multiplier (so a foundation switch keeps it). The avatar shaders darken the
             // torso's inner backing by the composite's alpha, so an alpha of 1 drew it near-black, a line round the
-            // neck. The layer's own draws write colour only (RM_ALPHA_ADDITIVE).
+            // neck. The layer's own draws write colour only (RM_ALPHA_ADDITIVE). Derived: the alpha is measured from
+            // the content (the median, `medianAlpha`), and taking it as the composite's is our reading of the shaders.
             const baseCopy = await c.Copy(base);
             const paint = await c.Colorized(detail, CjsPaperDollCompositor.crop(detail), zone, CjsPaperDollCompositor.crop(zone), initial.colors);
             const r = this._regions[region] = { base, detail, zone, colorAreas, baseCopy, skinAlpha, paint };

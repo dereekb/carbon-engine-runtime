@@ -1,16 +1,14 @@
-import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollPass } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
-import { CjsPaperDollMapDecalSource } from "./CjsPaperDollMapDecalSource.js";
 
 /** The surface outputs' channels, as the consumer effects name them. */
 const CHANNELS = [ "NormalMap", "SpecularMap" ];
 
 /**
  * A paper doll's surface pass, in the composition: the head and body normal and specular maps, each based on the
- * selected foundation's own map, with mips, and the map-decal parts' sources (every definition part drawn in the
- * surface pass alone: aging and scarring). The other surface parts (scars, lipstick, garments, augmentations,
- * hair, beard) give their layers through their own sources.
+ * selected foundation's own map, with mips. The parts give their layers through their sources on the composition:
+ * the map-decal parts' (`CjsPaperDollMapDecalSource.prepareAll`: aging, scarring, scars) and the others' (lipstick,
+ * garments, augmentations, hair, beard).
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. Moved from Graphene's
  * `surfaceDetails.js` (character-structure-and-plugins.md R5); the name is a working name.
@@ -32,7 +30,7 @@ export class CjsPaperDollSurfaceComposer
     /** Each foundation's copied head and body normal and specular maps, by foundation id. @type {Map<string, object>} */
     _bases = new Map();
 
-    /** The map-decal parts' sources, by part name. @type {Map<string, CjsPaperDollMapDecalSource>} */
+    /** The map-decal parts' sources, by part name. @type {Map<string, import("./CjsPaperDollMapDecalSource.js").CjsPaperDollMapDecalSource>} */
     _decals = new Map();
 
     /** Notes a change, for the build's log. @type {function(string): void} */
@@ -56,23 +54,17 @@ export class CjsPaperDollSurfaceComposer
      * @param {{ head: object[], body: object[] }} consumers The effects each region's maps bind to; read at each bind,
      *   so effects added later (garments, the drape) take the maps too.
      * @param {function(string): void} onChange Notes a change.
+     * @param {Map<string, import("./CjsPaperDollMapDecalSource.js").CjsPaperDollMapDecalSource>} decals The map-decal parts' sources, for the build report.
      * @returns {Promise<void>}
      */
-    async Prepare(definition, foundations, consumers, onChange)
+    async Prepare(definition, foundations, consumers, onChange, decals)
     {
         this._definition = definition;
         this._onChange = onChange;
         const sizes = {};
         for (const [ id, foundation ] of foundations) Object.assign(sizes, await this.PrepareFoundation(id, foundation));
 
-        for (const name of CjsPaperDollDefinition.parts)
-        {
-            if (definition[name].constructor.passes !== PaperDollPass.SURFACE) continue;
-            const source = new CjsPaperDollMapDecalSource(this.composition.compositor, this._build, name, CHANNELS);
-            await source.Configure(definition);
-            this._decals.set(name, source);
-            this.composition.SetSource(name, source);
-        }
+        this._decals = decals;
 
         for (const region of [ "head", "body" ]) for (const channel of CHANNELS)
         {
@@ -86,7 +78,7 @@ export class CjsPaperDollSurfaceComposer
 
         this._build.report.surfaceDetails = {
             order: definition.GetLayerOrder(PaperDollPass.SURFACE),
-            orderAuthority: "the paper definition bake order (PaperDollLayer), confirmed layer by layer",
+            orderAuthority: "the paper doll bake order (PaperDollLayer)",
             options: Object.fromEntries([ ...this._decals ].map(([ name, source ]) => [ name, source.Describe() ])),
             updates: 0
         };

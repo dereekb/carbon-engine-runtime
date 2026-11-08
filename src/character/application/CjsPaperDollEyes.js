@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollPass } from "./paperDollOrder.js";
 
 /** Application-owned eye settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollEyes")
@@ -46,5 +46,7 @@ export class CjsPaperDollEyes extends CjsPaperDollComponent
     static passes = PaperDollPass.EYES;
 
     static category = "makeup/eyes";
+
+    static blend = PaperDollBlend.COLORIZE;
 
 }

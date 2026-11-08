@@ -72,3 +72,23 @@ export const PaperDollPass = Object.freeze({
     /** The composed body diffuse. */
     BODY: 32
 });
+
+/**
+ * How a part's look is composed: the compositing source its class draws through. Each part class declares one as
+ * `static blend`; the paper doll picks a part's source by it.
+ *
+ * @readonly
+ * @enum {number}
+ */
+export const PaperDollBlend = Object.freeze({
+    /** Composed maps drawn as they are (`comp_<region>_<suffix>`): aging, freckles, scarring, scars, augmentations. */
+    DECAL: 1,
+    /** A colourised detail and zone map with a palette: skin, eyes, eyebrows, blush, eye shadow, eyeliner, lipstick. */
+    COLORIZE: 2,
+    /** A worn item's material: its colourised detail, zone, normal and specular through its coverage. */
+    MATERIAL: 3,
+    /** Projected onto the head mesh and baked: tattoos. */
+    PROJECTION: 4,
+    /** A mesh with its own maps; nothing composed: accessories. */
+    MESH: 5
+});

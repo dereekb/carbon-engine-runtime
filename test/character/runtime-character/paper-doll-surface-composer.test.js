@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollSurfaceComposer, PaperDollPass } from "../../../npm/dist/character/index.js";
+import { CjsCharacterRecipe, CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollPass } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
@@ -9,7 +9,7 @@ import "../../support/frameLoop.js";
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const AGING = ROOT + "makeup/aging/aging_01/";
 const FILES = [ AGING + "types/aging_01.type", AGING + "comp_head_tn.png", AGING + "comp_head_s.png", AGING + "comp_body_s.png",
-  ROOT + "makeup/scarring/scarring_01/types/scarring_01.type" ];
+  ROOT + "makeup/scarring/scarring_01/types/scarring_01.type", ROOT + "makeup/scarring/scarring_01/comp_head_tn.png" ];
 
 /** A paths service over FILES (Carbon's own BluePaths over a remote index), and a library answering the types. */
 function services(t, recipe = [])
@@ -20,7 +20,7 @@ function services(t, recipe = [])
   paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const characterLibrary = {
     FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }),
-    FetchRecipe: async () => ({ value: recipe })
+    FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] })
   };
   const previous = installBlueServices({ paths, characterLibrary }, false);
   t.after(() => installBlueServices(previous, previous.running));
@@ -58,7 +58,8 @@ async function prepared(t, recipe = null)
   definition.archetype.option = "a";
   const consumers = { head: [], body: [] }, notes = [];
   const surface = new CjsPaperDollSurfaceComposer(composition, build);
-  await surface.Prepare(definition, new Map([ [ "a", foundation("a") ] ]), consumers, message => notes.push(message));
+  const decals = await CjsPaperDollMapDecalSource.prepareAll(composition, definition, build);
+  await surface.Prepare(definition, new Map([ [ "a", foundation("a") ] ]), consumers, message => notes.push(message), decals);
   return { composition, compositor, definition, consumers, surface, build, notes };
 }
 
@@ -75,7 +76,7 @@ test("the surface pass's four outputs take their sizes from the foundation's map
   assert.deepEqual(composition._rows.map(row => [ row.region, row.channel, row.width, row.height, row.mips ]), [
     [ "head", "NormalMap", 2048, 1024, true ], [ "head", "SpecularMap", 2048, 1024, true ],
     [ "body", "NormalMap", 2048, 2048, true ], [ "body", "SpecularMap", 2048, 2048, true ] ]);
-  assert.ok(composition.HasSource("aging") && composition.HasSource("scarring"), "every part drawn in the surface pass alone has a source");
+  assert.ok(composition.HasSource("aging") && composition.HasSource("scarring"), "every decal part has a source");
   assert.equal(definition.aging.option, "aging_01");
   assert.equal(definition.aging.enabled, false);
 });
@@ -101,7 +102,7 @@ test("Apply draws each output's base, then each part's layers in the capture's o
   assert.deepEqual(Object.keys(head.bound).sort(), [ "NormalMap", "SpecularMap" ]);
   assert.equal(body.bound.NormalMap, composition.GetOutput(PaperDollPass.SURFACE, "body", "NormalMap"));
   assert.equal(build.report.surfaceDetails.updates, 1);
-  assert.equal(build.report.surfaceDetails.options.aging[0].regions.head.NormalMap.path, AGING + "comp_head_tn.png");
+  assert.equal(build.report.surfaceDetails.options.aging[0].regions.head.NormalMap[0].path, AGING + "comp_head_tn.png");
   assert.deepEqual(notes, [ "surface details applied" ]);
 });
 

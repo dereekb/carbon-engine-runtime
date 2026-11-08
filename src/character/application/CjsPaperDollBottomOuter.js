@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned bottom (`bottomouter`: trousers and skirts) settings: the
@@ -58,6 +58,8 @@ export class CjsPaperDollBottomOuter extends CjsPaperDollComponent
     static passes = PaperDollPass.BODY | PaperDollPass.SURFACE;
 
     static category = "bottomouter";
+
+    static blend = PaperDollBlend.MATERIAL;
 
     static optionNamesPalette = true;
 

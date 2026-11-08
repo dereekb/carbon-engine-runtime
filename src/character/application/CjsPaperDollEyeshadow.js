@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPass } from "./paperDollOrder.js";
 
 /**
  * Application-owned eye shadow settings: the style, two independent swatch
@@ -100,5 +100,7 @@ export class CjsPaperDollEyeshadow extends CjsPaperDollComponent
     static passes = PaperDollPass.HEAD;
 
     static category = "makeup/eyeshadow";
+
+    static blend = PaperDollBlend.COLORIZE;
 
 }
