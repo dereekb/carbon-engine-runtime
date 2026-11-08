@@ -81,6 +81,9 @@ export class CjsPaperDollBlush extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
+    /** Its paint draws at its weight setting (`CjsPaperDollColorizedSource`). */
+    static weighted = true;
+
     /** Where its palette files live: the category's catalog (`PaperDollPalettes`). */
     static palettes = PaperDollPalettes.CATALOG;
 

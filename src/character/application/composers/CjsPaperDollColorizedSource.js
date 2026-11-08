@@ -82,7 +82,7 @@ export class CjsPaperDollColorizedSource
     /** The catalog's options by id (the catalog rule). @type {Map<string, object>} */
     _catalog = new Map();
 
-    /** Whether the part has a weight setting, which the paint's strength follows; without one it draws at full. */
+    /** Whether the part's paint draws at its weight setting (`static weighted`); without it, at full strength. */
     _weighted = true;
 
     /** The part's class, for its facts (`carrier`). */
@@ -140,7 +140,7 @@ export class CjsPaperDollColorizedSource
         const build = this._build, component = definition[this.name], category = component.constructor.category;
         const root = build.content.root + category + "/", files = this._files = CjsPaperDollDefinition.listFiles(root);
         this._type = component.constructor;
-        this._weighted = Object.hasOwn(component, "weight");
+        this._weighted = component.constructor.weighted === true;
         for (const type of files.filter(file => file.endsWith(".type")))
         {
             const folder = type.slice(0, type.indexOf("/types/") + 1), id = folder.slice(root.length, -1);
@@ -210,28 +210,34 @@ export class CjsPaperDollColorizedSource
         const build = this._build, component = definition[this.name], category = component.constructor.category;
         const catalog = await CjsPaperDollMakeupCatalog.read(category.split("/").at(-1), build);
         this._type = component.constructor;
-        this._weighted = Object.hasOwn(component, "weight");
+        this._weighted = component.constructor.weighted === true;
         this._catalog = new Map(catalog.options.map(option => [ option.id, option ]));
         const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const entries = recipe.filter(entry => entry.path.startsWith(category + "/"));
         if (entries.length > 1 || entries.length && (!Number.isFinite(entries[0].weight) || entries[0].weight < 0 || entries[0].weight > 1)) throw new Error("Invalid " + this.name + " recipe entry");
         const set = entries.length ? entries[0] : null;
+        // Without a recipe entry the part starts off on the catalog's first option. Derived: our own default, awaiting the
+        // defaults work (the operator: our own defaults come later).
         const initial = set ? catalog.options.find(option => option.part === set.path) : catalog.options[0];
         if (!initial) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
         // The recipe's colours (else its colour variation, else the option's default) are `authored`: the default palette
-        // of the recipe's option (a loaded recipe applies what it sets) and of every option without its own. With no
-        // recipe entry an option without its own has no default.
+        // of every option without its own. With no recipe entry such an option has no default. PROVISIONAL (Ruru,
+        // 2026-11-09; derived item 19): an option's own default wins over the recipe's colours, which keeps today's brows;
+        // the ruling says a loaded recipe applies what it sets, so the recipe option should take `authored` (a colour-space
+        // check of the recipe's colours against the .color files is pending).
         let authored = null;
         if (set)
         {
             const folder = build.content.root + initial.part + "/";
+            // An entry without colours or a colour variation falls back to the option's default palette, else its first.
+            // PROVISIONAL (with the recipe-colours call, derived item 15): the first palette is our pick, not a source's.
             authored = set.GetColors() ?? (await build.Ready(blue.characterLibrary.FetchPalette(set.colorvariation
                 ? folder + set.colorvariation + ".color" : initial.defaultPalette ?? initial.palettes[0].path))).colors;
         }
         const AUTHORED = CjsPaperDollColorizedSource.authored;
         component.Configure(catalog.options.map(option =>
         {
-            const defaultPalette = authored !== null && (option === initial || !option.defaultPalette) ? AUTHORED : option.defaultPalette ?? null;
+            const defaultPalette = option.defaultPalette ?? (authored !== null ? AUTHORED : null);
             return {
                 id: option.id,
                 colorAreas: [],
@@ -305,7 +311,8 @@ export class CjsPaperDollColorizedSource
     /**
      * What the carrier mesh draws for a capture (a part with `static carrier`): the captured option's unblended
      * colourised detail in the captured colours, and its cutout; the last applied option's while the part is off or the
-     * option loads.
+     * option loads. Derived: today's look (Graphene 6a47517 headComposition.js kept the last brow); the brow meshes are
+     * hidden while the part is off, so the carrier's colour does not show then.
      * @param {{ option: string, colors: Float32Array[] }} value The part's capture.
      * @returns {{ effect: object, region: Float32Array, material: { NormalMap: object, SpecularMap: object } }}
      */

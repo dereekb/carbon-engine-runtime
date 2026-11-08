@@ -62,7 +62,7 @@ test("the catalog lists every option's palettes as raw records, unmerged; an opt
   assert.equal(definition.blush.weight, 0, "no recipe entry: weight 0");
 });
 
-test("a recipe entry turns its option on at its weight; its colours are the recipe option's default and that of options without their own", async t =>
+test("a recipe entry turns its option on at its weight; its colours are the default of options without their own (provisional: an own default wins)", async t =>
 {
   const { definition, source } = await configured(t, [ { category: "makeup", path: "makeup/blush/blush_02", colors: "[(0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0), (0.9, 0.1, 0.1, 1.0)]", weight: .06 } ]);
   const blush = definition.blush;
@@ -70,7 +70,7 @@ test("a recipe entry turns its option on at its weight; its colours are the reci
   assert.equal(blush.option, "blush_02");
   assert.equal(blush.weight, .06);
   const [ first, second ] = blush.GetOptions();
-  assert.equal(second.defaultPalette, CjsPaperDollColorizedSource.authored, "the recipe's option, over its own default.color");
+  assert.equal(second.defaultPalette, BLUSH + "blush_02/default.color", "the recipe's option keeps its own default (provisional)");
   assert.equal(first.defaultPalette, CjsPaperDollColorizedSource.authored, "an option without its own");
   assert.ok(first.palettes.some(record => record.path === CjsPaperDollColorizedSource.authored));
   assert.equal(Math.round(blush.GetPaletteColors(CjsPaperDollColorizedSource.authored)[0][0] * 10) / 10, .9);

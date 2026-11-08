@@ -1,6 +1,6 @@
 import { meta, type } from "#schema";
 import { CjsPaperDollComponent } from "./CjsPaperDollComponent.js";
-import { PaperDollBlend, PaperDollLayer, PaperDollTarget } from "./paperDollOrder.js";
+import { PaperDollBlend, PaperDollLayer, PaperDollPalettes, PaperDollTarget } from "./paperDollOrder.js";
 
 /** Application-owned eyebrow settings; edits invalidate the doll's update pass. */
 @meta.define("CjsPaperDollEyebrows")
@@ -50,6 +50,9 @@ export class CjsPaperDollEyebrows extends CjsPaperDollComponent
     static category = "makeup/eyebrows";
 
     static blend = PaperDollBlend.COLORIZE;
+
+    /** Where its palette files live: the category's catalog (`PaperDollPalettes`). */
+    static palettes = PaperDollPalettes.CATALOG;
 
 
     /**

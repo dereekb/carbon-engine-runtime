@@ -103,6 +103,9 @@ export class CjsPaperDollEyeshadow extends CjsPaperDollComponent
 
     static blend = PaperDollBlend.COLORIZE;
 
+    /** Its paint draws at its weight setting (`CjsPaperDollColorizedSource`). */
+    static weighted = true;
+
     /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
     static palettes = PaperDollPalettes.OWN;
 
