@@ -23,11 +23,10 @@ import { ensureRuntimeState, getRuntimeState } from "../../../src/blue/compose/r
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as lifecycle from "../../../src/global/model/lifecycle/index.js";
-import * as model from "../../../src/global/model/index.js";
 import * as schema from "../../../src/blue/schema/index.js";
 import * as types from "../../../src/blue/schema/types/index.js";
 
-const coreTypes = { ...lifecycle, ...model, ...schema, ...types };
+const coreTypes = { ...lifecycle, ...schema, ...types };
 const {
     CARBON_TYPE,
     CjsLifecycleState,
