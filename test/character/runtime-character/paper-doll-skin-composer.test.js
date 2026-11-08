@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsPaperDollDefinition, CjsPaperDollSkinComposer } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollDefinition, CjsPaperDollMaterialLayer, CjsPaperDollSkinComposer } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
+import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import "../../support/frameLoop.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/skintone/basic/";
@@ -24,7 +25,10 @@ function services(t)
   return { paths, fetched };
 }
 
-/** A compositor recording what the skin asks of it. */
+/**
+ * A compositor recording what the skin asks of it. Its effects are real Tr2Effects, returned through promises as
+ * CjsPaperDollCompositor returns them (Copy and Colorized), so an effect used before it is awaited fails here too.
+ */
 class StubCompositor
 {
   draws = [];
@@ -37,8 +41,8 @@ class StubCompositor
     return { path, cutoutX: 0, cutoutY: 0, cutoutWidth: 1, cutoutHeight: .5, width: 32, height: 32, loadedBitmap: { GetMipRawData: () => data, GetPitch: () => 128 } };
   }
   async ColorAreas(detail) { return detail.path.includes("head") ? [ 1, 2 ] : [ 2, 3 ]; }
-  async Copy(source) { return { source, SetParameter(name, value) { this[name] = value; } }; }
-  Colorized(detail, region, zone, zoneRegion, colors) { return { detail, colors: colors.map(color => Array.from(color)), SetParameter__Vector4(name, value) { this[name] = Array.from(value); } }; }
+  async Copy(source) { const effect = new Tr2Effect(); effect.source = source; return effect; }
+  async Colorized(detail, region, zone, zoneRegion, colors) { const effect = new Tr2Effect(); effect.detail = detail; CjsPaperDollMaterialLayer.setColors(effect, colors); return effect; }
   TargetTexture(width, height) { const index = this.made++; return { target: { index, width, height }, resource: { index } }; }
   Draw(target, width, height, value, region, clear = false) { this.draws.push({ target: target.index, width, height, value, region: Array.from(region), clear }); }
   Destruct() { this.destructed = true; }
@@ -86,7 +90,7 @@ test("Prepare configures the skin from the folder's palettes and the regions' co
   // Head then body: the base copy cleared into the target, then the colourised layer over the detail's cutout.
   assert.deepEqual(compositor.draws.map(draw => [ draw.width, draw.height, draw.clear ]), [ [ 2048, 1024, true ], [ 2048, 1024, false ], [ 2048, 2048, true ], [ 2048, 2048, false ] ]);
   assert.deepEqual(compositor.draws[1].region, [ 0, 0, 1, .5 ]);
-  assert.equal(compositor.draws[0].value.AlphaMultiplier, 51 / 255, "the base takes the detail's median alpha under a skin option");
+  assert.ok(Math.abs(compositor.draws[0].value.FindParameterByName("AlphaMultiplier").GetValue() - 51 / 255) < 1e-6, "the base takes the detail's median alpha under a skin option");
 });
 
 test("Apply draws into the other target each time, binds the body base and reports the definition's skin", async t =>
@@ -96,11 +100,11 @@ test("Apply draws into the other target each time, binds the body base and repor
   skin.Apply({ skin: { option: "basic", colors: PALETTE } });
   assert.notEqual(skin.bodyTexture, first);
   assert.equal(body[0].bound, skin.bodyTexture);
-  assert.deepEqual(compositor.draws.at(-1).value.Color1, PALETTE[0]);
+  assert.deepEqual(Array.from(compositor.draws.at(-1).value.FindParameterByName("Color1").value), PALETTE[0].map(Math.fround));
   skin.Apply({ skin: { option: "", colors: PALETTE } });
   assert.equal(skin.bodyTexture, first, "two targets, alternating");
   assert.equal(compositor.draws.at(-1).clear, true, "no option: the base only");
-  assert.equal(compositor.draws.at(-1).value.AlphaMultiplier, 1);
+  assert.equal(compositor.draws.at(-1).value.FindParameterByName("AlphaMultiplier").GetValue(), 1);
   assert.equal(build.report.skin.updates, 2);
   assert.equal(build.report.skin.selected, ROOT + "deteis_light.color");
   assert.deepEqual(notes, [ "skin palette applied", "skin palette applied" ]);

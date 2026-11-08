@@ -113,7 +113,7 @@ export class CjsPaperDollSkinComposer
             // darken the torso's inner backing by the composite's alpha, so an alpha of 1 drew it near-black, a line
             // round the neck. The layer's own draws write colour only (RM_ALPHA_ADDITIVE).
             const baseCopy = await c.Copy(base);
-            const paint = c.Colorized(detail, CjsPaperDollCompositor.crop(detail), zone, CjsPaperDollCompositor.crop(zone), initial.colors);
+            const paint = await c.Colorized(detail, CjsPaperDollCompositor.crop(detail), zone, CjsPaperDollCompositor.crop(zone), initial.colors);
             // The content's head maps are 2048x1024 and its body maps 2048x2048.
             const width = 2048, height = region === "head" ? 1024 : 2048;
             const buffers = [ c.TargetTexture(width, height), c.TargetTexture(width, height) ];
