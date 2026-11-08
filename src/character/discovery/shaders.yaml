@@ -1,0 +1,1670 @@
+# Character shaders: the effects character parts name, and what each compiled effect declares; resource index 3654997.
+# Family: shaders
+# Source pattern: res:/graphics/character/**/*.black (every Tr2Effect.effectFilePath, its resources and parameters),
+#   and the compiled container each names: res:/graphics/effect.dx11/<path>.sm_hi.
+# Files: 1074 .black read, 0 failed; 24 distinct effects; 24 compiled containers read.
+# Every compiled container is version 15 with one row and no permutation axes.
+# partSlots: texture parameter names the parts' Tr2Effect.resources carry, with how many part effects carry each.
+# authoredTextures: file names those slots carry where a part sets resourcePath (digits as #); most slots are empty
+#   in the parts and are bound at run time.
+# textures, constants: what the compiled effect declares, across techniques, passes and stages; register, stage and
+#   isSRGB as read. A compiled effect declares only what its programs use.
+# annotations: the compiled effect's per-parameter annotations, decoded (1 = true for flags).
+# Facts only: names are as authored, including case and spelling.
+effects:
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdflinear.fx":
+    parts: 549
+    categories: [ "female/accessories", "female/basenude", "female/bottominner", "female/bottomouter", "female/dependants", "female/feet", "female/hair", "female/head", "female/outer", "female/paperdoll_lod", "female/topinner", "female/topouter", "global/paperdollsettings", "male/accessories", "male/bottomouter", "male/dependants", "male/feet", "male/hair", "male/head", "male/outer", "male/paperdoll_lod", "male/topinner", "male/topouter", "unique/characterselect" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 605
+      SpecularMap: 605
+      DiffuseMap: 605
+      FresnelLookupMap: 605
+      ColorNdotLLookupMap: 605
+      CutMaskMap: 605
+      IrradianceMap: 32
+      ClothingReflectionCube: 6
+      spotLightMap0: 6
+      Noisemap: 6
+      spotLightMap1: 6
+      spotLightMap2: 6
+      spotLightMap3: 6
+      CellReflectionMap: 1
+      CellReflection2ndMap: 1
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 1 }
+      SpecularMap: { "specularmap.dds": 1 }
+      DiffuseMap: { "diffusemap.dds": 1 }
+      FresnelLookupMap: { "brdflibrary.dds": 7 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 540 }
+      CutMaskMap: { "cutmaskmap.dds": 1 }
+      ClothingReflectionCube: { "genericreflection_cube.dds": 6 }
+      Noisemap: { "noise.png": 6 }
+    partConstants: [ "TransformUV0", "MaterialAmbientFactor", "ReflectionMap", "CutMaskInfluence", "MaterialDiffuseColor", "MaterialSpecularCurve", "MaterialSpecularFactors", "FresnelFactors", "MaterialSpecularColor", "MaterialLibraryID", "FilmicMappingParams1", "FilmicMappingParams2", "MaterialCutoutColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor", "SkinGlowThreshold", "SkinGlowSpecularAlpha", "SkinGlowColor", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "PortraitRoughnessParams", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdflinear.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      ClothingReflectionCube: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      FresnelLookupMap: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ColorNdotLLookupMap: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 0, 11 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      ClothingReflectionCube: { Tr2sRGB: 1 }
+      ColorNdotLLookupMap: { SasUiVisible: 1 }
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      MaterialCubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma (do nothing = 1.0)", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialCubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdfdoublelinear.fx":
+    parts: 283
+    categories: [ "female/accessories", "female/bottominner", "female/bottomouter", "female/dependants", "female/feet", "female/hair", "female/hands", "female/head", "female/outer", "female/paperdoll_lod", "female/topinner", "female/topouter", "male/accessories", "male/bottominner", "male/bottomouter", "male/dependants", "male/feet", "male/hands", "male/head", "male/outer", "male/paperdoll_lod", "male/topinner", "male/topouter" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 306
+      SpecularMap: 306
+      DiffuseMap: 306
+      FresnelLookupMap: 306
+      ColorNdotLLookupMap: 306
+      CutMaskMap: 306
+    authoredTextures:
+      ColorNdotLLookupMap: { "ndotllibrary.png": 301 }
+    partConstants: [ "TransformUV0", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "CutMaskInfluence", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams", "MaterialCutoutColor", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "SkinGlowThreshold", "SkinGlowSpecularAlpha", "SkinGlowColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdfdoublelinear.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      ClothingReflectionCube: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      FresnelLookupMap: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ColorNdotLLookupMap: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 0, 11 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2CubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2CubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2CubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      Material2DiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2LibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      ClothingReflectionCube: { Tr2sRGB: 1 }
+      ColorNdotLLookupMap: { SasUiVisible: 1 }
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      Material2CubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2CubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      Material2CubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2DiffuseColor: { group: "Material2", sasuidescription: "The diffuse color", sasuivisible: 1, uiwidget: "Color" }
+      Material2LibraryID: { Component1: "ID", Group: "Material2", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularColor: { Group: "Material2", SasUiDescription: "The specular color", SasUiVisible: 1, UIWidget: "Color" }
+      Material2SpecularCurve: { Component1: "Specular1 Power", Component2: "Specular2 Power", Component3: "Specular1/Specular2 Ratio", Group: "Material2", SasUiDescription: "( Specular1 Power, Specular2 Power, Specular1/Specular2 ratio, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularFactors: { Component1: "Additive Factor", Component2: "Mult Factor", Group: "Material2", SasUiDescription: "( Add factor, Mult factor, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma (do nothing = 1.0)", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialCubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarhair_detailed.fx":
+    parts: 136
+    categories: [ "female/hair", "female/paperdoll_lod", "global/paperdollsettings", "male/hair", "male/paperdoll_lod" ]
+    areaLists: [ "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      DiffuseMap: 372
+      SpecularMap: 372
+      NormalMap: 372
+      IrradianceMap: 372
+      HairNoise: 2
+      TangentMap: 2
+      ColorNdotLLookupMap: 2
+      FresnelLookupMap: 2
+      spotLightMap0: 2
+      Noisemap: 2
+      spotLightMap1: 2
+      spotLightMap2: 2
+      spotLightMap3: 2
+    authoredTextures:
+      HairNoise: { "noise#d.dds": 2 }
+      TangentMap: { "#gray.dds": 2 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 2 }
+      FresnelLookupMap: { "brdflibrary.dds": 2 }
+      Noisemap: { "noise.png": 2 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "HairDiffuseBias", "HairParameters", "HairSpecularFactors1", "HairSpecularColor1", "HairSpecularFactors2", "HairSpecularColor2", "HairNoiseParameters", "TangentMapParameters", "HairFakeAOFactors", "FilmicMappingParams1", "FilmicMappingParams2", "MaterialCutoutColor", "PortraitShaderArtDiffuseColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "undefined", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarhair_detailed.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 0, 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      TangentMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairDiffuseBias: { bytes: [ 4 ], stages: [ "ps" ] }
+      HairParameters: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors2: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor2: { bytes: [ 16 ], stages: [ "ps" ] }
+      TangentMapParameters: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      HairDiffuseBias: { Group: "Hair", SasUiDescription: "", SasUiVisible: 1 }
+      HairParameters: { Component1: "Ambient scale", Component2: "Enlighten scale", Component3: "Fake translucency", Component4: "-", Group: "Hair", SasUiDescription: "( Ambient scale, Enlighten scale, Fake translucency, 0 )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularColor1: { Group: "Hair", SasUiDescription: "The first specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      HairSpecularColor2: { Group: "Hair", SasUiDescription: "The second specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      HairSpecularFactors1: { Component1: "Specular1 Additive Strength", Component2: "Specular1 Shift", Component3: "Specular1 Power", Component4: "Specular1 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular1 Strength Additive, Specular1 Shift, Specular1 Power, Specular1 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularFactors2: { Component1: "Specular2 Additive Strength", Component2: "Specular2 Shift", Component3: "Specular2 Power", Component4: "Specular2 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular2 Strength Additive, Specular2 Shift, Specular2 Power, Specular2 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      TangentMapParameters: { Component1: "Tangent map rotation scale", Component2: "Tangent map bias", Component3: "-", Component4: "-", Group: "Hair", SasUiDescription: "( Tangent map rotation scale, tangent map rotation bias, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdf.fx":
+    parts: 86
+    categories: [ "female/accessories", "female/dependants", "female/head", "female/outer", "female/paperdoll_lod", "global/lowlods", "male/accessories", "male/dependants", "male/head", "male/outer", "male/paperdoll_lod" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 97
+      SpecularMap: 97
+      DiffuseMap: 97
+      FresnelLookupMap: 97
+      ColorNdotLLookupMap: 96
+      CutMaskMap: 96
+    authoredTextures:
+      NormalMap: { "flatnormal.dds": 2, "_n.psd": 2 }
+      SpecularMap: { "#gray.dds": 2, "_s.psd": 2 }
+      DiffuseMap: { "_d.psd": 2, "colorize_body_l.png": 1, "basicfemale_d.dds": 1 }
+      FresnelLookupMap: { "brdflibrary.dds": 4 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 94 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "MaterialSpecularCurve", "MaterialCutoutColor", "MaterialSpecularFactors", "CutMaskInfluence", "MaterialSpecularColor", "MaterialLibraryID", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor", "MaterialExtraFresnel", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdf.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ClothingReflectionCube: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      FresnelLookupMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ColorNdotLLookupMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 0, 6 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ShadowCubeMap0: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ShadowCubeMap1: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      ColorNdotLLookupMap: { SasUiVisible: 1 }
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      MaterialCubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma (do nothing = 1.0)", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialCubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarhair.fx":
+    parts: 44
+    categories: [ "female/hair", "female/paperdoll_lod", "male/hair" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      IrradianceMap: 106
+      NormalMap: 106
+      SpecularMap: 106
+      DiffuseMap: 106
+    authoredTextures:
+      NormalMap: { "flatnormal.dds": 2 }
+      SpecularMap: { "#gray.dds": 2 }
+      DiffuseMap: { "#gray.dds": 2 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "MaterialCutoutColor", "PortraitShaderArtDiffuseColor", "HairDiffuseBias", "HairParameters", "HairSpecularFactors1", "HairSpecularColor1", "HairSpecularFactors2", "HairSpecularColor2", "undefined" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarhair.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ShadowCubeMap0: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ShadowCubeMap1: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairDiffuseBias: { bytes: [ 4 ], stages: [ "ps" ] }
+      HairParameters: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors2: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor2: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1 }
+      HairDiffuseBias: { Group: "Hair", SasUiDescription: "", SasUiVisible: 1 }
+      HairParameters: { Component1: "Ambient scale", Component2: "Enlighten scale", Component3: "Fake translucency", Component4: "-", Group: "Hair", SasUiDescription: "( Ambient scale, Enlighten scale, Fake translucency, 0 )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularColor1: { Group: "Hair", SasUiDescription: "The first specular color", SasUiVisible: 1, UIWidget: "Color" }
+      HairSpecularColor2: { Group: "Hair", SasUiDescription: "The second specular color", SasUiVisible: 1, UIWidget: "Color" }
+      HairSpecularFactors1: { Component1: "Specular1 Additive Strength", Component2: "Specular1 Shift", Component3: "Specular1 Power", Component4: "Specular1 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular1 Strength Additive, Specular1 Shift, Specular1 Power, Specular1 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularFactors2: { Component1: "Specular2 Additive Strength", Component2: "Specular2 Shift", Component3: "Specular2 Power", Component4: "Specular2 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular2 Strength Additive, Specular2 Shift, Specular2 Power, Specular2 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, UIWidget: "Color" }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/glassshader.fx":
+    parts: 43
+    categories: [ "female/accessories", "female/hair", "female/paperdoll_lod", "global/paperdollsettings", "male/accessories", "male/paperdoll_lod", "unique/characterselect" ]
+    areaLists: [ "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      DiffuseMap: 44
+      SpecularMap: 44
+      NormalMap: 44
+      FresnelLookupMap: 42
+      ColorNdotLLookupMap: 42
+      CutMaskMap: 42
+      GlowMap: 44
+      IrradianceMap: 2
+      GlassReflectionCube: 2
+      spotLightMap0: 1
+      Noisemap: 1
+      spotLightMap1: 1
+      spotLightMap2: 1
+      spotLightMap3: 1
+    authoredTextures:
+      DiffuseMap: { "diffusemap.dds": 1 }
+      SpecularMap: { "specularmap.dds": 1 }
+      NormalMap: { "normalmap.dds": 1 }
+      FresnelLookupMap: { "brdflibrary.dds": 2 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 40 }
+      CutMaskMap: { "cutmaskmap.dds": 1 }
+      GlassReflectionCube: { "glassreflection_cube.dds": 1 }
+      Noisemap: { "noise.png": 1 }
+    partConstants: [ "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialSpecularColor", "MaterialCutoutColor", "MaterialLibraryID", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "CutMaskInfluence", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "MaterialDiffuseColor", "spotLightViewProj3", "spotLightData3", "GlassOptions", "GlassTransparencyColor", "GlassTransparencyOptions", "GlassOptions2", "GlowColor", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/glassshader.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      DiffuseMap: { register: [ 0, 3 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      GlowMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      NormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      GlassReflectionCube: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      CutMaskMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      GlassTransparencyColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      GlassTransparencyOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      GlassOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      GlassOptions2: { bytes: [ 16 ], stages: [ "ps" ] }
+      GlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      GlassOptions: { Component1: "Reflection map intensity", Component2: "Diffuse strength", Component3: "Specular strength", Component4: "Max Specular power", Group: "Glass", SasUiDescription: "Options for the glass shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      GlassOptions2: { Component1: "Fresnel intensity", Component2: "Fresnel exp power", Component3: "Glow scale", Group: "Glass", SasUiDescription: "Options for the glass shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      GlassReflectionCube: { Tr2sRGB: 1 }
+      GlassTransparencyColor: { Group: "Glass", SasUiDescription: "Glass Transparency Color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      GlassTransparencyOptions: { Component1: "Diffuse map mix-in", Group: "Glass", SasUiDescription: "Glass Transparency Options", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      GlowColor: { Group: "Glass", SasUiDescription: "Color for glow map", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      GlowMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialCubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma (do nothing = 1.0)", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialCubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/eyeshader_dxt5n.fx":
+    parts: 24
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      NormalMap: 48
+      SpecularMap: 48
+      DiffuseMap: 48
+      FresnelLookupMap: 48
+      ColorNdotLLookupMap: 48
+      CutMaskMap: 48
+      EyeReflectionCube: 48
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 48 }
+      SpecularMap: { "specularmap.dds": 48 }
+      DiffuseMap: { "diffusemap.dds": 48 }
+      FresnelLookupMap: { "brdflibrary.dds": 48 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 48 }
+      CutMaskMap: { "cutmaskmap.dds": 48 }
+      EyeReflectionCube: { "eyereflection_cube.dds": 48 }
+    partConstants: [ "CutMaskInfluence", "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/eyeshader_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      EyeReflectionCube: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      EyeOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      EyeOptions2: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      EyeOptions: { Component1: "Reflection map intensity", Component2: "Diffuse strength", Component3: "Specular strength", Component4: "Caustic strength", Group: "Eyes", SasUiDescription: "Options for the eye shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      EyeOptions2: { Component1: "Max Specular power", Component2: "Caustic Specular power", Component3: "Diffuse normal scale", Component4: "unused", Group: "Eyes", SasUiDescription: "More options for the eye shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      EyeReflectionCube: { Tr2sRGB: 1 }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_single_dxt5n.fx":
+    parts: 24
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      NormalMap: 57
+      SpecularMap: 57
+      DiffuseMap: 57
+      FresnelLookupMap: 57
+      ColorNdotLLookupMap: 57
+      CutMaskMap: 57
+      WrinkleNormalMap: 57
+      WrinkleNormalCorrectionMap: 57
+      WrinkleDiffuseMap: 57
+      WrinkleZoneMap: 57
+      BeckmannLookup: 57
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 57 }
+      SpecularMap: { "specularmap.dds": 57 }
+      DiffuseMap: { "diffusemap.dds": 57 }
+      FresnelLookupMap: { "brdflibrary.dds": 57 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 57 }
+      CutMaskMap: { "cutmaskmap.dds": 57 }
+      WrinkleNormalMap: { "wrinklenormal.png": 36 }
+      WrinkleNormalCorrectionMap: { "wrinklenormalcorrection.png": 36 }
+      WrinkleDiffuseMap: { "wrinklediffuse.png": 36 }
+      WrinkleZoneMap: { "facezones.png": 36 }
+      BeckmannLookup: { "beckmannspecular.dds": 57 }
+    partConstants: [ "TransformUV0", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "CutMaskInfluence", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams", "MaterialCutoutColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_single_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalCorrectionMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleDiffuseMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleZoneMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      BeckmannLookup: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpotlightShadow0: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 12 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      CutMaskMap: { register: [ 0, 13 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleDarkeningFactor: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength1: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength2: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength3: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleParams: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularFactors: { Component2: "Skin Specular strength", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( unused, Specular strength, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDarkeningFactor: { Component1: "Wrinklemap alpha darkening", Component2: "Correctionmap alpha darkening", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "The wrinkle darkening factors", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDiffuseMap: { SasUiVisible: 1 }
+      WrinkleNormalCorrectionMap: { SasUiVisible: 1 }
+      WrinkleNormalMap: { SasUiVisible: 1 }
+      WrinkleNormalStrength1: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength2: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength3: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleParams: { Component1: "Normal Wrinklemap multiplier", Component2: "Normal Correctionmap multiplier", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "( WrinkleMap, CorrectionMap, -, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleZoneMap: { SasUiVisible: 1 }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdflinear_dxt5n.fx":
+    parts: 24
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 107
+      SpecularMap: 107
+      DiffuseMap: 107
+      FresnelLookupMap: 107
+      ColorNdotLLookupMap: 107
+      CutMaskMap: 107
+      ClothingReflectionCube: 94
+      IrradianceMap: 4
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 107 }
+      SpecularMap: { "specularmap.dds": 107 }
+      DiffuseMap: { "diffusemap.dds": 107 }
+      FresnelLookupMap: { "brdflibrary.dds": 107 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 107 }
+      CutMaskMap: { "cutmaskmap.dds": 107 }
+      ClothingReflectionCube: { "genericreflection_cube.dds": 94 }
+    partConstants: [ "TransformUV0", "MaterialAmbientFactor", "ReflectionMap", "CutMaskInfluence", "MaterialDiffuseColor", "MaterialSpecularCurve", "MaterialSpecularFactors", "FresnelFactors", "MaterialSpecularColor", "MaterialLibraryID", "FilmicMappingParams1", "FilmicMappingParams2", "MaterialCutoutColor", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdflinear_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      ClothingReflectionCube: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      FresnelLookupMap: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      ColorNdotLLookupMap: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 0, 11 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflection: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionControl: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCubeReflectionColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      ClothingReflectionCube: { Tr2sRGB: 1 }
+      ColorNdotLLookupMap: { SasUiVisible: 1 }
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      MaterialCubeReflection: { Component1: "Cube Reflection Intensity", Component2: "Cube Reflection Fresnel Power", Component3: "Gamma (do nothing = 1.0)", Group: "Material", SasUiDescription: "( -, Use specmap, Mipmap bias, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCubeReflectionColor: { Group: "Material", SasUiDescription: "The cube reflection color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialCubeReflectionControl: { Component1: "Use specmap", Component2: "Mipmap bias", Component3: "Specalpha mipmap bias scale", Group: "Material", SasUiDescription: "", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/portraitbasic_dxt5n.fx":
+    parts: 24
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      NormalMap: 60
+      SpecularMap: 60
+      DiffuseMap: 60
+      FresnelLookupMap: 60
+      ColorNdotLLookupMap: 60
+      CutMaskMap: 60
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 60 }
+      SpecularMap: { "specularmap.dds": 60 }
+      DiffuseMap: { "diffusemap.dds": 60 }
+      FresnelLookupMap: { "brdflibrary.dds": 60 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 60 }
+      CutMaskMap: { "cutmaskmap.dds": 60 }
+    partConstants: [ "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialSpecularColor", "MaterialDiffuseColor", "ShadingOptions" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/portraitbasic_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      ShadingOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      DiffuseColor: { Group: "Material", SasUiDescription: "Diffuse color", SasUiVisible: 1, UIWidget: "Color" }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      ShadingOptions: { Component1: "Ambient scaling", Component2: "-", Component3: "-", Component4: "-", Group: "Shading", SasUiDescription: "Shader options", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_double_dxt5n.fx":
+    parts: 24
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 278
+      SpecularMap: 278
+      DiffuseMap: 278
+      FresnelLookupMap: 278
+      ColorNdotLLookupMap: 278
+      CutMaskMap: 278
+      WrinkleNormalMap: 278
+      WrinkleNormalCorrectionMap: 278
+      WrinkleDiffuseMap: 278
+      WrinkleZoneMap: 278
+      BeckmannLookup: 278
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 278 }
+      SpecularMap: { "specularmap.dds": 278 }
+      DiffuseMap: { "diffusemap.dds": 278 }
+      FresnelLookupMap: { "brdflibrary.dds": 278 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 278 }
+      CutMaskMap: { "cutmaskmap.dds": 278 }
+      WrinkleNormalMap: { "wrinklenormal.png": 96 }
+      WrinkleNormalCorrectionMap: { "wrinklenormalcorrection.png": 96 }
+      WrinkleDiffuseMap: { "wrinklediffuse.png": 96 }
+      WrinkleZoneMap: { "facezones.png": 96 }
+      BeckmannLookup: { "beckmannspecular.dds": 278 }
+    partConstants: [ "TransformUV0", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "CutMaskInfluence", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams", "MaterialCutoutColor", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_double_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalCorrectionMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleDiffuseMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleZoneMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 0, 6 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      FresnelLookupMap: { register: [ 12 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 1, 13 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleDarkeningFactor: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength1: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength2: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength3: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleParams: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      Material2SpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2LibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      Material2LibraryID: { Component1: "ID", Group: "Material2", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularColor: { Group: "Material2", SasUiDescription: "The specular color", SasUiVisible: 1, UIWidget: "Color" }
+      Material2SpecularCurve: { Component1: "Specular1 Power", Component2: "Specular2 Power", Component3: "Specular1/Specular2 Ratio", Group: "Material2", SasUiDescription: "( Specular1 Power, Specular2 Power, Specular1/Specular2 ratio, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularFactors: { Component1: "Additive Factor", Component2: "Mult Factor", Group: "Material2", SasUiDescription: "( Add factor, Mult factor, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component2: "Skin Specular strength", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( unused, Specular strength, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDarkeningFactor: { Component1: "Wrinklemap alpha darkening", Component2: "Correctionmap alpha darkening", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "The wrinkle darkening factors", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDiffuseMap: { SasUiVisible: 1 }
+      WrinkleNormalCorrectionMap: { SasUiVisible: 1 }
+      WrinkleNormalMap: { SasUiVisible: 1 }
+      WrinkleNormalStrength1: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength2: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength3: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleParams: { Component1: "Normal Wrinklemap multiplier", Component2: "Normal Correctionmap multiplier", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "( WrinkleMap, CorrectionMap, -, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleZoneMap: { SasUiVisible: 1 }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/eyewetnessshader_dxt5n.fx":
+    parts: 20
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "transparentAreas" ]
+    partSlots:
+      NormalMap: 20
+      SpecularMap: 20
+      DiffuseMap: 20
+      FresnelLookupMap: 20
+      ColorNdotLLookupMap: 20
+      CutMaskMap: 20
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 20 }
+      SpecularMap: { "specularmap.dds": 20 }
+      DiffuseMap: { "diffusemap.dds": 20 }
+      FresnelLookupMap: { "brdflibrary.dds": 20 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 20 }
+      CutMaskMap: { "cutmaskmap.dds": 20 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "MaterialSpecularCurve", "MaterialCutoutColor", "MaterialSpecularFactors", "CutMaskInfluence", "MaterialSpecularColor", "MaterialLibraryID", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/eyewetnessshader_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      SpotlightShadow0: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      EyeWetnessOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      EyeWetnessOptions: { Component1: "Specular strength", Component2: "Specular Power", Component3: "-", Component4: "-", Group: "Eye Wetness", SasUiDescription: "Options for the eye wetness layer", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarhair_detailed_dxt5n.fx":
+    parts: 19
+    categories: [ "unique/characterselect" ]
+    areaLists: [ "decalAreas", "transparentAreas" ]
+    partSlots:
+      IrradianceMap: 66
+      NormalMap: 66
+      SpecularMap: 66
+      DiffuseMap: 66
+      ColorNdotLLookupMap: 66
+      FresnelLookupMap: 66
+      HairNoise: 66
+      TangentMap: 66
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 66 }
+      SpecularMap: { "specularmap.dds": 66 }
+      DiffuseMap: { "diffusemap.dds": 66 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 66 }
+      FresnelLookupMap: { "brdflibrary.dds": 66 }
+      HairNoise: { "noise#d.dds": 66 }
+      TangentMap: { "#gray.dds": 58, "headtangents.dds": 8 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "HairDiffuseBias", "HairParameters", "HairSpecularFactors1", "HairSpecularColor1", "HairSpecularFactors2", "HairSpecularColor2", "HairNoiseParameters", "TangentMapParameters", "HairFakeAOFactors", "FilmicMappingParams1", "FilmicMappingParams2", "MaterialCutoutColor", "PortraitShaderArtDiffuseColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "undefined" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarhair_detailed_dxt5n.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 0, 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      TangentMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairDiffuseBias: { bytes: [ 4 ], stages: [ "ps" ] }
+      HairParameters: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor1: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularFactors2: { bytes: [ 16 ], stages: [ "ps" ] }
+      HairSpecularColor2: { bytes: [ 16 ], stages: [ "ps" ] }
+      TangentMapParameters: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      HairDiffuseBias: { Group: "Hair", SasUiDescription: "", SasUiVisible: 1 }
+      HairParameters: { Component1: "Ambient scale", Component2: "Enlighten scale", Component3: "Fake translucency", Component4: "-", Group: "Hair", SasUiDescription: "( Ambient scale, Enlighten scale, Fake translucency, 0 )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularColor1: { Group: "Hair", SasUiDescription: "The first specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      HairSpecularColor2: { Group: "Hair", SasUiDescription: "The second specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      HairSpecularFactors1: { Component1: "Specular1 Additive Strength", Component2: "Specular1 Shift", Component3: "Specular1 Power", Component4: "Specular1 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular1 Strength Additive, Specular1 Shift, Specular1 Power, Specular1 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      HairSpecularFactors2: { Component1: "Specular2 Additive Strength", Component2: "Specular2 Shift", Component3: "Specular2 Power", Component4: "Specular2 Multiplied Strength", Group: "Hair", SasUiDescription: "( Specular2 Strength Additive, Specular2 Shift, Specular2 Power, Specular2 Strength Modulation )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      TangentMapParameters: { Component1: "Tangent map rotation scale", Component2: "Tangent map bias", Component3: "-", Component4: "-", Group: "Hair", SasUiDescription: "( Tangent map rotation scale, tangent map rotation bias, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarfurshells.fx":
+    parts: 15
+    categories: [ "male/beard", "unique/characterselect" ]
+    areaLists: [ "decalAreas" ]
+    partSlots:
+      FurTexture: 15
+      LengthTexture: 15
+      CombTexture: 15
+      ColorNdotLLookupMap: 15
+      FresnelLookupMap: 15
+      spotLightMap0: 15
+      spotLightMap1: 15
+      spotLightMap2: 15
+    authoredTextures:
+      FurTexture: { "randomlonghairs.dds": 15 }
+      LengthTexture: { "colorize_head_l.png": 15 }
+      CombTexture: { "combmaphead.dds": 15 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 15 }
+      FresnelLookupMap: { "brdflibrary.dds": 15 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "FurLength", "UVScale", "AlphaMultiplier", "CombStrength", "gravityOffset", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "FurGrainRotation", "MirrorGrain", "FurParallax" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarfurshells.sm_hi"
+    techniques: [ "Main" ]
+    textures:
+      FurTexture: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      LengthTexture: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CombTexture: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      UVScale: { bytes: [ 4 ], stages: [ "ps" ] }
+      AlphaMultiplier: { bytes: [ 4 ], stages: [ "ps" ] }
+      FurGrainRotation: { bytes: [ 4 ], stages: [ "ps" ] }
+      MirrorGrain: { bytes: [ 4 ], stages: [ "ps" ] }
+      FurParallax: { bytes: [ 4 ], stages: [ "ps" ] }
+      gravityOffset: { bytes: [ 16 ], stages: [ "vs" ] }
+      CombStrength: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      AlphaMultiplier: { SasUiVisible: 1 }
+      CombStrength: { SasUiVisible: 1 }
+      CombTexture: { SasUiVisible: 1, TextureType: "2D" }
+      FurGrainRotation: { SasUiVisible: 1 }
+      FurParallax: { SasUiVisible: 1 }
+      FurTexture: { SasUiDescription: "", SasUiVisible: 1, TextureType: "2D" }
+      LengthTexture: { SasUiVisible: 1 }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MirrorGrain: { SasUiVisible: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      UVScale: { SasUiVisible: 1 }
+      gravityOffset: { SasUiVisible: 1 }
+  "res:/graphics/effect/managed/interior/avatar/eyeshader.fx":
+    parts: 12
+    categories: [ "female/head", "female/paperdoll_lod", "global/paperdollsettings", "male/head", "male/paperdoll_lod", "unique/characterselect" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      NormalMap: 17
+      SpecularMap: 17
+      DiffuseMap: 17
+      FresnelLookupMap: 17
+      ColorNdotLLookupMap: 17
+      CutMaskMap: 17
+      EyeReflectionCube: 4
+      spotLightMap0: 2
+      Noisemap: 2
+      spotLightMap1: 2
+      spotLightMap2: 2
+      spotLightMap3: 2
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 2 }
+      SpecularMap: { "specularmap.dds": 2 }
+      DiffuseMap: { "diffusemap.dds": 2 }
+      FresnelLookupMap: { "brdflibrary.dds": 4 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 17 }
+      CutMaskMap: { "cutmaskmap.dds": 2 }
+      EyeReflectionCube: { "eyereflection_cube.dds": 4 }
+      Noisemap: { "noise.png": 2 }
+    partConstants: [ "CutMaskInfluence", "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/eyeshader.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      EyeReflectionCube: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      EyeOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      EyeOptions2: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      EyeOptions: { Component1: "Reflection map intensity", Component2: "Diffuse strength", Component3: "Specular strength", Component4: "Caustic strength", Group: "Eyes", SasUiDescription: "Options for the eye shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      EyeOptions2: { Component1: "Max Specular power", Component2: "Caustic Specular power", Component3: "Diffuse normal scale", Component4: "unused", Group: "Eyes", SasUiDescription: "More options for the eye shader", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      EyeReflectionCube: { Tr2sRGB: 1 }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/portraitbasic.fx":
+    parts: 7
+    categories: [ "female/head", "female/paperdoll_lod", "global/paperdollsettings", "male/head", "male/paperdoll_lod", "unique/characterselect" ]
+    areaLists: [ "opaqueAreas" ]
+    partSlots:
+      NormalMap: 16
+      SpecularMap: 16
+      DiffuseMap: 16
+      FresnelLookupMap: 16
+      ColorNdotLLookupMap: 16
+      CutMaskMap: 16
+      spotLightMap0: 3
+      Noisemap: 3
+      spotLightMap1: 3
+      spotLightMap2: 3
+      spotLightMap3: 3
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 3 }
+      SpecularMap: { "specularmap.dds": 3 }
+      DiffuseMap: { "diffusemap.dds": 3 }
+      FresnelLookupMap: { "brdflibrary.dds": 6 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 16 }
+      CutMaskMap: { "cutmaskmap.dds": 3 }
+      Noisemap: { "noise.png": 3 }
+    partConstants: [ "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialSpecularColor", "MaterialDiffuseColor", "ShadingOptions", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/portraitbasic.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      ShadingOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      DiffuseColor: { Group: "Material", SasUiDescription: "Diffuse color", SasUiVisible: 1, UIWidget: "Color" }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      ShadingOptions: { Component1: "Ambient scaling", Component2: "-", Component3: "-", Component4: "-", Group: "Shading", SasUiDescription: "Shader options", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/eyewetnessshader.fx":
+    parts: 6
+    categories: [ "global/paperdollsettings", "unique/characterselect" ]
+    areaLists: [ "transparentAreas" ]
+    partSlots:
+      NormalMap: 6
+      SpecularMap: 6
+      DiffuseMap: 6
+      FresnelLookupMap: 6
+      ColorNdotLLookupMap: 6
+      CutMaskMap: 6
+      spotLightMap0: 1
+      Noisemap: 1
+      spotLightMap1: 1
+      spotLightMap2: 1
+      spotLightMap3: 1
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 5 }
+      SpecularMap: { "specularmap.dds": 5 }
+      DiffuseMap: { "diffusemap.dds": 5 }
+      FresnelLookupMap: { "brdflibrary.dds": 6 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 6 }
+      CutMaskMap: { "cutmaskmap.dds": 5 }
+      Noisemap: { "noise.png": 1 }
+    partConstants: [ "TransformUV0", "MaterialDiffuseColor", "MaterialSpecularCurve", "MaterialCutoutColor", "MaterialSpecularFactors", "CutMaskInfluence", "MaterialSpecularColor", "MaterialLibraryID", "MaterialCubeReflection", "MaterialCubeReflectionControl", "MaterialCubeReflectionColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/eyewetnessshader.sm_hi"
+    techniques: [ "Main", "Picking" ]
+    textures:
+      SpotlightShadow0: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      EyeWetnessOptions: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      EyeWetnessOptions: { Component1: "Specular strength", Component2: "Specular Power", Component3: "-", Component4: "-", Group: "Eye Wetness", SasUiDescription: "Options for the eye wetness layer", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/space/postprocess/colorlut.fx":
+    parts: 4
+    categories: [ "global/paperdolllibrary" ]
+    areaLists: [  ]
+    partSlots:
+      TexLUT: 4
+    authoredTextures:
+      TexLUT: { "lutdefault.dds": 1, "ncc_normal.dds": 1, "sanshainfestlut#.dds": 1, "theralut#.dds": 1 }
+    partConstants: [ "Influence" ]
+    compiled: "res:/graphics/effect.dx11/managed/space/postprocess/colorlut.sm_hi"
+    techniques: [ "Main" ]
+    textures:
+      BlitCurrent: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      TexLUT: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      Influence: { bytes: [ 4 ], stages: [ "ps" ] }
+    annotations:
+      Influence: { Group: "PostProcess", SasUiDescription: "influence of the LUT", SasUiVisible: 1 }
+      TexLUT: { SasUiVisible: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_double.fx":
+    parts: 2
+    categories: [ "global/paperdollsettings", "unique/characterselect" ]
+    areaLists: [ "decalAreas", "opaqueAreas", "transparentAreas" ]
+    partSlots:
+      NormalMap: 21
+      SpecularMap: 21
+      DiffuseMap: 21
+      FresnelLookupMap: 21
+      ColorNdotLLookupMap: 21
+      CutMaskMap: 21
+      WrinkleNormalMap: 21
+      WrinkleNormalCorrectionMap: 21
+      WrinkleDiffuseMap: 21
+      WrinkleZoneMap: 21
+      BeckmannLookup: 21
+      spotLightMap0: 14
+      Noisemap: 14
+      spotLightMap1: 14
+      spotLightMap2: 14
+      spotLightMap3: 14
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 7 }
+      SpecularMap: { "specularmap.dds": 7 }
+      DiffuseMap: { "diffusemap.dds": 7 }
+      FresnelLookupMap: { "brdflibrary.dds": 21 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 21 }
+      CutMaskMap: { "cutmaskmap.dds": 7 }
+      WrinkleNormalMap: { "wrinklenormal.png": 7 }
+      WrinkleNormalCorrectionMap: { "wrinklenormalcorrection.png": 7 }
+      WrinkleDiffuseMap: { "wrinklediffuse.png": 7 }
+      WrinkleZoneMap: { "facezones.png": 7 }
+      BeckmannLookup: { "beckmannspecular.dds": 21 }
+      Noisemap: { "noise.png": 14 }
+    partConstants: [ "TransformUV0", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "CutMaskInfluence", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams", "MaterialCutoutColor", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_double.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalCorrectionMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleDiffuseMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleZoneMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 0, 6 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      SpotlightShadow0: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      FresnelLookupMap: { register: [ 12 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 1, 13 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialSpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleDarkeningFactor: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength1: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength2: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength3: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleParams: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      Material2SpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularCurve: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2SpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      Material2LibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+      MaterialDiffuseColor: { bytes: [ 16 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      Material2LibraryID: { Component1: "ID", Group: "Material2", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularColor: { Group: "Material2", SasUiDescription: "The specular color", SasUiVisible: 1, UIWidget: "Color" }
+      Material2SpecularCurve: { Component1: "Specular1 Power", Component2: "Specular2 Power", Component3: "Specular1/Specular2 Ratio", Group: "Material2", SasUiDescription: "( Specular1 Power, Specular2 Power, Specular1/Specular2 ratio, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      Material2SpecularFactors: { Component1: "Additive Factor", Component2: "Mult Factor", Group: "Material2", SasUiDescription: "( Add factor, Mult factor, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialDiffuseColor: { Group: "Material", SasUiDescription: "The material diffuse color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularCurve: { Component1: "Secondary Highlight Specular Power", Component2: "Primary Highlight Specular Power", Component3: "Secondary Highlight intensity", Component4: "Specular power for black", Group: "Material", SasUiDescription: "( Secondary Highlight Specular Power, Primary Highlight Specular Power, Secondary Highlight intensity, Specular Power Gamma )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularFactors: { Component2: "Skin Specular strength", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( unused, Specular strength, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDarkeningFactor: { Component1: "Wrinklemap alpha darkening", Component2: "Correctionmap alpha darkening", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "The wrinkle darkening factors", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDiffuseMap: { SasUiVisible: 1 }
+      WrinkleNormalCorrectionMap: { SasUiVisible: 1 }
+      WrinkleNormalMap: { SasUiVisible: 1 }
+      WrinkleNormalStrength1: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength2: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength3: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleParams: { Component1: "Normal Wrinklemap multiplier", Component2: "Normal Correctionmap multiplier", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "( WrinkleMap, CorrectionMap, -, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleZoneMap: { SasUiVisible: 1 }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_single.fx":
+    parts: 2
+    categories: [ "global/paperdollsettings", "unique/characterselect" ]
+    areaLists: [ "decalAreas", "opaqueAreas" ]
+    partSlots:
+      NormalMap: 4
+      SpecularMap: 4
+      DiffuseMap: 4
+      FresnelLookupMap: 4
+      ColorNdotLLookupMap: 4
+      CutMaskMap: 4
+      WrinkleNormalMap: 4
+      WrinkleNormalCorrectionMap: 4
+      WrinkleDiffuseMap: 4
+      WrinkleZoneMap: 4
+      BeckmannLookup: 4
+      spotLightMap0: 3
+      Noisemap: 3
+      spotLightMap1: 3
+      spotLightMap2: 3
+      spotLightMap3: 3
+    authoredTextures:
+      NormalMap: { "normalmap.dds": 1 }
+      SpecularMap: { "specularmap.dds": 1 }
+      DiffuseMap: { "diffusemap.dds": 1 }
+      FresnelLookupMap: { "brdflibrary.dds": 4 }
+      ColorNdotLLookupMap: { "ndotllibrary.png": 4 }
+      CutMaskMap: { "cutmaskmap.dds": 1 }
+      WrinkleNormalMap: { "wrinklenormal.png": 2 }
+      WrinkleNormalCorrectionMap: { "wrinklenormalcorrection.png": 2 }
+      WrinkleDiffuseMap: { "wrinklediffuse.png": 2 }
+      WrinkleZoneMap: { "facezones.png": 2 }
+      BeckmannLookup: { "beckmannspecular.dds": 4 }
+      Noisemap: { "noise.png": 3 }
+    partConstants: [ "TransformUV0", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "CutMaskInfluence", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams", "MaterialCutoutColor", "PortraitShaderArtParams", "PortraitShaderArtDiffuseColor", "spotLightViewProj0", "spotLightData0", "spotLightViewProj1", "spotLightData1", "spotLightViewProj2", "spotLightData2", "spotLightViewProj3", "spotLightData3" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdfsinglepassskin_single.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalCorrectionMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleDiffuseMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleZoneMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      BeckmannLookup: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpotlightShadow0: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 12 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      CutMaskMap: { register: [ 0, 13 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleDarkeningFactor: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength1: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength2: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength3: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleParams: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      DecalClip: { bytes: [ 4 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DecalClip: { Group: "DecalClip", SasUiDescription: "Decal clipping = 1.0, Opaque clipping = 0.0", SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularFactors: { Component2: "Skin Specular strength", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( unused, Specular strength, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDarkeningFactor: { Component1: "Wrinklemap alpha darkening", Component2: "Correctionmap alpha darkening", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "The wrinkle darkening factors", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDiffuseMap: { SasUiVisible: 1 }
+      WrinkleNormalCorrectionMap: { SasUiVisible: 1 }
+      WrinkleNormalMap: { SasUiVisible: 1 }
+      WrinkleNormalStrength1: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength2: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength3: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleParams: { Component1: "Normal Wrinklemap multiplier", Component2: "Normal Correctionmap multiplier", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "( WrinkleMap, CorrectionMap, -, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleZoneMap: { SasUiVisible: 1 }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+  "res:/graphics/effect/managed/interior/avatar/shadow.fx":
+    parts: 1
+    categories: [ "global/lowlods" ]
+    areaLists: [ "depthAreas" ]
+    partSlots:
+    partConstants: [  ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/shadow.sm_hi"
+    techniques: [ "Main" ]
+    textures:
+      DiffuseMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+    annotations:
+      DiffuseMap: { SasUiVisible: 1 }
+  "res:/graphics/effect/managed/interior/avatar/lightprepass.fx":
+    parts: 1
+    categories: [ "global/lowlods" ]
+    areaLists: [ "depthNormalAreas" ]
+    partSlots:
+      NormalMap: 1
+      SpecularMap: 1
+    authoredTextures:
+      NormalMap: { "flatnormal.dds": 1 }
+      SpecularMap: { "#gray.dds": 1 }
+    partConstants: [ "MaterialSpecularCurve", "MaterialLibraryID" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/lightprepass.sm_hi"
+    techniques: [ "Main" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+    annotations:
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NormalMap: { SasUiVisible: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdf_prepass.fx":
+    parts: 1
+    categories: [ "global/lowlods" ]
+    areaLists: [ "opaquePrepassAreas" ]
+    partSlots:
+      NormalMap: 1
+      SpecularMap: 1
+      DiffuseMap: 1
+      FresnelLookupMap: 1
+    authoredTextures:
+      NormalMap: { "flatnormal.dds": 1 }
+      SpecularMap: { "#gray.dds": 1 }
+      DiffuseMap: { "basicfemale_d.dds": 1 }
+      FresnelLookupMap: { "brdflibrary.dds": 1 }
+    partConstants: [ "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialSpecularColor", "MaterialLibraryID" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdf_prepass.sm_hi"
+    techniques: [ "Main" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      DiffuseMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      FresnelLookupMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      CutMaskMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      LightAccumulationMap: { register: [ 13 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "vs" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialLibraryID: { bytes: [ 16 ], stages: [ "ps" ] }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1 }
+      FresnelLookupMap: { SasUiVisible: 1 }
+      LightAccumulationMap: { SasUiVisible: 1 }
+      MaterialLibraryID: { Component1: "ID", Group: "Material", SasUiDescription: "( ID from Material Library, unused, unused, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialSpecularFactors: { Component1: "Additive specular", Component2: "Multiplied specular", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( Add factor, Mult factor, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NormalMap: { SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+  "res:/graphics/effect/managed/interior/avatar/skinnedavatarbrdflightmapapplication_single.fx":
+    parts: 1
+    categories: [ "global/paperdollsettings" ]
+    areaLists: [  ]
+    partSlots:
+      NormalMap: 1
+      SpecularMap: 1
+      DiffuseMap: 1
+      FresnelLookupMap: 1
+      ColorNdotLLookupMap: 1
+      CutMaskMap: 1
+      WrinkleNormalMap: 1
+      WrinkleNormalCorrectionMap: 1
+      WrinkleZoneMap: 1
+      BeckmannLookup: 1
+      SkinMap: 1
+      DiffuseScatterMap: 1
+      WrinkleDiffuseMap: 1
+    partConstants: [ "CutMaskInfluence", "TransformUV0", "MaterialSpecularCurve", "MaterialSpecularFactors", "MaterialLibraryID", "MaterialSpecularColor", "Material2SpecularFactors", "Material2SpecularCurve", "Material2SpecularColor", "Material2LibraryID", "WrinkleDarkeningFactor", "WrinkleNormalStrength1", "WrinkleNormalStrength2", "WrinkleNormalStrength3", "WrinkleParams", "ColorCorrectionSource", "ColorCorrectionTarget", "PhotoFilterMoodColor", "PhotoFilterParams", "FilmicMappingParams1", "FilmicMappingParams2", "PortraitRoughnessParams" ]
+    compiled: "res:/graphics/effect.dx11/managed/interior/avatar/skinnedavatarbrdflightmapapplication_single.sm_hi"
+    techniques: [ "Main", "Picking", "Shadow" ]
+    textures:
+      NormalMap: { register: [ 0 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalMap: { register: [ 1 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleNormalCorrectionMap: { register: [ 2 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleDiffuseMap: { register: [ 3 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      WrinkleZoneMap: { register: [ 4 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpecularMap: { register: [ 5 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseMap: { register: [ 6 ], stages: [ "ps" ], isSRGB: [ 1 ] }
+      DiffuseScatterMap: { register: [ 7 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SkinMap: { register: [ 8 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      BeckmannLookup: { register: [ 9 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+      SpotlightShadow0: { register: [ 10 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow1: { register: [ 11 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow2: { register: [ 12 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      SpotlightShadow3: { register: [ 13 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      NoiseMap: { register: [ 14 ], stages: [ "ps" ], isSRGB: [ 0 ], autoregister: 1 }
+      CutMaskMap: { register: [ 0, 15 ], stages: [ "ps" ], isSRGB: [ 0 ] }
+    constants:
+      TransformUV0: { bytes: [ 16 ], stages: [ "ps", "vs" ] }
+      MaterialCutoutColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularFactors: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleDarkeningFactor: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength1: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength2: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleNormalStrength3: { bytes: [ 16 ], stages: [ "ps" ] }
+      WrinkleParams: { bytes: [ 16 ], stages: [ "ps" ] }
+      CutMaskInfluence: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowThreshold: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowSpecularAlpha: { bytes: [ 4 ], stages: [ "ps" ] }
+      SkinGlowColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      MaterialSpecularColor: { bytes: [ 16 ], stages: [ "ps" ] }
+      objectId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      areaId: { bytes: [ 4 ], stages: [ "ps" ], autoregister: 1 }
+      PickingComponents: { bytes: [ 16 ], stages: [ "ps" ], autoregister: 1 }
+    annotations:
+      CutMaskInfluence: { Group: "Cutmask", SasUiDescription: "", SasUiVisible: 1 }
+      CutMaskMap: { SasUiVisible: 1 }
+      DiffuseMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      MaterialCutoutColor: { Group: "Material", SasUiDescription: "The diffuse alpha fade out color", SasUiVisible: 1, UIWidget: "Color" }
+      MaterialSpecularColor: { Group: "Material", SasUiDescription: "The specular color", SasUiVisible: 1, Tr2sRGB: 1, UIWidget: "Color" }
+      MaterialSpecularFactors: { Component2: "Skin Specular strength", Component3: "Specular alpha Gamma (do nothing = 0.0)", Group: "Material", SasUiDescription: "( unused, Specular strength, Specular Alpha Gamma, unused )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      NoiseMap: { AutoRegister: 1 }
+      NormalMap: { SasUiVisible: 1 }
+      PickingComponents: { AutoRegister: 1 }
+      SkinGlowColor: { Group: "SkinGlow", SasUiDescription: "Skin Glow color", SasUiVisible: 1, UIWidget: "Color" }
+      SkinGlowSpecularAlpha: { Group: "SkinGlow", SasUiDescription: "This is the glossiness value for glowing areas.", SasUiVisible: 1 }
+      SkinGlowThreshold: { Group: "SkinGlow", SasUiDescription: "Gloss map over this value becomes skin glow", SasUiVisible: 1 }
+      SpecularMap: { SasUiVisible: 1, Tr2sRGB: 1 }
+      SpotlightShadow0: { AutoRegister: 1 }
+      SpotlightShadow1: { AutoRegister: 1 }
+      SpotlightShadow2: { AutoRegister: 1 }
+      SpotlightShadow3: { AutoRegister: 1 }
+      TransformUV0: { SasUiDescription: "Transformation data of UV set #0", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDarkeningFactor: { Component1: "Wrinklemap alpha darkening", Component2: "Correctionmap alpha darkening", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "The wrinkle darkening factors", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleDiffuseMap: { SasUiVisible: 1 }
+      WrinkleNormalCorrectionMap: { SasUiVisible: 1 }
+      WrinkleNormalMap: { SasUiVisible: 1 }
+      WrinkleNormalStrength1: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength2: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleNormalStrength3: { Group: "Portrait Shader", SasUiVisible: 1 }
+      WrinkleParams: { Component1: "Normal Wrinklemap multiplier", Component2: "Normal Correctionmap multiplier", Component3: "-", Component4: "-", Group: "Portrait Shader", SasUiDescription: "( WrinkleMap, CorrectionMap, -, - )", SasUiVisible: 1, UIWidget: "VectorMixed" }
+      WrinkleZoneMap: { SasUiVisible: 1 }
+      areaId: { AutoRegister: 1 }
+      objectId: { AutoRegister: 1 }
+# Composition inputs: res:/graphics/character/** files named comp_<region>_<role> or colorize_<region>_<role>, any tier
+# suffix (_4k, _512, _256) or none, counted by name. No part's Tr2Effect names one of them except
+# colorize_body_l.png (skinnedavatarbrdf.fx DiffuseMap, above); they reach the effects through composition at run time.
+compositionInputs:
+  colorize_body_l: 1388
+  colorize_body_z: 1156
+  colorize_head_l: 658
+  comp_head_s: 574
+  comp_head_d: 560
+  comp_body_s: 514
+  comp_body_n: 506
+  colorize_head_z: 465
+  comp_head_n: 413
+  comp_body_d: 402
+  comp_hair_s: 330
+  comp_head_tn: 291
+  colorize_hair_l: 263
+  comp_hair_n: 249
+  colorize_acc_l: 163
+  colorize_body_s: 145
+  colorize_hair_z: 118
+  comp_head_z: 117
+  comp_hair_d: 112
+  colorize_acc_z: 107
+  comp_body_tn: 81
+  comp_body_m: 78
+  comp_body_mn: 47
+  comp_head_mn: 35
+  colorize_body_n: 10
+  colorize_body_d: 8
+  comp_head_m: 6
+  colorize_acc_s: 6
+  colorize_acc_n: 5
+  colorize_head_s: 4
+  comp_body_l: 2
