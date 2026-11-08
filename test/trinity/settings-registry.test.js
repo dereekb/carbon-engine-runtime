@@ -18,30 +18,6 @@ import { meta } from "../../npm/dist/blue/schema/index.js";
 import { Tr2PlatformInfo } from "../../npm/dist/core/platform/Tr2PlatformInfo.js";
 // And the paper doll, whose character texture quality is ours.
 import { CjsPaperDollDefinition } from "../../npm/dist/character/application/CjsPaperDollDefinition.js";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { isUnshippedSource } from "../../scripts/lib/unshipped-source.js";
-
-/** Setting names declared in source the build never ships (scripts/lib/unshipped-source.js). */
-function unshippedSettingNames()
-{
-  const names = new Set();
-  const walk = dir =>
-  {
-    for (const entry of readdirSync(dir, { withFileTypes: true }))
-    {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (path.endsWith(".js") && isUnshippedSource(path))
-      {
-        for (const match of readFileSync(path, "utf8").matchAll(/@meta\.setting\("([^"]+)"/g)) names.add(match[1]);
-      }
-    }
-  };
-  walk(fileURLToPath(new URL("../../src", import.meta.url)));
-  return names;
-}
 const settings = Tr2Renderer.getSettings();
 
 test("the ported settings are registered under Carbon's names", () =>
@@ -142,10 +118,10 @@ test("only approved extension names are exempt from Carbon setting-name checks",
   assert.equal(settings.GetValue("webgl2LightAveraging"), webgl2.enum.APPROXIMATION);
   assert.equal(settings.GetValue("webgpuLightAveraging"), webgpu.enum.COMPUTE);
   assert.deepEqual(settings.FindSetting("newBloom").category, [ "post-processing" ]);
-  // Carbon donor ports are never shipped and stay faithful to Carbon, so they carry none of our categories.
-  const unshipped = unshippedSettingNames();
-  assert.deepEqual(settings.GetNames().filter(name => !unshipped.has(name) && !settings.FindSetting(name).category?.length), [],
-    "every shipped engine setting has a category");
+  // Carbon donor ports (scripts/lib/unshipped-source.js) are never imported, so they register nothing here;
+  // they stay faithful to Carbon, without our categories.
+  assert.deepEqual(settings.GetNames().filter(name => !settings.FindSetting(name).category?.length), [],
+    "every registered engine setting has a category");
   assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);
   assert.equal(settings.GetValue("characterTextureQuality"), "4k");
