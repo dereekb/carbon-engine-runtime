@@ -13,7 +13,7 @@ const FILES = [
   LIP + "lipstick_02/types/lipstick_02.type", LIP + "lipstick_02/colorize_head_l.png", LIP + "lipstick_02/colorize_head_z.png", LIP + "lipstick_02/pink.color"
 ];
 
-function services(t, entries)
+function services(t)
 {
   const grey = () => [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1));
   const overrides = {
@@ -33,10 +33,10 @@ class StubCompositor
   async BlitIntoAlphaWithZones(source) { return this.effect("gloss", source); }
 }
 
-async function configured(t, entries = [])
+async function configured(t)
 {
-  services(t, entries);
-  const build = { content: { root: ROOT, sex: "female", recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
+  services(t);
+  const build = { content: { root: ROOT, sex: "female" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
   const source = new CjsPaperDollColorizedSource(new StubCompositor(), build, "lipstick");
   await source.Configure(definition);

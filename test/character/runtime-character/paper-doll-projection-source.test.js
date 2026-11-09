@@ -17,7 +17,7 @@ const FILES = [
   ROOT + "tattoo/armleft/sleeve01/sleeve01.proj"
 ];
 
-function services(t, entries, files = FILES)
+function services(t, files = FILES)
 {
   installPartsLibrary(t, ROOT, files, { overrides: { FetchMaterialMaskAreas__Zone: async () => [ 1 ] } });
 }
@@ -31,10 +31,10 @@ class StubCompositor
   async Colorized(detail, region, zone) { const effect = new Tr2Effect(); Object.assign(effect, { detail, zone, recorded: {} }); effect.SetParameter__Vector4 = (name, value) => { effect.recorded[name] = Array.from(value); }; return effect; }
 }
 
-async function configured(t, entries = [], files = FILES)
+async function configured(t, files = FILES)
 {
-  services(t, entries, files);
-  const build = { content: { root: ROOT, sex: "male", recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
+  services(t, files);
+  const build = { content: { root: ROOT, sex: "male" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition(), compositor = new StubCompositor();
   const source = new CjsPaperDollProjectionSource(compositor, build, "tattoo");
   await source.Configure(definition);
@@ -51,7 +51,7 @@ test("the head tattoo options are its .types; folders without one are reported, 
   const option = definition.tattoo.GetOptions()[0];
   assert.equal(option.defaultPalette, undefined, "no code-picked ink: the character factory's defaults set it");
   assert.deepEqual(option.palettes.map(record => record.name), [ "blue_a", "default_a" ]);
-  assert.equal(definition.tattoo.enabled, false, "no recipe entry: off");
+  assert.equal(definition.tattoo.enabled, false, "off until the factory sets it");
 });
 
 test("an option paints its zone over the bake target once the host has baked it", async t =>

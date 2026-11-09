@@ -12,9 +12,8 @@ const FILES = [
   SHADOW + "eyeshadow_02/types/eyeshadow_02.type", SHADOW + "eyeshadow_02/colorize_head_l.png", SHADOW + "eyeshadow_02/colorize_head_z.png",
   SHADOW + "eyeshadow_02/default.color", SHADOW + "eyeshadow_02/red.color", SHADOW + "eyeshadow_02/aa_female_head_s_4k.png"
 ];
-const RECIPE_COLOURS = "[(0.1, 0.2, 0.3, 1.0), (0.4, 0.5, 0.6, 1.0), (0.7, 0.8, 0.9, 1.0)]";
 
-function services(t, entries = [])
+function services(t)
 {
   const overrides = {
     FetchPalette: async path => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(path.length / 100, 0, 0, 1)) }),
@@ -38,10 +37,10 @@ class StubCompositor
   }
 }
 
-async function configured(t, entries)
+async function configured(t)
 {
-  services(t, entries ?? []);
-  const build = { content: { root: ROOT, sex: "female", recipe: entries ? "res:/test.prs" : "" }, CheckActive() {}, Ready: value => value };
+  services(t);
+  const build = { content: { root: ROOT, sex: "female" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
   const source = new CjsPaperDollColorizedSource(new StubCompositor(), build, "eyeshadow");
   await source.Configure(definition);
@@ -50,7 +49,7 @@ async function configured(t, entries)
 
 test("each style lists its own palettes as raw records: name, kind and the areas each sets; the default is default.color only", async t =>
 {
-  const { definition } = await configured(t, null);
+  const { definition } = await configured(t);
   const [ first, second ] = definition.eyeshadow.GetOptions();
   assert.deepEqual(first.palettes.map(record => [ record.name, record.kind, record.areas ]),
     [ [ "aqua_a", PaperDollPaletteKind.AREA_1, [ 1 ] ], [ "blue_a", PaperDollPaletteKind.AREA_1, [ 1 ] ] ]);
@@ -60,13 +59,13 @@ test("each style lists its own palettes as raw records: name, kind and the areas
   assert.equal(first.defaultSecondaryPalette, undefined);
   assert.deepEqual(second.palettes.map(record => [ record.name, record.kind ]), [ [ "default", PaperDollPaletteKind.WHOLE ], [ "red", PaperDollPaletteKind.WHOLE ] ]);
   assert.equal(second.defaultPalette, SHADOW + "eyeshadow_02/default.color");
-  assert.equal(definition.eyeshadow.enabled, false, "no recipe entry: off");
+  assert.equal(definition.eyeshadow.enabled, false, "off until the factory sets it");
   assert.equal(definition.eyeshadow.option, "");
 });
 
 test("a style's paint draws in the captured colours at the captured weight, into the head diffuse only", async t =>
 {
-  const { definition, source } = await configured(t, null);
+  const { definition, source } = await configured(t);
   assert.deepEqual(source.GetLayers({ option: "eyeshadow_02", colors: [], weight: 1 }, "head", "DiffuseMap"), [], "not yet applied");
   await definition.eyeshadow.ResolveOption("eyeshadow_02");
   assert.ok(source.IsPrepared("eyeshadow_02"));

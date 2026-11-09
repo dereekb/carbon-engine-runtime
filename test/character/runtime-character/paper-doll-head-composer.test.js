@@ -17,8 +17,8 @@ const FILES = [
   AUG + "types/face_paint_v0.type", AUG + "comp_head_d.png", AUG + "comp_head_n.png", AUG + "metadata.yaml"
 ];
 
-/** The parts library over FILES (its types name their folder and the variation their name ends in), and the recipe. */
-function services(t, recipe = [])
+/** The parts library over FILES (its types name their folder and the variation their name ends in). */
+function services(t)
 {
   installPartsLibrary(t, ROOT, FILES, {
     text: { [AUG + "metadata.yaml"]: "!!python/object:paperDoll.AvatarPartMetaData\ndependantModifiers: null\noccludesModifiers: [accessories/browbase###0.5, accessories/browbase]\n" }
@@ -46,10 +46,10 @@ class StubCompositor
   Finish(target) { this.finished.push(target.index); }
 }
 
-async function prepared(t, recipe = null)
+async function prepared(t)
 {
-  services(t, recipe ?? []);
-  const build = { content: { root: ROOT, sex: "female", recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
+  services(t);
+  const build = { content: { root: ROOT, sex: "female" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const definition = new CjsPaperDollDefinition();
@@ -59,7 +59,7 @@ async function prepared(t, recipe = null)
 
 const short = path => path.slice(ROOT.length);
 
-test("prepareAll makes a source for each part whose class blends as a decal; a part the recipe does not set starts with no option, off", async t =>
+test("prepareAll makes a source for each part whose class blends as a decal; every part starts with no option, off", async t =>
 {
   const { composition, definition, decals } = await prepared(t);
   assert.deepEqual([ ...decals.keys() ].sort(), [ "aging", "augmentations", "freckles", "scarring", "scars" ]);

@@ -10,8 +10,8 @@ const AGING = ROOT + "makeup/aging/aging_01/";
 const FILES = [ AGING + "types/aging_01.type", AGING + "comp_head_tn.png", AGING + "comp_head_s.png", AGING + "comp_body_s.png",
   ROOT + "makeup/scarring/scarring_01/types/scarring_01.type", ROOT + "makeup/scarring/scarring_01/comp_head_tn.png" ];
 
-/** The parts library over FILES, and the recipe. */
-function services(t, recipe = [])
+/** The parts library over FILES. */
+function services(t)
 {
   installPartsLibrary(t, ROOT, FILES);
 }
@@ -38,10 +38,10 @@ class StubCompositor
 const foundation = id => ({ bindings: Object.fromEntries([ "head", "body" ].map(region => [ region,
   { NormalMap: `res:/${id}_${region}_n.dds`, SpecularMap: `res:/${id}_${region}_s.dds` } ])) });
 
-async function prepared(t, recipe = null)
+async function prepared(t)
 {
-  services(t, recipe ?? []);
-  const build = { content: { root: ROOT, sex: "female", recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
+  services(t);
+  const build = { content: { root: ROOT, sex: "female" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const definition = new CjsPaperDollDefinition();

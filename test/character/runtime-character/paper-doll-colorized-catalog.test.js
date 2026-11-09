@@ -14,7 +14,7 @@ const FILES = [
 /** Each palette's colours: rose and blush_02's default are the same colours, so they merge. */
 const PALETTES = { "colors/rose.color": .3, "colors/peach.color": .6, "blush_02/default.color": .3 };
 
-function services(t, entries)
+function services(t)
 {
   const overrides = {
     FetchPalette: async (path, { specular = false } = {}) => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(PALETTES[path.slice(BLUSH.length)], 0, 0, 1)), specularColors: specular ? [ 0, 1, 2 ].map(() => Float32Array.of(1, 1, 1, 1)) : null, pattern: null })
@@ -29,10 +29,10 @@ class StubCompositor
   async ColorAreas() { return [ 1, 2 ]; }
 }
 
-async function configured(t, entries = [])
+async function configured(t)
 {
-  services(t, entries);
-  const build = { content: { root: ROOT, sex: "female", recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
+  services(t);
+  const build = { content: { root: ROOT, sex: "female" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
   const source = new CjsPaperDollColorizedSource(new StubCompositor(), build, "blush");
   await source.ConfigureCatalog(definition);
@@ -45,9 +45,9 @@ test("the catalog lists every option's palettes as raw records, unmerged; an opt
   const [ first, second ] = definition.blush.GetOptions();
   assert.deepEqual(first.palettes.map(record => record.name).sort(), [ "peach", "rose" ]);
   assert.deepEqual(second.palettes.map(record => record.name).sort(), [ "default", "peach", "rose" ], "equal colours are not merged here: the menu's");
-  assert.equal(first.defaultPalette, undefined, "no own default and no recipe: none");
+  assert.equal(first.defaultPalette, undefined, "no own default: none");
   assert.equal(second.defaultPalette, BLUSH + "blush_02/default.color");
-  assert.equal(definition.blush.enabled, false, "no recipe entry: off");
-  assert.equal(definition.blush.weight, 0, "no recipe entry: weight 0");
+  assert.equal(definition.blush.enabled, false, "off until the factory sets it");
+  assert.equal(definition.blush.weight, 0, "weight 0 until the factory sets it");
 });
 
