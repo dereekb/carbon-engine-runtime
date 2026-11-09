@@ -192,6 +192,7 @@ export class CjsCharacterFactory
             return;
         }
         const values = { enabled: false, overridable: true, ...rest, option };
+        // Derived: a weighted part the DNA turns on without a weight draws at full weight (the shipped recipes set 1.0).
         if (component.constructor.weighted === true) values.weight = rest.weight ?? (values.enabled ? 1 : 0);
         else delete values.weight;
         CjsSchema.setValues(component, values);

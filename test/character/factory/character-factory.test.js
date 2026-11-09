@@ -1,7 +1,7 @@
 // The character factory's DNA core: reading and writing a DNA, the sex defaults, and their merge.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterFactory, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
+import { CjsCharacterFactory, CjsPaperDollDefinition, CjsPaperDollInstance } from "../../../npm/dist/character/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 
 test("the defaults are the clean character: eyebrows, head, body, eyes and underwear on, the underwear not overridable", () =>
@@ -102,4 +102,23 @@ test("ResetPart and Reset put a part, or the whole character, back to the defaul
   assert.deepEqual([ definition.lipstick.enabled, definition.lipstick.option, definition.lipstick.customColors ], [ false, "", false ]);
   assert.equal(definition.GetLayer("lipstick"), definition.lipstick.constructor.layer, "the layer order back to the class ranks");
   await assert.rejects(CjsCharacterFactory.ResetPart(definition, "wings"), /Unknown character part wings/);
+});
+
+test("the paper doll holds a part that is not overridable on, unless a worn part occludes it", async t =>
+{
+  const { definition } = configuredDefinition(t);
+  await CjsCharacterFactory.Build(definition, { sex: "female", parts: {} });
+  definition.bottomUnderwear.enabled = false;
+  CjsPaperDollInstance.holdParts(definition);
+  assert.equal(definition.bottomUnderwear.enabled, true, "switched back on: nothing occludes it");
+  // A worn part whose option occludes the underwear's category lets it be switched off.
+  definition.lipstick.Configure([ { id: "cover", occludes: [ "bottomunderwear" ] } ], new Map(), { option: "cover" });
+  definition.lipstick.enabled = true;
+  definition.bottomUnderwear.enabled = false;
+  CjsPaperDollInstance.holdParts(definition);
+  assert.equal(definition.bottomUnderwear.enabled, false, "an occluder removes it");
+  definition.bottomUnderwear.overridable = true;
+  definition.lipstick.enabled = false;
+  CjsPaperDollInstance.holdParts(definition);
+  assert.equal(definition.bottomUnderwear.enabled, false, "an overridable part stays as the user set it");
 });

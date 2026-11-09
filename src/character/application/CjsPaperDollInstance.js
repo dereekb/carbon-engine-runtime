@@ -1,4 +1,4 @@
-import { meta } from "#schema";
+import { CjsSchema, meta } from "#schema";
 import { CjsCharacterAppearanceResolver } from "../model/resolution/CjsCharacterAppearanceResolver.js";
 import { CjsPaperDollDefinition } from "./CjsPaperDollDefinition.js";
 import { PaperDollTarget } from "./paperDollOrder.js";
@@ -106,6 +106,7 @@ export class CjsPaperDollInstance
         // A geometry-only strength edit must not rebuild skin or cosmetic maps.
         const forced = definition.IsForced();
         const dirtyTargets = definition.GetDirtyTargets() | this._targetDirty;
+        CjsPaperDollInstance.holdParts(definition);
         const suppression = this._suppression = CjsPaperDollInstance.suppress(definition);
         const plans = [];
         let changedTargets = 0;
@@ -163,6 +164,61 @@ export class CjsPaperDollInstance
     }
 
     /**
+     * Holds the parts that are not overridable (`CjsPaperDollComponent.overridable`; operator, 2026-11-09): a part
+     * switched off while no worn part occludes it is switched back on, and its option resolved if it is not. An occluder
+     * still removes it from every bake (`suppress`). The host's switch only reflects this.
+     *
+     * Ours (no Carbon counterpart): the client's paper doll is Python. The rule is the operator's.
+     * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
+     * @returns {void}
+     */
+    static holdParts(definition)
+    {
+        const worn = CjsPaperDollInstance._Worn(definition);
+        for (const name of CjsPaperDollDefinition.parts)
+        {
+            const part = definition[name];
+            if (part.overridable || part.enabled || part.option === "") continue;
+            const option = part.GetOptions().find(value => value.id === part.option);
+            if (option === undefined) continue;
+            const target = { name, category: part.constructor.category, path: option.path ?? part.constructor.category };
+            if (worn.some(by => CjsPaperDollInstance._Occludes(by, target))) continue;
+            CjsSchema.setValues(part, { enabled: true });
+            if (!part.IsResolved(part.option)) part.ResolveOption(part.option);
+        }
+    }
+
+    /**
+     * The worn parts (on, with an option, resolved): each one's name, category, path (its option's content path, else its
+     * category) and what it occludes.
+     * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
+     * @returns {Array<{ name: string, category: string, path: string, occludes: string[] }>}
+     */
+    static _Worn(definition)
+    {
+        return CjsPaperDollDefinition.parts.filter(name =>
+        {
+            const part = definition[name];
+            return part.enabled && part.option !== "" && part.IsResolved(part.option);
+        }).map(name =>
+        {
+            const part = definition[name], option = part.GetOptions().find(value => value.id === part.option);
+            return { name, category: part.constructor.category, path: option.path ?? part.constructor.category, occludes: option.occludes ?? [] };
+        });
+    }
+
+    /**
+     * Whether a worn part occludes another: one of its occludes names the other's category, or its path or a folder above.
+     * @param {{ name: string, occludes: string[] }} by The occluding part.
+     * @param {{ name: string, category: string, path: string }} target The other part.
+     * @returns {boolean}
+     */
+    static _Occludes(by, target)
+    {
+        return by.name !== target.name && by.occludes.some(path => path === target.category || CjsPaperDollDefinition.occludes([ path ], target.path));
+    }
+
+    /**
      * Which parts are suppressed: runtime's suppression walk (`CjsCharacterAppearanceResolver.resolveSuppressions`)
      * over every active part whose option is resolved, an edge where one's `occludesModifiers` names another's category
      * or option path. Suppression runs from the roots; a cycle stays active. An unresolved option is not walked until its
@@ -179,19 +235,11 @@ export class CjsPaperDollInstance
      */
     static suppress(definition)
     {
-        const worn = CjsPaperDollDefinition.parts.filter(name =>
-        {
-            const part = definition[name];
-            return part.enabled && part.option !== "" && part.IsResolved(part.option);
-        }).map(name =>
-        {
-            const part = definition[name], option = part.GetOptions().find(value => value.id === part.option);
-            return { name, category: part.constructor.category, path: option.path ?? part.constructor.category, occludes: option.occludes ?? [] };
-        });
+        const worn = CjsPaperDollInstance._Worn(definition);
         const edges = new Map();
         for (const target of worn) for (const by of worn)
         {
-            if (by === target || !by.occludes.some(path => path === target.category || CjsPaperDollDefinition.occludes([ path ], target.path))) continue;
+            if (by === target || !CjsPaperDollInstance._Occludes(by, target)) continue;
             if (!edges.has(target)) edges.set(target, []);
             edges.get(target).push({ owner: by, rules: new Set([ "occludesModifiers" ]) });
         }

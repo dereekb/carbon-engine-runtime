@@ -264,6 +264,7 @@ export class CjsPaperDollColorizedSource
         if (initial !== null) await component.ResolveOption(initial.id);
         // A carrier mesh needs a material before any option is applied (the head draws its brow target once at
         // preparation): the catalog's first is loaded for the carrier only, not selected; the part stays as configured.
+        // Derived: which option's material the carrier starts with is ours (the first), not a source's.
         else if (this._type.carrier === true && catalog.options.length) await this._ResolveCatalog(catalog.options[0].id);
     }
 
