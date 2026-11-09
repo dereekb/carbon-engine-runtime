@@ -256,3 +256,17 @@ test("packed morph frames retain their declaration and sparse base values", () =
         0, 0, 0, 1
     ]);
 });
+
+test("vertex annotation sets are the blend shapes only when the mesh has no morph targets (TriGrannyRes.cpp:597-602)", () =>
+{
+    const annotations = typed([ { Position: [ 0, 0, 2 ], Normal: [ 0, 0, 0 ] } ], [ real3("Position"), real3("Normal") ]);
+    const sets = [ { Name: "AnnotationShape", VertexAnnotations: annotations, IndicesMapFromVertexToAnnotation: 0, VertexAnnotationIndices: [ { Int32: 0 } ] } ];
+    const target = {
+        ScalarName: "MorphShape",
+        DataIsDeltas: 1,
+        VertexData: { Vertices: typed([ { Position: [ 0, 0, 1 ] }, { Position: [ 0, 0, 1 ] }, { Position: [ 0, 0, 1 ] } ], [ real3("Position") ]) }
+    };
+    const both = emitJson({ FromFileName: "face.gr2", Meshes: [ { ...reflectedMesh(sets), MorphTargets: [ target ] } ], Models: [], Animations: [] }, 7).meshes[0];
+    assert.deepEqual(both.morphTargets.map(value => value.name), [ "MorphShape" ]);
+    assert.deepEqual(emitMesh(sets).morphTargets.map(value => value.name), [ "AnnotationShape" ]);
+});

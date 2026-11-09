@@ -543,10 +543,12 @@ function emitMesh(mesh, classes = {}, rebuildMissingBounds = false)
     // controls in four-wide texture coordinates. Preserve the authored stream
     // width; its vertex count cannot be inferred by dividing positions by three.
     if (verts.length && o.vertex.position.length !== verts.length * 3) o.vertexCount = verts.length;
-    o.morphTargets = (mesh.MorphTargets || []).map(mt => emitMorphTarget(mt, classes));
-    o.morphTargets.push(...(vd?.VertexAnnotationSets || [])
-        .map(set => emitVertexAnnotationTarget(set, verts.length, classes))
-        .filter(Boolean));
+    // A mesh's blend shapes are its MorphTargets, or, only when it has none, its vertex annotation sets
+    // (TriGrannyRes.cpp:597-602 BakeBlendshape, :1252-1255, :1356-1357).
+    const morphTargets = mesh.MorphTargets || [];
+    o.morphTargets = morphTargets.length
+        ? morphTargets.map(mt => emitMorphTarget(mt, classes))
+        : (vd?.VertexAnnotationSets || []).map(set => emitVertexAnnotationTarget(set, verts.length, classes)).filter(Boolean);
 
     const
         topo = mesh.PrimaryTopology || {},
