@@ -303,10 +303,11 @@ export class CjsCharacterFactory
             if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
             const value = { enabled: true, option: found.option };
             if (entry.weight > 0) value.weight = entry.weight;
-            const colors = entry.GetColors();
-            if (colors !== null)
+            const read = CjsCharacterFactory._ReadRecipeColors(entry);
+            if (read.problem) problems.push(entry.path + ": " + read.problem);
+            if (read.colors)
             {
-                value.colors = colors.map(color => Array.from(color));
+                value.colors = read.colors;
                 value.specularColors = [ entry.specularColor1, entry.specularColor2, entry.specularColor3 ].map(color => Array.from(color));
             }
             else if (entry.colorvariation)
@@ -319,6 +320,36 @@ export class CjsCharacterFactory
             dna.parts[name] = value;
         }
         return { dna: CjsCharacterFactory.ReadJSON(dna), problems };
+    }
+
+    /**
+     * The shapes a recipe entry's `colors` takes (found: every `.prs` under `res:/graphics/character/` and
+     * `res:/animation_gstate/`, build 3670638, 380 recipes): a list of RGBA tuples, written `[(..), (..), (..)]` or as
+     * a tuple of tuples, then any scalars. `colors`: three tuples, one colour per area (3990 entries). `pattern`: an
+     * entry that names a `pattern` holds that pattern's colours as a patterned palette's `patternColors` does
+     * (`CjsCharacterColorVariation.patternOf`): the three pattern colours, the colours of areas 2 and 3, the placement
+     * (offset x, y; repeat x, y) and the rotation (20 entries, all garments and arms).
+     * @type {Object<string, { tuples: number, scalars: number }>}
+     */
+    static recipeColorShapes = { colors: { tuples: 3, scalars: 0 }, pattern: { tuples: 6, scalars: 1 } };
+
+    /**
+     * An entry's own colours, read by its shape (`recipeColorShapes`). A pattern entry's colours are read and not
+     * applied: the part draws its colour variation's palette, whose pattern is its own. PROVISIONAL, with the colour
+     * ruling. A shape that is neither is reported and its colours skipped, never thrown for the whole recipe.
+     * @param {{ colors: string, pattern: string }} entry The recipe entry.
+     * @returns {{ colors?: number[][], problem?: string }} The colours to apply, and what was not applied.
+     */
+    static _ReadRecipeColors(entry)
+    {
+        if (entry.colors === "") return {};
+        const tuples = [ ...entry.colors.matchAll(/\(([^()]*)\)/gu) ].map(match => match[1].split(",").map(Number));
+        const scalars = entry.colors.replace(/\(([^()]*)\)/gu, "").split(/[\[\],\s()]+/u).filter(token => token !== "").map(Number);
+        const shape = entry.pattern ? CjsCharacterFactory.recipeColorShapes.pattern : CjsCharacterFactory.recipeColorShapes.colors;
+        if (tuples.length !== shape.tuples || scalars.length !== shape.scalars || tuples.some(tuple => tuple.length !== 4 || !tuple.every(Number.isFinite)) || !scalars.every(Number.isFinite))
+            return { problem: "colours in an unread shape (" + tuples.length + " tuples, " + scalars.length + " scalars); skipped" };
+        if (entry.pattern) return { problem: "pattern " + entry.pattern + ": its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)" };
+        return { colors: tuples };
     }
 
     /**

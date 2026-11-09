@@ -145,6 +145,8 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     "- { category: outer, path: outer/coat01, variation: v9, weight: 1.0 }",
     "- { category: hair, path: hair/long01, weight: 1.0 }",
     "- { category: bodyshapes, path: bodyshapes/thinshape, weight: 0.3 }",
+    "- { category: topmiddle, path: topmiddle/shirt01, weight: 1.0, pattern: Camo, colorvariation: plain, colors: '[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1), (1, 1, 0, 1), (0, 1, 1, 1), (0, 0, 8, 8), 0.0]' }",
+    "- { category: makeup, path: makeup/eyeliner/eyeliner_01, weight: 1.0, colors: '[(1, 0, 0, 1), (0, 1, 0, 1)]' }",
     ""
   ].join("\n");
   const files = [
@@ -152,21 +154,26 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     ROOT + "makeup/lipstick/lipstick_01/types/lipstick_01.type", ROOT + "makeup/lipstick/lipstick_01/red.color",
     ROOT + "makeup/blush/blush_01/types/blush_01.type", ROOT + "makeup/blush/blush_01/pink.color",
     ROOT + "makeup/aging/aging_01/types/aging_01_v1.type", ROOT + "makeup/aging/aging_01/v1/comp_head_d.png",
-    ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type"
+    ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type",
+    ROOT + "topmiddle/shirt01/types/shirt01.type", ROOT + "topmiddle/shirt01/plain.color", ROOT + "makeup/eyeliner/eyeliner_01/types/eyeliner_01.type"
   ];
   installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });
   const { dna, problems } = await CjsCharacterFactory.ReadRecipe(PRS);
   assert.equal(dna.sex, "female");
   assert.deepEqual(dna.parts.lipstick, { enabled: true, option: "lipstick_01", weight: 1,
-    colors: [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ].map(color => Array.from(Float32Array.from(color))),
+    colors: [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ],
     specularColors: [ [ .5, .5, .5, 1 ], [ .5, .5, .5, 1 ], [ .5, .5, .5, 1 ] ] }, "its own colours, and their specular colours");
   assert.deepEqual(dna.parts.blush, { enabled: true, option: "blush_01", weight: .5, palette: ROOT + "makeup/blush/blush_01/pink.color" }, "the palette its colour variation names");
   assert.deepEqual(dna.parts.aging, { enabled: true, option: "aging_01_v1", weight: 1 }, "the option its variation selects");
   assert.deepEqual(dna.parts.archetype, { option: "archetypes/msshape" });
   assert.deepEqual(dna.parts.feet, { enabled: false }, "a nude feet entry turns the feet off");
+  assert.deepEqual(dna.parts.topMiddle, { enabled: true, option: "shirt01", weight: 1, palette: ROOT + "topmiddle/shirt01/plain.color" }, "a pattern entry: its colour variation's palette");
+  assert.deepEqual(dna.parts.eyeliner, { enabled: true, option: "eyeliner_01", weight: 1 }, "colours in an unread shape are skipped");
   assert.deepEqual(problems.sort(), [
     "bodyshapes/thinshape: no part (no paper doll category)",
     "hair/long01: hair is not applied until the instance owns meshes (R6)",
-    "outer/coat01: no outer option presets it (variation 'v9', colour variation '')"
+    "makeup/eyeliner/eyeliner_01: colours in an unread shape (2 tuples, 0 scalars); skipped",
+    "outer/coat01: no outer option presets it (variation 'v9', colour variation '')",
+    "topmiddle/shirt01: pattern Camo: its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)"
   ]);
 });

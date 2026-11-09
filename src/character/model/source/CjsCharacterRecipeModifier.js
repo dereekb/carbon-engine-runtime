@@ -78,20 +78,4 @@ export class CjsCharacterRecipeModifier
     @type.float64
     decalweight = 0;
 
-    /**
-     * The three area colours `colors` authors, as written: `'[(r, g, b, a), (r, g, b, a), (r, g, b, a)]'`
-     * (src/character/discovery/prs.yaml). Null when the entry authors none.
-     * @cjs
-     * @returns {?Float32Array[]} Three RGBA colours.
-     * @throws {Error} For a `colors` string that is not three four-number tuples.
-     */
-    GetColors()
-    {
-        if (this.colors === "") return null;
-        const tuples = [ ...this.colors.matchAll(/\(([^()]*)\)/gu) ].map(match => match[1].split(",").map(Number));
-        if (tuples.length !== 3 || tuples.some(tuple => tuple.length !== 4 || !tuple.every(Number.isFinite)))
-            throw new Error("Unreadable recipe colours: " + this.colors);
-        return tuples.map(tuple => Float32Array.from(tuple));
-    }
-
 }
