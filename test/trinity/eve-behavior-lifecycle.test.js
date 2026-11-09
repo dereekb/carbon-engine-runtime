@@ -4,9 +4,9 @@ import { test } from "node:test";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
 import { quat } from "../../npm/dist/global/math/quat.js";
 import { BlueList } from "../../npm/dist/blue/exposure/BlueList.js";
-import { CjsBlackPropertyReaders } from "../../npm/dist/blue/formats/black/core/CjsBlackPropertyReaders.js";
 import * as trinity from "../../npm/dist/trinity/index.js";
-import { CjsBlueReader } from "../../npm/dist/blue/formats/black/CjsBlueReader.js";
+import { Fixture, u32 } from "../support/blackFixture.js";
+import { readBlack } from "../support/blackReader.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
@@ -280,7 +280,10 @@ test("BehaviorGroup hydrates notified behavior lists and regenerates authored ag
   });
   group.behaviors = new BlueList(ProcessLifetime);
   group.behaviors.SetNotify(group);
-  CjsBlackPropertyReaders.readNativeList({ ReadU32: () => 1, context: { ReadObject: () => new ProcessLifetime() } }, group.behaviors);
+  // Populated as a reader fills a list, without notification; the load notification follows below.
+  group.behaviors.SetNotify(null);
+  group.behaviors.Append(new ProcessLifetime());
+  group.behaviors.SetNotify(group);
   assert.equal(group.GetSize(), 3);
   assert.equal(group._scratchData[0].length, 3);
   const previous = group.GetAgents()[0];
@@ -346,19 +349,24 @@ test("behavior system load notifications defer wiring and instance modifiers inv
 });
 
 
-test("BehaviorGroup binary-reader population mutes inserts until all behavior scratch slots exist", () =>
+/** A BehaviorGroup file: its count, then its behaviors list, each behavior an object of the named class. */
+function behaviorGroupBytes(count, names)
 {
-  const reader = new CjsBlueReader({ classes: { BehaviorGroup } });
-  const group = reader.CreateRuntimeTarget("BehaviorGroup");
-  group.count = 2;
-  group.InitializeGeometryResource();
-  const first = new ProcessLifetime(), second = new ProcessLifetime();
-  const list = group.behaviors, events = [];
-  const notify = group.OnListModified.bind(group);
-  group.OnListModified = (...args) => { events.push(args[0]); return notify(...args); };
-  reader.ApplyRuntimeValues(group, { behaviors: [first, second] }, "BehaviorGroup");
-  assert.equal(group.behaviors, list);
-  assert.deepEqual(Array.from(group.behaviors), [first, second]);
+  const f = new Fixture();
+  return f.Finish(f.Object(1, "BehaviorGroup", [
+    [ "count", u32(count) ], [ "behaviors", f.List(names.map((name, index) => f.Object(index + 2, name))) ]
+  ]));
+}
+
+test("BehaviorGroup binary-reader population mutes inserts until all behavior scratch slots exist", t =>
+{
+  const events = [], original = BehaviorGroup.prototype.OnListModified;
+  BehaviorGroup.prototype.OnListModified = function(...args) { events.push(args[0]); return original.apply(this, args); };
+  t.after(() => { BehaviorGroup.prototype.OnListModified = original; });
+  const group = readBlack(behaviorGroupBytes(2, [ "ProcessLifetime", "ProcessLifetime" ]));
+  assert.equal(group.constructor, BehaviorGroup);
+  assert.equal(group.behaviors.length, 2);
+  assert.ok(Array.from(group.behaviors).every(behavior => behavior.constructor === ProcessLifetime));
   assert.deepEqual(events, [BLUELISTEVENT.BELIST_LOADFINISHED]);
   assert.equal(group.GetSize(), 2);
   assert.equal(group._scratchData.length, 2);
@@ -371,12 +379,9 @@ test("BehaviorGroup accepts every Carbon-mapped IBehavior during bulk loading", 
 {
   const names = ["Allign", "ApproachGroup", "BackAndForth", "CollisionAvoidance", "DroneAvoidance",
     "FollowASpline", "Formation", "InclusionVolume", "Inertia", "PlayFX", "ProcessLifetime", "SeekTarget", "SpawnDrones", "Wander"];
-  const group = new BehaviorGroup(), list = group.behaviors;
-  const behaviors = names.map(name => new trinity[name]());
-  const reader = new CjsBlueReader({ classes: { BehaviorGroup } });
-  reader.ApplyRuntimeValues(group, { behaviors }, "BehaviorGroup");
-  assert.equal(group.behaviors, list);
-  assert.deepEqual(Array.from(list), behaviors, "native interface admission must not silently discard a steering behavior");
+  const group = readBlack(behaviorGroupBytes(1, names));
+  assert.deepEqual(Array.from(group.behaviors, behavior => behavior.constructor), names.map(name => trinity[name]),
+    "native interface admission must not silently discard a steering behavior");
 });
 
 

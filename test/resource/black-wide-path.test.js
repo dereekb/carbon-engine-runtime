@@ -5,7 +5,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
-import { CjsBlackSchemaRegistry } from "../../npm/dist/blue/formats/black/core/CjsBlackSchemaRegistry.js";
+import { ClassInfo } from "../../npm/dist/blue/base/ClassInfo.js";
+import { declaredMemberType } from "../../npm/dist/blue/schema/compileClassInfo.js";
+import { VARTYPE } from "../../npm/dist/global/consts/blue.js";
 import { EveSOFDataHullLightSetTexturedPointLight } from "../../npm/dist/sof/index.js";
 import { clientResources } from "../support/clientResources.js";
 
@@ -16,10 +18,8 @@ test("wpath maps to STDWSTRING and keeps its path meaning", () =>
   // EveSOFData_Blue.cpp:1094 maps m_data.texturePath, a std::wstring.
   const field = CjsSchema.getField(EveSOFDataHullLightSetTexturedPointLight, "texturePath");
   assert.deepEqual(field.type, { kind: "wpath", accepts: [ "TriTextureRes" ] });
-  const black = CjsBlackSchemaRegistry.fromDeclaredType(field.type);
-  assert.equal(black.black.beType, "STDWSTRING");
-  assert.equal(black.jsType.kind, "wpath");
-  assert.equal(CjsBlackSchemaRegistry.fromDeclaredType({ kind: "path", accepts: [] }).black.beType, "STDSTRING");
+  assert.equal(ClassInfo.exposeToBlue(EveSOFDataHullLightSetTexturedPointLight).meta.entries.get("texturePath").type, VARTYPE.STDWSTRING);
+  assert.equal(declaredMemberType({ kind: "path", accepts: [] }).type, VARTYPE.STDSTRING);
 });
 
 test("the client's data.black textured point light path reads from the wide table", { skip: sofData.skip ?? false }, async () =>
@@ -27,7 +27,7 @@ test("the client's data.black textured point light path reads from the wide tabl
   const bytes = await sofData.Read("res:/dx9/model/spaceobjectfactory/data.black");
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   const lights = [];
-  const seen = new Set(), stack = [ CjsBlackFormat.readRuntime(buffer, { schema: null }).root ];
+  const seen = new Set(), stack = [ CjsBlackFormat.readRuntime(buffer).root ];
   while (stack.length)
   {
     const value = stack.pop();

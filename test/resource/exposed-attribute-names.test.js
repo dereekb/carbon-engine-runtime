@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { YamlReader } from "../../npm/dist/blue/formats/yaml/YamlReader.js";
 import "../../npm/dist/blue/values.js";
 import { CjsGraphFormat } from "../../npm/dist/blue/formats/graph/CjsGraphFormat.js";
@@ -39,18 +40,18 @@ test("Black reads m_dampingRatio into dampingRatio and keeps the exposed name in
 {
     const black = new BlackFixture();
     const bytes = black.Finish(black.Object(1, DAMPING, [ [ "m_dampingRatio", f32(0.25) ] ]));
-    const instance = new CjsBlackReader(bytes, { schema: null }).CreateObject();
+    const instance = readBlack(bytes);
     assert.ok(instance instanceof EveVirtualCameraBehaviourVector3Damping);
     assert.equal(instance.dampingRatio, 0.25);
     assert.equal(Object.hasOwn(instance, "m_dampingRatio"), false);
-    const payload = new CjsBlackReader(bytes, { schema: null }).ReadPayload().object;
+    const payload = CjsBlackFormat.readPayload(bytes).object;
     assert.equal(payload.m_dampingRatio, 0.25);
     assert.equal(Object.hasOwn(payload, "dampingRatio"), false);
 
     // The JS key is not a Black field name.
     const byKey = new BlackFixture();
     const keyed = byKey.Finish(byKey.Object(1, DAMPING, [ [ "dampingRatio", f32(0.25) ] ]));
-    assert.throws(() => new CjsBlackReader(keyed, { schema: null }).CreateObject(), /No persisted member declared for Black field EveVirtualCameraBehaviourVector3Damping\.dampingRatio/);
+    assert.throws(() => readBlack(keyed), /Invalid attribute: dampingRatio/);
 });
 
 test("YamlReader reads the exposed name and the values service exports it", () =>
@@ -75,7 +76,7 @@ test("Black and strict YamlReader refuse nonpersisted m_showCubemap under either
     {
         const black = new BlackFixture();
         const bytes = black.Finish(black.Object(1, TOGGLE, [ [ name, new Uint8Array([ 0 ]) ] ]));
-        assert.throws(() => new CjsBlackReader(bytes, { schema: null }).CreateObject(), new RegExp(`No persisted member declared for Black field ${TOGGLE}\\.${name}`));
+        assert.throws(() => readBlack(bytes), new RegExp(`Invalid attribute: ${name}`));
     }
     for (const name of [ "m_showCubemap", "showCubemap" ])
     {

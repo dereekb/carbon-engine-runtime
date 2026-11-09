@@ -8,7 +8,7 @@ import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { EveBoosterSet2, EveComponentRegistry, EveComponentType, EveShip2, TriDevice, trinity, Tr2Renderer } from "../../npm/dist/trinity/index.js";
 
 test("EveShip2 preserves distinct native stored and live booster declarations", () =>
@@ -175,7 +175,7 @@ test("canonical Black and Copier keep production booster persistence off the liv
 {
   guardDeviceCreation(t);
   t.mock.method(EveShip2.prototype, "SetBoosters", () => assert.fail("native persistence must bypass the live setter"));
-  const ship = new CjsBlackReader(authoredShipBytes(), { schema: null }).CreateObject();
+  const ship = readBlack(authoredShipBytes());
   assert.equal(ship._boosters.constructor, EveBoosterSet2);
   assert.equal(ship.GetBoosters().staticTrailLength, 23);
   const clone = new Copier().CloneTo(ship);

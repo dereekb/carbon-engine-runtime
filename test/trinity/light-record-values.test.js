@@ -5,6 +5,7 @@ import { EveSOF } from "../../npm/dist/sof/index.js";
 import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { LightData, EveBannerLight, EveHazeSetLight, EvePlaneLight, EveSpotlightLight, EveSpriteLight } from "../../npm/dist/trinity/index.js";
 import { clientResources } from "../support/clientResources.js";
+import { readBlack } from "../support/blackReader.js";
 
 // Real client files through BePaths (test/support/clientResources.js).
 const client = await clientResources();
@@ -39,7 +40,8 @@ test("real gc3_t1 SOF attachment lights retain authored values through their fac
     return client.Read(path.replace(/\.red$/u, ".black"));
   };
   const sof = (await new EveSOF().Register({
-    lazyData: { source: bytes },
+    // SOF takes its catalog as the objects resMan builds from the files, never as bytes.
+    lazyData: { source: async path => readBlack(await bytes(path)) },
     resources: { getObject: async path =>
     {
       const read = CjsBlackFormat.read(await bytes(path), { emit: "json" });

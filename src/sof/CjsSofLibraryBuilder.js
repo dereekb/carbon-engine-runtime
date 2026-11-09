@@ -1,6 +1,5 @@
 import { CjsSchema, meta } from "#schema";
 import { normalizeResourcePath } from "#utils/path";
-import { CjsBlackFormat } from "#blue/formats/black";
 import { EveSOFData } from "./EveSOFData.js";
 import * as CcpLog from "../global/logging/ccpLog.js";
 
@@ -563,34 +562,28 @@ export class CjsSofLibraryBuilder
 
 }
 
+/**
+ * One catalog file as its source gave it: the object resMan built from it, as
+ * Carbon's EveSOFDataMgr takes its data from BeResMan->LoadObject
+ * (EveSOFDataMgr.cpp:592-610). SOF never decodes bytes; a source that returns
+ * them is refused.
+ *
+ * @param {*} value What the source returned.
+ * @param {string} path The file's res path.
+ * @returns {object} The catalog object.
+ * @throws {TypeError} When the source returned bytes or nothing.
+ */
 async function normalizeSofObject(value, path)
 {
-  let input = value;
-  if (input && typeof input.arrayBuffer === "function")
+  if (value instanceof ArrayBuffer || ArrayBuffer.isView(value) || (value && typeof value.arrayBuffer === "function"))
   {
-    input = await input.arrayBuffer();
+    throw new TypeError(`SOF catalog source returned bytes for ${path}; load the file through resMan (LoadObject), which reads it into EveSOFData`);
   }
-  else if (input && typeof input === "object" && Object.hasOwn(input, "object"))
+  if (!value || typeof value !== "object")
   {
-    return input.object;
+    throw new TypeError(`SOF catalog source returned no object for ${path}`);
   }
-  else if (input && typeof input === "object" && Object.hasOwn(input, "bytes"))
-  {
-    input = input.bytes;
-  }
-
-  if (input instanceof ArrayBuffer || ArrayBuffer.isView(input))
-  {
-    const bytes = input instanceof ArrayBuffer
-      ? input
-      : input.buffer.slice(input.byteOffset, input.byteOffset + input.byteLength);
-    return CjsBlackFormat.readPayload(bytes, {}).object;
-  }
-  if (!input || typeof input !== "object")
-  {
-    throw new TypeError(`SOF catalog source returned no object or bytes for ${path}`);
-  }
-  return input;
+  return value;
 }
 
 function normalizeNamedRequest(kind, nameOrPath, basePath)

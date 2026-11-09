@@ -5,11 +5,18 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import * as runtime from "../../npm/dist/carbonenginejs.min.js";
-// Readers are opt-in subpaths, absent from the package root. Use their strictly
-// minified test builds only to decode bytes. The SHIPPED DictReader performs
-// Black class construction and field population using its own declarations.
-// Red uses the shipped YamlReader and the values service's DictWriter.
-import { CjsBlackFormat } from "../../.cache/minified-test/dist/blue/formats/black/index.js";
+// Black objects load through the SHIPPED resMan object route: the bundle's own
+// object builder (DefaultConfiguration.objectBuilders.black), which reads with
+// BlackReader into the bundle's registered classes. Red uses the shipped
+// YamlReader and the values service's DictWriter.
+
+/** The bundle's resMan over one file's bytes, with the shipped Black object builder. */
+function shippedResMan(bytes)
+{
+    const manager = new runtime.CjsBlueResMan({ source: { Read: () => bytes } });
+    manager.RegisterObjectBuilder("black", runtime.DefaultConfiguration.objectBuilders.black);
+    return manager;
+}
 
 async function fixture(variable)
 {
@@ -21,8 +28,9 @@ test("shipped minified bundle constructs real Black hull classes", async () =>
 {
     const bytes = await fixture("CJS_BUNDLE_BLACK_FILE");
     assert.equal(bytes.length, 87626);
-    const payload = CjsBlackFormat.readPayload(bytes);
-    const result = { root: new runtime.DictReader({ declarations: true }).CreateObject(payload.object) };
+    const manager = shippedResMan(bytes);
+    const result = { root: await manager.LoadObject("res:/test/ab1_t1.black") };
+    manager.Clear();
     assert.equal(Object.getPrototypeOf(result.root), runtime.EveSOFDataHull.prototype);
     assert.equal(runtime.blue.classes.GetClassRegistration("EveSOFDataHull").name, "EveSOFDataHull");
     assert.notEqual(runtime.EveSOFDataHull.name, "EveSOFDataHull", "negative control: identifiers really were minified");
@@ -60,7 +68,10 @@ test("shipped minified SOF builds a hull from real catalog DNA", async () =>
 {
     const black = await fixture("CJS_BUNDLE_SOF_FILE");
     assert.equal(createHash("md5").update(black).digest("hex"), "a800b64240ea16a7efba1d1b96df3365");
-    const sof = await runtime.EveSOF.Create({ black });
+    // SOF takes its catalog as the EveSOFData objects resMan builds from data.black.
+    const manager = shippedResMan(black);
+    const sof = await runtime.EveSOF.Create({ data: await manager.LoadObject("res:/dx9/model/spaceobjectfactory/data.black") });
+    manager.Clear();
     const values = await sof.BuildValuesFromDNA("ab1_t1:amarrbase:amarr");
     assert.equal(values._type, "EveShip2");
     assert.ok(values.mesh.opaqueAreas.length > 0);
@@ -70,14 +81,10 @@ test("shipped minified SOF builds a hull from real catalog DNA", async () =>
 test("shipped minified ResMan resolves and reads the real Black format", async () =>
 {
     const bytes = await fixture("CJS_BUNDLE_BLACK_FILE");
-    const manager = new runtime.CjsBlueResMan({ source: { Read: () => bytes } });
+    const manager = shippedResMan(bytes);
     try
     {
-        manager.RegisterFormat(CjsBlackFormat);
-        assert.equal(manager.ResolveFormat("black", { emit: "payload" }), CjsBlackFormat);
-        const descriptor = manager.GetFormatDescriptors("black")[0];
-        const payload = await manager.ReadFormat(descriptor, bytes, { emit: "payload" });
-        const hull = new runtime.DictReader({ declarations: true }).CreateObject(payload.object);
+        const hull = await manager.LoadObject("res:/test/ab1_t1.black");
         assert.equal(Object.getPrototypeOf(hull), runtime.EveSOFDataHull.prototype);
         assert.equal(hull.name, "ab1_t1");
     }

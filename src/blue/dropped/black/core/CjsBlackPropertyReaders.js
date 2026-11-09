@@ -1,5 +1,5 @@
 import { BLUELISTEVENT } from "#consts/blue";
-import { BLUE_MATH_WRAPPERS as WRAPPERS, getWrapperLayout } from "../blueMathWrappers.js";
+import { BLUE_MATH_WRAPPERS as WRAPPERS, getWrapperLayout } from "../../../formats/black/blueMathWrappers.js";
 import { CjsSchema } from "#schema";
 import { applyStructRecordMember, getReaderMemberValue } from "#schema/hydration";
 import {

@@ -8,7 +8,7 @@ import { blue, ITriFunction, ITriVectorFunction, ITriColorFunction, ITriCurveLen
 import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
 import { DictWriter } from "../../npm/dist/blue/formats/graph/DictWriter.js";
 import { GetResources } from "../../npm/dist/blue/getResources.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { Tr2CurveVector2 } from "../../npm/dist/trinity/curves/curve/Tr2CurveVector2.js";
 import { Tr2CurveVector3 } from "../../npm/dist/trinity/curves/curve/Tr2CurveVector3.js";
 import { Tr2CurveColor } from "../../npm/dist/trinity/curves/curve/Tr2CurveColor.js";
@@ -110,33 +110,20 @@ for(const [Class,components,Base,interfaces] of cases)
             ["keys",concat([u32(1),u16(20),record])],["name",f.String("child")]
         ]).subarray(4)]);
         fields.push(["name",f.String("BlackComposite")]);
-        let children,keys;
-        class RecordingReader extends CjsBlackReader
-        {
-            CreateRuntimeTarget(kind,shape)
-            {
-                const target=super.CreateRuntimeTarget(kind,shape);
-                children=components.map(key=>target[key]);
-                keys=children.map(child=>child.keys);
-                return target;
-            }
-        }
-        const reader=new RecordingReader(f.Finish(f.Object(1,name,fields)),{schema:null,initialize:false});
-        const curve=reader.ReadRuntime().root;
+        const curve=readBlack(f.Finish(f.Object(1,name,fields)),{initialize:false});
         assert.equal(curve.constructor,Class);
-        components.forEach((key,index)=>
+        // An embedded IROOT member is read into the storage the constructor made (Copy<IROOT>, BlueVariable.cpp:338-343),
+        // so each child, and its keys list, keep the constructor's own types.
+        const fresh=new Class();
+        components.forEach(key=>
         {
-            assert.equal(curve[key],children[index]);
-            assert.equal(curve[key].keys,keys[index]);
+            assert.equal(curve[key].constructor,fresh[key].constructor);
+            assert.equal(curve[key].keys.constructor,fresh[key].keys.constructor);
             assert.equal(curve[key].keys.length,1);
             assert.equal(curve[key].keys[0].value,2);
         });
-        assert.equal(reader.references.size,1);
         assert.equal(curve.name,"BlackComposite");
         assert.equal(curve[components[0]].name,"child");
-        assert.equal(reader.references.get(1),curve);
-        assert.equal(reader.reader.AtEnd(),true);
-        assert.deepEqual(reader.reports,[]);
         curve.UpdateValue(1);
         assert.deepEqual(Array.from(curve.currentValue),components.map(()=>2));
     });

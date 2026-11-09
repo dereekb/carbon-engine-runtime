@@ -115,10 +115,9 @@ test("real SOF generic and decal data retain concrete nested records through the
     for (const set of hull.decalSets ?? []) for (const payload of set.items ?? [])
     {
       if (!payload.indexBuffers?.length) continue;
-      // DictReader refuses a binary block (DictReader.cpp:718-721), so the
-      // decoded index buffers stay out of the values.
-      assert.throws(() => CjsSchema.from("EveSOFDataHullDecalSetItem", payload), /DictReader does not support binary blocks/);
-      const values = { ...payload, indexBuffers: payload.indexBuffers.map(({ indexBuffer: _indexBuffer, ...rest }) => rest) };
+      // The payload is the read objects' values, which leave out a binary block (DictReader.cpp:718-721 refuses one).
+      assert.ok(payload.indexBuffers.every(buffer => !Object.hasOwn(buffer, "indexBuffer")));
+      const values = payload;
       const decal = CjsSchema.from("EveSOFDataHullDecalSetItem", values);
       assert.equal(decal.constructor, EveSOFDataHullDecalSetItem);
       assert.equal(CjsSchema.getClassName(decal.indexBuffers[0].constructor), "EveSOFDataDecalIndexBuffer");

@@ -32,7 +32,9 @@ for (const file of walk(DIST).sort()) await import(pathToFileURL(file).href);
 
 const { blue } = await load("blue/index.js");
 const { CjsSchema } = await load("blue/schema/index.js");
-const { CjsBlackReader } = await load("blue/formats/black/core/CjsBlackReader.js");
+const { BlackReader } = await load("blue/formats/black/BlackReader.js");
+/** A file root through BlackReader, without Initialize; throws its message when the read fails. */
+const readBlack = bytes => { const reader = new BlackReader(); reader.SetDoInitialize(false); const root = reader.ReadFromStream(bytes); if (root === null) throw new Error(reader.GetErrorMessage()); return root; };
 const { DictReader } = await load("blue/formats/graph/DictReader.js");
 const { CjsBlueGraph } = await load("blue/formats/graph/index.js");
 const { CjsGraph } = await load("global/model/graph/index.js");
@@ -363,7 +365,7 @@ for (let index = shard; index < wanted.length; index += shards)
   {
     const bytes = await readBytes(path);
     if (!bytes) { stats.notServed++; continue; }
-    root = new CjsBlackReader(bytes, { schema: null, initialize: false }).CreateObject();
+    root = readBlack(bytes);
   }
   catch (error)
   {

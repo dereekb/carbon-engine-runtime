@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import * as graph from "../../src/global/model/graph/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
 // Scene construction registers device resources; no device or GPU is created by this import.
 import "../../npm/dist/trinity/core/device/TriDevice.js";
@@ -69,9 +69,9 @@ function read(name, hash)
   const bytes = readFileSync(join(corpus, `${name}.black`));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), hash);
 
-  const reader = new CjsBlackReader(bytes, { schema: null, initialize: false });
+  const reader = blackBuilder(bytes, { initialize: false });
   const scene = reader.CreateObject();
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
   return scene;
 }
 

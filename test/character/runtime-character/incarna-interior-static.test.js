@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { blue } from "../../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../../support/blackReader.js";
 import { ITr2Interior, ITr2InteriorDynamic, Tr2HighLevelShader, Tr2InteriorCell, Tr2InteriorScene, Tr2InteriorStatic, Tr2ShaderFloat4Desc, Tr2ShaderManager, Tr2ShaderMaterial, Tr2ShaderPermuteTag, Tr2ShaderTexDesc } from "../../../npm/dist/character/index.js";
 import { Tr2Effect, Tr2FloatParameter, TriTextureParameter } from "../../../npm/dist/trinity/shader/index.js";
 import { ITr2Pickable, ITr2Renderable, Tr2Mesh, Tr2MeshArea, Tr2RenderContext_GetMainThreadRenderContext, TriPoolAllocator } from "../../../npm/dist/trinity/index.js";
@@ -40,8 +40,8 @@ function walkwayRecord()
 test("a walkway record hydrates the Incarna static and its shader material in file order", t =>
 {
   renderSetup(t);
-  const reader = new CjsBlackReader(walkwayRecord(), { schema: null, initialize: false });
-  const root = reader.ReadRuntime().root;
+  const reader = blackBuilder(walkwayRecord(), { initialize: false });
+  const root = reader.CreateObject(0);
 
   assert.equal(root.constructor, Tr2InteriorStatic);
   assert.equal(root.name, "Walkway_Test");
@@ -61,7 +61,7 @@ test("a walkway record hydrates the Incarna static and its shader material in fi
   assert.equal(material.parameters.get("OverlayMap").resourcePath, "res:/graphics/test/piece_os.dds");
   assert.equal(material.parameters.get("ShadowTransparency").value, 0.25);
   assert.equal(material.IsGood(), false, "read without initializing, the material stays, and a material never draws");
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
 });
 
 test("the static is Carbon's: an interior renderable that is picked, never a dynamic", t =>
@@ -254,8 +254,8 @@ function shaderLibraryRecord()
 test("a shader library record hydrates the Incarna shader classes in file order", t =>
 {
   renderSetup(t);
-  const reader = new CjsBlackReader(shaderLibraryRecord(), { schema: null, initialize: false });
-  const root = reader.ReadRuntime().root;
+  const reader = blackBuilder(shaderLibraryRecord(), { initialize: false });
+  const root = reader.CreateObject(0);
 
   assert.equal(root.constructor, Tr2ShaderManager);
   const [ shader ] = root.shaderLibrary;
@@ -276,7 +276,7 @@ test("a shader library record hydrates the Incarna shader classes in file order"
   assert.equal(color.constructor, Tr2ShaderFloat4Desc);
   assert.deepEqual(Array.from(color.defaultValue), [ 1, 0.5, 0.25, 1 ]);
   assert.equal(color.isColor, true);
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
 });
 
 test("a material becomes a Tr2Effect holding its parameters, with its path from the shader's source", async t =>
@@ -308,7 +308,7 @@ test("initializing a read static puts in each area the effect its material becom
 {
   renderSetup(t);
   blue.resMan = new LibraryResMan(libraryNaming("IncarnaDetailed", "res:/graphics/shaders/IncarnaDetailed.fx"));
-  const root = new CjsBlackReader(walkwayRecord(), { schema: null }).ReadRuntime().root;
+  const root = readBlack(walkwayRecord());
 
   const effect = root.detailMeshes[0].opaquePrepassAreas[0].effect;
   assert.equal(effect.constructor, Tr2Effect);
@@ -325,7 +325,7 @@ test("once the shader library is loaded, a read static's effects hold their path
   const library = await Tr2ShaderMaterial.loadShaderLibrary(blue.resMan);
   assert.equal(await Tr2ShaderMaterial.loadShaderLibrary(blue.resMan), library, "loaded once per manager");
 
-  const root = new CjsBlackReader(walkwayRecord(), { schema: null }).ReadRuntime().root;
+  const root = readBlack(walkwayRecord());
   const effect = root.detailMeshes[0].opaquePrepassAreas[0].effect;
   assert.equal(effect.GetEffectPathName(), "res:/graphics/shaders/compiled/dx11/incarnadetailed.fxt");
   assert.equal(blue.resMan.requests.filter(request => request.path === Tr2ShaderMaterial.shaderLibraryPath).length, 1);

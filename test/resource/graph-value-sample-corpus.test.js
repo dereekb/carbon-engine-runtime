@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { existsSync, readFileSync } from "node:fs";
 import { blue } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { DictReader } from "../../npm/dist/blue/formats/graph/DictReader.js";
 import { CjsBlueGraph } from "../../npm/dist/blue/formats/graph/index.js";
 import { CjsGraph } from "../../npm/dist/global/model/graph/index.js";
@@ -136,7 +136,7 @@ test("graph operations match the old path on a sample of real content", {
     {
       const bytes = await readBytes(path);
       if (!bytes) throw new Error("not served");
-      root = new CjsBlackReader(bytes, { schema: null, initialize: false }).CreateObject();
+      root = readBlack(bytes, { initialize: false });
     }
     catch
     {

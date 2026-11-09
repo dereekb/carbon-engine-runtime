@@ -6,7 +6,8 @@ import { Copier } from "../../npm/dist/blue/index.js";
 import { DictReader, CreateAnchorTable } from "../../npm/dist/blue/formats/graph/DictReader.js";
 import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
-import { CjsBlackSchemaRegistry } from "../../npm/dist/blue/formats/black/core/CjsBlackSchemaRegistry.js";
+import { ClassInfo } from "../../npm/dist/blue/base/ClassInfo.js";
+import { BLACK_DESTINATION } from "../../npm/dist/blue/base/PersistedMember.js";
 import "../../npm/dist/trinity/index.js";
 import { composeStubResMan } from "../support/stubResMan.js";
 
@@ -41,20 +42,15 @@ test("structList declares a BlueStructureList of its item class", () =>
     assert.throws(() => type.structList(""), /registered class name/);
 });
 
-test("the Black codec takes the record layout from the item class", () =>
+test("Black reads a structure list with the item class's layout", () =>
 {
-    const { black } = CjsSchemaRegistryCodec({ kind: "structList", className: "StructListRecord" });
-    assert.equal(black.cppType, "StructureList");
-    assert.equal(black.container, "list");
-    assert.equal(black.itemClassName, "StructListRecord");
-    assert.equal(black.structure.size, 24);
-    assert.deepEqual(black.structure.members.map(member => [member.name, member.offset]), [["name", 0], ["value", 8]]);
+    const entry = ClassInfo.exposeToBlue(StructListOwner).meta.entries.get("records");
+    assert.equal(entry.destination, BLACK_DESTINATION.STRUCTURELIST);
+    assert.equal(entry.structClass, "StructListRecord");
+    assert.equal(entry.structure.size, 24);
+    assert.equal(entry.structure.Item, StructListRecord);
+    assert.deepEqual(entry.structure.fields.map(member => [member.name, member.offset]), [["name", 0], ["value", 8]]);
 });
-
-function CjsSchemaRegistryCodec(type)
-{
-    return CjsBlackSchemaRegistry.fromDeclaredType(type);
-}
 
 test("values build records as instances of the item class and refill them in place", () =>
 {

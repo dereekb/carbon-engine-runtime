@@ -13,7 +13,6 @@ import { mat4 } from "#math/mat4";
 import { quat } from "#math/quat";
 import { vec3 } from "#math/vec3";
 import { TriBatchType } from "#consts/graphics";
-import { CjsBlackFormat } from "#blue/formats/black";
 import { EveSOFDataHullDecalSetItem } from "./hull/EveSOFDataHullDecalSetItem.js";
 import { EveSOFDataHullBanner } from "./hull/EveSOFDataHullBanner.js";
 import { EveSOFDataHullBannerSetItem } from "./hull/EveSOFDataHullBannerSetItem.js";
@@ -460,7 +459,7 @@ export class EveSOF extends IRoot
    *   the async builds.
    * - `lazyData`: `true` installs a `CjsSofLibraryBuilder` whose source is
    *   `resources.getObject` (runtime output); an options object may supply
-   *   its own `source` returning decoded objects or Black bytes. The builder
+   *   its own `source` returning the objects resMan built (bytes are refused). The builder
    *   uses resources.exists for absent materials unless lazyData supplies its
    *   own exists probe (or null to disable it). An existing
    *   `CjsSofLibraryBuilder` is installed as is (it must update this
@@ -1134,35 +1133,32 @@ export class EveSOF extends IRoot
   }
 
   /**
-   * Canonical pure-data instantiation: the decoded (or raw black) sof catalog
-   * plus, optionally, a plain list of res file names.
+   * Canonical pure-data instantiation: the sof catalog, as resMan built it from
+   * data.black (an EveSOFData), plus, optionally, a plain list of res file names.
+   * Carbon's EveSOFDataMgr::LoadData takes the same object from
+   * BeResMan->LoadObject (EveSOFDataMgr.cpp:592-610); SOF never decodes bytes.
    *
    * The catalog is mandatory - a factory without its data is useless.
    * resPathInsert existence asks the global BePaths, as Carbon does; a file
    * list overrides that through the temporary `resFileIndex` host adapter
    * (see Register).
-   * The factory never fetches, never parses index formats, and never touches
-   * the network: callers hand it bytes or data they acquired however they
-   * chose.
+   * The factory never fetches, never parses index or file formats, and never
+   * touches the network.
    *
    * (`Create`, not `from` - CjsSchema.from is the schema hydration contract
    * and keeps its signature.)
    */
-  static async Create({ black, resFileIndex } = {})
+  static async Create({ data, resFileIndex } = {})
   {
-    if (black === undefined || black === null)
+    if (data === undefined || data === null)
     {
-      throw new TypeError("EveSOF.Create requires the sof catalog: data.black bytes or its decoded data");
+      throw new TypeError("EveSOF.Create requires the sof catalog: the EveSOFData resMan loaded from data.black");
+    }
+    if (data instanceof ArrayBuffer || ArrayBuffer.isView(data))
+    {
+      throw new TypeError("EveSOF.Create takes the catalog object, not bytes: load data.black through resMan (LoadObject)");
     }
     const sof = new EveSOF();
-    const data = (black instanceof ArrayBuffer || ArrayBuffer.isView(black))
-      ? CjsBlackFormat.readPayload(
-        ArrayBuffer.isView(black)
-          ? black.buffer.slice(black.byteOffset, black.byteOffset + black.byteLength)
-          : black,
-        {}
-      ).object
-      : black;
     if (!sof.dataMgr.SetData(data))
     {
       throw new TypeError("EveSOF.Create could not ingest the sof catalog");

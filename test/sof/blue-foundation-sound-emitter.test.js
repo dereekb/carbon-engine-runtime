@@ -4,7 +4,8 @@ import test from "node:test";
 import { Copier } from "../../npm/dist/blue/exposure/Copier.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
+import { CjsBlackFormat } from "../../npm/dist/blue/formats/black/index.js";
 import { EveSOFDataHullSoundEmitter } from "../../npm/dist/sof/hull/EveSOFDataHullSoundEmitter.js";
 
 const members = [ "name", "prefix", "position", "rotation", "attenuationScalingFactor" ];
@@ -35,16 +36,15 @@ test("the production sound emitter has only native stored members and constructo
 
 test("canonical Black reads the actual sound emitter using separate narrow and wide string tables", () =>
 {
-  const reader = new CjsBlackReader(authoredEmitterBytes(), { schema: null });
-  const payload = reader.ReadPayload().object;
+  const reader = blackBuilder(authoredEmitterBytes());
+  const payload = CjsBlackFormat.readPayload(authoredEmitterBytes()).object;
   assert.equal(payload.name, "narrow emitter");
   assert.equal(payload.prefix, "wide emitter \u03a9");
   const emitter = reader.CreateObject();
   assert.equal(emitter.constructor, EveSOFDataHullSoundEmitter);
   assertAuthoredMembers(emitter);
   assertPlainEmitter(emitter);
-  assert.equal(reader.reader.AtEnd(), true);
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
   const another = reader.CreateObject();
   assert.equal(another.constructor, EveSOFDataHullSoundEmitter);
   assert.notEqual(another, emitter);
@@ -55,7 +55,7 @@ test("canonical Black reads the actual sound emitter using separate narrow and w
 
 test("Blue copies the production sound emitter into fresh and existing native-shaped storage", () =>
 {
-  const source = new CjsBlackReader(authoredEmitterBytes(), { schema: null }).CreateObject();
+  const source = readBlack(authoredEmitterBytes());
   const clone = new Copier().CloneTo(source);
   assert.equal(clone.constructor, EveSOFDataHullSoundEmitter);
   assert.notEqual(clone, source);

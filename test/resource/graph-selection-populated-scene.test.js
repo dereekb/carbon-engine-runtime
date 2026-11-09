@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { CjsGraph } from "../../src/global/model/graph/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { blue } from "../../npm/dist/blue/blue.js";
 import "../../npm/dist/trinity/index.js";
 import "../../npm/dist/audio/index.js";
@@ -181,10 +181,9 @@ function hydrate(name, assets)
         const values = JSON.parse(bytes);
         return CjsSchema.from(values._type, values, { initialize: false, notify: false });
     }
-    const reader = new CjsBlackReader(bytes, { schema: null, initialize: false });
+    const reader = blackBuilder(bytes, { initialize: false });
     const root = reader.CreateObject();
-    assert.deepEqual(reader.reports, []);
-    assert.equal(reader.reader.AtEnd(), true);
+    assert.equal(reader.GetErrorMessage(), "");
     return root;
 }
 

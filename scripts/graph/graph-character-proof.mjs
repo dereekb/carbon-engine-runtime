@@ -163,7 +163,9 @@ for (const entry of all)
 }
 
 // No file carries metadata, and SOF sets it on a load, so each hull takes it the way SOF does.
-const { CjsBlackReader } = await load("blue/formats/black/core/CjsBlackReader.js");
+const { BlackReader } = await load("blue/formats/black/BlackReader.js");
+/** A file root through BlackReader, without Initialize; throws its message when the read fails. */
+const readBlack = bytes => { const reader = new BlackReader(); reader.SetDoInitialize(false); const root = reader.ReadFromStream(bytes); if (root === null) throw new Error(reader.GetErrorMessage()); return root; };
 const { BeObjectMetadata } = await load("blue/services/BlueObjectMetadata.js");
 const { EveSOFDataMgr } = await load("sof/EveSOFDataMgr.js");
 const dataMgr = new EveSOFDataMgr();
@@ -184,7 +186,7 @@ for (const path of all.filter(entry => entry.includes("/spaceobjectfactory/hulls
   const response = await fetch(`${base}res/${path.slice(5)}`);
   if (!response.ok) continue;
 
-  const hull = new CjsBlackReader(new Uint8Array(await response.arrayBuffer()), { schema: null, initialize: false }).CreateObject();
+  const hull = readBlack(new Uint8Array(await response.arrayBuffer()));
   if (!Array.isArray(hull?.decalSets)) continue;
 
   try

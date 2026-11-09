@@ -37,16 +37,16 @@ const RED = `type: EveSOFDataDecalIndexBuffer\nindexBuffer: !!binary ${Buffer.fr
 
 test("a decal index buffer reads through its ICustomPersist from Black", () =>
 {
-  const runtime = CjsBlackFormat.readRuntime(DecalBlack(), { schema: null }).root;
+  const runtime = CjsBlackFormat.readRuntime(DecalBlack()).root;
   assert.equal(runtime.constructor, EveSOFDataDecalIndexBuffer);
   assert.ok(runtime.indexBuffer instanceof Uint32Array);
   assert.deepEqual([ ...runtime.indexBuffer ], INDICES);
 
   // The snapshot schema names the block binaryBlock; the class still decodes it.
   assert.deepEqual([ ...CjsBlackFormat.readRuntime(DecalBlack()).root.indexBuffer ], INDICES);
+  // The payload is the object's values, and DictWriter omits a persist-only binary block, as for Red below.
   const payload = CjsBlackFormat.readPayload(DecalBlack()).object;
-  assert.ok(payload.indexBuffer instanceof Uint32Array);
-  assert.deepEqual([ ...payload.indexBuffer ], INDICES);
+  assert.equal(Object.hasOwn(payload, "indexBuffer"), false);
 });
 
 test("a decal index buffer reads through its ICustomPersist from Red's !!binary scalar", () =>
@@ -67,7 +67,7 @@ test("the reader hands the bytes to AllocateReadBuffer and SetBufferAndSize with
   original.SetBufferAndSize = function (name, buffer, size) { calls.push([ "SetBufferAndSize", name, size ]); return set.call(this, name, buffer, size); };
   try
   {
-    CjsBlackFormat.readRuntime(DecalBlack(), { schema: null });
+    CjsBlackFormat.readRuntime(DecalBlack());
   }
   finally
   {
@@ -109,25 +109,15 @@ test("define refuses type.binary without persistOnly or without ICustomPersist",
   assert.equal(CjsSchema.getField(Valid, "bytes").type.binary, true);
 });
 
-test("the client's data.black decals decode to the same indices through payload and runtime reads", { skip: sofData.skip ?? false }, async () =>
+test("the client's data.black decals decode their index buffers through ICustomPersist", { skip: sofData.skip ?? false }, async () =>
 {
   const bytes = await sofData.Read("res:/dx9/model/spaceobjectfactory/data.black");
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 
-  // Both reads decode each block through the class's ICustomPersist. The
-  // document read that kept the raw blocks for an independent decode is gone
-  // with carbon.document.
-  const payload = Collect(CjsBlackFormat.readPayload(buffer).object, value => value?._type === "EveSOFDataDecalIndexBuffer");
-  const runtime = Collect(CjsBlackFormat.readRuntime(buffer, { schema: null }).root, value => value instanceof EveSOFDataDecalIndexBuffer);
-  assert.ok(payload.length > 100, `decal index buffers in data.black: ${payload.length}`);
-  for (const [ name, records ] of [ [ "payload", payload ], [ "runtime", runtime ] ])
-  {
-    assert.ok(records.every(record => record.indexBuffer instanceof Uint32Array), `${name} holds Uint32Arrays`);
-  }
-  assert.deepEqual(
-    runtime.map(record => [ ...record.indexBuffer ].join(",")).sort(),
-    payload.map(record => [ ...record.indexBuffer ].join(",")).sort()
-  );
+  // Each block decodes through the class's ICustomPersist.
+  const runtime = Collect(CjsBlackFormat.readRuntime(buffer).root, value => value instanceof EveSOFDataDecalIndexBuffer);
+  assert.ok(runtime.length > 100, `decal index buffers in data.black: ${runtime.length}`);
+  assert.ok(runtime.every(record => record.indexBuffer instanceof Uint32Array));
 });
 
 /** Every distinct object in a graph that matches. */

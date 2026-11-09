@@ -9,7 +9,7 @@ import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { ExecuteMainThreadActions } from "../../npm/dist/trinity/core/continueOnMainThread.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { ITr2ControllerAction } from "../../npm/dist/trinity/controllers/action/ITr2ControllerAction.js";
@@ -685,16 +685,14 @@ test("canonical Black framing populates both owned lists with real shared childr
     return original.call(this, event, key, key2, value, list);
   };
   t.after(() => { Tr2StateMachineState.prototype.OnListModified = original; });
-  const reader = new CjsBlackReader(bytes, { schema: null });
-  const state = reader.ReadRuntime().root;
+  const reader = blackBuilder(bytes);
+  const state = reader.CreateObject(0);
   AssertOwned(state);
   assert.equal(state.GetName(), "black-state");
   assert.equal(state.actions.length, 2);
   assert.equal(state.transitions.length, 2);
   assert.equal(state.actions[0], state.actions[1]);
-  assert.equal(state.actions[0], reader.references.get(2));
   assert.equal(state.transitions[0], state.transitions[1]);
-  assert.equal(state.transitions[0], reader.references.get(3));
   assert.ok(state.actions[0] instanceof Tr2ActionCallback);
   assert.ok(state.transitions[0] instanceof Tr2StateMachineTransition);
   assert.equal(state.actions[0].callbackName, "callback");
@@ -707,8 +705,7 @@ test("canonical Black framing populates both owned lists with real shared childr
     assert.equal(event.notify, state);
   }
   assert.equal(state.transitions[0].GetSource(), null);
-  assert.equal(reader.reader.AtEnd(), true);
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
 });
 
 test("Copier preserves existing and fresh owned lists, subscriptions and shared copied children", () =>

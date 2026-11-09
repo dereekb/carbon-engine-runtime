@@ -1,61 +1,45 @@
 import { CjsFormat } from "../../../resource/format/CjsFormat.js";
-import { CLASS_KEYS } from "./core/schema.js";
-import {
-    DEFAULT_VALUES,
-    OUTPUT_JSON,
-    OUTPUT_PAYLOAD,
-    OUTPUT_RUNTIME,
-    normalizeValues,
-    toJsonValue,
-    validateClass,
-    validateClassKey
-} from "./core/helpers.js";
-import {
-    CJS_BLACK_EXTENSION,
-    CJS_BLACK_FOURCC,
-    CJS_BLACK_VERSION
-} from "./core/blackConstants.js";
-import { CjsBlackReader } from "./core/CjsBlackReader.js";
-
-const FORMAT_NAME = "CjsBlackFormat";
-
+import { toJsonAcyclic } from "../../../resource/format/jsonPolicies.js";
+import { CjsSchema } from "#schema";
 import { YamlReader } from "../yaml/YamlReader.js";
 import { BlackReader } from "./BlackReader.js";
 
+/** The format's id, extension, magic and version (BlackReader.cpp:53, 123). */
+const FORMAT_ID = "black";
+const EXTENSION = ".black";
+const FOURCC = 0xb1acf11e;
+const VERSION = 1;
+
+const OUTPUT_JSON = "json";
+const OUTPUT_PAYLOAD = "payload";
+const OUTPUT_RUNTIME = "runtime";
+const OUTPUTS = new Set([ OUTPUT_JSON, OUTPUT_PAYLOAD, OUTPUT_RUNTIME ]);
+
 /**
- * CarbonEngineJS-facing Black format profile.
+ * What GetValues writes for the payload and json outputs: the persisted members, every object's class, and shared
+ * objects as `_id`/`_ref`. A values consumer (SOF's values fragments) needs the class on every identified object.
+ */
+const VALUES_OPTIONS = Object.freeze({ refs: true, forceTypeTags: true, persistOnly: true });
+
+/**
+ * CarbonEngineJS's Black format profile. Every read goes through BlackReader,
+ * Carbon's reader, which builds the registered Blue classes the file names and
+ * asks only Blue's class registry for them, so a class Blue lacks fails the read.
+ * The payload and json outputs are those objects' values (GetValues), for callers
+ * that want plain data; `inspect` reports the header and string tables.
  *
- * This package reads public-facing `.black` payload data using CarbonEngineJS
- * canonical schemas or source-shape registries.
+ * The older reader that decoded plain data without building objects is in
+ * blue/dropped.
  */
 export class CjsBlackFormat extends CjsFormat
 {
-    /** Registered name; `constructor.name` does not survive minification. */
     static className = "CjsBlackFormat";
 
-    _emit = DEFAULT_VALUES.emit;
-
-    _schema = DEFAULT_VALUES.schema;
-
-    _readerOptions = {};
-
-    _classes = {};
+    /** The default output: "json", "payload" or "runtime". */
+    _emit = OUTPUT_JSON;
 
     /**
-     * Plain payload outputs can be decoded in a browser worker. Runtime output
-     * retains class identity and therefore stays on the caller thread.
-     */
-    static worker = {
-        module: import.meta.url,
-        exportName: "CjsBlackFormat",
-        outputTypes: [ OUTPUT_JSON, OUTPUT_PAYLOAD ],
-        defaultOutput: OUTPUT_JSON
-    };
-
-    /**
-     * Create a reusable format profile.
-     *
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Default format values.
+     * @param {{emit?: string}} [options] The default output.
      */
     constructor(options = {})
     {
@@ -64,253 +48,185 @@ export class CjsBlackFormat extends CjsFormat
     }
 
     /**
-     * Set format values for this reusable profile.
+     * Sets the default output.
      *
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Values to merge into the profile.
-     * @returns {CjsBlackFormat} This format profile.
+     * @param {{emit?: string}} [options] Format values.
+     * @returns {CjsBlackFormat} This format.
      */
     SetValues(options = {})
     {
-        const values = normalizeValues(this.GetValues(), options, CLASS_KEYS, FORMAT_NAME);
-        this._emit = values.emit;
-        this._schema = values.schema;
-        this._classes = values.classes;
-        this._readerOptions = CjsBlackFormat.copyReaderOptions(values);
+        this._emit = CjsBlackFormat._normalizeOptions(options, this._emit).emit;
         return this;
     }
 
     /**
-     * Get this profile's current values, optionally with per-call overrides.
+     * The format values, with per-call ones applied.
      *
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Optional values to merge into a copy.
-     * @returns {import("./core/helpers.js").BlackReaderValues} A copy of the effective values.
+     * @param {{emit?: string}} [options] Per-call values.
+     * @returns {{emit: string}} The values.
      */
     GetValues(options = {})
     {
-        return normalizeValues({
-            emit: this._emit,
-            schema: this._schema,
-            ...this._readerOptions,
-            classes: this._classes
-        }, options, CLASS_KEYS, FORMAT_NAME);
+        return CjsBlackFormat._normalizeOptions(options, this._emit);
     }
 
-    /**
-     * Set multiple runtime class constructors for this profile.
-     *
-     * @param {Object<string, Function>} [classes] Map of Black class names to constructors.
-     * @returns {CjsBlackFormat} This format profile.
-     */
-    SetClasses(classes = {})
-    {
-        return this.SetValues({ classes });
-    }
-
-    /**
-     * Set one node-class constructor for this profile.
-     *
-     * @param {string} type Black class name.
-     * @param {Function|null|undefined} Class Constructor to use, or nullish to delete.
-     * @returns {CjsBlackFormat} This format profile.
-     */
-    SetClass(type, Class)
-    {
-        validateClassKey(CLASS_KEYS, type, FORMAT_NAME);
-        if (Class === null || Class === undefined)
-        {
-            delete this._classes[type];
-            return this;
-        }
-
-        validateClass(CLASS_KEYS, type, Class, FORMAT_NAME);
-        this._classes = { ...this._classes, [type]: Class };
-        return this;
-    }
-
-    /**
-     * Get a configured runtime class constructor.
-     *
-     * @param {string} type Black class name.
-     * @returns {Function|undefined} The registered constructor, if any.
-     */
-    GetClass(type)
-    {
-        validateClassKey(CLASS_KEYS, type, FORMAT_NAME);
-        return this._classes[type];
-    }
-
-    /**
-     * Whether this format profile has a constructor registered for a node key.
-     *
-     * @param {string} type Node class key.
-     * @returns {boolean} True when a constructor is registered.
-     */
-    HasClass(type)
-    {
-        return !!this.GetClass(type);
-    }
-
-    /**
-     * Read Black data with this profile's values.
-     *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Per-call value overrides.
-     * @returns {import("./core/helpers.js").BlackPayload|import("./core/helpers.js").BlackRuntimeResult} Public payload output by default.
-     */
+    /** Reads with the default output. */
     Read(input, options = {})
     {
         return CjsBlackFormat.read(input, this.GetValues(options));
     }
 
-    /**
-     * Read Black data as runtime objects or plain source-shaped objects.
-     *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Per-call value overrides.
-     * @returns {import("./core/helpers.js").BlackRuntimeResult} Runtime read result.
-     */
+    /** Reads runtime objects. */
     ReadRuntime(input, options = {})
     {
         return CjsBlackFormat.readRuntime(input, this.GetValues(options));
     }
 
-    /**
-     * Read Black data as compact public payload JSON.
-     *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Per-call value overrides.
-     * @returns {import("./core/helpers.js").BlackPayload} Public payload output.
-     */
+    /** Reads the payload: the objects' values. */
     ReadPayload(input, options = {})
     {
         return CjsBlackFormat.readPayload(input, this.GetValues(options));
     }
 
-    /**
-     * Inspect Black data with this profile's values.
-     *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Per-call value overrides.
-     * @returns {import("./core/helpers.js").BlackInspection} Plain summary data.
-     */
+    /** Reports the header and string tables. */
     Inspect(input, options = {})
     {
         return CjsBlackFormat.inspect(input, this.GetValues(options));
     }
 
     /**
-     * Convert format output to JSON-compatible data.
+     * Converts format output to JSON-compatible data.
      *
-     * @param {any} value Format output to convert.
+     * @param {any} value Format output.
      * @returns {any} Plain JSON-compatible data.
      */
     ToJSON(value)
     {
-        return toJsonValue(value);
+        return CjsBlackFormat.toJSON(value);
     }
 
     /**
-     * Static one-shot read. Static methods use camelCase by convention.
+     * One-shot read with the requested output.
      *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Format values.
-     * @returns {import("./core/helpers.js").BlackPayload|import("./core/helpers.js").BlackRuntimeResult} Format output.
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @param {{emit?: string}} [options] Format values.
+     * @returns {object} The runtime result, or the payload (json: as JSON-compatible data).
      */
     static read(input, options = {})
     {
-        const values = normalizeValues(DEFAULT_VALUES, options, CLASS_KEYS, FORMAT_NAME);
-        if (values.emit === OUTPUT_RUNTIME) return CjsBlackFormat.readRuntime(input, values);
-        return CjsBlackFormat.readPayload(input, values);
+        const { emit } = CjsBlackFormat._normalizeOptions(options, OUTPUT_JSON);
+        if (emit === OUTPUT_RUNTIME) return CjsBlackFormat.readRuntime(input);
+        const payload = CjsBlackFormat.readPayload(input);
+        return emit === OUTPUT_JSON ? CjsBlackFormat.toJSON(payload) : payload;
     }
 
     /**
-     * Static one-shot runtime read.
+     * One-shot runtime read.
      *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Format values.
-     * @returns {import("./core/helpers.js").BlackRuntimeResult} Runtime read result.
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @param {{emit?: string}} [options] Format values.
+     * @returns {{root: object, format: {id: string, version: number}, reports: object[]}} The root object.
      */
     static readRuntime(input, options = {})
     {
-        return CjsBlackFormat.createObjectBuilder(input, options).ReadRuntime();
+        CjsBlackFormat._normalizeOptions(options, OUTPUT_RUNTIME);
+        const reader = CjsBlackFormat.createObjectBuilder(input);
+        const root = reader.CreateObject(0);
+        if (root === null) throw new TypeError(`black: ${reader.GetErrorMessage() || "Black root object is null"}`);
+        return { root, format: { id: FORMAT_ID, version: VERSION }, reports: [] };
     }
 
     /**
-     * The object builder for one file: a reader over its bytes whose
-     * `CreateObject()` builds a new graph each call, as Carbon's resource
-     * manager keeps a BlackReader per file (BlueResMan.cpp:722-773).
+     * The object builder for one file: a caching BlackReader whose `CreateObject()`
+     * builds a new graph each call, as Carbon's resource manager keeps a BlackReader
+     * per file (BlueResMan.cpp:722-773).
      *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Format values.
-     * @returns {CjsBlackReader} The builder.
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @param {{emit?: string}} [options] Format values.
+     * @param {string} [fileName] The file's path, for messages.
+     * @returns {BlackReader} The builder.
+     * @throws {Error} When the bytes are not a Black file BlackReader reads.
      */
-    static createObjectBuilder(input, options = {})
+    static createObjectBuilder(input, options = {}, fileName = "")
     {
-        return new CjsBlackReader(input, normalizeValues(DEFAULT_VALUES, options, CLASS_KEYS, FORMAT_NAME));
+        CjsBlackFormat._normalizeOptions(options, OUTPUT_RUNTIME);
+        const reader = new BlackReader();
+        reader.SetFileName(fileName);
+        if (!reader.ReadForCachingFromStream(CjsBlackFormat._view(input)))
+        {
+            throw new Error(`${fileName || "black"}: ${reader.GetErrorMessage() || "not a Black object file"}`);
+        }
+        return reader;
     }
 
     /**
-     * Static one-shot public payload read.
+     * One-shot payload read: the root object's values, with each object's class
+     * and shared objects as `_id`/`_ref`.
      *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Format values.
-     * @returns {import("./core/helpers.js").BlackPayload} Public payload output.
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @param {{emit?: string}} [options] Format values.
+     * @returns {{comments: object[], object: object}} The payload.
      */
     static readPayload(input, options = {})
     {
-        return new CjsBlackReader(input, normalizeValues(DEFAULT_VALUES, options, CLASS_KEYS, FORMAT_NAME)).ReadPayload();
+        CjsBlackFormat._normalizeOptions(options, OUTPUT_PAYLOAD);
+        const { root } = CjsBlackFormat.readRuntime(input);
+        return { comments: [], object: CjsSchema.getValues(root, {}, VALUES_OPTIONS) };
     }
 
     /**
-     * Static one-shot inspection.
+     * The header and string tables, without building an object.
      *
-     * @param {import("./core/helpers.js").BlackInput} input Black format input.
-     * @param {Partial<import("./core/helpers.js").BlackReaderValues>} [options] Format values.
-     * @returns {import("./core/helpers.js").BlackInspection} Plain summary data.
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @param {{emit?: string}} [options] Format values.
+     * @returns {{format: {id: string, version: number}, byteLength: number, dataOffset: number, strings: string[], wideStrings: string[]}} The summary.
      */
     static inspect(input, options = {})
     {
-        return new CjsBlackReader(input, normalizeValues(DEFAULT_VALUES, options, CLASS_KEYS, FORMAT_NAME)).Inspect();
+        CjsBlackFormat._normalizeOptions(options, OUTPUT_JSON);
+        const view = CjsBlackFormat._view(input);
+        const reader = CjsBlackFormat.createObjectBuilder(view);
+        return {
+            format: { id: FORMAT_ID, version: VERSION },
+            byteLength: view.byteLength,
+            dataOffset: reader._dataStart,
+            strings: [ ...reader._strings ],
+            wideStrings: [ ...reader._wstrings ]
+        };
     }
 
     /**
-     * Static JSON-compatible conversion.
+     * JSON-compatible conversion.
      *
-     * @param {any} value Format output to convert.
+     * @param {any} value Format output.
      * @returns {any} Plain JSON-compatible data.
      */
     static toJSON(value)
     {
-        return toJsonValue(value);
+        return toJsonAcyclic(value, "Reader");
     }
 
     /**
-     * Performs the bounded Black content discriminator used by ordered object
-     * routes. Magic selects the Black reader; version and body failures remain
-     * that reader's errors and are never reinterpreted as Red/YAML.
+     * Whether the bytes start with Black's magic. Magic selects the Black reader; version and body failures
+     * remain that reader's errors and are never reinterpreted as Red/YAML.
      *
-     * @param {ArrayBuffer|ArrayBufferView} input Candidate source bytes.
+     * @param {ArrayBuffer|ArrayBufferView} input Candidate bytes.
      * @returns {boolean} True when the little-endian Black magic is present.
      */
     static probeSupport(input)
     {
-        const view = CjsBlackFormat._getBlackProbeView(input);
-        return Boolean(
-            view
-            && view.byteLength >= 4
-            && view.getUint32(0, true) === CJS_BLACK_FOURCC
-        );
+        if (!(input instanceof ArrayBuffer) && !ArrayBuffer.isView(input)) return false;
+        const view = input instanceof ArrayBuffer ? new DataView(input) : new DataView(input.buffer, input.byteOffset, input.byteLength);
+        return view.byteLength >= 4 && view.getUint32(0, true) === FOURCC;
     }
-
-    static classKeys = CLASS_KEYS;
 
     static id = "CjsBlackFormat";
 
-    static extensions = [CJS_BLACK_EXTENSION];
+    static extensions = [ EXTENSION ];
 
-    static fourCC = CJS_BLACK_FOURCC;
+    static fourCC = FOURCC;
 
-    static version = CJS_BLACK_VERSION;
+    static version = VERSION;
 
     static outputs = CjsFormat.defineOutputs({
         json: { default: true, decoded: true },
@@ -319,72 +235,73 @@ export class CjsBlackFormat extends CjsFormat
     });
 
     /**
-     * Provides the one-shot Black copy reader options helper entry point.
-     *
-     * @param {import("./core/helpers.js").BlackReaderValues} values Normalized values.
-     * @returns {Partial<import("./core/helpers.js").BlackReaderValues>} The values without `emit`, `schema` and `classes`.
-     */
-    static copyReaderOptions(values)
-    {
-        const {
-            emit: _emit,
-            schema: _schema,
-            classes: _classes,
-            ...readerOptions
-        } = values;
-        return readerOptions;
-    }
-
-    /**
-     * Returns a DataView over probe input, or null when the input is not binary.
-     *
-     * @param {unknown} input Candidate source.
-     * @returns {DataView|null} A view over the bytes, or null.
-     */
-    static _getBlackProbeView(input)
-    {
-        if (input instanceof ArrayBuffer) return new DataView(input);
-        if (!ArrayBuffer.isView(input)) return null;
-        return new DataView(input.buffer, input.byteOffset, input.byteLength);
-    }
-
-    /**
      * The builder for one object file: Carbon keeps a reader per file and builds a
      * new object from it on every LoadObject (BlueResMan.cpp:722-773). The reader
      * follows the bytes, not the extension: a valid Black header gets a caching
      * BlackReader, and anything else is read as YAML by a caching YamlReader
      * (BlueResMan.cpp:806-840). A .red path normally arrives as compiled Black
      * bytes, since the file system swaps .red for .black (BlueFileUtil.cpp:374-387).
-     * @meta.adapted JavaScript builder callback configured by CjsLibrary; a reader
-     * that fails to cache throws with its message, where Carbon logs it and loads nothing.
+     *
+     * @adapted a reader that fails to cache throws with its message, where Carbon logs it and loads nothing.
      * @param {Uint8Array|ArrayBuffer} bytes Object file bytes, Black or YAML.
      * @param {object} context Loading context used for the diagnostic path.
      * @returns {object} A builder that creates a fresh object for each caller.
      */
     static createBlackObjectBuilder(bytes, context)
     {
-            const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); // alloc: byte view
-            if (CjsBlackFormat.probeSupport(view))
+        const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); // alloc: byte view
+        if (CjsBlackFormat.probeSupport(view)) return CjsBlackFormat.createObjectBuilder(view, {}, context?.path ?? "");
+        let offset = 0;
+        const reader = new YamlReader();
+        reader.SetFileName(context?.path ?? "");
+        const cached = reader.ReadForCachingFromStream({
+            Read(buffer, size)
             {
-                    const black = new BlackReader();
-                    black.SetFileName(context?.path ?? "");
-                    if (!black.ReadForCachingFromStream(view)) throw new Error(`${context?.path ?? "object"}: ${black.GetErrorMessage() || "not a Black object file"}`);
-                    return black;
+                const count = Math.min(size, view.length - offset);
+                buffer.set(view.subarray(offset, offset + count));
+                offset += count;
+                return count;
             }
-            let offset = 0;
-            const reader = new YamlReader();
-            reader.SetFileName(context?.path ?? "");
-            const cached = reader.ReadForCachingFromStream({
-                    Read(buffer, size)
-                    {
-                            const count = Math.min(size, view.length - offset);
-                            buffer.set(view.subarray(offset, offset + count));
-                            offset += count;
-                            return count;
-                    }
-            });
-            if (!cached) throw new Error(`${context?.path ?? "object"}: ${reader.GetErrorMessage() || "not a Black or YAML object file"}`);
-            return reader;
+        });
+        if (!cached) throw new Error(`${context?.path ?? "object"}: ${reader.GetErrorMessage() || "not a Black or YAML object file"}`);
+        return reader;
+    }
+
+    /**
+     * The format values: only the output is a choice. The decoding options of the
+     * dropped plain-data reader (schemas, source shapes, payload field names,
+     * output classes) have no meaning for BlackReader and are refused.
+     *
+     * @param {object} options Values to apply.
+     * @param {string} emit The output when none is given.
+     * @returns {{emit: string}} The values.
+     * @throws {TypeError} For an unknown output or a retired option.
+     */
+    static _normalizeOptions(options, emit)
+    {
+        if (options === null || options === undefined) return { emit };
+        if (typeof options !== "object") throw new TypeError("CjsBlackFormat options must be an object.");
+        for (const key of Object.keys(options))
+        {
+            if (key !== "emit") throw new TypeError(`CjsBlackFormat: option "${key}" belonged to the dropped plain-data reader; BlackReader reads the registered classes (blue/dropped/README.md).`);
+        }
+        const value = options.emit ?? emit;
+        if (!OUTPUTS.has(value)) throw new TypeError(`CjsBlackFormat: unknown output "${value}".`);
+        return { emit: value };
+    }
+
+    /**
+     * A byte view over the input.
+     *
+     * @param {ArrayBuffer|ArrayBufferView} input Black bytes.
+     * @returns {Uint8Array} The view.
+     * @throws {TypeError} When the input is not bytes.
+     */
+    static _view(input)
+    {
+        if (input instanceof Uint8Array) return input;
+        if (input instanceof ArrayBuffer) return new Uint8Array(input);
+        if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+        throw new TypeError("CjsBlackFormat reads bytes: an ArrayBuffer or a view of one.");
     }
 }
-

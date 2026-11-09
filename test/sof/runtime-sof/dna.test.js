@@ -6063,12 +6063,11 @@ test("SOF resFileIndex registration wires the synchronous existence oracle", asy
   (await new EveSOF().Register({ resFileIndex: null }));
 });
 
-test("EveSOF.Create instantiates from raw catalog inputs only", async () => {
-  // The catalog is mandatory; garbage bytes propagate the black decoder's
-  // failure instead of silently producing an empty factory.
+test("EveSOF.Create instantiates from the catalog object only", async () => {
+  // The catalog is mandatory, and it is the object resMan builds from data.black: SOF never decodes bytes.
   (await assert.rejects(async () => (await EveSOF.Create()), /requires the sof catalog/));
   (await assert.rejects(async () => (await EveSOF.Create({})), /requires the sof catalog/));
-  (await assert.rejects(async () => (await EveSOF.Create({ black: new Uint8Array([1, 2, 3, 4]) }))));
+  (await assert.rejects(async () => (await EveSOF.Create({ data: new Uint8Array([1, 2, 3, 4]) })), /not bytes: load data.black through resMan/));
 
   const makeData = () => {
     const data = createData();
@@ -6102,7 +6101,7 @@ test("EveSOF.Create instantiates from raw catalog inputs only", async () => {
   let bare;
   try
   {
-    bare = (await EveSOF.Create({ black: makeData() }));
+    bare = (await EveSOF.Create({ data: makeData() }));
   }
   finally
   {
@@ -6114,7 +6113,7 @@ test("EveSOF.Create instantiates from raw catalog inputs only", async () => {
 
   // A plain (case-insensitive) file list is the whole existence oracle.
   const indexed = (await EveSOF.Create({
-    black: makeData(),
+    data: makeData(),
     resFileIndex: ["RES:/X/INSERT/SHIP_INSERT_D.DDS"],
   }));
   const indexedDocument = (await indexed.BuildFromDNA("rifter:minmatar:minmatar"));
@@ -6153,7 +6152,7 @@ test("resPathInsert existence goes through BePaths, as Carbon's FileExists does"
   const diffuse = async (sof, dna) => findTextureResourcePath((await sof.BuildFromDNA(dna)), "DiffuseMap");
 
   // A factory given its own paths service.
-  const own = (await (await EveSOF.Create({ black: makeData("insert") })).Register({ paths }));
+  const own = (await (await EveSOF.Create({ data: makeData("insert") })).Register({ paths }));
   assert.equal((await diffuse(own, "rifter:minmatar:minmatar")), "res:/x/insert/ship_insert_d.dds", "no clause: the faction's insert");
   assert.equal((await diffuse(own, "rifter:minmatar:minmatar:respathinsert?none")), "res:/x/ship_d.dds", "none suppresses it");
   assert.equal((await diffuse(own, "rifter:minmatar:minmatar:respathinsert?named")), "res:/x/named/ship_named_d.dds", "a named insert that exists applies");
@@ -6173,7 +6172,7 @@ test("resPathInsert existence goes through BePaths, as Carbon's FileExists does"
   blue.paths.RegisterFileSystem(fileSystem);
   try
   {
-    const global = (await EveSOF.Create({ black: makeData("insert") }));
+    const global = (await EveSOF.Create({ data: makeData("insert") }));
     assert.equal((await diffuse(global, "rifter:minmatar:minmatar")), "res:/x/insert/ship_insert_d.dds", "global BePaths answers");
     assert.equal((await diffuse(global, "rifter:minmatar:minmatar:respathinsert?none")), "res:/x/ship_d.dds");
   }
@@ -6183,7 +6182,7 @@ test("resPathInsert existence goes through BePaths, as Carbon's FileExists does"
   }
 
   // The temporary resFileIndex adapter still overrides paths.
-  const adapted = (await (await EveSOF.Create({ black: makeData("insert"), resFileIndex: [] })).Register({ paths }));
+  const adapted = (await (await EveSOF.Create({ data: makeData("insert"), resFileIndex: [] })).Register({ paths }));
   assert.equal((await diffuse(adapted, "rifter:minmatar:minmatar")), "res:/x/ship_d.dds", "resFileIndex overrides paths");
 });
 

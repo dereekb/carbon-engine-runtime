@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
 import { normalizeCarbonValue, coerceCarbonMathInto } from "../../src/blue/schema/types/carbonTypes.js";
-import { CjsBlackSchemaRegistry } from "../../src/blue/formats/black/core/CjsBlackSchemaRegistry.js";
+import { declaredMemberType } from "../../src/blue/schema/compileClassInfo.js";
+import { VARTYPE } from "../../src/global/consts/blue.js";
 
 test("math values compare at the declared storage precision before reporting a change", () =>
 {
@@ -68,7 +69,7 @@ test("object pointers are Carbon's rootRef and rootWeak; the retired kinds fail 
   } });
   assert.equal(CjsSchema.getField(Pointers, "strong").type.kind, "rootRef");
   assert.equal(CjsSchema.getField(Pointers, "weak").type.kind, "rootWeak");
-  assert.equal(CjsBlackSchemaRegistry.fromDeclaredType(CjsSchema.getField(Pointers, "weak").type).black.beType, "IROOTWEAKREF");
+  assert.equal(declaredMemberType(CjsSchema.getField(Pointers, "weak").type).type, VARTYPE.IROOTWEAKREF);
   for (const [ type, message ] of [
     [ { kind: "objectRef", className: "X" }, /"objectRef" is retired; Carbon's name is "rootRef"/ ],
     [ { kind: "model", className: "X" }, /"model" is retired; Carbon's name is "rootRef"/ ],
@@ -87,8 +88,9 @@ test("component labels require valid explicit declarations; type.custom is gone"
   assert.equal(Object.hasOwn(meta.ui, "readOnly"), false, "editability is Blue WRITE; Carbon has no read-only annotation");
   assert.throws(() => meta.ui.components(["x", 2]), /string labels/);
   assert.throws(() => meta.ui.components(["a", "b", "c", "d", "e"]), /four/);
-  assert.equal(CjsBlackSchemaRegistry.fromDeclaredType({ kind: "uint32", binary: true }).black.beType, "BINARYBLOCK");
-  assert.throws(() => CjsBlackSchemaRegistry.fromDeclaredType({ kind: "typedArray", arrayType: "Uint32Array" }), /Unsupported canonical Black type: typedArray/);
+  assert.equal(declaredMemberType({ kind: "uint32", binary: true }).type, VARTYPE.BINARYBLOCK);
+  // A typed array that is not a binary block has no VARTYPE: reading one is Carbon's "Invalid attribute type".
+  assert.equal(declaredMemberType({ kind: "typedArray", arrayType: "Uint32Array" }).type, VARTYPE.INVALID);
 });
 
 test("abstract methods throw while subclass implementations are preserved", () =>

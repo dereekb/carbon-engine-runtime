@@ -400,20 +400,20 @@ test("BlueResMan sends worker-safe reads off the main queue and publishes on it"
   assert.equal(resMan.IsLoading(), false);
 });
 
-test("Black, BNK, and WEM format facades declare worker module identities", async () => {
+test("BNK and WEM format facades declare worker module identities; Black has no worker", async () => {
   const [{ CjsBlackFormat }, { CjsBnkFormat }, { CjsWemFormat }] = await Promise.all([
     import("../../../npm/dist/blue/formats/black/index.js"),
     import("../../../npm/dist/resource/formats/bnk/index.js"),
     import("../../../npm/dist/resource/formats/wem/index.js")
   ]);
 
-  for (const Format of [ CjsBlackFormat, CjsBnkFormat, CjsWemFormat ]) {
+  for (const Format of [ CjsBnkFormat, CjsWemFormat ]) {
     assert.equal(typeof Format.worker.module, "string");
     assert.equal(Format.worker.module.startsWith("file:"), true);
     assert.equal(Format.worker.exportName, getRegisteredClassName(Format));
   }
-  assert.deepEqual(CjsBlackFormat.worker.outputTypes, [ "json", "payload" ]);
-  assert.equal(CjsBlackFormat.worker.defaultOutput, "json");
+  // BlackReader builds the classes Blue's registry holds, which a worker does not have.
+  assert.equal(CjsBlackFormat.worker, null);
 });
 
 class FakeWorker

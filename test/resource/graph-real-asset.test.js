@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { CjsGraphFormat } from "../../npm/dist/blue/formats/graph/index.js";
 import { CjsGraphBinaryFormat } from "../../npm/dist/blue/formats/graphbinary/index.js";
 // Scene-owned managers register with the device class even when Initialize is disabled.
@@ -23,11 +23,10 @@ test("real Black scene preserves declared class records through both Graph forma
     const bytes = readFileSync(externalPath);
     assert.equal(createHash("sha256").update(bytes).digest("hex"),
         "262d7ed669488bb23d7761a079b2866fa197d994c76c49357ace37dbf800ae51");
-    const reader = new CjsBlackReader(bytes, { schema: null, initialize: false });
+    const reader = blackBuilder(bytes, { initialize: false });
     const original = reader.CreateObject();
     assert.equal(original.constructor, EveSpaceScene);
-    assert.deepEqual(reader.reports, []);
-    assert.equal(reader.reader.AtEnd(), true);
+    assert.equal(reader.GetErrorMessage(), "");
     const expected = records(original);
     assert.deepEqual(expected.classes, [
         ["EveSpaceScene", 1], ["Tr2ConstantEffectParameter", 5],
@@ -37,7 +36,7 @@ test("real Black scene preserves declared class records through both Graph forma
     {
         const encoded = Format.write(original);
         const decoded = Format.read(encoded, { emit: "runtime", initialize: false });
-        assert.deepEqual(decoded.reports, []);
+        assert.equal(decoded.GetErrorMessage(), "");
         assert.deepEqual(records(decoded.root), expected);
     }
 });

@@ -6,7 +6,7 @@ import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { mappedInterfaces } from "../../npm/dist/blue/compose/interface.js";
 import { CjsSchema, type } from "../../npm/dist/blue/schema/index.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { EveBoosterSet2, EveEntity, EveMobile, EveShip2, EveSpaceObject2, TriDevice, trinity, Tr2Renderer } from "../../npm/dist/trinity/index.js";
 import { ITr2ShLightingReceiver } from "../../npm/dist/trinity/core/lighting/ITr2ShLightingReceiver.js";
 import { ITr2SecondaryLightSource } from "../../npm/dist/trinity/core/lighting/ITr2SecondaryLightSource.js";
@@ -31,21 +31,20 @@ test("native lifecycle mappings belong to space objects and boosters and reach d
 test("canonical Black initializes the real booster before its ship and suppresses member notifications", t =>
 {
   const calls = observeProductionLifecycle(t);
-  const reader = new CjsBlackReader(authoredShipBytes(), { schema: null });
+  const reader = blackBuilder(authoredShipBytes());
   const ship = reader.CreateObject();
   assert.equal(ship.constructor, EveShip2);
   assert.equal(ship.boosters.constructor, EveBoosterSet2);
   assert.equal(ship.name, "mapped ship");
   assert.equal(ship.boosters.staticTrailLength, 17);
   assert.deepEqual(calls, [ [ "booster", 17 ], [ "ship", "mapped ship", 17 ] ]);
-  assert.equal(reader.reader.AtEnd(), true);
-  assert.deepEqual(reader.reports, []);
+  assert.equal(reader.GetErrorMessage(), "");
 });
 
 test("disabled canonical Black initialization still suppresses INotify on the real objects", t =>
 {
   const calls = observeProductionLifecycle(t);
-  const ship = new CjsBlackReader(authoredShipBytes(), { schema: null, initialize: false }).CreateObject();
+  const ship = readBlack(authoredShipBytes(), { initialize: false });
   assert.equal(ship.boosters.staticTrailLength, 17);
   assert.equal(ship.name, "mapped ship");
   assert.deepEqual(calls, []);
@@ -83,7 +82,7 @@ test("having lifecycle methods without native mappings does not opt into Black o
     className: "BlueFoundationUnmappedLifecycle",
     fields: { value: [ type.float32, blue.persist, blue.notify ] }
   });
-  const reader = new CjsBlackReader(authoredUnmappedBytes(), { schema: null });
+  const reader = blackBuilder(authoredUnmappedBytes());
   const source = reader.CreateObject();
   assert.equal(source.constructor, UnmappedLifecycle);
   assert.equal(source.value, 11);

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { CjsGraph } from "../../src/global/model/graph/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/CjsSchema.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 // Scene construction registers device resources; no device or GPU is created by this import.
 import "../../npm/dist/trinity/core/device/TriDevice.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
@@ -198,10 +198,9 @@ test("exact-build real environment graphs preserve full/cached selection identit
   {
     const bytes = readFileSync(join(corpus, `${name}.black`));
     assert.equal(createHash("sha256").update(bytes).digest("hex"), hash);
-    const reader = new CjsBlackReader(bytes, { schema: null, initialize: false });
+    const reader = blackBuilder(bytes, { initialize: false });
     const scene = reader.CreateObject();
-    assert.deepEqual(reader.reports, []);
-    assert.equal(reader.reader.AtEnd(), true);
+    assert.equal(reader.GetErrorMessage(), "");
     assert.deepEqual(inventory(scene), [
       ["EveSpaceScene", 1], ["Tr2ConstantEffectParameter", 5], ["Tr2Effect", 1], ["TriTextureParameter", 4]
     ]);

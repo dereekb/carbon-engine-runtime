@@ -6,7 +6,7 @@ import { IList } from "../../npm/dist/blue/exposure/IList.js";
 import { IListNotify } from "../../npm/dist/blue/exposure/IListNotify.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { BLUELISTEVENT } from "../../npm/dist/global/consts/blue.js";
-import { CjsBlackReader } from "../../npm/dist/blue/formats/black/core/CjsBlackReader.js";
+import { blackBuilder, readBlack } from "../support/blackReader.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;
@@ -71,13 +71,12 @@ function wire(makeEntries, more = () => []) {
     ]));
 }
 function read(bytes) {
-    const reader = new CjsBlackReader(bytes, { schema: null, initialize: false });
-    const root = reader.ReadRuntime().root;
+    const reader = blackBuilder(bytes, { initialize: false });
+    const root = reader.CreateObject(0);
+    if (root === null) throw new Error(reader.GetErrorMessage());
     assert.equal(root.items, setup.list);
     assert.equal(root.after, 42);
-    assert.equal(reader.references.get(1), root);
-    assert.equal(reader.reader.AtEnd(), true);
-    assert.deepEqual(reader.reports, []);
+    assert.equal(reader.GetErrorMessage(), "");
     return { root, reader };
 }
 
@@ -88,15 +87,15 @@ test("canonical native list streams admitted objects, shared references and cycl
     const seen = [];
     setup.observe = (item, destination) => seen.push([item.value, items(destination), info(destination).notify]);
     const { root, reader } = read(wire(f => [
-        f.Object(2, "BlackNativeListItem", [["parent", f.Object(1)], ["value", u32(7)]]),
+        // No reference back to the root: Carbon registers an object's reference only once it is read (BlackReader.cpp:405).
+        f.Object(2, "BlackNativeListItem", [["value", u32(7)]]),
         f.Object(3, "BlackNativeListWrongItem"), f.Object(0), f.Object(2),
         f.Object(4, "BlackNativeListItem", [["value", u32(8)]])
     ]));
     assert.deepEqual(items(list).map(item => item.value), [7,7,8]);
     assert.equal(list[0], list[1]);
-    assert.equal(list[0], reader.references.get(2));
-    assert.equal(list[0].parent, root);
-    assert.ok(!items(list).includes(reader.references.get(3)));
+    // The wrong-class item is refused, and only the shared item and the third remain.
+    assert.ok(items(list).every(item => item.constructor === Item));
     assert.deepEqual(seen, [[7, [], null], [8, [list[0],list[0]], null]]);
     assert.deepEqual(observer.events.map(e=>e.event), [BELIST_UNLOADSTART]);
     assert.deepEqual(observer.events[0].items, [old]);
@@ -114,17 +113,19 @@ test("empty native lists finish once even when there was nothing to unload", () 
     assert.deepEqual(root.notifications, ["items"]);
 });
 
-test("a later malformed object keeps the accepted prefix and restores notify without completion", () => {
+// Carbon restores the list's notify only after the last item (BlackReader.cpp:493-505); a read that fails part-way
+// leaves it unset, with the items read so far, and no completion.
+test("a later malformed object keeps the accepted prefix and leaves notify unset without completion", () => {
     const { list, observer } = begin();
     const bytes = wire(f => [f.Object(2, "BlackNativeListItem", [["value", u32(7)]]), f.Object(3, "BlackNativeListMissing")]);
     assert.throws(() => read(bytes), /BlackNativeList/);
     assert.deepEqual(items(list).map(item=>item.value), [7]);
-    assert.equal(info(list).notify, observer);
+    assert.equal(info(list).notify, null);
     assert.deepEqual(observer.events.map(e=>e.event), [BELIST_UNLOADSTART]);
     assert.deepEqual(lastOwner.notifications, []);
 });
 
-test("an Append exception keeps its accepted prefix and restores the observer", () => {
+test("an Append exception keeps its accepted prefix and leaves the observer unset", () => {
     const { list, observer } = begin();
     const append = list.Append;
     list.Append = function(item) { if (item.value === 8) throw Error("append failed"); return append.call(this,item); };
@@ -133,7 +134,7 @@ test("an Append exception keeps its accepted prefix and restores the observer", 
         f.Object(3, "BlackNativeListItem", [["value", u32(8)]])
     ])), /append failed/);
     assert.deepEqual(items(list).map(item=>item.value), [7]);
-    assert.equal(info(list).notify, observer);
+    assert.equal(info(list).notify, null);
     assert.deepEqual(observer.events.map(e=>e.event), [BELIST_UNLOADSTART]);
     assert.deepEqual(lastOwner.notifications, []);
 });

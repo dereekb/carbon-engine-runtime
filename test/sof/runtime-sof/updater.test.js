@@ -16,7 +16,7 @@ async function FactionFixture(configure = null, suffix = "")
 {
   return Fixture(options =>
   {
-    const data = options.black;
+    const data = options.data;
     data.hull[0].sof6 = true;
     data.generic.materialPrefixes = [{ str: "Mtl1" }, { str: "Mtl2" }];
     data.generic.areaShaders[0].parameters = [{ str: "Mtl1Diffuse" }, { str: "Mtl2Diffuse" }];
@@ -96,7 +96,7 @@ test("same-sized visibility swaps request fallback before changing anything", as
 {
   const { ship, updater } = await FactionFixture(options =>
   {
-    const data = options.black;
+    const data = options.data;
     data.hull[0].spriteSets.push({ ...structuredClone(data.hull[0].spriteSets[0]), visibilityGroup: "other" });
     data.faction[1].visibilityGroupSet.visibilityGroups[0].str = "other";
   });
@@ -119,7 +119,7 @@ test(`co-located ambiguous attachment sets fall back, including rounded placemen
 {
   const { ship, updater } = await FactionFixture(options =>
   {
-    const sets = options.black.hull[0].spriteSets;
+    const sets = options.data.hull[0].spriteSets;
     sets.push(structuredClone(sets[0]));
     sets[1].items[0].colorType = 1;
     sets[1].items[0].blinkRate = 0.8;
@@ -135,7 +135,7 @@ test(`co-located ambiguous attachment sets fall back, including rounded placemen
 function FactionDecals(options)
 {
   options.editorMode = true;
-  const data = options.black;
+  const data = options.data;
   data.hull[0].decalSets = [{ visibilityGroup: "primary", items: [5, 6].map((usage, index) => ({
     name: `decal${index}`, usage, meshIndex: -1, boneIndex: -1, glowColorType: 0, logoType: 0,
     position: [index, 0, 0], rotation: [0, 0, 0, 1], scaling: [1, 1, 1],
@@ -179,7 +179,7 @@ test("shared decal effects require fallback before conflicting faction glow chan
   const { ship, updater } = await FactionFixture(options =>
   {
     FactionDecals(options);
-    const items = options.black.hull[0].decalSets[0].items;
+    const items = options.data.hull[0].decalSets[0].items;
     items[1] = { ...structuredClone(items[0]), glowColorType: 1, position: [2, 0, 0] };
   });
   ship.decals[1].decalEffect = ship.decals[0].decalEffect;
@@ -192,7 +192,7 @@ test("unchanged faction colours do not rebuild attachment buffers", async t =>
 {
   const { ship, updater } = await FactionFixture(options =>
   {
-    options.black.faction[1].colorSet = structuredClone(options.black.faction[0].colorSet);
+    options.data.faction[1].colorSet = structuredClone(options.data.faction[0].colorSet);
   });
   t.mock.method(ship.attachments[0], "Rebuild", () => assert.fail("unchanged colours rebuilt buffers"));
   assert.ok(await updater.UpdateFromDNA(ship, "hull:other:race"));
@@ -202,7 +202,7 @@ test("all SOF6 attachment and hull light families match fresh faction colours", 
 {
   const { ship, sof, updater } = await FactionFixture(options =>
   {
-    const hull = options.black.hull[0];
+    const hull = options.data.hull[0];
     const light = { translation: [0, 1, 0], rotation: [0, 0, 0, 1], saturation: 0.5,
       intensity: 2, innerScaleMultiplier: 1, outerScaleMultiplier: 2 };
     const item = { position: [2, 3, 4], rotation: [0, 0, 0, 1], scaling: [2, 3, 4],
@@ -228,11 +228,11 @@ test("faction edits preserve externally supplied banner images and content-deriv
 {
   const { ship, updater } = await FactionFixture(options =>
   {
-    options.black.hull[0].bannerSets = [{ visibilityGroup: "primary", banners: [{
+    options.data.hull[0].bannerSets = [{ visibilityGroup: "primary", banners: [{
       usage: 0, position: [2, 0, 0], scaling: [1, 3, 2],
       light: { translation: [1, 0, 0], rotation: [0, 0, 0, 1], saturation: 0.5, intensity: 4 }
     }] }];
-    options.black.generic.bannerShader = { shader: "res:/banner.fx", defaultParameters: [], defaultTextures: [] };
+    options.data.generic.bannerShader = { shader: "res:/banner.fx", defaultParameters: [], defaultTextures: [] };
   });
   const banner = ship.attachments.find(value => CjsSchema.isInstanceOf("EveBannerSet", value));
   const texture = ship.externalParameters[0].destinationObject;
@@ -304,8 +304,8 @@ test("hull and faction request flags are independent and always retain target ra
 {
   const { sof, updater, ship } = await Fixture(options =>
   {
-    options.black.hull.push({ ...structuredClone(options.black.hull[0]), name: "otherhull" });
-    options.black.faction.push({ ...structuredClone(options.black.faction[0]), name: "otherfaction" });
+    options.data.hull.push({ ...structuredClone(options.data.hull[0]), name: "otherhull" });
+    options.data.faction.push({ ...structuredClone(options.data.faction[0]), name: "otherfaction" });
   });
   const before = await sof.CreateDna(ship.dna);
   for (const [hull, faction] of [[true, false], [false, true], [true, true]])
@@ -397,13 +397,13 @@ async function RaceFixture(configure = null)
 {
   return Fixture(options =>
   {
-    const hull = options.black.hull[0];
+    const hull = options.data.hull[0];
     hull.booster = { hasTrails: true, items: [{ transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] }] };
     hull.impactEffectType = 1;
-    options.black.generic.damage = { armorShader: "armor.fx", shieldShaderEllipsoid: "shield.fx", shieldGeometryResFilePath: "res:/shield.gr2" };
-    options.black.generic.areaShaders[0].parameters = [{ str: "GeneralHeatGlowColor" }];
-    options.black.faction[0].colorSet = { Booster: [1, 0, 0, 1], Reactor: [0, 0, 1, 1] };
-    options.black.race = ["race", "other"].map((name, index) => ({ name,
+    options.data.generic.damage = { armorShader: "armor.fx", shieldShaderEllipsoid: "shield.fx", shieldGeometryResFilePath: "res:/shield.gr2" };
+    options.data.generic.areaShaders[0].parameters = [{ str: "GeneralHeatGlowColor" }];
+    options.data.faction[0].colorSet = { Booster: [1, 0, 0, 1], Reactor: [0, 0, 1, 1] };
+    options.data.race = ["race", "other"].map((name, index) => ({ name,
       hullPrimaryHeatColorType: index ? 14 : 16,
       booster: { glowColor: [index, 0.2, 0.5, 1], glowScale: 1 + index,
         lightRadius: 10 + index, lightColor: [0.2, index, 0.4, 1],
@@ -455,7 +455,7 @@ test("race edits preserve unrelated live mesh constants and hull placements", as
 {
   const { ship, sof, updater } = await RaceFixture(options =>
   {
-    options.black.generic.areaShaders[0].defaultParameters.push({ name: "CustomColor", value: [1, 1, 1, 1] });
+    options.data.generic.areaShaders[0].defaultParameters.push({ name: "CustomColor", value: [1, 1, 1, 1] });
   });
   const constant = ship.mesh.opaqueAreas[0].effect.constParameters.find(value => value.name === "CustomColor");
   constant.value.set([7, 8, 9, 10]);
@@ -476,8 +476,8 @@ for (const unsupported of ["offset", "damage-bindings", "combined"])
   {
     const { ship, updater } = await RaceFixture(options =>
     {
-      if (unsupported === "offset") options.black.race[1].booster.lightOffset = 2;
-      if (unsupported === "damage-bindings") options.black.race[1].damage.shieldImpactTextures.push({ name: "Extra", resFilePath: "res:/extra.dds" });
+      if (unsupported === "offset") options.data.race[1].booster.lightOffset = 2;
+      if (unsupported === "damage-bindings") options.data.race[1].damage.shieldImpactTextures.push({ name: "Extra", resFilePath: "res:/extra.dds" });
     });
     const before = CjsSchema.getValues(ship), requests = resources.requests.length;
     let next = originalDna.replace(":race:", ":other:");
@@ -532,11 +532,11 @@ for (const depthShader of [false, true])
   {
     const { ship, updater, sof } = await MaterialFixture(options =>
     {
-      const hull = options.black.hull[0], source = hull.opaqueAreas[0];
+      const hull = options.data.hull[0], source = hull.opaqueAreas[0];
       hull.decalAreas = [{ ...structuredClone(source), name: "cutout", index: 1, blockedMaterials: 1 }];
       hull.transparentAreas = [{ ...structuredClone(source), name: "glass", index: 2 }];
-      options.black.generic.areaShaders[0].doGenerateDepthArea = true;
-      if (depthShader) options.black.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
+      options.data.generic.areaShaders[0].doGenerateDepthArea = true;
+      if (depthShader) options.data.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
         defaultParameters: [], defaultTextures: [], transparencyTextureName: "DiffuseMap" });
     });
     const nextDna = ship.dna.replace("material?red;none", "material?blue;none");
@@ -591,7 +591,7 @@ test("targeted preflight rejects a late area mismatch before changing earlier co
 {
   const { ship, updater } = await MaterialFixture(options =>
   {
-    const areas = options.black.hull[0].opaqueAreas;
+    const areas = options.data.hull[0].opaqueAreas;
     areas.push({ ...structuredClone(areas[0]), name: "second", index: 1 });
   });
   ship.mesh.opaqueAreas[1].count = 999;
@@ -621,9 +621,9 @@ test("material updates retain externally supplied banner textures without reload
 {
   const { ship, updater } = await MaterialFixture(options =>
   {
-    options.black.hull[0].banners = [{ usage: 3, visibilityGroup: "primary" }];
-    options.black.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
-    options.black.generic.bannerShader = { shader: "res:/banner.fx", defaultParameters: [], defaultTextures: [] };
+    options.data.hull[0].banners = [{ usage: 3, visibilityGroup: "primary" }];
+    options.data.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
+    options.data.generic.bannerShader = { shader: "res:/banner.fx", defaultParameters: [], defaultTextures: [] };
   });
   assert.equal(ship.externalParameters.length, 1);
   const binding = ship.externalParameters[0], texture = binding.destinationObject;
@@ -677,12 +677,12 @@ async function MaterialFixture(configure = null, suffix = "")
 {
   return Fixture(options =>
   {
-    options.black.generic.materialPrefixes = [{ str: "Mtl1" }, { str: "Mtl2" }];
-    const shader = options.black.generic.areaShaders[0];
+    options.data.generic.materialPrefixes = [{ str: "Mtl1" }, { str: "Mtl2" }];
+    const shader = options.data.generic.areaShaders[0];
     shader.parameters = [{ str: "Mtl1Diffuse" }, { str: "Mtl1Fresnel" }];
     shader.defaultParameters = [{ name: "Mtl1Diffuse", value: [0.1, 0.2, 0.3, 1] },
       { name: "Mtl1Fresnel", value: [0.1, 0.1, 0.1, 1] }];
-    options.black.material = [
+    options.data.material = [
       { name: "red", parameters: [{ name: "Diffuse", value: [1, 0.2, 0.1, 1] }, { name: "Fresnel", value: [0.3, 0.3, 0.3, 1] }] },
       { name: "blue", parameters: [{ name: "Diffuse", value: [0.1, 0.2, 2, 1] }, { name: "Fresnel", value: [0.6, 0.6, 0.6, 1] }] }
     ];
@@ -695,11 +695,11 @@ async function PatternFixture(configure = null)
 {
   return MaterialFixture(options =>
   {
-    options.black.generic.patternMaterialPrefixes = [{ str: "Pmtl1" }, { str: "Pmtl2" }];
-    const shader = options.black.generic.areaShaders[0];
+    options.data.generic.patternMaterialPrefixes = [{ str: "Pmtl1" }, { str: "Pmtl2" }];
+    const shader = options.data.generic.areaShaders[0];
     shader.parameters.push({ str: "Pmtl1Diffuse" }, { str: "Pmtl2Diffuse" });
     shader.defaultParameters.push({ name: "Pmtl1Diffuse", value: [0, 0, 0, 1] }, { name: "Pmtl2Diffuse", value: [0, 0, 0, 1] });
-    options.black.pattern = ["one", "two"].map((name, index) => ({
+    options.data.pattern = ["one", "two"].map((name, index) => ({
       name, sof6: false,
       layer1: { materialSource: index, textureName: "PatternMask", textureResFilePath: `res:/${name}.dds`,
         projectionTypeU: index, projectionTypeV: index + 1, isTargetMtl1: !index, isTargetMtl2: !!index,
@@ -708,7 +708,7 @@ async function PatternFixture(configure = null)
       projections: [{ name: "hull", transformLayer1: { position: [index, 2, 3], scaling: [index + 1, 2, 1],
         rotation: [0, 0, 0, 1], isMirrored: !!index }, transformLayer2: null }], applicationGroups: []
     }));
-    options.black.pattern.push({ name: "empty", layer1: null, layer2: null, projections: [], applicationGroups: [] });
+    options.data.pattern.push({ name: "empty", layer1: null, layer2: null, projections: [], applicationGroups: [] });
     if (configure) configure(options);
   }, ":pattern?one;red;blue");
 }
@@ -717,7 +717,7 @@ async function PatternFixture(configure = null)
 async function Fixture(configure = null, dna = originalDna)
 {
   const options = {
-    black: {
+    data: {
       hull: [{ name: "hull", buildClass: 0, geometryResFilePath: "res:/hull.gr2", opaqueAreas: [{
         name: "hull", index: 0, count: 1, areaType: 0, shader: "ship.fx",
         textures: [{ name: "DiffuseMap", resFilePath: "res:/ship_d.dds" },
@@ -786,10 +786,10 @@ test("generated booster glows survive an insert edit without relaxing ordinary s
   t.mock.method(carbonRandom, "triFloatRandom01", () => 0.25);
   const { ship, updater, sof } = await Fixture(options =>
   {
-    options.black.hull[0].booster = { hasTrails: false, items: [{
+    options.data.hull[0].booster = { hasTrails: false, items: [{
       transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
     }] };
-    options.black.race[0].booster = {};
+    options.data.race[0].booster = {};
   });
   const glows = ship.boosters.glows;
   const sprites = glows.sprites.slice();
@@ -952,14 +952,14 @@ test("decal parent textures and editor DNA provenance update without replacing t
   const { ship, updater, sof } = await Fixture(options =>
   {
     options.editorMode = true;
-    options.black.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
-    options.black.hull[0].decalSets = [{ visibilityGroup: "primary", items: [{
+    options.data.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
+    options.data.hull[0].decalSets = [{ visibilityGroup: "primary", items: [{
       name: "decal", usage: 0, meshIndex: 0, boneIndex: -1,
       position: [0, 0, 0], rotation: [0, 0, 0, 1], scaling: [1, 1, 1],
       parameters: [], textures: [], indexBuffers: [{ indexBuffer: new Uint32Array([0, 1, 2]) }]
     }] }];
-    options.black.generic.decalShaderLocation = "res:/decal";
-    options.black.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
+    options.data.generic.decalShaderLocation = "res:/decal";
+    options.data.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
       defaultTextures: [], parentTextures: [{ str: "DiffuseMap" }] }];
   });
   assert.equal(ship.decals.length, 1);
@@ -983,17 +983,17 @@ test("targeted inserts reject reordered stamped decals before writing any textur
   const { ship, updater } = await Fixture(options =>
   {
     options.editorMode = true;
-    const hull = options.black.hull[0];
+    const hull = options.data.hull[0];
     hull.opaqueAreas.push({ ...structuredClone(hull.opaqueAreas[0]), name: "second", index: 1,
       textures: [{ name: "DiffuseMap", resFilePath: "res:/other_d.dds" }] });
-    options.black.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
+    options.data.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
     hull.decalSets = [{ visibilityGroup: "primary", items: [0, 1].map(meshIndex => ({
       name: `decal${meshIndex}`, usage: 0, meshIndex, boneIndex: -1,
       position: [meshIndex, 0, 0], rotation: [0, 0, 0, 1], scaling: [1, 1, 1],
       parameters: [], textures: [], indexBuffers: [{ indexBuffer: new Uint32Array([0, 1, 2]) }]
     })) }];
-    options.black.generic.decalShaderLocation = "res:/decal";
-    options.black.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
+    options.data.generic.decalShaderLocation = "res:/decal";
+    options.data.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
       defaultTextures: [], parentTextures: [{ str: "DiffuseMap" }] }];
   });
   assert.equal(ship.decals.length, 2);
@@ -1011,11 +1011,11 @@ for (const mode of ["ordinary", "instanced", "shared"])
     const { ship, updater, sof } = await Fixture(options =>
     {
       options.editorMode = true;
-      const hull = options.black.hull[0];
-      options.black.hull.push({ ...structuredClone(hull), name: "extension", buildClass: 1 });
+      const hull = options.data.hull[0];
+      options.data.hull.push({ ...structuredClone(hull), name: "extension", buildClass: 1 });
       hull.locatorSets = [{ name: "slot", locators: [{ position: [1, 2, 3],
         rotation: [0, 0, 0, 1], scaling: [1, 1, 1], boneIndex: -1 }] }];
-      options.black.layout = [{ name: "test", seed: 7, placements: [{ name: "slot",
+      options.data.layout = [{ name: "test", seed: 7, placements: [{ name: "slot",
         locatorSetName: "slot", descriptor: { hull: "extension" },
         isInstanced: mode !== "ordinary", isShared: mode === "shared" }] }];
     }, originalDna + ":layout?test");
@@ -1196,7 +1196,7 @@ test("patterns grow and shrink compacted mask slots without replacing retained s
 {
   const { ship, updater, sof } = await PatternFixture(options =>
   {
-    const double = structuredClone(options.black.pattern[0]);
+    const double = structuredClone(options.data.pattern[0]);
     double.name = "double";
     double.layer2 = { ...double.layer1, textureName: "SecondMask", textureResFilePath: "res:/second.dds", materialSource: 1 };
     double.projections[0].transformLayer2 = { ...double.projections[0].transformLayer1, position: [7, 8, 9] };
@@ -1204,7 +1204,7 @@ test("patterns grow and shrink compacted mask slots without replacing retained s
     second.name = "second";
     second.layer1 = null;
     second.projections[0].transformLayer1 = null;
-    options.black.pattern.push(double, second);
+    options.data.pattern.push(double, second);
   });
   const mesh = ship.mesh, list = ship.customMasks, effect = mesh.opaqueAreas[0].effect;
   const textureList = effect.resources, samplerList = effect.samplerOverrides;
@@ -1263,8 +1263,8 @@ test(`removing a pattern restores the ${source} texture and removes its sampler`
   const { ship, updater, sof } = await PatternFixture(options =>
   {
     const texture = { name: "PatternMask", resFilePath: `res:/${source}.dds` };
-    if (source === "hull") options.black.hull[0].opaqueAreas[0].textures.push(texture);
-    else options.black.generic.areaShaders[0].defaultTextures.push(texture);
+    if (source === "hull") options.data.hull[0].opaqueAreas[0].textures.push(texture);
+    else options.data.generic.areaShaders[0].defaultTextures.push(texture);
   });
   const effect = ship.mesh.opaqueAreas[0].effect, texture = effect.resources.find(value => value.name === "PatternMask");
   const nextDna = originalDna + ":material?red;none:pattern?empty;red;blue";
@@ -1323,7 +1323,7 @@ test("targeted pattern preflight rejects conflicting shared effects before any w
 {
   const { ship, updater } = await PatternFixture(options =>
   {
-    const areas = options.black.hull[0].opaqueAreas;
+    const areas = options.data.hull[0].opaqueAreas;
     const second = structuredClone(areas[0]);
     second.name = "second"; second.index = 1;
     second.textures.push({ name: "PatternMask", resFilePath: "res:/hull-mask.dds" });
@@ -1342,7 +1342,7 @@ for (const conflict of [false, true])
   {
     const { ship, updater } = await PatternFixture(options =>
     {
-      const areas = options.black.hull[0].opaqueAreas, second = structuredClone(areas[0]);
+      const areas = options.data.hull[0].opaqueAreas, second = structuredClone(areas[0]);
       second.name = "second"; second.index = 1;
       if (conflict) second.textures.push({ name: "PatternMask", resFilePath: "res:/one.dds" });
       areas.push(second);
@@ -1403,7 +1403,7 @@ test("combined edits use resolved hull texture precedence in pattern slots", asy
 {
   const { ship, updater, sof } = await PatternFixture(options =>
   {
-    options.black.hull[0].opaqueAreas[0].textures.push({ name: "PatternMask", resFilePath: "res:/mask_d.dds" });
+    options.data.hull[0].opaqueAreas[0].textures.push({ name: "PatternMask", resFilePath: "res:/mask_d.dds" });
     options.resFileIndex.push("res:/insert/mask_insert_d.dds");
   });
   const next = insertedDna + ":material?blue;none:pattern?two;blue;red";
@@ -1421,7 +1421,7 @@ test("combined edits reject conflicting shared hull and pattern paths before wri
 {
   const { ship, updater, sof } = await PatternFixture(options =>
   {
-    const areas = options.black.hull[0].opaqueAreas, second = structuredClone(areas[0]);
+    const areas = options.data.hull[0].opaqueAreas, second = structuredClone(areas[0]);
     second.name = "second"; second.index = 1;
     second.textures.push({ name: "PatternMask", resFilePath: "res:/one.dds" });
     options.resFileIndex.push("res:/insert/one_insert.dds");
@@ -1460,21 +1460,21 @@ for (const agree of [false, true])
   {
     const { ship, updater, sof } = await PatternFixture(options =>
     {
-      const hull = options.black.hull[0], second = structuredClone(hull.opaqueAreas[0]);
+      const hull = options.data.hull[0], second = structuredClone(hull.opaqueAreas[0]);
       second.name = "second"; second.index = 1;
       second.textures.push({ name: "PatternMask", resFilePath: "res:/one_d.dds" });
       hull.opaqueAreas.push(second);
-      options.black.pattern[0].layer1.textureResFilePath = "res:/one_d.dds";
-      options.black.pattern[1].layer1.textureResFilePath = agree ? "res:/insert/one_insert_d.dds" : "res:/one_d.dds";
+      options.data.pattern[0].layer1.textureResFilePath = "res:/one_d.dds";
+      options.data.pattern[1].layer1.textureResFilePath = agree ? "res:/insert/one_insert_d.dds" : "res:/one_d.dds";
       options.resFileIndex.push("res:/insert/one_insert_d.dds");
-      options.black.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
+      options.data.faction[0].visibilityGroupSet = { visibilityGroups: [{ str: "primary" }] };
       hull.decalSets = [{ visibilityGroup: "primary", items: [{
         name: "decal", usage: 0, meshIndex: 1, boneIndex: -1,
         position: [0, 0, 0], rotation: [0, 0, 0, 1], scaling: [1, 1, 1],
         parameters: [], textures: [], indexBuffers: [{ indexBuffer: new Uint32Array([0, 1, 2]) }]
       }] }];
-      options.black.generic.decalShaderLocation = "res:/decal";
-      options.black.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
+      options.data.generic.decalShaderLocation = "res:/decal";
+      options.data.generic.decalShaders = [{ shader: "decalv5.fx", parameters: [],
         defaultTextures: [], parentTextures: [{ str: "PatternMask" }] }];
     });
     const texture = ship.mesh.opaqueAreas[0].effect.resources.find(value => value.name === "PatternMask");
@@ -1501,7 +1501,7 @@ for (const agree of [false, true])
 
 test("combined edits still plan patterns when a hull has no authored texture paths", async t =>
 {
-  const { ship, updater, sof } = await PatternFixture(options => { options.black.hull[0].opaqueAreas[0].textures = []; });
+  const { ship, updater, sof } = await PatternFixture(options => { options.data.hull[0].opaqueAreas[0].textures = []; });
   const next = insertedDna + ":material?blue;none:pattern?two;blue;red";
   const expected = CjsSchema.from("EveShip2", await sof.BuildValuesFromDNA(next));
   t.mock.method(sof, "BuildValuesFromDNA", () => assert.fail("full build"));
@@ -1554,10 +1554,10 @@ test("pattern edits on transparent meshes retain depth areas without reading or 
 {
   const { ship, updater, sof } = await PatternFixture(options =>
   {
-    const hull = options.black.hull[0];
+    const hull = options.data.hull[0];
     hull.transparentAreas = hull.opaqueAreas; hull.opaqueAreas = [];
-    options.black.generic.areaShaders[0].doGenerateDepthArea = true;
-    options.black.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
+    options.data.generic.areaShaders[0].doGenerateDepthArea = true;
+    options.data.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
       defaultParameters: [], defaultTextures: [], transparencyTextureName: "DiffuseMap" });
   });
   const depth = ship.mesh.depthAreas, beforeDepth = CjsSchema.getValues(depth[0]);
@@ -1583,10 +1583,10 @@ test("combined pattern and insert edits only change inherited depth texture path
 {
   const { ship, updater, sof } = await PatternFixture(options =>
   {
-    const hull = options.black.hull[0];
+    const hull = options.data.hull[0];
     hull.transparentAreas = hull.opaqueAreas; hull.opaqueAreas = [];
-    options.black.generic.areaShaders[0].doGenerateDepthArea = true;
-    options.black.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
+    options.data.generic.areaShaders[0].doGenerateDepthArea = true;
+    options.data.generic.areaShaders.push({ shader: "depthonlyv5.fx", parameters: [],
       defaultParameters: [], defaultTextures: [], transparencyTextureName: "DiffuseMap" });
   });
   const depth = ship.mesh.depthAreas, effect = depth[0].effect;

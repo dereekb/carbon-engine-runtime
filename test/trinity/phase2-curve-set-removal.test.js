@@ -324,7 +324,7 @@ for (const route of ["declared dictionary", "canonical Black runtime", "default 
     assert.equal(CjsSchema.getConstructor("EveMeshOverlayEffect"), EveMeshOverlayEffect);
     const overlay = route === "declared dictionary"
       ? new DictReader({ declarations: true }).CreateObject(CjsBlackFormat.readPayload(bytes).object)
-      : CjsBlackFormat.read(bytes, { emit: "runtime", ...(route === "canonical Black runtime" ? { schema: null } : {}) }).root;
+      : CjsBlackFormat.read(bytes, { emit: "runtime" }).root;
     const set = overlay.curveSet;
     assert.equal(set.curves.GetSize(), 2);
     assert.equal(set.bindings.GetSize(), 4);

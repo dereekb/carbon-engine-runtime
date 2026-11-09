@@ -9,7 +9,16 @@ import { blue } from "../../src/blue/index.js";
 import { DictReader } from "../../src/blue/formats/graph/DictReader.js";
 import { INotify } from "../../src/blue/exposure/INotify.js";
 import { DictWriter } from "../../src/blue/formats/graph/DictWriter.js";
-import { CjsBlackReader } from "../../src/blue/formats/black/core/CjsBlackReader.js";
+import { BlackReader } from "../../src/blue/formats/black/BlackReader.js";
+
+/** A file's root through BlackReader; throws its message when the read fails. */
+function readBlack(bytes)
+{
+  const reader = new BlackReader();
+  const root = reader.ReadFromStream(bytes);
+  if (root === null) throw new Error(reader.GetErrorMessage());
+  return root;
+}
 import { CjsGraphFormat } from "../../src/blue/formats/graph/index.js";
 import { YamlReader } from "../../src/blue/formats/yaml/YamlReader.js";
 
@@ -108,14 +117,14 @@ test("Black reads a persisted property through its setter", () =>
   const fixture = new BlackFixture();
   const leaf = fixture.Object(2, "SchemaPropertyLeaf", [ [ "value", i32(7) ] ]);
   const bytes = fixture.Finish(fixture.Object(1, "SchemaPropertyProbe", [ [ "target", leaf ] ]));
-  const probe = new CjsBlackReader(bytes, { schema: null }).CreateObject();
+  const probe = readBlack(bytes);
   assert.ok(probe instanceof PropertyProbe);
   assert.equal(probe._target.value, 7);
   assert.ok(probe.calls.includes("SetTarget"));
 
   const scale = new BlackFixture();
   const unpersisted = scale.Finish(scale.Object(1, "SchemaPropertyProbe", [ [ "scale", f32(2) ] ]));
-  assert.throws(() => new CjsBlackReader(unpersisted, { schema: null }).CreateObject(), /scale/);
+  assert.throws(() => readBlack(unpersisted), /scale/);
 });
 
 test("Red reads a persisted property through its setter", () =>
@@ -233,7 +242,7 @@ test("an attribute over an accessor path keeps its flags and is read and written
   const fixture = new BlackFixture();
   const leaf = fixture.Object(2, "SchemaPropertyLeaf", [ [ "value", i32(4) ] ]);
   const bytes = fixture.Finish(fixture.Object(1, "SchemaAttributeAccessorOwner", [ [ "highDetailModel", leaf ] ]));
-  const black = new CjsBlackReader(bytes, { schema: null }).CreateObject();
+  const black = readBlack(bytes);
   assert.equal(black.lod.highDetailProxy.value, 4);
   assert.deepEqual(black.modified, [ "highDetailModel" ]);
 
