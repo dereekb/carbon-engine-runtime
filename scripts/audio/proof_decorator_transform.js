@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
+import v8 from "node:v8";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { rollup } from "rollup";
 import { babel } from "@rollup/plugin-babel";
+import json from "@rollup/plugin-json";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const sourceScratch = path.join(root, ".scratch", "audio-decorator-transform-proof");
@@ -51,14 +54,19 @@ export function capture() {
     // is the schema-registration signal that marks a model constructor. Plain
     // factory exports (audioMetadataFromSoundbanksInfo) must not be new-ed.
     if (!schema?.className) return [];
-    const value = new Class();
+    // A registered value class whose constructor requires its document
+    // (CjsAudioLibrary validates one) has no defaults to compare; both graphs
+    // must then refuse construction with the same message.
+    let value = null, constructError = null;
+    try { value = new Class(); } catch (error) { constructError = String(error?.message ?? error); }
     return [[name, {
       className: schema.className,
+      constructError,
       fields: schema.fields.map(field => ({
         name: field.name,
         type: captureData(field.type),
         persist: field.edit?.persist === true,
-        value: captureData(value[field.name])
+        value: value === null ? undefined : captureData(value[field.name])
       }))
     }]];
   }));
@@ -78,6 +86,7 @@ async function buildSourceBundle() {
     input: sourceEntry,
     external: id => id.startsWith("#"),
     plugins: [
+      json({ compact: true }),
       babel({
         babelHelpers: "bundled",
         extensions: [".js", ".mjs"],
@@ -92,21 +101,33 @@ async function buildSourceBundle() {
   await bundle.close();
 }
 
-await writeEntries();
-await buildSourceBundle();
+// Child mode: capture one module graph and write it to a file. Each graph runs
+// in its own process because Blue's class registry is process-wide and refuses
+// the second graph's registrations of the same class names.
+const captureIndex = process.argv.indexOf("--capture");
+if (captureIndex >= 0) {
+  const [modulePath, outPath] = process.argv.slice(captureIndex + 1, captureIndex + 3);
+  const graph = await import(pathToFileURL(modulePath));
+  // Constructor clock samples must be identical across the two captures. Keep
+  // comparing all fields, including runtime timers exposed by ordinary JS fields.
+  Object.defineProperty(globalThis.performance, "now", { configurable: true, value: () => 1234.5 });
+  // AudEmitter picks a random debug colour; both graphs draw the same sequence.
+  let randomState = 1;
+  Math.random = () => (randomState = (randomState * 48271) % 2147483647) / 2147483647;
+  await fs.writeFile(outPath, v8.serialize(structuredClone(graph.capture())));
+} else {
+  await writeEntries();
+  await buildSourceBundle();
 
-const source = await import(pathToFileURL(sourceBundle));
-const dist = await import(pathToFileURL(distEntry));
-// Default model values may themselves be class instances from the source and
-// dist module graphs. The proof compares their data, not constructor identity.
-// Constructor clock samples must be identical across the two captures. Keep
-// comparing all fields, including runtime timers exposed by ordinary JS fields.
-const nowDescriptor = Object.getOwnPropertyDescriptor(globalThis.performance, "now");
-Object.defineProperty(globalThis.performance, "now", { configurable: true, value: () => 1234.5 });
-try {
-  assert.deepEqual(structuredClone(source.capture()), structuredClone(dist.capture()));
-} finally {
-  if (nowDescriptor) Object.defineProperty(globalThis.performance, "now", nowDescriptor);
-  else delete globalThis.performance.now;
+  // Default model values may themselves be class instances from the source and
+  // dist module graphs. The proof compares their data, not constructor identity.
+  async function captureInChild(modulePath, outPath) {
+    const { status } = spawnSync(process.execPath, [ fileURLToPath(import.meta.url), "--capture", modulePath, outPath ], { stdio: [ "ignore", "ignore", "inherit" ] });
+    assert.equal(status, 0, `capture of ${modulePath} failed`);
+    return v8.deserialize(await fs.readFile(outPath));
+  }
+  const source = await captureInChild(sourceBundle, path.join(sourceScratch, "source-capture.bin"));
+  const dist = await captureInChild(distEntry, path.join(distScratch, "dist-capture.bin"));
+  assert.deepEqual(source, dist);
+  console.log("decorator transform proof passed for all audio classes");
 }
-console.log("decorator transform proof passed for all audio classes");
