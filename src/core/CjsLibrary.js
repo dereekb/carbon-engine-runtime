@@ -13,8 +13,23 @@ import { TriSettingsRegistrar } from "../trinity/core/TriSettingsRegistrar.js";
 import { Tr2EffectRes } from "../trinity/shader/Tr2EffectRes.js";
 import { trinity, TriDevice, Tr2FontManager, Tr2Renderer, Tr2RenderContext_GetMainThreadRenderContext } from "../trinity/index.js";
 import { SetEffectPathDefaults } from "#utils/effectPath";
+import { CjsLibrarySettingsTicker } from "./CjsLibrarySettingsTicker.js";
 
 let activeLibrary = null;
+
+/**
+ * Settings this library holds at a fixed value, with the reason. A requested
+ * value is still recorded (and an application may still save it); the owner
+ * always receives the fixed one.
+ */
+const FORCED_SETTINGS = new Map([
+  // Carbon's g_newBloom (default true, Tr2PostProcessRenderer.cpp:23-24) works
+  // but is not fully supported or set up in Carbon itself.
+  [ "newBloom", { value: false, reason: "Not fully supported in Carbon" } ]
+]);
+
+/** The setting categories that name a device backend, as AttachTrinity's `backend` names them. */
+const BACKEND_CATEGORIES = Object.freeze({ webgpu: "WebGPU", webgl2: "WebGL2" });
 
 
 /** Reader/factory policy is installed at startup; changing it requires reboot. */
@@ -38,6 +53,16 @@ const installedResourcePolicies = new WeakMap();
  */
 export class CjsLibrary
 {
+  /**
+   * Whether the application wants audio. Ours, with no Carbon counterpart.
+   * Unavailable until an audio manager is attached (AttachAudio) in a browser
+   * with Web Audio; while it is on and available, this library enables the
+   * attached manager at the first user gesture (an AudioContext needs one) and
+   * disables it when it goes off.
+   */
+  @meta.setting("audioEnabled", { category: "audio" })
+  static audioEnabled = false;
+
   /**
    * The initialized application root, or null before startup and after shutdown.
    * Startup reserves the single root before publishing it to application wrappers.
@@ -215,7 +240,7 @@ export class CjsLibrary
           {
             if (!paths.IsFileSystemRegistered(value)) paths.RegisterFileSystem(value);
           }
-          else if (section === "settings") settings.SetValue(key, value);
+          else if (section === "settings") settings.SetValue(key, FORCED_SETTINGS.has(key) ? FORCED_SETTINGS.get(key).value : value);
           else if (section === "callbackModules") BeCallbackMan.RegisterCallbackModule(key, value);
           // Trinity's sweep reads them on its next tick.
           else if (section === "deviceResources" && key === "idleRule") TriDevice.resourceIdleRule = value;
@@ -248,13 +273,20 @@ export class CjsLibrary
    *
    * @param {object} options Start-up options.
    * @param {object} options.renderContextAL The host's abstraction layer.
+   * @param {"webgpu"|"webgl2"|null} [options.backend] Which backend that layer is; settings
+   *   categorised for the other one become unavailable. Null (a stub or tool) marks none.
    * @returns {TriDevice} The device, now `trinity.device`.
    * @throws {Error} When no abstraction layer is given, or Trinity is already initialized.
    */
-  AttachTrinity({ renderContextAL = null } = {})
+  AttachTrinity({ renderContextAL = null, backend = null } = {})
   {
     if (!renderContextAL) throw new Error("no device backend chosen");
     if (trinity.device) throw new Error("trinity is already initialized");
+    if (backend !== null && !Object.hasOwn(BACKEND_CATEGORIES, backend))
+      throw new RangeError(`backend must be ${Object.keys(BACKEND_CATEGORIES).join(" or ")}, or null`);
+    this._backend = backend;
+    // Forced settings hold before the renderer reads them at creation.
+    this._ApplySettingsPolicy(false);
     Tr2RenderContext_GetMainThreadRenderContext().SetRenderContextAL(renderContextAL);
     const device = new TriDevice();
     trinity.Initialize({ device, fontManager: Tr2FontManager.initialize(), renderer: Tr2Renderer });
@@ -264,6 +296,140 @@ export class CjsLibrary
 
   /** Whether AttachTrinity started Trinity, so Shutdown stops it. */
   _startedTrinity = false;
+
+  /** The backend AttachTrinity started, "webgpu" or "webgl2"; null before, or for a stub. */
+  _backend = null;
+
+  /** The audio manager AttachAudio received, or null. */
+  _audio = null;
+
+  /** The last failure enabling attached audio, until `audioEnabled` goes off; null when none. */
+  _audioFailure = null;
+
+  /** Gesture listeners installed by AttachAudio, removed by DetachAudio. */
+  _audioGesture = null;
+
+  /** Runs the settings policy on each Blue tick, registered at Initialize. */
+  _settingsTicker = new CjsLibrarySettingsTicker(this);
+
+  /** The OS the settings ticker is registered on, until Shutdown. */
+  _settingsTickOs = null;
+
+  /**
+   * Whether a registered setting is available, and why not. The UI asks this
+   * when it draws a setting: an unavailable one shows disabled with its reason.
+   * Ours, with no Carbon counterpart. A value written while a setting is
+   * unavailable is still stored; it only has no effect (or, for a forced
+   * setting, the fixed value is what the engine receives).
+   *
+   * @param {string} name The setting's name.
+   * @returns {{available: boolean, reason: string|null}} The availability.
+   */
+  GetSettingAvailability(name)
+  {
+    const unavailable = reason => ({ available: false, reason });
+    const forced = FORCED_SETTINGS.get(name);
+    if (forced) return unavailable(forced.reason);
+    if (name === "audioEnabled")
+    {
+      if (!HasWebAudio()) return unavailable("Web Audio is not supported in this browser");
+      if (!this._audio) return unavailable("No audio engine is attached");
+      return { available: true, reason: null };
+    }
+    const category = TriSettingsRegistrar.getSettings().FindSetting(name)?.category ?? null;
+    if (this._backend && category)
+    {
+      const others = Object.keys(BACKEND_CATEGORIES).filter(backend => backend !== this._backend && category.includes(backend));
+      if (others.length && !category.includes(this._backend))
+        return unavailable(`${others.map(backend => BACKEND_CATEGORIES[backend]).join(" and ")} only`);
+    }
+    return { available: true, reason: null };
+  }
+
+  /**
+   * Attaches the application's audio manager (a CjsAudioMan; core does not
+   * import the audio layer, so it is not type-checked). `audioEnabled` becomes available in a browser
+   * with Web Audio. While it is on, the manager is enabled at the first user
+   * gesture once it has a library installed; when it goes off, it is disabled.
+   * The library itself is the application's to supply. Ours, as AttachTrinity is.
+   *
+   * @param {object} manager The audio manager.
+   * @returns {object} The manager.
+   */
+  AttachAudio(manager)
+  {
+    if (!manager) throw new TypeError("AttachAudio requires an audio manager");
+    if (this._audio && this._audio !== manager) this.DetachAudio();
+    this._audio = manager;
+    this._audioFailure = null;
+    const target = globalThis.addEventListener ? globalThis : null;
+    if (target && !this._audioGesture)
+    {
+      // An AudioContext may start inside a gesture handler on every browser.
+      const handler = () => this._ApplySettingsPolicy(true);
+      for (const type of [ "pointerdown", "keydown" ]) target.addEventListener(type, handler, true);
+      this._audioGesture = { target, handler };
+    }
+    this._ApplySettingsPolicy(false);
+    return manager;
+  }
+
+  /** Disables and releases the attached audio manager; `audioEnabled` becomes unavailable. */
+  DetachAudio()
+  {
+    if (this._audioGesture)
+    {
+      const { target, handler } = this._audioGesture;
+      for (const type of [ "pointerdown", "keydown" ]) target.removeEventListener(type, handler, true);
+      this._audioGesture = null;
+    }
+    if (this._audio && AudioIsEnabled(this._audio)) this._audio.Disable();
+    this._audio = null;
+    this._audioFailure = null;
+  }
+
+  /** The attached audio manager's state for display: attached, enabled, and the last enable failure. */
+  GetAudioState()
+  {
+    return { attached: this._audio !== null, enabled: this._audio ? AudioIsEnabled(this._audio) : false,
+      failure: this._audioFailure ? String(this._audioFailure.message ?? this._audioFailure) : null };
+  }
+
+  /**
+   * Holds forced settings at their fixed values and starts or stops attached
+   * audio to follow `audioEnabled`. Runs on each Blue tick and inside a user
+   * gesture; `gesture` says which. Outside a gesture, audio starts only once the
+   * page has had one (`navigator.userActivation.hasBeenActive`).
+   *
+   * @param {boolean} gesture Whether this runs inside a user gesture handler.
+   */
+  _ApplySettingsPolicy(gesture)
+  {
+    const settings = TriSettingsRegistrar.getSettings();
+    for (const [ name, { value } ] of FORCED_SETTINGS)
+      if (settings.FindSetting(name) && settings.GetValue(name) !== value) settings.SetValue(name, value);
+
+    const audio = this._audio;
+    if (!audio) return;
+    const wanted = CjsLibrary.audioEnabled === true && this.GetSettingAvailability("audioEnabled").available;
+    const enabled = AudioIsEnabled(audio);
+    if (!wanted)
+    {
+      this._audioFailure = null;
+      if (enabled) audio.Disable();
+      return;
+    }
+    if (enabled || this._audioFailure || !audio.library) return;
+    if (!gesture && globalThis.navigator?.userActivation?.hasBeenActive !== true) return;
+    try
+    {
+      if (!audio.Enable()) this._audioFailure = new Error("Audio could not start (no audio device)");
+    }
+    catch (error)
+    {
+      this._audioFailure = error;
+    }
+  }
 
   /** Creates the 2D overlay canvas over a 3D canvas; it draws on Blue ticks. */
   CreateOverlay2D(options)
@@ -347,6 +513,9 @@ export class CjsLibrary
         }
 
         this._StartCallbackMan();
+        blue.os.RegisterForTicks(this._settingsTicker, "CjsLibrarySettings");
+        this._settingsTickOs = blue.os;
+        this._ApplySettingsPolicy(false);
         if (!installedPolicy)
         {
           const installed = Object.fromEntries(
@@ -391,6 +560,10 @@ export class CjsLibrary
     }
     this._callbackManTickOs.UnregisterForTicks(this._callbackManTicker, "BeCallbackMan");
     this._callbackManTickOs = null;
+    this._settingsTickOs?.UnregisterForTicks(this._settingsTicker, "CjsLibrarySettings");
+    this._settingsTickOs = null;
+    this.DetachAudio();
+    this._backend = null;
     installBlueServices(this._previousServices, this._previousServices.running);
     this._previousServices = null;
     activeLibrary = null;
@@ -448,6 +621,18 @@ export class CjsLibrary
 
     return blue.resMan.Fetch(value, options);
   }
+}
+
+/** Whether this realm has a Web Audio context constructor. */
+function HasWebAudio()
+{
+  return typeof (globalThis.AudioContext ?? globalThis.webkitAudioContext) === "function";
+}
+
+/** Whether an attached audio manager's engine is enabled (CjsAudioMan: its system's manager). */
+function AudioIsEnabled(audio)
+{
+  return audio.system?.manager?.enabled === true;
 }
 
 CjsSchema.meta.define(CjsLibrary, {
