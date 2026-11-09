@@ -210,7 +210,7 @@ export class EveChildContainer extends EveChildTransform
   @type.enum("trinity.EveSpaceObjectChild.Origin")
   origin = 0;
 
-  @meta.persist
+  @meta.mapAttribute(meta.PERSIST)
   @type.boolean
   isPlacementRoot = false;
 

@@ -103,8 +103,8 @@ export class CjsTexturePipelineStepConvert
 CjsSchema.meta.define(CjsTexturePipelineStepConvert, {
   className: "CjsTexturePipelineStepConvert",
   fields: {
-    format: [ meta.persist, type.int32, type.enum("trinity.ImageIO.PixelFormat") ],
-    paths: [ meta.persist, type.list("string") ]
+    format: [ meta.mapAttribute(meta.PERSIST), type.int32, type.enum("trinity.ImageIO.PixelFormat") ],
+    paths: [ meta.mapAttribute(meta.PERSIST), type.list("string") ]
   },
   methods: {
     GetResourceDependencies: [],

@@ -32,23 +32,17 @@ export class Tr2BindingPoint
   // (Tr2ActionSetValue_Blue.cpp:18, Tr2ActionAnimateValue_Blue.cpp:19).
 
   /** m_path: a reference from one of the roots, or empty to use `object`. */
-  @meta.notify
-  @meta.readwrite
-  @meta.persist
+  @meta.mapAttribute(meta.READWRITE | meta.NOTIFY | meta.PERSIST)
   @type.string
   path = "";
 
   /** m_object: the destination object when `path` is empty. */
-  @meta.notify
-  @meta.readwrite
-  @meta.persist
+  @meta.mapAttribute(meta.READWRITE | meta.NOTIFY | meta.PERSIST)
   @type.object.ref.weak("IRoot")
   object = null;
 
   /** m_attribute: the member name, optionally with a one-letter swizzle (`color.a`). */
-  @meta.notify
-  @meta.readwrite
-  @meta.persist
+  @meta.mapAttribute(meta.READWRITE | meta.NOTIFY | meta.PERSIST)
   @type.string
   attribute = "";
 

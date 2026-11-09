@@ -129,9 +129,9 @@ export class CjsTexturePipelineStepResize
 CjsSchema.meta.define(CjsTexturePipelineStepResize, {
   className: "CjsTexturePipelineStepResize",
   fields: {
-    width: [ meta.persist, type.uint32 ],
-    height: [ meta.persist, type.uint32 ],
-    paths: [ meta.persist, type.list("string") ]
+    width: [ meta.mapAttribute(meta.PERSIST), type.uint32 ],
+    height: [ meta.mapAttribute(meta.PERSIST), type.uint32 ],
+    paths: [ meta.mapAttribute(meta.PERSIST), type.list("string") ]
   },
   methods: {
     GetResourceDependencies: [],
