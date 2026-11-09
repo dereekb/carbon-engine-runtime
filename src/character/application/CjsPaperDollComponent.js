@@ -16,8 +16,6 @@ export class CjsPaperDollComponent
 
     _options = new Map();
 
-    _palettes = new Map();
-
     /** The configured option resolver, or null when every option arrived fully described. */
     _resolve = null;
 
@@ -62,28 +60,24 @@ export class CjsPaperDollComponent
     }
 
     /**
-     * Installs option records and typed palettes, then resets inputs.
+     * Installs option records.
      *
      * An option record needs only what the file index gives (`id`, `path`, `label`, swatch records by name).
      * What has to be read from an option's files (its `colorAreas`, `occludes`, `defaultPalette`, palettes) can
      * come later from `resolve`, which `ResolveOption` runs the first time the option is applied; until then the
      * option has no colour areas and occludes nothing.
      * @param {object[]} options The option records; `colorAreas` defaults to none.
-     * @param {Map<string, ArrayLike<number>[]>} palettes Palettes whose colours are already known, by id.
      * @param {object} [settings] The default option and the resolver.
      * @param {string} [settings.option=""] The option Reset selects.
      * @param {?function(string): Promise<object>} [settings.resolve=null] Reads one option's remaining fields.
      * @returns {void}
      */
-    Configure(options, palettes, { option = "", resolve = null } = {})
+    Configure(options, { option = "", resolve = null } = {})
     {
         this._options = new Map(options.map(value => [value.id, {
             ...value,
             colorAreas: [...new Set(value.colorAreas ?? [])].sort()
         }]));
-        this._palettes = new Map([...palettes].map(([id, colors]) => [
-            id, colors.map(color => Float32Array.from(color))
-        ]));
         this._resolve = resolve;
         this._resolving = new Map();
         this._resolved = new Set();
@@ -165,16 +159,6 @@ export class CjsPaperDollComponent
             result.push({ path: this.palette, label: "Retained colour" });
         }
         return result;
-    }
-
-    /**
-     * Returns a prepared palette for the UI to apply to explicit colour inputs.
-     * @param {string} id Prepared palette identity.
-     * @returns {Float32Array[]|null} Borrowed palette values, or null when absent.
-     */
-    GetPaletteColors(id)
-    {
-        return this._palettes.get(id) ?? null;
     }
 
     /** Current input buffers; replacing a public field takes effect on the next capture. */

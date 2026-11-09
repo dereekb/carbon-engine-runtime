@@ -68,10 +68,10 @@ function configuredDefinition(t)
   definition.sex = "female";
   const resolved = [];
   const resolve = id => { resolved.push(id); return Promise.resolve({ colorAreas: [ 1, 2, 3 ] }); };
-  definition.bottomUnderwear.Configure([ { id: "bikinibottomcf01", path: "bottomunderwear/bikinibottomcf01", palettes: [] } ], new Map(), { resolve });
-  definition.eyebrows.Configure([ { id: "eyebrows_01" } ], new Map(), { resolve });
-  definition.lipstick.Configure([ { id: "lipstick_01" }, { id: "lipstick_02" } ], new Map(), { option: "lipstick_01", resolve });
-  definition.blush.Configure([ { id: "blush_01" } ], new Map(), { option: "blush_01", resolve });
+  definition.bottomUnderwear.Configure([ { id: "bikinibottomcf01", path: "bottomunderwear/bikinibottomcf01", palettes: [] } ], { resolve });
+  definition.eyebrows.Configure([ { id: "eyebrows_01" } ], { resolve });
+  definition.lipstick.Configure([ { id: "lipstick_01" }, { id: "lipstick_02" } ], { option: "lipstick_01", resolve });
+  definition.blush.Configure([ { id: "blush_01" } ], { option: "blush_01", resolve });
   return { definition, resolved };
 }
 
@@ -113,13 +113,13 @@ test("the paper doll holds a part that is not overridable on, unless a worn part
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, true, "switched back on: nothing occludes it");
   // A worn part whose option occludes the underwear's category lets it be switched off.
-  definition.lipstick.Configure([ { id: "cover", occludes: [ "bottomunderwear" ] } ], new Map(), { option: "cover" });
+  definition.lipstick.Configure([ { id: "cover", occludes: [ "bottomunderwear" ] } ], { option: "cover" });
   definition.lipstick.enabled = true;
   definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, false, "an occluder removes it");
   // An occluder that a third worn part suppresses covers nothing: the underwear is held on again.
-  definition.blush.Configure([ { id: "hood", occludes: [ "makeup/lipstick" ] } ], new Map(), { option: "hood" });
+  definition.blush.Configure([ { id: "hood", occludes: [ "makeup/lipstick" ] } ], { option: "hood" });
   definition.blush.enabled = true;
   definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
@@ -154,7 +154,7 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     ROOT + "makeup/lipstick/lipstick_01/types/lipstick_01.type", ROOT + "makeup/lipstick/lipstick_01/red.color",
     ROOT + "makeup/blush/blush_01/types/blush_01.type", ROOT + "makeup/blush/blush_01/pink.color",
     ROOT + "makeup/aging/aging_01/types/aging_01_v1.type", ROOT + "makeup/aging/aging_01/v1/comp_head_d.png",
-    ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type",
+    ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type", ROOT + "archetypes/msshape/head_d.png",
     ROOT + "topmiddle/shirt01/types/shirt01.type", ROOT + "topmiddle/shirt01/plain.color", ROOT + "makeup/eyeliner/eyeliner_01/types/eyeliner_01.type"
   ];
   installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });

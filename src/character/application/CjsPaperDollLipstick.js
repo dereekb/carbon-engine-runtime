@@ -20,9 +20,6 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
     /** The applied palette's three specular colours (W is the gloss); empty until a palette is applied. */
     _specularColors = [];
 
-    /** The specular colours of the palettes configured with their colours (the recipe's `authored`), by id. */
-    _paletteSpecular = new Map();
-
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
     @type.boolean
     @meta.ui.description("Lipstick")
@@ -87,30 +84,6 @@ export class CjsPaperDollLipstick extends CjsPaperDollComponent
     {
         this._specularColors = colors.map(color => Float32Array.from(color));
         this.Rebuild();
-    }
-
-    /**
-     * Registers a configured palette's specular colours (W is the gloss), which no palette file holds: the recipe's
-     * `authored` colours carry the recipe's own (`specularcolors`).
-     * @cjs
-     * @param {string} id The configured palette.
-     * @param {ArrayLike<number>[]} colors Its three specular colours.
-     * @returns {void}
-     */
-    SetPaletteSpecular(id, colors)
-    {
-        this._paletteSpecular.set(id, colors.map(color => Float32Array.from(color)));
-    }
-
-    /**
-     * A configured palette's specular colours, or null for a palette whose file holds them.
-     * @cjs
-     * @param {string} id The palette.
-     * @returns {?Float32Array[]}
-     */
-    GetPaletteSpecularColors(id)
-    {
-        return this._paletteSpecular.get(id) ?? null;
     }
 
     /** Restores the configured inputs and forgets the applied palette's specular colours. */

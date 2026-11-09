@@ -37,4 +37,15 @@ export class CjsCharacterRecipe
         return typeof this.value[0] === "string" ? this.value.slice(1) : this.value;
     }
 
+    /**
+     * The sex the recipe names on its first line (`female`, `male`), or "" for a recipe that names none (5 of 63 shipped
+     * character recipes).
+     * @cjs
+     * @returns {string}
+     */
+    GetSex()
+    {
+        return typeof this.value[0] === "string" ? this.value[0] : "";
+    }
+
 }

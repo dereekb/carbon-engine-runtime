@@ -6,8 +6,7 @@ import { CjsPaperDollDefinition, PaperDollTarget } from "../../../npm/dist/chara
 test("component fields are independent engine inputs and schema notification only dirties", () =>
 {
     const component = new CjsPaperDollDefinition().bottomOuter;
-    component.Configure([{ id: "pants", colorAreas: [1], defaultPalette: "authored" }],
-        new Map([["authored", [0, 1, 2].map(() => Float32Array.of(.1, .2, .3, 1))]]));
+    component.Configure([{ id: "pants", colorAreas: [1], defaultPalette: "authored" }]);
     component.ClearDirty();
     component.option = "pants";
     assert.equal(component.IsDirty(), false, "ordinary writes are not intercepted");
@@ -29,7 +28,7 @@ test("component fields are independent engine inputs and schema notification onl
 test("direct colour replacement is captured without enabling custom colours", () =>
 {
     const component = new CjsPaperDollDefinition().eyes;
-    component.Configure([{ id: "eyes", colorAreas: [1, 2, 3] }], new Map(), { option: "eyes" });
+    component.Configure([{ id: "eyes", colorAreas: [1, 2, 3] }], { option: "eyes" });
     component.color1 = Float32Array.of(.1, .2, .3, 1);
     component.palette = "palette-input";
     const state = component.Capture();
@@ -78,7 +77,7 @@ test("archetype notifications distinguish foundation and shape inputs", () =>
 test("lipstick surface capture keeps its palette with custom diffuse inputs", () =>
 {
     const component = new CjsPaperDollDefinition().lipstick;
-    component.Configure([{ id: "lip", colorAreas: [1] }], new Map(), { option: "lip" });
+    component.Configure([{ id: "lip", colorAreas: [1] }], { option: "lip" });
     component.customColors = true;
     component.palette = "gloss";
     assert.equal(component.Capture(PaperDollTarget.HEAD).palette, "");
@@ -92,7 +91,7 @@ test("an option configured by index alone is completed once by its resolver, whi
     const component = new CjsPaperDollDefinition().bottomOuter;
     const calls = [];
     let fail = true;
-    component.Configure([{ id: "pants", path: "bottomouter/pants" }], new Map(), {
+    component.Configure([{ id: "pants", path: "bottomouter/pants" }], {
         resolve: async id =>
         {
             calls.push(id);
@@ -119,7 +118,7 @@ test("an option configured by index alone is completed once by its resolver, whi
 test("lipstick's surface capture carries the applied palette's specular colours", () =>
 {
     const component = new CjsPaperDollDefinition().lipstick;
-    component.Configure([{ id: "lip", colorAreas: [1] }], new Map(), { option: "lip" });
+    component.Configure([{ id: "lip", colorAreas: [1] }], { option: "lip" });
     component.palette = "red";
     assert.deepEqual(component.Capture(PaperDollTarget.SURFACE).specularColors, []);
     component.ClearDirty();

@@ -24,7 +24,7 @@ function Doll()
 {
     const doll = new CjsPaperDollDefinition();
     doll.archetype.Configure([ Foundation() ], { option: "archetype", strength: 1 });
-    doll.topMiddle.Configure([ { id: "tshirtf01_aurora", path: "topmiddle/tshirtf01", occludes: [], colorAreas: [] } ], new Map(), { option: "tshirtf01_aurora" });
+    doll.topMiddle.Configure([ { id: "tshirtf01_aurora", path: "topmiddle/tshirtf01", occludes: [], colorAreas: [] } ], { option: "tshirtf01_aurora" });
     return doll;
 }
 

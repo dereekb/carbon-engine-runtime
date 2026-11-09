@@ -62,7 +62,7 @@ test("the head pass composes its parts in bake order and hands that order to the
 test("a layer override reorders and rebuilds only the passes the part feeds, and resets to the class rank", () =>
 {
     const doll = Doll();
-    doll.aging.Configure([ { id: "aging_01", colorAreas: [] } ], new Map(), { option: "aging_01" });
+    doll.aging.Configure([ { id: "aging_01", colorAreas: [] } ], { option: "aging_01" });
     const bindings = Bindings();
     Update(doll, bindings);
     assert.equal(bindings.surfaces.length, 1, "a selected ageing option builds the surface pass");
@@ -83,9 +83,9 @@ test("a layer override reorders and rebuilds only the passes the part feeds, and
 test("occlusion does not reorder: an occluder keeps its rank (the occluded part is dropped by the walk instead)", () =>
 {
     const doll = Doll();
-    doll.topUnderwear.Configure([ { id: "bikini", path: "topunderwear/bikini", colorAreas: [] } ], new Map(), { option: "bikini" });
+    doll.topUnderwear.Configure([ { id: "bikini", path: "topunderwear/bikini", colorAreas: [] } ], { option: "bikini" });
     doll.bodyAugmentation.Configure([ { id: "suit", path: "makeup/bodyaugmentations/suit", colorAreas: [],
-        occludes: [ "topunderwear" ] } ], new Map(), { option: "suit" });
+        occludes: [ "topunderwear" ] } ], { option: "suit" });
     const order = doll.GetLayerOrder(PaperDollTarget.BODY);
     assert.ok(order.indexOf("bodyAugmentation") < order.indexOf("topUnderwear"), "its own rank, before the top underwear");
 });
@@ -94,7 +94,7 @@ test("the captured occlusion targets name geometry the doll does not collect", (
 {
     const doll = Doll();
     doll.augmentations.Configure([ { id: "paint", path: "makeup/augmentations/face_paint_f01", colorAreas: [], occludes: [ "accessories/browbase" ] },
-        { id: "plain", path: "makeup/augmentations/face_paint_f01", colorAreas: [], occludes: [] } ], new Map(), { option: "paint" });
+        { id: "plain", path: "makeup/augmentations/face_paint_f01", colorAreas: [], occludes: [] } ], { option: "paint" });
     assert.deepEqual(doll.GetOccluded(), [ "accessories/browbase" ]);
     assert.ok(CjsPaperDollDefinition.occludes(doll.GetOccluded(), "accessories/browbase/browbase_01"));
     assert.ok(!CjsPaperDollDefinition.occludes(doll.GetOccluded(), "accessories/browbaseextra"));

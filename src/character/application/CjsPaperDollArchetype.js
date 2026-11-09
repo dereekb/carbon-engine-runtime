@@ -309,7 +309,7 @@ export class CjsPaperDollArchetype
         for (const key of [genericHead, body]) if (!records.get(key).model) throw new Error("Missing foundation model: " + key);
         return structuredClone({ archetype: id, head, genericHead, body, skeleton, bindings, origins,
             supportBindings, models, dependencies, parts: [...visited].map(key => records.get(key)),
-            source: entry.source, selections: entry.selections || [] });
+            source: entry.source });
     }
 
 }

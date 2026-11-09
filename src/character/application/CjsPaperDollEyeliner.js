@@ -58,9 +58,9 @@ export class CjsPaperDollEyeliner extends CjsPaperDollComponent
     color3 = Float32Array.of(.5, .5, .5, 1);
 
     /** Installs prepared options and the reset opacity. */
-    Configure(options, palettes, { option = "", weight = 1, resolve = null } = {})
+    Configure(options, { option = "", weight = 1, resolve = null } = {})
     {
-        super.Configure(options, palettes, { option, resolve });
+        super.Configure(options, { option, resolve });
         this._defaultWeight = weight;
         this.weight = weight;
     }

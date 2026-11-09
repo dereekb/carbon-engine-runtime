@@ -104,7 +104,7 @@ export class CjsPaperDollMaterialSource
         // Every garment starts with no option and off: what starts on is the character factory's defaults (operator,
         // 2026-11-09: no code-picked defaults; the underwear's bloodline pick went with them).
         const values = [ ...this._options.values() ];
-        component.Configure(values.map(value => ({ id: value.id, path: value.path, palettes: [] })), new Map(), {
+        component.Configure(values.map(value => ({ id: value.id, path: value.path, palettes: [] })), {
             option: "",
             resolve: id => this._Resolve(this._options.get(id))
         });

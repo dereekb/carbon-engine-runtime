@@ -76,7 +76,7 @@ test("listFiles lists a directory from the index, each stored .black under its o
 test("Prepare configures the skin from the folder's palettes and the regions' colour areas, and draws the initial skin", async t =>
 {
   const { compositor, doll, build, fetched } = await prepared(t);
-  const [ options, , values ] = doll.skin.configured;
+  const [ options, values ] = doll.skin.configured;
   assert.deepEqual(values, { option: "basic" });
   assert.equal(options[0].defaultPalette, undefined, "no code-picked palette: the character factory's defaults set it");
   assert.deepEqual(options[0].colorAreas, [ 1, 2, 3 ], "the union of head and body areas");

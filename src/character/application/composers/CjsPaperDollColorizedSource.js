@@ -156,7 +156,7 @@ export class CjsPaperDollColorizedSource
                 palettes: primary,
                 ...(secondary.length ? { secondaryPalettes: secondary } : {})
             };
-        }), new Map(), { option: "", weight: 1, resolve: id => this._Resolve(this._styles.get(id)) });
+        }), { option: "", weight: 1, resolve: id => this._Resolve(this._styles.get(id)) });
         component.enabled = false;
     }
 
@@ -211,7 +211,7 @@ export class CjsPaperDollColorizedSource
             colorAreas: [],
             ...(option.defaultPalette !== null ? { defaultPalette: option.defaultPalette } : {}),
             palettes: option.palettes.map(record => CjsPaperDollColorizedSource.record(record.path))
-        })), new Map(), { option: "", weight: 0, resolve: id => this._ResolveCatalog(id) });
+        })), { option: "", weight: 0, resolve: id => this._ResolveCatalog(id) });
         component.enabled = false;
         // A carrier mesh needs a material before any option is applied (the head draws its brow target once at
         // preparation): the catalog's first is loaded for the carrier only, not selected; the part stays as configured.

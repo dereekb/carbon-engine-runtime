@@ -37,7 +37,7 @@ function Doll()
     doll.tattoo.Configure([
         { id: "areaOne", colorAreas: [ 1 ], defaultPalette: "ink", palettes: [ { path: "ink", label: "Ink" } ] },
         { id: "areaOneAgain", colorAreas: [ 1 ], defaultPalette: "ink", palettes: [ { path: "ink", label: "Ink" } ] }
-    ], new Map([ [ "ink", ink ] ]), { option: "" });
+    ], { option: "" });
     return doll;
 }
 
@@ -58,7 +58,7 @@ test("tattoo controls offer only the colour slots the selected profile's zone us
 
     CjsSchema.setValues(doll.tattoo, { color1: Float32Array.from(ink[0]) });
     assert.deepEqual(Array.from(doll.tattoo.Capture().colors[0]), Array.from(ink[0]));
-    doll.tattoo.Configure([ { id: "areaThree", colorAreas: [ 3 ] } ], new Map(), { option: "areaThree" });
+    doll.tattoo.Configure([ { id: "areaThree", colorAreas: [ 3 ] } ], { option: "areaThree" });
     assert.deepEqual(doll.tattoo.GetColorAreas(), [3]);
 });
 

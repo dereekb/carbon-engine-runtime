@@ -36,8 +36,7 @@ function Doll()
     const doll = new CjsPaperDollDefinition();
     doll.archetype.Configure([ Foundation() ], { option: "archetype", strength: 1 });
     doll.lipstick.Configure([ { id: "lipstick_01", colorAreas: [ 1 ], defaultPalette: "red_glossy",
-        palettes: [ { path: "red_glossy", label: "Red glossy" }, { path: "pink_matte", label: "Pink matte" } ] } ],
-    new Map([ [ "red_glossy", red ], [ "pink_matte", pink ] ]), { option: "" });
+        palettes: [ { path: "red_glossy", label: "Red glossy" }, { path: "pink_matte", label: "Pink matte" } ] } ], { option: "" });
     CjsSchema.setValues(doll.lipstick, { palette: "red_glossy", color1: red[0], color2: red[1], color3: red[2] });
     return doll;
 }

@@ -125,7 +125,7 @@ export class CjsPaperDollSkinComposer
             id: "basic",
             colorAreas: [ ...areas ].sort(),
             palettes: records.map(({ path, name }) => ({ path, name }))
-        } ], new Map(), { option: "basic" });
+        } ], { option: "basic" });
         build.report.skin = {
             build: "resource index",
             regions: Object.fromEntries(Object.entries(this._regions).map(([ key, r ]) => [ key, {

@@ -8,7 +8,7 @@ function wearing(options)
   const definition = new CjsPaperDollDefinition();
   for (const [ part, option ] of Object.entries(options))
   {
-    definition[part].Configure([ { id: option.id, path: option.path, occludes: option.occludes } ], new Map(), { option: option.id });
+    definition[part].Configure([ { id: option.id, path: option.path, occludes: option.occludes } ], { option: option.id });
     definition[part].enabled = true;
   }
   return definition;
@@ -52,9 +52,9 @@ test("the walk runs from the roots, keeps a cycle active, and takes every part: 
   assert.deepEqual(CjsPaperDollInstance.suppress(paint).suppressed, [ "beard" ]);
   assert.ok(!CjsPaperDollInstance.ready(paint, PaperDollTarget.HEAD).lists.order.includes("beard"));
   const helmet = new CjsPaperDollDefinition();
-  helmet.outer.Configure([ { id: "v", path: "outer/vanguard", occludes: [ "makeup" ] } ], new Map(), { option: "v" });
+  helmet.outer.Configure([ { id: "v", path: "outer/vanguard", occludes: [ "makeup" ] } ], { option: "v" });
   helmet.outer.enabled = true;
-  helmet.eyeshadow.Configure([ { id: "e" } ], new Map(), { option: "e" });
+  helmet.eyeshadow.Configure([ { id: "e" } ], { option: "e" });
   helmet.eyeshadow.enabled = true;
   assert.deepEqual(CjsPaperDollInstance.suppress(helmet).suppressed, [ "eyeshadow" ]);
 });
@@ -73,13 +73,13 @@ test("an unresolved option is not walked until it resolves; the beard is walked"
   const definition = new CjsPaperDollDefinition();
   let release;
   const resolution = new Promise(resolve => { release = resolve; });
-  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => resolution });
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], { option: "coat", resolve: () => resolution });
   definition.outer.enabled = true;
-  definition.topMiddle.Configure([ { id: "shirt", path: "topmiddle/shirt", occludes: [] } ], new Map(), { option: "shirt" });
+  definition.topMiddle.Configure([ { id: "shirt", path: "topmiddle/shirt", occludes: [] } ], { option: "shirt" });
   definition.topMiddle.enabled = true;
-  definition.beard.Configure([ { id: "b", path: "beard/b", occludes: [] } ], new Map(), { option: "b" });
+  definition.beard.Configure([ { id: "b", path: "beard/b", occludes: [] } ], { option: "b" });
   definition.beard.enabled = true;
-  definition.mask.Configure([ { id: "m", path: "accessories/masks/m", occludes: [ "beard" ] } ], new Map(), { option: "m" });
+  definition.mask.Configure([ { id: "m", path: "accessories/masks/m", occludes: [ "beard" ] } ], { option: "m" });
   definition.mask.enabled = true;
   assert.deepEqual(CjsPaperDollInstance.suppress(definition).suppressed, [ "beard" ], "the unresolved coat is not a node; the mask drops the beard");
   const resolved = definition.outer.ResolveOption("coat");
@@ -93,9 +93,9 @@ test("a resolution in flight when the part is configured again does not mark the
   const definition = new CjsPaperDollDefinition();
   let release;
   const resolution = new Promise(resolve => { release = resolve; });
-  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => resolution });
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], { option: "coat", resolve: () => resolution });
   const pending = definition.outer.ResolveOption("coat");
-  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], new Map(), { option: "coat", resolve: () => new Promise(() => {}) });
+  definition.outer.Configure([ { id: "coat", path: "outer/coat" } ], { option: "coat", resolve: () => new Promise(() => {}) });
   release({ occludes: [], colorAreas: [] });
   await pending;
   assert.equal(definition.outer.IsResolved("coat"), false);

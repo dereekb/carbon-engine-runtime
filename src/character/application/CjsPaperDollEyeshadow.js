@@ -72,9 +72,9 @@ export class CjsPaperDollEyeshadow extends CjsPaperDollComponent
     }
 
     /** Installs prepared options and the reset opacity. */
-    Configure(options, palettes, { option = "", weight = 1, resolve = null } = {})
+    Configure(options, { option = "", weight = 1, resolve = null } = {})
     {
-        super.Configure(options, palettes, { option, resolve });
+        super.Configure(options, { option, resolve });
         this._defaultWeight = weight;
         this.weight = weight;
     }

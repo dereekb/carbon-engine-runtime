@@ -6,7 +6,7 @@ test("beard toggles preserve the selected style and invalidate head and surface 
 {
     const doll = new CjsPaperDollDefinition();
     const beard = doll.beard;
-    beard.Configure([{ id: "shadow", colorAreas: [] }, { id: "stubble", colorAreas: [] }], new Map());
+    beard.Configure([{ id: "shadow", colorAreas: [] }, { id: "stubble", colorAreas: [] }]);
     beard.option = "stubble";
     assert.deepEqual(beard.GetControls(), []);
     assert.equal(beard.Capture().option, "stubble");

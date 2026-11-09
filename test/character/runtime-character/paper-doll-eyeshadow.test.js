@@ -8,7 +8,7 @@ test("eyeshadow exposes independent palette inputs and selected-area controls", 
     component.Configure([{ id: "style", colorAreas: [1, 3],
         defaultPalette: "a", defaultSecondaryPalette: "bc",
         palettes: [{ path: "a" }], secondaryPalettes: [{ path: "bc" }]
-    }], new Map());
+    }]);
     component.option = "style";
     assert.equal(component.palette, "");
     assert.equal(component.secondaryPalette, "");

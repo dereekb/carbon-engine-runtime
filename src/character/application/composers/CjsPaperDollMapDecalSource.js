@@ -82,13 +82,10 @@ export class CjsPaperDollMapDecalSource
 
     /**
      * Takes the part's options from the parts library (`FetchOptions`) and configures the definition's component with
-     * them: the option the build's recipe sets for the part's category (`ResolveRecipeEntry`), on; with no recipe entry,
-     * no option, off (what starts on is the character factory's defaults). Loading a recipe applies everything it sets (operator, 2026-11-08); a character built without
-     * one starts with the part off. The recipe's weight is not applied: the layers draw at full strength, and the shipped
-     * recipes set 1.0.
+     * them: no option, off. What the part starts as is the character factory's (its defaults, or a loaded recipe's
+     * DNA). The layers draw at full strength: the part has no weight.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @returns {Promise<void>}
-     * @throws {Error} For a recipe entry selecting no option the part lists.
      */
     async Configure(definition)
     {
@@ -96,7 +93,7 @@ export class CjsPaperDollMapDecalSource
         const options = await build.Ready(library.FetchOptions(build.content.sex, category));
         this._definitions = new Map(options.map(option => [ option.id, option ]));
         // An option's path is its part folder below the content root; occlusion matches against it.
-        component.Configure(options.map(option => ({ id: option.id, path: option.path })), new Map(), {
+        component.Configure(options.map(option => ({ id: option.id, path: option.path })), {
             option: "",
             resolve: async id =>
             {

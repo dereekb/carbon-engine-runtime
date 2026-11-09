@@ -99,7 +99,7 @@ export class CjsPaperDollEyesComposer
         };
         this._component = definition.eyes;
         this._options = new Map(catalog.options.map(option => [ option.id, option ]));
-        this._component.Configure(catalog.options.map(option => ({ ...option })), new Map(), { resolve: id => this._PrepareOption(this._options.get(id)) });
+        this._component.Configure(catalog.options.map(option => ({ ...option })), { resolve: id => this._PrepareOption(this._options.get(id)) });
         this._ReportState();
     }
 

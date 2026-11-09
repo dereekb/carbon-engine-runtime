@@ -1,6 +1,7 @@
 import { blue } from "#blue";
 import { CjsSchema } from "#schema";
 import { CjsPaperDollDefinition } from "../application/CjsPaperDollDefinition.js";
+import { CjsCharacterLibraryManager } from "../library/CjsCharacterLibraryManager.js";
 import female from "./defaults/defaultFemalePaperDoll.json" with { type: "json" };
 import male from "./defaults/defaultMalePaperDoll.json" with { type: "json" };
 
@@ -221,7 +222,8 @@ export class CjsCharacterFactory
         const selected = component.enabled && component.option ? component.GetOptions().find(value => value.id === component.option) : null;
         const primary = palette || (selected && selected.colorAreas.length && selected.defaultPalette ? selected.defaultPalette : "");
         if (!primary) return;
-        const [ first, second ] = await Promise.all([ CjsCharacterFactory._ReadPalette(component, primary), secondaryPalette ? CjsCharacterFactory._ReadPalette(component, secondaryPalette) : null ]);
+        const specular = component.constructor.paletteSpecular === true, library = blue.characterLibrary;
+        const [ first, second ] = await Promise.all([ library.FetchPalette(primary, { specular }), secondaryPalette ? library.FetchPalette(secondaryPalette) : null ]);
         const values = { palette: primary, customColors: false, color1: Float32Array.from(first.colors[0]), color2: Float32Array.from(first.colors[1]), color3: Float32Array.from(first.colors[2]) };
         if (second)
         {
@@ -230,33 +232,8 @@ export class CjsCharacterFactory
             values.color3 = Float32Array.from(second.colors[2]);
         }
         CjsSchema.setValues(component, values);
-        if (component.constructor.paletteSpecular) component.SetSpecularColors(first.specularColors ?? []);
+        if (specular) component.SetSpecularColors(first.specularColors);
     }
-
-    /**
-     * One palette's colours, and its specular colours where the part's surface reads them: a palette the part was
-     * configured with (a recipe's `authored`) from the part, any other from the parts library (`FetchPalette`). Moved
-     * from Graphene's `characterComponentEditing.js` (`ReadPalette`).
-     * @param {object} component The definition's component.
-     * @param {string} path The palette's `res:` path, or a configured palette's id.
-     * @returns {Promise<{ colors: ArrayLike<number>[], specularColors: ?ArrayLike<number>[] }>}
-     */
-    static async _ReadPalette(component, path)
-    {
-        const specular = component.constructor.paletteSpecular === true, configured = component.GetPaletteColors(path);
-        if (configured && !specular) return { colors: configured, specularColors: null };
-        const configuredSpecular = configured && specular ? component.GetPaletteSpecularColors(path) : null;
-        if (configuredSpecular) return { colors: configured, specularColors: configuredSpecular };
-        const read = await blue.characterLibrary.FetchPalette(path, { specular });
-        return { colors: configured ?? read.colors, specularColors: specular ? read.specularColors : null };
-    }
-
-    /**
-     * The parts library categories whose paper doll part has another category (derived: the part classes name their
-     * category one folder up).
-     * @type {Object<string, string>}
-     */
-    static partOfCategory = { "tattoo/head": "tattoo", "skintone/basic": "skin" };
 
     /**
      * The parts whose recipe entries are reported and not applied until the instance owns meshes (R6): hair, beard and
@@ -268,7 +245,8 @@ export class CjsCharacterFactory
     /**
      * Reads a `.prs` recipe into a DNA: each entry's category and option from the parts library
      * (`ResolveRecipeEntry`), set on, at its weight, with its own colours (and their specular colours) or the palette
-     * its colour variation names. An archetype entry sets the archetype. A `feet_nude` entry turns the feet off. What
+     * its colour variation names. An archetype entry sets the archetype (the library's option path). An entry the library
+     * marks nude (`feet_nude`) turns its part off. What
      * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets (a
      * garment the part's `recipe` option will take, later), and the entries of parts not applied yet (`notAppliedYet`).
      * PROVISIONAL: the colour fields, as `_ApplyColors`.
@@ -282,21 +260,27 @@ export class CjsCharacterFactory
     static async ReadRecipe(path, sex = "")
     {
         const library = blue.characterLibrary, recipe = await library.FetchRecipe(path);
-        const named = typeof recipe.value[0] === "string" ? recipe.value[0] : "", recipeSex = named || sex;
+        const recipeSex = recipe.GetSex() || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
         const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._PartsByCategory();
         for (const entry of recipe.GetModifiers())
         {
             const found = await library.ResolveRecipeEntry(recipeSex, entry);
             if (found === null) { problems.push(entry.path + ": no part (no paper doll category)"); continue; }
-            if (found.category === "archetypes") { dna.parts.archetype = { option: entry.path.toLowerCase() }; continue; }
+            if (found.category === "archetypes")
+            {
+                // The archetype's option is its folder below the root, as the paper doll's archetype names it.
+                if (found.option !== null) dna.parts.archetype = { option: found.path };
+                else problems.push(entry.path + ": no archetype");
+                continue;
+            }
             const name = parts.get(found.category) ?? null;
             if (name === null) { problems.push(entry.path + ": no part (" + found.category + ")"); continue; }
             if (CjsCharacterFactory.notAppliedYet.includes(name)) { problems.push(entry.path + ": " + name + " is not applied until the instance owns meshes (R6)"); continue; }
             if (found.option === null)
             {
-                // The operator's ruling: a nude feet entry turns the feet off.
-                if (name === "feet" && /_nude$/u.test(entry.path)) { dna.parts.feet = { enabled: false }; continue; }
+                // The operator's ruling (feet_nude): an entry naming a part's bare state turns the part off.
+                if (found.nude === true) { dna.parts[name] = { enabled: false }; continue; }
                 problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorvariation + "')");
                 continue;
             }
@@ -353,8 +337,8 @@ export class CjsCharacterFactory
     }
 
     /**
-     * The shipped character recipes for a sex: every `.prs` under `res:/graphics/character/` whose first line names
-     * that sex (a recipe that names none is left out), sorted. Each recipe is read once (`FetchRecipe`); one that
+     * The shipped character recipes for a sex: the parts library's character recipes (`ListCharacterRecipeNames`) that
+     * name that sex (`GetSex`; a recipe that names none is left out), sorted. Each recipe is read once (`FetchRecipe`); one that
      * cannot be read is left out.
      * @param {"female"|"male"} sex The sex.
      * @returns {Promise<string[]>} The recipes' `res:` paths.
@@ -362,19 +346,20 @@ export class CjsCharacterFactory
     static async ListRecipes(sex)
     {
         const library = blue.characterLibrary, found = [];
-        for (const path of await library.ListRecipeNames())
+        for (const path of await library.ListCharacterRecipeNames())
         {
-            if (!path.startsWith("res:/graphics/character/")) continue;
             let recipe;
             try { recipe = await library.FetchRecipe(path); }
             catch { continue; }
-            if (recipe.value[0] === sex) found.push(path);
+            if (recipe.GetSex() === sex) found.push(path);
         }
-        return found.sort();
+        return found;
     }
 
     /**
-     * Each paper doll part by the parts library category it reads (`partOfCategory` where they differ).
+     * Each paper doll part by the parts library category it reads: its own category, and the one library category below
+     * it that the library reads in full (has a maps rule). Two part classes name their category one folder up:
+     * `tattoo` reads `tattoo/head` (`tattoo/armleft` has no maps rule), and `skintone` reads `skintone/basic`.
      * @returns {Map<string, string>}
      */
     static _PartsByCategory()
@@ -383,7 +368,11 @@ export class CjsCharacterFactory
         {
             const definition = new CjsPaperDollDefinition(), parts = new Map();
             for (const name of CjsPaperDollDefinition.parts) if (definition[name].constructor.category) parts.set(definition[name].constructor.category, name);
-            for (const [ category, name ] of Object.entries(CjsCharacterFactory.partOfCategory)) parts.set(category, name);
+            for (const [ category, rule ] of Object.entries(CjsCharacterLibraryManager.categories))
+            {
+                const parent = category.slice(0, category.lastIndexOf("/"));
+                if (rule.maps !== null && !parts.has(category) && parts.has(parent)) parts.set(category, parts.get(parent));
+            }
             CjsCharacterFactory._partsByCategory = parts;
         }
         return CjsCharacterFactory._partsByCategory;

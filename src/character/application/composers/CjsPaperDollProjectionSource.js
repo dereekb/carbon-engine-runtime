@@ -123,7 +123,7 @@ export class CjsPaperDollProjectionSource
         const palettes = options.length ? await build.Ready(library.FetchPalettes(options[0])) : [];
         this._bake = this._compositor.TargetTexture(CjsPaperDollProjectionSource.bakeWidth, CjsPaperDollProjectionSource.bakeHeight);
         // No option, off: what the part starts as is the character factory's (its defaults, or a loaded recipe's DNA).
-        component.Configure([ ...this._options.keys() ].sort().map(id => ({ id, palettes })), new Map(), { option: "", resolve: id => this._Resolve(this._options.get(id)) });
+        component.Configure([ ...this._options.keys() ].sort().map(id => ({ id, palettes })), { option: "", resolve: id => this._Resolve(this._options.get(id)) });
         component.enabled = false;
     }
 

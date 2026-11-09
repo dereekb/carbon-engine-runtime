@@ -208,8 +208,8 @@ export class CjsCharacterLibraryManager
      *   `colors/` (female eye shadow ships a `colors/` too, which is not offered: its options keep their own).
      * - `areas`: how its colour areas are found (`FetchColorAreas`): `zone`, `detail` or `none`.
      * Every category that ships `.type` files is listed. null is no rule: the content has not been surveyed for it
-     * (the mesh parts, and categories no paper doll part reads), and the query for it throws. `head` and `archetypes`
-     * have no option rule: a head or an archetype is a folder whose `.type`s (where it has any) do not name options.
+     * (the mesh parts, and categories no paper doll part reads), and the query for it throws. `head`
+     * has no option rule: a head is a folder whose options the archetype decides. An archetype is one option per folder.
      * `accessories/piercings` repeats type names across its folders (`stud02` in five) and its types name parts the
      * index does not hold (`accessories/earslow/stud02`; build 3670638), so its option ids are not unique.
      * @type {Object<string, { options: ?("type"|"folder"|"self"), maps: ?("name"|"composed"|"catalog"|"garment"), palettes: ?("own"|"shared"), areas: ?("zone"|"detail"|"none") }>}
@@ -259,7 +259,7 @@ export class CjsCharacterLibraryManager
         "accessories/nose": { options: "type", maps: null, palettes: null, areas: null },
         "accessories/piercings": { options: "type", maps: null, palettes: null, areas: null },
         "head": { options: null, maps: null, palettes: null, areas: null },
-        "archetypes": { options: null, maps: null, palettes: null, areas: null }
+        "archetypes": { options: "folder", maps: null, palettes: null, areas: null }
     };
 
     /**
@@ -710,9 +710,10 @@ export class CjsCharacterLibraryManager
      *
      * @param {"female"|"male"} sex The sex.
      * @param {{ path: string, variation?: string, colorvariation?: string }} entry The recipe entry.
-     * @returns {Promise<?{ category: string, option: ?string }>} The selection: its category, and its option or null
-     *   when no option matches (always null in a category with no option rule: `head`, `archetypes`); null for a
-     *   path in no category.
+     * @returns {Promise<?{ category: string, option: ?string, path?: string, nude?: true }>} The selection: its category,
+     *   and its option (with the option's path below the root) or null when no option matches (always null in a category
+     *   with no option rule: `head`). `nude` marks an entry naming its category's bare part (`feet/feet_nude`; derived: the
+     *   content's `_nude` folders name no option). Null for a path in no category.
      */
     async ResolveRecipeEntry(sex, { path, variation = "", colorvariation = "" })
     {
@@ -720,18 +721,19 @@ export class CjsCharacterLibraryManager
         const category = Object.keys(CjsCharacterLibraryManager.categories).filter(name => lower.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
         if (!category) return null;
         if (CjsCharacterLibraryManager.categories[category].options === null) return { category, option: null };
+        const unmatched = lower.endsWith("_nude") ? { category, option: null, nude: true } : { category, option: null };
         const same = (a, b) => (a || "v0").toLowerCase() === (b || "v0").toLowerCase();
         for (const option of await this.FetchOptions(sex, category))
         {
             if (option.typePath === null)
             {
-                if (option.path === lower) return { category, option: option.id };
+                if (option.path === lower) return { category, option: option.id, path: option.path };
                 continue;
             }
             const facts = await this.FetchOptionPart(option);
-            if (facts.part === lower && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant.toLowerCase() === wanted)) return { category, option: option.id };
+            if (facts.part === lower && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant.toLowerCase() === wanted)) return { category, option: option.id, path: option.path };
         }
-        return { category, option: null };
+        return unmatched;
     }
 
     /**
@@ -1044,6 +1046,17 @@ export class CjsCharacterLibraryManager
     ListRecipeNames()
     {
         return this.ListKindNames("recipes");
+    }
+
+    /**
+     * The character recipes: the `.prs` files under the character root (`res:/graphics/character/`), not the scenes'.
+     *
+     * Ours, as `FetchOptions`.
+     * @returns {Promise<string[]>} Their `res:` paths, sorted.
+     */
+    async ListCharacterRecipeNames()
+    {
+        return (await this.ListRecipeNames()).filter(path => path.startsWith("res:/graphics/character/"));
     }
 
     /**
