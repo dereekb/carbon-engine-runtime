@@ -26,17 +26,17 @@ requires an explicit `Rebuild()` when the instance must reconsider the inputs.
 An equal schema write does not dirty a component. Components do not validate
 editable input values or derive related values after a write.
 
-`Configure(options, palettes, defaults)` retains prepared option records and
-copies the supplied palette buffers. `Reset()` restores the configured option,
-neutral colours, empty palette picks, enabled state and component-specific
-weight or tuck defaults, then marks pending work. It does not apply a UI
-palette-selection policy. `GetPaletteColors(id)` lends prepared values to a UI
-that needs to write a chosen palette's colours into the explicit inputs.
+`Configure(options, defaults)` retains prepared option records. `Reset()`
+restores the configured option, neutral colours, empty palette picks, enabled
+state and component-specific weight or tuck defaults, then marks pending work.
+It does not apply a UI palette-selection policy. What a part starts as, and
+what a reset puts it back to, is the character factory's (`CjsCharacterFactory`:
+its sex's defaults data, or a loaded recipe's DNA).
 
 The UI applies the conveniences: option-named defaults, selecting a palette,
 re-picking it to leave custom mode, and enabling custom mode after a colour
 edit. Primary and secondary swatch picks are independent input values. The UI
-also owns remembered manual colours and initial/reset palette application.
+also owns remembered manual colours.
 
 ## Capture and building
 
