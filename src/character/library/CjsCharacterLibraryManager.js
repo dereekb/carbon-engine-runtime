@@ -12,6 +12,8 @@ import { normalizeResourcePath } from "#utils/path";
 import { CjsCharacterTextureRoles } from "./CjsCharacterTextureRoles.js";
 import { PaperDollPaletteKind } from "./characterPalettes.js";
 import { BlackReader } from "#blue/formats/black/BlackReader";
+import { CjsSchema } from "#schema";
+import { TriBatchType } from "#consts/graphics";
 
 /** Installs, loads, and queries one combined hydrated character library. */
 export class CjsCharacterLibraryManager
@@ -540,16 +542,18 @@ export class CjsCharacterLibraryManager
      * `BlackReader` builds the objects with `SetDoInitialize(false)`, so nothing loads or binds). Per mesh: its name,
      * its `meshIndex` (Carbon's `Tr2MeshBase` binds a mesh to its geometry by this index, `Tr2MeshBase.cpp:154`, and an
      * area by its index, :283; that is the Incarna-era engine, and whether today's client binds the same way is not
-     * established) and its geometry; per area: its list, name, index, count, shader file, effect name, the x of its
+     * established) and its geometry; per area: its batch type (`TriBatchType`, the list `Tr2MeshBase.GetAreas` gives it
+     * from), name, index, count, shader file, effect name, the x of its
      * `MaterialLibraryID` and `Material2LibraryID` (null where the effect does not set it), its UV region
      * (`CjsCharacterTextureRoles.uvRegion` of its `TransformUV0`) and its kind (`areaKind`). A model without meshes (a
-     * beard's bare effect) answers none.
+     * beard's bare effect, a `Tr2Effect`) answers none.
      *
      * Ours, as `FetchOptions`.
      *
      * @param {string} path The `.black`'s `res:` path.
      * @returns {Promise<{ model: string, meshes: Array<{ name: string, meshIndex: number, geometry: string, areas: object[] }> }>}
      *   The areas, shared by every caller (not to be changed).
+     * @throws {Error} For a model that is neither a `Tr2SkinnedModel` nor a `Tr2Effect`.
      */
     FetchModelAreas(path)
     {
@@ -560,14 +564,17 @@ export class CjsCharacterLibraryManager
             reader.SetFileName(path);
             if (!reader.ReadForCachingFromStream(read instanceof Uint8Array ? read : new Uint8Array(read))) throw new Error(path + ": " + reader.GetErrorMessage());
             reader.SetDoInitialize(false);
-            const root = reader.CreateObject();
+            const root = reader.CreateObject(), className = CjsSchema.getClassName(root.constructor);
+            // A beard's model is a bare effect, with no meshes.
+            if (className === "Tr2Effect") return { model: path, meshes: [] };
+            if (className !== "Tr2SkinnedModel") throw new Error("Unsupported character model " + className + ": " + path);
             const meshes = [];
-            for (const mesh of Array.isArray(root.meshes) ? root.meshes : [])
+            for (const mesh of root.meshes)
             {
                 const areas = [];
-                for (const list of Object.keys(mesh).filter(key => key.endsWith("Areas") && Array.isArray(mesh[key])))
+                for (let batchType = 0; batchType < TriBatchType.TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; batchType++)
                 {
-                    for (const area of mesh[list])
+                    for (const area of mesh.GetAreas(batchType))
                     {
                         const effect = area.effect, parameter = name => effect ? effect.parameters.find(value => value.name === name) ?? null : null;
                         const x = name => { const value = parameter(name); return value ? value.value[0] : null; };
@@ -575,7 +582,7 @@ export class CjsCharacterLibraryManager
                         const shader = effect ? effect.effectFilePath.slice(effect.effectFilePath.lastIndexOf("/") + 1).toLowerCase() : "";
                         const materialLibraryID = x("MaterialLibraryID"), material2LibraryID = x("Material2LibraryID");
                         areas.push({
-                            list, name: area.name, index: area.index, count: area.count, shader, effect: effect ? effect.name : "",
+                            batchType, name: area.name, index: area.index, count: area.count, shader, effect: effect ? effect.name : "",
                             materialLibraryID, material2LibraryID,
                             uv: uv ? CjsCharacterTextureRoles.uvRegion(uv.value) : null,
                             kind: CjsCharacterLibraryManager.areaKind(shader, materialLibraryID, material2LibraryID)
@@ -589,8 +596,11 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * An option's model and its areas (`FetchModelAreas`): the first `.black` (not a `_lodN` one) directly in the
-     * option's first folder that has one (its variation's, then its part's), or none.
+     * An option's model and its areas (`FetchModelAreas`): the `.black` (not a `_lodN` one) directly in the option's
+     * first folder that has one (its variation's, then its part's), or none. Of two in a folder, the one named as the
+     * folder. Derived: four folders ship two (build 3670638): female `hair_dreadlocks_01` and `hair_long_01` and male
+     * `dependants/ragdoll/ragdollthicktop` (each with a `_nosim` model), and male `outer/jacketcm01_r` (its own and
+     * `jacketcm01.black`).
      *
      * Ours, as `FetchOptions`.
      *
@@ -602,8 +612,9 @@ export class CjsCharacterLibraryManager
         const folders = option.typePath !== null ? (await this.FetchOptionPart(option)).folders : [ option.folder ];
         for (const folder of folders)
         {
-            const model = this._PaperDollFiles(folder).find(path => path.endsWith(".black") && path.lastIndexOf("/") === folder.length - 1 && !/_lod\d+\.black$/u.test(path));
-            if (model) return this.FetchModelAreas(model);
+            const models = this._PaperDollFiles(folder).filter(path => path.endsWith(".black") && path.lastIndexOf("/") === folder.length - 1 && !/_lod\d+\.black$/u.test(path));
+            const named = folder + folder.slice(0, -1).split("/").at(-1) + ".black";
+            if (models.length) return this.FetchModelAreas(models.includes(named) ? named : models[0]);
         }
         return null;
     }

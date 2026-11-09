@@ -26,6 +26,7 @@ function fixture(t)
         [ "outer/coat01/v1/colorize_body_l.png", OPAQUE ],
         [ "outer/coat01/v1/coat01_lod1.black", OPAQUE ],
         [ "outer/coat01/coat01.black", OPAQUE ],
+        [ "outer/coat01/acoat01_nosim.black", OPAQUE ],
         [ "outer/coat01/coat01_lod1.black", OPAQUE ],
         [ "dependants/mask01/comp_body_m.png", OPAQUE ],
         [ "bottomunderwear/boxers01/types/boxers01_civire.type", "!!python/tuple [bottomunderwear/boxers01, '', default]\n" ],
@@ -175,7 +176,7 @@ test("an option's model: the first folder's .black that is not a LOD, else none;
     const read = [];
     library.FetchModelAreas = async path => { read.push(path); return { model: path, meshes: [] }; };
     assert.equal((await library.FetchOptionAreas(await option(library, "outer", "coat01_black"))).model, ROOT + "outer/coat01/coat01.black",
-        "the variation folder holds only a LOD model, so the part folder's");
+        "the variation folder holds only a LOD model, so the part folder's: the one named as its folder");
     assert.equal(await library.FetchOptionAreas(await option(library, "makeup/eyeshadow", "eyeshadow_01")), null, "a baked option has no model");
     assert.deepEqual(read, [ ROOT + "outer/coat01/coat01.black" ]);
     const { uvRegion } = await import("../../../npm/dist/character/library/CjsCharacterTextureRoles.js").then(m => ({ uvRegion: m.CjsCharacterTextureRoles.uvRegion }));
