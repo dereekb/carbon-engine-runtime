@@ -213,6 +213,7 @@ export class Tr2GpuBuffer extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isValid()
   {
     return this.IsValid();

@@ -141,6 +141,7 @@ export class Range extends IRoot
    *
    * @adapted
    */
+  @type.float32
   get minRangePoint()
   {
     return this.GetMinRangePoint();
@@ -164,6 +165,7 @@ export class Range extends IRoot
    *
    * @adapted
    */
+  @type.float32
   get maxRangePoint()
   {
     return this.GetMaxRangePoint();

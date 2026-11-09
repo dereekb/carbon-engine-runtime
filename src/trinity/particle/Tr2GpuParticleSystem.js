@@ -1051,6 +1051,7 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
+  @type.float32
   get emitTime()
   {
     return this.GetEmitTime();
@@ -1073,6 +1074,7 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
+  @type.float32
   get updateTime()
   {
     return this.GetUpdateTime();
@@ -1095,6 +1097,7 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
+  @type.float32
   get sortTime()
   {
     return this.GetSortTime();
@@ -1117,6 +1120,7 @@ export class Tr2GpuParticleSystem
    *
    * @notImplemented
    */
+  @type.float32
   get renderTime()
   {
     return this.GetRenderTime();

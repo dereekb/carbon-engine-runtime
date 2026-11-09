@@ -379,6 +379,7 @@ export class Tr2QuadRenderer
    *
    * @implemented
    */
+  @type.uint32
   get instanceBufferSize()
   {
     return this.GetInstanceBufferSize();
@@ -401,6 +402,7 @@ export class Tr2QuadRenderer
    *
    * @implemented
    */
+  @type.uint32
   get instanceDataSize()
   {
     return this.GetInstanceDataSize();

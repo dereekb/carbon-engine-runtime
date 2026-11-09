@@ -162,6 +162,7 @@ export class Tr2StreamingBitmapSaver extends IRoot
    *
    * @implemented
    */
+  @type.boolean
   get hasStartedBatch()
   {
     return this.HasStartedBatch();

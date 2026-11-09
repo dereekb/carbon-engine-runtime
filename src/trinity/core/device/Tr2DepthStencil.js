@@ -306,6 +306,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.string
   get name()
   {
     return this.GetName();
@@ -324,6 +325,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get width()
   {
     return this.GetWidth();
@@ -336,6 +338,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get height()
   {
     return this.GetHeight();
@@ -348,6 +351,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get multiSampleType()
   {
     return this.GetMsaaSamples();
@@ -360,6 +364,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get multiSampleQuality()
   {
     return this.GetMsaaQuality();
@@ -372,6 +377,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get mipCount()
   {
     return this.GetMipCount();
@@ -384,6 +390,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isValid()
   {
     return this.IsValid();
@@ -396,6 +403,7 @@ export class Tr2DepthStencil extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isReadable()
   {
     return this.IsReadable();

@@ -181,6 +181,7 @@ export class Tr2InstancedMesh extends Tr2Mesh
    *
    * @implemented
    */
+  @type.object.ref("ITr2InstanceData")
   get instanceGeometryResource()
   {
     return this.GetInstanceGeometryResource();

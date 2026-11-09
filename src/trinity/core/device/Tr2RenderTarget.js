@@ -479,6 +479,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.string
   get name()
   {
     return this.GetName();
@@ -497,6 +498,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get width()
   {
     return this.GetWidth();
@@ -509,6 +511,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get height()
   {
     return this.GetHeight();
@@ -521,6 +524,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get mipCount()
   {
     return this.GetMipCount();
@@ -533,6 +537,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get multiSampleType()
   {
     return this.GetMsaaType();
@@ -545,6 +550,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get multiSampleQuality()
   {
     return this.GetMsaaQuality();
@@ -557,6 +563,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.uint32
   get arraySize()
   {
     return this.GetArraySize();
@@ -569,6 +576,8 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.int32
+  @type.enum("trinity.ImageIO.PixelFormat")
   get format()
   {
     return this.GetFormat();
@@ -581,6 +590,8 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.int32
+  @type.enum("trinity.ImageIO.TextureType")
   get type()
   {
     return this.GetType();
@@ -593,6 +604,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isValid()
   {
     return this.IsValid();
@@ -605,6 +617,7 @@ export class Tr2RenderTarget extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isReadable()
   {
     return this.IsReadable();

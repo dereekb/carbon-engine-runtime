@@ -218,6 +218,7 @@ export class TriVariableParameter extends ITriEffectParameter
    *
    * @implemented
    */
+  @type.int32
   get variableType()
   {
     return this.GetVariableType();

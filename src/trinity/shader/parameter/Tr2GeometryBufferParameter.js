@@ -202,6 +202,7 @@ export class Tr2GeometryBufferParameter extends ITriEffectResourceParameter
    *
    * @implemented
    */
+  @type.boolean
   get isValid()
   {
     return this.IsValid();

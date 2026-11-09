@@ -370,6 +370,7 @@ export class Tr2TextureLodManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get useLowResVtaFiles()
   {
     return this.GetUseLowResVtaFilesSetting();

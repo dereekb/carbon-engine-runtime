@@ -115,6 +115,7 @@ export class Tr2FloatParameter extends ITriEffectParameter
    *
    * @implemented
    */
+  @type.float32
   get value()
   {
     return this.GetValue();

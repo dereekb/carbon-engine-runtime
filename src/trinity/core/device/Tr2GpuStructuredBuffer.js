@@ -182,6 +182,7 @@ export class Tr2GpuStructuredBuffer extends IRoot
    * @implemented
    */
   @be.mapPropertyReadOnly()
+  @type.boolean
   get isValid()
   {
     return this.IsValid();

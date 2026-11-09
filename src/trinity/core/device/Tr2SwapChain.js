@@ -144,6 +144,7 @@ export class Tr2SwapChain extends IRoot
    *
    * @implemented
    */
+  @type.uint32
   get width()
   {
     return this.GetWidth();
@@ -155,6 +156,7 @@ export class Tr2SwapChain extends IRoot
    *
    * @implemented
    */
+  @type.uint32
   get height()
   {
     return this.GetHeight();
