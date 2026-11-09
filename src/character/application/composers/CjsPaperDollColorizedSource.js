@@ -33,9 +33,8 @@ import { CjsCharacterLibraryManager } from "../../library/CjsCharacterLibraryMan
  * colourised detail drawn unblended with its coverage (colorizedcopyblit), and its normal and specular as the mesh's
  * material. The carrier keeps the last applied option while the part is off or an option loads.
  *
- * A loaded recipe applies what it sets (operator, 2026-11-08): its entry's option, on, at its weight, and its colours
- * as a default palette. PROVISIONAL, awaiting the operator (Ruru's call, 2026-11-09): the recipe's colours enter as a
- * selected palette, not as custom colours; custom colours would hold across option picks.
+ * The source lists options only: what a part starts as (its option, weight and colours) is the character factory's,
+ * from its defaults or a loaded recipe's DNA.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
@@ -44,22 +43,18 @@ export class CjsPaperDollColorizedSource
 
     static className = "CjsPaperDollColorizedSource";
 
-    /** The palette id the recipe's colours are registered under. */
-    static authored = "authored";
-
     /** The colour areas each palette kind sets. */
     static areas = { [PaperDollPaletteKind.WHOLE]: [ 1, 2, 3 ], [PaperDollPaletteKind.AREA_1]: [ 1 ], [PaperDollPaletteKind.AREAS_2_3]: [ 2, 3 ] };
 
     /**
      * A palette file's raw record: its path, its file name, its kind (the areas it sets, from its `_a`/`_bc` name;
-     * derived, as in the game's creator) and those areas. `authored` (the recipe's colours) sets all three.
-     * @param {string} path The palette's `res:` path, or `authored`.
+     * derived, as in the game's creator) and those areas (`CjsCharacterLibraryManager.paletteRecord`).
+     * @param {string} path The palette's `res:` path.
      * @returns {{ path: string, name: string, kind: number, areas: number[] }}
      */
     static record(path)
     {
-        if (path !== CjsPaperDollColorizedSource.authored) return CjsCharacterLibraryManager.paletteRecord(path);
-        return { path, name: path, kind: PaperDollPaletteKind.WHOLE, areas: CjsPaperDollColorizedSource.areas[PaperDollPaletteKind.WHOLE] };
+        return CjsCharacterLibraryManager.paletteRecord(path);
     }
 
     /**
@@ -97,7 +92,7 @@ export class CjsPaperDollColorizedSource
 
     /**
      * @param {CjsPaperDollCompositor} compositor The compositor its layers are made with.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, CheckActive: function(): void, content: { root: string, recipe: string } }} build
+     * @param {{ Ready: function(Promise<*>): Promise<*>, CheckActive: function(): void, content: { root: string, sex: string } }} build
      *   The build served.
      * @param {string} name The definition part.
      */
@@ -133,11 +128,10 @@ export class CjsPaperDollColorizedSource
 
     /**
      * Takes the part's styles and their palettes from the parts library and configures the definition's component with
-     * them, applying the build's recipe entry for the part (`ResolveRecipeEntry`: option on, weight, colours as the
-     * `authored` palette); with no entry, no option, off.
+     * them: no option, off. What the part starts as is the character factory's (its defaults, or a loaded recipe's DNA).
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @returns {Promise<void>}
-     * @throws {Error} For a style without palettes, or a recipe entry naming a style the part does not list.
+     * @throws {Error} For a style without palettes.
      */
     async Configure(definition)
     {
@@ -152,29 +146,18 @@ export class CjsPaperDollColorizedSource
             const defaultPalette = records.find(record => record.name === "default")?.path ?? null;
             this._styles.set(style.id, { id: style.id, option: style, folder: style.folder, records, defaultPalette, paint: null, region: null, skipped: [], specular: null, gloss: null });
         }
-        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
-        const set = recipe.find(entry => entry.path.startsWith(category + "/")) ?? null;
-        const selected = set ? await build.Ready(library.ResolveRecipeEntry(build.content.sex, set)) : null;
-        if (set && (selected === null || selected.option === null || !this._styles.has(selected.option))) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
-        const option = set ? selected.option : "";
-        const authored = set ? set.GetColors() : null, AUTHORED = CjsPaperDollColorizedSource.authored;
-        // A part whose surface reads its palette's specular colours takes the recipe's own with its colours.
-        if (authored !== null && component.constructor.paletteSpecular) component.SetPaletteSpecular(AUTHORED, [ set.specularColor1, set.specularColor2, set.specularColor3 ]);
         component.Configure([ ...this._styles.values() ].map(style =>
         {
-            // The recipe's style starts in the recipe's colours: its default palette is `authored`.
-            const recipe = authored !== null && style.id === option;
             const primary = style.records.filter(record => record.kind !== PaperDollPaletteKind.AREAS_2_3);
             const secondary = style.records.filter(record => record.kind === PaperDollPaletteKind.AREAS_2_3);
-            const defaultPalette = recipe ? AUTHORED : style.defaultPalette;
             return {
                 id: style.id,
-                ...(defaultPalette !== null ? { defaultPalette } : {}),
-                palettes: recipe ? [ ...primary, CjsPaperDollColorizedSource.record(AUTHORED) ] : primary,
+                ...(style.defaultPalette !== null ? { defaultPalette: style.defaultPalette } : {}),
+                palettes: primary,
                 ...(secondary.length ? { secondaryPalettes: secondary } : {})
             };
-        }), new Map(authored ? [ [ AUTHORED, authored ] ] : []), { option, weight: set ? set.weight : 1, resolve: id => this._Resolve(this._styles.get(id)) });
-        component.enabled = set !== null;
+        }), new Map(), { option: "", weight: 1, resolve: id => this._Resolve(this._styles.get(id)) });
+        component.enabled = false;
     }
 
     /**
@@ -210,11 +193,9 @@ export class CjsPaperDollColorizedSource
     }
 
     /**
-     * Lists the part's options by the catalog rule and configures the definition's component with them, applying the
-     * build's recipe entry for the part (see the class).
+     * Lists the part's options by the catalog rule and configures the definition's component with them: no option, off.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @returns {Promise<void>}
-     * @throws {Error} For more than one recipe entry or a weight outside 0 to 1, or an entry naming no listed option.
      */
     async ConfigureCatalog(definition)
     {
@@ -223,49 +204,19 @@ export class CjsPaperDollColorizedSource
         this._type = component.constructor;
         this._weighted = component.constructor.weighted === true;
         this._catalog = new Map(catalog.options.map(option => [ option.id, option ]));
-        const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
-        const entries = recipe.filter(entry => entry.path.startsWith(category + "/"));
-        if (entries.length > 1 || entries.length && (!Number.isFinite(entries[0].weight) || entries[0].weight < 0 || entries[0].weight > 1)) throw new Error("Invalid " + this.name + " recipe entry");
-        const set = entries.length ? entries[0] : null;
-        // Without a recipe entry the part starts with no option and off: what starts on is the character factory's
-        // defaults (operator, 2026-11-09: no code-picked defaults).
-        const initial = set ? catalog.options.find(option => option.part === set.path) ?? null : null;
-        if (set && initial === null) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
-        // The recipe's colours (else its colour variation, else the option's default) are `authored`: the default palette
-        // of every option without its own. With no recipe entry such an option has no default. PROVISIONAL (Ruru,
-        // 2026-11-09; derived item 19): in every catalog part (blush as today, eyebrows) an option's own default wins over
-        // the recipe's colours, which keeps today's brows; the ruling says a loaded recipe applies what it sets. The
-        // recipe's colours and the .color files are in one colour space (eye shadow and blush match exactly); the female
-        // recipe's brow colour is a lighter brown of its own, for the operator to decide.
-        let authored = null;
-        if (set)
-        {
-            const folder = build.content.root + initial.part + "/";
-            // An entry without colours or a colour variation falls back to the option's default palette, else its first.
-            // PROVISIONAL (with the recipe-colours call, derived item 15): the first palette is our pick, not a source's.
-            authored = set.GetColors() ?? (await build.Ready(blue.characterLibrary.FetchPalette(set.colorvariation
-                ? folder + set.colorvariation + ".color" : initial.defaultPalette ?? initial.palettes[0].path))).colors;
-        }
-        const AUTHORED = CjsPaperDollColorizedSource.authored;
-        component.Configure(catalog.options.map(option =>
-        {
-            const defaultPalette = option.defaultPalette ?? (authored !== null ? AUTHORED : null);
-            return {
-                id: option.id,
-                colorAreas: [],
-                ...(defaultPalette !== null ? { defaultPalette } : {}),
-                palettes: [ ...option.palettes.map(record => CjsPaperDollColorizedSource.record(record.path)), ...(authored !== null ? [ CjsPaperDollColorizedSource.record(AUTHORED) ] : []) ]
-            };
-        }), new Map(authored !== null ? [ [ AUTHORED, authored ] ] : []), {
-            option: initial !== null ? initial.id : "", weight: set ? set.weight : 0, resolve: id => this._ResolveCatalog(id)
-        });
-        component.enabled = set !== null;
-        // The recipe's option draws from the first apply.
-        if (initial !== null) await component.ResolveOption(initial.id);
+        // The part starts with no option and off: what it starts as is the character factory's (its defaults, or a loaded
+        // recipe's DNA).
+        component.Configure(catalog.options.map(option => ({
+            id: option.id,
+            colorAreas: [],
+            ...(option.defaultPalette !== null ? { defaultPalette: option.defaultPalette } : {}),
+            palettes: option.palettes.map(record => CjsPaperDollColorizedSource.record(record.path))
+        })), new Map(), { option: "", weight: 0, resolve: id => this._ResolveCatalog(id) });
+        component.enabled = false;
         // A carrier mesh needs a material before any option is applied (the head draws its brow target once at
         // preparation): the catalog's first is loaded for the carrier only, not selected; the part stays as configured.
         // Derived: which option's material the carrier starts with is ours (the first), not a source's.
-        else if (this._type.carrier === true && catalog.options.length) await this._ResolveCatalog(catalog.options[0].id);
+        if (this._type.carrier === true && catalog.options.length) await this._ResolveCatalog(catalog.options[0].id);
     }
 
     /**

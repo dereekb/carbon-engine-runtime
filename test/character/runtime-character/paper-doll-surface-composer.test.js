@@ -106,11 +106,3 @@ test("each apply draws into the other target of every output", async t =>
   assert.notEqual(composition.GetOutput(PaperDollTarget.SURFACE, "head", "NormalMap"), first);
 });
 
-test("a recipe's entry for a map-decal part turns its option on and prepares it; parts it does not set stay off (operator, 2026-11-08)", async t =>
-{
-  const { definition, build } = await prepared(t, [ { category: "makeup", path: "makeup/scarring/scarring_01", weight: 1 } ]);
-  assert.equal(definition.scarring.option, "scarring_01");
-  assert.equal(definition.scarring.enabled, true);
-  assert.equal(definition.aging.enabled, false);
-  assert.deepEqual(build.report.surfaceDetails.options.scarring.map(option => option.id), [ "scarring_01" ], "prepared before the first apply");
-});

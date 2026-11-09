@@ -73,15 +73,6 @@ test("prepareAll makes a source for each part whose class blends as a decal; a p
   assert.equal(definition.freckles.enabled, false);
 });
 
-test("a recipe's entry turns its option on and prepares it; one the part does not list throws", async t =>
-{
-  const { definition, decals } = await prepared(t, [ { category: "makeup", path: "makeup/freckles/freckles_01", weight: 1 } ]);
-  assert.equal(definition.freckles.option, "freckles_01");
-  assert.equal(definition.freckles.enabled, true);
-  assert.deepEqual(decals.get("freckles").Describe().map(option => Object.keys(option.regions).sort()), [ [ "body", "head" ] ]);
-  await assert.rejects(prepared(t, [ { category: "makeup", path: "makeup/freckles/freckles_09" } ]), /does not list/);
-});
-
 test("a scar draws its masked normal before its twist, and its specular through its diffuse alpha at the diffuse's cutout", async t =>
 {
   const { decals } = await prepared(t);

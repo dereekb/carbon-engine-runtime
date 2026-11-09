@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterFactory, CjsPaperDollDefinition, CjsPaperDollInstance } from "../../../npm/dist/character/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 test("the defaults are the clean character: eyebrows, head, body, eyes and underwear on, the underwear not overridable", () =>
 {
@@ -129,4 +130,43 @@ test("the paper doll holds a part that is not overridable on, unless a worn part
   definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, false, "an overridable part stays as the user set it");
+});
+
+test("a recipe reads into a DNA: each entry's option on, its weight and colours; what cannot apply is reported", async t =>
+{
+  const ROOT = "res:/graphics/character/female/paperdoll/", PRS = "res:/graphics/character/dnafiles/test.prs";
+  const recipe = [
+    "- female",
+    "- { category: makeup, path: makeup/lipstick/lipstick_01, weight: 1.0, colors: '[(0.1, 0.2, 0.3, 1.0), (0.4, 0.5, 0.6, 1.0), (0.7, 0.8, 0.9, 1.0)]', colorvariation: null }",
+    "- { category: makeup, path: makeup/blush/blush_01, weight: 0.5, colorvariation: pink }",
+    "- { category: makeup, path: makeup/aging/aging_01, variation: v1, weight: 1.0 }",
+    "- { category: archetypes, path: archetypes/msshape, weight: 1.0 }",
+    "- { category: feet, path: feet/feet_nude, weight: 1.0 }",
+    "- { category: outer, path: outer/coat01, variation: v9, weight: 1.0 }",
+    "- { category: hair, path: hair/long01, weight: 1.0 }",
+    "- { category: bodyshapes, path: bodyshapes/thinshape, weight: 0.3 }",
+    ""
+  ].join("\n");
+  const files = [
+    PRS,
+    ROOT + "makeup/lipstick/lipstick_01/types/lipstick_01.type", ROOT + "makeup/lipstick/lipstick_01/red.color",
+    ROOT + "makeup/blush/blush_01/types/blush_01.type", ROOT + "makeup/blush/blush_01/pink.color",
+    ROOT + "makeup/aging/aging_01/types/aging_01_v1.type", ROOT + "makeup/aging/aging_01/v1/comp_head_d.png",
+    ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type"
+  ];
+  installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });
+  const { dna, problems } = await CjsCharacterFactory.ReadRecipe(PRS);
+  assert.equal(dna.sex, "female");
+  assert.deepEqual(dna.parts.lipstick, { enabled: true, option: "lipstick_01", weight: 1,
+    colors: [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ].map(color => Array.from(Float32Array.from(color))),
+    specularColors: [ [ .5, .5, .5, 1 ], [ .5, .5, .5, 1 ], [ .5, .5, .5, 1 ] ] }, "its own colours, and their specular colours");
+  assert.deepEqual(dna.parts.blush, { enabled: true, option: "blush_01", weight: .5, palette: ROOT + "makeup/blush/blush_01/pink.color" }, "the palette its colour variation names");
+  assert.deepEqual(dna.parts.aging, { enabled: true, option: "aging_01_v1", weight: 1 }, "the option its variation selects");
+  assert.deepEqual(dna.parts.archetype, { option: "archetypes/msshape" });
+  assert.deepEqual(dna.parts.feet, { enabled: false }, "a nude feet entry turns the feet off");
+  assert.deepEqual(problems.sort(), [
+    "bodyshapes/thinshape: no part (no paper doll category)",
+    "hair/long01: hair is not applied until the instance owns meshes (R6)",
+    "outer/coat01: no outer option presets it (variation 'v9', colour variation '')"
+  ]);
 });

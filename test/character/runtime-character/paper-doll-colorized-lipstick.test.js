@@ -72,13 +72,3 @@ test("a style without a specular map draws its diffuse only (the male lipstick)"
   assert.equal(source.GetLayers(value, "head", "DiffuseMap").length, 1);
 });
 
-test("a recipe entry's specular colours ride with its authored palette", async t =>
-{
-  const { definition } = await configured(t, [ { category: "makeup", path: "makeup/lipstick/lipstick_01", colors: "[(0.8, 0.1, 0.1, 1.0), (0.5, 0.5, 0.5, 1.0), (0.5, 0.5, 0.5, 1.0)]", weight: .1,
-    specularColor1: Float32Array.of(.9, .9, .9, 1.4) } ]);
-  const lipstick = definition.lipstick;
-  assert.equal(lipstick.enabled, true);
-  assert.equal(lipstick.GetOptions().find(option => option.id === "lipstick_01").defaultPalette, CjsPaperDollColorizedSource.authored);
-  assert.deepEqual(Array.from(lipstick.GetPaletteSpecularColors(CjsPaperDollColorizedSource.authored)[0], v => Math.round(v * 10) / 10), [ .9, .9, .9, 1.4 ]);
-  assert.equal(lipstick.GetPaletteSpecularColors(LIP + "lipstick_01/red_medium.color"), null, "a palette file holds its own");
-});

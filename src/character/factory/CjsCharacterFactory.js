@@ -11,6 +11,7 @@ const PART_FIELDS = {
     palette: "string",
     secondaryPalette: "string",
     colors: "colors",
+    specularColors: "colors",
     weight: "number",
     overridable: "boolean"
 };
@@ -158,15 +159,16 @@ export class CjsCharacterFactory
     /**
      * Puts the whole character back to its sex's default: one walk over the definition's parts to neutral (off, no
      * custom colours, the archetype's sculpts and strength, the layer order), then the defaults (`Build` of an empty
-     * DNA). The result is the freshly built default character.
+     * DNA, or the DNA given). The result is the freshly built character: the default, or the DNA's (a loaded recipe's).
      * @param {import("../application/CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The definition.
-     * @returns {Promise<{ problems: string[] }>} What the defaults could not apply.
+     * @param {object} [dna] The DNA to build over the defaults; none by default.
+     * @returns {Promise<{ problems: string[] }>} What could not apply.
      */
-    static async Reset(definition)
+    static async Reset(definition, dna = { sex: definition.sex, parts: {} })
     {
         definition.archetype.ClearSculpts();
         definition.ResetLayers();
-        return CjsCharacterFactory.Build(definition, { sex: definition.sex, parts: {} });
+        return CjsCharacterFactory.Build(definition, dna);
     }
 
     /**
@@ -182,7 +184,7 @@ export class CjsCharacterFactory
      */
     static async _ApplyPart(component, part, archetype)
     {
-        const { option = "", palette = "", secondaryPalette = "", colors = null, ...rest } = part;
+        const { option = "", palette = "", secondaryPalette = "", colors = null, specularColors = null, ...rest } = part;
         if (option && !component.GetOptions().some(value => value.id === option)) throw new Error("option " + option + " is not listed");
         component.Reset();
         if (archetype)
@@ -197,22 +199,23 @@ export class CjsCharacterFactory
         else delete values.weight;
         CjsSchema.setValues(component, values);
         if (option && component.enabled) await component.ResolveOption(option);
-        await CjsCharacterFactory._ApplyColors(component, { palette, secondaryPalette: component.constructor.secondaryPalettes ? secondaryPalette : "", colors });
+        await CjsCharacterFactory._ApplyColors(component, { palette, secondaryPalette: component.constructor.secondaryPalettes ? secondaryPalette : "", colors, specularColors });
     }
 
     /**
-     * A part's colours. PROVISIONAL (the operator's colour ruling is open): the DNA's own colours win; else its
-     * palette's colours (and specular colours where the part's surface reads them), with a secondary palette's areas 2
+     * A part's colours. PROVISIONAL (the operator's colour ruling is open): the DNA's own colours win (and its own
+     * specular colours, where the part's surface reads them); else its palette's colours (and specular colours where the part's surface reads them), with a secondary palette's areas 2
      * and 3; else the resolved option's default palette where the option paints colour areas; else neutral grey.
      * @param {object} component The definition's component.
-     * @param {{ palette: string, secondaryPalette: string, colors: ?number[][] }} values The part's colour values.
+     * @param {{ palette: string, secondaryPalette: string, colors: ?number[][], specularColors: ?number[][] }} values The part's colour values.
      * @returns {Promise<void>}
      */
-    static async _ApplyColors(component, { palette, secondaryPalette, colors })
+    static async _ApplyColors(component, { palette, secondaryPalette, colors, specularColors })
     {
         if (colors !== null)
         {
             CjsSchema.setValues(component, { customColors: true, color1: Float32Array.from(colors[0]), color2: Float32Array.from(colors[1]), color3: Float32Array.from(colors[2]) });
+            if (component.constructor.paletteSpecular && specularColors !== null) component.SetSpecularColors(specularColors.map(color => Float32Array.from(color)));
             return;
         }
         const selected = component.enabled && component.option ? component.GetOptions().find(value => value.id === component.option) : null;
@@ -249,6 +252,116 @@ export class CjsCharacterFactory
     }
 
     /**
+     * The parts library categories whose paper doll part has another category (derived: the part classes name their
+     * category one folder up).
+     * @type {Object<string, string>}
+     */
+    static partOfCategory = { "tattoo/head": "tattoo", "skintone/basic": "skin" };
+
+    /**
+     * The parts whose recipe entries are reported and not applied until the instance owns meshes (R6): hair, beard and
+     * the accessories. Derived: a build stage, not a content fact.
+     * @type {string[]}
+     */
+    static notAppliedYet = [ "hair", "beard", "brow", "chin", "ears", "earsHigh", "earsLow", "glasses", "lips", "mask", "nose" ];
+
+    /**
+     * Reads a `.prs` recipe into a DNA: each entry's category and option from the parts library
+     * (`ResolveRecipeEntry`), set on, at its weight, with its own colours (and their specular colours) or the palette
+     * its colour variation names. An archetype entry sets the archetype. A `feet_nude` entry turns the feet off. What
+     * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets (a
+     * garment the part's `recipe` option will take, later), and the entries of parts not applied yet (`notAppliedYet`).
+     * PROVISIONAL: the colour fields, as `_ApplyColors`.
+     *
+     * Ours (no Carbon counterpart): the client's paper doll is Python. Moved from the sources' own recipe handling.
+     * @param {string} path The recipe's `res:` path.
+     * @param {string} [sex=""] The sex, for a recipe that names none (5 of 63 shipped).
+     * @returns {Promise<{ dna: { sex: string, parts: Object<string, object> }, problems: string[] }>}
+     * @throws {Error} For a recipe and a call that name no sex.
+     */
+    static async ReadRecipe(path, sex = "")
+    {
+        const library = blue.characterLibrary, recipe = await library.FetchRecipe(path);
+        const named = typeof recipe.value[0] === "string" ? recipe.value[0] : "", recipeSex = named || sex;
+        if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
+        const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._PartsByCategory();
+        for (const entry of recipe.GetModifiers())
+        {
+            const found = await library.ResolveRecipeEntry(recipeSex, entry);
+            if (found === null) { problems.push(entry.path + ": no part (no paper doll category)"); continue; }
+            if (found.category === "archetypes") { dna.parts.archetype = { option: entry.path.toLowerCase() }; continue; }
+            const name = parts.get(found.category) ?? null;
+            if (name === null) { problems.push(entry.path + ": no part (" + found.category + ")"); continue; }
+            if (CjsCharacterFactory.notAppliedYet.includes(name)) { problems.push(entry.path + ": " + name + " is not applied until the instance owns meshes (R6)"); continue; }
+            if (found.option === null)
+            {
+                // The operator's ruling: a nude feet entry turns the feet off.
+                if (name === "feet" && /_nude$/u.test(entry.path)) { dna.parts.feet = { enabled: false }; continue; }
+                problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorvariation + "')");
+                continue;
+            }
+            if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
+            const value = { enabled: true, option: found.option };
+            if (entry.weight > 0) value.weight = entry.weight;
+            const colors = entry.GetColors();
+            if (colors !== null)
+            {
+                value.colors = colors.map(color => Array.from(color));
+                value.specularColors = [ entry.specularColor1, entry.specularColor2, entry.specularColor3 ].map(color => Array.from(color));
+            }
+            else if (entry.colorvariation)
+            {
+                const option = (await library.FetchOptions(recipeSex, found.category)).find(value => value.id === found.option);
+                const palette = (await library.FetchPalettes(option)).find(record => record.name === entry.colorvariation) ?? null;
+                if (palette !== null) value.palette = palette.path;
+                else problems.push(entry.path + ": no palette " + entry.colorvariation + " for " + found.option);
+            }
+            dna.parts[name] = value;
+        }
+        return { dna: CjsCharacterFactory.ReadJSON(dna), problems };
+    }
+
+    /**
+     * The shipped character recipes for a sex: every `.prs` under `res:/graphics/character/` whose first line names
+     * that sex (a recipe that names none is left out), sorted. Each recipe is read once (`FetchRecipe`); one that
+     * cannot be read is left out.
+     * @param {"female"|"male"} sex The sex.
+     * @returns {Promise<string[]>} The recipes' `res:` paths.
+     */
+    static async ListRecipes(sex)
+    {
+        const library = blue.characterLibrary, found = [];
+        for (const path of await library.ListRecipeNames())
+        {
+            if (!path.startsWith("res:/graphics/character/")) continue;
+            let recipe;
+            try { recipe = await library.FetchRecipe(path); }
+            catch { continue; }
+            if (recipe.value[0] === sex) found.push(path);
+        }
+        return found.sort();
+    }
+
+    /**
+     * Each paper doll part by the parts library category it reads (`partOfCategory` where they differ).
+     * @returns {Map<string, string>}
+     */
+    static _PartsByCategory()
+    {
+        if (CjsCharacterFactory._partsByCategory === null)
+        {
+            const definition = new CjsPaperDollDefinition(), parts = new Map();
+            for (const name of CjsPaperDollDefinition.parts) if (definition[name].constructor.category) parts.set(definition[name].constructor.category, name);
+            for (const [ category, name ] of Object.entries(CjsCharacterFactory.partOfCategory)) parts.set(category, name);
+            CjsCharacterFactory._partsByCategory = parts;
+        }
+        return CjsCharacterFactory._partsByCategory;
+    }
+
+    /** The parts by category, made once (`_PartsByCategory`). @type {?Map<string, string>} */
+    static _partsByCategory = null;
+
+    /**
      * One DNA part, checked and copied.
      * @param {string} name The part.
      * @param {object} part Its values.
@@ -267,8 +380,8 @@ export class CjsCharacterFactory
             if (kind === "colors")
             {
                 if (!Array.isArray(value) || value.length !== 3 || value.some(color => !Array.isArray(color) || color.length !== 4 || !color.every(Number.isFinite)))
-                    throw new Error("Character part " + name + " colors are not three RGBA quadruples");
-                out.colors = value.map(color => [ ...color ]);
+                    throw new Error("Character part " + name + " " + key + " are not three RGBA quadruples");
+                out[key] = value.map(color => [ ...color ]);
             }
             else if (typeof value !== kind || kind === "number" && !Number.isFinite(value)) throw new Error("Character part " + name + " " + key + " is not a " + kind);
             else out[key] = value;

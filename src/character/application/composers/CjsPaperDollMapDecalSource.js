@@ -46,7 +46,7 @@ export class CjsPaperDollMapDecalSource
 
     /**
      * @param {CjsPaperDollCompositor} compositor The compositor its layers are made with.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string, recipe: string } }} build The build served.
+     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string } }} build The build served.
      * @param {string} name The definition part.
      */
     constructor(compositor, build, name)
@@ -62,7 +62,7 @@ export class CjsPaperDollMapDecalSource
      * configured and set on the composition.
      * @param {import("./CjsPaperDollComposition.js").CjsPaperDollComposition} composition The composition.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string, recipe: string } }} build The build served.
+     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string } }} build The build served.
      * @returns {Promise<Map<string, CjsPaperDollMapDecalSource>>} The sources, by part.
      */
     static async prepareAll(composition, definition, build)
@@ -95,13 +95,9 @@ export class CjsPaperDollMapDecalSource
         const build = this._build, library = blue.characterLibrary, component = definition[this.name], category = component.constructor.category;
         const options = await build.Ready(library.FetchOptions(build.content.sex, category));
         this._definitions = new Map(options.map(option => [ option.id, option ]));
-        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
-        const set = recipe.find(entry => entry.path.startsWith(category + "/"));
-        const selected = set ? await build.Ready(library.ResolveRecipeEntry(build.content.sex, set)) : null;
-        if (set && (selected === null || selected.option === null || !this._definitions.has(selected.option))) throw Error("The recipe sets " + set.path + ", which " + category + " does not list");
         // An option's path is its part folder below the content root; occlusion matches against it.
         component.Configure(options.map(option => ({ id: option.id, path: option.path })), new Map(), {
-            option: set ? selected.option : "",
+            option: "",
             resolve: async id =>
             {
                 await this.Prepare(id);
@@ -109,9 +105,7 @@ export class CjsPaperDollMapDecalSource
                 return { path: prepared.path, occludes: prepared.occludes, colorAreas: [] };
             }
         });
-        component.enabled = !!set;
-        // An option the recipe turns on draws from the first apply.
-        if (set) await this.Prepare(selected.option);
+        component.enabled = false;
     }
 
     /**

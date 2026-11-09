@@ -66,23 +66,6 @@ test("each style lists its own palettes as raw records: name, kind and the areas
   assert.equal(definition.eyeshadow.option, "");
 });
 
-test("a recipe entry turns its style on at its weight, with its colours as the style's default palette and no secondary", async t =>
-{
-  const { definition } = await configured(t, [ { category: "makeup", path: "makeup/eyeshadow/eyeshadow_01", colors: RECIPE_COLOURS, weight: .25 } ]);
-  const component = definition.eyeshadow;
-  assert.equal(component.enabled, true);
-  assert.equal(component.option, "eyeshadow_01");
-  assert.equal(component.weight, .25);
-  const option = component.GetOptions().find(value => value.id === "eyeshadow_01");
-  assert.equal(option.defaultPalette, CjsPaperDollColorizedSource.authored);
-  assert.equal(option.defaultSecondaryPalette, undefined, "the recipe's colours fill all three areas");
-  assert.equal(option.palettes.find(record => record.path === CjsPaperDollColorizedSource.authored).kind, PaperDollPaletteKind.WHOLE);
-  assert.deepEqual(component.GetPaletteColors(CjsPaperDollColorizedSource.authored).map(color => Array.from(color, value => Math.round(value * 10) / 10)),
-    [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ]);
-  assert.equal(component.GetOptions().find(value => value.id === "eyeshadow_02").defaultPalette, SHADOW + "eyeshadow_02/default.color");
-  await assert.rejects(configured(t, [ { category: "makeup", path: "makeup/eyeshadow/eyeshadow_09", colors: RECIPE_COLOURS, weight: 1 } ]), /does not list/);
-});
-
 test("a style's paint draws in the captured colours at the captured weight, into the head diffuse only", async t =>
 {
   const { definition, source } = await configured(t, null);

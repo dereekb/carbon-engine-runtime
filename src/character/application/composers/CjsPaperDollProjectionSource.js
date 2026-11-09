@@ -24,8 +24,8 @@ import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles
  * meshes (R6): the host reads `GetBakeTarget` and `GetProjection` and installs `SetBaker`, which draws an option into
  * the target for the current face shape and answers whether it has (false while its inputs load).
  *
- * A loaded recipe applies what it sets (operator, 2026-11-08): its entry's option, on, and its colours as the
- * `authored` palette (no recipe in the build sets a tattoo: 0 of 37).
+ * The source lists options only: what the part starts as is the character factory's, from its defaults or a loaded
+ * recipe's DNA (no recipe in the build sets a tattoo: 0 of 37).
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
@@ -66,7 +66,7 @@ export class CjsPaperDollProjectionSource
 
     /**
      * @param {CjsPaperDollCompositor} compositor The compositor its layers are made with.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, CheckActive: function(): void, content: { root: string, recipe: string } }} build
+     * @param {{ Ready: function(Promise<*>): Promise<*>, CheckActive: function(): void, content: { root: string, sex: string } }} build
      *   The build served.
      * @param {string} name The definition part.
      */
@@ -100,11 +100,11 @@ export class CjsPaperDollProjectionSource
     }
 
     /**
-     * Lists the head options and the shared palettes, makes the bake target and configures the definition's component,
-     * applying the build's recipe entry for the part; with no entry, no option, off.
+     * Lists the head options and the shared palettes, makes the bake target and configures the definition's component:
+     * no option, off.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @returns {Promise<void>}
-     * @throws {Error} For an option without a projection or a zone map, or a recipe entry naming no listed option.
+     * @throws {Error} For an option without a projection or a zone map.
      */
     async Configure(definition)
     {
@@ -121,23 +121,10 @@ export class CjsPaperDollProjectionSource
         this._unlisted = (await build.Ready(library.FetchFoldersWithoutOptions(sex, head))).filter(folder => folder.projection !== null).map(folder => folder.id);
         // The shared palettes are every option's (`FetchPalettes`: the category's `colors/`).
         const palettes = options.length ? await build.Ready(library.FetchPalettes(options[0])) : [];
-        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
-        const set = recipe.find(entry => entry.path.startsWith(head + "/")) ?? null;
-        const selected = set ? await build.Ready(library.ResolveRecipeEntry(sex, set)) : null;
-        if (set && (selected === null || selected.option === null || !this._options.has(selected.option))) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
-        const option = set ? selected.option : "";
-        const authored = set ? set.GetColors() : null, AUTHORED = CjsPaperDollColorizedSource.authored;
         this._bake = this._compositor.TargetTexture(CjsPaperDollProjectionSource.bakeWidth, CjsPaperDollProjectionSource.bakeHeight);
-        component.Configure([ ...this._options.keys() ].sort().map(id =>
-        {
-            const recipe = authored !== null && id === option;
-            return {
-                id,
-                ...(recipe ? { defaultPalette: AUTHORED } : {}),
-                palettes: recipe ? [ ...palettes, CjsPaperDollColorizedSource.record(AUTHORED) ] : palettes
-            };
-        }), new Map(authored !== null ? [ [ AUTHORED, authored ] ] : []), { option, resolve: id => this._Resolve(this._options.get(id)) });
-        component.enabled = set !== null;
+        // No option, off: what the part starts as is the character factory's (its defaults, or a loaded recipe's DNA).
+        component.Configure([ ...this._options.keys() ].sort().map(id => ({ id, palettes })), new Map(), { option: "", resolve: id => this._Resolve(this._options.get(id)) });
+        component.enabled = false;
     }
 
     /**

@@ -77,12 +77,3 @@ test("an option paints its zone over the bake target once the host has baked it"
   assert.deepEqual(source.GetLayers(value, "head", "NormalMap"), []);
 });
 
-test("a recipe's tattoo comes on in the recipe's colours", async t =>
-{
-  const { definition } = await configured(t, [ { category: "tattoo", path: "tattoo/head/tattoofacem02", colors: "[(0.2, 0.3, 0.4, 1.0), (0.5, 0.5, 0.5, 1.0), (0.5, 0.5, 0.5, 1.0)]" } ]);
-  assert.equal(definition.tattoo.enabled, true);
-  assert.equal(definition.tattoo.option, "tattoofacem02");
-  assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacem02").defaultPalette, CjsPaperDollColorizedSource.authored);
-  assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacea01").defaultPalette, undefined);
-});
-
