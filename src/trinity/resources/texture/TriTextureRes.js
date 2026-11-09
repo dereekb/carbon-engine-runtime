@@ -1089,7 +1089,7 @@ CjsSchema.decorateField(TriTextureRes, "cutoutWidth", type.float32, be.mapAttrib
 CjsSchema.decorateField(TriTextureRes, "width", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutX", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "cutoutY", type.float32, be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(TriTextureRes, "loadedBitmap", type.unknown, meta.read);
+CjsSchema.decorateField(TriTextureRes, "loadedBitmap", type.rawStruct("ImageIO::HostBitmap"), meta.read);
 
 CjsSchema.decorateMethod(TriTextureRes, "SaveAsync", be.mapMethod());
 CjsSchema.decorateMethod(TriTextureRes, "Save", be.mapMethod());

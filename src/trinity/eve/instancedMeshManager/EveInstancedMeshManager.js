@@ -269,7 +269,7 @@ export class EveInstancedMeshManager
    * A Map from KeyHasher.hash(key) to Carbon's value_type `[key, meshData]`;
    * see EveInstancedMeshManagerKeyHasher for why the key is a string.
    */
-  @type.unknown
+  @type.map("EveInstancedMeshManager::MeshData")
   _meshInstances = new Map();
 
   /**

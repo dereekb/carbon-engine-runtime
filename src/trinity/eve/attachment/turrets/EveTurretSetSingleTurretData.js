@@ -60,7 +60,7 @@ export class EveTurretSetSingleTurretData
    * Tr2GrannyAnimation that EveTurretSet.InitializeAnimation attaches, which
    * samples both CMF and Granny resources.
    */
-  @type.unknown
+  @type.rawStruct("cmf::AnimationSequencer")
   sequencer = null;
 
   /**
@@ -68,7 +68,7 @@ export class EveTurretSetSingleTurretData
    * the pose the sequencer owns, so it stays null until
    * EveTurretSet.InitializeAnimation attaches a sequencer.
    */
-  @type.unknown
+  @type.rawStruct("cmf::SkeletonPose")
   pose = null;
 
   /**

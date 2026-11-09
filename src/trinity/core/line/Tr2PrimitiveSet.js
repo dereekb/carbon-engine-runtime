@@ -66,7 +66,7 @@ export class Tr2PrimitiveSet extends IRoot
   worldTransform = mat4.create();
 
   /** m_pythonUserData (PyObject*) [READWRITE] */
-  @type.unknown
+  @type.pyObject
   _userData = null;
 
   /** m_viewOriented (bool) [READWRITE, PERSIST] */

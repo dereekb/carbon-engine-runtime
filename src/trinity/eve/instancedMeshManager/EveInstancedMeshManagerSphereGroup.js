@@ -22,7 +22,7 @@ export class EveInstancedMeshManagerSphereGroup
    * bounds (CcpMath::Sphere), embedded by value. `= {}` runs Sphere's default
    * constructor (math/include/Sphere_inline.h:9-13): centre 0, radius -1.
    */
-  @type.unknown
+  @type.rawStruct("CcpMath::Sphere")
   bounds = { center: vec3.create(), radius: -1 };
 
   /** flags (InstanceFlags), embedded by value. */
@@ -34,7 +34,7 @@ export class EveInstancedMeshManagerSphereGroup
   count = 0;
 
   /** boundingSpheres (const CcpMath::Sphere*): the provider's sphere array. Carbon initializes it to nullptr. */
-  @type.unknown
+  @type.array({ kind: "rawStruct", className: "CcpMath::Sphere" })
   boundingSpheres = null;
 
   /** handle (BoundingSphereHandle*). Carbon initializes it to nullptr. */

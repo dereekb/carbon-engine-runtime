@@ -27,7 +27,7 @@ export class EveInstancedMeshManagerMeshGroup
    * staticInstances (const StaticPerInstanceData*): the provider's instance
    * array, read in place. Carbon initializes the union to nullptr.
    */
-  @type.unknown
+  @type.array("EveInstancedMeshManager::StaticPerInstanceData")
   staticInstances = null;
 
   /** count (uint32_t). */

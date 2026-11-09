@@ -29,47 +29,47 @@ export class EveSpaceSceneRenderDriverTimers
 {
 
   /** update (Tr2ProfileTimer), h:157. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   update = null;
 
   /** beginRender (Tr2ProfileTimer), h:158. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   beginRender = null;
 
   /** endRender (Tr2ProfileTimer), h:159. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   endRender = null;
 
   /** postProcess (Tr2ProfileTimer), h:160. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   postProcess = null;
 
   /** ui3d (Tr2ProfileTimer), h:161. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   ui3d = null;
 
   /** background (Tr2ProfileTimer), h:162. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   background = null;
 
   /** depthPass (Tr2ProfileTimer), h:163. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   depthPass = null;
 
   /** mainPass (Tr2ProfileTimer), h:164. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   mainPass = null;
 
   /** reflections (Tr2ProfileTimer), h:165. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   reflections = null;
 
   /** shadows (Tr2ProfileTimer), h:166. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   shadows = null;
 
   /** ssao (Tr2ProfileTimer), h:167. Waiting: Tr2ProfileTimer is not ported. */
-  @type.unknown
+  @type.rawStruct("Tr2ProfileTimer")
   ssao = null;
 
 }

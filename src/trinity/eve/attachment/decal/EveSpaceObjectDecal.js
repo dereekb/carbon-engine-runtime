@@ -153,7 +153,7 @@ export class EveSpaceObjectDecal
   // interchange reproduces Carbon's hidden decal geometry selection.
 
   @meta.mapAttribute(meta.PERSIST)
-  @type.array("unknown")
+  @type.array({ kind: "array", itemType: "uint32" })
   staticIndexBuffers = [];
 
   _decalMatrix = mat4.create();

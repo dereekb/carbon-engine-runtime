@@ -33,7 +33,7 @@ export class Tr2PyValueBinding extends INotify
   isValid = false;
 
   /** m_sourceObject (PyObject*) [READWRITE, NOTIFY] */
-  @type.unknown
+  @type.pyObject
   sourceObject = null;
 
   /** m_sourceAttribute (std::string) [READWRITE, NOTIFY, PERSIST] */
@@ -41,7 +41,7 @@ export class Tr2PyValueBinding extends INotify
   sourceAttribute = "";
 
   /** m_destinationObject (PyObject*) [READWRITE, NOTIFY] */
-  @type.unknown
+  @type.pyObject
   destinationObject = null;
 
   /** m_destinationAttribute (std::string) [READWRITE, NOTIFY, PERSIST] */

@@ -41,7 +41,7 @@ export class TriEventKey extends IRoot
   /** Carbon: m_callable (trinity/trinity/Curves/TriEventKey.h:22).
    * Adapted: Python values use ordinary JavaScript callables; they are not IRoot objects.
    */
-  @type.unknown
+  @type.pyObject
   callable = null;
 
   /**
@@ -52,7 +52,7 @@ export class TriEventKey extends IRoot
   /** Carbon: m_callableArgs (trinity/trinity/Curves/TriEventKey.h:23).
    * Adapted: Python values use ordinary JavaScript argument arrays; they are not IRoot objects.
    */
-  @type.array("unknown")
+  @type.pyObject
   callableArgs = null;
 }
 
