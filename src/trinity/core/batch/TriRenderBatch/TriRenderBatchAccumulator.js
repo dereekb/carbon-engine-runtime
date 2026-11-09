@@ -1,4 +1,3 @@
-import { Tr2RenderBatch } from "./Tr2RenderBatch.js";
 import { CjsSchema, type } from "#schema";
 // Source: trinity/trinity/TriRenderBatch.h
 import { DefaultKeyGenerator } from "./DefaultKeyGenerator.js";
@@ -196,8 +195,8 @@ export class TriRenderBatchAccumulator extends ITriRenderBatchAccumulator
   }
 }
 
-CjsSchema.decorateField(TriRenderBatchAccumulator, "batches", type.array(Tr2RenderBatch));
-CjsSchema.decorateField(TriRenderBatchAccumulator, "gdprBatches", type.array(Tr2RenderBatch));
+CjsSchema.decorateField(TriRenderBatchAccumulator, "batches", type.array("Tr2RenderBatch"));
+CjsSchema.decorateField(TriRenderBatchAccumulator, "gdprBatches", type.array("Tr2RenderBatch"));
 // States: TriRenderBatch.h:319-410. Commit is adapted: it stores the batch itself rather than a copy and returns whether it was accepted. Finalize is
 // adapted: one partition routine serves both sort types and Array.sort is always stable, where Carbon picks sort or stable_sort.
 CjsSchema.meta.carbon("TriRenderBatchAccumulator")(TriRenderBatchAccumulator);
