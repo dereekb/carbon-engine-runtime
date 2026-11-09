@@ -238,5 +238,5 @@ export class Tr2ConstantBufferAL
   }
 }
 
-CjsSchema.decorateField(Tr2ConstantBufferAL, "_buffer", type.unknown);
+CjsSchema.decorateField(Tr2ConstantBufferAL, "_buffer", type.rawStruct("TrinityALImpl::Tr2ConstantBufferAL"));
 CjsSchema.meta.carbon("Tr2ConstantBufferAL")(Tr2ConstantBufferAL);

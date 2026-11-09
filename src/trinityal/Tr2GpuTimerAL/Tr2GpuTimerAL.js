@@ -199,5 +199,5 @@ export class Tr2GpuTimerAL
   }
 }
 
-CjsSchema.decorateField(Tr2GpuTimerAL, "_gpuTimer", type.unknown);
+CjsSchema.decorateField(Tr2GpuTimerAL, "_gpuTimer", type.rawStruct("TrinityALImpl::Tr2GpuTimerAL"));
 CjsSchema.meta.carbon("Tr2GpuTimerAL")(Tr2GpuTimerAL);

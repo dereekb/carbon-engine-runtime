@@ -260,5 +260,5 @@ export class Tr2PipelineStatsQueryAL
   }
 }
 
-CjsSchema.decorateField(Tr2PipelineStatsQueryAL, "_query", type.unknown);
+CjsSchema.decorateField(Tr2PipelineStatsQueryAL, "_query", type.rawStruct("TrinityALImpl::Tr2PipelineStatsQueryAL"));
 CjsSchema.meta.carbon("Tr2PipelineStatsQueryAL")(Tr2PipelineStatsQueryAL);

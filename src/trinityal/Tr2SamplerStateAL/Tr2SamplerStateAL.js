@@ -167,5 +167,5 @@ export class Tr2SamplerStateAL
   }
 }
 
-CjsSchema.decorateField(Tr2SamplerStateAL, "_sampler", type.unknown);
+CjsSchema.decorateField(Tr2SamplerStateAL, "_sampler", type.rawStruct("TrinityALImpl::Tr2SamplerStateAL"));
 CjsSchema.meta.carbon("Tr2SamplerStateAL")(Tr2SamplerStateAL);

@@ -215,6 +215,6 @@ export class Tr2BufferAL
 
 
 
-CjsSchema.decorateField(Tr2BufferAL, "_buffer", type.unknown);
+CjsSchema.decorateField(Tr2BufferAL, "_buffer", type.rawStruct("TrinityALImpl::Tr2BufferAL"));
 CjsSchema.decorateMethod(Tr2BufferAL, "MapForReading__OffsetSize");
 CjsSchema.meta.carbon("Tr2BufferAL")(Tr2BufferAL);

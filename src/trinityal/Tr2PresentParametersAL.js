@@ -68,7 +68,7 @@ CjsSchema.decorateField(Tr2PresentParametersAL, "backBufferCount", type.uint32);
 CjsSchema.decorateField(Tr2PresentParametersAL, "msaaType", type.uint32);
 CjsSchema.decorateField(Tr2PresentParametersAL, "msaaQuality", type.uint32);
 CjsSchema.decorateField(Tr2PresentParametersAL, "swapEffect", type.int32);
-CjsSchema.decorateField(Tr2PresentParametersAL, "outputWindow", type.unknown);
+CjsSchema.decorateField(Tr2PresentParametersAL, "outputWindow", type.rawStruct("Tr2WindowHandle"));
 CjsSchema.decorateField(Tr2PresentParametersAL, "windowed", type.boolean);
 CjsSchema.decorateField(Tr2PresentParametersAL, "software", type.boolean);
 CjsSchema.decorateField(Tr2PresentParametersAL, "presentInterval", type.int32);

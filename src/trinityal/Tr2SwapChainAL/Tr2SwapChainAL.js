@@ -201,5 +201,5 @@ export class Tr2SwapChainAL
   }
 }
 
-CjsSchema.decorateField(Tr2SwapChainAL, "_swapChain", type.unknown);
+CjsSchema.decorateField(Tr2SwapChainAL, "_swapChain", type.rawStruct("TrinityALImpl::Tr2SwapChainAL"));
 CjsSchema.meta.carbon("Tr2SwapChainAL")(Tr2SwapChainAL);

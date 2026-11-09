@@ -202,5 +202,5 @@ export class Tr2OcclusionQueryAL
   }
 }
 
-CjsSchema.decorateField(Tr2OcclusionQueryAL, "_query", type.unknown);
+CjsSchema.decorateField(Tr2OcclusionQueryAL, "_query", type.rawStruct("TrinityALImpl::Tr2OcclusionQueryAL"));
 CjsSchema.meta.carbon("Tr2OcclusionQueryAL")(Tr2OcclusionQueryAL);

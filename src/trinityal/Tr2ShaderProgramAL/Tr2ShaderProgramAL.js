@@ -209,5 +209,5 @@ export class Tr2ShaderProgramAL
   }
 }
 
-CjsSchema.decorateField(Tr2ShaderProgramAL, "_program", type.unknown);
+CjsSchema.decorateField(Tr2ShaderProgramAL, "_program", type.rawStruct("TrinityALImpl::Tr2ShaderProgramAL"));
 CjsSchema.meta.carbon("Tr2ShaderProgramAL")(Tr2ShaderProgramAL);

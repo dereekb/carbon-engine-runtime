@@ -502,6 +502,6 @@ export class Tr2TextureAL
 
 
 
-CjsSchema.decorateField(Tr2TextureAL, "_texture", type.unknown);
+CjsSchema.decorateField(Tr2TextureAL, "_texture", type.rawStruct("TrinityALImpl::Tr2TextureAL"));
 CjsSchema.decorateMethod(Tr2TextureAL, "CreateReadback");
 CjsSchema.meta.carbon("Tr2TextureAL")(Tr2TextureAL);

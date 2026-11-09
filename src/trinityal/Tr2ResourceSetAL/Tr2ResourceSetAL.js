@@ -113,7 +113,7 @@ export class Tr2ResourceSetAL
   }
 }
 
-CjsSchema.decorateField(Tr2ResourceSetAL, "_resourceSet", type.unknown);
+CjsSchema.decorateField(Tr2ResourceSetAL, "_resourceSet", type.rawStruct("TrinityALImpl::Tr2ResourceSetAL"));
 CjsSchema.decorateMethod(Tr2ResourceSetAL, "Create__Program");
 CjsSchema.decorateMethod(Tr2ResourceSetAL, "Create__Pipeline");
 // States: the wrapper forwards to its implementation as Tr2ResourceSetAL.cpp:584-605 does (SetName refuses an invalid set and a null name).

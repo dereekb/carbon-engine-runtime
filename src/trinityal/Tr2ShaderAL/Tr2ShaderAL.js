@@ -227,5 +227,5 @@ export class Tr2ShaderAL
   }
 }
 
-CjsSchema.decorateField(Tr2ShaderAL, "_shader", type.unknown);
+CjsSchema.decorateField(Tr2ShaderAL, "_shader", type.rawStruct("TrinityALImpl::Tr2ShaderAL"));
 CjsSchema.meta.carbon("Tr2ShaderAL")(Tr2ShaderAL);

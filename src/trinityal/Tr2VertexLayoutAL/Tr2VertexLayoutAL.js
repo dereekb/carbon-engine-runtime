@@ -156,5 +156,5 @@ export class Tr2VertexLayoutAL
   }
 }
 
-CjsSchema.decorateField(Tr2VertexLayoutAL, "_layout", type.unknown);
+CjsSchema.decorateField(Tr2VertexLayoutAL, "_layout", type.rawStruct("TrinityALImpl::Tr2VertexLayoutAL"));
 CjsSchema.meta.carbon("Tr2VertexLayoutAL")(Tr2VertexLayoutAL);

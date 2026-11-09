@@ -67,7 +67,7 @@ export class Tr2ReadbackAL
 
 
 
-CjsSchema.decorateField(Tr2ReadbackAL, "_readback", type.unknown);
+CjsSchema.decorateField(Tr2ReadbackAL, "_readback", type.rawStruct("TrinityALImpl::Tr2ReadbackAL"));
 CjsSchema.decorateMethod(Tr2ReadbackAL, "IsReady");
 CjsSchema.decorateMethod(Tr2ReadbackAL, "IsValid");
 CjsSchema.decorateMethod(Tr2ReadbackAL, "Map");

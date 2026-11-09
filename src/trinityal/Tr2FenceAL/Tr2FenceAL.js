@@ -189,5 +189,5 @@ export class Tr2FenceAL
   }
 }
 
-CjsSchema.decorateField(Tr2FenceAL, "_fence", type.unknown);
+CjsSchema.decorateField(Tr2FenceAL, "_fence", type.rawStruct("TrinityALImpl::Tr2FenceAL"));
 CjsSchema.meta.carbon("Tr2FenceAL")(Tr2FenceAL);
