@@ -1,27 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMaterialLayer, CjsPaperDollSkinComposer } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/skintone/basic/";
 const FILES = [ "deteis_default.color", "deteis_light.color", "default.color", "colorize_head_l.png", "colorize_head_z.png",
   "colorize_body_l_512.png", "colorize_body_l.png", "colorize_body_z.png", "deteis.base", "nested/other.color", "skin.red" ].map(name => ROOT + name);
 const PALETTE = [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ];
 
-/** A paths service over FILES (Carbon's own BluePaths over a remote index), and a character library of one palette. */
+/** The parts library over FILES, with one palette's colours. */
 function services(t)
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path.replace(/\.red$/u, ".black")},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const fetched = [];
-  const characterLibrary = { FetchPalette: async (path, options) => { fetched.push([ path, options ]); return { colors: PALETTE }; } };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  const { paths } = installPartsLibrary(t, "res:/graphics/character/female/paperdoll/", FILES.map(path => path.replace(/\.red$/u, ".black")),
+    { overrides: { FetchPalette: async (path, options) => { fetched.push([ path, options ]); return { colors: PALETTE }; } } });
   return { paths, fetched };
 }
 
@@ -61,7 +54,7 @@ const foundation = id => ({ bindings: { head: { DiffuseMap: `res:/${id}_head_d.d
 async function prepared(t)
 {
   const { fetched } = services(t);
-  const build = { content: { root: "res:/graphics/character/female/paperdoll/" }, report: {}, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: "res:/graphics/character/female/paperdoll/", sex: "female" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const skin = new CjsPaperDollSkinComposer(composition, build);

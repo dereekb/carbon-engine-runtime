@@ -1,7 +1,6 @@
 import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLayer.js";
-import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
 import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
@@ -42,8 +41,8 @@ export class CjsPaperDollSkinComposer
 
     /**
      * @param {CjsPaperDollComposition} composition The character's composition.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, report: object, content: { root: string } }} build The build
-     *   served: its waits, its report and its content root.
+     * @param {{ Ready: function(Promise<*>): Promise<*>, report: object, content: { root: string, sex: string } }} build The build
+     *   served: its waits, its report, its content root and its sex.
      */
     constructor(composition, build)
     {
@@ -65,8 +64,9 @@ export class CjsPaperDollSkinComposer
      */
     async Prepare(definition, foundation, foundations, bodyParameters, onChange)
     {
-        const build = this._build, c = this.composition.compositor;
-        const root = build.content.root + "skintone/basic/";
+        const build = this._build, c = this.composition.compositor, library = blue.characterLibrary;
+        // The skin tone is the parts library's `skintone/basic`: one option, the folder itself.
+        const [ option ] = await build.Ready(library.FetchOptions(build.content.sex, "skintone/basic"));
         this._definition = definition;
         this._foundations = foundations;
         this._onChange = onChange;
@@ -74,18 +74,13 @@ export class CjsPaperDollSkinComposer
         // Every bloodline's palettes (<bloodline>_<light|midlight|default|middark|dark>.color) and the neutral default,
         // by name: a palette's colours are fetched when it is applied, and only the initial palette is read here.
         // Their specular colours (absent from some) are not read: the skin specular is not composed yet.
-        const files = CjsPaperDollDefinition.listFiles(root);
-        const paletteFiles = files.filter(path => path.endsWith(".color") && !path.slice(root.length).includes("/"));
-        const initial = await build.Ready(blue.characterLibrary.FetchPalette(root + "deteis_default.color", { pattern: "reject" }));
-        const records = [];
-        for (const path of paletteFiles)
-        {
-            // A raw record: the panel labels it (Graphene paletteMenus.js).
-            records.push({ path, name: path.slice(root.length, -".color".length) });
-        }
-        records.sort((a, b) => a.path.localeCompare(b.path));
+        // Raw records (`FetchPalettes`): the panel labels them (Graphene paletteMenus.js).
+        const records = (await build.Ready(library.FetchPalettes(option))).map(({ path, name }) => ({ path, name })).sort((a, b) => a.path.localeCompare(b.path));
+        const initialPalette = records.find(record => record.name === "deteis_default")?.path ?? null;
+        if (initialPalette === null) throw new Error("Missing skin tone palette deteis_default");
+        const initial = await build.Ready(library.FetchPalette(initialPalette, { pattern: "reject" }));
 
-        const areas = new Set(), { roles, skipped } = CjsCharacterTextureRoles.readFolder(root, files);
+        const areas = new Set(), { roles, skipped } = await build.Ready(library.FetchOptionMaps(option));
         if (skipped.length) throw new Error("Skin tone maps the role lookup does not name: " + skipped.join(", "));
         for (const region of [ "head", "body" ])
         {
@@ -129,7 +124,7 @@ export class CjsPaperDollSkinComposer
         definition.skin.Configure([ {
             id: "basic",
             colorAreas: [ ...areas ].sort(),
-            defaultPalette: root + "deteis_default.color",
+            defaultPalette: initialPalette,
             palettes: records.map(({ path, name }) => ({ path, name }))
         } ], new Map(), { option: "basic" });
         build.report.skin = {
