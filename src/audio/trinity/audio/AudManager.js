@@ -549,6 +549,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get obstructionOcclusionEnabled()
   {
     return this.GetObstructionOcclusionEnabled();
@@ -590,6 +591,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get obstructionOcclusionFadeRate()
   {
     return this.GetObstructionOcclusionFadeRate();
@@ -688,6 +690,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get movementThreshold()
   {
     return this.GetMovementThreshold();
@@ -727,6 +730,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get numberOfPrimaryRays()
   {
     return this.GetNumberOfPrimaryRays();
@@ -766,6 +770,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get maxReflectionOrder()
   {
     return this.GetMaxReflectionOrder();
@@ -805,6 +810,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get maxDiffractionOrder()
   {
     return this.GetMaxDiffractionOrder();
@@ -844,6 +850,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get maxEmitterRoomAuxSends()
   {
     return this.GetMaxEmitterRoomAuxSends();
@@ -883,6 +890,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get diffractionOnReflectionsOrder()
   {
     return this.GetDiffractionOnReflectionsOrder();
@@ -922,6 +930,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get maxPathLength()
   {
     return this.GetMaxPathLength();
@@ -961,6 +970,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get cpuLimitPercentage()
   {
     return this.GetCPULimitPercentage();
@@ -1000,6 +1010,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get loadBalancingSpread()
   {
     return this.GetLoadBalancingSpread();
@@ -1039,6 +1050,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get enableDiffractionAndTransmission()
   {
     return this.GetEnableDiffractionAndTransmission();
@@ -1078,6 +1090,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get calcEmitterVirtualPosition()
   {
     return this.GetCalcEmitterVirtualPosition();
@@ -1117,6 +1130,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get transmissionLoss()
   {
     return this.GetTransmissionLoss();
@@ -1156,6 +1170,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get enableDiffraction()
   {
     return this.GetEnableDiffraction();
@@ -1195,6 +1210,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.boolean
   get enableDiffractionOnBoundaryEdges()
   {
     return this.GetEnableDiffractionOnBoundaryEdges();
@@ -1234,6 +1250,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int64
   get oneShotWindow()
   {
     return this.GetOneShotWindow();
@@ -1273,6 +1290,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get playing2DWeight()
   {
     return this.GetPlaying2DWeight();
@@ -1312,6 +1330,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get activeSoundsWeight()
   {
     return this.GetPlayingEventsWeight();
@@ -1371,6 +1390,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get rangeWeight()
   {
     return this.GetRangeWeight();
@@ -1410,6 +1430,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get usedEmitterWeight()
   {
     return this.GetUsedEmitterWeight();
@@ -1449,6 +1470,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get visibleWeight()
   {
     return this.GetVisibleWeight();
@@ -1488,6 +1510,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get waitingOneShotWeight()
   {
     return this.GetWaitingOneShotWeight();
@@ -1527,6 +1550,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.float32
   get weightMultiplier()
   {
     return this.GetWeightMultiplier();
@@ -1566,6 +1590,7 @@ export class AudManager extends IRoot
    * @implemented
    */
   @be.mapProperty()
+  @type.int32
   get maxAwakeGameObjects()
   {
     return this.GetMaxAwakeGameObjects();

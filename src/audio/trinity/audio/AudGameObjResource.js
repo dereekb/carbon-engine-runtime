@@ -1038,6 +1038,7 @@ export class AudGameObjResource
    *
    * @implemented
    */
+  @type.float32
   get maxAttenuationRadius()
   {
     return this.GetMaxAttenuationRadius();
