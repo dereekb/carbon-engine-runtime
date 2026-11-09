@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const BLUSH = ROOT + "makeup/blush/";
@@ -18,19 +16,12 @@ const PALETTES = { "colors/rose.color": .3, "colors/peach.color": .6, "blush_02/
 
 function services(t, entries)
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
-  const characterLibrary = {
+  const overrides = {
     FetchRecipe: async () => recipe,
-    FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }),
-    FetchAvatarPartMetaData: async () => null,
-    FetchPalette: async path => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(PALETTES[path.slice(BLUSH.length)], 0, 0, 1)) })
+    FetchPalette: async (path, { specular = false } = {}) => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(PALETTES[path.slice(BLUSH.length)], 0, 0, 1)), specularColors: specular ? [ 0, 1, 2 ].map(() => Float32Array.of(1, 1, 1, 1)) : null, pattern: null })
   };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, FILES, { overrides });
 }
 
 class StubCompositor
@@ -43,7 +34,7 @@ class StubCompositor
 async function configured(t, entries = [])
 {
   services(t, entries);
-  const build = { content: { root: ROOT, recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female", recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
   const source = new CjsPaperDollColorizedSource(new StubCompositor(), build, "blush");
   await source.ConfigureCatalog(definition);

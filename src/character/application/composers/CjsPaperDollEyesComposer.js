@@ -1,6 +1,5 @@
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLayer.js";
-import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
 import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
@@ -66,7 +65,7 @@ export class CjsPaperDollEyesComposer
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @param {Array<{ effect: object, mesh: object }>} consumers The EyeShader effects and their meshes.
      * @param {function(string): void} onChange Notes a change.
-     * @param {object} [services] The paths service and library the catalogue is read through (`CjsPaperDollMakeupCatalog.read`).
+     * @param {object} [services] The library the catalogue is read through (`CjsPaperDollMakeupCatalog.read`).
      * @returns {Promise<void>}
      * @throws {Error} With no consumers, or consumers that do not share their maps.
      */
@@ -164,8 +163,7 @@ export class CjsPaperDollEyesComposer
         if (option.metadata?.dependantModifiers?.length) throw new Error("Unresolved eye dependencies " + option.definition);
         // The option's maps by role (CjsCharacterTextureRoles): a diffuse drawn as it is or colourised through its zone
         // map, and the normal and specular copied in as patches.
-        const roles = Object.values(option.channels).map(value => CjsCharacterTextureRoles.lookup(
-            CjsPaperDollDefinition.pickTier(value.path, CjsPaperDollDefinition.listFiles(value.path.slice(0, value.path.lastIndexOf("/") + 1)))));
+        const roles = Object.values(option.channels).map(value => CjsCharacterTextureRoles.lookup(value.path));
         const one = match => CjsCharacterTextureRoles.one(roles, match);
         const detailRole = one(role => role.property === "DiffuseMap" && role.operation !== null), zoneRole = one(role => role.inputOf === "l");
         const coloured = detailRole?.operation === "Colorized";

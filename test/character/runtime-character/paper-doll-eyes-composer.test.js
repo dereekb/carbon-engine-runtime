@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollEyesComposer, CjsPaperDollMakeupCatalog, PaperDollTarget } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const COLOURED = ROOT + "makeup/eyes/eyes_01/", PLAIN = ROOT + "makeup/eyes/eyes_02/";
@@ -17,13 +15,8 @@ const COLOURS = [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ];
 
 function services(t)
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
-  const characterLibrary = { FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }) };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  const overrides = { FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }) };
+  installPartsLibrary(t, ROOT, FILES, { overrides });
 }
 
 /** A compositor recording draws; effects are real Tr2Effects through promises, as the real one returns them. */
@@ -50,7 +43,7 @@ function consumer(maps)
 async function prepared(t)
 {
   services(t);
-  const build = { content: { root: ROOT }, report: {}, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const definition = new CjsPaperDollDefinition();
@@ -64,7 +57,7 @@ async function prepared(t)
 test("the makeup catalogue reads each type's channels, palettes and default palette (Graphene's componentCatalog moved)", async t =>
 {
   services(t);
-  const catalog = await CjsPaperDollMakeupCatalog.read("eyes", { content: { root: ROOT }, Ready: value => value });
+  const catalog = await CjsPaperDollMakeupCatalog.read("eyes", { content: { root: ROOT, sex: "female" }, Ready: value => value });
   assert.deepEqual(catalog.options.map(option => option.id), [ "eyes_01", "eyes_02" ]);
   assert.deepEqual(Object.keys(catalog.options[0].channels).sort(), [ "colorize_head_l", "colorize_head_z", "comp_head_n", "comp_head_s" ]);
   assert.equal(catalog.options[1].defaultPalette, PLAIN + "default.color");
