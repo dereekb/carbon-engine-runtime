@@ -234,6 +234,17 @@ export class CjsCharacterLibraryManager
     };
 
     /**
+     * Categories whose recipe entries the library places but does not yet read options for: the mesh parts
+     * (character-structure-and-plugins.md R6) and the foundation's. `ResolveRecipeEntry` answers their category with no
+     * option, so a caller can tell them from a path in no category.
+     * @type {string[]}
+     */
+    static deferredCategories = [
+        "hair", "beard", "accessories/brow", "accessories/chin", "accessories/ears", "accessories/earshigh", "accessories/earslow",
+        "accessories/glasses", "accessories/lips", "accessories/masks", "accessories/nose", "archetypes", "head"
+    ];
+
+    /**
      * The paper doll content root of a sex, which every category path is relative to.
      * @param {"female"|"male"} sex The sex.
      * @returns {string} The root's `res:` path, with its trailing slash.
@@ -462,14 +473,15 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * An option's colours, as GetShaderConfig answers a shader's (ccpwgl `EveSOFDataGeneric.GetShaderConfig`: the
-     * library's own result, then the provided values assigned over it). The library's result is the named palette's
-     * colours, else the palette its `.type`'s colour variant names, else its `default` palette (`default_a` for a
-     * shared ink), else for a garment its first, else none; a palette sets only its own areas (`paletteRecord`). Then each provided colour is laid
-     * over the area it is for, where the option paints that area (`FetchColorAreas`); the rest are ignored, as the
-     * generic assigns only the parameters a shader uses. Provided values are not otherwise read.
+     * An option's colours: the library's own result, then the provided values laid over it. The library's result is
+     * the named palette's colours, else the palette its `.type`'s colour variant names, else its `default` palette
+     * (`default_a` for a shared ink), else for a garment its first, else none; a palette sets only its own areas
+     * (`paletteRecord`). Then each provided colour is laid over the area it is for, where the option paints that area
+     * (`FetchColorAreas`); the rest are ignored. Provided values are not otherwise read.
      *
-     * Ours, as `FetchOptions`.
+     * Ours, derived (non-carbon-extensions.md § *The shared character library*): Carbon has no counterpart. The shape
+     * follows ccpwgl's `EveSOFDataGeneric.GetShaderConfig` (its result, then the provided values that the shader uses
+     * assigned over it), which is a loose guide, not a source.
      *
      * @param {object} option An option from `FetchOptions`.
      * @param {object} [provided] What the caller has.
@@ -544,30 +556,35 @@ export class CjsCharacterLibraryManager
      * colour to the entry: its colour variation then names one of the option's palettes. Found from the shipped
      * recipes (`dnafiles/`, `paperdolllibrary/prs/`): no makeup type names a colour variant, and their entries name
      * palettes (`default`, `black`). An entry no type presets (a garment palette its type does not pair with that
-     * variation) selects nothing.
+     * variation) selects no option. Names compare without case, as res paths do. The first entry of a category reads
+     * every `.type` in it (cached; 204 for female `outer`).
      *
      * Ours, as `FetchOptions`.
      *
      * @param {"female"|"male"} sex The sex.
      * @param {{ path: string, variation?: string, colorvariation?: string }} entry The recipe entry.
-     * @returns {Promise<?{ category: string, option: string }>} The selection, or null when no option matches.
+     * @returns {Promise<?{ category: string, option: ?string }>} The selection: its category, and its option or null
+     *   when no option matches (always null in a `deferredCategories` category); null for a path in no category.
      */
     async ResolveRecipeEntry(sex, { path, variation = "", colorvariation = "" })
     {
-        const category = Object.keys(CjsCharacterLibraryManager.categories).filter(name => path.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
+        const lower = path.toLowerCase(), wanted = colorvariation.toLowerCase();
+        const category = [ ...Object.keys(CjsCharacterLibraryManager.categories), ...CjsCharacterLibraryManager.deferredCategories ]
+            .filter(name => lower.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
         if (!category) return null;
-        const same = (a, b) => (a || "v0") === (b || "v0");
+        if (!CjsCharacterLibraryManager.categories[category]) return { category, option: null };
+        const same = (a, b) => (a || "v0").toLowerCase() === (b || "v0").toLowerCase();
         for (const option of await this.FetchOptions(sex, category))
         {
             if (option.typePath === null)
             {
-                if (option.path === path.toLowerCase()) return { category, option: option.id };
+                if (option.path === lower) return { category, option: option.id };
                 continue;
             }
             const facts = await this.FetchOptionPart(option);
-            if (facts.part === path.toLowerCase() && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant === colorvariation)) return { category, option: option.id };
+            if (facts.part === lower && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant.toLowerCase() === wanted)) return { category, option: option.id };
         }
-        return null;
+        return { category, option: null };
     }
 
     /**

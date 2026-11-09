@@ -133,10 +133,12 @@ test("an archetype's bloodline is the head that depends on it; a recipe entry se
     const resolve = entry => library.ResolveRecipeEntry("female", entry);
     assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorvariation: "black" }), { category: "outer", option: "coat01_black" });
     assert.deepEqual(await resolve({ path: "outer/Coat01", variation: "v0", colorvariation: "missing" }), { category: "outer", option: "coat01_plain" }, "'' is v0; case does not matter");
-    assert.equal(await resolve({ path: "outer/coat01", variation: "v1", colorvariation: "red" }), null, "a pairing no type presets");
+    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorvariation: "red" }), { category: "outer", option: null }, "a pairing no type presets");
+    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "V1", colorvariation: "Black" }), { category: "outer", option: "coat01_black" }, "no name compares with case");
     assert.deepEqual(await resolve({ path: "makeup/eyeshadow/eyeshadow_01", colorvariation: "aqua_a" }), { category: "makeup/eyeshadow", option: "eyeshadow_01" }, "a makeup entry's colour variation is a palette");
     assert.deepEqual(await resolve({ path: "bottomunderwear/boxers01" }), { category: "bottomunderwear", option: "boxers01" });
-    assert.equal(await resolve({ path: "hair/long01" }), null);
+    assert.deepEqual(await resolve({ path: "hair/long01" }), { category: "hair", option: null }, "a deferred category is placed, with no option");
+    assert.equal(await resolve({ path: "bodyshapes/thinshape" }), null, "a path in no category");
 });
 
 test("colours: the library's palette, then each provided colour the option paints", async t =>
