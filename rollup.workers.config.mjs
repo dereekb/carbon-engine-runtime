@@ -7,6 +7,7 @@
 // bundling the entries again, so there is one build of each.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import json from "@rollup/plugin-json";
 import { shared } from "./rollup.browser-shared.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
@@ -49,7 +50,8 @@ export const workerFormatUrls = {
 
 export default Object.entries(WORKER_BUNDLES).map(([ output, input ]) => ({
     onwarn: shared.onwarn,
-    plugins: [ ...shared.plugins, workerFormatUrls ],
+    // The built dist keeps JSON modules (math's SSE reciprocal table) as imports.
+    plugins: [ json({ compact: true }), ...shared.plugins, workerFormatUrls ],
     input: path.join(root, input),
     output: { file: path.join(destination, output), format: "esm", inlineDynamicImports: true }
 }));
