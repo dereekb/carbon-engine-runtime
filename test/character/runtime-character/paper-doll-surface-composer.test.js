@@ -1,8 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterRecipe, CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollTarget } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import "../../support/frameLoop.js";
 
@@ -11,19 +10,10 @@ const AGING = ROOT + "makeup/aging/aging_01/";
 const FILES = [ AGING + "types/aging_01.type", AGING + "comp_head_tn.png", AGING + "comp_head_s.png", AGING + "comp_body_s.png",
   ROOT + "makeup/scarring/scarring_01/types/scarring_01.type", ROOT + "makeup/scarring/scarring_01/comp_head_tn.png" ];
 
-/** A paths service over FILES (Carbon's own BluePaths over a remote index), and a library answering the types. */
+/** The parts library over FILES, and the recipe. */
 function services(t, recipe = [])
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
-  const characterLibrary = {
-    FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }),
-    FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] })
-  };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, FILES, { overrides: { FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] }) } });
 }
 
 /** A compositor recording draws; its effects are real Tr2Effects returned through promises, as the real one does. */
@@ -51,7 +41,7 @@ const foundation = id => ({ bindings: Object.fromEntries([ "head", "body" ].map(
 async function prepared(t, recipe = null)
 {
   services(t, recipe ?? []);
-  const build = { content: { root: ROOT, recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female", recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const definition = new CjsPaperDollDefinition();

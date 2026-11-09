@@ -1,8 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollHeadComposer, CjsPaperDollInstance, CjsPaperDollMapDecalSource, PaperDollBlend, PaperDollTarget } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 import { CjsCharacterRecipe } from "../../../npm/dist/character/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import "../../support/frameLoop.js";
@@ -19,24 +18,13 @@ const FILES = [
   AUG + "types/face_paint_v0.type", AUG + "comp_head_d.png", AUG + "comp_head_n.png", AUG + "metadata.yaml"
 ];
 
-/** A paths service over FILES, and a library answering the types and the recipe. */
+/** The parts library over FILES (its types name their folder and the variation their name ends in), and the recipe. */
 function services(t, recipe = [])
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
-  const characterLibrary = {
-    FetchType: async path =>
-    {
-      const name = path.split("/").at(-1).slice(0, -5), variation = name.match(/_(v\d)$/)?.[1] ?? "";
-      return { value: [ path.slice(ROOT.length, path.indexOf("/types/")), variation, "" ] };
-    },
-    FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] }),
-    FetchAvatarPartMetaData: async path => path === AUG + "metadata.yaml" ? { occludesModifiers: [ "accessories/browbase###0.5", "accessories/browbase" ] } : null
-  };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, FILES, {
+    text: { [AUG + "metadata.yaml"]: "!!python/object:paperDoll.AvatarPartMetaData\ndependantModifiers: null\noccludesModifiers: [accessories/browbase###0.5, accessories/browbase]\n" },
+    overrides: { FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] }) }
+  });
 }
 
 /** A compositor recording draws and how each layer was made. */
@@ -63,7 +51,7 @@ class StubCompositor
 async function prepared(t, recipe = null)
 {
   services(t, recipe ?? []);
-  const build = { content: { root: ROOT, recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female", recipe: recipe ? "res:/test.prs" : "" }, report: {}, CheckActive() {}, Ready: value => value };
   const composition = new CjsPaperDollComposition(null, build);
   const compositor = composition.compositor = new StubCompositor();
   const definition = new CjsPaperDollDefinition();

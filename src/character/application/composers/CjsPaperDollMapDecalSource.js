@@ -10,12 +10,9 @@ import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles
  * composition output its role feeds (`CjsCharacterTextureRoles.lookup`: region, property, operation), whichever target
  * that output belongs to; the roles come from the files the option actually holds.
  *
- * An option is a `.type` file, its id the file's name. The type names the part folder and a variation: a variation
- * names a subfolder, and `v0` (or none) is the part folder itself (character-creator-reference.md, augmentations).
- * A variation's maps replace the part folder's of the same name and the part folder's others stay. Derived: this
- * matches Graphene's working behaviour, today's look (Graphene 6a47517 largeScars.js: "v1 overrides present channels
- * and retains base specular"); no source states it. Options are listed from the file index;
- * an option's type, maps and metadata (`occludesModifiers`) are read the first time it is applied
+ * The options, their parts and their maps are the parts library's (`blue.characterLibrary`: `FetchOptions`,
+ * `FetchOptionPart`, `FetchOptionMaps` by the map decal rule, where a variation's maps replace the part folder's of the
+ * same name). An option's part, maps and metadata (`occludesModifiers`) are read the first time it is applied
  * (`CjsPaperDollComponent.ResolveOption`).
  *
  * A role drawn through a coverage (`covered`) draws through the option's own diffuse alpha, placed at the diffuse's
@@ -41,18 +38,15 @@ export class CjsPaperDollMapDecalSource
     /** The build served: its waits and its content root. */
     _build = null;
 
-    /** Each option's `.type` path, by id. @type {Map<string, string>} */
+    /** Each option, by id: the parts library's (`FetchOptions`). @type {Map<string, object>} */
     _definitions = new Map();
 
     /** Each prepared option: its id, type path, occlusion targets and per-region, per-property layers. @type {Map<string, object>} */
     _options = new Map();
 
-    /** The part folder's files. @type {string[]} */
-    _files = [];
-
     /**
      * @param {CjsPaperDollCompositor} compositor The compositor its layers are made with.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, recipe: string } }} build The build served.
+     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string, recipe: string } }} build The build served.
      * @param {string} name The definition part.
      */
     constructor(compositor, build, name)
@@ -68,7 +62,7 @@ export class CjsPaperDollMapDecalSource
      * configured and set on the composition.
      * @param {import("./CjsPaperDollComposition.js").CjsPaperDollComposition} composition The composition.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
-     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, recipe: string } }} build The build served.
+     * @param {{ Ready: function(Promise<*>): Promise<*>, content: { root: string, sex: string, recipe: string } }} build The build served.
      * @returns {Promise<Map<string, CjsPaperDollMapDecalSource>>} The sources, by part.
      */
     static async prepareAll(composition, definition, build)
@@ -79,7 +73,7 @@ export class CjsPaperDollMapDecalSource
             const type = definition[name].constructor;
             if (type.blend !== PaperDollBlend.DECAL) continue;
             const source = new CjsPaperDollMapDecalSource(composition.compositor, build, name);
-            await source.Configure(definition, CjsPaperDollDefinition.listFiles(build.content.root + type.category));
+            await source.Configure(definition);
             composition.SetSource(name, source);
             sources.set(name, source);
         }
@@ -87,28 +81,27 @@ export class CjsPaperDollMapDecalSource
     }
 
     /**
-     * Lists the part's options and configures the definition's component with them: the option the build's recipe
-     * sets for the part's category, on; with no recipe entry, the first option, off. Loading a recipe applies
-     * everything it sets (operator, 2026-11-08); a character built without one starts with the part off. The
-     * recipe's weight is not applied: the layers draw at full strength, and the shipped recipes set 1.0.
+     * Takes the part's options from the parts library (`FetchOptions`) and configures the definition's component with
+     * them: the option the build's recipe sets for the part's category (`ResolveRecipeEntry`), on; with no recipe entry,
+     * the first option, off. Loading a recipe applies everything it sets (operator, 2026-11-08); a character built without
+     * one starts with the part off. The recipe's weight is not applied: the layers draw at full strength, and the shipped
+     * recipes set 1.0.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
-     * @param {string[]} files The part folder's files.
      * @returns {Promise<void>}
-     * @throws {Error} For a recipe entry naming an option the part does not list.
+     * @throws {Error} For a recipe entry selecting no option the part lists.
      */
-    async Configure(definition, files)
+    async Configure(definition)
     {
-        const build = this._build, component = definition[this.name], category = component.constructor.category;
-        this._files = files;
-        this._definitions = new Map(files.filter(path => path.endsWith(".type")).map(path => [ path.split("/").at(-1).slice(0, -5), path ]));
-        const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
+        const build = this._build, library = blue.characterLibrary, component = definition[this.name], category = component.constructor.category;
+        const options = await build.Ready(library.FetchOptions(build.content.sex, category));
+        this._definitions = new Map(options.map(option => [ option.id, option ]));
+        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const set = recipe.find(entry => entry.path.startsWith(category + "/"));
-        const option = set ? set.path.split("/").at(-1) : [ ...this._definitions.keys() ][0] ?? "";
-        if (set && !this._definitions.has(option)) throw Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        const selected = set ? await build.Ready(library.ResolveRecipeEntry(build.content.sex, set)) : null;
+        if (set && (selected === null || selected.option === null || !this._definitions.has(selected.option))) throw Error("The recipe sets " + set.path + ", which " + category + " does not list");
         // An option's path is its part folder below the content root; occlusion matches against it.
-        const root = build.content.root;
-        component.Configure([ ...this._definitions ].map(([ id, path ]) => ({ id, path: path.slice(root.length, path.indexOf("/types/")) })), new Map(), {
-            option,
+        component.Configure(options.map(option => ({ id: option.id, path: option.path })), new Map(), {
+            option: set ? selected.option : options.length ? options[0].id : "",
             resolve: async id =>
             {
                 await this.Prepare(id);
@@ -118,37 +111,25 @@ export class CjsPaperDollMapDecalSource
         });
         component.enabled = !!set;
         // An option the recipe turns on draws from the first apply.
-        if (set) await this.Prepare(option);
+        if (set) await this.Prepare(selected.option);
     }
 
     /**
-     * Reads an option's type and makes its layers, once.
+     * Reads an option's part and maps from the parts library and makes its layers, once.
      * @param {string} id The option.
      * @returns {Promise<void>}
-     * @throws {Error} For a type that is not a part, variation and no colour variant; a variation with no folder that
-     *   is not `v0`; or a map name the role lookup does not know or a role not drawn on its own.
+     * @throws {Error} For a type with a colour variant; a variation with no folder that is not `v0`
+     *   (`FetchOptionMaps`); or a map name the role lookup does not know or a role not drawn on its own.
      */
     async Prepare(id)
     {
         if (this._options.has(id)) return;
-        const build = this._build, c = this._compositor, path = this._definitions.get(id);
-        const value = (await build.Ready(blue.characterLibrary.FetchType(path))).value;
-        if (!Array.isArray(value) || value.length !== 3 || typeof value[0] !== "string" || typeof value[1] !== "string" || value[2])
-            throw Error("Unsupported map decal type " + path);
-        const dir = build.content.root + value[0] + "/", variant = value[1] ? dir + value[1] + "/" : dir;
-        const inFolder = folder => this._files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"));
-        const own = inFolder(variant);
-        if (variant !== dir && !own.length && value[1] !== "v0") throw Error("Map decal type " + path + " names a variation with no folder");
+        const build = this._build, c = this._compositor, library = blue.characterLibrary, option = this._definitions.get(id);
+        const part = await build.Ready(library.FetchOptionPart(option));
+        if (part.colorVariant) throw Error("Unsupported map decal type " + option.typePath);
         // One map per name at the character texture quality; the variation's replace the part folder's of that name.
-        const pick = files => new Map([ ...new Set(files.map(file => CjsPaperDollDefinition.splitTier(file)[0].split("/").at(-1))) ]
-            .map(name => [ name, CjsPaperDollDefinition.pickTier(files[0].slice(0, files[0].lastIndexOf("/") + 1) + name + ".png", files) ]));
-        const maps = new Map([ ...(variant !== dir ? pick(inFolder(dir)) : []), ...(own.length ? pick(own) : []) ]);
-        // What the option occludes: the first metadata among its variation's folder and its part folder.
-        const metadata = [ variant, dir ].map(folder => folder + "metadata.yaml").find(file => this._files.includes(file));
-        const occludes = metadata
-            ? [ ...new Set((await build.Ready(blue.characterLibrary.FetchAvatarPartMetaData(metadata))).occludesModifiers.map(value => value.split("#")[0])) ]
-            : [];
-        const roles = [ ...maps.values() ].map(file => CjsCharacterTextureRoles.lookup(file));
+        const { paths } = await build.Ready(library.FetchOptionMaps(option));
+        const roles = paths.map(file => CjsCharacterTextureRoles.lookup(file));
         // Per region and property, replacements before additions.
         roles.sort((a, b) => (a.plan === "add") - (b.plan === "add"));
         const regions = {};
@@ -165,7 +146,8 @@ export class CjsPaperDollMapDecalSource
             if (owner) layer.region = owner.region;
             layer.effect = owner ? await c.Simple(layer.texture, owner.region, owner.texture, owner.region) : await c[layer.role.operation](layer.texture, layer.region);
         }
-        this._options.set(id, { id, definition: path, path: value[0], occludes, regions });
+        // What the option occludes: its part's metadata (the variation's folder's first), each entry cut to its path.
+        this._options.set(id, { id, definition: option.typePath, path: part.part, occludes: part.occludes, regions });
     }
 
     /**
