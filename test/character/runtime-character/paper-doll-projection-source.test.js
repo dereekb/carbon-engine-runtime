@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition, CjsPaperDollProjectionSource, PaperDollPalettes } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/male/paperdoll/";
 const HEAD = ROOT + "tattoo/head/";
@@ -21,14 +19,8 @@ const FILES = [
 
 function services(t, entries, files = FILES)
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(files.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "male", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
-  const characterLibrary = { FetchRecipe: async () => recipe, FetchMaterialMaskAreas__Zone: async () => [ 1 ] };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, files, { overrides: { FetchRecipe: async () => recipe, FetchMaterialMaskAreas__Zone: async () => [ 1 ] } });
 }
 
 /** A compositor recording each effect, its inputs and the colours set on it. */
@@ -43,7 +35,7 @@ class StubCompositor
 async function configured(t, entries = [], files = FILES)
 {
   services(t, entries, files);
-  const build = { content: { root: ROOT, recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "male", recipe: "res:/test.prs" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition(), compositor = new StubCompositor();
   const source = new CjsPaperDollProjectionSource(compositor, build, "tattoo");
   await source.Configure(definition);

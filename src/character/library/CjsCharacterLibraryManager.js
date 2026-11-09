@@ -329,6 +329,28 @@ export class CjsCharacterLibraryManager
     }
 
     /**
+     * A category's first-level folders that hold files but no `.type`, so no option (two male `tattoo/head` folders,
+     * `tattooface01` and `tattoofacetest`, and every `colors/`): each folder's id (its name), its folder and its
+     * path below the root, and its projection where it has one. From the index alone.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {"female"|"male"} sex The sex.
+     * @param {string} category The category path below the root, one whose options are `.type`s.
+     * @returns {Promise<Array<{ id: string, folder: string, path: string, projection: ?string }>>} The folders.
+     * @throws {Error} For a category whose options are not `.type`s.
+     */
+    async FetchFoldersWithoutOptions(sex, category)
+    {
+        if (CjsCharacterLibraryManager._CategoryRule(category, "options").options !== "type") throw new Error("The paper doll category " + category + " does not list options by .type");
+        const root = CjsCharacterLibraryManager.paperDollRoot(sex), folder = root + category + "/", files = this._PaperDollFiles(folder);
+        const typed = new Set(files.filter(path => path.endsWith(".type")).map(path => path.slice(0, path.lastIndexOf("/types/") + 1)));
+        return [ ...new Set(files.filter(path => path.indexOf("/", folder.length) >= 0).map(path => path.slice(0, path.indexOf("/", folder.length) + 1))) ]
+            .filter(dir => !typed.has(dir))
+            .map(dir => ({ id: dir.slice(folder.length, -1), folder: dir, path: dir.slice(root.length, -1), projection: files.includes(dir + "projection.proj") ? dir + "projection.proj" : null }));
+    }
+
+    /**
      * An option's part facts, read once: its `.type`'s part, variation and colour variant (empty for a folder
      * option), its folders (the variation's own folder first where it has one, then the part folder), the first of
      * those folders' metadata with its occludes and dependants (each entry cut to its path), its projection and its

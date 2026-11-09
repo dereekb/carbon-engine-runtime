@@ -110,27 +110,26 @@ export class CjsPaperDollProjectionSource
      */
     async Configure(definition)
     {
-        const build = this._build, component = definition[this.name], category = component.constructor.category;
-        const root = build.content.root + category + "/head/", files = CjsPaperDollDefinition.listFiles(root);
-        const listed = new Set();
-        for (const type of files.filter(file => file.endsWith(".type")))
+        const build = this._build, library = blue.characterLibrary, component = definition[this.name], category = component.constructor.category;
+        // The head tattoos are the tattoo category's head folder (the parts library's `tattoo/head`).
+        const head = category + "/head", sex = build.content.sex, options = await build.Ready(library.FetchOptions(sex, head));
+        for (const option of options)
         {
-            const folder = type.slice(0, type.indexOf("/types/") + 1), id = folder.slice(root.length, -1);
-            const projection = folder + "projection.proj";
-            const zone = CjsCharacterTextureRoles.one(CjsCharacterTextureRoles.readFolder(folder, files).roles, role => role.family === "comp" && role.suffix === "z");
-            if (!files.includes(projection) || !zone) throw new Error("Incomplete " + this.name + " option " + folder);
-            this._options.set(id, { id, folder, projection, zone: zone.path, paint: null });
-            listed.add(folder);
+            const [ part, maps ] = await Promise.all([ build.Ready(library.FetchOptionPart(option)), build.Ready(library.FetchOptionMaps(option)) ]);
+            const zone = CjsCharacterTextureRoles.one(maps.roles, role => role.family === "comp" && role.suffix === "z");
+            if (!part.projection || !zone) throw new Error("Incomplete " + this.name + " option " + option.folder);
+            this._options.set(option.id, { id: option.id, folder: option.folder, projection: part.projection, zone: zone.path, paint: null });
         }
-        this._unlisted = files.filter(file => file.endsWith("/projection.proj") && !listed.has(file.slice(0, -"projection.proj".length)))
-            .map(file => file.slice(root.length, -"/projection.proj".length));
-        const palettes = files.filter(file => file.startsWith(root + "colors/") && file.endsWith(".color")).map(path => CjsPaperDollColorizedSource.record(path));
+        this._unlisted = (await build.Ready(library.FetchFoldersWithoutOptions(sex, head))).filter(folder => folder.projection !== null).map(folder => folder.id);
+        // The shared palettes are every option's (`FetchPalettes`: the category's `colors/`).
+        const palettes = options.length ? await build.Ready(library.FetchPalettes(options[0])) : [];
         const defaultPalette = palettes.find(record => record.name.replace(/_a$/u, "") === "default" && record.kind === PaperDollPaletteKind.AREA_1)?.path ?? null;
-        if (defaultPalette === null) throw new Error("Missing default " + this.name + " palette " + root + "colors/default_a.color");
-        const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
-        const set = recipe.find(entry => entry.path.startsWith(category + "/head/")) ?? null;
-        const option = set ? set.path.split("/").at(-1) : "";
-        if (set && !this._options.has(option)) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        if (defaultPalette === null) throw new Error("Missing default " + this.name + " palette default_a");
+        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
+        const set = recipe.find(entry => entry.path.startsWith(head + "/")) ?? null;
+        const selected = set ? await build.Ready(library.ResolveRecipeEntry(sex, set)) : null;
+        if (set && (selected === null || selected.option === null || !this._options.has(selected.option))) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        const option = set ? selected.option : "";
         const authored = set ? set.GetColors() : null, AUTHORED = CjsPaperDollColorizedSource.authored;
         this._bake = this._compositor.TargetTexture(CjsPaperDollProjectionSource.bakeWidth, CjsPaperDollProjectionSource.bakeHeight);
         component.Configure([ ...this._options.keys() ].sort().map(id =>
