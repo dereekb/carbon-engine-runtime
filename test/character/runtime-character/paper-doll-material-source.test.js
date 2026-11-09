@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsPaperDollDefinition, CjsPaperDollMaterialSource, CjsCharacterTextureRoles, PaperDollPalettes } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const TOP = ROOT + "topmiddle/shirtaf01/";
@@ -19,26 +17,26 @@ const FILES = [
   ROOT + "dependants/masktuck/standard/comp_body_m.png",
   // Underwear: one option per folder, typed per bloodline.
   UNDER + "bra01/types/bra01_amarr.type", UNDER + "bra01/comp_body_d.png", UNDER + "bra01/default.color",
-  UNDER + "bra02/types/bra02_deteis.type", UNDER + "bra02/comp_body_d.png", UNDER + "bra02/white.color", UNDER + "bra02/default.color"
+  UNDER + "bra02/types/bra02_deteis.type", UNDER + "bra02/comp_body_d.png", UNDER + "bra02/white.color", UNDER + "bra02/default.color",
+  // The bloodline heads: which archetype each depends on.
+  ROOT + "head/amarr_amarr/metadata.yaml", ROOT + "head/caldari_deteis/metadata.yaml"
 ];
-const METADATA = {
-  [TOP + "metadata.yaml"]: { dependantModifiers: [], occludesModifiers: [], numColorAreas: -1 },
-  [TOP + "v1/metadata.yaml"]: { dependantModifiers: [ "dependants/masktuck/standard###0.5", "utilityshapes/x" ], occludesModifiers: [ "topunderwear###1" ], numColorAreas: 2 }
+const ARCHETYPES = { Amarr: "archetypes/aashape", Deteis: "archetypes/cdshape" };
+const META = "!!python/object:paperDoll.AvatarPartMetaData\n";
+const TEXT = {
+  [TOP + "types/shirtaf01_amarr.type"]: "!!python/tuple [topmiddle/shirtaf01, v1, amarr]\n",
+  [TOP + "metadata.yaml"]: META + "dependantModifiers: []\noccludesModifiers: []\nnumColorAreas: -1\n",
+  [TOP + "v1/metadata.yaml"]: META + "dependantModifiers: [dependants/masktuck/standard###0.5, utilityshapes/x]\noccludesModifiers: [topunderwear###1]\nnumColorAreas: 2\n",
+  [ROOT + "head/amarr_amarr/metadata.yaml"]: META + "dependantModifiers: [archetypes/aashape###1.0]\noccludesModifiers: null\n",
+  [ROOT + "head/caldari_deteis/metadata.yaml"]: META + "dependantModifiers: [archetypes/cdshape###1.0]\noccludesModifiers: null\n"
 };
 
 function services(t)
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
-  const characterLibrary = {
-    FetchType: async path => ({ value: path.endsWith("amarr.type") ? [ "topmiddle/shirtaf01", "v1", "amarr" ] : [ "topmiddle/shirtaf01", "", "" ] }),
-    FetchAvatarPartMetaData: async path => METADATA[path],
-    FetchPalette: async path => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1)), pattern: null, path })
-  };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, FILES, { text: TEXT, overrides: {
+    FetchPalette: async (path, { specular = false } = {}) => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1)), specularColors: specular ? [ 0, 1, 2 ].map(() => Float32Array.of(1, 1, 1, 1)) : null, pattern: null, path }),
+    FetchMaterialMaskAreas: async () => [ 1, 2, 3 ]
+  } });
 }
 
 /** A compositor recording textures and layers. */
@@ -58,10 +56,9 @@ class StubCompositor
 async function configured(t, bloodline = "Amarr")
 {
   services(t);
-  const build = { content: { root: ROOT }, closed: false, errors: [], notes: [], Error(m) { this.errors.push(m); }, Note(m) { this.notes.push(m); }, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female" }, closed: false, errors: [], notes: [], Error(m) { this.errors.push(m); }, Note(m) { this.notes.push(m); }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
-  definition.archetype.GetOptions = () => [ { id: "a", label: "Female " + bloodline } ];
-  definition.archetype.option = "a";
+  definition.archetype.option = ARCHETYPES[bloodline];
   let rebuilt = 0;
   definition.Rebuild = () => { rebuilt++; };
   const composition = { compositor: new StubCompositor(), sources: new Map(), SetSource(name, source) { this.sources.set(name, source); } };
@@ -101,7 +98,7 @@ test("a typed option resolves its variation, colour variant and metadata; the ho
   assert.equal(option.defaultPalette, TOP + "amarr.color", "the colour variant");
   assert.deepEqual(option.palettes.map(record => record.name), [ "amarr", "default" ]);
   assert.deepEqual(hooked, [ [ "topMiddle", "shirtaf01_amarr", true, [ TOP + "v1/", TOP ], [ "dependants/masktuck/standard", "utilityshapes/x" ] ] ]);
-  assert.equal((await definition.topMiddle.ResolveOption("shirtaf01_plain")).defaultPalette, TOP + "amarr.color", "no variant: the first palette");
+  assert.equal((await definition.topMiddle.ResolveOption("shirtaf01_plain")).defaultPalette, TOP + "default.color", "no variant: its default palette (ResolveColors)");
 });
 
 test("maps follow today's precedence: folder, then tier, then name; undrawn names are reported", async t =>

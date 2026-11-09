@@ -2,7 +2,6 @@ import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollTarget } from "../paperDollOrder.js";
-import { CjsPaperDollColorizedSource } from "./CjsPaperDollColorizedSource.js";
 import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
@@ -12,17 +11,11 @@ import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles
  * diffuse drawn as it is) and its body cut masks; and into the surface, under its coverage, a flat normal and a black
  * specular first, then its own normal and specular. Its maps are named by `CjsCharacterTextureRoles.garment`.
  *
- * Options, from the part's folder (`static category`): one per first-level folder for the underwear
- * (`static optionPerFolder`; each folder holds one `.type` per bloodline that wears it), else one per `.type`. The
- * folder rule loses nothing (content, resource index of build 3670638, both sexes): every one of the 37 underwear
- * `.type`s names its own folder as its part, no variation, and the colour variant `default`, and every underwear
- * folder ships `default.color`, which the folder rule starts on. One folder's single `.type` names no bloodline
- * (`topunderwear/topzh/types/topzh.type`), so the bloodline default never picks it.
- * Palettes: the `.color` files directly in the option's first-level folder (`PaperDollPalettes.OWN`). An option's
- * `.type` names its variation (a subfolder holding its maps, ahead of the part folder's) and colour variant (its
- * default palette); its metadata (the first folder's `metadata.yaml`) its dependants, what it occludes and its colour
- * areas (`numColorAreas`, else read from the zone map). Each option reads its files when first applied, and its maps
- * load when first drawn; until then it draws nothing, and `MapsWaiting` says it is owed.
+ * Options, their palettes, parts, maps, cut masks, default palette and colour areas are the parts library's
+ * (`blue.characterLibrary`: `FetchOptions`, where the underwear is one option per folder and each folder's `.type`s name
+ * the bloodlines that wear it; `FetchPalettes`, `FetchOptionPart`, `FetchOptionMaps` by the garment rule,
+ * `ResolveColors`, `FetchColorAreas`). Each option reads its part when first applied, and its maps load when first
+ * drawn; until then it draws nothing, and `MapsWaiting` says it is owed.
  *
  * Moved from Graphene's `bodyComposition.js` (d2b1306) without a change of look; the rules above are its rules,
  * derived (today's look). Derived and our own default, awaiting the defaults work: the underwear starts on the garment
@@ -85,7 +78,7 @@ export class CjsPaperDollMaterialSource
             const type = definition[name].constructor;
             if (type.blend !== PaperDollBlend.MATERIAL || !(type.targets & PaperDollTarget.BODY)) continue;
             const source = new CjsPaperDollMaterialSource(composition.compositor, build, name);
-            source.Configure(definition);
+            await source.Configure(definition);
             composition.SetSource(name, source);
             sources.set(name, source);
         }
@@ -93,45 +86,27 @@ export class CjsPaperDollMaterialSource
     }
 
     /**
-     * Lists the part's options from the file index alone and configures the definition's component with them.
+     * Takes the part's options and their palettes from the parts library and configures the definition's component with
+     * them.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
-     * @returns {void}
+     * @returns {Promise<void>}
      * @throws {Error} For an underwear folder without a palette.
      */
-    Configure(definition)
+    async Configure(definition)
     {
-        const component = definition[this.name], type = component.constructor, ROOT = this._build.content.root;
-        const root = ROOT + type.category + "/", files = CjsPaperDollDefinition.listFiles(root);
+        const component = definition[this.name], type = component.constructor, build = this._build, library = blue.characterLibrary, sex = build.content.sex;
         this._definition = definition;
-        // Palettes: every .color file directly inside a first-level folder.
-        const colorFiles = files.filter(path => path.endsWith(".color") && path.lastIndexOf("/") === path.indexOf("/", root.length));
-        const recordsOf = dir => colorFiles.filter(path => path.startsWith(dir)).map(path => CjsPaperDollColorizedSource.record(path));
-        const option = (id, base, typePath, bloodlines) => ({ id, base, type: typePath, files, colorFiles, records: recordsOf(base), bloodlines,
-            path: typePath ? base.slice(ROOT.length, -1) : type.category + "/" + id, resolved: null, maps: null });
-        if (type.optionPerFolder)
+        for (const value of await build.Ready(library.FetchOptions(sex, type.category)))
         {
-            for (const dir of [ ...new Set(files.map(path => path.slice(0, path.indexOf("/", root.length) + 1))) ])
-            {
-                const id = dir.slice(root.length, -1);
-                // The bloodlines that wear it, from its `types/<name>_<bloodline>.type` file names.
-                const bloodlines = files.filter(path => path.startsWith(dir + "types/") && path.endsWith(".type")).map(path => path.slice(path.lastIndexOf("_") + 1, -".type".length));
-                const value = option(id, dir, null, bloodlines);
-                if (!value.records.length) throw new Error("Underwear without a palette " + dir);
-                this._options.set(id, value);
-            }
+            const records = await build.Ready(library.FetchPalettes(value));
+            if (value.typePath === null && !records.length) throw new Error("Underwear without a palette " + value.folder);
+            this._options.set(value.id, { id: value.id, option: value, base: value.folder, type: value.typePath, records, bloodlines: value.bloodlines, path: value.path, resolved: null, maps: null });
         }
-        else for (const typePath of files.filter(path => path.endsWith(".type")))
-        {
-            // A type's part is the folder its `types/` folder sits in (true of every garment type in the content).
-            const base = typePath.slice(0, typePath.indexOf("/types/") + 1), id = typePath.slice(typePath.lastIndexOf("/") + 1, -".type".length);
-            this._options.set(id, option(id, base, typePath, []));
-        }
-        // READS UI TEXT, awaiting a bloodline id: the bloodline is the last word of the archetype option's label, which
-        // the host builds from the head folder's name (`head/<race>_<bloodline>`); no content record gives it yet (the
-        // same gap as the skin's `deteis_default`).
-        const archetype = definition.archetype, bloodline = (archetype.GetOptions().find(value => value.id === archetype.option)?.label ?? "").split(" ").at(-1).toLowerCase();
-        const values = [ ...this._options.values() ];
-        const selected = type.optionPerFolder ? values.find(value => value.bloodlines.includes(bloodline)) ?? values[0] ?? null : null;
+        // An underwear folder (a folder option) starts on the one typed for the foundation's bloodline
+        // (`FetchBloodline`: the head that depends on the archetype), else the first.
+        const values = [ ...this._options.values() ], perFolder = values.length > 0 && values[0].type === null;
+        const archetype = definition.archetype.option, bloodline = perFolder && archetype ? await build.Ready(library.FetchBloodline(sex, archetype)) : null;
+        const selected = perFolder ? values.find(value => value.bloodlines.includes(bloodline)) ?? values[0] : null;
         component.Configure(values.map(value => ({ id: value.id, path: value.path, palettes: [] })), new Map(), {
             option: selected ? selected.id : "",
             resolve: id => this._Resolve(this._options.get(id))
@@ -150,47 +125,25 @@ export class CjsPaperDollMaterialSource
     }
 
     /**
-     * Reads one option's files the first time it is applied: its `.type` (variation and colour variant), its metadata
-     * (dependants, occludes, colour areas) and, through the host's hook, its mesh facts.
+     * Reads one option's part from the parts library the first time it is applied: its folders and variation, its
+     * dependants and occludes, its garment maps and cut masks, its default palette and colour areas; and, through the
+     * host's hook, its mesh facts.
      * @param {object} option The option.
      * @returns {Promise<object>} The component option's resolved fields.
-     * @throws {Error} For a `.type` that is not three strings.
      */
     async _Resolve(option)
     {
-        const build = this._build, c = this._compositor, { files, colorFiles, base, records } = option;
-        let folders = [ base ], variation = "", defaultPalette = records[0]?.path ?? null;
-        if (option.type)
-        {
-            const [ path, typeVariation = "", colorVariant = "" ] = (await build.Ready(blue.characterLibrary.FetchType(option.type))).value;
-            if (typeof path !== "string" || typeof typeVariation !== "string" || typeof colorVariant !== "string") throw new Error("Unsupported augmentation type " + option.type);
-            variation = typeVariation;
-            if (colorVariant && colorFiles.includes(base + colorVariant + ".color")) defaultPalette = base + colorVariant + ".color";
-            // A variation without its own folder (v0) is the part's folder itself; the variation's folder first, then the part's.
-            const maps = variation && files.some(file => file.startsWith(base + variation + "/")) ? base + variation + "/" : base;
-            folders = [ ...new Set([ maps, base ]) ];
-        }
-        else defaultPalette = (records.find(record => record.path.endsWith("/default.color")) ?? records[0]).path;
-        // The first folder's metadata: dependants and occludes, each entry cut to its path; its colour areas.
-        const metadataPath = folders.map(folder => folder + "metadata.yaml").find(path => files.includes(path)) ?? null;
-        const metadata = metadataPath ? await build.Ready(blue.characterLibrary.FetchAvatarPartMetaData(metadataPath)) : null;
-        const list = key => metadata ? [ ...new Set(metadata[key].map(value => value.split("#")[0])) ] : [];
-        const dependants = list("dependantModifiers"), occludes = list("occludesModifiers");
-        const maps = CjsCharacterTextureRoles.pickGarmentMaps(folders, files);
-        let colorAreas = [];
-        if (maps.detail && maps.zone && defaultPalette)
-        {
-            const count = metadata ? metadata.numColorAreas : -1;
-            colorAreas = count < 0
-                ? await build.Ready(c.ColorAreas(await build.Ready(c.Texture(maps.detail)), await build.Ready(c.Texture(maps.zone))))
-                : Array.from({ length: count }, (_, index) => index + 1);
-        }
-        const resolved = { id: option.id, path: option.path, type: option.type, base, folders, variation, files, dependants, occludes, defaultPalette, maps };
+        const build = this._build, library = blue.characterLibrary, { records } = option;
+        const [ part, { maps, masks, skipped } ] = await Promise.all([ build.Ready(library.FetchOptionPart(option.option)), build.Ready(library.FetchOptionMaps(option.option)) ]);
+        const defaultPalette = records.length ? (await build.Ready(library.ResolveColors(option.option))).palette : null;
+        const colorAreas = maps.detail && maps.zone && defaultPalette ? await build.Ready(library.FetchColorAreas(option.option)) : [];
+        const resolved = { id: option.id, path: option.path, type: option.type, base: part.folders.at(-1), folders: part.folders, variation: part.variation,
+            dependants: part.dependants, occludes: part.occludes, defaultPalette, maps, masks, skipped };
         if (this._hook !== null) await this._hook(this.name, resolved);
         // Drawn from here on: the maps load on the next draw.
         option.resolved = resolved;
         return {
-            occludes,
+            occludes: part.occludes,
             colorAreas,
             defaultPalette: colorAreas.length ? defaultPalette : undefined,
             palettes: colorAreas.length ? records : []
@@ -229,14 +182,14 @@ export class CjsPaperDollMaterialSource
 
     /**
      * Loads an option's maps and palettes and makes its material layer, its cut masks (its own, then each dependant
-     * folder's, `maskPaths`) and the clears drawn under its coverage.
+     * folder's, the parts library's `masks`) and the clears drawn under its coverage.
      * @param {object} option The option.
      * @returns {Promise<object>} The material layer, with `masks` and `clear`.
      * @throws {Error} For an option without a detail map.
      */
     async _LoadMaps(option)
     {
-        const build = this._build, c = this._compositor, crop = CjsPaperDollCompositor.crop, { folders, files, defaultPalette, dependants, maps } = option.resolved;
+        const build = this._build, c = this._compositor, crop = CjsPaperDollCompositor.crop, { folders, defaultPalette, maps, masks, skipped } = option.resolved;
         if (!maps.detail) throw new Error("Garment without a detail map " + folders[0]);
         // The default's colours, and which palettes are patterned (composed through patternblit).
         const paths = option.records.map(record => record.path), reads = [ ...new Set([ ...(defaultPalette ? [ defaultPalette ] : []), ...paths ]) ];
@@ -247,11 +200,10 @@ export class CjsPaperDollMaterialSource
         const palette = defaultPalette ? read[reads.indexOf(defaultPalette)].colors : null;
         const patterns = new Map(reads.map((path, index) => [ path, read[index].pattern ]).filter(([ path, pattern ]) => pattern && paths.includes(path)));
         const [ flatNormal, noSpecular ] = await Promise.all([ "0.5,0.5,1,1", "0,0,0,1" ].map(color => build.Ready(c.Texture("dynamic:/color/" + color))));
-        const masks = this._MaskPaths(option);
         const layer = await c.CreateMaterialLayer({ detail, zones, normal, specular }, palette, { coverage: true, patterns });
         // A masked normal (`mn`) carries its own coverage and encoding (maskednormalblit), not the detail's; a twist normal
         // (`tn`) adds over the normal (twistnormalblit). The `mn` and `tn` roles: `CjsCharacterTextureRoles.table`.
-        if (normal !== null && CjsPaperDollDefinition.splitTier(maps.normal)[0].endsWith("/comp_body_mn")) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
+        if (normal !== null && CjsCharacterTextureRoles.splitTier(maps.normal)[0].endsWith("/comp_body_mn")) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
         const twistLayer = twist === null ? null : { effect: await c.Twist(twist, crop(twist)), region: crop(twist) };
         return Object.assign(layer, {
             masks: await Promise.all(masks.map(async path =>
@@ -264,25 +216,8 @@ export class CjsPaperDollMaterialSource
                 NormalMap: { effect: await c.Simple(flatNormal, crop(detail), detail, crop(detail)), region: crop(detail) },
                 SpecularMap: { effect: await c.Simple(noSpecular, crop(detail), detail, crop(detail)), region: crop(detail) }
             },
-            skipped: CjsCharacterTextureRoles.garmentSkipped(folders, files, [ ...Object.values(maps) ])
+            skipped
         });
-    }
-
-    /**
-     * An option's body cut masks: its own folders' first, then each dependant folder's (a boot's
-     * `dependants/bootmasks/*`, a top's `dependants/masktuck/*`); utility shapes are not folders.
-     * @param {object} option The option.
-     * @returns {string[]} The mask paths.
-     */
-    _MaskPaths(option)
-    {
-        const ROOT = this._build.content.root, { maps, dependants } = option.resolved;
-        const fromDependants = dependants.filter(path => !/^utilityshapes\//iu.test(path)).map(path =>
-        {
-            const dir = ROOT + path.toLowerCase() + "/";
-            return CjsCharacterTextureRoles.pickGarmentMaps([ dir ], CjsPaperDollDefinition.listFiles(dir)).cutMask;
-        });
-        return [ ...new Set([ maps.cutMask, ...fromDependants ].filter(Boolean)) ];
     }
 
     /**

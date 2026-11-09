@@ -62,9 +62,6 @@ export class CjsPaperDollTopUnderwear extends CjsPaperDollComponent
     /** Where its palette files live: each option's own folder (`PaperDollPalettes`). */
     static palettes = PaperDollPalettes.OWN;
 
-    /** Each first-level folder is one option (`CjsPaperDollComponent.optionPerFolder`). */
-    static optionPerFolder = true;
-
     static optionNamesPalette = true;
 
 }
