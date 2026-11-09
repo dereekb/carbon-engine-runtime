@@ -167,13 +167,13 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
   assert.deepEqual(dna.parts.aging, { enabled: true, option: "aging_01_v1", weight: 1 }, "the option its variation selects");
   assert.deepEqual(dna.parts.archetype, { option: "archetypes/msshape" });
   assert.deepEqual(dna.parts.feet, { enabled: false }, "a nude feet entry turns the feet off");
+  assert.deepEqual(dna.parts.outer, { enabled: true, option: "recipe", recipePath: "outer/coat01", recipeVariation: "v9", weight: 1 }, "a garment no type presets takes the recipe option");
   assert.deepEqual(dna.parts.topMiddle, { enabled: true, option: "shirt01", weight: 1, palette: ROOT + "topmiddle/shirt01/plain.color" }, "a pattern entry: its colour variation's palette");
   assert.deepEqual(dna.parts.eyeliner, { enabled: true, option: "eyeliner_01", weight: 1 }, "colours in an unread shape are skipped");
   assert.deepEqual(problems.sort(), [
     "bodyshapes/thinshape: no part (no paper doll category)",
     "hair/long01: hair is not applied until the instance owns meshes (R6)",
     "makeup/eyeliner/eyeliner_01: colours in an unread shape (2 tuples, 0 scalars); skipped",
-    "outer/coat01: no outer option presets it (variation 'v9', colour variation '')",
     "topmiddle/shirt01: pattern Camo: its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)"
   ]);
 });

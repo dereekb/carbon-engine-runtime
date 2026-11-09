@@ -13,6 +13,8 @@ const PART_FIELDS = {
     secondaryPalette: "string",
     colors: "colors",
     specularColors: "colors",
+    recipePath: "string",
+    recipeVariation: "string",
     weight: "number",
     overridable: "boolean"
 };
@@ -199,6 +201,8 @@ export class CjsCharacterFactory
         if (component.constructor.weighted === true) values.weight = rest.weight ?? (values.enabled ? 1 : 0);
         else delete values.weight;
         CjsSchema.setValues(component, values);
+        // A recipe option names its part folder in the part's own fields: read again for each one applied.
+        if (option === "recipe") component.ForgetResolution(option);
         if (option && component.enabled) await component.ResolveOption(option);
         await CjsCharacterFactory._ApplyColors(component, { palette, secondaryPalette: component.constructor.secondaryPalettes ? secondaryPalette : "", colors, specularColors });
     }
@@ -247,8 +251,9 @@ export class CjsCharacterFactory
      * (`ResolveRecipeEntry`), set on, at its weight, with its own colours (and their specular colours) or the palette
      * its colour variation names. An archetype entry sets the archetype (the library's option path). An entry the library
      * marks nude (`feet_nude`) turns its part off. What
-     * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets (a
-     * garment the part's `recipe` option will take, later), and the entries of parts not applied yet (`notAppliedYet`).
+     * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets that
+     * is not a garment (a garment takes the part's `recipe` option, `FetchRecipeOption`, where the build ships its
+     * folder), and the entries of parts not applied yet (`notAppliedYet`).
      * PROVISIONAL: the colour fields, as `_ApplyColors`.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. Moved from the sources' own recipe handling.
@@ -281,7 +286,21 @@ export class CjsCharacterFactory
             {
                 // The operator's ruling (feet_nude): an entry naming a part's bare state turns the part off.
                 if (found.nude === true) { dna.parts[name] = { enabled: false }; continue; }
-                problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorvariation + "')");
+                // The operator's ruling: a garment no `.type` presets takes the part's `recipe` option.
+                const recipeOption = CjsCharacterLibraryManager.categories[found.category].maps === "garment"
+                    ? await library.FetchRecipeOption(recipeSex, found.category, entry) : null;
+                if (recipeOption === null)
+                {
+                    problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorvariation + "')" + (CjsCharacterLibraryManager.categories[found.category].maps === "garment" ? ", and the build ships no such folder" : ""));
+                    continue;
+                }
+                if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
+                const value = { enabled: true, option: "recipe", recipePath: recipeOption.path, recipeVariation: recipeOption.variation };
+                if (entry.weight > 0) value.weight = entry.weight;
+                const palette = entry.colorvariation ? (await library.FetchPalettes(recipeOption)).find(record => record.name === entry.colorvariation) ?? null : null;
+                if (palette !== null) value.palette = palette.path;
+                else if (entry.colorvariation) problems.push(entry.path + ": no palette " + entry.colorvariation + " in its recipe option");
+                dna.parts[name] = value;
                 continue;
             }
             if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");

@@ -365,11 +365,18 @@ export class CjsCharacterLibraryManager
      */
     FetchOptionPart(option)
     {
-        return this._Query("part|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        return this._Query("part|" + CjsCharacterLibraryManager._OptionKey(option), async () =>
         {
             const root = CjsCharacterLibraryManager.paperDollRoot(option.sex);
             let part = option.path, variation = "", colorVariant = "", folders = [ option.folder ];
-            if (option.typePath !== null)
+            if (option.typePath === null && option.variation)
+            {
+                // A recipe option (`FetchRecipeOption`): its variation's folder first where it has one.
+                variation = option.variation;
+                const own = option.folder + variation + "/";
+                if (this._PaperDollFiles(own).length) folders = [ own, option.folder ];
+            }
+            else if (option.typePath !== null)
             {
                 const value = (await this.FetchType(option.typePath)).value;
                 if (!Array.isArray(value)) throw new Error("Unsupported character type " + option.typePath);
@@ -415,7 +422,7 @@ export class CjsCharacterLibraryManager
     async FetchOptionMaps(option)
     {
         const rule = CjsCharacterLibraryManager._CategoryRule(option.category, "maps").maps, tier = CjsCharacterTextureRoles.tierOrder()[0];
-        return this._Query("maps|" + tier + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        return this._Query("maps|" + tier + "|" + CjsCharacterLibraryManager._OptionKey(option), async () =>
         {
             if (rule === "composed") return CjsCharacterTextureRoles.readFolder(option.folder, this._PaperDollFiles(option.folder));
             const facts = await this.FetchOptionPart(option), base = facts.folders.at(-1), files = this._PaperDollFiles(base);
@@ -468,7 +475,7 @@ export class CjsCharacterLibraryManager
      */
     async FetchPalettes(option)
     {
-        return (await this._Query("palettes|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        return (await this._Query("palettes|" + CjsCharacterLibraryManager._OptionKey(option), async () =>
         {
             const shared = CjsCharacterLibraryManager.paperDollRoot(option.sex) + option.category + "/colors/";
             const own = this._PaperDollFiles(option.folder).filter(path => path.endsWith(".color") && path.lastIndexOf("/") === option.folder.length - 1);
@@ -492,7 +499,7 @@ export class CjsCharacterLibraryManager
     {
         const rule = CjsCharacterLibraryManager._CategoryRule(option.category, "areas");
         if (rule.areas === "none") return [];
-        return (await this._Query("areas|" + CjsCharacterTextureRoles.tierOrder()[0] + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        return (await this._Query("areas|" + CjsCharacterTextureRoles.tierOrder()[0] + "|" + CjsCharacterLibraryManager._OptionKey(option), async () =>
         {
             const maps = await this.FetchOptionMaps(option);
             if (rule.maps === "garment")
@@ -734,6 +741,38 @@ export class CjsCharacterLibraryManager
             if (facts.part === lower && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant.toLowerCase() === wanted)) return { category, option: option.id, path: option.path };
         }
         return unmatched;
+    }
+
+    /**
+     * A recipe option: the option a recipe entry selects when no `.type` presets it (a garment palette its type does
+     * not pair with that variation; the operator's ruling, 2026-11-09). It names the entry's part folder and variation
+     * directly, as an option record the other queries take (`FetchOptionPart`, `FetchOptionMaps`, `FetchPalettes`), with
+     * the id `recipe`. Null when the content has no such folder (a part the build does not ship).
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {"female"|"male"} sex The sex.
+     * @param {string} category The category path below the root, one with an option rule.
+     * @param {{ path: string, variation?: string }} entry The recipe entry's part path and variation.
+     * @returns {Promise<?{ sex: string, category: string, id: string, typePath: null, typePaths: string[], folder: string, path: string, bloodlines: string[], variation: string }>}
+     */
+    async FetchRecipeOption(sex, category, { path, variation = "" })
+    {
+        CjsCharacterLibraryManager._CategoryRule(category, "options");
+        const lower = path.toLowerCase(), folder = CjsCharacterLibraryManager.paperDollRoot(sex) + lower + "/";
+        if (!this._PaperDollFiles(folder).length) return null;
+        return { sex, category, id: "recipe", typePath: null, typePaths: [], folder, path: lower, bloodlines: [], variation: variation.toLowerCase() };
+    }
+
+    /**
+     * An option's identity for the query caches: its sex, category, id, folder and variation (a recipe option is told
+     * apart by its folder and variation).
+     * @param {{ sex: string, category: string, id: string, folder: string, variation?: string }} option The option.
+     * @returns {string}
+     */
+    static _OptionKey(option)
+    {
+        return [ option.sex, option.category, option.id, option.folder, option.variation ?? "" ].join("|");
     }
 
     /**

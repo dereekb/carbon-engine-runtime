@@ -50,6 +50,19 @@ export class CjsPaperDollComponent
     overridable = true;
 
     /**
+     * The part folder a `recipe` option names, below the paper doll root (a garment a recipe sets and no `.type`
+     * presets; operator, 2026-11-09); empty otherwise. The part's source reads it when the `recipe` option resolves.
+     */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.string
+    recipePath = "";
+
+    /** The variation a `recipe` option names (`recipePath`); empty for the part folder itself. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.string
+    recipeVariation = "";
+
+    /**
      * Marks changed inputs for rebuilding without deriving or validating other values.
      * @param {string|string[]|null} _propertyName The notified input names.
      * @returns {void}
@@ -111,6 +124,19 @@ export class CjsPaperDollComponent
             operation.catch(() => { if (resolving.get(id) === operation) resolving.delete(id); });
         }
         return this._resolving.get(id);
+    }
+
+    /**
+     * Forgets one option's resolution, so the next `ResolveOption` reads it again: a `recipe` option whose part folder
+     * (`recipePath`) changed.
+     * @cjs
+     * @param {string} id The option's id.
+     * @returns {void}
+     */
+    ForgetResolution(id)
+    {
+        this._resolving.delete(id);
+        this._resolved.delete(id);
     }
 
     /**

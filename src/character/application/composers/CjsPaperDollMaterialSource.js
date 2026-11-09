@@ -101,6 +101,9 @@ export class CjsPaperDollMaterialSource
             if (value.typePath === null && !records.length) throw new Error("Underwear without a palette " + value.folder);
             this._options.set(value.id, { id: value.id, option: value, base: value.folder, type: value.typePath, records, bloodlines: value.bloodlines, path: value.path, resolved: null, maps: null });
         }
+        // The `recipe` option: the part folder and variation a recipe sets when no `.type` presets them (operator,
+        // 2026-11-09). What it names is the component's `recipePath` and `recipeVariation`, read when it resolves.
+        this._options.set("recipe", { id: "recipe", option: null, base: "", type: null, records: [], bloodlines: [], path: "", resolved: null, maps: null, recipe: true });
         // Every garment starts with no option and off: what starts on is the character factory's defaults (operator,
         // 2026-11-09: no code-picked defaults; the underwear's bloodline pick went with them).
         const values = [ ...this._options.values() ];
@@ -130,7 +133,16 @@ export class CjsPaperDollMaterialSource
      */
     async _Resolve(option)
     {
-        const build = this._build, library = blue.characterLibrary, { records } = option;
+        const build = this._build, library = blue.characterLibrary;
+        if (option.recipe === true)
+        {
+            // The recipe option takes the part folder and variation the component names now.
+            const component = this._definition[this.name];
+            const target = await build.Ready(library.FetchRecipeOption(build.content.sex, component.constructor.category, { path: component.recipePath, variation: component.recipeVariation }));
+            if (target === null) throw new Error("No " + this.name + " part folder " + component.recipePath);
+            Object.assign(option, { option: target, base: target.folder, path: target.path, records: await build.Ready(library.FetchPalettes(target)), resolved: null, maps: null });
+        }
+        const { records } = option;
         const [ part, { maps, masks, skipped, maskedNormal } ] = await Promise.all([ build.Ready(library.FetchOptionPart(option.option)), build.Ready(library.FetchOptionMaps(option.option)) ]);
         const defaultPalette = records.length ? (await build.Ready(library.ResolveColors(option.option))).palette : null;
         const colorAreas = maps.detail && maps.zone && defaultPalette ? await build.Ready(library.FetchColorAreas(option.option)) : [];
@@ -140,6 +152,7 @@ export class CjsPaperDollMaterialSource
         // Drawn from here on: the maps load on the next draw.
         option.resolved = resolved;
         return {
+            path: option.path,
             occludes: part.occludes,
             colorAreas,
             defaultPalette: colorAreas.length ? defaultPalette : undefined,

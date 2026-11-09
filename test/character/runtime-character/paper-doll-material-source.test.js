@@ -78,7 +78,7 @@ test("the garment parts are the MATERIAL parts with the body target, their palet
 test("underwear lists one option per folder; every garment starts with no option and off", async t =>
 {
   const deteis = await configured(t, "Deteis");
-  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ] ]);
+  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ], [ "recipe", "" ] ], "then the recipe option");
   assert.deepEqual([ deteis.definition.topUnderwear.option, deteis.definition.topUnderwear.enabled ], [ "", false ], "no code-picked underwear: the character factory's defaults set it");
   assert.equal(deteis.definition.topMiddle.enabled, false, "a typed garment starts off");
   const [ bra ] = (await deteis.definition.topUnderwear.ResolveOption("bra02")).palettes.length ? [] : [ null ];
@@ -143,4 +143,22 @@ test("the garment names: today's first, then the ruled ones, with folder, tier, 
   assert.deepEqual(CjsCharacterTextureRoles.garment.specular, [ "comp_body_s", "<part>_s", "_s", "colorize_body_s", "comb_body_s", "<part>_body_s", "*_s" ]);
   // Junk names stay unruled.
   assert.deepEqual(CjsCharacterTextureRoles.garmentSkipped([ F ], [ F + "dots_prv.png", F + "colorize_body_s_resize.png" ], []).unruled.sort(), [ "robef01/colorize_body_s_resize", "robef01/dots_prv" ]);
+});
+
+test("the recipe option takes the part folder and variation the component names, read again when forgotten", async t =>
+{
+  const { definition } = await configured(t);
+  const component = definition.topMiddle;
+  component.recipePath = "topmiddle/shirtaf01";
+  component.recipeVariation = "v1";
+  const first = await component.ResolveOption("recipe");
+  assert.equal(first.path, "topmiddle/shirtaf01", "the option takes the folder it names");
+  assert.deepEqual(first.occludes, [ "topunderwear" ], "the variation folder's metadata");
+  component.recipeVariation = "";
+  component.ForgetResolution("recipe");
+  const second = await component.ResolveOption("recipe");
+  assert.deepEqual(second.occludes, [], "the part folder's metadata, once forgotten and read again");
+  component.recipePath = "topmiddle/missing01";
+  component.ForgetResolution("recipe");
+  await assert.rejects(component.ResolveOption("recipe"), /No topMiddle part folder topmiddle\/missing01/);
 });
