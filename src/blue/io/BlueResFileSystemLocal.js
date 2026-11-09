@@ -14,7 +14,7 @@ import { exposure as be } from "#be";
 //
 // Carbon's paths service creates its local file system itself (BluePaths.cpp:
 // 52-64); here the orchestrator registers one, or none.
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { BlueResFileSystemForm, IBlueResFileSystem } from "../interfaces/IBlueResFileSystem.js";
 
 /**
@@ -312,7 +312,7 @@ CjsSchema.decorateMethod(BlueResFileSystemLocal, "GetSearchPathW", be.mapMethodA
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "ClearSearchPaths", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "ResolvePathForWritingW", be.mapMethodAndWrap("ResolvePathForWriting"));
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "ResolvePathToRootW", be.mapMethodAndWrap("ResolvePathToRoot"));
-CjsSchema.decorateField(BlueResFileSystemLocal, "initialWorkingDirectory", be.mapPropertyReadOnly());
+CjsSchema.decorateField(BlueResFileSystemLocal, "initialWorkingDirectory", type.wstring, be.mapPropertyReadOnly());
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "GetAllSearchPaths", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "GetExpandedSearchPathsAsDict", be.mapMethodAndWrap("GetExpandedSearchPaths"));
 CjsSchema.decorateMethod(BlueResFileSystemLocal, "ListDirFromScript", be.mapMethodAndWrap("listdir"));
