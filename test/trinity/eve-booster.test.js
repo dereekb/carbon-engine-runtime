@@ -154,6 +154,11 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   assert.equal(restored.glows.sprites.length, 6);
   assert.deepEqual(restored.trails.GetTrailData(), trails.GetTrailData());
   assert.equal(restored.maxSize, boosters.maxSize);
+  // trailData is ours with PERSISTONLY (non-carbon-extensions.md): the default values carry it too, and a trail set built
+  // from them reads it back.
+  const defaultValues = CjsSchema.getValues(boosters);
+  assert.equal(defaultValues.trails.trailData.length, 1, "default values carry trailData");
+  assert.deepEqual(CjsSchema.from("EveBoosterSet2", defaultValues).trails.GetTrailData(), trails.GetTrailData());
   assertVecNear(restored._boosterBoundingSphere.subarray(0, 3), boosters._boosterBoundingSphere.subarray(0, 3));
   assert.equal(restored._boosterBoundingSphere[3], boosters._boosterBoundingSphere[3]);
   // m_trailsStaticOffsets is one array; each element persists under its own name (EveBoosterSet2_Blue.cpp:136-140).
