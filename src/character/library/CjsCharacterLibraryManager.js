@@ -9,6 +9,8 @@ import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.
 
 import { CjsCharacterLibrary } from "./CjsCharacterLibrary.js";
 import { normalizeResourcePath } from "#utils/path";
+import { CjsCharacterTextureRoles } from "./CjsCharacterTextureRoles.js";
+import { PaperDollPaletteKind } from "./characterPalettes.js";
 
 /** Installs, loads, and queries one combined hydrated character library. */
 export class CjsCharacterLibraryManager
@@ -20,6 +22,12 @@ export class CjsCharacterLibraryManager
 
     /** Material-mask areas by detail and zone path (or zone path alone), derived once beside the records. */
     _materialMaskAreas = new Map();
+
+    /** The parts library queries' answers, by query and arguments (`_Query`). */
+    _queries = new Map();
+
+    /** The indexed paper doll files, sorted, for one install generation (`_PaperDollFiles`). */
+    _paperDollFiles = null;
 
     /**
      * Reads one flat kind through its lazy Blue loader when present.
@@ -179,6 +187,439 @@ export class CjsCharacterLibraryManager
         }
         if (generation !== this._installGeneration) throw new Error("Character library was replaced during a part join.");
         return this._library.AddKind("parts", name, part);
+    }
+
+    /**
+     * How each paper doll category's content is read, by category path below the sex's paper doll root. The
+     * parts library decides these itself; no caller passes them.
+     *
+     * Derived: the content does not state these rules. Each was found from the content (build 3670638) and from
+     * the sources that read it before the parts library did (character-structure-and-plugins.md R5):
+     * - `options`: `type`, one option per `.type`, named by its file; `folder`, one option per first-level
+     *   folder, whose `.type`s name the bloodlines that wear it (underwear: telling it from the content would mean
+     *   reading every `.type`); `self`, the category folder is its one option (skin tone).
+     * - `maps`: `name`, a variation's map replaces the part folder's of the same name (map decals); `composed`, the
+     *   composed names in the option's folder; `catalog`, one map per stem directly in the part folder, with no
+     *   variation; `garment`, the garment name lists, the variation folder first.
+     * - `palettes`: `own`, the `.color` files directly in the option's folder; `shared`, those and the category's
+     *   `colors/` (female eye shadow ships a `colors/` too, which is not offered: its options keep their own).
+     * - `areas`: how its colour areas are found (`FetchColorAreas`): `zone`, `detail` or `none`.
+     * @type {Object<string, { options: "type"|"folder"|"self", maps: "name"|"composed"|"catalog"|"garment", palettes: "own"|"shared", areas: "zone"|"detail"|"none" }>}
+     */
+    static categories = {
+        "makeup/aging": { options: "type", maps: "name", palettes: "own", areas: "none" },
+        "makeup/augmentations": { options: "type", maps: "name", palettes: "own", areas: "none" },
+        "makeup/freckles": { options: "type", maps: "name", palettes: "own", areas: "none" },
+        "makeup/scarring": { options: "type", maps: "name", palettes: "own", areas: "none" },
+        "scars": { options: "type", maps: "name", palettes: "own", areas: "none" },
+        "makeup/eyeshadow": { options: "type", maps: "composed", palettes: "own", areas: "zone" },
+        "makeup/eyeliner": { options: "type", maps: "composed", palettes: "own", areas: "zone" },
+        "makeup/lipstick": { options: "type", maps: "composed", palettes: "own", areas: "zone" },
+        "tattoo/head": { options: "type", maps: "composed", palettes: "shared", areas: "zone" },
+        "skintone/basic": { options: "self", maps: "composed", palettes: "own", areas: "detail" },
+        "makeup/blush": { options: "type", maps: "catalog", palettes: "shared", areas: "detail" },
+        "makeup/eyebrows": { options: "type", maps: "catalog", palettes: "shared", areas: "detail" },
+        "makeup/eyes": { options: "type", maps: "catalog", palettes: "shared", areas: "detail" },
+        "makeup/armleft": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "makeup/armright": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "makeup/bodyaugmentations": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "bottommiddle": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "bottomouter": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "topmiddle": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "topouter": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "outer": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "feet": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
+        "bottomunderwear": { options: "folder", maps: "garment", palettes: "own", areas: "detail" },
+        "topunderwear": { options: "folder", maps: "garment", palettes: "own", areas: "detail" }
+    };
+
+    /**
+     * The paper doll content root of a sex, which every category path is relative to.
+     * @param {"female"|"male"} sex The sex.
+     * @returns {string} The root's `res:` path, with its trailing slash.
+     * @throws {Error} For another sex.
+     */
+    static paperDollRoot(sex)
+    {
+        if (sex !== "female" && sex !== "male") throw new Error("Unknown character sex " + sex);
+        return "res:/graphics/character/" + sex + "/paperdoll/";
+    }
+
+    /**
+     * A palette file's record: its path, its file name, its kind (the areas it sets, from its `_a`/`_bc` name;
+     * derived, as in the game's creator) and those areas.
+     * @param {string} path The palette's `res:` path.
+     * @returns {{ path: string, name: string, kind: number, areas: number[] }}
+     */
+    static paletteRecord(path)
+    {
+        const name = path.slice(path.lastIndexOf("/") + 1, -".color".length);
+        const kind = name.endsWith("_a") ? PaperDollPaletteKind.AREA_1 : name.endsWith("_bc") ? PaperDollPaletteKind.AREAS_2_3 : PaperDollPaletteKind.WHOLE;
+        return { path, name, kind, areas: kind === PaperDollPaletteKind.AREA_1 ? [ 1 ] : kind === PaperDollPaletteKind.AREAS_2_3 ? [ 2, 3 ] : [ 1, 2, 3 ] };
+    }
+
+    /**
+     * A category's options, from the index alone (no file is read): each option's id, its `.type` (null for a
+     * folder option), its folder and its path below the root, and for a folder option the bloodlines its `.type`
+     * names say wear it. Sorted by `.type` path, or by folder.
+     *
+     * Ours (non-carbon-extensions.md § *The shared character library*): the game's paper doll is Python client
+     * code, not Carbon. The listing each paper doll source made for itself, moved into the parts library.
+     *
+     * @param {"female"|"male"} sex The sex.
+     * @param {string} category The category path below the root (a key of `categories`).
+     * @returns {Promise<Array<{ sex: string, category: string, id: string, typePath: ?string, typePaths: string[], folder: string, path: string, bloodlines: string[] }>>}
+     *   The options; a new list per call, of records shared by every caller (not to be changed).
+     * @throws {Error} For a category the library has no rule for.
+     */
+    async FetchOptions(sex, category)
+    {
+        const rule = CjsCharacterLibraryManager._CategoryRule(category);
+        return (await this._Query("options|" + sex + "|" + category, async () =>
+        {
+            const root = CjsCharacterLibraryManager.paperDollRoot(sex), folder = root + category + "/", files = this._PaperDollFiles(folder);
+            const option = (id, typePath, typePaths, optionFolder, bloodlines) =>
+                ({ sex, category, id, typePath, typePaths, folder: optionFolder, path: optionFolder.slice(root.length, -1), bloodlines });
+            if (rule.options === "self") return [ option(category.split("/").at(-1), null, [], folder, []) ];
+            const types = files.filter(path => path.endsWith(".type"));
+            if (rule.options === "type")
+            {
+                // A type's folder is the one its `types/` folder sits in, as the part join slices it.
+                return types.map(path => option(path.slice(path.lastIndexOf("/") + 1, -".type".length), path, [ path ], path.slice(0, path.lastIndexOf("/types/") + 1), []));
+            }
+            return [ ...new Set(files.map(path => path.slice(0, path.indexOf("/", folder.length) + 1))) ].map(dir =>
+            {
+                const id = dir.slice(folder.length, -1), own = types.filter(path => path.startsWith(dir + "types/"));
+                // The bloodline is the type's name, after the folder's name where it carries it (`bikinibottomcf01_deteis`,
+                // male `deteis`); a type named as its folder names none (`topzh`).
+                const bloodlines = own.map(path => path.slice(path.lastIndexOf("/") + 1, -".type".length))
+                    .map(name => name.startsWith(id + "_") ? name.slice(id.length + 1) : name).filter(name => name !== id);
+                return option(id, null, own, dir, bloodlines);
+            });
+        })).slice();
+    }
+
+    /**
+     * An option's part facts, read once: its `.type`'s part, variation and colour variant (empty for a folder
+     * option), its folders (the variation's own folder first where it has one, then the part folder), the first of
+     * those folders' metadata with its occludes and dependants (each entry cut to its path), its projection and its
+     * models (the part folder's `.black` and `.gr2` files).
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @returns {Promise<{ part: string, variation: string, colorVariant: string, folders: string[], metadataPath: ?string, metadata: ?object, occludes: string[], dependants: string[], numColorAreas: number, projection: ?string, models: string[] }>}
+     *   The facts, shared by every caller (not to be changed).
+     * @throws {Error} For a `.type` that is not three strings.
+     */
+    FetchOptionPart(option)
+    {
+        return this._Query("part|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        {
+            const root = CjsCharacterLibraryManager.paperDollRoot(option.sex);
+            let part = option.path, variation = "", colorVariant = "", folders = [ option.folder ];
+            if (option.typePath !== null)
+            {
+                const value = (await this.FetchType(option.typePath)).value;
+                if (!Array.isArray(value)) throw new Error("Unsupported character type " + option.typePath);
+                [ part, variation = "", colorVariant = "" ] = value;
+                if (typeof part !== "string" || typeof variation !== "string" || typeof colorVariant !== "string")
+                    throw new Error("Unsupported character type " + option.typePath);
+                // Res paths are case-insensitive and indexed lowercase; seven tattoo types name their part in mixed case.
+                part = part.toLowerCase();
+                const base = root + part + "/", own = base + variation + "/";
+                // A variation without its own folder (v0) is the part's folder itself.
+                folders = variation && this._PaperDollFiles(own).length ? [ own, base ] : [ base ];
+            }
+            const files = this._PaperDollFiles(folders.at(-1));
+            const metadataPath = folders.map(folder => folder + "metadata.yaml").find(path => files.includes(path)) ?? null;
+            const metadata = metadataPath ? await this.FetchAvatarPartMetaData(metadataPath) : null;
+            const list = key => metadata ? [ ...new Set(metadata[key].map(value => value.split("#")[0])) ] : [];
+            const base = folders.at(-1), direct = files.filter(path => path.lastIndexOf("/") === base.length - 1);
+            return {
+                part, variation, colorVariant, folders, metadataPath, metadata,
+                occludes: list("occludesModifiers"), dependants: list("dependantModifiers"), numColorAreas: metadata ? metadata.numColorAreas : -1,
+                projection: files.includes(base + "projection.proj") ? base + "projection.proj" : null,
+                models: direct.filter(path => /\.(black|gr2)$/u.test(path))
+            };
+        });
+    }
+
+    /**
+     * An option's maps at the character texture quality, by its category's rule (`categories`):
+     * - `name`: `{ paths }`, one map per name, a variation's replacing the part folder's;
+     * - `composed`: `{ roles, skipped }`, the option folder's composed maps by role, and those not named so;
+     * - `catalog`: `{ channels }`, one map per stem directly in the part folder;
+     * - `garment`: `{ maps, skipped, masks }`, the garment maps by key, the folder's other maps (overridden or
+     *   unruled), and its body cut masks: its own, then each dependant folder's (utility shapes are not folders).
+     *
+     * Ours, as `FetchOptions`. The rules are `CjsCharacterTextureRoles`'.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @returns {Promise<object>} The maps, shared by every caller (not to be changed).
+     * @throws {Error} For a map decal variation with no folder that is not `v0`, a catalog option with a variation
+     *   or an ambiguous stem, or a map name the role lookup does not know.
+     */
+    FetchOptionMaps(option)
+    {
+        const rule = CjsCharacterLibraryManager._CategoryRule(option.category).maps, tier = CjsCharacterTextureRoles.tierOrder()[0];
+        return this._Query("maps|" + tier + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        {
+            if (rule === "composed") return CjsCharacterTextureRoles.readFolder(option.folder, this._PaperDollFiles(option.folder));
+            const facts = await this.FetchOptionPart(option), base = facts.folders.at(-1), files = this._PaperDollFiles(base);
+            const inFolder = folder => files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"));
+            if (rule === "name")
+            {
+                const variant = facts.variation ? base + facts.variation + "/" : base, own = inFolder(variant);
+                if (variant !== base && !own.length && facts.variation !== "v0") throw new Error("Map decal type " + option.typePath + " names a variation with no folder");
+                const pick = list => new Map([ ...new Set(list.map(file => CjsCharacterTextureRoles.splitTier(file)[0].split("/").at(-1))) ]
+                    .map(name => [ name, CjsCharacterTextureRoles.pickTier(list[0].slice(0, list[0].lastIndexOf("/") + 1) + name + ".png", list) ]));
+                return { paths: [ ...new Map([ ...(variant !== base ? pick(inFolder(base)) : []), ...(own.length ? pick(own) : []) ]).values() ] };
+            }
+            if (rule === "catalog")
+            {
+                if (facts.variation) throw new Error("Unqualified makeup variation: " + option.typePath);
+                const direct = inFolder(base), channels = {};
+                for (const stem of new Set(direct.map(path => CjsCharacterTextureRoles.splitTier(path)[0].slice(base.length))))
+                {
+                    const candidates = CjsCharacterTextureRoles.tierCandidates(direct, stem);
+                    if (candidates.length !== 1) throw new Error("Ambiguous makeup channel: " + base + stem);
+                    channels[stem] = candidates[0];
+                }
+                return { channels };
+            }
+            const maps = CjsCharacterTextureRoles.pickGarmentMaps(facts.folders, files), root = CjsCharacterLibraryManager.paperDollRoot(option.sex);
+            const fromDependants = facts.dependants.filter(path => !/^utilityshapes\//iu.test(path)).map(path =>
+            {
+                const dir = root + path.toLowerCase() + "/";
+                return CjsCharacterTextureRoles.pickGarmentMaps([ dir ], this._PaperDollFiles(dir)).cutMask;
+            });
+            return {
+                maps,
+                skipped: CjsCharacterTextureRoles.garmentSkipped(facts.folders, files, [ ...Object.values(maps) ]),
+                masks: [ ...new Set([ maps.cutMask, ...fromDependants ].filter(Boolean)) ]
+            };
+        });
+    }
+
+    /**
+     * An option's palettes by path, with their kinds (`paletteRecord`): the `.color` files directly in its folder,
+     * then, for a category whose palettes are `shared` (`categories`), those in its `colors/`. No colour is read.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @returns {Promise<Array<{ path: string, name: string, kind: number, areas: number[] }>>} The palettes; a new
+     *   list per call.
+     */
+    async FetchPalettes(option)
+    {
+        return (await this._Query("palettes|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        {
+            const shared = CjsCharacterLibraryManager.paperDollRoot(option.sex) + option.category + "/colors/";
+            const own = this._PaperDollFiles(option.folder).filter(path => path.endsWith(".color") && path.lastIndexOf("/") === option.folder.length - 1);
+            const category = CjsCharacterLibraryManager._CategoryRule(option.category).palettes === "shared" ? this._PaperDollFiles(shared).filter(path => path.endsWith(".color")) : [];
+            return [ ...new Set([ ...own, ...category ]) ].map(path => CjsCharacterLibraryManager.paletteRecord(path));
+        })).slice();
+    }
+
+    /**
+     * The colour areas (1 to 3) an option paints, decoded once, by its category's rule (`categories`): `zone`, the
+     * areas its zone map selects (`FetchMaterialMaskAreas__Zone`: layers that paint every pixel of their zone);
+     * `detail`, the areas its colourise detail paints through its zone (`FetchMaterialMaskAreas`), each region's
+     * pair joined, or for a garment its metadata's `numColorAreas` where stated; `none`, no colour.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @returns {Promise<number[]>} The areas, ascending; a new list per call.
+     */
+    async FetchColorAreas(option)
+    {
+        const rule = CjsCharacterLibraryManager._CategoryRule(option.category);
+        if (rule.areas === "none") return [];
+        return (await this._Query("areas|" + CjsCharacterTextureRoles.tierOrder()[0] + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
+        {
+            const maps = await this.FetchOptionMaps(option);
+            if (rule.maps === "garment")
+            {
+                if (!maps.maps.detail || !maps.maps.zone) return [];
+                const count = (await this.FetchOptionPart(option)).numColorAreas;
+                return count < 0 ? this.FetchMaterialMaskAreas(maps.maps.detail, maps.maps.zone) : Array.from({ length: count }, (_, index) => index + 1);
+            }
+            const roles = rule.maps === "catalog" ? Object.values(maps.channels).map(path => CjsCharacterTextureRoles.lookup(path)) : maps.roles;
+            const areas = new Set();
+            for (const region of new Set(roles.filter(role => role.operation === "Colorized" || role.inputOf === "l").map(role => role.region)))
+            {
+                const detail = CjsCharacterTextureRoles.one(roles, role => role.region === region && role.operation === "Colorized");
+                const zone = CjsCharacterTextureRoles.one(roles, role => role.region === region && role.inputOf === "l");
+                if (!zone || rule.areas === "detail" && !detail) continue;
+                const found = rule.areas === "zone" ? await this.FetchMaterialMaskAreas__Zone(zone.path) : await this.FetchMaterialMaskAreas(detail.path, zone.path);
+                for (const area of found) areas.add(area);
+            }
+            return [ ...areas ].sort();
+        })).slice();
+    }
+
+    /**
+     * An option's colours, as GetShaderConfig answers a shader's (ccpwgl `EveSOFDataGeneric.GetShaderConfig`: the
+     * library's own result, then the provided values assigned over it). The library's result is the named palette's
+     * colours, else the palette its `.type`'s colour variant names, else its `default` palette (`default_a` for a
+     * shared ink), else for a garment its first, else none; a palette sets only its own areas (`paletteRecord`). Then each provided colour is laid
+     * over the area it is for, where the option paints that area (`FetchColorAreas`); the rest are ignored, as the
+     * generic assigns only the parameters a shader uses. Provided values are not otherwise read.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @param {object} [provided] What the caller has.
+     * @param {string} [provided.palette] A palette name (a recipe's colour variation); an unknown name falls back.
+     * @param {Array<?ArrayLike<number>>} [provided.colors] Colours for areas 1 to 3 (a recipe's own colours).
+     * @param {Array<?ArrayLike<number>>} [provided.specularColors] Specular colours for areas 1 to 3.
+     * @returns {Promise<{ palette: ?string, colors: Array<?Float32Array>, specularColors: Array<?Float32Array>, pattern: ?object }>}
+     *   The palette used (its path), and per area its colour and specular colour, null where nothing sets it.
+     */
+    async ResolveColors(option, { palette = "", colors = null, specularColors = null } = {})
+    {
+        const palettes = await this.FetchPalettes(option), named = name => name ? palettes.find(record => record.name === name) ?? null : null;
+        const colorVariant = option.typePath !== null ? (await this.FetchOptionPart(option)).colorVariant : "";
+        // A garment whose colour variant names no palette it ships takes its first. Derived: our pick, not a source's
+        // (15 female and 12 male garments in build 3670638; the recipe-colours ruling is open).
+        const garment = CjsCharacterLibraryManager._CategoryRule(option.category).maps === "garment";
+        const chosen = named(palette) ?? named(colorVariant) ?? named("default") ?? named("default_a") ?? (garment ? palettes[0] ?? null : null);
+        const result = { palette: chosen ? chosen.path : null, colors: [ null, null, null ], specularColors: [ null, null, null ], pattern: null };
+        if (chosen)
+        {
+            const values = await this.FetchPalette(chosen.path, { specular: true });
+            for (const area of chosen.areas)
+            {
+                result.colors[area - 1] = values.colors[area - 1];
+                result.specularColors[area - 1] = values.specularColors[area - 1];
+            }
+            result.pattern = values.pattern;
+        }
+        if (colors === null && specularColors === null) return result;
+        for (const area of await this.FetchColorAreas(option))
+        {
+            if (colors !== null && colors[area - 1]) result.colors[area - 1] = Float32Array.from(colors[area - 1]);
+            if (specularColors !== null && specularColors[area - 1]) result.specularColors[area - 1] = Float32Array.from(specularColors[area - 1]);
+        }
+        return result;
+    }
+
+    /**
+     * The bloodline of an archetype: the bloodline head whose metadata depends on it, named by its folder's last
+     * word (`head/caldari_deteis`: `deteis`), as the underwear types name bloodlines. The archetype's own
+     * `types/<bloodline>.type` is not used: the male archetypes ship none, and two female ones are spelled apart
+     * from every other file (`deites`, `verokior`). Derived: no content record names an archetype's bloodline.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {"female"|"male"} sex The sex.
+     * @param {string} archetype The archetype folder below the root (`archetypes/cdshape`).
+     * @returns {Promise<?string>} The bloodline, or null for an archetype no head depends on.
+     * @throws {Error} For an archetype more than one head depends on.
+     */
+    FetchBloodline(sex, archetype)
+    {
+        return this._Query("bloodline|" + sex + "|" + archetype, async () =>
+        {
+            const heads = CjsCharacterLibraryManager.paperDollRoot(sex) + "head/";
+            const paths = this._PaperDollFiles(heads).filter(path => path.endsWith("/metadata.yaml") && path.indexOf("/", heads.length) === path.length - "/metadata.yaml".length);
+            const found = [];
+            for (const path of paths)
+            {
+                const metadata = await this.FetchAvatarPartMetaData(path);
+                if (metadata.dependantModifiers.some(value => value.split("#")[0] === archetype)) found.push(path.slice(heads.length, -"/metadata.yaml".length));
+            }
+            if (found.length > 1) throw new Error("Archetype " + archetype + " has more than one head: " + found.join(", "));
+            return found.length ? found[0].slice(found[0].lastIndexOf("_") + 1) : null;
+        });
+    }
+
+    /**
+     * The category and option a recipe entry selects: the first option whose `.type` names the same part and
+     * variation (an empty variation is `v0`) and, where the type names a colour variant, the same colour variation;
+     * or the folder option of the entry's part. A type without a colour variant (every makeup type) leaves the
+     * colour to the entry: its colour variation then names one of the option's palettes. Found from the shipped
+     * recipes (`dnafiles/`, `paperdolllibrary/prs/`): no makeup type names a colour variant, and their entries name
+     * palettes (`default`, `black`). An entry no type presets (a garment palette its type does not pair with that
+     * variation) selects nothing.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {"female"|"male"} sex The sex.
+     * @param {{ path: string, variation?: string, colorvariation?: string }} entry The recipe entry.
+     * @returns {Promise<?{ category: string, option: string }>} The selection, or null when no option matches.
+     */
+    async ResolveRecipeEntry(sex, { path, variation = "", colorvariation = "" })
+    {
+        const category = Object.keys(CjsCharacterLibraryManager.categories).filter(name => path.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
+        if (!category) return null;
+        const same = (a, b) => (a || "v0") === (b || "v0");
+        for (const option of await this.FetchOptions(sex, category))
+        {
+            if (option.typePath === null)
+            {
+                if (option.path === path.toLowerCase()) return { category, option: option.id };
+                continue;
+            }
+            const facts = await this.FetchOptionPart(option);
+            if (facts.part === path.toLowerCase() && same(facts.variation, variation) && (!facts.colorVariant || facts.colorVariant === colorvariation)) return { category, option: option.id };
+        }
+        return null;
+    }
+
+    /**
+     * A category's rule.
+     * @param {string} category The category path below the root.
+     * @returns {{ options: string, maps: string }}
+     * @throws {Error} For a category the library has no rule for.
+     */
+    static _CategoryRule(category)
+    {
+        const rule = CjsCharacterLibraryManager.categories[category];
+        if (!rule) throw new Error("No paper doll category " + category);
+        return rule;
+    }
+
+    /**
+     * The indexed paper doll files below a folder, sorted, with a stored `.black` listed as `.black` (the remote file
+     * system lists it as `.red`, `BlueResFileSystemRemote.cpp:23-36`). The one listing every query is built on.
+     * @param {string} folder The folder's `res:` path, with its trailing slash.
+     * @returns {string[]} The files.
+     */
+    _PaperDollFiles(folder)
+    {
+        this._StartLazySource();
+        if (this._paperDollFiles === null || this._paperDollFiles.generation !== this._installGeneration)
+        {
+            const names = new Set();
+            for (const kind of Object.keys(CjsCharacterLibraryConfiguration.kinds))
+            {
+                const paths = this._sourceBuilder ? this._sourceBuilder.ListSourceNames(kind) : this._library.ListKindNames(kind);
+                for (const path of paths) if (path.includes("/paperdoll/")) names.add(path.replace(/\.red$/u, ".black"));
+            }
+            this._paperDollFiles = { generation: this._installGeneration, files: [ ...names ].sort() };
+        }
+        return this._paperDollFiles.files.filter(path => path.startsWith(folder));
+    }
+
+    /**
+     * One cached query: concurrent requests share it, a failed one is forgotten.
+     * @param {string} key The query and its arguments.
+     * @param {function(): Promise<*>} make The query.
+     * @returns {Promise<*>} The cached answer.
+     */
+    _Query(key, make)
+    {
+        if (!this._queries.has(key))
+        {
+            const operation = make();
+            this._queries.set(key, operation);
+            operation.catch(() => { if (this._queries.get(key) === operation) this._queries.delete(key); });
+        }
+        return this._queries.get(key);
     }
 
     /**
@@ -351,7 +792,7 @@ export class CjsCharacterLibraryManager
      * every Fetch does.
      *
      * @param {string} path The file's canonical `res:` path.
-     * @returns {Promise<object>} The record, whose `value` is the file's tuple (part path, variation, colour variant, bloodlines); a path that is not indexed rejects.
+     * @returns {Promise<object>} The record, whose `value` is the file's tuple (part path, variation, colour variant; every shipped type has these three, build 3670638); a path that is not indexed rejects.
      */
     async FetchType(path)
     {
@@ -1055,6 +1496,7 @@ export class CjsCharacterLibraryManager
         this._library = installed;
         this._partJoins.clear();
         this._materialMaskAreas.clear();
+        this._queries.clear();
         if (this._sourceBuilder && this._sourceBuilder.GetLibrary() !== installed) this._sourceBuilder = null;
         return installed;
     }

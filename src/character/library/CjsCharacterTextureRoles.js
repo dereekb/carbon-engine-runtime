@@ -20,8 +20,8 @@ const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a
  * - Property names: the character effects' texture parameters, `src/character/discovery/shaders.yaml` (DiffuseMap,
  *   NormalMap, SpecularMap and CutMaskMap are the same names in every character effect that samples them; the fur
  *   shells bind `colorize_head_l` directly as `LengthTexture`, :1024, which is mesh binding, not composition).
- * - Channels and blends: the shipped compositing effects, `docs/research/character-compositing.md` (:307-347
- *   per-channel placement, :349-405 blit arithmetic and states).
+ * - Channels and blends: the shipped compositing effects under `res:/graphics/effect/utility/compositing/` (their
+ *   per-channel placement, blit arithmetic and states).
  * - Families, regions and suffixes: the file names under `res:/graphics/character/<sex>/paperdoll/` (resource
  *   index, build 3670638): families `comp` and `colorize`; regions `head`, `body`, `hair`, `acc`; tiers `_4k`,
  *   `_512`, `_256` and none (`CjsCharacterTextureRoles.splitTier`).

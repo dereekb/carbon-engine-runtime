@@ -5,6 +5,7 @@ import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollPaletteKind, PaperDollPalettes } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
 import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
+import { CjsCharacterLibraryManager } from "../../library/CjsCharacterLibraryManager.js";
 
 /**
  * The layer source of a colourised head part: each option's colourise detail (`l`) through its zone map (`z`), in the
@@ -57,9 +58,8 @@ export class CjsPaperDollColorizedSource
      */
     static record(path)
     {
-        const name = path === CjsPaperDollColorizedSource.authored ? path : path.slice(path.lastIndexOf("/") + 1, -".color".length);
-        const kind = name.endsWith("_a") ? PaperDollPaletteKind.AREA_1 : name.endsWith("_bc") ? PaperDollPaletteKind.AREAS_2_3 : PaperDollPaletteKind.WHOLE;
-        return { path, name, kind, areas: CjsPaperDollColorizedSource.areas[kind] };
+        if (path !== CjsPaperDollColorizedSource.authored) return CjsCharacterLibraryManager.paletteRecord(path);
+        return { path, name: path, kind: PaperDollPaletteKind.WHOLE, areas: CjsPaperDollColorizedSource.areas[PaperDollPaletteKind.WHOLE] };
     }
 
     /**
