@@ -12,6 +12,7 @@ export { CjsCharacterLibrary } from "./library/CjsCharacterLibrary.js";
 export { CjsCharacterLibraryDocuments } from "./library/CjsCharacterLibraryDocuments.js";
 export { CjsCharacterLibraryManager } from "./library/CjsCharacterLibraryManager.js";
 export { CjsCharacterTextureRoles } from "./library/CjsCharacterTextureRoles.js";
+export { CjsCharacterFactory } from "./factory/CjsCharacterFactory.js";
 export * from "./model/index.js";
 export { CjsCharacterRigBinding } from "./controls/CjsCharacterRigBinding.js";
 export * from "./generated/index.js";

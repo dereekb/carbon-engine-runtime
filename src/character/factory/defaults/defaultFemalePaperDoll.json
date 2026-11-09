@@ -1,0 +1,36 @@
+{
+  "sex": "female",
+  "description": "The default female paper doll: the clean character with the default bloodline (Caldari Deteis). The clean character (operator, 2026-11-09): eyebrows, head, body, eyes, bottom underwear and top underwear on; lashes and tear ducts are head-mesh areas, not parts. Each part listed here starts in the values given; every other part starts switched off. A palette is a res: path whose colours the part takes. Edit freely: the engine reads this file as data.",
+  "parts": {
+    "archetype": {
+      "option": "archetypes/cdshape"
+    },
+    "skin": {
+      "enabled": true,
+      "option": "basic",
+      "palette": "res:/graphics/character/female/paperdoll/skintone/basic/deteis_default.color"
+    },
+    "eyes": {
+      "enabled": true,
+      "option": "eyes_01",
+      "overridable": true
+    },
+    "eyebrows": {
+      "enabled": true,
+      "option": "eyebrows_01",
+      "palette": "res:/graphics/character/female/paperdoll/makeup/eyebrows/eyebrows_01/default.color"
+    },
+    "bottomUnderwear": {
+      "enabled": true,
+      "option": "bikinibottomcf01",
+      "palette": "res:/graphics/character/female/paperdoll/bottomunderwear/bikinibottomcf01/default.color",
+      "overridable": false
+    },
+    "topUnderwear": {
+      "enabled": true,
+      "option": "bikinitopcf01",
+      "palette": "res:/graphics/character/female/paperdoll/topunderwear/bikinitopcf01/default.color",
+      "overridable": false
+    }
+  }
+}
