@@ -314,15 +314,15 @@ export class BlueObjectProxy extends IBlueObjectProxy
   }
 }
 
-CjsSchema.decorateField(BlueObjectProxy, "object", CjsSchema.be.property(), type.object.ref("IRoot"));
+CjsSchema.decorateField(BlueObjectProxy, "object", be.mapProperty(), type.object.ref("IRoot"));
 CjsSchema.decorateField(BlueObjectProxy, "builder", be.mapAttribute(be.READWRITE), type.object.ref.weak("IBlueObjectBuilder"));
 CjsSchema.decorateField(BlueObjectProxy, "objectMarker", be.mapAttribute(be.READWRITE), type.uint32);
-CjsSchema.decorateField(BlueObjectProxy, "temporary", CjsSchema.be.property(), type.boolean);
-CjsSchema.decorateField(BlueObjectProxy, "isResident", CjsSchema.be.property(), type.boolean);
+CjsSchema.decorateField(BlueObjectProxy, "temporary", be.mapProperty(), type.boolean);
+CjsSchema.decorateField(BlueObjectProxy, "isResident", be.mapPropertyReadOnly(), type.boolean);
 CjsSchema.decorateMethod(BlueObjectProxy, "Freeze", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(BlueObjectProxy, "SetObjectFromBuilder", be.mapMethodAndWrap());
 CjsSchema.be.define(BlueObjectProxy, {
   className: "BlueObjectProxy",
-  members: [ { name: "object", key: "_object", type: { kind: "rootRef", className: "IRoot" }, edit: { persist: true, persistOnly: true, hidden: true }, carbon: { member: true } } ]
+  members: [ { name: "object", key: "_object", exposure: { macro: "MAP_ATTRIBUTE", flags: 24 }, type: { kind: "rootRef", className: "IRoot" }, edit: { persist: true, persistOnly: true, hidden: true }, carbon: { member: true } } ]
 });
 CjsSchema.exposure.mapInterface(IBlueObjectProxy)(BlueObjectProxy);

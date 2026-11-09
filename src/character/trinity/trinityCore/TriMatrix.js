@@ -25,7 +25,8 @@ const ELEMENTS = [
 @CjsSchema.be.define({
   className: "TriMatrix",
   members: ELEMENTS.map((name, index) => ({
-    name, key: "_matrix", index, type: { kind: "float32" }, edit: { read: true, write: true, persist: true }
+    name, key: "_matrix", index, type: { kind: "float32" }, edit: { read: true, write: true, persist: true },
+    exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }
   }))
 })
 @be.mapInterface(ITriMatrix)

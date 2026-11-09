@@ -1112,11 +1112,11 @@ export class Tr2HostBitmap extends HostBitmap
 CjsSchema.be.define(Tr2HostBitmap, {
   className: "Tr2HostBitmap",
   members: [
-    { name: "format", key: "_format", type: { kind: "int32" }, enum: { enumType: "trinity.ImageIO.PixelFormat" }, edit: { read: true } },
-    { name: "width", key: "_width", type: { kind: "uint32" }, edit: { read: true } },
-    { name: "height", key: "_height", type: { kind: "uint32" }, edit: { read: true } },
-    { name: "mipCount", key: "_mipCount", type: { kind: "uint32" }, edit: { read: true } },
-    { name: "imageType", key: "_type", type: { kind: "int32" }, enum: { enumType: "trinity.ImageIO.TextureType" }, edit: { read: true } },
-    { name: "name", key: "_name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+    { name: "format", key: "_format", exposure: { macro: "MAP_ATTRIBUTE_WITH_CHOOSER", flags: 1, chooser: "trinity.ImageIO.PixelFormat" }, type: { kind: "int32" }, enum: { enumType: "trinity.ImageIO.PixelFormat" }, edit: { read: true } },
+    { name: "width", key: "_width", exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, type: { kind: "uint32" }, edit: { read: true } },
+    { name: "height", key: "_height", exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, type: { kind: "uint32" }, edit: { read: true } },
+    { name: "mipCount", key: "_mipCount", exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, type: { kind: "uint32" }, edit: { read: true } },
+    { name: "imageType", key: "_type", exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, type: { kind: "int32" }, enum: { enumType: "trinity.ImageIO.TextureType" }, edit: { read: true } },
+    { name: "name", key: "_name", exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
   ]
 });

@@ -205,8 +205,8 @@ export class Tr2ImageRes extends BlueAsyncRes
 // source without a transform. Field order is key order, and GetValues() exports
 // in that order.
 
-CjsSchema.decorateField(Tr2ImageRes, "width", type.int32, CjsSchema.be.read, meta.persist);
-CjsSchema.decorateField(Tr2ImageRes, "height", type.int32, CjsSchema.be.read, meta.persist);
+CjsSchema.decorateField(Tr2ImageRes, "width", type.int32, be.mapPropertyReadOnly__Field());
+CjsSchema.decorateField(Tr2ImageRes, "height", type.int32, be.mapPropertyReadOnly__Field());
 CjsSchema.decorateMethod(Tr2ImageRes, "GetPixelColor", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(Tr2ImageRes, "IsPixelOpaque", be.mapMethodAndWrap());
 CjsSchema.exposure.mapICacheableMethods()(Tr2ImageRes);

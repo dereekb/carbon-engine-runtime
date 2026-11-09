@@ -138,6 +138,6 @@ CjsSchema.decorateField(Tr2VideoAdapter, "vendorID", type.uint32, be.mapAttribut
 CjsSchema.decorateField(Tr2VideoAdapter, "deviceID", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(Tr2VideoAdapter, "subSystemID", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(Tr2VideoAdapter, "revision", type.uint32, be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", type.string, CjsSchema.be.read);
+CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", type.string, be.mapPropertyReadOnly__Field());
 CjsSchema.decorateMethod(Tr2VideoAdapter, "GetDriverInfo", be.mapMethodAndWrap());
 CjsSchema.exposure.define("Tr2VideoAdapter")(Tr2VideoAdapter);

@@ -1071,25 +1071,25 @@ function getPayloadMemoryUsage(payload)
 // in that order.
 
 CjsSchema.decorateField(TriTextureRes, "format", type.int32, type.enum("trinity.ImageIO.PixelFormat"), be.mapAttributeWithChooser(be.READ | be.ENUM, "trinity.ImageIO.PixelFormat"));
-CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), CjsSchema.be.read, CjsSchema.be.persist);
+CjsSchema.decorateField(TriTextureRes, "type", type.int32, type.enum("trinity.ImageIO.TextureType"), be.mapAttributeWithChooser(be.READ | be.PERSIST, "trinity.ImageIO.TextureType"));
 CjsSchema.decorateField(TriTextureRes, "averageColor", type.color, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "depth", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutHeight", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "height", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "lodEnabled", type.boolean, be.mapAttribute(be.READ));
-CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, CjsSchema.be.read);
+CjsSchema.decorateField(TriTextureRes, "hadLodRequests", type.boolean, be.mapPropertyReadOnly__Field());
 CjsSchema.decorateField(TriTextureRes, "cpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "gpuMip", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "wrappedRenderTarget", type.object.ref("Tr2RenderTarget"), be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "originalResolution", type.uint32, be.mapAttribute(be.READ));
-CjsSchema.decorateField(TriTextureRes, "originalMemoryUsage", type.uint64, meta.read);
+CjsSchema.decorateField(TriTextureRes, "originalMemoryUsage", type.uint64);
 CjsSchema.decorateField(TriTextureRes, "name", type.string, be.mapAttribute(be.READ | be.WRITE));
 CjsSchema.decorateField(TriTextureRes, "arraySize", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutWidth", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "width", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateField(TriTextureRes, "cutoutX", type.float32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(TriTextureRes, "cutoutY", type.float32, be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(TriTextureRes, "loadedBitmap", type.rawStruct("ImageIO::HostBitmap"), meta.read);
+CjsSchema.decorateField(TriTextureRes, "loadedBitmap", type.rawStruct("ImageIO::HostBitmap"));
 
 CjsSchema.decorateMethod(TriTextureRes, "SaveAsync", be.mapMethod());
 CjsSchema.decorateMethod(TriTextureRes, "Save", be.mapMethod());

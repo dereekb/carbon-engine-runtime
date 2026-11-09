@@ -1,5 +1,6 @@
 // Source: blue/include/IBlueOS.h, blue/src/BlueOS.h and BlueOS.cpp.
 // Host-driven clock and tick pump; scheduler, IO and process services remain on the interface.
+import { exposure as be } from "#be";
 import { CjsSchema, type } from "#schema";
 import { BeInfo } from "./BeInfo.js";
 import { IBlueEvents } from "../interfaces/IBlueEvents.js";
@@ -381,7 +382,7 @@ export class BlueOS extends IBlueOS
 
 CjsSchema.exposure.mapInterface(IBlueOS)(BlueOS);
 CjsSchema.meta.inherit(BeInfo)(BlueOS);
-CjsSchema.decorateField(BlueOS, "frameClock", type.pyObject, CjsSchema.be.readwrite);
+CjsSchema.decorateField(BlueOS, "frameClock", type.pyObject, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateMethod(BlueOS, "PumpOS", CjsSchema.be.method);
 CjsSchema.be.define(BlueOS, {
   className: "BlueOS"
