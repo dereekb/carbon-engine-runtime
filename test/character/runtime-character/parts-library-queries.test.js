@@ -84,7 +84,10 @@ test("options come from the index alone, one per .type, per underwear folder, or
     const [ skin ] = await library.FetchOptions("female", "skintone/basic");
     assert.deepEqual([ skin.id, skin.folder ], [ "basic", ROOT + "skintone/basic/" ]);
     assert.deepEqual(reads, [], "listing reads no file");
-    await assert.rejects(library.FetchOptions("female", "hair"), /No paper doll category hair/);
+    await assert.rejects(library.FetchOptions("female", "bodyshapes"), /No paper doll category bodyshapes/);
+    await assert.rejects(library.FetchOptions("female", "head"), /No options rule for the paper doll category head/);
+    assert.deepEqual(await library.FetchOptions("female", "hair"), [], "a listed category this build ships nothing in");
+    await assert.rejects(library.FetchOptionMaps({ sex: "female", category: "hair", id: "long01" }), /No maps rule for the paper doll category hair/);
     assert.throws(() => CjsCharacterLibraryManager.paperDollRoot("other"), /Unknown character sex/);
 });
 
@@ -137,7 +140,8 @@ test("an archetype's bloodline is the head that depends on it; a recipe entry se
     assert.deepEqual(await resolve({ path: "outer/coat01", variation: "V1", colorvariation: "Black" }), { category: "outer", option: "coat01_black" }, "no name compares with case");
     assert.deepEqual(await resolve({ path: "makeup/eyeshadow/eyeshadow_01", colorvariation: "aqua_a" }), { category: "makeup/eyeshadow", option: "eyeshadow_01" }, "a makeup entry's colour variation is a palette");
     assert.deepEqual(await resolve({ path: "bottomunderwear/boxers01" }), { category: "bottomunderwear", option: "boxers01" });
-    assert.deepEqual(await resolve({ path: "hair/long01" }), { category: "hair", option: null }, "a deferred category is placed, with no option");
+    assert.deepEqual(await resolve({ path: "hair/long01" }), { category: "hair", option: null }, "a listed category with no matching type");
+    assert.deepEqual(await resolve({ path: "head/caldari_deteis" }), { category: "head", option: null }, "a category with no option rule");
     assert.equal(await resolve({ path: "bodyshapes/thinshape" }), null, "a path in no category");
 });
 

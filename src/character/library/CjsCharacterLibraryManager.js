@@ -204,7 +204,12 @@ export class CjsCharacterLibraryManager
      * - `palettes`: `own`, the `.color` files directly in the option's folder; `shared`, those and the category's
      *   `colors/` (female eye shadow ships a `colors/` too, which is not offered: its options keep their own).
      * - `areas`: how its colour areas are found (`FetchColorAreas`): `zone`, `detail` or `none`.
-     * @type {Object<string, { options: "type"|"folder"|"self", maps: "name"|"composed"|"catalog"|"garment", palettes: "own"|"shared", areas: "zone"|"detail"|"none" }>}
+     * Every category that ships `.type` files is listed. null is no rule: the content has not been surveyed for it
+     * (the mesh parts, and categories no paper doll part reads), and the query for it throws. `head` and `archetypes`
+     * have no option rule: a head or an archetype is a folder whose `.type`s (where it has any) do not name options.
+     * `accessories/piercings` repeats type names across its folders (`stud02` in five) and its types name parts the
+     * index does not hold (`accessories/earslow/stud02`; build 3670638), so its option ids are not unique.
+     * @type {Object<string, { options: ?("type"|"folder"|"self"), maps: ?("name"|"composed"|"catalog"|"garment"), palettes: ?("own"|"shared"), areas: ?("zone"|"detail"|"none") }>}
      */
     static categories = {
         "makeup/aging": { options: "type", maps: "name", palettes: "own", areas: "none" },
@@ -230,19 +235,29 @@ export class CjsCharacterLibraryManager
         "outer": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
         "feet": { options: "type", maps: "garment", palettes: "own", areas: "detail" },
         "bottomunderwear": { options: "folder", maps: "garment", palettes: "own", areas: "detail" },
-        "topunderwear": { options: "folder", maps: "garment", palettes: "own", areas: "detail" }
+        "topunderwear": { options: "folder", maps: "garment", palettes: "own", areas: "detail" },
+        "hair": { options: "type", maps: null, palettes: null, areas: null },
+        "beard": { options: "type", maps: null, palettes: null, areas: null },
+        "bottominner": { options: "type", maps: null, palettes: null, areas: null },
+        "skintype": { options: "type", maps: null, palettes: null, areas: null },
+        "tattoo/armleft": { options: "type", maps: null, palettes: null, areas: null },
+        "makeup/blemish": { options: "type", maps: null, palettes: null, areas: null },
+        "makeup/eyelashes": { options: "type", maps: null, palettes: null, areas: null },
+        "makeup/implants": { options: "type", maps: null, palettes: null, areas: null },
+        "makeup/teeth": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/brow": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/chin": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/ears": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/earshigh": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/earslow": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/glasses": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/lips": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/masks": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/nose": { options: "type", maps: null, palettes: null, areas: null },
+        "accessories/piercings": { options: "type", maps: null, palettes: null, areas: null },
+        "head": { options: null, maps: null, palettes: null, areas: null },
+        "archetypes": { options: null, maps: null, palettes: null, areas: null }
     };
-
-    /**
-     * Categories whose recipe entries the library places but does not yet read options for: the mesh parts
-     * (character-structure-and-plugins.md R6) and the foundation's. `ResolveRecipeEntry` answers their category with no
-     * option, so a caller can tell them from a path in no category.
-     * @type {string[]}
-     */
-    static deferredCategories = [
-        "hair", "beard", "accessories/brow", "accessories/chin", "accessories/ears", "accessories/earshigh", "accessories/earslow",
-        "accessories/glasses", "accessories/lips", "accessories/masks", "accessories/nose", "archetypes", "head"
-    ];
 
     /**
      * The paper doll content root of a sex, which every category path is relative to.
@@ -285,7 +300,7 @@ export class CjsCharacterLibraryManager
      */
     async FetchOptions(sex, category)
     {
-        const rule = CjsCharacterLibraryManager._CategoryRule(category);
+        const rule = CjsCharacterLibraryManager._CategoryRule(category, "options");
         return (await this._Query("options|" + sex + "|" + category, async () =>
         {
             const root = CjsCharacterLibraryManager.paperDollRoot(sex), folder = root + category + "/", files = this._PaperDollFiles(folder);
@@ -371,9 +386,9 @@ export class CjsCharacterLibraryManager
      * @throws {Error} For a map decal variation with no folder that is not `v0`, a catalog option with a variation
      *   or an ambiguous stem, or a map name the role lookup does not know.
      */
-    FetchOptionMaps(option)
+    async FetchOptionMaps(option)
     {
-        const rule = CjsCharacterLibraryManager._CategoryRule(option.category).maps, tier = CjsCharacterTextureRoles.tierOrder()[0];
+        const rule = CjsCharacterLibraryManager._CategoryRule(option.category, "maps").maps, tier = CjsCharacterTextureRoles.tierOrder()[0];
         return this._Query("maps|" + tier + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
         {
             if (rule === "composed") return CjsCharacterTextureRoles.readFolder(option.folder, this._PaperDollFiles(option.folder));
@@ -429,7 +444,7 @@ export class CjsCharacterLibraryManager
         {
             const shared = CjsCharacterLibraryManager.paperDollRoot(option.sex) + option.category + "/colors/";
             const own = this._PaperDollFiles(option.folder).filter(path => path.endsWith(".color") && path.lastIndexOf("/") === option.folder.length - 1);
-            const category = CjsCharacterLibraryManager._CategoryRule(option.category).palettes === "shared" ? this._PaperDollFiles(shared).filter(path => path.endsWith(".color")) : [];
+            const category = CjsCharacterLibraryManager._CategoryRule(option.category, "palettes").palettes === "shared" ? this._PaperDollFiles(shared).filter(path => path.endsWith(".color")) : [];
             return [ ...new Set([ ...own, ...category ]) ].map(path => CjsCharacterLibraryManager.paletteRecord(path));
         })).slice();
     }
@@ -447,7 +462,7 @@ export class CjsCharacterLibraryManager
      */
     async FetchColorAreas(option)
     {
-        const rule = CjsCharacterLibraryManager._CategoryRule(option.category);
+        const rule = CjsCharacterLibraryManager._CategoryRule(option.category, "areas");
         if (rule.areas === "none") return [];
         return (await this._Query("areas|" + CjsCharacterTextureRoles.tierOrder()[0] + "|" + option.sex + "|" + option.category + "|" + option.id, async () =>
         {
@@ -497,7 +512,7 @@ export class CjsCharacterLibraryManager
         const colorVariant = option.typePath !== null ? (await this.FetchOptionPart(option)).colorVariant : "";
         // A garment whose colour variant names no palette it ships takes its first. Derived: our pick, not a source's
         // (15 female and 12 male garments in build 3670638; the recipe-colours ruling is open).
-        const garment = CjsCharacterLibraryManager._CategoryRule(option.category).maps === "garment";
+        const garment = CjsCharacterLibraryManager.categories[option.category].maps === "garment";
         const chosen = named(palette) ?? named(colorVariant) ?? named("default") ?? named("default_a") ?? (garment ? palettes[0] ?? null : null);
         const result = { palette: chosen ? chosen.path : null, colors: [ null, null, null ], specularColors: [ null, null, null ], pattern: null };
         if (chosen)
@@ -564,15 +579,15 @@ export class CjsCharacterLibraryManager
      * @param {"female"|"male"} sex The sex.
      * @param {{ path: string, variation?: string, colorvariation?: string }} entry The recipe entry.
      * @returns {Promise<?{ category: string, option: ?string }>} The selection: its category, and its option or null
-     *   when no option matches (always null in a `deferredCategories` category); null for a path in no category.
+     *   when no option matches (always null in a category with no option rule: `head`, `archetypes`); null for a
+     *   path in no category.
      */
     async ResolveRecipeEntry(sex, { path, variation = "", colorvariation = "" })
     {
         const lower = path.toLowerCase(), wanted = colorvariation.toLowerCase();
-        const category = [ ...Object.keys(CjsCharacterLibraryManager.categories), ...CjsCharacterLibraryManager.deferredCategories ]
-            .filter(name => lower.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
+        const category = Object.keys(CjsCharacterLibraryManager.categories).filter(name => lower.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
         if (!category) return null;
-        if (!CjsCharacterLibraryManager.categories[category]) return { category, option: null };
+        if (CjsCharacterLibraryManager.categories[category].options === null) return { category, option: null };
         const same = (a, b) => (a || "v0").toLowerCase() === (b || "v0").toLowerCase();
         for (const option of await this.FetchOptions(sex, category))
         {
@@ -588,15 +603,17 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * A category's rule.
+     * A category's rules, with the one a query needs.
      * @param {string} category The category path below the root.
-     * @returns {{ options: string, maps: string }}
-     * @throws {Error} For a category the library has no rule for.
+     * @param {"options"|"maps"|"palettes"|"areas"} kind The rule the query needs.
+     * @returns {{ options: ?string, maps: ?string, palettes: ?string, areas: ?string }}
+     * @throws {Error} For a category the library does not list, or one with no rule of that kind.
      */
-    static _CategoryRule(category)
+    static _CategoryRule(category, kind)
     {
         const rule = CjsCharacterLibraryManager.categories[category];
         if (!rule) throw new Error("No paper doll category " + category);
+        if (rule[kind] === null) throw new Error("No " + kind + " rule for the paper doll category " + category);
         return rule;
     }
 
