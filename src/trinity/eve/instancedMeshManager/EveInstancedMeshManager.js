@@ -277,7 +277,6 @@ export class EveInstancedMeshManager
    * PerObjectDataHandle*>>, h:286): each entry `[data, handle]`, `data` the
    * provider's EveSpacePerObjectData RawData record, read in place.
    */
-  @type.unknown
   _perObjectData = [];
 
   /** m_sphereGroups (std::vector<SphereGroup>, h:287). */

@@ -46,7 +46,6 @@ export class EveInstancedMeshManagerMeshData
    * per LOD slot (two per LOD: plain and mirrored), the visible instances
    * binned there, each as [instance, perObjectDataIndex].
    */
-  @type.unknown
   lodIndices = [];
 
   /** screenSizeThresholds (std::vector<float>): each LOD's authored maximum screen size. */
