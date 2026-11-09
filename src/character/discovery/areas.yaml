@@ -3,8 +3,10 @@
 # Source pattern: res:/graphics/character/<sex>/paperdoll/**/*.black (LOD models excluded), both sexes, and the
 #   geometry (.gr2) each mesh names.
 # Files: 482 .black read, 0 failed; 594 meshes; 727 areas.
-# Binding: a mesh draws the gr2 mesh at its meshIndex (Tr2MeshBase.cpp:154, :224), an area the triangle group at its
-#   index (Tr2MeshBase.cpp:283, :414). Mesh names and list order are not the key.
+# Binding: each mesh names a gr2 mesh by meshIndex and by name; `binding` lists where the two disagree. Carbon's
+#   Tr2MeshBase binds by meshIndex (Tr2MeshBase.cpp:154, :224) and an area by its index (:283, :414); that is the
+#   Incarna-era engine, and whether today's client binds the same way is not established. Mesh list order is not
+#   meshIndex.
 # role: the area's shader with the x of its MaterialLibraryID and Material2LibraryID parameters (absent = the effect
 #   does not set it).
 # arrayOf: no effect a character part names declares an ArrayOf* parameter (shaders.yaml, 24 effects).
