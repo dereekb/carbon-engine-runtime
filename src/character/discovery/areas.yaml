@@ -8,19 +8,20 @@
 #   Incarna-era engine, and whether today's client binds the same way is not established. Mesh list order is not
 #   meshIndex.
 # role: the area's shader with the x of its MaterialLibraryID and Material2LibraryID parameters (absent = the effect
-#   does not set it).
+#   does not set it). uv: areas per atlas region of their TransformUV0 (body [0,0,0.5,1], head [0.5,0,1,0.5], hair
+#   [0.5,0.5,0.75,1], acc a sub-rect of [0.75,0.5,1,1], identity [0,0,1,1]).
 # arrayOf: no effect a character part names declares an ArrayOf* parameter (shaders.yaml, 24 effects).
 roles:
-  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 348, uv: body, kind: cloth }
-  - { shader: skinnedavatarbrdfdoublelinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 139, uv: body, kind: skin }
-  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 14, uv: body, kind: skin }
-  - { shader: skinnedavatarhair_detailed.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 144, uv: hair, kind: hair }
-  - { shader: skinnedavatarhair.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 6, uv: hair, kind: hair }
-  - { shader: skinnedavatarbrdf.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 43, uv: identity, kind: own textures }
-  - { shader: skinnedavatarbrdf.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 1, uv: identity, kind: own textures }
-  - { shader: glassshader.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 18, uv: acc, kind: glass }
-  - { shader: eyeshader.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 6, uv: head, kind: eyes }
-  - { shader: portraitbasic.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 8, kind: portrait }
+  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 348, uv: { body: 332, head: 8, acc: 8 }, kind: cloth }
+  - { shader: skinnedavatarbrdfdoublelinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 139, uv: { body: 139 }, kind: skin }
+  - { shader: skinnedavatarbrdflinear.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 14, uv: { body: 8, head: 6 }, kind: skin }
+  - { shader: skinnedavatarhair_detailed.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 144, uv: { hair: 127, head: 17 }, kind: hair }
+  - { shader: skinnedavatarhair.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 6, uv: { identity: 6 }, kind: hair }
+  - { shader: skinnedavatarbrdf.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 43, uv: { identity: 43 }, kind: own textures }
+  - { shader: skinnedavatarbrdf.fx, materialLibraryID: ">0", material2LibraryID: absent, areas: 1, uv: { identity: 1 }, kind: own textures }
+  - { shader: glassshader.fx, materialLibraryID: 0, material2LibraryID: absent, areas: 18, uv: { acc: 18 }, kind: glass }
+  - { shader: eyeshader.fx, materialLibraryID: 0, material2LibraryID: ">0", areas: 6, uv: { head: 6 }, kind: eyes }
+  - { shader: portraitbasic.fx, materialLibraryID: absent, material2LibraryID: absent, areas: 8, uv: { head: 8 }, kind: portrait }
 # Effects named C_Skin* that are not skin by role (skinnedavatarbrdf.fx, no Material2LibraryID):
 skinNamedOwnTextures:
   - female/paperdoll/dependants/sleeveslower/longflowing_01/longflowing_01.black TorsoShape C_SkinShiny_Decal
