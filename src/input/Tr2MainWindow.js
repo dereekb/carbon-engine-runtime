@@ -737,16 +737,16 @@ function sanitizeDimension(value, maximum, minimum)
 
 be.inherit(IRoot, IBlueEvents)(Tr2MainWindow);
 
-CjsSchema.decorateField(Tr2MainWindow, "onKeyDown", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onKeyUp", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onChar", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onMouseDown", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onMouseUp", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onMouseMove", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onMouseWheel", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onClose", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onFocusChange", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "onWindowStateChange", be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onKeyDown", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onKeyUp", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onChar", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onMouseDown", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onMouseUp", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onMouseMove", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onMouseWheel", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onClose", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onFocusChange", type.scriptCallback, be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "onWindowStateChange", type.scriptCallback, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(Tr2MainWindow, "imeState_MacOS", type.int32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateMethod(Tr2MainWindow, "HasFocus", be.mapMethodAndWrap("IsActive"));
 CjsSchema.decorateField(Tr2MainWindow, "active", type.boolean, be.mapPropertyReadOnly());

@@ -849,8 +849,21 @@ export class CjsSchema
          * string table.
          */
         wpath: pathDecorator("wpath"),
+        /**
+         * Carbon's PYOBJECT: a script object (`PyObject*`), such as BlueOS's
+         * frame clock (`BlueOS.h:56`). It describes the member only; no reader,
+         * writer or values handler reads one.
+         */
+        pyObject: fieldDecorator("type", { kind: "pyObject" }),
         quat: wrappableTypeDecorator("quat"),
         rawStruct: className => fieldDecorator("type", { kind: "rawStruct", className }),
+        /**
+         * Carbon's SCRIPTCALLBACK: a `BlueScriptCallback`
+         * (`BLUE_DEFINE_TYPE_TRAIT( BlueScriptCallback, Be::SCRIPTCALLBACK )`,
+         * BlueTypeTraits.h:92). It describes the member only; no reader,
+         * writer or values handler reads one.
+         */
+        scriptCallback: fieldDecorator("type", { kind: "scriptCallback" }),
         set: itemType => fieldDecorator("type", { kind: "set", itemType }),
         string: fieldDecorator("type", { kind: "string" }),
         wstring: fieldDecorator("type", { kind: "wstring" }),

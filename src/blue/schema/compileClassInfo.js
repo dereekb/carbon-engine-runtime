@@ -72,6 +72,8 @@ const SCALARS = Object.freeze({
   expression: [ VARTYPE.STDSTRING, false, 0 ],
   wstring: [ VARTYPE.STDWSTRING, false, 0 ],
   wpath: [ VARTYPE.STDWSTRING, false, 0 ],
+  pyObject: [ VARTYPE.PYOBJECT, false, 0 ],
+  scriptCallback: [ VARTYPE.SCRIPTCALLBACK, false, 0 ],
   enum: [ VARTYPE.LONG, true, 0 ],
   float32: [ VARTYPE.FLOAT, false, 0 ],
   float64: [ VARTYPE.DOUBLE, false, 0 ],
