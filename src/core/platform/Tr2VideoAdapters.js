@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IRoot } from "../../blue/exposure/IRoot.js";
 import { Tr2DisplayMode } from "./Tr2DisplayMode.js";
 import { Tr2PlatformInfo } from "./Tr2PlatformInfo.js";
@@ -242,7 +242,7 @@ export class Tr2VideoAdapters
 
 be.inherit(IRoot)(Tr2VideoAdapters);
 
-CjsSchema.decorateField(Tr2VideoAdapters, "DEFAULT_ADAPTER", be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapters, "DEFAULT_ADAPTER", type.uint32, be.mapAttribute(be.READ));
 CjsSchema.decorateMethod(Tr2VideoAdapters, "RefreshData", be.mapMethodAndWrap("Refresh"));
 CjsSchema.decorateMethod(Tr2VideoAdapters, "GetAdapterCount", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(Tr2VideoAdapters, "GetAdapterInfo", be.mapMethodAndWrap());

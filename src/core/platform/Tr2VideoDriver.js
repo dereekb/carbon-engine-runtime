@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IRoot } from "../../blue/exposure/IRoot.js";
 import { optionalString, snapshotWebIdl } from "./browserHelpers.js";
 
@@ -68,10 +68,10 @@ export class Tr2VideoDriver extends IRoot
 
 be.inherit(IRoot)(Tr2VideoDriver);
 
-CjsSchema.decorateField(Tr2VideoDriver, "driverVersion", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoDriver, "driverVersionString", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoDriver, "driverVendor", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoDriver, "driverDate", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoDriver, "isOptimus", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoDriver, "isAmdDynamicSwitchable", be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "driverVersion", type.int64, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "driverVersionString", type.string, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "driverVendor", type.string, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "driverDate", type.string, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "isOptimus", type.boolean, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoDriver, "isAmdDynamicSwitchable", type.boolean, be.mapAttribute(be.READ));
 CjsSchema.exposure.define("Tr2VideoDriver")(Tr2VideoDriver);

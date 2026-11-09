@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IRoot } from "../../blue/exposure/IRoot.js";
 import { optionalString, snapshotFeatures, snapshotWebIdl } from "./browserHelpers.js";
 import { Tr2VideoDriver } from "./Tr2VideoDriver.js";
@@ -129,15 +129,15 @@ export class Tr2VideoAdapter extends IRoot
 
 be.inherit(IRoot)(Tr2VideoAdapter);
 
-CjsSchema.decorateField(Tr2VideoAdapter, "index", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "driver", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "description", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "deviceName", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "driverVersion", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "vendorID", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "deviceID", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "subSystemID", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "revision", be.mapAttribute(be.READ));
-CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", CjsSchema.be.read);
+CjsSchema.decorateField(Tr2VideoAdapter, "index", type.uint32, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "driver", type.string, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "description", type.wstring, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "deviceName", type.string, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "driverVersion", type.int64, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "vendorID", type.uint32, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "deviceID", type.uint32, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "subSystemID", type.uint32, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "revision", type.uint32, be.mapAttribute(be.READ));
+CjsSchema.decorateField(Tr2VideoAdapter, "deviceIdentifier", type.string, CjsSchema.be.read);
 CjsSchema.decorateMethod(Tr2VideoAdapter, "GetDriverInfo", be.mapMethodAndWrap());
 CjsSchema.exposure.define("Tr2VideoAdapter")(Tr2VideoAdapter);

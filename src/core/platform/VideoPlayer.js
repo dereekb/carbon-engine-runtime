@@ -5,7 +5,7 @@ import { IBlueEvents } from "../../blue/interfaces/IBlueEvents.js";
 // Source: videoplayer/VideoPlayer.h, videoplayer/VideoPlayer.cpp:104-247
 // Browser adaptation: HTML media owns decoding, presentation and audio clocks.
 // Resource paths and playlist policy remain with VideoPlaylistController.
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { State } from "./video/enums.js";
 import { Tr2PlatformInfo } from "./Tr2PlatformInfo.js";
 import { Webgl2LightAveraging, WebgpuLightAveraging } from "#consts/graphics";
@@ -581,12 +581,12 @@ be.inherit(INotify, IBlueEvents)(VideoPlayer);
 CjsSchema.decorateMethod(VideoPlayer, "Create", be.mapMethodAndWrapOptionalArgs("__init__"));
 CjsSchema.decorateMethod(VideoPlayer, "Pause", be.mapMethodAndWrap("pause"));
 CjsSchema.decorateMethod(VideoPlayer, "Resume", be.mapMethodAndWrap("resume"));
-CjsSchema.decorateField(VideoPlayer, "is_paused", be.mapPropertyReadOnly());
-CjsSchema.decorateField(VideoPlayer, "media_time", be.mapPropertyReadOnly());
-CjsSchema.decorateField(VideoPlayer, "downloaded_media_time", be.mapPropertyReadOnly());
+CjsSchema.decorateField(VideoPlayer, "is_paused", type.boolean, be.mapPropertyReadOnly());
+CjsSchema.decorateField(VideoPlayer, "media_time", type.uint64, be.mapPropertyReadOnly());
+CjsSchema.decorateField(VideoPlayer, "downloaded_media_time", type.uint64, be.mapPropertyReadOnly());
 CjsSchema.decorateMethod(VideoPlayer, "GetVideoInfo", be.mapMethodAndWrap("get_video_info"));
 CjsSchema.decorateMethod(VideoPlayer, "ClearTextures", be.mapMethodAndWrap("clear_textures"));
 CjsSchema.decorateMethod(VideoPlayer, "Seek", be.mapMethodAndWrap("seek"));
-CjsSchema.decorateField(VideoPlayer, "state", be.mapPropertyReadOnly());
+CjsSchema.decorateField(VideoPlayer, "state", type.int32, be.mapPropertyReadOnly());
 CjsSchema.decorateMethod(VideoPlayer, "Validate", be.mapMethodAndWrap("validate"));
 CjsSchema.exposure.define("VideoPlayer")(VideoPlayer);

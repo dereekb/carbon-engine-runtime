@@ -1,6 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../blue/exposure/IRoot.js";
-import { meta } from "#schema";
+import { meta, type } from "#schema";
 import { CjsWebGLProbe } from "./CjsWebGLProbe.js";
 import { ResolveDeviceRequirements } from "./deviceLimits.js";
 import { ResolveEffectPath } from "#utils/effectPath";
@@ -352,6 +352,7 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {string|null}
      */
+    @type.string
     get platformName()
     {
         return this.GetPlatformName();
@@ -364,6 +365,7 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {number}
      */
+    @type.uint32
     get platformID()
     {
         return this.GetPlatformID();
@@ -376,6 +378,7 @@ export class Tr2PlatformInfo
      * @implemented
      * @type {boolean}
      */
+    @type.boolean
     get isLowPerformance()
     {
         return this.IsLowPerformance();

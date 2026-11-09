@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { IRoot } from "../blue/exposure/IRoot.js";
 import { IBlueEvents } from "../blue/interfaces/IBlueEvents.js";
 // Source: trinity/trinity/UI/Tr2MainWindow.h
@@ -747,9 +747,9 @@ CjsSchema.decorateField(Tr2MainWindow, "onMouseWheel", be.mapAttribute(be.READWR
 CjsSchema.decorateField(Tr2MainWindow, "onClose", be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(Tr2MainWindow, "onFocusChange", be.mapAttribute(be.READWRITE));
 CjsSchema.decorateField(Tr2MainWindow, "onWindowStateChange", be.mapAttribute(be.READWRITE));
-CjsSchema.decorateField(Tr2MainWindow, "imeState_MacOS", be.mapAttribute(be.READWRITE));
+CjsSchema.decorateField(Tr2MainWindow, "imeState_MacOS", type.int32, be.mapAttribute(be.READWRITE));
 CjsSchema.decorateMethod(Tr2MainWindow, "HasFocus", be.mapMethodAndWrap("IsActive"));
-CjsSchema.decorateField(Tr2MainWindow, "active", be.mapPropertyReadOnly());
+CjsSchema.decorateField(Tr2MainWindow, "active", type.boolean, be.mapPropertyReadOnly());
 CjsSchema.decorateMethod(Tr2MainWindow, "SetMinimumSize", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(Tr2MainWindow, "GetDefaultState", be.mapMethodAndWrap());
 CjsSchema.decorateMethod(Tr2MainWindow, "StoreStateSettings", be.mapMethodAndWrap());
