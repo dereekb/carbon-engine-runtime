@@ -4,6 +4,9 @@ import { test } from "node:test";
 import { CjsSchema, type } from "#schema";
 import { resolveHydrationAdapter } from "#schema/hydration";
 import { YamlReader } from "../../src/blue/formats/yaml/YamlReader.js";
+// The reader asks Blue's class registry (BeClasses) for each class, as Carbon's does; importing
+// BlueClasses runs BlueClasses.initialize(), which installs it.
+import "../../src/blue/exposure/BlueClasses.js";
 
 // Declared classes without their own SetValues populate through the schema.
 // The reader supplies ctx.declared from class registration; undeclared caller
