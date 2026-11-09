@@ -1,4 +1,4 @@
-import { CjsSchema, meta } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { PaperDollTarget } from "./paperDollOrder.js";
 
 /**
@@ -40,6 +40,16 @@ export class CjsPaperDollComponent
     color2 = Float32Array.of(.5, .5, .5, 1);
 
     color3 = Float32Array.of(.5, .5, .5, 1);
+
+    /**
+     * Whether the user may switch the part off (operator, 2026-11-09). While nothing that remains occludes the part, a
+     * part that is not overridable cannot be switched off by the user; an occluder still removes it from the bake. The
+     * default character's data sets it false for the underwear (`CjsCharacterFactory`). The engine only holds the flag
+     * and the UI honours it.
+     */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @type.boolean
+    overridable = true;
 
     /**
      * Marks changed inputs for rebuilding without deriving or validating other values.

@@ -227,10 +227,10 @@ export class CjsPaperDollColorizedSource
         const entries = recipe.filter(entry => entry.path.startsWith(category + "/"));
         if (entries.length > 1 || entries.length && (!Number.isFinite(entries[0].weight) || entries[0].weight < 0 || entries[0].weight > 1)) throw new Error("Invalid " + this.name + " recipe entry");
         const set = entries.length ? entries[0] : null;
-        // Without a recipe entry the part starts off on the catalog's first option. Derived: our own default, awaiting the
-        // defaults work (the operator: our own defaults come later).
-        const initial = set ? catalog.options.find(option => option.part === set.path) : catalog.options[0];
-        if (!initial) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        // Without a recipe entry the part starts with no option and off: what starts on is the character factory's
+        // defaults (operator, 2026-11-09: no code-picked defaults).
+        const initial = set ? catalog.options.find(option => option.part === set.path) ?? null : null;
+        if (set && initial === null) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
         // The recipe's colours (else its colour variation, else the option's default) are `authored`: the default palette
         // of every option without its own. With no recipe entry such an option has no default. PROVISIONAL (Ruru,
         // 2026-11-09; derived item 19): in every catalog part (blush as today, eyebrows) an option's own default wins over
@@ -257,11 +257,14 @@ export class CjsPaperDollColorizedSource
                 palettes: [ ...option.palettes.map(record => CjsPaperDollColorizedSource.record(record.path)), ...(authored !== null ? [ CjsPaperDollColorizedSource.record(AUTHORED) ] : []) ]
             };
         }), new Map(authored !== null ? [ [ AUTHORED, authored ] ] : []), {
-            option: initial.id, weight: set ? set.weight : 0, resolve: id => this._ResolveCatalog(id)
+            option: initial !== null ? initial.id : "", weight: set ? set.weight : 0, resolve: id => this._ResolveCatalog(id)
         });
         component.enabled = set !== null;
         // The recipe's option draws from the first apply.
-        await component.ResolveOption(initial.id);
+        if (initial !== null) await component.ResolveOption(initial.id);
+        // A carrier mesh needs a material before any option is applied (the head draws its brow target once at
+        // preparation): the catalog's first is loaded for the carrier only, not selected; the part stays as configured.
+        else if (this._type.carrier === true && catalog.options.length) await this._ResolveCatalog(catalog.options[0].id);
     }
 
     /**

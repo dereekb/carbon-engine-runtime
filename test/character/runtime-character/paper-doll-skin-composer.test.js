@@ -78,10 +78,10 @@ test("Prepare configures the skin from the folder's palettes and the regions' co
   const { compositor, doll, build, fetched } = await prepared(t);
   const [ options, , values ] = doll.skin.configured;
   assert.deepEqual(values, { option: "basic" });
-  assert.equal(options[0].defaultPalette, ROOT + "deteis_default.color");
+  assert.equal(options[0].defaultPalette, undefined, "no code-picked palette: the character factory's defaults set it");
   assert.deepEqual(options[0].colorAreas, [ 1, 2, 3 ], "the union of head and body areas");
   assert.deepEqual(options[0].palettes.map(value => value.name), [ "default", "deteis_default", "deteis_light" ], "raw records, nested palettes left out; the panel labels them");
-  assert.deepEqual(fetched, [ [ ROOT + "deteis_default.color", { pattern: "reject" } ] ], "only the initial palette is read");
+  assert.deepEqual(fetched, [], "no palette is read: the paint starts neutral");
   assert.equal(build.report.skin.regions.body.detail, ROOT + "colorize_body_l.png", "the setting's tier, falling back to the unsuffixed map");
   // Head then body: the base copy cleared into the target, then the colourised layer over the detail's cutout.
   assert.deepEqual(compositor.draws.map(draw => [ draw.width, draw.height, draw.clear ]), [ [ 2048, 1024, true ], [ 2048, 1024, false ], [ 2048, 2048, true ], [ 2048, 2048, false ] ]);

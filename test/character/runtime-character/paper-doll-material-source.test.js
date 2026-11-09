@@ -75,13 +75,11 @@ test("the garment parts are the MATERIAL parts with the body target, their palet
   assert.equal(sources.has("hair"), false);
 });
 
-test("underwear lists one option per folder and starts on the one typed for the foundation's bloodline", async t =>
+test("underwear lists one option per folder; every garment starts with no option and off", async t =>
 {
-  const amarr = await configured(t, "Amarr");
-  assert.deepEqual(amarr.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ] ]);
-  assert.equal(amarr.definition.topUnderwear.option, "bra01");
   const deteis = await configured(t, "Deteis");
-  assert.equal(deteis.definition.topUnderwear.option, "bra02");
+  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ] ]);
+  assert.deepEqual([ deteis.definition.topUnderwear.option, deteis.definition.topUnderwear.enabled ], [ "", false ], "no code-picked underwear: the character factory's defaults set it");
   assert.equal(deteis.definition.topMiddle.enabled, false, "a typed garment starts off");
   const [ bra ] = (await deteis.definition.topUnderwear.ResolveOption("bra02")).palettes.length ? [] : [ null ];
   assert.equal(bra, null, "a garment without a zone map offers no palettes");

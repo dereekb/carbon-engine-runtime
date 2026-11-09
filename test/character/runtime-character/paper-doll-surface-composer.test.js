@@ -67,7 +67,7 @@ test("the surface pass's four outputs take their sizes from the foundation's map
     [ "head", "NormalMap", 2048, 1024, true ], [ "head", "SpecularMap", 2048, 1024, true ],
     [ "body", "NormalMap", 2048, 2048, true ], [ "body", "SpecularMap", 2048, 2048, true ] ]);
   assert.ok(composition.HasSource("aging") && composition.HasSource("scarring"), "every decal part has a source");
-  assert.equal(definition.aging.option, "aging_01");
+  assert.equal(definition.aging.option, "");
   assert.equal(definition.aging.enabled, false);
 });
 

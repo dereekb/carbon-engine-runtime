@@ -61,13 +61,14 @@ async function prepared(t, recipe = null)
 
 const short = path => path.slice(ROOT.length);
 
-test("prepareAll makes a source for each part whose class blends as a decal; a part the recipe does not set starts on its first option, off", async t =>
+test("prepareAll makes a source for each part whose class blends as a decal; a part the recipe does not set starts with no option, off", async t =>
 {
   const { composition, definition, decals } = await prepared(t);
   assert.deepEqual([ ...decals.keys() ].sort(), [ "aging", "augmentations", "freckles", "scarring", "scars" ]);
   assert.ok([ ...decals.keys() ].every(name => definition[name].constructor.blend === PaperDollBlend.DECAL));
   assert.ok(composition.HasSource("scars") && composition.HasSource("freckles"));
-  assert.equal(definition.scars.option, "heroscar01_v0", "an option is its type file's name");
+  assert.deepEqual(definition.scars.GetOptions().map(option => option.id), [ "heroscar01_v0", "heroscar01_v1" ], "an option is its type file's name");
+  assert.equal(definition.scars.option, "", "no code-picked option: the character factory's defaults set what starts on");
   assert.equal(definition.scars.enabled, false);
   assert.equal(definition.freckles.enabled, false);
 });

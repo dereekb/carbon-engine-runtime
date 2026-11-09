@@ -50,7 +50,7 @@ test("the head tattoo options are its .types; folders without one are reported, 
   assert.deepEqual(source.Describe(), { options: [ "tattoofacea01", "tattoofacem02" ], unlisted: [ "tattooface01", "tattoofacetest" ] });
   assert.equal(source.GetProjection("tattoofacem02"), HEAD + "tattoofacem02/projection.proj");
   const option = definition.tattoo.GetOptions()[0];
-  assert.equal(option.defaultPalette, HEAD + "colors/default_a.color", "the content's default swatch");
+  assert.equal(option.defaultPalette, undefined, "no code-picked ink: the character factory's defaults set it");
   assert.deepEqual(option.palettes.map(record => record.name), [ "blue_a", "default_a" ]);
   assert.equal(definition.tattoo.enabled, false, "no recipe entry: off");
 });
@@ -83,10 +83,6 @@ test("a recipe's tattoo comes on in the recipe's colours", async t =>
   assert.equal(definition.tattoo.enabled, true);
   assert.equal(definition.tattoo.option, "tattoofacem02");
   assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacem02").defaultPalette, CjsPaperDollColorizedSource.authored);
-  assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacea01").defaultPalette, HEAD + "colors/default_a.color");
+  assert.equal(definition.tattoo.GetOptions().find(option => option.id === "tattoofacea01").defaultPalette, undefined);
 });
 
-test("a build without the default ink throws, as the content always ships it", async t =>
-{
-  await assert.rejects(configured(t, [], FILES.filter(path => !path.endsWith("/default_a.color"))), /Missing default tattoo palette/);
-});

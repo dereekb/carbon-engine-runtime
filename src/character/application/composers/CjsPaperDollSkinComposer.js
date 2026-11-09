@@ -72,13 +72,13 @@ export class CjsPaperDollSkinComposer
         this._onChange = onChange;
 
         // Every bloodline's palettes (<bloodline>_<light|midlight|default|middark|dark>.color) and the neutral default,
-        // by name: a palette's colours are fetched when it is applied, and only the initial palette is read here.
+        // by name: a palette's colours are fetched when it is applied; none is read here.
         // Their specular colours (absent from some) are not read: the skin specular is not composed yet.
         // Raw records (`FetchPalettes`): the panel labels them (Graphene paletteMenus.js).
         const records = (await build.Ready(library.FetchPalettes(option))).map(({ path, name }) => ({ path, name })).sort((a, b) => a.path.localeCompare(b.path));
-        const initialPalette = records.find(record => record.name === "deteis_default")?.path ?? null;
-        if (initialPalette === null) throw new Error("Missing skin tone palette deteis_default");
-        const initial = await build.Ready(library.FetchPalette(initialPalette, { pattern: "reject" }));
+        // The paint's colours until the first capture: neutral grey (the starting palette is the character factory's
+        // defaults; operator, 2026-11-09, no code-picked defaults).
+        const initial = { colors: [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1)) };
 
         const areas = new Set(), { roles, skipped } = await build.Ready(library.FetchOptionMaps(option));
         if (skipped.length) throw new Error("Skin tone maps the role lookup does not name: " + skipped.join(", "));
@@ -124,7 +124,6 @@ export class CjsPaperDollSkinComposer
         definition.skin.Configure([ {
             id: "basic",
             colorAreas: [ ...areas ].sort(),
-            defaultPalette: initialPalette,
             palettes: records.map(({ path, name }) => ({ path, name }))
         } ], new Map(), { option: "basic" });
         build.report.skin = {

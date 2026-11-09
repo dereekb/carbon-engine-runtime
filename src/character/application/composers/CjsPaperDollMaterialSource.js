@@ -18,9 +18,9 @@ import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles
  * drawn; until then it draws nothing, and `MapsWaiting` says it is owed.
  *
  * Moved from Graphene's `bodyComposition.js` (d2b1306) without a change of look; the rules above are its rules,
- * derived (today's look). Derived and our own default, awaiting the defaults work: the underwear starts on the garment
- * typed for the foundation's bloodline, else the first; the other garments start off. A loaded recipe's garments are
- * not applied yet (today's look; the rule that a recipe applies what it sets waits for the defaults work).
+ * derived (today's look). Every garment starts with no option and off: what starts on, the underwear included, is the
+ * character factory's defaults data. A loaded recipe's garments are not applied yet (the recipe reading moves to the
+ * character factory).
  *
  * The mesh facts (model, utility shapes, promoted dependency shapes) are the host's until the instance owns meshes
  * (R6): `SetResolveHook` installs what reads them when an option resolves.
@@ -102,16 +102,14 @@ export class CjsPaperDollMaterialSource
             if (value.typePath === null && !records.length) throw new Error("Underwear without a palette " + value.folder);
             this._options.set(value.id, { id: value.id, option: value, base: value.folder, type: value.typePath, records, bloodlines: value.bloodlines, path: value.path, resolved: null, maps: null });
         }
-        // An underwear folder (a folder option) starts on the one typed for the foundation's bloodline
-        // (`FetchBloodline`: the head that depends on the archetype), else the first.
-        const values = [ ...this._options.values() ], perFolder = values.length > 0 && values[0].type === null;
-        const archetype = definition.archetype.option, bloodline = perFolder && archetype ? await build.Ready(library.FetchBloodline(sex, archetype)) : null;
-        const selected = perFolder ? values.find(value => value.bloodlines.includes(bloodline)) ?? values[0] : null;
+        // Every garment starts with no option and off: what starts on is the character factory's defaults (operator,
+        // 2026-11-09: no code-picked defaults; the underwear's bloodline pick went with them).
+        const values = [ ...this._options.values() ];
         component.Configure(values.map(value => ({ id: value.id, path: value.path, palettes: [] })), new Map(), {
-            option: selected ? selected.id : "",
+            option: "",
             resolve: id => this._Resolve(this._options.get(id))
         });
-        if (!selected) component.enabled = false;
+        component.enabled = false;
     }
 
     /**

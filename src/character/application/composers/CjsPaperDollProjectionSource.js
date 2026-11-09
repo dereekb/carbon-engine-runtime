@@ -2,7 +2,7 @@ import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLayer.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
-import { PaperDollBlend, PaperDollPaletteKind } from "../paperDollOrder.js";
+import { PaperDollBlend } from "../paperDollOrder.js";
 import { CjsPaperDollColorizedSource } from "./CjsPaperDollColorizedSource.js";
 import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
@@ -16,10 +16,8 @@ import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles
  * `projection.proj` and a `comp_head_z`, and the shared palettes in `colors/` (`PaperDollPalettes.CATALOG`; every one
  * an area-1 `_a` swatch). An option is a `.type`, as in every part. Two male folders have none and are not options,
  * reported by `Describe`: `tattooface01` (a `projection.proj` alone) and `tattoofacetest` (a projection and a zone).
- * The arm folders (`tattoo/armleft/`, `tattoo/armright/`) project onto the body and are not composed here. An option's
- * default palette is the content's: `colors/default_a.color`, the `default` palette by the kind rule
- * (`CjsPaperDollColorizedSource.record`); every build ships it, and a build without it throws (as Graphene's
- * `tattoos.js` did).
+ * The arm folders (`tattoo/armleft/`, `tattoo/armright/`) project onto the body and are not composed here. No option
+ * names a default ink: what starts on is the character factory's defaults (operator, 2026-11-09).
  *
  * The source owns the bake target and every option's paint over it. The bake draw itself (the head mesh drawn with
  * the shipped `skinnedavatartattoobaking` effect from the option's projection) is the host's until the instance owns
@@ -123,8 +121,6 @@ export class CjsPaperDollProjectionSource
         this._unlisted = (await build.Ready(library.FetchFoldersWithoutOptions(sex, head))).filter(folder => folder.projection !== null).map(folder => folder.id);
         // The shared palettes are every option's (`FetchPalettes`: the category's `colors/`).
         const palettes = options.length ? await build.Ready(library.FetchPalettes(options[0])) : [];
-        const defaultPalette = palettes.find(record => record.name.replace(/_a$/u, "") === "default" && record.kind === PaperDollPaletteKind.AREA_1)?.path ?? null;
-        if (defaultPalette === null) throw new Error("Missing default " + this.name + " palette default_a");
         const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const set = recipe.find(entry => entry.path.startsWith(head + "/")) ?? null;
         const selected = set ? await build.Ready(library.ResolveRecipeEntry(sex, set)) : null;
@@ -137,7 +133,7 @@ export class CjsPaperDollProjectionSource
             const recipe = authored !== null && id === option;
             return {
                 id,
-                defaultPalette: recipe ? AUTHORED : defaultPalette,
+                ...(recipe ? { defaultPalette: AUTHORED } : {}),
                 palettes: recipe ? [ ...palettes, CjsPaperDollColorizedSource.record(AUTHORED) ] : palettes
             };
         }), new Map(authored !== null ? [ [ AUTHORED, authored ] ] : []), { option, resolve: id => this._Resolve(this._options.get(id)) });
