@@ -37,14 +37,8 @@ import { CjsPaperDollChin } from "./CjsPaperDollChin.js";
 import { CjsPaperDollBrow } from "./CjsPaperDollBrow.js";
 import { CjsPaperDollMask } from "./CjsPaperDollMask.js";
 import { PaperDollTarget } from "./paperDollOrder.js";
+import { CjsCharacterTextureRoles } from "../library/CjsCharacterTextureRoles.js";
 
-/**
- * The paper-doll map size tiers, largest first, as `[characterTextureQuality value,
- * file suffix]`: `_4k`, unsuffixed (half of it), `_512`, `_256`. An array, not an
- * object: an object lists the integer-like keys `512` and `256` first, which broke the
- * fallback order for every quality but `4k`.
- */
-const TEXTURE_TIERS = [ [ "4k", "_4k" ], [ "2k", "" ], [ "512", "_512" ], [ "256", "_256" ] ];
 
 /**
  * Who and what one paper doll character is: its identity, its foundation and
@@ -370,80 +364,25 @@ export class CjsPaperDollDefinition
     }
 
     /**
-     * Our character texture quality: the size tier of the paper-doll maps a
-     * character composes from (`4k`, `2k` for the unsuffixed files, `512`,
-     * `256`). A map missing at that tier is taken from the nearest smaller one,
-     * then the nearest larger. A character copies it when it is built, so a
-     * change shows from the next build (CREATE: the library holds LOAD
-     * settings back until it reboots). EVE has its own character quality
-     * controls in client code; Carbon registers no such setting. The setting
-     * registry records this non-Carbon name with carbon: false.
+     * The paper-doll map size: the parts library's setting (`CjsCharacterTextureRoles.characterTextureQuality`), read
+     * and written through here until the host modules that read it here move (R6).
+     * @type {string}
      */
-    @meta.setting("characterTextureQuality", { applies: meta.setting.CREATE, values: [ "4k", "2k", "512", "256" ], category: "characters" })
-    static characterTextureQuality = "4k";
+    static get characterTextureQuality() { return CjsCharacterTextureRoles.characterTextureQuality; }
 
-    /**
-     * A `.png` map path's stem and tier suffix: `.../colorize_body_l_4k.png` gives
-     * `.../colorize_body_l` and `_4k`; an unsuffixed file gives an empty suffix.
-     * Ours, with the tiers of `characterTextureQuality` (non-carbon-extensions.md
-     * § *Character texture quality*).
-     * @param {string} path The map's `.png` path.
-     * @returns {[string, string]} The stem and the tier suffix.
-     */
-    static splitTier(path)
-    {
-        const [ , stem, tier = "" ] = path.match(/^(.*?)(_4k|_512|_256)?\.png$/u);
-        return [ stem, tier ];
-    }
+    static set characterTextureQuality(value) { CjsCharacterTextureRoles.characterTextureQuality = value; }
 
-    /**
-     * The tier suffixes to try for a quality: its own, then each smaller, then each
-     * larger. A map missing at the set size is taken from the nearest size below,
-     * and from above only when nothing below exists (`shirtqf01` ships its zone map
-     * unsuffixed only). Ours: the fallback order, with
-     * `characterTextureQuality` (non-carbon-extensions.md § *Character texture quality*).
-     * @param {string} [quality] A `characterTextureQuality` value; the setting's by default.
-     * @returns {string[]} The tier suffixes in the order to try.
-     * @throws {Error} For a quality that is not one of the setting's values.
-     */
-    static tierOrder(quality = CjsPaperDollDefinition.characterTextureQuality)
-    {
-        const index = TEXTURE_TIERS.findIndex(([ value ]) => value === quality);
-        if (index === -1) throw new Error("Unknown character texture quality " + quality);
-        const tiers = TEXTURE_TIERS.map(([ , suffix ]) => suffix);
-        return [ ...tiers.slice(index), ...tiers.slice(0, index).reverse() ];
-    }
+    /** The parts library's `splitTier`, until the host modules that call it here move (R6). @param {string} path @returns {[string, string]} */
+    static splitTier(path) { return CjsCharacterTextureRoles.splitTier(path); }
 
-    /**
-     * A map at the character texture quality: the first listed file of `tierOrder`
-     * for a map path written at any tier (`.../colorize_head_l.png`, or a `_4k` path).
-     * Ours (non-carbon-extensions.md § *Character texture quality*).
-     * @param {string} path The map's `.png` path, at any tier.
-     * @param {string[]} files The listed files holding it.
-     * @returns {string|null} The file to load, or null when no tier exists.
-     */
-    static pickTier(path, files)
-    {
-        const [ stem ] = CjsPaperDollDefinition.splitTier(path);
-        return CjsPaperDollDefinition.tierOrder().map(tier => stem + tier + ".png").find(file => files.includes(file)) ?? null;
-    }
+    /** The parts library's `tierOrder`, until the host modules that call it here move (R6). @param {string} [quality] @returns {string[]} */
+    static tierOrder(quality) { return CjsCharacterTextureRoles.tierOrder(quality); }
 
-    /**
-     * The files ending in `ending` plus a tier, at the first tier of `tierOrder`
-     * that has any. Ours (non-carbon-extensions.md § *Character texture quality*).
-     * @param {string[]} files The listed files.
-     * @param {string} ending The name's end without tier or extension (`comp_head_d`).
-     * @returns {string[]} The matches at that tier; empty when no tier has one.
-     */
-    static tierCandidates(files, ending)
-    {
-        for (const tier of CjsPaperDollDefinition.tierOrder())
-        {
-            const found = files.filter(file => file.endsWith(ending + tier + ".png"));
-            if (found.length) return found;
-        }
-        return [];
-    }
+    /** The parts library's `pickTier`, until the host modules that call it here move (R6). @param {string} path @param {string[]} files @returns {?string} */
+    static pickTier(path, files) { return CjsCharacterTextureRoles.pickTier(path, files); }
+
+    /** The parts library's `tierCandidates`, until the host modules that call it here move (R6). @param {string[]} files @param {string} ending @returns {string[]} */
+    static tierCandidates(files, ending) { return CjsCharacterTextureRoles.tierCandidates(files, ending); }
 
     /**
      * Every file below a `res:` directory, from the resource index, sorted: Blue's `paths.Filter` walks it through

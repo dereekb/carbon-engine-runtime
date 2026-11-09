@@ -17,7 +17,7 @@ import { meta } from "../../npm/dist/blue/schema/index.js";
 // Import the platform owner so its three explicitly approved settings register.
 import { Tr2PlatformInfo } from "../../npm/dist/core/platform/Tr2PlatformInfo.js";
 // And the paper doll, whose character texture quality is ours.
-import { CjsPaperDollDefinition } from "../../npm/dist/character/application/CjsPaperDollDefinition.js";
+import { CjsCharacterTextureRoles } from "../../npm/dist/character/library/CjsCharacterTextureRoles.js";
 const settings = Tr2Renderer.getSettings();
 
 test("the ported settings are registered under Carbon's names", () =>
@@ -122,7 +122,7 @@ test("only approved extension names are exempt from Carbon setting-name checks",
   // they stay faithful to Carbon, without our categories.
   assert.deepEqual(settings.GetNames().filter(name => !settings.FindSetting(name).category?.length), [],
     "every registered engine setting has a category");
-  assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsPaperDollDefinition);
+  assert.equal(settings.FindSetting("characterTextureQuality").owner, CjsCharacterTextureRoles);
   assert.equal(settings.FindSetting("characterTextureQuality").applies, meta.setting.CREATE);
   assert.equal(settings.GetValue("characterTextureQuality"), "4k");
   assert.equal(settings.FindSetting("compressUncompressedTextures").applies, meta.setting.LOAD);

@@ -4,11 +4,11 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollPaletteKind } from "../paperDollOrder.js";
 import { CjsPaperDollColorizedSource } from "./CjsPaperDollColorizedSource.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * The layer source of a projected head part (`static blend` PROJECTION: head tattoos): each option's projection baked
- * into head UV space, colourised through the option's zone map (`comp_head_z`, `CjsPaperDollTextureRoles`) in the
+ * into head UV space, colourised through the option's zone map (`comp_head_z`, `CjsCharacterTextureRoles`) in the
  * captured colours (colorizedblit: character-compositing.md:367). It draws into the head diffuse only, at full
  * strength: the part has no weight.
  *
@@ -117,7 +117,7 @@ export class CjsPaperDollProjectionSource
         {
             const folder = type.slice(0, type.indexOf("/types/") + 1), id = folder.slice(root.length, -1);
             const projection = folder + "projection.proj";
-            const zone = CjsPaperDollTextureRoles.one(CjsPaperDollTextureRoles.readFolder(folder, files).roles, role => role.family === "comp" && role.suffix === "z");
+            const zone = CjsCharacterTextureRoles.one(CjsCharacterTextureRoles.readFolder(folder, files).roles, role => role.family === "comp" && role.suffix === "z");
             if (!files.includes(projection) || !zone) throw new Error("Incomplete " + this.name + " option " + folder);
             this._options.set(id, { id, folder, projection, zone: zone.path, paint: null });
             listed.add(folder);

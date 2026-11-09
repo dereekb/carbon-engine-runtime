@@ -2,12 +2,12 @@ import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend } from "../paperDollOrder.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * The layer source of a map-decal part (`static blend = PaperDollBlend.DECAL`: aging, freckles, scarring, scars,
  * augmentations), whose options are folders of composed maps (`comp_<region>_<suffix>`). Each of an option's maps draws over the
- * composition output its role feeds (`CjsPaperDollTextureRoles.lookup`: region, property, operation), whichever target
+ * composition output its role feeds (`CjsCharacterTextureRoles.lookup`: region, property, operation), whichever target
  * that output belongs to; the roles come from the files the option actually holds.
  *
  * An option is a `.type` file, its id the file's name. The type names the part folder and a variation: a variation
@@ -148,7 +148,7 @@ export class CjsPaperDollMapDecalSource
         const occludes = metadata
             ? [ ...new Set((await build.Ready(blue.characterLibrary.FetchAvatarPartMetaData(metadata))).occludesModifiers.map(value => value.split("#")[0])) ]
             : [];
-        const roles = [ ...maps.values() ].map(file => CjsPaperDollTextureRoles.lookup(file));
+        const roles = [ ...maps.values() ].map(file => CjsCharacterTextureRoles.lookup(file));
         // Per region and property, replacements before additions.
         roles.sort((a, b) => (a.plan === "add") - (b.plan === "add"));
         const regions = {};
@@ -161,7 +161,7 @@ export class CjsPaperDollMapDecalSource
         for (const channels of Object.values(regions)) for (const layer of Object.values(channels).flat())
         {
             // The coverage is the option's diffuse: one diffuse map per region, or an error.
-            const owner = layer.role.covered ? CjsPaperDollTextureRoles.one(channels.DiffuseMap ?? [], () => true) : null;
+            const owner = layer.role.covered ? CjsCharacterTextureRoles.one(channels.DiffuseMap ?? [], () => true) : null;
             if (owner) layer.region = owner.region;
             layer.effect = owner ? await c.Simple(layer.texture, owner.region, owner.texture, owner.region) : await c[layer.role.operation](layer.texture, layer.region);
         }

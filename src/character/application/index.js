@@ -61,4 +61,3 @@ export { CjsPaperDollMakeupCatalog } from "./composers/CjsPaperDollMakeupCatalog
 export { CjsPaperDollMapDecalSource } from "./composers/CjsPaperDollMapDecalSource.js";
 export { CjsPaperDollSkinComposer } from "./composers/CjsPaperDollSkinComposer.js";
 export { CjsPaperDollSurfaceComposer } from "./composers/CjsPaperDollSurfaceComposer.js";
-export { CjsPaperDollTextureRoles } from "./composers/CjsPaperDollTextureRoles.js";

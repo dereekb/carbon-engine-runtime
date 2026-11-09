@@ -4,7 +4,7 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollComposition } from "./CjsPaperDollComposition.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * A paper doll's skin target, the first of `CjsPaperDollInstance.targetOrder`, in the composition: two outputs (head and
@@ -85,13 +85,13 @@ export class CjsPaperDollSkinComposer
         }
         records.sort((a, b) => a.path.localeCompare(b.path));
 
-        const areas = new Set(), { roles, skipped } = CjsPaperDollTextureRoles.readFolder(root, files);
+        const areas = new Set(), { roles, skipped } = CjsCharacterTextureRoles.readFolder(root, files);
         if (skipped.length) throw new Error("Skin tone maps the role lookup does not name: " + skipped.join(", "));
         for (const region of [ "head", "body" ])
         {
             // The region's colourised detail and the zone map its colourising reads.
-            const detailMap = CjsPaperDollTextureRoles.one(roles, role => role.region === region && role.operation === "Colorized");
-            const zoneMap = CjsPaperDollTextureRoles.one(roles, role => role.region === region && role.inputOf === "l");
+            const detailMap = CjsCharacterTextureRoles.one(roles, role => role.region === region && role.operation === "Colorized");
+            const zoneMap = CjsCharacterTextureRoles.one(roles, role => role.region === region && role.inputOf === "l");
             if (!detailMap || !zoneMap) throw new Error("Incomplete skin tone maps for the " + region);
             const [ base, detail, zone ] = await Promise.all([
                 c.Texture(foundation.bindings[region].DiffuseMap),

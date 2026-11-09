@@ -4,12 +4,12 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollPaletteKind, PaperDollPalettes } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * The layer source of a colourised head part: each option's colourise detail (`l`) through its zone map (`z`), in the
  * captured colours, at the captured weight (colorizedblit: character-compositing.md:367; the roles through
- * `CjsPaperDollTextureRoles`). It draws into the head diffuse only.
+ * `CjsCharacterTextureRoles`). It draws into the head diffuse only.
  *
  * Its options and their palette files come from where the part's palettes live (`static palettes`,
  * `PaperDollPalettes`): each option's own folder (eye shadow, eyeliner: each `.type` is a style, its palettes its own
@@ -190,11 +190,11 @@ export class CjsPaperDollColorizedSource
      */
     async _Resolve(style)
     {
-        const build = this._build, c = this._compositor, { roles, skipped } = CjsPaperDollTextureRoles.readFolder(style.folder, this._files);
+        const build = this._build, c = this._compositor, { roles, skipped } = CjsCharacterTextureRoles.readFolder(style.folder, this._files);
         // Maps named outside the composed naming are not drawn (derived: today's look; eyeshadow_02's aa_female_head_s).
         style.skipped = skipped;
-        const detailMap = CjsPaperDollTextureRoles.one(roles, role => role.region === "head" && role.operation === "Colorized");
-        const zoneMap = CjsPaperDollTextureRoles.one(roles, role => role.region === "head" && role.inputOf === "l");
+        const detailMap = CjsCharacterTextureRoles.one(roles, role => role.region === "head" && role.operation === "Colorized");
+        const zoneMap = CjsCharacterTextureRoles.one(roles, role => role.region === "head" && role.inputOf === "l");
         if (!detailMap || !zoneMap) throw new Error("Incomplete " + this.name + " style " + style.folder);
         const [ detail, zone, initial, colorAreas ] = await Promise.all([
             build.Ready(c.Texture(detailMap.path)), build.Ready(c.Texture(zoneMap.path)),
@@ -204,7 +204,7 @@ export class CjsPaperDollColorizedSource
         build.CheckActive();
         style.region = CjsPaperDollCompositor.crop(detail);
         style.paint = await c.Colorized(detail, style.region, zone, CjsPaperDollCompositor.crop(zone), initial.colors);
-        const specularMap = CjsPaperDollTextureRoles.one(roles, role => role.region === "head" && role.property === "SpecularMap");
+        const specularMap = CjsCharacterTextureRoles.one(roles, role => role.region === "head" && role.property === "SpecularMap");
         if (specularMap)
         {
             const specular = await build.Ready(c.Texture(specularMap.path)), crop = CjsPaperDollCompositor.crop;
@@ -281,20 +281,20 @@ export class CjsPaperDollColorizedSource
         const dependants = option.metadata ? option.metadata.dependantModifiers : [], carrier = this._type.carrier === true;
         if (option.geometry.length || dependants.length) throw new Error("Unqualified " + this.name + " geometry or dependency " + option.definition);
         if (carrier && option.metadata && ![ -1, 2 ].includes(option.metadata.numColorAreas)) throw new Error("Unqualified " + this.name + " colour areas " + option.definition);
-        const roles = Object.values(option.channels).map(value => CjsPaperDollTextureRoles.lookup(value.path));
+        const roles = Object.values(option.channels).map(value => CjsCharacterTextureRoles.lookup(value.path));
         // Without a carrier the option is a colourise detail and zone map only; a carrier's material adds n and s.
         const allowed = carrier ? [ "l", "z", "n", "s" ] : [ "l", "z" ];
         if (roles.some(role => !allowed.includes(role.suffix))) throw new Error("Unqualified " + this.name + " material channel " + option.definition);
-        const detailMap = CjsPaperDollTextureRoles.one(roles, role => role.operation === "Colorized");
-        const zoneMap = CjsPaperDollTextureRoles.one(roles, role => role.inputOf === "l");
+        const detailMap = CjsCharacterTextureRoles.one(roles, role => role.operation === "Colorized");
+        const zoneMap = CjsCharacterTextureRoles.one(roles, role => role.inputOf === "l");
         if (!detailMap || !zoneMap) throw new Error("Incomplete " + this.name + " inputs " + option.definition);
         const [ detail, zone ] = await Promise.all([ build.Ready(c.Texture(detailMap.path)), build.Ready(c.Texture(zoneMap.path)) ]);
         const region = CjsPaperDollCompositor.crop(detail), neutral = CjsPaperDollColorizedSource.neutral();
         const style = { id, region, paint: await c.Colorized(detail, region, zone, CjsPaperDollCompositor.crop(zone), neutral), carrier: null, material: null, skipped: [], specular: null, gloss: null };
         if (carrier)
         {
-            const normalMap = CjsPaperDollTextureRoles.one(roles, role => role.property === "NormalMap");
-            const specularMap = CjsPaperDollTextureRoles.one(roles, role => role.property === "SpecularMap");
+            const normalMap = CjsCharacterTextureRoles.one(roles, role => role.property === "NormalMap");
+            const specularMap = CjsCharacterTextureRoles.one(roles, role => role.property === "SpecularMap");
             if (!normalMap || !specularMap) throw new Error("Incomplete " + this.name + " material " + option.definition);
             const [ normal, specular ] = await Promise.all([ build.Ready(c.Texture(normalMap.path)), build.Ready(c.Texture(specularMap.path)) ]);
             style.material = { NormalMap: normal, SpecularMap: await c.Material(specular) };
@@ -353,7 +353,7 @@ export class CjsPaperDollColorizedSource
 
     /**
      * The prepared options, for the build report: each option's cutout, and the maps in its folder that are not
-     * composed maps and so are not drawn (`CjsPaperDollTextureRoles.readFolder`'s `skipped`).
+     * composed maps and so are not drawn (`CjsCharacterTextureRoles.readFolder`'s `skipped`).
      * @returns {object[]}
      */
     Describe()

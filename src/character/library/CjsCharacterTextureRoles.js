@@ -1,4 +1,11 @@
-import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
+import { meta } from "#schema";
+
+/**
+ * The paper-doll map size tiers, largest first, as `[characterTextureQuality value, file suffix]`: `_4k`, unsuffixed
+ * (half of it), `_512`, `_256`. An array, not an object: an object lists the integer-like keys `512` and `256` first,
+ * which broke the fallback order for every quality but `4k`.
+ */
+const TEXTURE_TIERS = [ [ "4k", "_4k" ], [ "2k", "" ], [ "512", "_512" ], [ "256", "_256" ] ];
 
 /** The note on a derived fact: our own earlier code's behaviour, which the screenshots keep. */
 const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a47517 ";
@@ -17,17 +24,131 @@ const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a
  *   per-channel placement, :349-405 blit arithmetic and states).
  * - Families, regions and suffixes: the file names under `res:/graphics/character/<sex>/paperdoll/` (resource
  *   index, build 3670638): families `comp` and `colorize`; regions `head`, `body`, `hair`, `acc`; tiers `_4k`,
- *   `_512`, `_256` and none (`CjsPaperDollDefinition.splitTier`).
+ *   `_512`, `_256` and none (`CjsCharacterTextureRoles.splitTier`).
+ *
+ * The parts library's one texture-role table (character-structure-and-plugins.md, "One role per manager": the parts
+ * library is the only code that parses content paths). It folds two tables that had grown apart: the paper doll's
+ * `CjsPaperDollTextureRoles` (the entries below, with their sources) and the library builder's `QualifyTexture`
+ * (CjsCharacterLibraryBuilder.js, the documents' `CjsCharacterCatalogTextureBinding` role names). `qualify` keeps the
+ * builder's naming and acceptance; `lookup` keeps the paper doll's. Where they disagree, both are kept and marked
+ * (`qualify`). The map size tiers and the `characterTextureQuality` setting live here too.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
-export class CjsPaperDollTextureRoles
+export class CjsCharacterTextureRoles
 {
 
-    static className = "CjsPaperDollTextureRoles";
+    /**
+     * Our character texture quality: the size tier of the paper-doll maps a character composes from (`4k`, `2k` for the
+     * unsuffixed files, `512`, `256`). A map missing at that tier is taken from the nearest smaller one, then the nearest
+     * larger (`tierOrder`). A character copies it when it is built, so a change shows from the next build (CREATE: the
+     * library holds LOAD settings back until it reboots). EVE has its own character quality controls in client code;
+     * Carbon registers no such setting. The setting registry records this non-Carbon name with carbon: false. Moved
+     * from `CjsPaperDollDefinition` with the tier helpers (non-carbon-extensions.md § *Character texture quality*).
+     */
+    @meta.setting("characterTextureQuality", { applies: meta.setting.CREATE, values: [ "4k", "2k", "512", "256" ], category: "characters" })
+    static characterTextureQuality = "4k";
+
+    static className = "CjsCharacterTextureRoles";
 
     /** The regions a file name can carry, as authored. */
     static regions = [ "head", "body", "hair", "acc" ];
+
+    /**
+     * A `.png` map path's stem and tier suffix: `.../colorize_body_l_4k.png` gives `.../colorize_body_l` and `_4k`; an
+     * unsuffixed file gives an empty suffix. Ours, with the tiers of `characterTextureQuality` (non-carbon-extensions.md
+     * § *Character texture quality*).
+     * @param {string} path The map's `.png` path.
+     * @returns {[string, string]} The stem and the tier suffix.
+     */
+    static splitTier(path)
+    {
+        const [ , stem, tier = "" ] = path.match(/^(.*?)(_4k|_512|_256)?\.png$/u);
+        return [ stem, tier ];
+    }
+
+    /**
+     * The tier suffixes to try for a quality: its own, then each smaller, then each larger. A map missing at the set size
+     * is taken from the nearest size below, and from above only when nothing below exists (`shirtqf01` ships its zone
+     * map unsuffixed only). Ours: the fallback order, with `characterTextureQuality` (non-carbon-extensions.md
+     * § *Character texture quality*).
+     * @param {string} [quality] A `characterTextureQuality` value; the setting's by default.
+     * @returns {string[]} The tier suffixes in the order to try.
+     * @throws {Error} For a quality that is not one of the setting's values.
+     */
+    static tierOrder(quality = CjsCharacterTextureRoles.characterTextureQuality)
+    {
+        const index = TEXTURE_TIERS.findIndex(([ value ]) => value === quality);
+        if (index === -1) throw new Error("Unknown character texture quality " + quality);
+        const tiers = TEXTURE_TIERS.map(([ , suffix ]) => suffix);
+        return [ ...tiers.slice(index), ...tiers.slice(0, index).reverse() ];
+    }
+
+    /**
+     * A map at the character texture quality: the first listed file of `tierOrder` for a map path written at any tier.
+     * Ours (non-carbon-extensions.md § *Character texture quality*).
+     * @param {string} path The map's `.png` path, at any tier.
+     * @param {string[]} files The listed files holding it.
+     * @returns {string|null} The file to load, or null when no tier exists.
+     */
+    static pickTier(path, files)
+    {
+        const [ stem ] = CjsCharacterTextureRoles.splitTier(path);
+        return CjsCharacterTextureRoles.tierOrder().map(tier => stem + tier + ".png").find(file => files.includes(file)) ?? null;
+    }
+
+    /**
+     * The files ending in `ending` plus a tier, at the first tier of `tierOrder` that has any. Ours
+     * (non-carbon-extensions.md § *Character texture quality*).
+     * @param {string[]} files The listed files.
+     * @param {string} ending The name's end without tier or extension (`comp_head_d`).
+     * @returns {string[]} The matches at that tier; empty when no tier has one.
+     */
+    static tierCandidates(files, ending)
+    {
+        for (const tier of CjsCharacterTextureRoles.tierOrder())
+        {
+            const found = files.filter(file => file.endsWith(ending + tier + ".png"));
+            if (found.length) return found;
+        }
+        return [];
+    }
+
+    /**
+     * The library builder's qualification of an original texture (was `QualifyTexture` in CjsCharacterLibraryBuilder.js):
+     * its role in the documents' naming (`colorize-layer`, `diffuse-overlay`, ...), its target region and its quality,
+     * for a `CjsCharacterCatalogTextureBinding`. Applied at preparation, never by the renderer. It keeps the builder's
+     * acceptance, which differs from `lookup`'s (both kept, marked): it reads `.dds`, `.tga` and `.jpg` names and an
+     * `_hi` suffix, accepts every suffix under both families (`colorize_body_n`, which `lookup` does not source), and a
+     * bare `<name>_<suffix>` shorthand when the caller names the target (`targetHint`).
+     * @param {string} path The texture's path.
+     * @param {?string} targetHint The target region a shorthand name takes.
+     * @param {string} sourceVersion The source version the binding belongs to.
+     * @param {function(string, string): object} origin Makes the binding's origin record.
+     * @returns {{ path: string, role: string, target: string, quality: string, sourceVersion: string, origin: object }}
+     * @throws {Error} For a name with no role or no target.
+     */
+    static qualify(path, targetHint, sourceVersion, origin)
+    {
+        const name = path.split("/").at(-1).toLowerCase().replace(/\.(png|dds|tga|jpe?g)$/u, "");
+        const quality = name.match(/_(4k|512|256)(?:_hi)?$/u)?.[1] ?? "standard";
+        const family = name.replace(/_(4k|512|256)(?:_hi)?$/u, "").replace(/_hi$/u, "");
+        const explicit = family.match(/^(colorize|comp)_(body|head|hair|acc)_(tn|mn|[dnslzm])$/u);
+        const short = family.match(/_(tn|[dnslz])$/u);
+        const target = explicit?.[2] ?? targetHint;
+        const map = explicit?.[3] ?? short?.[1];
+        if (!target || !map || !CjsCharacterTextureRoles.regions.includes(target))
+            throw new Error(`Texture role/target is unqualified: ${path}`);
+        const suffix = explicit?.[1] === "comp" ? "overlay" : "source";
+        const role = CjsCharacterTextureRoles.qualifiedRoles[map];
+        return { path, role: role.includes("-") ? role : role + "-" + suffix, target, quality, sourceVersion, origin: origin(path, "character-texture-role-v1") };
+    }
+
+    /**
+     * The documents' role name of each suffix (`qualify`): a name without `-` takes `-overlay` for the `comp` family and
+     * `-source` otherwise.
+     */
+    static qualifiedRoles = { l: "colorize-layer", z: "colorize-zones", m: "cut-mask", tn: "twist-normal", mn: "normal-overlay", d: "diffuse", n: "normal", s: "specular" };
 
     /**
      * Each suffix's role. `families`: the name prefixes it is sourced for. `property`: the effect texture parameter
@@ -144,7 +265,7 @@ export class CjsPaperDollTextureRoles
     /**
      * The garment map names (the MATERIAL parts with the body target), by the map they give: each map is the first
      * name found searching the option's folders in order (its variation's, then its part's), then the size tiers
-     * (`CjsPaperDollDefinition.tierOrder`), then these names in order; `<part>` is the part folder's name, and `*` any
+     * (`CjsCharacterTextureRoles.tierOrder`), then these names in order; `<part>` is the part folder's name, and `*` any
      * name (a folder holding two such candidates at one tier throws). A name these lists do not hold is not drawn.
      *
      * Derived, every entry (no source states them; Carbon ships no paper doll). Today's look first: Graphene d2b1306
@@ -181,16 +302,16 @@ export class CjsPaperDollTextureRoles
      */
     static pickGarmentMaps(folders, files)
     {
-        const part = folders.at(-1).slice(0, -1).split("/").at(-1), tiers = CjsPaperDollDefinition.tierOrder(), maps = {};
+        const part = folders.at(-1).slice(0, -1).split("/").at(-1), tiers = CjsCharacterTextureRoles.tierOrder(), maps = {};
         const find = (folder, tier, name) =>
         {
             if (!name.startsWith("*")) return files.includes(folder + name + tier + ".png") ? folder + name + tier + ".png" : null;
             const found = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png")
-                && CjsPaperDollDefinition.splitTier(file)[1] === tier && CjsPaperDollDefinition.splitTier(file)[0].endsWith(name.slice(1)));
+                && CjsCharacterTextureRoles.splitTier(file)[1] === tier && CjsCharacterTextureRoles.splitTier(file)[0].endsWith(name.slice(1)));
             if (found.length > 1) throw new Error("Ambiguous garment maps " + found.join(", "));
             return found[0] ?? null;
         };
-        for (const [ key, names ] of Object.entries(CjsPaperDollTextureRoles.garment))
+        for (const [ key, names ] of Object.entries(CjsCharacterTextureRoles.garment))
         {
             const stems = names.map(name => name.replace("<part>", part));
             maps[key] = null;
@@ -215,8 +336,8 @@ export class CjsPaperDollTextureRoles
      */
     static garmentSkipped(folders, files, used)
     {
-        const stems = new Set(used.filter(Boolean).map(path => CjsPaperDollDefinition.splitTier(path)[0]));
-        const part = folders.at(-1).slice(0, -1).split("/").at(-1), names = Object.values(CjsPaperDollTextureRoles.garment).flat();
+        const stems = new Set(used.filter(Boolean).map(path => CjsCharacterTextureRoles.splitTier(path)[0]));
+        const part = folders.at(-1).slice(0, -1).split("/").at(-1), names = Object.values(CjsCharacterTextureRoles.garment).flat();
         const exact = new Set(names.filter(name => !name.startsWith("*")).map(name => name.replace("<part>", part)));
         const endings = names.filter(name => name.startsWith("*")).map(name => name.slice(1));
         const ruled = { has: name => exact.has(name) || endings.some(ending => name.endsWith(ending)) };
@@ -225,7 +346,7 @@ export class CjsPaperDollTextureRoles
             for (const file of files)
                 if (file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"))
                 {
-                    const [ stem ] = CjsPaperDollDefinition.splitTier(file);
+                    const [ stem ] = CjsCharacterTextureRoles.splitTier(file);
                     if (stems.has(stem)) continue;
                     (ruled.has(stem.slice(folder.length)) ? overridden : unruled).add(stem.slice(root.length));
                 }
@@ -244,12 +365,12 @@ export class CjsPaperDollTextureRoles
     static lookup(path)
     {
         if (!path.endsWith(".png")) throw new Error("Not a paper doll texture name: " + path);
-        const [ stem, tier ] = CjsPaperDollDefinition.splitTier(path);
+        const [ stem, tier ] = CjsCharacterTextureRoles.splitTier(path);
         const match = /^(comp|colorize)_([a-z]+)_([a-z]+)$/u.exec(stem.split("/").at(-1));
         if (!match) throw new Error("Not a paper doll texture name: " + path);
         const [ , family, region, suffix ] = match;
-        if (!CjsPaperDollTextureRoles.regions.includes(region)) throw new Error("Unknown paper doll texture region " + region + ": " + path);
-        const role = CjsPaperDollTextureRoles.table[family + "_" + suffix] ?? CjsPaperDollTextureRoles.table[suffix];
+        if (!CjsCharacterTextureRoles.regions.includes(region)) throw new Error("Unknown paper doll texture region " + region + ": " + path);
+        const role = CjsCharacterTextureRoles.table[family + "_" + suffix] ?? CjsCharacterTextureRoles.table[suffix];
         if (!role || !role.families.includes(family)) throw new Error("Unknown paper doll texture role " + family + "_" + suffix + ": " + path);
         return { path, family, region, suffix, tier, ...role };
     }
@@ -260,26 +381,26 @@ export class CjsPaperDollTextureRoles
      * refuse or report (`aa_female_head_s` in eyeshadow_02). A composed name the lookup does not source throws.
      * @param {string} folder The folder's `res:` path, ending in "/".
      * @param {string[]} files The listed files.
-     * @returns {{ roles: Array<ReturnType<typeof CjsPaperDollTextureRoles.lookup>>, skipped: string[] }} The composed
+     * @returns {{ roles: Array<ReturnType<typeof CjsCharacterTextureRoles.lookup>>, skipped: string[] }} The composed
      *   maps' roles, and the other map names.
      * @throws {Error} For a composed map name the lookup does not source.
      */
     static readFolder(folder, files)
     {
         const maps = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png"));
-        const names = [ ...new Set(maps.map(file => CjsPaperDollDefinition.splitTier(file)[0])) ];
+        const names = [ ...new Set(maps.map(file => CjsCharacterTextureRoles.splitTier(file)[0])) ];
         const composed = names.filter(stem => /^(comp|colorize)_/u.test(stem.slice(folder.length)));
         return {
-            roles: composed.map(stem => CjsPaperDollTextureRoles.lookup(CjsPaperDollDefinition.pickTier(stem + ".png", maps))),
+            roles: composed.map(stem => CjsCharacterTextureRoles.lookup(CjsCharacterTextureRoles.pickTier(stem + ".png", maps))),
             skipped: names.filter(stem => !composed.includes(stem)).map(stem => stem.slice(folder.length))
         };
     }
 
     /**
      * The one map among roles that matches, or null.
-     * @param {Array<ReturnType<typeof CjsPaperDollTextureRoles.lookup>>} roles The maps' roles.
+     * @param {Array<ReturnType<typeof CjsCharacterTextureRoles.lookup>>} roles The maps' roles.
      * @param {function(object): boolean} match The test.
-     * @returns {?ReturnType<typeof CjsPaperDollTextureRoles.lookup>}
+     * @returns {?ReturnType<typeof CjsCharacterTextureRoles.lookup>}
      * @throws {Error} For more than one match.
      */
     static one(roles, match)

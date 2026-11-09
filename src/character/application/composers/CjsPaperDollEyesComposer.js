@@ -3,7 +3,7 @@ import { CjsPaperDollMaterialLayer } from "../compositor/CjsPaperDollMaterialLay
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollMakeupCatalog } from "./CjsPaperDollMakeupCatalog.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /** The eye material's channels: the effect properties its outputs feed. */
 const CHANNELS = [ "DiffuseMap", "NormalMap", "SpecularMap" ];
@@ -162,11 +162,11 @@ export class CjsPaperDollEyesComposer
     {
         const c = this.composition.compositor;
         if (option.metadata?.dependantModifiers?.length) throw new Error("Unresolved eye dependencies " + option.definition);
-        // The option's maps by role (CjsPaperDollTextureRoles): a diffuse drawn as it is or colourised through its zone
+        // The option's maps by role (CjsCharacterTextureRoles): a diffuse drawn as it is or colourised through its zone
         // map, and the normal and specular copied in as patches.
-        const roles = Object.values(option.channels).map(value => CjsPaperDollTextureRoles.lookup(
+        const roles = Object.values(option.channels).map(value => CjsCharacterTextureRoles.lookup(
             CjsPaperDollDefinition.pickTier(value.path, CjsPaperDollDefinition.listFiles(value.path.slice(0, value.path.lastIndexOf("/") + 1)))));
-        const one = match => CjsPaperDollTextureRoles.one(roles, match);
+        const one = match => CjsCharacterTextureRoles.one(roles, match);
         const detailRole = one(role => role.property === "DiffuseMap" && role.operation !== null), zoneRole = one(role => role.inputOf === "l");
         const coloured = detailRole?.operation === "Colorized";
         if (!detailRole || coloured !== !!zoneRole) throw new Error("Ambiguous diffuse inputs " + option.definition);

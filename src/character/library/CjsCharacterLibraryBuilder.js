@@ -1,3 +1,4 @@
+import { CjsCharacterTextureRoles } from "./CjsCharacterTextureRoles.js";
 import { normalizeResourcePath } from "#utils/path";
 import { CjsCharacterLibraryConfiguration } from "./CjsCharacterLibraryConfiguration.js";
 import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
@@ -398,7 +399,7 @@ export class CjsCharacterLibraryBuilder
                 if (paths.size !== input.paths.length) throw new Error("Duplicate original texture candidate");
                 return input.paths.filter(path => !path.endsWith(".png")
                     || !paths.has(path.slice(0, -4) + ".dds")
-                    || !fullCanvasDds.has(path.slice(0, -4) + ".dds")).map(path => QualifyTexture(
+                    || !fullCanvasDds.has(path.slice(0, -4) + ".dds")).map(path => CjsCharacterTextureRoles.qualify(
                     requirePath(path), evidence.textureTargets?.[source.recordID], version.resourceVersion, origin
                 )).map(binding =>
                 {
@@ -609,26 +610,6 @@ function OmitResourceOptions(options)
     return result;
 }
 
-
-// The recovered character texture naming policy is applied at preparation,
-// never by the renderer. A shorthand channel needs an explicitly qualified
-// target. Duplicate formats/roles are rejected by library validation.
-function QualifyTexture(path, targetHint, sourceVersion, origin)
-{
-    const name = path.split("/").at(-1).toLowerCase().replace(/\.(png|dds|tga|jpe?g)$/u, "");
-    const quality = name.match(/_(4k|512|256)(?:_hi)?$/u)?.[1] ?? "standard";
-    const family = name.replace(/_(4k|512|256)(?:_hi)?$/u, "").replace(/_hi$/u, "");
-    const explicit = family.match(/^(colorize|comp)_(body|head|hair|acc)_(tn|mn|[dnslzm])$/u);
-    const short = family.match(/_(tn|[dnslz])$/u);
-    const target = explicit?.[2] ?? targetHint;
-    const map = explicit?.[3] ?? short?.[1];
-    if (!target || !map || !["body", "head", "hair", "acc"].includes(target))
-        throw new Error(`Texture role/target is unqualified: ${path}`);
-    const suffix = explicit?.[1] === "comp" ? "overlay" : "source";
-    const roles = { l: "colorize-layer", z: "colorize-zones", m: "cut-mask", tn: "twist-normal", mn: "normal-overlay",
-        d: `diffuse-${suffix}`, n: `normal-${suffix}`, s: `specular-${suffix}` };
-    return { path, role: roles[map], target, quality, sourceVersion, origin: origin(path, "character-texture-role-v1") };
-}
 
 function NormalizeDocuments(input)
 {

@@ -3,14 +3,14 @@ import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js"
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollTarget } from "../paperDollOrder.js";
 import { CjsPaperDollColorizedSource } from "./CjsPaperDollColorizedSource.js";
-import { CjsPaperDollTextureRoles } from "./CjsPaperDollTextureRoles.js";
+import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * The layer source of a garment (`static blend` MATERIAL with the body target: underwear, body augmentations, arms,
  * middles, outers, feet). Each selected option draws its material layer (`CjsPaperDollCompositor.CreateMaterialLayer`)
  * into the body: its diffuse (the detail colourised through its zone map in the captured colours, or an authored
  * diffuse drawn as it is) and its body cut masks; and into the surface, under its coverage, a flat normal and a black
- * specular first, then its own normal and specular. Its maps are named by `CjsPaperDollTextureRoles.garment`.
+ * specular first, then its own normal and specular. Its maps are named by `CjsCharacterTextureRoles.garment`.
  *
  * Options, from the part's folder (`static category`): one per first-level folder for the underwear
  * (`static optionPerFolder`; each folder holds one `.type` per bloodline that wears it), else one per `.type`. The
@@ -176,7 +176,7 @@ export class CjsPaperDollMaterialSource
         const metadata = metadataPath ? await build.Ready(blue.characterLibrary.FetchAvatarPartMetaData(metadataPath)) : null;
         const list = key => metadata ? [ ...new Set(metadata[key].map(value => value.split("#")[0])) ] : [];
         const dependants = list("dependantModifiers"), occludes = list("occludesModifiers");
-        const maps = CjsPaperDollTextureRoles.pickGarmentMaps(folders, files);
+        const maps = CjsCharacterTextureRoles.pickGarmentMaps(folders, files);
         let colorAreas = [];
         if (maps.detail && maps.zone && defaultPalette)
         {
@@ -250,7 +250,7 @@ export class CjsPaperDollMaterialSource
         const masks = this._MaskPaths(option);
         const layer = await c.CreateMaterialLayer({ detail, zones, normal, specular }, palette, { coverage: true, patterns });
         // A masked normal (`mn`) carries its own coverage and encoding (maskednormalblit), not the detail's; a twist normal
-        // (`tn`) adds over the normal (twistnormalblit). The `mn` and `tn` roles: `CjsPaperDollTextureRoles.table`.
+        // (`tn`) adds over the normal (twistnormalblit). The `mn` and `tn` roles: `CjsCharacterTextureRoles.table`.
         if (normal !== null && CjsPaperDollDefinition.splitTier(maps.normal)[0].endsWith("/comp_body_mn")) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
         const twistLayer = twist === null ? null : { effect: await c.Twist(twist, crop(twist)), region: crop(twist) };
         return Object.assign(layer, {
@@ -264,7 +264,7 @@ export class CjsPaperDollMaterialSource
                 NormalMap: { effect: await c.Simple(flatNormal, crop(detail), detail, crop(detail)), region: crop(detail) },
                 SpecularMap: { effect: await c.Simple(noSpecular, crop(detail), detail, crop(detail)), region: crop(detail) }
             },
-            skipped: CjsPaperDollTextureRoles.garmentSkipped(folders, files, [ ...Object.values(maps) ])
+            skipped: CjsCharacterTextureRoles.garmentSkipped(folders, files, [ ...Object.values(maps) ])
         });
     }
 
@@ -280,7 +280,7 @@ export class CjsPaperDollMaterialSource
         const fromDependants = dependants.filter(path => !/^utilityshapes\//iu.test(path)).map(path =>
         {
             const dir = ROOT + path.toLowerCase() + "/";
-            return CjsPaperDollTextureRoles.pickGarmentMaps([ dir ], CjsPaperDollDefinition.listFiles(dir)).cutMask;
+            return CjsCharacterTextureRoles.pickGarmentMaps([ dir ], CjsPaperDollDefinition.listFiles(dir)).cutMask;
         });
         return [ ...new Set([ maps.cutMask, ...fromDependants ].filter(Boolean)) ];
     }
