@@ -482,8 +482,14 @@ export class CjsLibrary
           createdCharacterLibrary = services.characterLibrary = new CjsCharacterLibraryManager();
         }
         this._previousServices = installBlueServices(services);
-        // The character library registers its own formats on the installed resMan; this root lists none.
-        if (createdCharacterLibrary) createdCharacterLibrary.Initialize(blue);
+        // The character library and the character factory register their own formats on the installed resMan; this
+        // root lists none.
+        if (createdCharacterLibrary)
+        {
+          createdCharacterLibrary.Initialize(blue);
+          const { CjsCharacterFactory } = await import("../character/factory/CjsCharacterFactory.js");
+          CjsCharacterFactory.registerObjectBuilders(blue.resMan);
+        }
         const installedPolicy = installedResourcePolicies.get(blue.resMan) || null;
         if (this._configurationOwners?.resMan !== blue.resMan)
         {

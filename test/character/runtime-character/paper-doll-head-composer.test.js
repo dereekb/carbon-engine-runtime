@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollHeadComposer, CjsPaperDollInstance, CjsPaperDollMapDecalSource, PaperDollBlend, PaperDollTarget } from "../../../npm/dist/character/index.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
-import { CjsCharacterRecipe } from "../../../npm/dist/character/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import "../../support/frameLoop.js";
 
@@ -22,8 +21,7 @@ const FILES = [
 function services(t, recipe = [])
 {
   installPartsLibrary(t, ROOT, FILES, {
-    text: { [AUG + "metadata.yaml"]: "!!python/object:paperDoll.AvatarPartMetaData\ndependantModifiers: null\noccludesModifiers: [accessories/browbase###0.5, accessories/browbase]\n" },
-    overrides: { FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] }) }
+    text: { [AUG + "metadata.yaml"]: "!!python/object:paperDoll.AvatarPartMetaData\ndependantModifiers: null\noccludesModifiers: [accessories/browbase###0.5, accessories/browbase]\n" }
   });
 }
 

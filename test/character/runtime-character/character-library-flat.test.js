@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-    CjsCharacterLibrary, CjsCharacterLibraryBuilder, CjsCharacterLibraryManager,
+    CjsCharacterLibrary, CjsCharacterLibraryBuilder, CjsCharacterLibraryConfiguration, CjsCharacterLibraryManager,
     CjsCharacterObjectBuilder, CjsCharacterCamera, CjsCharacterColorVariation
 } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResMan, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
@@ -46,7 +46,7 @@ function fixture(t)
         resMan.Clear();
     });
     const builder = new CjsCharacterLibraryBuilder({ paths, resMan });
-    CjsCharacterObjectBuilder.registerObjectBuilders(resMan, path => builder.GetSourceKind(path));
+    CjsCharacterObjectBuilder.registerObjectBuilders(resMan, path => builder.GetSourceKind(path), CjsCharacterLibraryConfiguration);
     return { builder, resMan, paths, reads };
 }
 

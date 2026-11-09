@@ -66,11 +66,6 @@ export class CjsCharacterLibrary
     @type.list("CjsProjectedDecal")
     projectedDecals = [];
 
-    /** Flat recipes holdings; schema 13 only. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("CjsCharacterRecipe")
-    recipes = [];
-
     /** Flat cameras holdings; schema 13 only. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.list("CjsCharacterCamera")

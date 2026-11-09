@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollTarget } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollComposition, CjsPaperDollDefinition, CjsPaperDollMapDecalSource, CjsPaperDollSurfaceComposer, PaperDollTarget } from "../../../npm/dist/character/index.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import "../../support/frameLoop.js";
@@ -13,7 +13,7 @@ const FILES = [ AGING + "types/aging_01.type", AGING + "comp_head_tn.png", AGING
 /** The parts library over FILES, and the recipe. */
 function services(t, recipe = [])
 {
-  installPartsLibrary(t, ROOT, FILES, { overrides: { FetchRecipe: async () => Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...recipe ] }) } });
+  installPartsLibrary(t, ROOT, FILES);
 }
 
 /** A compositor recording draws; its effects are real Tr2Effects returned through promises, as the real one does. */

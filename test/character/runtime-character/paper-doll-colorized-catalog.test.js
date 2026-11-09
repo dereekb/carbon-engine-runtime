@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
 
@@ -16,9 +16,7 @@ const PALETTES = { "colors/rose.color": .3, "colors/peach.color": .6, "blush_02/
 
 function services(t, entries)
 {
-  const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
   const overrides = {
-    FetchRecipe: async () => recipe,
     FetchPalette: async (path, { specular = false } = {}) => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(PALETTES[path.slice(BLUSH.length)], 0, 0, 1)), specularColors: specular ? [ 0, 1, 2 ].map(() => Float32Array.of(1, 1, 1, 1)) : null, pattern: null })
   };
   installPartsLibrary(t, ROOT, FILES, { overrides });

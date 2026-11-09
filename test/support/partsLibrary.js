@@ -2,10 +2,10 @@
 //
 // A real parts library (CjsCharacterLibraryManager) over a synthetic build: Carbon's BluePaths over a remote index of
 // the given files, and a resMan whose source answers each file's text. A paper doll source then lists and reads
-// through the library's queries, as in a host. A `.type` without its own text names the folder its `types/` folder
+// through the library's queries, as in a host, and a `.prs` reads through the character factory's recipe reader. A `.type` without its own text names the folder its `types/` folder
 // sits in, the variation its name ends in (`_v1`), and no colour variant. Methods a test needs to answer itself (a
 // recipe, a palette's colours, a decode) are set on the library it returns.
-import { CjsCharacterLibraryManager } from "../../npm/dist/character/index.js";
+import { CjsCharacterFactory, CjsCharacterLibraryManager } from "../../npm/dist/character/index.js";
 import { BluePaths, BlueResMan, BlueResFileSystemRemote, RemoteFileCache } from "../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../npm/dist/blue/blue.js";
 import "./frameLoop.js";
@@ -54,5 +54,6 @@ export function installPartsLibrary(t, root, files, { text = {}, overrides = {} 
         resMan.Clear();
     });
     library.Initialize({ resMan });
+    CjsCharacterFactory.registerObjectBuilders(resMan);
     return { library, paths, reads };
 }

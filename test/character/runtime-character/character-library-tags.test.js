@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema } from "../../../npm/dist/blue/schema/CjsSchema.js";
 import { CjsYamlFormat } from "../../../npm/dist/resource/formats/yaml/index.js";
-import { CjsAvatarPartMetaData, CjsProjectedDecal, Tr2InteriorLightSource } from "../../../npm/dist/character/index.js";
+import { CjsAvatarPartMetaData, CjsCharacterLibraryConfiguration, CjsProjectedDecal, Tr2InteriorLightSource } from "../../../npm/dist/character/index.js";
 import { createCharacterYamlTagHandlers, readCharacterYamlObject } from "../../../npm/dist/character/formats/yaml.js";
 
 const prefix = "tag:yaml.org,2002:python/object:";
@@ -12,7 +12,7 @@ function Read(source)
     return CjsYamlFormat.readRaw(source, {
         tagPolicy: "handle",
         sourceName: "res:/test/character.yaml",
-        tagHandlers: createCharacterYamlTagHandlers()
+        tagHandlers: createCharacterYamlTagHandlers(CjsCharacterLibraryConfiguration.sourceLists)
     });
 }
 
@@ -32,7 +32,7 @@ test("Python content aliases resolve to the existing constructor identities", ()
 
 test("one handler supports registry names and preserves YAML alias identity", () =>
 {
-    const handlers = createCharacterYamlTagHandlers();
+    const handlers = createCharacterYamlTagHandlers(CjsCharacterLibraryConfiguration.sourceLists);
     assert.equal(handlers.get(prefix + "paperDoll.ProjectedDecal"), handlers.get(prefix + "paperDoll.AvatarPartMetaData"));
     const source = "first: &part !!python/object:paperDoll.AvatarPartMetaData\n  dependantModifiers: [hair/style#0.5]\n  numColorAreas: 2\nsecond: *part\n";
     const value = Read(source);
@@ -53,7 +53,7 @@ test("an unstated numColorAreas reads as -1, apart from an authored 0", () =>
 test("unknown object tags and non-mapping values are rejected without execution", () =>
 {
     assert.throws(() => Read("!!python/object:missing.Class {}"), /no explicit handler/);
-    assert.throws(() => readCharacterYamlObject({}, { tag: prefix + "missing.Class", sourceName: "sample" }), /unregistered Python object/);
+    assert.throws(() => readCharacterYamlObject({}, { tag: prefix + "missing.Class", sourceName: "sample" }, CjsCharacterLibraryConfiguration.sourceLists), /unregistered Python object/);
     assert.throws(() => Read("!!python/object:paperDoll.ProjectedDecal [1, 2]"), /plain values object/);
     assert.throws(() => Read("!!python/object:paperDoll.ProjectedDecal null"), /plain values object/);
 });

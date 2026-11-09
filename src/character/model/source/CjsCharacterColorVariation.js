@@ -7,7 +7,7 @@ import { vec4 } from "#math/vec4";
 /**
  * A colour variation: three colours, three specular colours and an optional pattern. Each colour is its own
  * field, as Carbon exposes `EveSOFDataFactionColorSet` colour by colour; the file's `colors` and
- * `specularColors` lists are translated by the reader (`formats/characterSourceLists.js`).
+ * `specularColors` lists are translated by the reader (`CjsCharacterLibraryConfiguration.sourceLists`).
  */
 @meta.define("CjsCharacterColorVariation")
 export class CjsCharacterColorVariation

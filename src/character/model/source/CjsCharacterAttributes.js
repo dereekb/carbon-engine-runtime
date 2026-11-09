@@ -6,7 +6,7 @@ import { vec4 } from "#math/vec4";
 
 /**
  * Authored material attributes. The file writes each colour as a one-element list holding an RGB tuple; the
- * reader translates it into the colour field (`formats/characterSourceLists.js`), opaque. `transparency` is read as a colour too,
+ * reader translates it into the colour field (`CjsCharacterLibraryConfiguration.sourceLists`), opaque. `transparency` is read as a colour too,
  * as the file's other RGB attributes are (unverified: it may be a per-channel opacity).
  */
 @meta.define("CjsCharacterAttributes")

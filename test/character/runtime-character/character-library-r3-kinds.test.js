@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CjsCharacterLibraryManager } from "../../../npm/dist/character/index.js";
+import { CjsCharacterFactory, CjsCharacterLibraryManager } from "../../../npm/dist/character/index.js";
 import { blue, BluePaths, BlueResMan, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import "../../support/frameLoop.js";
@@ -28,6 +28,7 @@ function Library(t)
         installBlueServices(previous, previous.running);
         resMan.Clear();
     });
+    CjsCharacterFactory.registerObjectBuilders(resMan);
     return new CjsCharacterLibraryManager().Initialize(blue);
 }
 
@@ -47,12 +48,12 @@ test("FetchProjectedDecal answers the projection fields the tattoo bake reads as
     }
 });
 
-test("FetchRecipe answers the modifiers' category, path and weight as readYaml did", async t =>
+test("the factory's FetchRecipe answers the modifiers' category, path and weight as readYaml did", async t =>
 {
-    const library = Library(t);
+    Library(t);
     for (const { path, value } of expected.recipes)
     {
-        const record = await library.FetchRecipe(path);
+        const record = await CjsCharacterFactory.FetchRecipe(path);
         assert.deepEqual(record.value.map(entry => typeof entry === "string" || entry === null ? entry : { category: entry.category, path: entry.path, weight: entry.weight }), value, path);
     }
 });

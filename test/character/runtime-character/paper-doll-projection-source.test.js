@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition, CjsPaperDollProjectionSource, PaperDollPalettes } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollColorizedSource, CjsPaperDollDefinition, CjsPaperDollProjectionSource, PaperDollPalettes } from "../../../npm/dist/character/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
 
@@ -19,8 +19,7 @@ const FILES = [
 
 function services(t, entries, files = FILES)
 {
-  const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "male", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
-  installPartsLibrary(t, ROOT, files, { overrides: { FetchRecipe: async () => recipe, FetchMaterialMaskAreas__Zone: async () => [ 1 ] } });
+  installPartsLibrary(t, ROOT, files, { overrides: { FetchMaterialMaskAreas__Zone: async () => [ 1 ] } });
 }
 
 /** A compositor recording each effect, its inputs and the colours set on it. */

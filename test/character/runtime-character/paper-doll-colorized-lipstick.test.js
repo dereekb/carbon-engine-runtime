@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
+import { CjsPaperDollColorizedSource, CjsPaperDollDefinition } from "../../../npm/dist/character/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
 
@@ -15,10 +15,8 @@ const FILES = [
 
 function services(t, entries)
 {
-  const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
   const grey = () => [ 0, 1, 2 ].map(() => Float32Array.of(.5, .5, .5, 1));
   const overrides = {
-    FetchRecipe: async () => recipe,
     FetchPalette: async () => ({ colors: grey(), specularColors: grey() }),
     FetchMaterialMaskAreas__Zone: async () => [ 1 ]
   };

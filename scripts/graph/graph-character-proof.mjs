@@ -109,7 +109,7 @@ for (const entry of all)
   {
     const response = await fetch(`${base}res/${path.slice(5)}`);
     if (!response.ok) { stats.unreadable.notServed = (stats.unreadable.notServed ?? 0) + 1; continue; }
-    original = new CjsCharacterObjectBuilder(await response.text(), row.kind, path).CreateObject();
+    original = new CjsCharacterObjectBuilder(await response.text(), row.kind, path, CjsCharacterLibraryConfiguration).CreateObject();
   }
   catch (error)
   {

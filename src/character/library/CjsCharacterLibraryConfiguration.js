@@ -17,7 +17,6 @@ export class CjsCharacterLibraryConfiguration
         baseColors: { className: "CjsCharacterBaseColor", envelope: true },
         types: { className: "CjsCharacterType", envelope: true },
         projectedDecals: { className: "CjsProjectedDecal" },
-        recipes: { className: "CjsCharacterRecipe", envelope: true },
         cameras: { className: "CjsCharacterCamera" },
         cameraSequences: { className: "CjsCharacterCameraSequence", envelope: true },
         positions: { className: "CjsCharacterPosition" },
@@ -74,7 +73,6 @@ export class CjsCharacterLibraryConfiguration
         [ "res:/graphics/character/global/paperdolllibrary/positions/*.yaml", "positions" ],
         [ "res:/graphics/character/global/paperdolllibrary/posts/*.yaml", "posts" ],
         [ "res:/graphics/character/**/*.proj", "projectedDecals" ],
-        [ "res:/graphics/character/**/*.prs", "recipes" ],
         [ "res:/graphics/character/global/facesetup/scultpinglimits/*.yaml", "sculptingLimits" ],
         [ "res:/graphics/character/global/facesetup/*.trif", "fieldSets" ],
         [ "res:/graphics/character/**/*.type", "types" ],
@@ -87,7 +85,6 @@ export class CjsCharacterLibraryConfiguration
         [ "res:/animation_gstate/scenes/**/*_curve_cache_list.yaml", "curveCacheLists" ],
         [ "res:/animation_gstate/scenes/**/position_*.yaml", "positions" ],
         [ "res:/animation_gstate/scenes/**/post.yaml", "posts" ],
-        [ "res:/animation_gstate/scenes/**/*.prs", "recipes" ],
         [ "res:/animation_gstate/scenes/**/scene.yaml", "scenes" ],
         [ "res:/animation_gstate/scenes/**/scene-new.yaml", "scenes" ],
         [ "res:/graphics/character/global/paperdolllibrary/lights/*.yaml", "lights" ],
@@ -154,6 +151,24 @@ export class CjsCharacterLibraryConfiguration
         "character_colornames", "character_modifierlocations", "character_portraitresources", "character_resources",
         "character_sculptinglocations", "npccharacters", "paperdolls", "races"
     ];
+
+    /**
+     * The list forms of the kinds' files, by record class: each listed key of a file holds one tuple per named field
+     * (`normalizeCharacterYamlValues`). The `.prs` recipes are the character factory's
+     * (`CjsCharacterFactory.recipeConfiguration`), so their modifier's list forms are too.
+     */
+    static sourceLists = {
+        CjsCharacterColorVariation: {
+            colors: [ "color1", "color2", "color3" ],
+            specularColors: [ "specularColor1", "specularColor2", "specularColor3" ]
+        },
+        CjsCharacterAttributes: {
+            ambientColor: [ "ambientColor" ],
+            color: [ "color" ],
+            incandescence: [ "incandescence" ],
+            transparency: [ "transparency" ]
+        }
+    };
 
     /** Non-data and unestablished opaque inputs, relative to each configured root. */
     static excludes = [ "**/*.py", "**/*.pickle", "**/*.apb", "**/*.16", "**/*.64", "**/*.128", "**/*.256", "**/*.512", "**/*.1024" ];

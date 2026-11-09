@@ -1056,49 +1056,6 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * A `.prs` recipe, as its typed record, from the one library every character shares.
-     *
-     * Ours (non-carbon-extensions.md § *The shared character library*): the read Graphene's composers made
-     * for themselves (graphene `readYaml` on `.prs` files: the foundation's mannequin and the selected blush), moved onto the library. It starts the shared library's lazy source, as
-     * every Fetch does.
-     *
-     * @param {string} path The file's canonical `res:` path.
-     * @returns {Promise<object>} The record, whose `value` is the recipe's list of modifiers; a path that is not indexed rejects.
-     */
-    async FetchRecipe(path)
-    {
-        this._StartLazySource();
-        return this.GetRecipe(path);
-    }
-
-    /**
-     * Returns one recipes record by its canonical identity.
-     * @param {string} name Stored or indexed source name.
-     * @returns {Promise<object>} Typed record.
-     */
-    GetRecipe(name)
-    {
-        return this.GetKindRecord("recipes", name);
-    }
-
-    /** @returns {Promise<Array<string>>} Exact recipes names after source identification. */
-    ListRecipeNames()
-    {
-        return this.ListKindNames("recipes");
-    }
-
-    /**
-     * The character recipes: the `.prs` files under the character root (`res:/graphics/character/`), not the scenes'.
-     *
-     * Ours, as `FetchOptions`.
-     * @returns {Promise<string[]>} Their `res:` paths, sorted.
-     */
-    async ListCharacterRecipeNames()
-    {
-        return (await this.ListRecipeNames()).filter(path => path.startsWith("res:/graphics/character/"));
-    }
-
-    /**
      * Returns one cameras record by its canonical identity.
      * @param {string} name Stored or indexed source name.
      * @returns {Promise<object>} Typed record.
@@ -1670,7 +1627,7 @@ export class CjsCharacterLibraryManager
 
     /**
      * Registers the character formats on Blue's resMan: every character text extension builds through
-     * `CjsCharacterObjectBuilder`, whose kind this library's source answers. Called by `CjsLibrary` when it
+     * `CjsCharacterObjectBuilder` with this library's configuration, whose kind this library's source answers. Called by `CjsLibrary` when it
      * creates the library; the library's source itself still starts on first need.
      *
      * Ours (non-carbon-extensions.md § *The shared character library*; current-work § *Character formats live
@@ -1685,7 +1642,7 @@ export class CjsCharacterLibraryManager
         {
             this._StartLazySource();
             return this._sourceBuilder ? this._sourceBuilder.GetSourceKind(path) : null;
-        });
+        }, CjsCharacterLibraryConfiguration);
         return this;
     }
 

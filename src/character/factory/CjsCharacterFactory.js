@@ -2,6 +2,8 @@ import { blue } from "#blue";
 import { CjsSchema } from "#schema";
 import { CjsPaperDollDefinition } from "../application/CjsPaperDollDefinition.js";
 import { CjsCharacterLibraryManager } from "../library/CjsCharacterLibraryManager.js";
+import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
+import { normalizeResourcePath } from "#utils/path";
 import female from "./defaults/defaultFemalePaperDoll.json" with { type: "json" };
 import male from "./defaults/defaultMalePaperDoll.json" with { type: "json" };
 
@@ -27,8 +29,9 @@ const DEFAULTS = { female, male };
  * per manager"). DNA in and out as a plain JS object, so a character can be built any way; the sex defaults, which it
  * owns (`defaults/defaultFemalePaperDoll.json`, `defaults/defaultMalePaperDoll.json`); and their merge with a DNA.
  * It hydrates a paper doll definition from a DNA (`Build`) and puts a part or the whole character back to its defaults
- * (`ResetPart`, `Reset`). Reading a `.prs` recipe joins it in a later step. It holds no content facts: those are
- * the parts library's (`blue.characterLibrary`).
+ * (`ResetPart`, `Reset`). It reads the game's `.prs` recipes, which are DNA, into a DNA (`ReadRecipe`): their format
+ * is its own (`recipeConfiguration`, `registerObjectBuilders`). It holds no content facts: those are the parts
+ * library's (`blue.characterLibrary`).
  *
  * A DNA is `{ sex, description?, parts: { <part>: { enabled?, option?, palette?, secondaryPalette?, colors?, weight?,
  * overridable? } } }`. A part is `archetype` or a `CjsPaperDollDefinition.parts` member; a palette is a `res:` path;
@@ -264,7 +267,7 @@ export class CjsCharacterFactory
      */
     static async ReadRecipe(path, sex = "")
     {
-        const library = blue.characterLibrary, recipe = await library.FetchRecipe(path);
+        const library = blue.characterLibrary, recipe = await CjsCharacterFactory.FetchRecipe(path);
         const recipeSex = recipe.GetSex() || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
         const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._PartsByCategory();
@@ -356,23 +359,67 @@ export class CjsCharacterFactory
     }
 
     /**
-     * The shipped character recipes for a sex: the parts library's character recipes (`ListCharacterRecipeNames`) that
-     * name that sex (`GetSex`; a recipe that names none is left out), sorted. Each recipe is read once (`FetchRecipe`); one that
-     * cannot be read is left out.
+     * The shipped character recipes for a sex: the `.prs` files under the character root (`recipeConfiguration.match`;
+     * the scenes' recipes are not characters) that name that sex (`GetSex`; a recipe that names none is left out),
+     * sorted. Each recipe is read once (`FetchRecipe`); one that cannot be read is left out.
      * @param {"female"|"male"} sex The sex.
      * @returns {Promise<string[]>} The recipes' `res:` paths.
      */
     static async ListRecipes(sex)
     {
-        const library = blue.characterLibrary, found = [];
-        for (const path of await library.ListCharacterRecipeNames())
+        const found = [];
+        for (const path of Array.from(blue.paths.Filter(CjsCharacterFactory.recipeConfiguration.match)).sort())
         {
             let recipe;
-            try { recipe = await library.FetchRecipe(path); }
+            try { recipe = await CjsCharacterFactory.FetchRecipe(path); }
             catch { continue; }
             if (recipe.GetSex() === sex) found.push(path);
         }
         return found;
+    }
+
+    /**
+     * The factory's recipe format, as the parts library's configuration declares the files it reads
+     * (`CjsCharacterLibraryConfiguration`): a recipe entry, with its colours and shape weights, is DNA, not part data
+     * (Ruru, 2026-11-09). `kinds`: the `.prs` record, an envelope whose list's mappings are
+     * `CjsCharacterRecipeModifier` records (`items`; the leading sex stays as written). `sourceLists`: the modifier's
+     * list forms (`normalizeCharacterYamlValues`). `match`: the character recipes `ListRecipes` lists.
+     * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>>, match: string }}
+     */
+    static recipeConfiguration = {
+        kinds: { recipes: { className: "CjsCharacterRecipe", envelope: true, items: "CjsCharacterRecipeModifier" } },
+        sourceLists: { CjsCharacterRecipeModifier: { specularcolors: [ "specularColor1", "specularColor2", "specularColor3" ] } },
+        match: "res:/graphics/character/**/*.prs"
+    };
+
+    /**
+     * Registers the recipe reader on a resMan: a `.prs` file builds through `CjsCharacterObjectBuilder` with the
+     * factory's `recipeConfiguration`. `CjsLibrary` calls it beside the parts library's `Initialize`.
+     *
+     * Ours (non-carbon-extensions.md § *The shared character library*): as the character formats register
+     * themselves (`CjsCharacterObjectBuilder.registerObjectBuilders`), after Carbon's modules
+     * (`BLUE_REGISTER_RESOURCE_EXTENSION`, `IBlueResMan.h:151`).
+     * @param {object} resMan The resource manager.
+     * @returns {void}
+     */
+    static registerObjectBuilders(resMan)
+    {
+        resMan.RegisterObjectBuilder("prs", (bytes, context) =>
+            new CjsCharacterObjectBuilder(bytes, "recipes", normalizeResourcePath(context.path), CjsCharacterFactory.recipeConfiguration));
+    }
+
+    /**
+     * A `.prs` recipe, as its typed record (`CjsCharacterRecipe`), read through Blue's resMan
+     * (`registerObjectBuilders`).
+     * @param {string} path The file's canonical `res:` path.
+     * @returns {Promise<import("../model/source/CjsCharacterRecipe.js").CjsCharacterRecipe>} The record; a file that does
+     *   not load rejects.
+     */
+    static async FetchRecipe(path)
+    {
+        const record = await blue.resMan.LoadObject(path);
+        if (!record) throw new Error("Character recipe did not load: " + path);
+        return record;
     }
 
     /**

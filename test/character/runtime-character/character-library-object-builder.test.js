@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-    CjsCharacterObjectBuilder, CjsCharacterCamera, CjsCharacterCameraSequence,
+    CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
     CjsCharacterPost, CjsCharacterScalarPost, CjsCharacterPose,
     CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene
 } from "../../../npm/dist/character/index.js";
@@ -10,9 +10,11 @@ import { InitializeTrinityStub } from "../../support/trinityStub.js";
 // Character builds Trinity objects, so Trinity runs, on the stub backend.
 InitializeTrinityStub();
 
+/** A builder with the configuration that owns the kind: the factory's for recipes, the parts library's otherwise. */
 function Builder(source, kind)
 {
-    return new CjsCharacterObjectBuilder(source, kind, "res:/test/character/source.yaml");
+    const configuration = kind === "recipes" ? CjsCharacterFactory.recipeConfiguration : CjsCharacterLibraryConfiguration;
+    return new CjsCharacterObjectBuilder(source, kind, "res:/test/character/source.yaml", configuration);
 }
 
 test("content inspection separates camera/post layouts without decoding other resources", () =>
@@ -88,6 +90,6 @@ test("sculpting limits retain duplicate source pairs and expose the last value",
     const builder = Builder(source, "sculptingLimits");
     assert.deepEqual(builder.CreateObject().limits.get("FatShape"), [0, 1]);
     assert.equal(builder.GetSourceDocument().get("limits", true).items.length, 2);
-    assert.throws(() => new CjsCharacterObjectBuilder(source, "sculptingLimits", "test.yaml", { uniqueKeys: true }), /unique/);
+    assert.throws(() => new CjsCharacterObjectBuilder(source, "sculptingLimits", "test.yaml", CjsCharacterLibraryConfiguration, { uniqueKeys: true }), /unique/);
     assert.throws(() => Builder("field_of_view: 1\nfield_of_view: 2\n", "cameras"), /unique/);
 });
