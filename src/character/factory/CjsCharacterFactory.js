@@ -28,8 +28,8 @@ const DEFAULTS = { female, male };
  * The character factory: everything that knows what a character is (character-structure-and-plugins.md, "One role
  * per manager"). DNA in and out as a plain JS object, so a character can be built any way; the sex defaults, which it
  * owns (`defaults/defaultFemalePaperDoll.json`, `defaults/defaultMalePaperDoll.json`); and their merge with a DNA.
- * It hydrates a paper doll definition from a DNA (`Build`) and puts a part or the whole character back to its defaults
- * (`ResetPart`, `Reset`). It reads the game's `.prs` recipes, which are DNA, into a DNA (`ReadRecipe`): their format
+ * It hydrates a paper doll definition from a DNA (`build`) and puts a part or the whole character back to its defaults
+ * (`resetPart`, `reset`). It reads the game's `.prs` recipes, which are DNA, into a DNA (`readRecipe`): their format
  * is its own (`recipeConfiguration`, `registerObjectBuilders`). It holds no content facts: those are the parts
  * library's (`blue.characterLibrary`).
  *
@@ -56,7 +56,7 @@ export class CjsCharacterFactory
      * @returns {{ sex: string, description?: string, parts: Object<string, object> }} A new DNA.
      * @throws {Error} For a sex the factory does not know, a part no paper doll has, or a field outside the DNA.
      */
-    static ReadJSON(input)
+    static readJSON(input)
     {
         const value = typeof input === "string" ? JSON.parse(input) : input;
         if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("A character DNA is an object");
@@ -64,7 +64,7 @@ export class CjsCharacterFactory
         if (!Object.hasOwn(DEFAULTS, value.sex)) throw new Error("Unknown character sex " + value.sex);
         const dna = { sex: value.sex, parts: {} };
         if (value.description !== undefined) dna.description = String(value.description);
-        for (const [ name, part ] of Object.entries(value.parts ?? {})) dna.parts[name] = CjsCharacterFactory._ReadPart(name, part);
+        for (const [ name, part ] of Object.entries(value.parts ?? {})) dna.parts[name] = CjsCharacterFactory._readPart(name, part);
         return dna;
     }
 
@@ -72,11 +72,11 @@ export class CjsCharacterFactory
      * Writes a DNA as JSON text.
      * @param {object} dna The DNA.
      * @returns {string} Its JSON, two-space indented.
-     * @throws {Error} For a DNA `ReadJSON` refuses.
+     * @throws {Error} For a DNA `readJSON` refuses.
      */
-    static WriteJSON(dna)
+    static writeJSON(dna)
     {
-        return JSON.stringify(CjsCharacterFactory.ReadJSON(dna), null, 2);
+        return JSON.stringify(CjsCharacterFactory.readJSON(dna), null, 2);
     }
 
     /**
@@ -85,10 +85,10 @@ export class CjsCharacterFactory
      * @returns {{ sex: string, description: string, parts: Object<string, object> }}
      * @throws {Error} For a sex the factory does not know.
      */
-    static GetDefaults(sex)
+    static getDefaults(sex)
     {
         if (!Object.hasOwn(DEFAULTS, sex)) throw new Error("Unknown character sex " + sex);
-        return CjsCharacterFactory.ReadJSON(DEFAULTS[sex]);
+        return CjsCharacterFactory.readJSON(DEFAULTS[sex]);
     }
 
     /**
@@ -97,11 +97,11 @@ export class CjsCharacterFactory
      * doll's bake rules (occludes) can still remove it. What the DNA set and the merge did not apply is reported.
      * @param {object} input The DNA.
      * @returns {{ sex: string, parts: Object<string, object>, problems: string[] }} A new DNA naming every part.
-     * @throws {Error} For a DNA `ReadJSON` refuses.
+     * @throws {Error} For a DNA `readJSON` refuses.
      */
-    static Merge(input)
+    static merge(input)
     {
-        const dna = CjsCharacterFactory.ReadJSON(input), defaults = CjsCharacterFactory.GetDefaults(dna.sex);
+        const dna = CjsCharacterFactory.readJSON(input), defaults = CjsCharacterFactory.getDefaults(dna.sex);
         const merged = { sex: dna.sex, parts: {}, problems: [] };
         for (const name of CjsCharacterFactory.parts)
         {
@@ -118,19 +118,19 @@ export class CjsCharacterFactory
     }
 
     /**
-     * The merged values of a DNA, per part, as a host writes them (`Merge` without its problems): every part named.
+     * The merged values of a DNA, per part, as a host writes them (`merge` without its problems): every part named.
      * @param {object} dna The DNA.
      * @returns {Object<string, object>} The values, by part.
      */
-    static BuildValues(dna)
+    static buildValues(dna)
     {
-        return CjsCharacterFactory.Merge(dna).parts;
+        return CjsCharacterFactory.merge(dna).parts;
     }
 
     /**
      * Hydrates a paper doll definition from a DNA, in place: each part to neutral, then the DNA merged over its sex's
-     * defaults (`Merge`). Each part takes its values; an option is resolved when the part is on (its files read through
-     * the parts library) and set unresolved when it is off; a palette's colours are read (`_ApplyColors`). The
+     * defaults (`merge`). Each part takes its values; an option is resolved when the part is on (its files read through
+     * the parts library) and set unresolved when it is off; a palette's colours are read (`_applyColors`). The
      * definition's dirty flags are left for the paper doll's update. What could not be applied (an option the part does
      * not list, a part that is not overridable) is reported, and the rest still applies.
      * @param {import("../application/CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The definition, its
@@ -138,47 +138,47 @@ export class CjsCharacterFactory
      * @param {object} dna The DNA; its sex is the definition's.
      * @returns {Promise<{ problems: string[] }>} What was not applied.
      */
-    static async Build(definition, dna)
+    static async build(definition, dna)
     {
-        const merged = CjsCharacterFactory.Merge(dna), problems = [ ...merged.problems ];
+        const merged = CjsCharacterFactory.merge(dna), problems = [ ...merged.problems ];
         for (const name of CjsCharacterFactory.parts)
         {
-            try { await CjsCharacterFactory._ApplyPart(definition[name], merged.parts[name], name === "archetype"); }
+            try { await CjsCharacterFactory._applyPart(definition[name], merged.parts[name], name === "archetype"); }
             catch (error) { problems.push(name + ": " + error.message); }
         }
         return { problems };
     }
 
     /**
-     * Puts one part back to its sex's default: neutral, then the default's values (`Build` for one part).
+     * Puts one part back to its sex's default: neutral, then the default's values (`build` for one part).
      * @param {import("../application/CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The definition.
      * @param {string} name The part.
      * @returns {Promise<void>}
      * @throws {Error} For a part the factory does not know, or a default that cannot apply.
      */
-    static async ResetPart(definition, name)
+    static async resetPart(definition, name)
     {
         if (!CjsCharacterFactory.parts.includes(name)) throw new Error("Unknown character part " + name);
-        await CjsCharacterFactory._ApplyPart(definition[name], CjsCharacterFactory.BuildValues({ sex: definition.sex, parts: {} })[name], name === "archetype");
+        await CjsCharacterFactory._applyPart(definition[name], CjsCharacterFactory.buildValues({ sex: definition.sex, parts: {} })[name], name === "archetype");
     }
 
     /**
      * Puts the whole character back to its sex's default: one walk over the definition's parts to neutral (off, no
-     * custom colours, the archetype's sculpts and strength, the layer order), then the defaults (`Build` of an empty
+     * custom colours, the archetype's sculpts and strength, the layer order), then the defaults (`build` of an empty
      * DNA, or the DNA given). The result is the freshly built character: the default, or the DNA's (a loaded recipe's).
      * @param {import("../application/CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The definition.
      * @param {object} [dna] The DNA to build over the defaults; none by default.
      * @returns {Promise<{ problems: string[] }>} What could not apply.
      */
-    static async Reset(definition, dna = { sex: definition.sex, parts: {} })
+    static async reset(definition, dna = { sex: definition.sex, parts: {} })
     {
         definition.archetype.ClearSculpts();
         definition.ResetLayers();
-        return CjsCharacterFactory.Build(definition, dna);
+        return CjsCharacterFactory.build(definition, dna);
     }
 
     /**
-     * Writes one merged part onto its component. The component first goes to neutral (`Reset`; then off, no option,
+     * Writes one merged part onto its component. The component first goes to neutral (its `Reset`; then off, no option,
      * overridable, and a weighted part at weight 0, or 1 when the part is on); then the part's values; then its option,
      * resolved when the part is on; then its colours. The archetype has no switch or colours: its option is prepared
      * before it is set.
@@ -188,7 +188,7 @@ export class CjsCharacterFactory
      * @returns {Promise<void>}
      * @throws {Error} For an option the part does not list.
      */
-    static async _ApplyPart(component, part, archetype)
+    static async _applyPart(component, part, archetype)
     {
         const { option = "", palette = "", secondaryPalette = "", colors = null, specularColors = null, ...rest } = part;
         if (option && !component.GetOptions().some(value => value.id === option)) throw new Error("option " + option + " is not listed");
@@ -207,7 +207,7 @@ export class CjsCharacterFactory
         // A recipe option names its part folder in the part's own fields: read again for each one applied.
         if (option === "recipe") component.ForgetResolution(option);
         if (option && component.enabled) await component.ResolveOption(option);
-        await CjsCharacterFactory._ApplyColors(component, { palette, secondaryPalette: component.constructor.secondaryPalettes ? secondaryPalette : "", colors, specularColors });
+        await CjsCharacterFactory._applyColors(component, { palette, secondaryPalette: component.constructor.secondaryPalettes ? secondaryPalette : "", colors, specularColors });
     }
 
     /**
@@ -218,7 +218,7 @@ export class CjsCharacterFactory
      * @param {{ palette: string, secondaryPalette: string, colors: ?number[][], specularColors: ?number[][] }} values The part's colour values.
      * @returns {Promise<void>}
      */
-    static async _ApplyColors(component, { palette, secondaryPalette, colors, specularColors })
+    static async _applyColors(component, { palette, secondaryPalette, colors, specularColors })
     {
         if (colors !== null)
         {
@@ -257,7 +257,7 @@ export class CjsCharacterFactory
      * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets that
      * is not a garment (a garment takes the part's `recipe` option, `FetchRecipeOption`, where the build ships its
      * folder), and the entries of parts not applied yet (`notAppliedYet`).
-     * PROVISIONAL: the colour fields, as `_ApplyColors`.
+     * PROVISIONAL: the colour fields, as `_applyColors`.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. Moved from the sources' own recipe handling.
      * @param {string} path The recipe's `res:` path.
@@ -265,12 +265,12 @@ export class CjsCharacterFactory
      * @returns {Promise<{ dna: { sex: string, parts: Object<string, object> }, problems: string[] }>}
      * @throws {Error} For a recipe and a call that name no sex.
      */
-    static async ReadRecipe(path, sex = "")
+    static async readRecipe(path, sex = "")
     {
-        const library = blue.characterLibrary, recipe = await CjsCharacterFactory.FetchRecipe(path);
+        const library = blue.characterLibrary, recipe = await CjsCharacterFactory.fetchRecipe(path);
         const recipeSex = recipe.GetSex() || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
-        const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._PartsByCategory();
+        const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._partsByCategory();
         for (const entry of recipe.GetModifiers())
         {
             const found = await library.ResolveRecipeEntry(recipeSex, entry);
@@ -309,7 +309,7 @@ export class CjsCharacterFactory
             if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
             const value = { enabled: true, option: found.option };
             if (entry.weight > 0) value.weight = entry.weight;
-            const read = CjsCharacterFactory._ReadRecipeColors(entry);
+            const read = CjsCharacterFactory._readRecipeColors(entry);
             if (read.problem) problems.push(entry.path + ": " + read.problem);
             if (read.colors)
             {
@@ -325,7 +325,7 @@ export class CjsCharacterFactory
             }
             dna.parts[name] = value;
         }
-        return { dna: CjsCharacterFactory.ReadJSON(dna), problems };
+        return { dna: CjsCharacterFactory.readJSON(dna), problems };
     }
 
     /**
@@ -346,7 +346,7 @@ export class CjsCharacterFactory
      * @param {{ colors: string, pattern: string }} entry The recipe entry.
      * @returns {{ colors?: number[][], problem?: string }} The colours to apply, and what was not applied.
      */
-    static _ReadRecipeColors(entry)
+    static _readRecipeColors(entry)
     {
         if (entry.colors === "") return {};
         const tuples = [ ...entry.colors.matchAll(/\(([^()]*)\)/gu) ].map(match => match[1].split(",").map(Number));
@@ -361,17 +361,17 @@ export class CjsCharacterFactory
     /**
      * The shipped character recipes for a sex: the `.prs` files under the character root (`recipeConfiguration.match`;
      * the scenes' recipes are not characters) that name that sex (`GetSex`; a recipe that names none is left out),
-     * sorted. Each recipe is read once (`FetchRecipe`); one that cannot be read is left out.
+     * sorted. Each recipe is read once (`fetchRecipe`); one that cannot be read is left out.
      * @param {"female"|"male"} sex The sex.
      * @returns {Promise<string[]>} The recipes' `res:` paths.
      */
-    static async ListRecipes(sex)
+    static async listRecipes(sex)
     {
         const found = [];
         for (const path of Array.from(blue.paths.Filter(CjsCharacterFactory.recipeConfiguration.match)).sort())
         {
             let recipe;
-            try { recipe = await CjsCharacterFactory.FetchRecipe(path); }
+            try { recipe = await CjsCharacterFactory.fetchRecipe(path); }
             catch { continue; }
             if (recipe.GetSex() === sex) found.push(path);
         }
@@ -383,7 +383,7 @@ export class CjsCharacterFactory
      * (`CjsCharacterLibraryConfiguration`): a recipe entry, with its colours and shape weights, is DNA, not part data
      * (Ruru, 2026-11-09). `kinds`: the `.prs` record, an envelope whose list's mappings are
      * `CjsCharacterRecipeModifier` records (`items`; the leading sex stays as written). `sourceLists`: the modifier's
-     * list forms (`normalizeCharacterYamlValues`). `match`: the character recipes `ListRecipes` lists.
+     * list forms (`normalizeCharacterYamlValues`). `match`: the character recipes `listRecipes` lists.
      * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>>, match: string }}
      */
     static recipeConfiguration = {
@@ -415,7 +415,7 @@ export class CjsCharacterFactory
      * @returns {Promise<import("../model/source/CjsCharacterRecipe.js").CjsCharacterRecipe>} The record; a file that does
      *   not load rejects.
      */
-    static async FetchRecipe(path)
+    static async fetchRecipe(path)
     {
         const record = await blue.resMan.LoadObject(path);
         if (!record) throw new Error("Character recipe did not load: " + path);
@@ -428,9 +428,9 @@ export class CjsCharacterFactory
      * `tattoo` reads `tattoo/head` (`tattoo/armleft` has no maps rule), and `skintone` reads `skintone/basic`.
      * @returns {Map<string, string>}
      */
-    static _PartsByCategory()
+    static _partsByCategory()
     {
-        if (CjsCharacterFactory._partsByCategory === null)
+        if (CjsCharacterFactory._partsByCategoryCache === null)
         {
             const definition = new CjsPaperDollDefinition(), parts = new Map();
             for (const name of CjsPaperDollDefinition.parts) if (definition[name].constructor.category) parts.set(definition[name].constructor.category, name);
@@ -439,13 +439,13 @@ export class CjsCharacterFactory
                 const parent = category.slice(0, category.lastIndexOf("/"));
                 if (rule.maps !== null && !parts.has(category) && parts.has(parent)) parts.set(category, parts.get(parent));
             }
-            CjsCharacterFactory._partsByCategory = parts;
+            CjsCharacterFactory._partsByCategoryCache = parts;
         }
-        return CjsCharacterFactory._partsByCategory;
+        return CjsCharacterFactory._partsByCategoryCache;
     }
 
-    /** The parts by category, made once (`_PartsByCategory`). @type {?Map<string, string>} */
-    static _partsByCategory = null;
+    /** The parts by category, made once (`_partsByCategory`). @type {?Map<string, string>} */
+    static _partsByCategoryCache = null;
 
     /**
      * One DNA part, checked and copied.
@@ -454,7 +454,7 @@ export class CjsCharacterFactory
      * @returns {object} A new part.
      * @throws {Error} For a part no paper doll has, a field outside the DNA, or a value of the wrong type.
      */
-    static _ReadPart(name, part)
+    static _readPart(name, part)
     {
         if (!CjsCharacterFactory.parts.includes(name)) throw new Error("Unknown character part " + name);
         if (part === null || typeof part !== "object" || Array.isArray(part)) throw new Error("Character part " + name + " is not an object");

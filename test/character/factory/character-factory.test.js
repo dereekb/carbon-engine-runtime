@@ -9,41 +9,41 @@ test("the defaults are the clean character: eyebrows, head, body, eyes and under
 {
   for (const sex of [ "female", "male" ])
   {
-    const defaults = CjsCharacterFactory.GetDefaults(sex);
+    const defaults = CjsCharacterFactory.getDefaults(sex);
     assert.equal(defaults.sex, sex);
     assert.deepEqual(Object.keys(defaults.parts).sort(), [ "archetype", "bottomUnderwear", "eyebrows", "eyes", "skin", ...(sex === "female" ? [ "topUnderwear" ] : []) ].sort());
     assert.equal(defaults.parts.bottomUnderwear.overridable, false);
     assert.equal(defaults.parts.eyes.overridable, true);
   }
-  const copy = CjsCharacterFactory.GetDefaults("female");
+  const copy = CjsCharacterFactory.getDefaults("female");
   copy.parts.eyes.option = "changed";
-  assert.equal(CjsCharacterFactory.GetDefaults("female").parts.eyes.option, "eyes_01", "a copy the caller may change");
-  assert.throws(() => CjsCharacterFactory.GetDefaults("other"), /Unknown character sex/);
+  assert.equal(CjsCharacterFactory.getDefaults("female").parts.eyes.option, "eyes_01", "a copy the caller may change");
+  assert.throws(() => CjsCharacterFactory.getDefaults("other"), /Unknown character sex/);
 });
 
 test("a DNA reads from JSON text or a value, and writes back to the same DNA", () =>
 {
   const dna = { sex: "male", parts: { lipstick: { enabled: true, option: "lipstick_02", weight: .5, colors: [ [ 1, 0, 0, 1 ], [ 0, 1, 0, 1 ], [ 0, 0, 1, 1 ] ] } } };
-  const read = CjsCharacterFactory.ReadJSON(JSON.stringify(dna));
+  const read = CjsCharacterFactory.readJSON(JSON.stringify(dna));
   assert.deepEqual(read, dna);
   assert.notEqual(read.parts.lipstick.colors, dna.parts.lipstick.colors, "a copy");
-  assert.deepEqual(CjsCharacterFactory.ReadJSON(CjsCharacterFactory.WriteJSON(read)), read);
+  assert.deepEqual(CjsCharacterFactory.readJSON(CjsCharacterFactory.writeJSON(read)), read);
 });
 
 test("a DNA naming an unknown sex, part, field or value type is refused", () =>
 {
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "x", parts: {} }), /Unknown character sex/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: { wings: {} } }), /Unknown character part wings/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: { eyes: { size: 2 } } }), /Unknown field size/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: { eyes: { enabled: "yes" } } }), /enabled is not a boolean/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: { eyes: { weight: NaN } } }), /weight is not a number/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: { eyes: { colors: [ [ 1, 1, 1 ] ] } } }), /three RGBA/);
-  assert.throws(() => CjsCharacterFactory.ReadJSON({ sex: "male", parts: {}, extra: 1 }), /Unknown character DNA field extra/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "x", parts: {} }), /Unknown character sex/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: { wings: {} } }), /Unknown character part wings/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: { eyes: { size: 2 } } }), /Unknown field size/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: { eyes: { enabled: "yes" } } }), /enabled is not a boolean/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: { eyes: { weight: NaN } } }), /weight is not a number/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: { eyes: { colors: [ [ 1, 1, 1 ] ] } } }), /three RGBA/);
+  assert.throws(() => CjsCharacterFactory.readJSON({ sex: "male", parts: {}, extra: 1 }), /Unknown character DNA field extra/);
 });
 
 test("the merge lays the DNA over the defaults, switches every other part off and keeps parts that are not overridable", () =>
 {
-  const merged = CjsCharacterFactory.Merge({ sex: "female", parts: {
+  const merged = CjsCharacterFactory.merge({ sex: "female", parts: {
     eyes: { option: "eyes_04" },
     lipstick: { enabled: true, option: "lipstick_02" },
     bottomUnderwear: { option: "other" }
@@ -78,7 +78,7 @@ function configuredDefinition(t)
 test("Build writes the merged DNA onto a definition: options resolved when on, palettes read, every other part off", async t =>
 {
   const { definition, resolved } = configuredDefinition(t);
-  const { problems } = await CjsCharacterFactory.Build(definition, { sex: "female", parts: {
+  const { problems } = await CjsCharacterFactory.build(definition, { sex: "female", parts: {
     lipstick: { enabled: true, option: "lipstick_02", colors: [ [ 1, 0, 0, 1 ], [ 0, 1, 0, 1 ], [ 0, 0, 1, 1 ] ] }
   } });
   assert.deepEqual([ definition.bottomUnderwear.enabled, definition.bottomUnderwear.option, definition.bottomUnderwear.overridable ], [ true, "bikinibottomcf01", false ]);
@@ -94,21 +94,21 @@ test("Build writes the merged DNA onto a definition: options resolved when on, p
 test("ResetPart and Reset put a part, or the whole character, back to the defaults", async t =>
 {
   const { definition } = configuredDefinition(t);
-  await CjsCharacterFactory.Build(definition, { sex: "female", parts: { lipstick: { enabled: true, option: "lipstick_02" }, eyebrows: { enabled: false } } });
-  await CjsCharacterFactory.ResetPart(definition, "eyebrows");
+  await CjsCharacterFactory.build(definition, { sex: "female", parts: { lipstick: { enabled: true, option: "lipstick_02" }, eyebrows: { enabled: false } } });
+  await CjsCharacterFactory.resetPart(definition, "eyebrows");
   assert.deepEqual([ definition.eyebrows.enabled, definition.eyebrows.option ], [ true, "eyebrows_01" ]);
   assert.equal(definition.lipstick.enabled, true, "only that part");
   definition.SetLayer("lipstick", 1);
-  await CjsCharacterFactory.Reset(definition);
+  await CjsCharacterFactory.reset(definition);
   assert.deepEqual([ definition.lipstick.enabled, definition.lipstick.option, definition.lipstick.customColors ], [ false, "", false ]);
   assert.equal(definition.GetLayer("lipstick"), definition.lipstick.constructor.layer, "the layer order back to the class ranks");
-  await assert.rejects(CjsCharacterFactory.ResetPart(definition, "wings"), /Unknown character part wings/);
+  await assert.rejects(CjsCharacterFactory.resetPart(definition, "wings"), /Unknown character part wings/);
 });
 
 test("the paper doll holds a part that is not overridable on, unless a worn part occludes it", async t =>
 {
   const { definition } = configuredDefinition(t);
-  await CjsCharacterFactory.Build(definition, { sex: "female", parts: {} });
+  await CjsCharacterFactory.build(definition, { sex: "female", parts: {} });
   definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, true, "switched back on: nothing occludes it");
@@ -158,7 +158,7 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     ROOT + "topmiddle/shirt01/types/shirt01.type", ROOT + "topmiddle/shirt01/plain.color", ROOT + "makeup/eyeliner/eyeliner_01/types/eyeliner_01.type"
   ];
   installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });
-  const { dna, problems } = await CjsCharacterFactory.ReadRecipe(PRS);
+  const { dna, problems } = await CjsCharacterFactory.readRecipe(PRS);
   assert.equal(dna.sex, "female");
   assert.deepEqual(dna.parts.lipstick, { enabled: true, option: "lipstick_01", weight: 1,
     colors: [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ],

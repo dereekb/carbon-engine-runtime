@@ -53,7 +53,7 @@ test("the factory's FetchRecipe answers the modifiers' category, path and weight
     Library(t);
     for (const { path, value } of expected.recipes)
     {
-        const record = await CjsCharacterFactory.FetchRecipe(path);
+        const record = await CjsCharacterFactory.fetchRecipe(path);
         assert.deepEqual(record.value.map(entry => typeof entry === "string" || entry === null ? entry : { category: entry.category, path: entry.path, weight: entry.weight }), value, path);
     }
 });
