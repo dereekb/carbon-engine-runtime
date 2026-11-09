@@ -69,11 +69,13 @@ export class EveTrailsSet
 
   /**
    * m_trailData (h:121): one record per booster with a trail. Carbon does not
-   * map it; it persists here so values carry which boosters have trails.
+   * map it; ours exposes it (non-carbon-extensions.md, persisted booster and
+   * trail records) so values carry which boosters have trails: SOF writes it,
+   * and building a trail set from values reads it back.
    */
-  @meta.persistOnly
+  @meta.mapAttribute(meta.PERSISTONLY)
   @type.array("EveTrailsSet::SingleTrailData")
-  _trailData = [];
+  trailData = [];
 
   /** m_trailVertexDecl: the trail mesh's elements plus the instance float4. */
   _trailVertexDecl = [];
@@ -238,7 +240,7 @@ export class EveTrailsSet
 
   Clear()
   {
-    this._trailData.length = 0;
+    this.trailData.length = 0;
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
@@ -257,7 +259,7 @@ export class EveTrailsSet
     const data = new EveTrailsSetSingleTrailData();
     mat4.copy(data.transform, localMatrix);
     data.size = Number(size) || 0;
-    this._trailData.push(data);
+    this.trailData.push(data);
   }
 
   /**
@@ -305,16 +307,16 @@ export class EveTrailsSet
   InitializeInstanceBuffer()
   {
     this._instanceBuffer = null;
-    if (!this._trailData.length) return;
+    if (!this.trailData.length) return;
 
-    const vertices = new Float32Array(this._trailData.length * 4);
-    this._trailData.forEach((trail, i) =>
+    const vertices = new Float32Array(this.trailData.length * 4);
+    this.trailData.forEach((trail, i) =>
     {
       vertices.set([ trail.transform[12], trail.transform[13], trail.transform[14], trail.size ], i * 4);
     });
 
     const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
-    this._instanceBuffer = SharedGeometryBuffer(renderContext).Allocate(INSTANCE_VERTEX_SIZE, this._trailData.length, vertices, renderContext);
+    this._instanceBuffer = SharedGeometryBuffer(renderContext).Allocate(INSTANCE_VERTEX_SIZE, this.trailData.length, vertices, renderContext);
   }
 
   /**
@@ -357,7 +359,7 @@ export class EveTrailsSet
     batch.SetGeometry__AllocationSecondStream(this._vertexDeclHandle, vertices, instances, lod.indexAllocation);
     batch.SetDrawIndexedInstanced(
       TriGeometryRes.getPrimitiveCount(lod, 0, lod.areas?.length ?? 0) * 3,
-      this._trailData.length,
+      this.trailData.length,
       lod.indexAllocation.GetStartIndex(),
       vertices.GetOffset() / vertices.GetStride(),
       instances.GetOffset() / instances.GetStride());
@@ -378,7 +380,7 @@ export class EveTrailsSet
   /** The trail placements as copies, for diagnostics. */
   GetTrailData()
   {
-    return this._trailData.map(trail => ({ transform: mat4.clone(trail.transform), size: trail.size }));
+    return this.trailData.map(trail => ({ transform: mat4.clone(trail.transform), size: trail.size }));
   }
 
   /** Carbon EveTrailsSet::SingleTrailData (private, EveTrailsSet.h:88-94). */

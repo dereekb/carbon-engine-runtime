@@ -94,9 +94,9 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   transform[12] = 999;
 
   assert.equal(CjsSchema.getField(EveBoosterSet2, "_singleBoosters")?.type.itemType, "EveBoosterSet2::SingleBoosterData");
-  assert.equal(CjsSchema.getField(EveTrailsSet, "_trailData")?.type.itemType, "EveTrailsSet::SingleTrailData");
+  assert.equal(CjsSchema.getField(EveTrailsSet, "trailData")?.type.itemType, "EveTrailsSet::SingleTrailData");
   assert.equal(boosters._singleBoosters[0] instanceof EveBoosterSet2SingleBoosterData, true);
-  assert.equal(trails._trailData[0] instanceof EveTrailsSetSingleTrailData, true);
+  assert.equal(trails.trailData[0] instanceof EveTrailsSetSingleTrailData, true);
 
   const data = boosters.GetBoosterData();
   assert.equal(data.length, 2);
@@ -148,7 +148,7 @@ test("EveBoosterSet2 builds Carbon booster, glow, trail, light, and bounds CPU d
   // the same flares, bounds and max size as the set Add built.
   const values = CjsSchema.getValues(boosters, {}, { persistOnly: true });
   assert.equal(values._singleBoosters.length, 2);
-  assert.equal(values.trails._trailData.length, 1);
+  assert.equal(values.trails.trailData.length, 1);
   const restored = CjsSchema.from("EveBoosterSet2", values);
   assert.deepEqual(restored.GetBoosterData(), boosters.GetBoosterData());
   assert.equal(restored.glows.sprites.length, 6);

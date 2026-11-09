@@ -308,7 +308,6 @@ export class EveSOF extends IRoot
    * counterpart of the native global setting.
    * @type {boolean}
    */
-  @meta.readwrite
   @type.boolean
   alphaCutoutShadowsEnabled = false;
 
@@ -320,7 +319,6 @@ export class EveSOF extends IRoot
    * counterpart of the native global setting; empty by default.
    * @type {string}
    */
-  @meta.readwrite
   @type.path("TriGeometryRes")
   volumetricTrailPath = "";
 
@@ -334,9 +332,26 @@ export class EveSOF extends IRoot
    * construction deterministic.
    * @type {number}
    */
-  @meta.readwrite
   @type.float64
   buildTime = 0;
+
+  /**
+   * Carbon's `TRI_REGISTER_SETTING( "alphaCutoutShadowsEnabled", g_alphaCutoutShadowsEnabled )` (EveSOF.cpp:61-62,
+   * default false): whether decal and alpha-cutout areas cast shadows. Each factory reads its own
+   * `alphaCutoutShadowsEnabled`, given through `Register`; whether a factory takes this setting is not decided yet.
+   * @type {boolean}
+   */
+  @meta.setting("alphaCutoutShadowsEnabled", { applies: meta.setting.LOAD })
+  static alphaCutoutShadowsEnabled = false;
+
+  /**
+   * Carbon's `TRI_REGISTER_SETTING( "volumetricTrailPath", g_volumetricTrailPath )` (EveSOF.cpp:64-65, default
+   * empty): the booster trail mesh. Each factory reads its own `volumetricTrailPath`, given through `Register`;
+   * whether a factory takes this setting is not decided yet.
+   * @type {string}
+   */
+  @meta.setting("volumetricTrailPath", { applies: meta.setting.LOAD })
+  static volumetricTrailPath = "";
 
   /**
    * Catalog manager supplying resolved hull, faction, race, material and generic data for DNA and
@@ -3075,7 +3090,7 @@ export class EveSOF extends IRoot
         // Carbon: trail->SetMeshResPath(g_volumetricTrailPath) (EveSOF.cpp:2720).
         geometryResPath: this.volumetricTrailPath,
         effect: trailEffect,
-        _trailData: trailData
+        trailData
       });
     }
 

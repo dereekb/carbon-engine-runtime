@@ -5321,7 +5321,7 @@ test("SOF projects, emits, and hydrates multi-hull Carbon boosters", {
   assert.deepEqual(singleBoosters.map(node => node._type), ["EveBoosterSet2::SingleBoosterData", "EveBoosterSet2::SingleBoosterData"]);
   assert.deepEqual(singleBoosters[1].transform.slice(12, 15), [14, 5, 6]);
   // Only the second hull item has a trail.
-  const trailData = referencedNode(document, booster.trails)._trailData.map(ref => referencedNode(document, ref));
+  const trailData = referencedNode(document, booster.trails).trailData.map(ref => referencedNode(document, ref));
   assert.deepEqual(trailData.map(node => node._type), ["EveTrailsSet::SingleTrailData"]);
   assert.deepEqual(
     root.locators
