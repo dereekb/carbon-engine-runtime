@@ -1,10 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterRecipe, CjsCharacterRecipeModifier, CjsPaperDollColorizedSource, CjsPaperDollDefinition, PaperDollPaletteKind } from "../../../npm/dist/character/index.js";
-import { BluePaths, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
-import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/index.js";
-import "../../support/frameLoop.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const SHADOW = ROOT + "makeup/eyeshadow/";
@@ -18,18 +16,13 @@ const RECIPE_COLOURS = "[(0.1, 0.2, 0.3, 1.0), (0.4, 0.5, 0.6, 1.0), (0.7, 0.8, 
 
 function services(t, entries = [])
 {
-  const cache = new RemoteFileCache();
-  cache.AddFileIndex(FILES.map((path, index) => `${path},synthetic/${index},checksum,1`).join("\n"));
-  const paths = new BluePaths();
-  paths.RegisterFileSystem(new BlueResFileSystemRemote(cache));
   const recipe = Object.assign(new CjsCharacterRecipe(), { value: [ "female", ...entries.map(entry => Object.assign(new CjsCharacterRecipeModifier(), entry)) ] });
-  const characterLibrary = {
+  const overrides = {
     FetchRecipe: async () => recipe,
     FetchPalette: async path => ({ colors: [ 0, 1, 2 ].map(() => Float32Array.of(path.length / 100, 0, 0, 1)) }),
     FetchMaterialMaskAreas__Zone: async () => [ 1, 2, 3 ]
   };
-  const previous = installBlueServices({ paths, characterLibrary }, false);
-  t.after(() => installBlueServices(previous, previous.running));
+  installPartsLibrary(t, ROOT, FILES, { overrides });
 }
 
 /** A compositor recording the colourised paints it makes. */
@@ -50,7 +43,7 @@ class StubCompositor
 async function configured(t, entries)
 {
   services(t, entries ?? []);
-  const build = { content: { root: ROOT, recipe: entries ? "res:/test.prs" : "" }, CheckActive() {}, Ready: value => value };
+  const build = { content: { root: ROOT, sex: "female", recipe: entries ? "res:/test.prs" : "" }, CheckActive() {}, Ready: value => value };
   const definition = new CjsPaperDollDefinition();
   const source = new CjsPaperDollColorizedSource(new StubCompositor(), build, "eyeshadow");
   await source.Configure(definition);

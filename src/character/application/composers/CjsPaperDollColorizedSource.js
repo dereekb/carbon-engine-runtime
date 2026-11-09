@@ -13,9 +13,9 @@ import { CjsCharacterLibraryManager } from "../../library/CjsCharacterLibraryMan
  * `CjsCharacterTextureRoles`). It draws into the head diffuse only.
  *
  * Its options and their palette files come from where the part's palettes live (`static palettes`,
- * `PaperDollPalettes`): each option's own folder (eye shadow, eyeliner: each `.type` is a style, its palettes its own
- * `.color` files) or the category's catalog (blush, eyebrows: the makeup catalog's options, every option's `.color`
- * files and the category's `colors/`). Each palette is a raw record: its path, its file name, its kind
+ * `PaperDollPalettes`): each option's own folder (eye shadow, eyeliner, lipstick: the parts library's options,
+ * `FetchOptions`, and their palettes, `FetchPalettes`) or the category's catalog (blush, eyebrows: the makeup
+ * catalog's options, every option's `.color` files and the category's `colors/`). Each palette is a raw record: its path, its file name, its kind
  * (`PaperDollPaletteKind`: the areas it sets, from its `_a`/`_bc` name) and those areas. An option's default palette
  * is a content fact only: its `default.color` (or the type's colour variant), else none; which palettes a menu shows,
  * how they are merged and labelled, and a default where there is none, are the UI's (operator: the UI makes the
@@ -80,11 +80,8 @@ export class CjsPaperDollColorizedSource
     /** The build served: its waits and its content. */
     _build = null;
 
-    /** Each style, by id: its folder, palettes, and once applied its paint and cutout. @type {Map<string, object>} */
+    /** Each style, by id: its parts library option, folder, palettes, and once applied its paint and cutout. @type {Map<string, object>} */
     _styles = new Map();
-
-    /** The part folder's files (the swatch rule). @type {string[]} */
-    _files = [];
 
     /** The catalog's options by id (the catalog rule). @type {Map<string, object>} */
     _catalog = new Map();
@@ -135,33 +132,31 @@ export class CjsPaperDollColorizedSource
     }
 
     /**
-     * Lists the part's styles by the swatch rule and configures the definition's component with them, applying the
-     * build's recipe entry for the part (option on, weight, colours as the `authored` palette); with no entry, no
-     * option, off.
+     * Takes the part's styles and their palettes from the parts library and configures the definition's component with
+     * them, applying the build's recipe entry for the part (`ResolveRecipeEntry`: option on, weight, colours as the
+     * `authored` palette); with no entry, no option, off.
      * @param {import("../CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The paper doll definition.
      * @returns {Promise<void>}
      * @throws {Error} For a style without palettes, or a recipe entry naming a style the part does not list.
      */
     async Configure(definition)
     {
-        const build = this._build, component = definition[this.name], category = component.constructor.category;
-        const root = build.content.root + category + "/", files = this._files = CjsPaperDollDefinition.listFiles(root);
+        const build = this._build, library = blue.characterLibrary, component = definition[this.name], category = component.constructor.category;
         this._type = component.constructor;
         this._weighted = component.constructor.weighted === true;
-        for (const type of files.filter(file => file.endsWith(".type")))
+        for (const style of await build.Ready(library.FetchOptions(build.content.sex, category)))
         {
-            const folder = type.slice(0, type.indexOf("/types/") + 1), id = folder.slice(root.length, -1);
             // Palettes by path only; a palette's colours are fetched when it is applied.
-            const records = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".color"))
-                .map(path => CjsPaperDollColorizedSource.record(path));
-            if (!records.length) throw new Error("A " + this.name + " style without palettes " + folder);
+            const records = await build.Ready(library.FetchPalettes(style));
+            if (!records.length) throw new Error("A " + this.name + " style without palettes " + style.folder);
             const defaultPalette = records.find(record => record.name === "default")?.path ?? null;
-            this._styles.set(id, { id, folder, records, defaultPalette, paint: null, region: null, skipped: [], specular: null, gloss: null });
+            this._styles.set(style.id, { id: style.id, option: style, folder: style.folder, records, defaultPalette, paint: null, region: null, skipped: [], specular: null, gloss: null });
         }
-        const recipe = build.content.recipe ? (await build.Ready(blue.characterLibrary.FetchRecipe(build.content.recipe))).GetModifiers() : [];
+        const recipe = build.content.recipe ? (await build.Ready(library.FetchRecipe(build.content.recipe))).GetModifiers() : [];
         const set = recipe.find(entry => entry.path.startsWith(category + "/")) ?? null;
-        const option = set ? set.path.split("/").at(-1) : "";
-        if (set && !this._styles.has(option)) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        const selected = set ? await build.Ready(library.ResolveRecipeEntry(build.content.sex, set)) : null;
+        if (set && (selected === null || selected.option === null || !this._styles.has(selected.option))) throw new Error("The recipe sets " + set.path + ", which " + category + " does not list");
+        const option = set ? selected.option : "";
         const authored = set ? set.GetColors() : null, AUTHORED = CjsPaperDollColorizedSource.authored;
         // A part whose surface reads its palette's specular colours takes the recipe's own with its colours.
         if (authored !== null && component.constructor.paletteSpecular) component.SetPaletteSpecular(AUTHORED, [ set.specularColor1, set.specularColor2, set.specularColor3 ]);
@@ -190,7 +185,7 @@ export class CjsPaperDollColorizedSource
      */
     async _Resolve(style)
     {
-        const build = this._build, c = this._compositor, { roles, skipped } = CjsCharacterTextureRoles.readFolder(style.folder, this._files);
+        const build = this._build, c = this._compositor, { roles, skipped } = await build.Ready(blue.characterLibrary.FetchOptionMaps(style.option));
         // Maps named outside the composed naming are not drawn (derived: today's look; eyeshadow_02's aa_female_head_s).
         style.skipped = skipped;
         const detailMap = CjsCharacterTextureRoles.one(roles, role => role.region === "head" && role.operation === "Colorized");
