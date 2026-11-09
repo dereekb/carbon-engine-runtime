@@ -2,7 +2,6 @@ import { blue } from "#blue";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 import { CjsPaperDollDefinition } from "../CjsPaperDollDefinition.js";
 import { PaperDollBlend, PaperDollTarget } from "../paperDollOrder.js";
-import { CjsCharacterTextureRoles } from "../../library/CjsCharacterTextureRoles.js";
 
 /**
  * The layer source of a garment (`static blend` MATERIAL with the body target: underwear, body augmentations, arms,
@@ -132,11 +131,11 @@ export class CjsPaperDollMaterialSource
     async _Resolve(option)
     {
         const build = this._build, library = blue.characterLibrary, { records } = option;
-        const [ part, { maps, masks, skipped } ] = await Promise.all([ build.Ready(library.FetchOptionPart(option.option)), build.Ready(library.FetchOptionMaps(option.option)) ]);
+        const [ part, { maps, masks, skipped, maskedNormal } ] = await Promise.all([ build.Ready(library.FetchOptionPart(option.option)), build.Ready(library.FetchOptionMaps(option.option)) ]);
         const defaultPalette = records.length ? (await build.Ready(library.ResolveColors(option.option))).palette : null;
         const colorAreas = maps.detail && maps.zone && defaultPalette ? await build.Ready(library.FetchColorAreas(option.option)) : [];
         const resolved = { id: option.id, path: option.path, type: option.type, base: part.folders.at(-1), folders: part.folders, variation: part.variation,
-            dependants: part.dependants, occludes: part.occludes, defaultPalette, maps, masks, skipped };
+            dependants: part.dependants, occludes: part.occludes, defaultPalette, maps, masks, skipped, maskedNormal };
         if (this._hook !== null) await this._hook(this.name, resolved);
         // Drawn from here on: the maps load on the next draw.
         option.resolved = resolved;
@@ -187,7 +186,7 @@ export class CjsPaperDollMaterialSource
      */
     async _LoadMaps(option)
     {
-        const build = this._build, c = this._compositor, crop = CjsPaperDollCompositor.crop, { folders, defaultPalette, maps, masks, skipped } = option.resolved;
+        const build = this._build, c = this._compositor, crop = CjsPaperDollCompositor.crop, { folders, defaultPalette, maps, masks, skipped, maskedNormal } = option.resolved;
         if (!maps.detail) throw new Error("Garment without a detail map " + folders[0]);
         // The default's colours, and which palettes are patterned (composed through patternblit).
         const paths = option.records.map(record => record.path), reads = [ ...new Set([ ...(defaultPalette ? [ defaultPalette ] : []), ...paths ]) ];
@@ -201,7 +200,7 @@ export class CjsPaperDollMaterialSource
         const layer = await c.CreateMaterialLayer({ detail, zones, normal, specular }, palette, { coverage: true, patterns });
         // A masked normal (`mn`) carries its own coverage and encoding (maskednormalblit), not the detail's; a twist normal
         // (`tn`) adds over the normal (twistnormalblit). The `mn` and `tn` roles: `CjsCharacterTextureRoles.table`.
-        if (normal !== null && CjsCharacterTextureRoles.splitTier(maps.normal)[0].endsWith("/comp_body_mn")) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
+        if (normal !== null && maskedNormal) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
         const twistLayer = twist === null ? null : { effect: await c.Twist(twist, crop(twist)), region: crop(twist) };
         return Object.assign(layer, {
             masks: await Promise.all(masks.map(async path =>

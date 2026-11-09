@@ -401,8 +401,9 @@ export class CjsCharacterLibraryManager
      * - `name`: `{ paths }`, one map per name, a variation's replacing the part folder's;
      * - `composed`: `{ roles, skipped }`, the option folder's composed maps by role, and those not named so;
      * - `catalog`: `{ channels }`, one map per stem directly in the part folder;
-     * - `garment`: `{ maps, skipped, masks }`, the garment maps by key, the folder's other maps (overridden or
-     *   unruled), and its body cut masks: its own, then each dependant folder's (utility shapes are not folders).
+     * - `garment`: `{ maps, skipped, masks, maskedNormal }`, the garment maps by key, the folder's other maps (overridden
+     *   or unruled), its body cut masks (its own, then each dependant folder's; utility shapes are not folders), and
+     *   whether its normal is a masked normal (`comp_body_mn`).
      *
      * Ours, as `FetchOptions`. The rules are `CjsCharacterTextureRoles`'.
      *
@@ -448,7 +449,9 @@ export class CjsCharacterLibraryManager
             return {
                 maps,
                 skipped: CjsCharacterTextureRoles.garmentSkipped(facts.folders, files, [ ...Object.values(maps) ]),
-                masks: [ ...new Set([ maps.cutMask, ...fromDependants ].filter(Boolean)) ]
+                masks: [ ...new Set([ maps.cutMask, ...fromDependants ].filter(Boolean)) ],
+                // A masked normal (`comp_body_mn`) carries its own coverage and encoding (`CjsCharacterTextureRoles.table`).
+                maskedNormal: maps.normal !== null && CjsCharacterTextureRoles.splitTier(maps.normal)[0].endsWith("/comp_body_mn")
             };
         });
     }

@@ -40,7 +40,7 @@ export class CjsPaperDollInstance
     objects = [];
 
     /**
-     * @param {{foundation: Function, skin: Function, surface: Function, eyes: Function, head: Function, body: Function}} bindings
+     * @param {{error: Function, foundation: Function, skin: Function, surface: Function, eyes: Function, head: Function, body: Function}} bindings
      *   Prepared synchronous bindings, one per target: each receives that target's capture (the foundation binding the resolved foundation).
      * @param {object[]} [objects=[]] The skinned objects drawn for this character.
      */
@@ -106,7 +106,8 @@ export class CjsPaperDollInstance
         // A geometry-only strength edit must not rebuild skin or cosmetic maps.
         const forced = definition.IsForced();
         const dirtyTargets = definition.GetDirtyTargets() | this._targetDirty;
-        CjsPaperDollInstance.holdParts(definition);
+        for (const [ name, resolving ] of CjsPaperDollInstance.holdParts(definition))
+            resolving.catch(error => this._bindings.error(name + " could not be held on: " + error.message));
         const suppression = this._suppression = CjsPaperDollInstance.suppress(definition);
         const plans = [];
         let changedTargets = 0;
@@ -165,16 +166,21 @@ export class CjsPaperDollInstance
 
     /**
      * Holds the parts that are not overridable (`CjsPaperDollComponent.overridable`; operator, 2026-11-09): a part
-     * switched off while no worn part occludes it is switched back on, and its option resolved if it is not. An occluder
-     * still removes it from every bake (`suppress`). The host's switch only reflects this.
+     * switched off while no part that is still worn (on, resolved, and not itself suppressed: `suppress` over the parts as
+     * they are) occludes it is switched back on, and its option resolved if it is not. Coverage is decided once, before the
+     * held parts return, so holding and suppressing do not loop; an occluder still removes a held part from every bake
+     * (`suppress`, run after). The host's switch only reflects this. `Update` reports a failed
+     * resolution through the host's `error` binding.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. The rule is the operator's.
      * @param {import("./CjsPaperDollDefinition.js").CjsPaperDollDefinition} definition The settings.
-     * @returns {void}
+     * @returns {Array<[ string, Promise<*> ]>} Each held part whose option is resolving, and the resolution.
      */
     static holdParts(definition)
     {
-        const worn = CjsPaperDollInstance._Worn(definition);
+        // What is actually worn: the worn parts the suppression walk leaves.
+        const { suppressed } = CjsPaperDollInstance.suppress(definition), resolving = [];
+        const worn = CjsPaperDollInstance._Worn(definition).filter(item => !suppressed.includes(item.name));
         for (const name of CjsPaperDollDefinition.parts)
         {
             const part = definition[name];
@@ -184,8 +190,9 @@ export class CjsPaperDollInstance
             const target = { name, category: part.constructor.category, path: option.path ?? part.constructor.category };
             if (worn.some(by => CjsPaperDollInstance._Occludes(by, target))) continue;
             CjsSchema.setValues(part, { enabled: true });
-            if (!part.IsResolved(part.option)) part.ResolveOption(part.option);
+            if (!part.IsResolved(part.option)) resolving.push([ name, part.ResolveOption(part.option) ]);
         }
+        return resolving;
     }
 
     /**

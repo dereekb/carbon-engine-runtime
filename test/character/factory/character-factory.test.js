@@ -117,8 +117,16 @@ test("the paper doll holds a part that is not overridable on, unless a worn part
   definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, false, "an occluder removes it");
+  // An occluder that a third worn part suppresses covers nothing: the underwear is held on again.
+  definition.blush.Configure([ { id: "hood", occludes: [ "makeup/lipstick" ] } ], new Map(), { option: "hood" });
+  definition.blush.enabled = true;
+  definition.bottomUnderwear.enabled = false;
+  CjsPaperDollInstance.holdParts(definition);
+  assert.equal(definition.bottomUnderwear.enabled, true, "a suppressed occluder covers nothing");
+  definition.blush.enabled = false;
   definition.bottomUnderwear.overridable = true;
   definition.lipstick.enabled = false;
+  definition.bottomUnderwear.enabled = false;
   CjsPaperDollInstance.holdParts(definition);
   assert.equal(definition.bottomUnderwear.enabled, false, "an overridable part stays as the user set it");
 });
