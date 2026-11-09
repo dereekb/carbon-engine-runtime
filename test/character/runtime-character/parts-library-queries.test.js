@@ -24,6 +24,9 @@ function fixture(t)
         [ "outer/coat01/colorize_body_z.png", OPAQUE ],
         [ "outer/coat01/comp_body_m.png", OPAQUE ],
         [ "outer/coat01/v1/colorize_body_l.png", OPAQUE ],
+        [ "outer/coat01/v1/coat01_lod1.black", OPAQUE ],
+        [ "outer/coat01/coat01.black", OPAQUE ],
+        [ "outer/coat01/coat01_lod1.black", OPAQUE ],
         [ "dependants/mask01/comp_body_m.png", OPAQUE ],
         [ "bottomunderwear/boxers01/types/boxers01_civire.type", "!!python/tuple [bottomunderwear/boxers01, '', default]\n" ],
         [ "bottomunderwear/boxers01/types/boxers01_deteis.type", "!!python/tuple [bottomunderwear/boxers01, '', default]\n" ],
@@ -164,4 +167,24 @@ test("colours: the library's palette, then each provided colour the option paint
     const shadow = await library.ResolveColors(await option(library, "makeup/eyeshadow", "eyeshadow_01"), { palette: "aqua_a" });
     assert.deepEqual(shadow.colors.map(color => color === null), [ false, true, true ], "an _a palette sets area 1 only");
     assert.equal((await library.ResolveColors(await option(library, "makeup/aging", "aging_01_v1"))).palette, null);
+});
+
+test("an option's model: the first folder's .black that is not a LOD, else none; areas by role and atlas region", async t =>
+{
+    const { library } = fixture(t);
+    const read = [];
+    library.FetchModelAreas = async path => { read.push(path); return { model: path, meshes: [] }; };
+    assert.equal((await library.FetchOptionAreas(await option(library, "outer", "coat01_black"))).model, ROOT + "outer/coat01/coat01.black",
+        "the variation folder holds only a LOD model, so the part folder's");
+    assert.equal(await library.FetchOptionAreas(await option(library, "makeup/eyeshadow", "eyeshadow_01")), null, "a baked option has no model");
+    assert.deepEqual(read, [ ROOT + "outer/coat01/coat01.black" ]);
+    const { uvRegion } = await import("../../../npm/dist/character/library/CjsCharacterTextureRoles.js").then(m => ({ uvRegion: m.CjsCharacterTextureRoles.uvRegion }));
+    assert.deepEqual([ [ 0, 0, 0.5, 1 ], [ 0.5, 0, 1, 0.5 ], [ 0.5, 0.5, 0.75, 1 ], [ 0.8, 0.6, 0.9, 0.7 ], [ 0, 0, 1, 1 ], [ 0.25, 0.25, 0.75, 0.75 ] ].map(uv => uvRegion(uv)),
+        [ "body", "head", "hair", "acc", "identity", null ]);
+    const kind = CjsCharacterLibraryManager.areaKind;
+    assert.deepEqual([
+        kind("skinnedavatarbrdfdoublelinear.fx", 0, 3), kind("skinnedavatarbrdflinear.fx", 0, 2), kind("skinnedavatarbrdflinear.fx", 10, null),
+        kind("skinnedavatarbrdflinear.fx", 0, null), kind("skinnedavatarbrdf.fx", 0, null), kind("skinnedavatarhair_detailed.fx", null, null),
+        kind("glassshader.fx", 0, null), kind("eyeshader.fx", 0, 4), kind("portraitbasic.fx", null, null), kind("other.fx", 1, 1)
+    ], [ "skin", "skin", "cloth", null, "own", "hair", "glass", "eyes", "portrait", null ]);
 });

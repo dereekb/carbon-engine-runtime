@@ -55,6 +55,30 @@ export class CjsCharacterTextureRoles
     static regions = [ "head", "body", "hair", "acc" ];
 
     /**
+     * The character atlas's regions, as an area's `TransformUV0` places them: [u0, v0, u1, v1]. Found: every character
+     * area's `TransformUV0` in build 3670638 is the identity or lies within one of these (moved from Graphene's
+     * `atlasRegions.js`).
+     * @type {Object<string, number[]>}
+     */
+    static atlas = { body: [ 0, 0, 0.5, 1 ], head: [ 0.5, 0, 1, 0.5 ], hair: [ 0.5, 0.5, 0.75, 1 ], acc: [ 0.75, 0.5, 1, 1 ] };
+
+    /**
+     * The atlas region a `TransformUV0` lies in (`atlas`), `identity` for the whole image, or null for neither.
+     * @param {ArrayLike<number>} transform The area's `TransformUV0`, [u0, v0, u1, v1].
+     * @returns {?string} The region.
+     */
+    static uvRegion(transform)
+    {
+        const near = (a, b) => Math.abs(a - b) < 1e-4;
+        if (near(transform[0], 0) && near(transform[1], 0) && near(transform[2], 1) && near(transform[3], 1)) return "identity";
+        for (const [ name, [ u0, v0, u1, v1 ] ] of Object.entries(CjsCharacterTextureRoles.atlas))
+        {
+            if (transform[0] > u0 - 1e-4 && transform[1] > v0 - 1e-4 && transform[2] < u1 + 1e-4 && transform[3] < v1 + 1e-4) return name;
+        }
+        return null;
+    }
+
+    /**
      * A `.png` map path's stem and tier suffix: `.../colorize_body_l_4k.png` gives `.../colorize_body_l` and `_4k`; an
      * unsuffixed file gives an empty suffix. Ours, with the tiers of `characterTextureQuality` (non-carbon-extensions.md
      * § *Character texture quality*).

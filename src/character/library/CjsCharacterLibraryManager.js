@@ -11,6 +11,7 @@ import { CjsCharacterLibrary } from "./CjsCharacterLibrary.js";
 import { normalizeResourcePath } from "#utils/path";
 import { CjsCharacterTextureRoles } from "./CjsCharacterTextureRoles.js";
 import { PaperDollPaletteKind } from "./characterPalettes.js";
+import { BlackReader } from "#blue/formats/black/BlackReader";
 
 /** Installs, loads, and queries one combined hydrated character library. */
 export class CjsCharacterLibraryManager
@@ -532,6 +533,101 @@ export class CjsCharacterLibraryManager
             if (specularColors !== null && specularColors[area - 1]) result.specularColors[area - 1] = Float32Array.from(specularColors[area - 1]);
         }
         return result;
+    }
+
+    /**
+     * A model's meshes and their areas, read once from its `.black` through blue.resMan (the bytes; Carbon's
+     * `BlackReader` builds the objects with `SetDoInitialize(false)`, so nothing loads or binds). Per mesh: its name,
+     * its `meshIndex` (Carbon's `Tr2MeshBase` binds a mesh to its geometry by this index, `Tr2MeshBase.cpp:154`, and an
+     * area by its index, :283; that is the Incarna-era engine, and whether today's client binds the same way is not
+     * established) and its geometry; per area: its list, name, index, count, shader file, effect name, the x of its
+     * `MaterialLibraryID` and `Material2LibraryID` (null where the effect does not set it), its UV region
+     * (`CjsCharacterTextureRoles.uvRegion` of its `TransformUV0`) and its kind (`areaKind`). A model without meshes (a
+     * beard's bare effect) answers none.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {string} path The `.black`'s `res:` path.
+     * @returns {Promise<{ model: string, meshes: Array<{ name: string, meshIndex: number, geometry: string, areas: object[] }> }>}
+     *   The areas, shared by every caller (not to be changed).
+     */
+    FetchModelAreas(path)
+    {
+        return this._Query("model|" + path, async () =>
+        {
+            const read = await blue.resMan.ReadResource(path);
+            const reader = new BlackReader();
+            reader.SetFileName(path);
+            if (!reader.ReadForCachingFromStream(read instanceof Uint8Array ? read : new Uint8Array(read))) throw new Error(path + ": " + reader.GetErrorMessage());
+            reader.SetDoInitialize(false);
+            const root = reader.CreateObject();
+            const meshes = [];
+            for (const mesh of Array.isArray(root.meshes) ? root.meshes : [])
+            {
+                const areas = [];
+                for (const list of Object.keys(mesh).filter(key => key.endsWith("Areas") && Array.isArray(mesh[key])))
+                {
+                    for (const area of mesh[list])
+                    {
+                        const effect = area.effect, parameter = name => effect ? effect.parameters.find(value => value.name === name) ?? null : null;
+                        const x = name => { const value = parameter(name); return value ? value.value[0] : null; };
+                        const uv = parameter("TransformUV0");
+                        const shader = effect ? effect.effectFilePath.slice(effect.effectFilePath.lastIndexOf("/") + 1).toLowerCase() : "";
+                        const materialLibraryID = x("MaterialLibraryID"), material2LibraryID = x("Material2LibraryID");
+                        areas.push({
+                            list, name: area.name, index: area.index, count: area.count, shader, effect: effect ? effect.name : "",
+                            materialLibraryID, material2LibraryID,
+                            uv: uv ? CjsCharacterTextureRoles.uvRegion(uv.value) : null,
+                            kind: CjsCharacterLibraryManager.areaKind(shader, materialLibraryID, material2LibraryID)
+                        });
+                    }
+                }
+                meshes.push({ name: mesh.name, meshIndex: mesh.meshIndex, geometry: mesh.geometryResPath, areas });
+            }
+            return { model: path, meshes };
+        });
+    }
+
+    /**
+     * An option's model and its areas (`FetchModelAreas`): the first `.black` (not a `_lodN` one) directly in the
+     * option's first folder that has one (its variation's, then its part's), or none.
+     *
+     * Ours, as `FetchOptions`.
+     *
+     * @param {object} option An option from `FetchOptions`.
+     * @returns {Promise<?{ model: string, meshes: object[] }>} The areas, or null for an option without a model.
+     */
+    async FetchOptionAreas(option)
+    {
+        const folders = option.typePath !== null ? (await this.FetchOptionPart(option)).folders : [ option.folder ];
+        for (const folder of folders)
+        {
+            const model = this._PaperDollFiles(folder).find(path => path.endsWith(".black") && path.lastIndexOf("/") === folder.length - 1 && !/_lod\d+\.black$/u.test(path));
+            if (model) return this.FetchModelAreas(model);
+        }
+        return null;
+    }
+
+    /**
+     * An area's kind from its shader and material ids. Derived (the content does not name kinds): the roles every
+     * character area takes in build 3670638, found from the shaders and the ids they set: `skin` (a body shader with a
+     * second material id), `cloth` (a body shader with a first id only), `hair`, `glass`, `eyes`, `own` (the full
+     * shader, which samples its own textures), `portrait`; null for anything else.
+     * @param {string} shader The effect's shader file name, lowercase.
+     * @param {?number} materialLibraryID The x of `MaterialLibraryID`, or null where unset.
+     * @param {?number} material2LibraryID The x of `Material2LibraryID`, or null where unset.
+     * @returns {?string} The kind.
+     */
+    static areaKind(shader, materialLibraryID, material2LibraryID)
+    {
+        if (shader === "eyeshader.fx") return "eyes";
+        if (shader === "glassshader.fx") return "glass";
+        if (shader === "portraitbasic.fx") return "portrait";
+        if (shader === "skinnedavatarbrdf.fx") return "own";
+        if (shader.startsWith("skinnedavatarhair")) return "hair";
+        if (shader !== "skinnedavatarbrdflinear.fx" && shader !== "skinnedavatarbrdfdoublelinear.fx") return null;
+        if (material2LibraryID !== null && material2LibraryID > 0) return "skin";
+        return materialLibraryID !== null && materialLibraryID > 0 ? "cloth" : null;
     }
 
     /**
