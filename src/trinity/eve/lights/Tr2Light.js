@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { mat4 } from "#math/mat4";
 import { vec3 } from "#math/vec3";
 import { color } from "#math/color";
-import { meta, type } from "#schema";
+import { type } from "#schema";
 import { IsMatch, blue, IInitialize, INotify } from "#blue";
 import { PerLightShadowSetting } from "../../generated/eve/lights/enums.js";
 import { Tr2LightFlags } from "#consts/graphics";
@@ -42,8 +42,6 @@ export class Tr2Light
   static SPOT_LIGHT = 2;
   static COUNT = 3;
 
-  @meta.readwrite
-  @meta.persist
   @type.string
   name = "";
 
@@ -60,13 +58,9 @@ export class Tr2Light
   boneTransform = mat4.create();
 
   // Every subclass exposes it Be::READ (Tr2PointLight_Blue.cpp:44 and siblings).
-  @meta.read
   @type.object.ref("Tr2LightProfileRes")
   lightProfile = null;
 
-  @meta.notify
-  @meta.readwrite
-  @meta.persist
   @type.wpath("Tr2LightProfileRes")
   lightProfilePath = "";
 
