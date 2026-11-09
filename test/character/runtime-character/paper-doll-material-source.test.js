@@ -112,8 +112,8 @@ test("maps follow today's precedence: folder, then tier, then name; undrawn name
   assert.equal(resolved.maps.zone, TOP + "v1/colorize_body_z.png", "the variation's zone map");
   assert.equal(resolved.maps.detail, TOP + "colorize_body_l.png", "falls back to the part folder");
   assert.equal(resolved.maps.normal, TOP + "shirtaf01_n.png", "<part>_n");
-  // The 4k tier comes first (the default quality), so a 4k `<part>_s` beats a 512 `comp_body_s` in the same folder.
-  assert.equal(resolved.maps.specular, TOP + "shirtaf01_s_4k.png");
+  // The variation folder comes first: its `comb_body_s` (drawn as a comp specular) beats the part folder's.
+  assert.equal(resolved.maps.specular, TOP + "v1/comb_body_s.png");
   assert.equal(resolved.maps.cutMask, TOP + "v1/comp_body_m.png");
   const source = sources.get("topMiddle"), value = { option: "shirtaf01_amarr", colors: [] };
   assert.deepEqual(source.GetLayers(value, "body", "DiffuseMap"), [], "maps load on the first draw");
@@ -129,13 +129,23 @@ test("maps follow today's precedence: folder, then tier, then name; undrawn name
   assert.equal(normal.effect, "normal " + TOP + "shirtaf01_n.png");
   assert.deepEqual(source.GetLayers(value, "head", "DiffuseMap"), []);
   assert.deepEqual(source.GetCutMaskPaths(value), [ TOP + "v1/comp_body_m.png", ROOT + "dependants/masktuck/standard/comp_body_m.png" ]);
-  assert.deepEqual(source.Describe()[0].skipped, { overridden: [ "shirtaf01/colorize_body_z", "shirtaf01/comp_body_s" ], unruled: [ "shirtaf01/v1/comb_body_s" ] },
+  assert.deepEqual(source.Describe()[0].skipped, { overridden: [ "shirtaf01/colorize_body_z", "shirtaf01/shirtaf01_s", "shirtaf01/comp_body_s" ].sort(), unruled: [] },
     "maps a better one hides, apart from names no rule draws");
   assert.deepEqual(build.errors, []);
 });
 
-test("the garment names are each a derived rule", () =>
+test("the garment names: today's first, then the ruled ones, with folder, tier, name precedence and a `*` fallback", () =>
 {
-  assert.deepEqual(CjsPaperDollTextureRoles.garment.normal, [ "comp_body_n", "<part>_n", "_n" ]);
-  assert.deepEqual(CjsPaperDollTextureRoles.garment.specular, [ "comp_body_s", "<part>_s", "_s", "colorize_body_s" ]);
+  const F = "res:/graphics/character/female/paperdoll/outer/robef01/";
+  // A 4k `<part>_s` beats a 512 `comp_body_s` in the same folder: the tier comes before the name.
+  assert.equal(CjsPaperDollTextureRoles.pickGarmentMaps([ F ], [ F + "robef01_s_4k.png", F + "comp_body_s_512.png" ]).specular, F + "robef01_s_4k.png");
+  // Another part's name (`robeam01_n` in `robef01`) draws where nothing else does; two such candidates throw.
+  assert.equal(CjsPaperDollTextureRoles.pickGarmentMaps([ F ], [ F + "robeam01_n.png" ]).normal, F + "robeam01_n.png");
+  assert.throws(() => CjsPaperDollTextureRoles.pickGarmentMaps([ F ], [ F + "a_n.png", F + "b_n.png" ]), /Ambiguous garment maps/);
+  // A masked normal and a twist normal, and a variation's own authored diffuse ahead of the part folder's detail.
+  const maps = CjsPaperDollTextureRoles.pickGarmentMaps([ F + "v4/", F ], [ F + "comp_body_mn.png", F + "_tn.png", F + "v4/robef01_d.png", F + "colorize_body_l.png" ]);
+  assert.deepEqual([ maps.normal, maps.twist, maps.detail ], [ F + "comp_body_mn.png", F + "_tn.png", F + "v4/robef01_d.png" ]);
+  assert.deepEqual(CjsPaperDollTextureRoles.garment.specular, [ "comp_body_s", "<part>_s", "_s", "colorize_body_s", "comb_body_s", "<part>_body_s", "*_s" ]);
+  // Junk names stay unruled.
+  assert.deepEqual(CjsPaperDollTextureRoles.garmentSkipped([ F ], [ F + "dots_prv.png", F + "colorize_body_s_resize.png" ], []).unruled.sort(), [ "robef01/colorize_body_s_resize", "robef01/dots_prv" ]);
 });

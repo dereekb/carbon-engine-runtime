@@ -240,8 +240,8 @@ export class CjsPaperDollMaterialSource
         if (!maps.detail) throw new Error("Garment without a detail map " + folders[0]);
         // The default's colours, and which palettes are patterned (composed through patternblit).
         const paths = option.records.map(record => record.path), reads = [ ...new Set([ ...(defaultPalette ? [ defaultPalette ] : []), ...paths ]) ];
-        const [ detail, zones, normal, specular, ...read ] = await Promise.all([
-            ...[ maps.detail, maps.zone, maps.normal, maps.specular ].map(path => path ? build.Ready(c.Texture(path)) : null),
+        const [ detail, zones, normal, specular, twist, ...read ] = await Promise.all([
+            ...[ maps.detail, maps.zone, maps.normal, maps.specular, maps.twist ].map(path => path ? build.Ready(c.Texture(path)) : null),
             ...reads.map(path => build.Ready(blue.characterLibrary.FetchPalette(path)))
         ]);
         const palette = defaultPalette ? read[reads.indexOf(defaultPalette)].colors : null;
@@ -249,12 +249,17 @@ export class CjsPaperDollMaterialSource
         const [ flatNormal, noSpecular ] = await Promise.all([ "0.5,0.5,1,1", "0,0,0,1" ].map(color => build.Ready(c.Texture("dynamic:/color/" + color))));
         const masks = this._MaskPaths(option);
         const layer = await c.CreateMaterialLayer({ detail, zones, normal, specular }, palette, { coverage: true, patterns });
+        // A masked normal (`mn`) carries its own coverage and encoding (maskednormalblit), not the detail's; a twist normal
+        // (`tn`) adds over the normal (twistnormalblit). The `mn` and `tn` roles: `CjsPaperDollTextureRoles.table`.
+        if (normal !== null && CjsPaperDollDefinition.splitTier(maps.normal)[0].endsWith("/comp_body_mn")) layer.NormalMap = { effect: await c.MaskedNormal(normal, crop(normal)), region: crop(normal) };
+        const twistLayer = twist === null ? null : { effect: await c.Twist(twist, crop(twist)), region: crop(twist) };
         return Object.assign(layer, {
             masks: await Promise.all(masks.map(async path =>
             {
                 const texture = await build.Ready(c.Texture(path));
                 return { effect: await c.Simple(texture, crop(texture)), region: crop(texture), path };
             })),
+            twist: twistLayer,
             clear: {
                 NormalMap: { effect: await c.Simple(flatNormal, crop(detail), detail, crop(detail)), region: crop(detail) },
                 SpecularMap: { effect: await c.Simple(noSpecular, crop(detail), detail, crop(detail)), region: crop(detail) }
@@ -297,8 +302,10 @@ export class CjsPaperDollMaterialSource
         if (channel === "DiffuseMap") return [ { effect: layer.DiffuseFor(value), region: layer.DiffuseMap.region } ];
         if (channel === "CutMaskMap") return layer.masks.map(mask => ({ effect: mask.effect, region: mask.region }));
         if (channel !== "NormalMap" && channel !== "SpecularMap") return [];
-        // Under the garment's cutout, the layers below are cleared first.
-        return layer[channel] ? [ layer.clear[channel], layer[channel] ] : [ layer.clear[channel] ];
+        // Under the garment's cutout, the layers below are cleared first; a twist normal adds over the normal.
+        const layers = layer[channel] ? [ layer.clear[channel], layer[channel] ] : [ layer.clear[channel] ];
+        if (channel === "NormalMap" && layer.twist !== null) layers.push(layer.twist);
+        return layers;
     }
 
     /**

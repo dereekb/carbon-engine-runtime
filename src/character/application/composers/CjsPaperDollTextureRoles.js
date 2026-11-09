@@ -144,24 +144,29 @@ export class CjsPaperDollTextureRoles
     /**
      * The garment map names (the MATERIAL parts with the body target), by the map they give: each map is the first
      * name found searching the option's folders in order (its variation's, then its part's), then the size tiers
-     * (`CjsPaperDollDefinition.tierOrder`), then these names in order; `<part>` is the part folder's name. A name these
-     * lists do not hold is not drawn.
+     * (`CjsPaperDollDefinition.tierOrder`), then these names in order; `<part>` is the part folder's name, and `*` any
+     * name (a folder holding two such candidates at one tier throws). A name these lists do not hold is not drawn.
      *
-     * Derived, every entry (no source states them; Carbon ships no paper doll): today's look, Graphene d2b1306
-     * `bodyComposition.js` `mapPaths` and `maskPaths`, reproduced with their exact precedence. The garment map naming
-     * table lists every name the garment folders hold, what today draws, and the names that wait for a ruling
-     * (`comb_body_s`, `comp_body_mn`, `<part>_d`, `colorize_body_d`, `colorize_body_n`, `_tn`, `<part>_body_n`/`_s` and
-     * part-name mismatches); none of those is drawn.
+     * Derived, every entry (no source states them; Carbon ships no paper doll). Today's look first: Graphene d2b1306
+     * `bodyComposition.js` `mapPaths` and `maskPaths`, with their exact precedence. Then the names the operator ruled
+     * drawn (2026-11-09, "if they exist, we should use them"), each after today's names for its map, so they draw only
+     * where today's draw nothing: `comb_body_s` as a `comp` specular, `colorize_body_d` and `<part>_d` as an authored
+     * diffuse, `colorize_body_n`, `<part>_body_n`/`_s`, `comp_body_mn` (a masked normal), `_tn` (a twist normal, added
+     * over the normal), and any other `<name>_n`/`_s` (the part-name mismatches: `spacesuit01f_n`, `catsuitf01_s`,
+     * `robeam01_n` in `robef01`, `jacketmilf01_s` in `jacketmilf02`). An authored diffuse is colourised through a zone
+     * map when the chain holds one, as today's `comp_body_d` is.
      */
     static garment = {
-        /** The diffuse source: a colourise detail, or an authored diffuse drawn as it is. */
-        detail: [ "colorize_body_l", "comp_body_l", "comp_body_d", "_l" ],
+        /** The diffuse source: a colourise detail, or an authored diffuse. */
+        detail: [ "colorize_body_l", "comp_body_l", "comp_body_d", "_l", "colorize_body_d", "<part>_d" ],
         /** The colourise detail's zone map. */
         zone: [ "colorize_body_z" ],
-        /** The normal, drawn through the detail's coverage. */
-        normal: [ "comp_body_n", "<part>_n", "_n" ],
+        /** The normal, drawn through the detail's coverage (`comp_body_mn`: a masked normal, through its own). */
+        normal: [ "comp_body_n", "<part>_n", "_n", "colorize_body_n", "<part>_body_n", "comp_body_mn", "*_n" ],
+        /** A twist normal, added over the normal. */
+        twist: [ "comp_body_tn", "_tn" ],
         /** The specular, drawn through the detail's coverage. */
-        specular: [ "comp_body_s", "<part>_s", "_s", "colorize_body_s" ],
+        specular: [ "comp_body_s", "<part>_s", "_s", "colorize_body_s", "comb_body_s", "<part>_body_s", "*_s" ],
         /** The body cut mask: the first folder's, then each dependant folder's (`maskPaths`). */
         cutMask: [ "comp_body_m" ]
     };
@@ -170,16 +175,30 @@ export class CjsPaperDollTextureRoles
      * A garment option's maps by the garment names (`garment`), with today's precedence: folder, then tier, then name.
      * @param {string[]} folders The option's folders, most specific first, each ending in "/"; the last is the part's.
      * @param {string[]} files The listed files below them.
-     * @returns {{ detail: ?string, zone: ?string, normal: ?string, specular: ?string, cutMask: ?string }} Each map's
-     *   path; null when no folder holds one.
+     * @returns {{ detail: ?string, zone: ?string, normal: ?string, twist: ?string, specular: ?string, cutMask: ?string }}
+     *   Each map's path; null when no folder holds one.
+     * @throws {Error} For a folder holding two candidates for a `*` name at one tier.
      */
     static pickGarmentMaps(folders, files)
     {
         const part = folders.at(-1).slice(0, -1).split("/").at(-1), tiers = CjsPaperDollDefinition.tierOrder(), maps = {};
+        const find = (folder, tier, name) =>
+        {
+            if (!name.startsWith("*")) return files.includes(folder + name + tier + ".png") ? folder + name + tier + ".png" : null;
+            const found = files.filter(file => file.startsWith(folder) && file.lastIndexOf("/") === folder.length - 1 && file.endsWith(".png")
+                && CjsPaperDollDefinition.splitTier(file)[1] === tier && CjsPaperDollDefinition.splitTier(file)[0].endsWith(name.slice(1)));
+            if (found.length > 1) throw new Error("Ambiguous garment maps " + found.join(", "));
+            return found[0] ?? null;
+        };
         for (const [ key, names ] of Object.entries(CjsPaperDollTextureRoles.garment))
         {
             const stems = names.map(name => name.replace("<part>", part));
-            maps[key] = folders.flatMap(folder => tiers.flatMap(tier => stems.map(stem => folder + stem + tier + ".png"))).find(path => files.includes(path)) ?? null;
+            maps[key] = null;
+            search: for (const folder of folders) for (const tier of tiers) for (const stem of stems)
+            {
+                const path = find(folder, tier, stem);
+                if (path !== null) { maps[key] = path; break search; }
+            }
         }
         return maps;
     }
@@ -197,8 +216,10 @@ export class CjsPaperDollTextureRoles
     static garmentSkipped(folders, files, used)
     {
         const stems = new Set(used.filter(Boolean).map(path => CjsPaperDollDefinition.splitTier(path)[0]));
-        const part = folders.at(-1).slice(0, -1).split("/").at(-1);
-        const ruled = new Set(Object.values(CjsPaperDollTextureRoles.garment).flat().map(name => name.replace("<part>", part)));
+        const part = folders.at(-1).slice(0, -1).split("/").at(-1), names = Object.values(CjsPaperDollTextureRoles.garment).flat();
+        const exact = new Set(names.filter(name => !name.startsWith("*")).map(name => name.replace("<part>", part)));
+        const endings = names.filter(name => name.startsWith("*")).map(name => name.slice(1));
+        const ruled = { has: name => exact.has(name) || endings.some(ending => name.endsWith(ending)) };
         const root = folders.at(-1).slice(0, folders.at(-1).slice(0, -1).lastIndexOf("/") + 1), overridden = new Set(), unruled = new Set();
         for (const folder of folders)
             for (const file of files)
