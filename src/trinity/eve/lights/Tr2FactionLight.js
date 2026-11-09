@@ -39,6 +39,10 @@ const TRI_2PI = Math.fround(6.283185307);
 @be.mapInterface(Tr2Light)
 @be.mapInterface(IInitialize)
 @be.mapInterface(INotify)
+// Tr2Light's members, mapped by the subclass as Carbon does (Tr2FactionLight_Blue.cpp:17, :43, :50).
+@be.mapAttribute(be.READWRITE | be.PERSIST, "name")
+@be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY, "lightProfilePath")
+@be.mapAttribute(be.READ, "lightProfile")
 export class Tr2FactionLight extends Tr2Light
 {
 
@@ -288,11 +292,6 @@ export class Tr2FactionLight extends Tr2Light
     color.copy(this._lightData.color, value);
   }
 
-  /** m_name (std::string) [READWRITE, PERSIST] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST)
-
-  @type.string
-  name = "";
 
   /**
    * m_selectedColor (int) [READWRITE, PERSIST, NOTIFY, ENUM]
@@ -316,17 +315,7 @@ export class Tr2FactionLight extends Tr2Light
   @type.boolean
   isSpotlight = false;
 
-  /** m_lightProfilePath (std::wstring) [READWRITE, PERSIST, NOTIFY] */
-  @be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY)
 
-
-  @type.wpath("Tr2LightProfileRes")
-  lightProfilePath = "";
-
-  /** m_lightProfile (Tr2LightProfileResPtr) [READ] */
-  @be.mapAttribute(be.READ)
-  @type.object.ref("Tr2LightProfileRes")
-  lightProfile = null;
 
   type = Tr2Light.POINT_LIGHT;
 
