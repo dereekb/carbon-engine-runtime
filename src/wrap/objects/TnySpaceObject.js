@@ -3,6 +3,7 @@ import { CjsLibrary } from "../../core/CjsLibrary.js";
 import { EveSpaceObject2 } from "../../trinity/eve/spaceObject/EveSpaceObject2.js";
 import { Tr2ExternalParameter } from "../../trinity/core/binding/Tr2ExternalParameter.js";
 import { TnyControllers } from "./TnyControllers.js";
+import { TnyOverlays } from "./TnyOverlays.js";
 
 /**
  * The dirt level for weeks since a ship was last cleaned. Ours, client
@@ -55,7 +56,12 @@ export class TnySpaceObject
         // Module animations on the impact overlay (EveSpaceObject2.SetImpactAnimation), by their native names.
         ...[ "shieldboost", "shieldhardening", "armorhardening", "armorrepair", "hullrepair" ].map(name => ({ name, type: "boolean",
             read: o => o._animations.has(name),
-            write: (o, v) => { if (v) o._animations.add(name); else o._animations.delete(name); o.wrapped.SetImpactAnimation(name, v, TnySpaceObject.ANIMATION_DURATION); } }))
+            write: (o, v) => { if (v) o._animations.add(name); else o._animations.delete(name); o.wrapped.SetImpactAnimation(name, v, TnySpaceObject.ANIMATION_DURATION); } })),
+        // The client's cloak: res:/fisfx/cloaking/cloaking(_skinned).black as an overlay (TnyOverlays),
+        // the skinned file when the hull's shaders are skinned, as Graphene's demo picks. Writing returns a promise.
+        { name: "cloak", type: "boolean",
+            read: o => o.overlays.Has(o._CloakPath()),
+            write: (o, v) => v ? (o.overlays.Has(o._CloakPath()) ? Promise.resolve() : o.overlays.Add(o._CloakPath())) : Promise.resolve(o.overlays.Remove(o._CloakPath())) }
     ];
 
     /** Seconds a module animation fades over (a quarter of it); Graphene's demo value. */
@@ -72,6 +78,22 @@ export class TnySpaceObject
 
     /** Built on first use. */
     _controllers = null;
+
+    /** The object's overlays beyond its core damage ones (TnyOverlays). */
+    get overlays()
+    {
+        return this._overlays ??= new TnyOverlays(this);
+    }
+
+    /** Built on first use. */
+    _overlays = null;
+
+    /** The cloak overlay for this hull: skinned when its opaque areas use skinned shaders. */
+    _CloakPath()
+    {
+        const skinned = this.wrapped.mesh?.opaqueAreas.some(area => /skinned/i.test(area.effect?.effectFilePath ?? "")) ?? false;
+        return `res:/fisfx/cloaking/${skinned ? "cloaking_skinned" : "cloaking"}.black`;
+    }
 
     /** Weeks for the `age` parameter. */
     _age = 0;
@@ -113,6 +135,7 @@ export class TnySpaceObject
      *
      * @param {string} name A name from GetParameters.
      * @param {number|boolean} value A number within its range, or a boolean.
+     * @returns {*} What the write returns: a promise for parameters that load content (cloak).
      */
     SetParameter(name, value)
     {
@@ -129,7 +152,7 @@ export class TnySpaceObject
         {
             throw new RangeError(`${name} takes a whole number.`);
         }
-        parameter.write(this, value);
+        return parameter.write(this, value);
     }
 
     /** The descriptor for a supported parameter. */
