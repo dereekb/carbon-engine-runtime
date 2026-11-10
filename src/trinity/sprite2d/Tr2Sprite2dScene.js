@@ -60,8 +60,7 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
  * SetTexture is absent and asserts are no-ops. `exefile/version.h:5-7` names the
  * CCP_DEPLOY build `ExeFile_deploy`, the deployed client.
  *
- * Complete canonical members retain native order and indexed aliases. Legacy
- * getField/getDefaults expose no Scene fields; use Blue declaration consumers.
+ * The exposure bag keeps Carbon's row order and the displayX/displayY index rows on translation.
  */
 @be.define({
   name: "Tr2Sprite2dScene",
@@ -78,8 +77,8 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
     [ be.ATTR, "is2dRender", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "is2dPick", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
-    [ be.ATTR, "displayX", be.READWRITE | be.PERSIST ],
-    [ be.ATTR, "displayY", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_INDEX, "displayX", be.READWRITE | be.PERSIST, 0, "translation" ],
+    [ be.ATTR_INDEX, "displayY", be.READWRITE | be.PERSIST, 1, "translation" ],
     [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "displayWidth", be.READWRITE | be.PERSIST ],
@@ -142,14 +141,13 @@ export class Tr2Sprite2dScene extends ITr2Scene
   /**
    * Scene translation; displayX and displayY alias the first two components.
    *
-   * @adapted Carbon maps displayX and displayY on m_translation.x and .y; here they are accessors over the first two components.
+   * @adapted Native stored translation component exposed through an indexed canonical member (displayX, displayY).
    * @type {Float32Array}
    */
   @type.vec3
   translation = vec3.create();
 
   /** Reads the native translation component alias. @returns {number} displayX coordinate. */
-  @type.float32
   get displayX()
   {
     return this.translation[0];
@@ -162,7 +160,6 @@ export class Tr2Sprite2dScene extends ITr2Scene
   }
 
   /** Reads the native translation component alias. @returns {number} displayY coordinate. */
-  @type.float32
   get displayY()
   {
     return this.translation[1];
