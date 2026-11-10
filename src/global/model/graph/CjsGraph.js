@@ -77,8 +77,8 @@ export class CjsGraph
    * interfaces names classes an instance also counts as without inheriting from them.
    * bases is its C++ base list and chainTo the class its exposure table continues into, or null.
    * whole means members is the class's complete list, so no base definition adds to it.
-   * initialize, notify, listNotify and hook say instances take Initialize, OnModified,
-   * OnListModified and OnValueChanged. ownValues says instances hold values that are not members,
+   * initialize, notify and listNotify say instances take Initialize, OnModified and
+   * OnListModified. ownValues says instances hold values that are not members,
    * through GetOwnValues, SetOwnValues and IsOwnValues. customPersist, list, proxy and abstract are
    * facts for readers, and layout a structure record's { size, boundaries, fields }. ui is a
    * function returning the class's presentation, called only when something asks for it.
@@ -373,22 +373,31 @@ export class CjsGraph
   }
 
   /**
-   * Tells an object about its own members; it never reaches children. Names fire OnModified
-   * for those NOTIFY members. No names runs the class's OnValueChanged hook, such as cleaning
-   * a dirty matrix once after chained calls; a class with no hook does nothing.
-   * @cjs Our contract for direct writes. It keeps no baseline and compares nothing.
+   * Tells an object about its own members; it never reaches children. Calls OnModified once per
+   * NOTIFY member, in member-table order: every one when names is null, otherwise those named.
+   * A named member without NOTIFY is skipped. An unknown name throws unless
+   * options.skipValidation, which SetValues passes for names it has already checked.
+   * @cjs Our helper over Carbon's per-member INotify, for SetValues and for direct writes. It keeps
+   * no baseline and compares nothing. Options are opt-outs (skip...).
+   * @param {object} object The object whose members changed.
+   * @param {string|string[]|null} [names=null] One member, several, or null for all.
+   * @param {{skipValidation?: boolean}} [options={}] Opt-outs.
+   * @returns {void}
    */
-  static updateValues(object, names = null)
+  static updateValues(object, names = null, options = {})
   {
     const info = this._getObjectInfo(object, this._noTypes);
+    const list = typeof names === "string" ? [ names ] : names;
 
-    if (names === null)
+    if (list !== null && !options.skipValidation)
     {
-      if (info.declared.hook) object.OnValueChanged();
-      return;
+      for (let i = 0; i < list.length; i++)
+      {
+        if (!info.compiled.byName[list[i]]) throw new TypeError(`Unknown graph member: ${info.declared.name}.${list[i]}`);
+      }
     }
 
-    this._notify(object, info, typeof names === "string" ? [ names ] : names);
+    this._notify(object, info, list);
   }
 
   /**
@@ -1016,7 +1025,9 @@ export class CjsGraph
   }
 
   /**
-   * Fires OnModified for the NOTIFY members among names, or for every name.
+   * Fires OnModified in member-table order for the NOTIFY members among names (every NOTIFY
+   * member when names is null), or for every named member when all is set. Names that are not
+   * members are skipped; updateValues validates them first.
    * @cjs Carbon's per-member INotify. Copier takes no NOTIFY flag (Copier.cpp:190), so a copy
    * passes all.
    */
@@ -1024,11 +1035,15 @@ export class CjsGraph
   {
     if (!info.declared.notify) return;
 
-    for (let i = 0; i < names.length; i++)
+    const { members, byName } = info.compiled;
+
+    for (let i = 0; i < members.length; i++)
     {
-      const candidates = info.compiled.byName[names[i]];
-      if (!candidates) throw new TypeError(`Unknown graph member: ${info.declared.name}.${names[i]}`);
-      if (all || (candidates[0].flags & EDITFLAGS.NOTIFY) !== 0) object.OnModified(names[i]);
+      const member = members[i];
+      // A same-name alternative further down the chain is not a second member.
+      if (byName[member.name][0] !== member) continue;
+      if (names !== null && names.indexOf(member.name) === -1) continue;
+      if (all || (member.flags & EDITFLAGS.NOTIFY) !== 0) object.OnModified(member.name);
     }
   }
 

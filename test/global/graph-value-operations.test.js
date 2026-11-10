@@ -857,14 +857,6 @@ class Started extends Watched
   Initialize() { log.push([ "Initialize", this.name ]); }
 }
 
-class Hooked
-{
-  dirty = true;
-  cleaned = 0;
-
-  OnValueChanged() { this.dirty = false; this.cleaned++; }
-}
-
 class Bare
 {
   value = 0;
@@ -882,7 +874,6 @@ const watchedMembers = [
 
 CjsGraph.define(Watched, { name: "GraphWatched", notify: true, members: watchedMembers });
 CjsGraph.define(Started, { name: "GraphStarted", chainTo: "GraphWatched", initialize: true, notify: true, members: [] });
-CjsGraph.define(Hooked, { name: "GraphHooked", hook: true, members: [] });
 CjsGraph.define(Bare, { name: "GraphBare", members: [ { name: "value", type: "float32" } ] });
 
 function watched(name)
@@ -1103,18 +1094,23 @@ test("UpdateValues with names fires OnModified for those NOTIFY members on that 
   assert.deepEqual(told(() => CjsGraph.updateValues(owner, [ "name", "quiet" ])), [ [ "OnModified", "owner", "name" ] ]);
   assert.deepEqual(told(() => CjsGraph.updateValues(child, "weight")), [ [ "OnModified", "child", "weight" ] ]);
   assert.throws(() => CjsGraph.updateValues(owner, "nothing"), /Unknown graph member/);
+  assert.deepEqual(told(() => CjsGraph.updateValues(owner, [ "nothing", "weight" ], { skipValidation: true })),
+    [ [ "OnModified", "owner", "weight" ] ], "skipValidation skips unknown names");
 });
 
-test("UpdateValues with no names runs the class's own hook, and a class with none does nothing", () =>
+test("UpdateValues notifies in member-table order, and with no names every NOTIFY member", () =>
 {
-  const hooked = new Hooked();
+  const owner = watched("owner");
 
-  CjsGraph.updateValues(hooked);
-  assert.equal(hooked.dirty, false);
-  assert.equal(hooked.cleaned, 1);
-
-  assert.deepEqual(told(() => CjsGraph.updateValues(watched("a"))), [], "no brute force");
-  assert.deepEqual(told(() => CjsGraph.updateValues(new Bare())), []);
+  assert.deepEqual(told(() => CjsGraph.updateValues(owner, [ "weight", "name" ])),
+    [ [ "OnModified", "owner", "name" ], [ "OnModified", "owner", "weight" ] ]);
+  assert.deepEqual(told(() => CjsGraph.updateValues(owner)), [
+    [ "OnModified", "owner", "name" ],
+    [ "OnModified", "owner", "weight" ],
+    [ "OnModified", "owner", "child" ],
+    [ "OnModified", "owner", "items" ]
+  ]);
+  assert.deepEqual(told(() => CjsGraph.updateValues(new Bare())), [], "a class without notify is told nothing");
 });
 
 test("the three routes agree for the object changed", () =>

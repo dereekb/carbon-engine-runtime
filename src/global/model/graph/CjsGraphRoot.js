@@ -29,13 +29,16 @@ export class CjsGraphRoot
   }
 
   /**
-   * Tells this object about its own members. Names fire OnModified for those NOTIFY members;
-   * no names runs the class's OnValueChanged hook.
+   * Tells this object about its own members: OnModified per NOTIFY member, in member-table
+   * order, for those named or, with no names, all of them (CjsGraph.updateValues).
    * @cjs
+   * @param {string|string[]|null} [names=null] One member, several, or null for all.
+   * @param {{skipValidation?: boolean}} [options] Opt-outs.
+   * @returns {void}
    */
-  UpdateValues(names)
+  UpdateValues(names = null, options)
   {
-    CjsGraph.updateValues(this, names);
+    CjsGraph.updateValues(this, names, options);
   }
 
   /**
