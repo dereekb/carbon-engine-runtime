@@ -216,10 +216,18 @@ export class Tny
         this._renderHandler = handler;
     }
 
-    /** Draws the scene through the driver into the canvas: the default frame. */
+    /**
+     * Draws the scene through the driver into the canvas: the default frame.
+     * On WebGL2 the driver's anti-aliasing is held at Low or below: the shipped
+     * Medium and High TAA passes read and write a UAV in the pixel shader,
+     * which WebGL2 cannot run. The host holds the preference; the runtime does
+     * not substitute (as Graphene's host does).
+     */
     RenderScene()
     {
-        const { blue, Tr2RenderContext_GetMainThreadRenderContext } = this._engine;
+        const { blue, Tr2RenderContext_GetMainThreadRenderContext, EveSpaceSceneRenderDriver } = this._engine;
+        if (this.backend.name === "webgl2")
+            this.driver.antiAliasingQuality = Math.min(this.driver.antiAliasingQuality, EveSpaceSceneRenderDriver.AntiAliasingQuality.Low);
         this.backend.Render(this.driver, blue.os.GetRealTime(), blue.os.GetCurrentFrameTime(), Tr2RenderContext_GetMainThreadRenderContext());
     }
 
@@ -335,7 +343,7 @@ export class Tny
 /** Loads the engine modules Initialize composes; Tny itself imports none. */
 async function LoadEngine()
 {
-    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, tnyScene ] = await Promise.all([
+    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, sceneDriver, tnyScene ] = await Promise.all([
         import("../../core/CjsLibrary.js"),
         import("../../core/scene/createSpaceSceneDriver.js"),
         import("../../blue/io/CjsBlueResFileSystemFetch.js"),
@@ -347,6 +355,7 @@ async function LoadEngine()
         import("../input/TnyInputMan.js"),
         import("../cameras/TnyCameraControls.js"),
         import("../../trinity/eve/scene/EveSpaceScene.js"),
+        import("../../trinity/eve/scene/EveSpaceSceneRenderDriver.js"),
         import("../TnyScene.js")
     ]);
     return {
@@ -365,6 +374,7 @@ async function LoadEngine()
         TnyInputMan: input.TnyInputMan,
         TnyCameraControls: controls.TnyCameraControls,
         EveSpaceScene: scene.EveSpaceScene,
+        EveSpaceSceneRenderDriver: sceneDriver.EveSpaceSceneRenderDriver,
         TnyScene: tnyScene.TnyScene
     };
 }
