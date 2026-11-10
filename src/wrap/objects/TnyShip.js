@@ -19,20 +19,29 @@ export class TnyShip
 
     /**
      * Acquires a fresh ship through the library and starts its existing controllers.
-     * The library owns DNA hydration; this does not initialize the graph again or
-     * wait for all of its rendering resources. Fetch and controller failures reject.
+     * The library owns DNA hydration and the resource wait; this does not
+     * initialize the graph again. Fetch and controller failures reject.
+     * ccpwgl's `TnySpaceObject.fetch(options)` shape (our own code there).
      *
-     * @param {string} source DNA or object resource path.
-     * @param {object} [options={}] Passed unchanged to the library.
+     * @param {object} options What to fetch.
+     * @param {string} [options.dna] Ship DNA; give this or `resPath`.
+     * @param {string} [options.resPath] Object resource path; give this or `dna`.
+     * @param {boolean} [options.awaitResources=false] Resolve once the ship's resources have loaded.
+     * @param {string} [options.name] Sets the ship's `name`.
      * @returns {Promise<TnyShip>} Wrapper borrowing the acquired ship.
      */
-    static async fetch(source, options = {})
+    static async fetch({ dna = null, resPath = null, awaitResources = false, name = null, ...unknown } = {})
     {
         const library = CjsLibrary.instance;
         if (!library) throw new Error("TnyShip requires an initialized CjsLibrary.");
-        if (typeof source !== "string" || !source) throw new TypeError("TnyShip requires DNA or an object path.");
+        const extra = Object.keys(unknown);
+        if (extra.length) throw new TypeError(`TnyShip.fetch does not take ${extra.join(", ")}.`);
+        const source = dna ?? resPath;
+        if (typeof source !== "string" || !source || (dna !== null && resPath !== null))
+            throw new TypeError("TnyShip requires DNA or an object path.");
 
-        const ship = new TnyShip(await library.Fetch(source, options));
+        const ship = new TnyShip(await library.Fetch(source, { awaitResources }));
+        if (name !== null) ship.wrapped.name = name;
         ship.wrapped.StartControllers();
         return ship;
     }

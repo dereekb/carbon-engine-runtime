@@ -1,19 +1,19 @@
 # Application wrappers
 
-`TnyShip.fetch(dnaOrPath)` acquires a live ship through `CjsLibrary.Fetch`
-and starts its native controllers once for that acquisition. It does not repeat
-graph initialization, provide resource readiness, or implement ship behavior.
-The single shared library must already be initialized and pumped by its host.
-`CjsLibrary.instance` exposes that initialized root; it is null during startup
-and after shutdown. The wrappers do not create another library.
+`await new Tny().Initialize({ canvas, resources })` starts the engine on a
+canvas: the library acquires WebGPU or WebGL2, Trinity attaches, a scene
+driver and `EveCamera` are installed, and one frame loop pumps Blue. Without
+it, a host that already runs the engine can use the wrappers below directly.
 
-`TnyScene.fetch(path)` acquires an authored space scene, while
-`TnyScene.fromWrapped(scene)` adapts an existing one. Both preserve the
-scene graph. `AddObject(ship)` and `RemoveObject(ship)` use its native object list
-and notifications. Duplicate addition and missing removal return false; removal
-does not destroy the ship.
+`TnyShip.fetch({ dna | resPath, awaitResources, name })` acquires a live ship
+through `CjsLibrary.Fetch` and starts its native controllers once.
+`awaitResources` waits on `BlueResMan.Watch`. `CjsLibrary.instance` is the
+initialized library; it is null during startup and after shutdown.
 
-Both wrappers expose the borrowed `wrapped` graph and own no frame loop or
-library shutdown. This first surface supports
-`EveShip2` and `EveSpaceScene`; character and modular-ship operations are separate
-work. Acquisition/type failures reject, without a replacement scene or ship.
+`TnyScene.fetch(path)` acquires an authored space scene;
+`TnyScene.fromWrapped(scene)` adapts an existing one. `AddObject(ship)` and
+`RemoveObject(ship)` use the scene's native list; duplicates and absent
+removals return false, and removal does not destroy the ship.
+
+Wrappers expose the borrowed `wrapped` graph. Failures reject, without a
+replacement scene or ship.

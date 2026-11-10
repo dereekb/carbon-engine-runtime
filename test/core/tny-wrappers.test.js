@@ -11,11 +11,10 @@ test("ship acquisition preserves the library contract and starts controllers wit
     const library = new CjsLibrary(), ship = new EveShip2();
     t.after(() => library.Shutdown());
     await library.Initialize({ sof: null, characterLibrary: null });
-    const options = { callerOption: {} };
     const fetch = t.mock.method(library, "Fetch", async (source, received) =>
     {
         assert.equal(source, "hull:faction:race");
-        assert.equal(received, options);
+        assert.deepEqual(received, { awaitResources: true });
         return ship;
     });
     const start = t.mock.method(ship, "StartControllers");
@@ -23,8 +22,9 @@ test("ship acquisition preserves the library contract and starts controllers wit
     t.mock.method(library, "Initialize", () => assert.fail("the wrapper borrows its library"));
     const shutdown = t.mock.method(library, "Shutdown");
 
-    const wrapper = await TnyShip.fetch("hull:faction:race", options);
+    const wrapper = await TnyShip.fetch({ dna: "hull:faction:race", awaitResources: true, name: "Rifter" });
     assert.equal(wrapper.wrapped, ship);
+    assert.equal(ship.name, "Rifter");
     assert.equal(Object.hasOwn(wrapper, "library"), false);
     assert.equal(fetch.mock.callCount(), 1);
     assert.equal(start.mock.callCount(), 1);
@@ -38,19 +38,41 @@ test("ship acquisition rejects null, incompatible graphs and provider/controller
     await library.Initialize({ sof: null, characterLibrary: null });
     let result = null;
     t.mock.method(library, "Fetch", async () => result);
-    await assert.rejects(TnyShip.fetch("a:b:c"), /live EveShip2/);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c" }), /live EveShip2/);
     result = {};
-    await assert.rejects(TnyShip.fetch("a:b:c"), /live EveShip2/);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c" }), /live EveShip2/);
     result = new EveShip2();
     const controllerFailure = new Error("controller failed");
     t.mock.method(result, "StartControllers", () => { throw controllerFailure; });
-    await assert.rejects(TnyShip.fetch("a:b:c"), error => error === controllerFailure);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c" }), error => error === controllerFailure);
     const loadFailure = new Error("catalog failed");
     t.mock.method(library, "Fetch", async () => { throw loadFailure; });
-    await assert.rejects(TnyShip.fetch("a:b:c"), error => error === loadFailure);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c" }), error => error === loadFailure);
     await assert.rejects(TnyShip.fetch({}), /DNA or an object path/);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c", resPath: "res:/a.black" }), /DNA or an object path/);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c", typeID: 587 }), /does not take typeID/);
     await library.Shutdown();
-    await assert.rejects(TnyShip.fetch("a:b:c"), /initialized CjsLibrary/);
+    await assert.rejects(TnyShip.fetch({ dna: "a:b:c" }), /initialized CjsLibrary/);
+});
+
+test("Fetch waits on resMan's Watch only when awaitResources is set, and forwards the rest", async t =>
+{
+    const library = new CjsLibrary(), ship = new EveShip2();
+    t.after(() => library.Shutdown());
+    await library.Initialize({ sof: null, characterLibrary: null });
+    const { blue } = await import("../../npm/dist/blue/index.js");
+    const fetch = t.mock.method(blue.resMan, "Fetch", async (_path, received) =>
+    {
+        assert.deepEqual(received, { other: 1 });
+        return ship;
+    });
+    const watch = t.mock.method(blue.resMan, "Watch", async root => ({ object: root, failed: [] }));
+    assert.equal(await library.Fetch("res:/ship.black", { other: 1 }), ship);
+    assert.equal(watch.mock.callCount(), 0);
+    assert.equal(await library.Fetch("res:/ship.black", { other: 1, awaitResources: true }), ship);
+    assert.equal(watch.mock.callCount(), 1);
+    assert.equal(watch.mock.calls[0].arguments[0], ship);
+    assert.equal(fetch.mock.callCount(), 2);
 });
 
 test("scene acquisition and adaptation preserve the existing scene and failures", async t =>

@@ -676,10 +676,20 @@ export class CjsLibrary
    *   handlers replace CjsSchema.from, then direct SOF construction replaces the
    *   intermediate graph. Keep this bridge in one place; service values builds stay unchanged.
    * @param {string} value DNA or resource path.
-   * @param {object} [options] Options forwarded unchanged to the selected service.
+   * @param {object} [options] Options forwarded to the selected service, except `awaitResources`.
+   * @param {boolean} [options.awaitResources=false] Resolve only once every resource the result
+   *   reaches has loaded or failed (`BlueResMan.Watch`, ccpwgl's `Tw2Library.Fetch(source, awaitResources)`).
    * @returns {Promise<object|null>} Constructed graph, loaded resource, or the SOF's null build result.
    */
-  async Fetch(value, options)
+  async Fetch(value, { awaitResources = false, ...options } = {})
+  {
+    const result = await this._Fetch(value, options);
+    if (awaitResources && result) await blue.resMan.Watch(result);
+    return result;
+  }
+
+  /** Routes one Fetch to the SOF or resMan. */
+  async _Fetch(value, options)
   {
     if (typeof value === "string" && !/^[a-z][a-z0-9+.-]*:[/\\]/i.test(value)
       && value.split(":").length >= 3)
