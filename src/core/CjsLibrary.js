@@ -17,6 +17,9 @@ import { CjsLibrarySettingsTicker } from "./CjsLibrarySettingsTicker.js";
 
 let activeLibrary = null;
 
+/** The audio Trinity barrel, imported once by the first DNA Fetch. */
+let sofAudioClasses = null;
+
 /**
  * Settings this library holds at a fixed value, with the reason. A requested
  * value is still recorded (and an application may still save it); the owner
@@ -548,9 +551,23 @@ export class CjsLibrary
         this._ApplyConfiguration(startup);
         if (createdSof)
         {
+          // The catalog's EveSOFData classes register on import; the SOF reads them through resMan.
+          await import("../sof/index.js");
+          const { CjsBlackFormat } = await import("../blue/formats/black/CjsBlackFormat.js");
           const resMan = blue.resMan;
+          const paths = blue.paths;
           await createdSof.Register({
-            resources: { getObject: path => resMan.FetchObject(path) },
+            // EveSOF's getObject is two-mode: catalog reads ask for runtime
+            // objects; documents a build inlines (controllers, model curves,
+            // effect children) ask for the file's root as model values.
+            resources: { getObject: async (path, context) =>
+            {
+              if (context?.output !== "values") return resMan.FetchObject(path);
+              const file = await paths.GetStreamFromPath(path);
+              if (!file) return null;
+              const read = CjsBlackFormat.read(file.data, { emit: "json" });
+              return (read.root ?? read).object ?? null;
+            } },
             paths: blue.paths,
             lazyData: true
           });
@@ -668,6 +685,9 @@ export class CjsLibrary
       && value.split(":").length >= 3)
     {
       if (!blue.sof) throw new Error("SOF is not configured");
+      // SOF output declares audio emitters (TriObserverLocal/AudEmitter); their
+      // classes register on import, and hydration resolves them by name.
+      await (sofAudioClasses ??= import("../audio/trinity/index.js"));
       const values = await blue.sof.BuildFromDNA(value, options);
       return values === null ? null : CjsSchema.from(values._type, values);
     }
