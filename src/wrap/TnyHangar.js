@@ -228,6 +228,45 @@ export class TnyHangar extends TnyScene
     }
 
     /**
+     * Cancels an undock the docker has begun, by its authored path: while the
+     * docking machine is in InitalizeUndock (the init_undock range), docked
+     * back to 1 takes InitalizeUndock_2_docked and the ship settles again.
+     * Once past it (Short_Wait, docked_2_undocked) the content itself always
+     * runs undock_cancelled and docks again; there is nothing to drive.
+     *
+     * @param {number} [bay=this.active] The bay.
+     * @returns {boolean} Whether an undock was cancelled.
+     */
+    CancelUndock(bay = this.active)
+    {
+        if (!this.CanCancelUndock(bay)) return false;
+        this._bays[bay].effect.SetControllerVariable("docked", 1);
+        return true;
+    }
+
+    /**
+     * Whether CancelUndock would act: the bay's docker is in InitalizeUndock.
+     *
+     * @param {number} [bay=this.active] The bay.
+     * @returns {boolean} Whether its undock can still be cancelled.
+     */
+    CanCancelUndock(bay = this.active)
+    {
+        const effect = this._bays[bay]?.effect;
+        if (!effect || this.kind === "origin") return false;
+        const machine = effect.controllers.find(controller => controller.name === "docker")?.stateMachines.find(each => each.name === "docking");
+        return machine?.GetCurrentState()?.name === "InitalizeUndock";
+    }
+
+    /** The hangar's actions, for the type info: CancelUndock only while it can act. */
+    GetTypeInfo()
+    {
+        const info = super.GetTypeInfo();
+        info[3] = { SetShip: "(ship, { bay, entry })", Undock: "(bay)", ...(this.CanCancelUndock() ? { CancelUndock: "(bay)" } : {}) };
+        return info;
+    }
+
+    /**
      * The hangar's controllers (its own, its overlays' and container
      * children's, such as a `*_docking_ctrl`) and those of the effects
      * driving its ships (the docker; me_generic with `HangarType`).
