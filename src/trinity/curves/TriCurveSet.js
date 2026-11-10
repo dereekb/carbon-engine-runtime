@@ -45,7 +45,7 @@ import { mappedInterfaces } from "../../blue/compose/interface.js";
     [ be.METHOD, "GetMaxCurveDuration", be.WRAP ],
     [ be.METHOD, "StopAfterWithCallback", be.WRAP ],
     [ be.METHOD, "Apply", be.WRAP ],
-    [ be.METHOD, "SetTimeRange", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "SetTimeRange", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "ResetTimeRange", be.WRAP ],
     [ be.METHOD, "HasTimeRange", be.WRAP ],
     [ be.METHOD, "GetTimeRange", be.WRAP ]

@@ -22,7 +22,7 @@ export class TriStepRenderScene extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(scene = null)
   {
     this.scene = scene;

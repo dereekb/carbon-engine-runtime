@@ -24,7 +24,7 @@ export class TriStepSetDepthStencil extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(depthStencil = null)
   {
     this.depthStencil = depthStencil ?? null;

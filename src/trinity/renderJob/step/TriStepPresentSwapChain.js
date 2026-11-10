@@ -24,7 +24,7 @@ export class TriStepPresentSwapChain extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(swapChain = null)
   {
     this.swapChain = swapChain ?? null;

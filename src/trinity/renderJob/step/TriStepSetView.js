@@ -19,7 +19,7 @@ import { mat4 } from "#math/mat4";
   members: [
     [ be.ATTR, "view", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "camera", be.READWRITE | be.PERSIST ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetViewCameraParent" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 2, "SetViewCameraParent" ]
   ],
   chainTo: TriRenderStep
 })

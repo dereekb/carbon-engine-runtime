@@ -33,7 +33,7 @@ import { Tr2CurveScalarKey } from "../key/Tr2CurveScalarKey.js";
     [ be.METHOD, "SetTimeOffset", be.WRAP ],
     [ be.METHOD, "GetTimeScale", be.WRAP ],
     [ be.METHOD, "SetTimeScale", be.WRAP ],
-    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS, 4 ],
     [ be.METHOD, "SetExtrapolation", be.WRAP ]
   ]
 })

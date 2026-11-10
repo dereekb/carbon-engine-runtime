@@ -44,7 +44,7 @@ export class TriRect extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(4)
   __init__(left = 0, top = 0, right = 0, bottom = 0)
   {
     this.left = left;
@@ -61,7 +61,7 @@ export class TriRect extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(4)
   SetRect(left, top, right, bottom)
   {
     if (left !== undefined)

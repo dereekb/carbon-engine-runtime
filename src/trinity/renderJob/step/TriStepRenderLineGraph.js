@@ -70,7 +70,7 @@ export class TriStepRenderLineGraph extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(4)
   __init__(graphs = [], legendScale = undefined, scale = undefined, autoScale = undefined)
   {
     this.lineGraphs.push(...graphs);

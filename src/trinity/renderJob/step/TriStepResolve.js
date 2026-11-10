@@ -33,7 +33,7 @@ export class TriStepResolve extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(destination = null, source = null)
   {
     this.destination = destination ?? null;

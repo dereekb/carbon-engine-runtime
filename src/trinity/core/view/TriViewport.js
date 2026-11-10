@@ -58,7 +58,7 @@ export class TriViewport extends IRoot
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(6)
   __init__(x = 0, y = 0, width = 1, height = 1, minZ = 0, maxZ = 1)
   {
     this.x = x;

@@ -32,7 +32,7 @@ export class TriStepSetVariableStore extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(name = undefined, value = undefined)
   {
     if (name !== undefined) this.SetName(name);

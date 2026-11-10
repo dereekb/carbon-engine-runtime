@@ -4025,8 +4025,10 @@ function abstractParts(blue)
  * - `[ATTR_INDEX, name, flags, index, field]` - `MAP_ATTRIBUTE` on one element of an array member.
  * - `[PROP | PROP_RO | PROP_PERSISTED, name, field?]` - `MAP_PROPERTY`, `_READONLY`, `_PERSISTED`; on an accessor when the
  *   class has one under that key, else on the plain field that stores the value.
- * - `[METHOD, name, mode?, method?]` - `MAP_METHOD`, or with `WRAP`, `WRAP_OPTIONAL_ARGS` or `AS_METHOD` the matching macro;
+ * - `[METHOD, name, mode?, method?]` - `MAP_METHOD`, or with `WRAP` or `AS_METHOD` the matching macro;
  *   `method` is the JS method when it differs from the name.
+ * - `[METHOD, name, WRAP_OPTIONAL_ARGS, numOptional, method?]` - `MAP_METHOD_AND_WRAP_OPTIONAL_ARGS` with Carbon's
+ *   optional-argument count, which is compulsory.
  * - `[ICACHEABLE_METHODS]` - `MAP_ICACHEABLE_METHODS()`.
  *
  * @returns {object} The constants.
@@ -4143,18 +4145,24 @@ function applyExposureRow(Constructor, row, blue, context)
         }
         case ROW.METHOD:
         {
-            const [ , , mode, method ] = row;
+            const [ , , mode ] = row;
             const macro = mode === undefined ? "MAP_METHOD" : METHOD_MACROS[mode];
             if (!macro) throw new TypeError(`Exposure row ${name}: unknown method mode ${String(mode)}.`);
+
+            // WRAP_OPTIONAL_ARGS carries Carbon's optional-argument count before the JS method.
+            const optional = mode === ROW.WRAP_OPTIONAL_ARGS;
+            const numOptional = optional ? requireOptionalArgCount(row[3], `Exposure row ${name}`) : undefined;
+            const method = optional ? row[4] : row[3];
             const key = method ?? name;
             if (!(key in Constructor.prototype)) throw new TypeError(`Exposure row ${name}: the class has no method "${key}".`);
+
             // An inherited method's row names it, as the class-level be.mapMethod* does (inheritedAware).
             const own = Object.hasOwn(Constructor.prototype, key);
-            const decorator = exposureMethodDecorator(macro, own ? optionalName(key) : name, blue);
+            const decorator = exposureMethodDecorator(macro, own ? optionalName(key) : name, blue, numOptional);
             if (own) decorator(Constructor.prototype, key);
             else for (const part of [ { namespace: "mapsInherited", value: { inherited: true } }, ...getDecoratorMetadata(decorator).parts ])
                 defineMethodMetadata(Constructor, key, part.namespace, part.value);
-            return { kind, role: "method", key, name, macro };
+            return { kind, role: "method", key, name, macro, ...(optional ? { numOptional } : {}) };
         }
         default:
             throw new TypeError(`Exposure row ${name}: unknown row kind ${String(kind)}.`);
@@ -4253,7 +4261,12 @@ function createMapNamespace(blue)
         mapPropertyPersisted__Field: name => inheritedAware(ns, "mapPropertyPersisted__Field", "member", name, key => exposurePropertyDecorator("MAP_PROPERTY_PERSISTED", key, true, blue)),
         mapMethod: name => inheritedAware(ns, "mapMethod", "method", name, key => exposureMethodDecorator("MAP_METHOD", key, blue)),
         mapMethodAndWrap: name => inheritedAware(ns, "mapMethodAndWrap", "method", name, key => exposureMethodDecorator("MAP_METHOD_AND_WRAP", key, blue)),
-        mapMethodAndWrapOptionalArgs: name => inheritedAware(ns, "mapMethodAndWrapOptionalArgs", "method", name, key => exposureMethodDecorator("MAP_METHOD_AND_WRAP_OPTIONAL_ARGS", key, blue)),
+        // Carbon's MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( name, function, numOptional, doc ) always gives the count (BlueExposureMacrosPython.h:140).
+        mapMethodAndWrapOptionalArgs: (numOptional, name) =>
+        {
+            requireOptionalArgCount(numOptional, `${ns}.mapMethodAndWrapOptionalArgs`);
+            return inheritedAware(ns, "mapMethodAndWrapOptionalArgs", "method", name, key => exposureMethodDecorator("MAP_METHOD_AND_WRAP_OPTIONAL_ARGS", key, blue, numOptional));
+        },
         mapMethodAsMethod: name => inheritedAware(ns, "mapMethodAsMethod", "method", name, key => exposureMethodDecorator("MAP_METHOD_AS_METHOD", key, blue)),
         // Carbon's `MAP_ICACHEABLE_METHODS()` (ICacheable.h:21): both ICacheable rows, one line in the class's exposure block.
         mapICacheableMethods: () => icacheableMethodsDecorator(blue)
@@ -4453,12 +4466,37 @@ function exposurePropertyDecorator(macro, name, asField, blue)
     return decorator;
 }
 
-/** Keeps the native method stamp for old consumers and records the exact exposure macro and alias; ours records neither. */
-function exposureMethodDecorator(macro, name, blue)
+/**
+ * Checks Carbon's optional-argument count of a MAP_METHOD_AND_WRAP_OPTIONAL_ARGS row.
+ *
+ * @param {*} numOptional The count.
+ * @param {string} where The decorator or row, for the message.
+ * @returns {number} The count.
+ * @throws {TypeError} When the count is missing or not a nonnegative integer.
+ */
+function requireOptionalArgCount(numOptional, where)
+{
+    if (!Number.isSafeInteger(numOptional) || numOptional < 0)
+        throw new TypeError(`${where} requires Carbon's optional-argument count (MAP_METHOD_AND_WRAP_OPTIONAL_ARGS numOptional), got ${String(numOptional)}.`);
+    return numOptional;
+}
+
+/**
+ * Keeps the native method stamp for old consumers and records the exact exposure macro, alias and, for
+ * MAP_METHOD_AND_WRAP_OPTIONAL_ARGS, Carbon's optional-argument count; ours records no stamp.
+ *
+ * @param {string} macro Carbon's macro.
+ * @param {string|undefined} name The exposed name when it differs from the JS key.
+ * @param {boolean} blue Whether the row is Carbon's exposure.
+ * @param {number} [numOptional] Carbon's optional-argument count.
+ * @returns {Function} The method decorator.
+ */
+function exposureMethodDecorator(macro, name, blue, numOptional)
 {
     if (name !== undefined) name = exposureName(name);
+    const rest = { ...(name === undefined ? {} : { name }), ...(numOptional === undefined ? {} : { numOptional }) };
     const parts = [ ...(blue ? [ { namespace: "carbon", value: { method: true } } ] : []),
-        { namespace: "exposure", value: exposureRecord(macro, name === undefined ? {} : { name }, blue) } ];
+        { namespace: "exposure", value: exposureRecord(macro, rest, blue) } ];
     const decorator = (target, context) =>
     {
         for (const part of parts) methodDecorator(part.namespace, part.value)(target, context);

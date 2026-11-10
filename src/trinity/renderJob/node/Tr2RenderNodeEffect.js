@@ -18,7 +18,7 @@ import "#consts/graphics/trinityEnums";
     [ be.ATTR, "effect", be.READWRITE ],
     [ be.ATTR, "viewport", be.READWRITE ],
     [ be.ATTR_CHOOSER, "renderingMode", be.READWRITE | be.ENUM, "trinity.Tr2EffectStateManager.RenderingMode" ],
-    [ be.METHOD, "AddSource", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddSource", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.ATTR, "inputNodes", be.READ | be.PERSIST ]
   ]
 })

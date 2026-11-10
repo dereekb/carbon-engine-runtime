@@ -206,7 +206,7 @@ export class Tr2MouseCursor
 
 be.inherit(IRoot)(Tr2MouseCursor);
 
-CjsSchema.decorateMethod(Tr2MouseCursor, "Create", be.mapMethodAndWrapOptionalArgs());
+CjsSchema.decorateMethod(Tr2MouseCursor, "Create", be.mapMethodAndWrapOptionalArgs(1));
 CjsSchema.decorateMethod(Tr2MouseCursor, "IsValid", be.mapMethodAndWrap());
 CjsSchema.decorateField(Tr2MouseCursor, "isValid", type.boolean, be.mapPropertyReadOnly());
 CjsSchema.exposure.define("Tr2MouseCursor")(Tr2MouseCursor);

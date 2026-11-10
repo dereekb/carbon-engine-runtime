@@ -21,7 +21,7 @@ export class TriStepUpdate extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(object = null)
   {
     this.object = object;

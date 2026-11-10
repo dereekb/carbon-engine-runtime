@@ -78,7 +78,7 @@ export class TriStepRenderObject extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(renderable = null)
   {
     this.renderable = renderable;

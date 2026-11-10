@@ -87,7 +87,7 @@ export class Tr2RenderTarget extends IRoot
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(8)
   __init__(width = 0, height = 0, mipCount = 1, format = PixelFormat.PIXEL_FORMAT_UNKNOWN, msaaType = 1, msaaQuality = 0, flags = ExFlag.EX_NONE, type = TextureType.TEX_TYPE_2D)
   {
     if (width && height && format)
@@ -105,8 +105,8 @@ export class Tr2RenderTarget extends IRoot
    */
   // Carbon bug (CE-214): Tr2RenderTarget_Blue.cpp:49-51 binds CreateArray to Create.
   /** @implemented */
-  @be.mapMethodAndWrapOptionalArgs("CreateArray")
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(5, "CreateArray")
+  @be.mapMethodAndWrapOptionalArgs(4)
   Create(width, height, mipLevelCount, format, msaaType = 1, msaaQuality = 0, flags = ExFlag.EX_NONE, type = TextureType.TEX_TYPE_2D, renderContext = Tr2RenderContext_GetMainThreadRenderContext())
   {
     if (this.IsAttached()) return ALResult.E_INVALIDARG;

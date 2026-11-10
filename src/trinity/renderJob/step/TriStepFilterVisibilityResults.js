@@ -54,7 +54,7 @@ export class TriStepFilterVisibilityResults extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(4)
   __init__(input = null, output = null, eventFilter = undefined, filter = undefined)
   {
     this.SetInputResults(input);

@@ -229,7 +229,7 @@ export class Tr2TranslationAdapter extends ITriVectorFunction
    * @param {number} range Radius in seconds; zero or omission selects 60.
    * @returns {void}
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   RandomizeStart(range = 60)
   {
     const radius = range || 60;

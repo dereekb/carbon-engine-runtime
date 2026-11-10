@@ -48,7 +48,7 @@ export class TriStepSetStdRndStates extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(state)
   {
     if (arguments.length && state !== undefined) this.SetState(state);

@@ -2940,7 +2940,7 @@ export class EveSpaceObject2 extends EveEntity
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   PlayAnimationEx(animName, loopCount, start, speed, clearWhenDone = true)
   {
     this._PlayAnimation(animName, true, loopCount, start, speed, clearWhenDone);

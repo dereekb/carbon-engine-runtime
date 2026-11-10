@@ -50,7 +50,7 @@ import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
     [ be.METHOD, "SetControllerVariable", be.WRAP ],
     [ be.METHOD, "HandleControllerEvent", be.WRAP ],
     [ be.METHOD, "StartControllers", be.WRAP ],
-    [ be.METHOD, "Reload", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "Reload", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.PROP_RO, "partTag" ],
     [ be.METHOD, "GetParent", be.WRAP ],
     [ be.METHOD, "GetOwner", be.WRAP ]

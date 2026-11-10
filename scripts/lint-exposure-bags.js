@@ -75,7 +75,9 @@ async function main()
             + "in tools-core against a Carbon checkout, or set CARBON_BLUE_REPORTS.");
         return;
     }
-    const carbon = readCarbonExposures(reports.map(file => JSON.parse(readFileSync(file, "utf8"))));
+    const parsed = reports.map(file => JSON.parse(readFileSync(file, "utf8")));
+    const carbon = readCarbonExposures(parsed);
+    readOptionalArgCounts(carbon, process.env.CARBON_ROOT ?? parsed[0].carbonRoot);
 
     const findings = new Map();
     let bagCount = 0;
@@ -117,6 +119,50 @@ export function readCarbonExposures(reports)
         }
     }
     return exposures;
+}
+
+/**
+ * Adds Carbon's optional-argument count to each MAP_METHOD_AND_WRAP_OPTIONAL_ARGS row, read from the macro's third argument at the
+ * `_Blue.cpp` line the report cites (the scanner does not record it). Rows whose source is not under `carbonRoot` are left alone.
+ *
+ * @param {Map<string, object[]>} exposures Carbon's rows by class, from readCarbonExposures.
+ * @param {string|undefined} carbonRoot The Carbon checkout the reports were scanned from.
+ */
+export function readOptionalArgCounts(exposures, carbonRoot)
+{
+    if (!carbonRoot || !existsSync(carbonRoot)) return;
+    const files = new Map();
+    for (const rows of exposures.values())
+    {
+        for (const row of rows)
+        {
+            if (row.macro !== "MAP_METHOD_AND_WRAP_OPTIONAL_ARGS" || !row.source || !row.line) continue;
+            const file = path.join(carbonRoot, row.source);
+            if (!files.has(file)) files.set(file, existsSync(file) ? readFileSync(file, "utf8").split(/\r?\n/) : null);
+            const lines = files.get(file);
+            if (!lines) continue;
+            const text = lines.slice(row.line - 1, row.line + 30).join("\n");
+            const count = macroArgument(text, text.indexOf("MAP_METHOD_AND_WRAP_OPTIONAL_ARGS"), 2);
+            if (count !== null && /^\d+$/.test(count)) row.numOptional = Number(count);
+        }
+    }
+}
+
+/** The `index`th top-level argument of the macro call starting at `at`, or null. */
+function macroArgument(text, at, index)
+{
+    if (at < 0) return null;
+    let i = text.indexOf("(", at) + 1, depth = 0, arg = 0, start = i, inString = false;
+    for (; i < text.length; i++)
+    {
+        const c = text[i];
+        if (inString) { if (c === "\\") i++; else if (c === "\"") inString = false; continue; }
+        if (c === "\"") inString = true;
+        else if (c === "(") depth++;
+        else if (c === ")") { if (depth === 0) break; depth--; }
+        else if (c === "," && depth === 0) { if (arg === index) return text.slice(start, i).trim(); arg++; start = i + 1; }
+    }
+    return arg === index ? text.slice(start, i).trim() : null;
 }
 
 /**
@@ -192,6 +238,12 @@ function readRow(node)
             const noMode = !rest[0] || (rest[0].type === "Identifier" && rest[0].name === "undefined");
             const mode = !noMode && isMember(rest[0], "be") ? rest[0].property.name : null;
             if (!noMode && !(mode in METHOD_MODES)) return "method mode is not a be mode constant";
+            // WRAP_OPTIONAL_ARGS carries Carbon's optional-argument count before the JS method.
+            if (mode === "WRAP_OPTIONAL_ARGS")
+            {
+                const count = rest[1] && rest[1].type === "NumericLiteral" ? rest[1].value : null;
+                return { kind, name, mode, numOptional: count, key: literal(rest[2]) ?? name };
+            }
             return { kind, name, mode, key: literal(rest[1]) ?? name };
         }
         default:
@@ -271,18 +323,22 @@ export function compareBag(bag, rows)
     for (const { member, carbon } of pairs)
     {
         const where = at(carbon.row);
+        // A vector component realised as an index row on its member (see carbonRow) is Carbon's row.
+        const asComponent = Boolean(carbon.component) && member.kind === "ATTR_INDEX" && member.key === carbon.component.member;
         if (carbon.kind === null) findings.push({ key: `${carbon.label} no bag kind`, detail: `${carbon.row.macro} (${where}) has no bag row kind yet.` });
-        else if (carbon.kind !== member.kind || (carbon.mode ?? null) !== (member.mode ?? null))
+        else if (!asComponent && (carbon.kind !== member.kind || (carbon.mode ?? null) !== (member.mode ?? null)))
             findings.push({ key: `${carbon.label} kind`, detail: `Carbon writes ${carbon.row.macro} (${where}); the bag writes ${label(member)}.` });
         if (carbon.flags !== undefined && member.flags !== undefined && carbon.flags !== member.flags)
             findings.push({ key: `${carbon.label} flags`, detail: `Carbon's flags are ${carbon.row.flags.join(" | ")} (${where}); the bag's evaluate to ${member.flags === null ? "an expression it cannot read" : `0x${member.flags.toString(16)}`}.` });
         if (carbon.accessor && !(bag.accessors ?? new Set()).has(member.key))
             findings.push({ key: `${carbon.label} accessor`, detail: `${carbon.row.macro} over ${carbon.row.member} (${where}) is realised as an accessor "${member.key}"; the class has no such getter.` });
+        if (carbon.numOptional !== undefined && member.mode === "WRAP_OPTIONAL_ARGS" && member.numOptional !== carbon.numOptional)
+            findings.push({ key: `${carbon.label} numOptional`, detail: `Carbon's optional-argument count is ${carbon.numOptional} (${where}); the bag gives ${member.numOptional ?? "none"}.` });
         // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds. A key that is Carbon's own name
         // is kept whole, since Carbon names can contain `__` themselves (TriMatrix's Py__init__).
         const split = carbon.family === "METHOD" && member.key && !(carbon.keys ?? []).includes(member.key);
         const key = split ? member.key.replace(/__\w+$/, "") : member.key;
-        if (carbon.keys && !carbon.keys.includes(key))
+        if (carbon.keys && !asComponent && !carbon.keys.includes(key))
             findings.push({ key: `${carbon.label} key`, detail: `${carbon.label} lands on "${member.key}"; the key is ${carbon.keys.map(key => `"${key}"`).join(" or ")} (${carbon.source}, ${where}).` });
     }
 
@@ -311,7 +367,7 @@ export function carbonRow(row)
         const target = row.target ? row.target.split("::").pop() : null;
         return {
             family: "METHOD", kind: mode === undefined ? null : "METHOD", mode: mode ?? null, name: row.name, label: `method ${row.name}`,
-            keys: target ? [ target ] : undefined, source: `method ${target}`
+            keys: target ? [ target ] : undefined, source: `method ${target}`, numOptional: row.numOptional
         };
     }
     const flags = (row.flags ?? []).reduce((value, flag) => value | (EDIT_FLAGS[flag] ?? NaN), 0);
@@ -327,8 +383,14 @@ export function carbonRow(row)
     const kind = row.macro === "MAP_ATTRIBUTE_WITH_CHOOSER" ? "ATTR_CHOOSER" : row.macro === "MAP_ATTRIBUTE" ? (indexed ? "ATTR_INDEX" : "ATTR") : null;
     const member = (row.member ?? "").replace(/\[.*$/, "").trim();
     const plain = /^m_(\w+)$/.exec(member);
+    // One component of a vector member (`m_translation.x`, Tr2Sprite2dScene_Blue.cpp:90) is a field under its exposed name, or an
+    // index row on the vector member; compareBag accepts either.
+    const component = /^m_(\w+)\s*\.\s*([xyzw])$/.exec(member);
     // The acceptable keys depend on the rest of the block, so compareBag derives them (attributeKeys).
-    return { family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`, flags, indexed, member: plain ? plain[1] : null, source: `member ${member}` };
+    return {
+        family: "ATTR", kind, name: row.name, label: `attribute ${row.name}`, flags, indexed, member: plain ? plain[1] : null, source: `member ${member}`,
+        ...(component ? { component: { member: component[1], index: "xyzw".indexOf(component[2]) } } : {})
+    };
 }
 
 /**

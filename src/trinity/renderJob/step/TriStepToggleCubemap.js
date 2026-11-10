@@ -25,7 +25,7 @@ export class TriStepToggleCubemap extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(showCubemap = true, scene = null)
   {
     this.showCubemap = Boolean(showCubemap);

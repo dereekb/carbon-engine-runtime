@@ -10,7 +10,7 @@ import { BlueScriptCallback } from "#blue";
   name: "TriStepPythonCB",
   // TriStepPythonCB_Blue.cpp:11-28, in Carbon's order.
   members: [
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetCallback" ],
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetCallback" ],
     [ be.METHOD, "SetCallback", be.WRAP ]
   ],
   chainTo: TriRenderStep

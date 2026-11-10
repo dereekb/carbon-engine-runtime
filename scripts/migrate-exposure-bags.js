@@ -41,7 +41,7 @@ const MAP_DECORATORS = {
     mapPropertyPersisted__Field: { family: "PROP", kind: "PROP_PERSISTED", name: 0 },
     mapMethod: { family: "METHOD", kind: "METHOD", mode: null, name: 0 },
     mapMethodAndWrap: { family: "METHOD", kind: "METHOD", mode: "WRAP", name: 0 },
-    mapMethodAndWrapOptionalArgs: { family: "METHOD", kind: "METHOD", mode: "WRAP_OPTIONAL_ARGS", name: 0 },
+    mapMethodAndWrapOptionalArgs: { family: "METHOD", kind: "METHOD", mode: "WRAP_OPTIONAL_ARGS", name: 1 },
     mapMethodAsMethod: { family: "METHOD", kind: "METHOD", mode: "AS_METHOD", name: 0 },
     mapICacheableMethods: { family: "ICACHEABLE", kind: "ICACHEABLE_METHODS", name: null }
 };
@@ -272,7 +272,9 @@ function rowFrom(spec, args, exposed, key, decorator, text)
         flagsText: flagsArg ? text(flagsArg) : undefined,
         flagsValue: flagsArg ? flagValue(flagsArg) : undefined,
         chooserText: spec.kind === "ATTR_CHOOSER" && args[1] ? text(args[1]) : undefined,
-        indexText: spec.kind === "ATTR_INDEX" && args[2] ? text(args[2]) : undefined
+        indexText: spec.kind === "ATTR_INDEX" && args[2] ? text(args[2]) : undefined,
+        // Carbon optional-argument count, the first argument of mapMethodAndWrapOptionalArgs.
+        numOptionalText: spec.mode === "WRAP_OPTIONAL_ARGS" && args[0] ? text(args[0]) : undefined
     };
 }
 
@@ -301,7 +303,7 @@ function renderRow(row)
         case "ATTR_INDEX": return `[ be.ATTR_INDEX, ${name}, ${row.flagsText}, ${row.indexText}, ${JSON.stringify(row.key)} ]`;
         case "METHOD":
         {
-            const mode = row.mode ? `, be.${row.mode}` : key ? ", undefined" : "";
+            const mode = row.mode ? `, be.${row.mode}${row.numOptionalText !== undefined ? `, ${row.numOptionalText}` : ""}` : key ? ", undefined" : "";
             return `[ be.METHOD, ${name}${mode}${key ? `, ${key}` : ""} ]`;
         }
         default: return `[ be.${row.kind}, ${name}${key ? `, ${key}` : ""} ]`;

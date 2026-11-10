@@ -87,7 +87,7 @@ export class Tr2DepthStencil extends IRoot
    * @param {object} [renderContext] The context to create through.
    * @returns {boolean} Whether the surface was created.
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   Create(width, height, format, msaaType = 1, msaaQuality = 0, flags = ExFlag.EX_NONE, renderContext = null)
   {
     let gpuUsage = Tr2GpuUsage.DEPTH_STENCIL | Tr2GpuUsage.SHADER_RESOURCE;

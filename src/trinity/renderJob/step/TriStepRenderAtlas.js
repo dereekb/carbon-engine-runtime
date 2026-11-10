@@ -64,7 +64,7 @@ export class TriStepRenderAtlas extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(atlas = null, focus = null)
   {
     this.SetAtlas(atlas);

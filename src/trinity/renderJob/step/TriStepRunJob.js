@@ -12,7 +12,7 @@ import { TriRenderJob } from "../TriRenderJob.js";
   // TriStepRunJob_Blue.cpp:11-27, in Carbon's order.
   members: [
     [ be.ATTR, "job", be.READWRITE | be.PERSIST ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetRenderJob" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetRenderJob" ]
   ],
   chainTo: TriRenderStep
 })

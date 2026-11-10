@@ -47,12 +47,13 @@ test("methods take an array of names, and every method macro kind records its ow
       export class Base { A() {} B() {} C() {} D() {} }
       @be.mapMethod("D")
       @be.mapMethodAsMethod("C")
-      @be.mapMethodAndWrapOptionalArgs("B")
+      @be.mapMethodAndWrapOptionalArgs(2, "B")
       @be.mapMethodAndWrap(["A"])
       @be.define("InhArrSub")
       export class Sub extends Base {}`);
     const macros = Object.fromEntries(CjsSchema.getSchema(Sub).methods.map(m => [ m.name, m.exposure?.macro ]));
     assert.deepEqual(macros, { A: "MAP_METHOD_AND_WRAP", B: "MAP_METHOD_AND_WRAP_OPTIONAL_ARGS", C: "MAP_METHOD_AS_METHOD", D: "MAP_METHOD" });
+    assert.equal(CjsSchema.getSchema(Sub).methods.find(m => m.name === "B").exposure.numOptional, 2);
     const two = await load(`
       export class Base { A() {} B() {} }
       @be.mapMethodAndWrap(["A", "B"])
@@ -108,9 +109,13 @@ test("an inherited field is mapped as an attribute, with a chooser, or as a fiel
 test("above a class the name is required, a single string for non-methods, and must name a member for methods and properties", () =>
 {
     class Base { Go() {} get prop() { return 1; } }
-    for (const name of [ "mapMethod", "mapMethodAndWrap", "mapMethodAndWrapOptionalArgs", "mapMethodAsMethod",
+    for (const name of [ "mapMethod", "mapMethodAndWrap", "mapMethodAsMethod",
         "mapProperty", "mapPropertyReadOnly", "mapPropertyPersisted", "mapProperty__Field", "mapPropertyReadOnly__Field", "mapPropertyPersisted__Field" ])
         assert.throws(() => { class Sub extends Base {} be[name]()(Sub); }, /requires the name of the inherited member/, name);
+    assert.throws(() => { class Sub extends Base {} be.mapMethodAndWrapOptionalArgs(1)(Sub); }, /requires the name of the inherited member/);
+    // Carbon always writes the optional-argument count (BlueExposureMacrosPython.h:140).
+    assert.throws(() => be.mapMethodAndWrapOptionalArgs("Go"), /optional-argument count/);
+    assert.throws(() => be.mapMethodAndWrapOptionalArgs(), /optional-argument count/);
     assert.throws(() => { class Sub extends Base {} be.mapAttribute(be.READ)(Sub); }, /requires the name of the inherited member/);
     assert.throws(() => { class Sub extends Base {} be.mapAttributeWithChooser(be.READ, null)(Sub); }, /requires the name of the inherited member/);
     assert.throws(() => { class Sub extends Base {} be.mapMethodAndWrap([])(Sub); }, /requires the name/);

@@ -203,7 +203,7 @@ export class Tr2GpuStructuredBuffer extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(3)
   __init__(...args)
   {
     throw new Error("Tr2GpuStructuredBuffer.__init__ is not implemented in CarbonEngineJS.");

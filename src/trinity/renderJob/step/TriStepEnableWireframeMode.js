@@ -20,7 +20,7 @@ export class TriStepEnableWireframeMode extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(value = false)
   {
     this.enableWireframe = !!value;

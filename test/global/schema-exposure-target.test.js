@@ -204,9 +204,10 @@ test("method macro variants preserve their alias; notUsed throws", () =>
     for (const [key,macro] of Object.entries(kinds))
     {
         class Variant { Call() {} }
-        CjsSchema.decorateMethod(Variant, "Call", exposure[key]("alias"));
+        const optional = key === "mapMethodAndWrapOptionalArgs";
+        CjsSchema.decorateMethod(Variant, "Call", optional ? exposure[key](2, "alias") : exposure[key]("alias"));
         exposure.define(`Target${key}`)(Variant);
-        assert.deepEqual(CjsSchema.getMethod(Variant,"Call").exposure, {macro,name:"alias"});
+        assert.deepEqual(CjsSchema.getMethod(Variant,"Call").exposure, optional ? {macro,name:"alias",numOptional:2} : {macro,name:"alias"});
         assert.deepEqual(Object.keys(new BlueClasses().GetTypeInfo(new Variant())[3]), ["alias"]);
     }
     CjsSchema.decorateMethod(Sample,"Skip",meta.notUsed);

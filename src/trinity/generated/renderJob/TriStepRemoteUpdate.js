@@ -58,7 +58,7 @@ export class TriStepRemoteUpdate extends TriRenderStep
    * @param {TriViewport} viewport The viewport it publishes.
    * @param {number} [id] The shared-memory instance id; Carbon's default is -1.
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(view, projection, viewport, id = -1)
   {
     this.SetData(view, projection, viewport, id);

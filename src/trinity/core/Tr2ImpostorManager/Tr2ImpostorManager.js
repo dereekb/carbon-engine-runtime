@@ -53,7 +53,7 @@ function copyHash(out, value)
     [ be.ATTR, "atlas", be.READ ],
     [ be.ATTR, "effect", be.READ ],
     [ be.PROP_RO, "count" ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "Create" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 4, "Create" ]
   ]
 })
 export class Tr2ImpostorManager

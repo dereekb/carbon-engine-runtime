@@ -16,7 +16,7 @@ import { TriRenderStep } from "./TriRenderStep.js";
   interfaces: [ TriRenderStep ],
   members: [
     [ be.ATTR, "viewport", be.READWRITE | be.PERSIST ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetViewport" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetViewport" ]
   ],
   chainTo: TriRenderStep
 })

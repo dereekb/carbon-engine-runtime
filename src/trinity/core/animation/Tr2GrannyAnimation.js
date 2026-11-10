@@ -140,7 +140,7 @@ function sampleCmfChannel(out, curves, channel, time)
     [ be.ATTR, "debugRenderJointNames", be.READWRITE ],
     [ be.ATTR, "animationEnabled", be.READWRITE ],
     [ be.METHOD, "PlayAnimation", be.WRAP, "PlayAnimationOnce" ],
-    [ be.METHOD, "PlayAnimationEx", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "PlayAnimationEx", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "ChainAnimation", be.WRAP ],
     [ be.METHOD, "ChainAnimationEx", be.WRAP ],
     [ be.METHOD, "TogglePauseAnimations", be.WRAP ],

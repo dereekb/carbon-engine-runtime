@@ -234,7 +234,7 @@ export class Tr2GpuBuffer extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(3)
   __init__(...args)
   {
     throw new Error("Tr2GpuBuffer.__init__ is not implemented in CarbonEngineJS.");

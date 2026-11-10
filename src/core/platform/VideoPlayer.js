@@ -578,7 +578,7 @@ export class VideoPlayer
 
 be.inherit(INotify, IBlueEvents)(VideoPlayer);
 
-CjsSchema.decorateMethod(VideoPlayer, "Create", be.mapMethodAndWrapOptionalArgs("__init__"));
+CjsSchema.decorateMethod(VideoPlayer, "Create", be.mapMethodAndWrapOptionalArgs(3, "__init__"));
 CjsSchema.decorateMethod(VideoPlayer, "Pause", be.mapMethodAndWrap("pause"));
 CjsSchema.decorateMethod(VideoPlayer, "Resume", be.mapMethodAndWrap("resume"));
 CjsSchema.decorateField(VideoPlayer, "is_paused", type.boolean, be.mapPropertyReadOnly());

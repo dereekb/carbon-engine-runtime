@@ -50,7 +50,7 @@ import { Tr2ControllerFloatVariable } from "../expression/Tr2ControllerFloatVari
     [ be.METHOD, "SetActionStartTime", be.WRAP ],
     [ be.METHOD, "SetActionEndTime", be.WRAP ],
     [ be.METHOD, "SetActionTrackID", be.WRAP ],
-    [ be.METHOD, "AddAction", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddAction", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "RemoveAction", be.WRAP ],
     [ be.METHOD, "IsTrackEnabled", be.WRAP ],
     [ be.METHOD, "EnableTrack", be.WRAP ]

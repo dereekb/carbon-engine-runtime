@@ -25,7 +25,7 @@ export class TriStepPushRenderTarget extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(renderTarget = null, slot = 0)
   {
     this.renderTarget = renderTarget ?? null;

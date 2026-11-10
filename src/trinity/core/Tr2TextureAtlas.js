@@ -283,7 +283,7 @@ function CopyToTexture(bitmap, texture, x, y, margin, renderContext)
     [ be.METHOD, "GetFreeMaxWidth", be.WRAP ],
     [ be.METHOD, "GetFreeMaxHeight", be.WRAP ],
     [ be.METHOD, "EjectAllTextures", be.WRAP ],
-    [ be.METHOD, "CreateTexture", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "CreateTexture", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "GetTexturesOutsideAtlas", be.WRAP ],
     [ be.METHOD, "HasALObject", be.WRAP ]
   ]

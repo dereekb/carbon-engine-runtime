@@ -47,7 +47,7 @@ export class TriStepRunComputeShader extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(4)
   __init__(effect = null, groupDimX = 1, groupDimY = 1, groupDimZ = 1)
   {
     this.effect = effect;

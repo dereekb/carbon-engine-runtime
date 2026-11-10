@@ -36,7 +36,7 @@ import { blue, ITriVectorFunction } from "#blue";
     [ be.ATTR, "positionOffset", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "damageLocatorIndex", be.READ ],
     [ be.ATTR, "impactSize", be.READWRITE ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetBehavior" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetBehavior" ]
   ]
 })
 export class EveLocalPositionCurve extends ITriVectorFunction

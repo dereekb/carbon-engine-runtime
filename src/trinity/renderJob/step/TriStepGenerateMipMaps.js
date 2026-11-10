@@ -22,7 +22,7 @@ export class TriStepGenerateMipMaps extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(renderTarget = null)
   {
     this.renderTarget = renderTarget ?? null;

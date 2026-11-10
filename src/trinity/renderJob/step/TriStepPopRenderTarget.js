@@ -24,7 +24,7 @@ export class TriStepPopRenderTarget extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(slot = 0)
   {
     this.slot = Number(slot) >>> 0;

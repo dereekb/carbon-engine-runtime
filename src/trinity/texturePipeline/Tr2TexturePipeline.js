@@ -171,6 +171,6 @@ CjsSchema.exposure.inherit(IRoot)(Tr2TexturePipeline);
 
 CjsSchema.decorateField(Tr2TexturePipeline, "pipelineType", be.mapAttribute(be.READWRITE | be.PERSIST), type.string);
 CjsSchema.decorateField(Tr2TexturePipeline, "steps", be.mapAttribute(be.READ | be.PERSIST), type.list("ITr2TexturePipelineStep"));
-CjsSchema.decorateMethod(Tr2TexturePipeline, "ExecuteFromScript", be.mapMethodAndWrapOptionalArgs("Execute"));
+CjsSchema.decorateMethod(Tr2TexturePipeline, "ExecuteFromScript", be.mapMethodAndWrapOptionalArgs(2, "Execute"));
 CjsSchema.decorateMethod(Tr2TexturePipeline, "GetResourceDependenciesFromScript", be.mapMethodAndWrap("GetResourceDependencies"));
 CjsSchema.exposure.define("Tr2TexturePipeline")(Tr2TexturePipeline);

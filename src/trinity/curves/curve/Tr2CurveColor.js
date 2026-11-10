@@ -32,7 +32,7 @@ const CLAMP_MIN = vec4.create();
     [ be.ATTR, "timeOffset", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "currentValue", be.READ ],
     [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
-    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS, 4 ],
     [ be.METHOD, "SetExtrapolation", be.WRAP ]
   ]
 })

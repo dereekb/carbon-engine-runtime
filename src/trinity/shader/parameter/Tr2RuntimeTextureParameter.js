@@ -24,7 +24,7 @@ import { RealizeTexture } from "../../core/Tr2ImageIOHelpers.js";
     [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "texture", be.READWRITE | be.PERSIST | be.NOTIFY ],
     [ be.ATTR, "uavMipLevel", be.READWRITE | be.PERSIST ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "Create" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 3, "Create" ]
   ]
 })
 export class Tr2RuntimeTextureParameter extends ITriEffectResourceParameter

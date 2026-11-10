@@ -37,7 +37,7 @@ import { TriCurveSet } from "../../../curves/TriCurveSet.js";
     [ be.METHOD, "SetControllerVariable", be.WRAP ],
     [ be.METHOD, "HandleControllerEvent", be.WRAP ],
     [ be.METHOD, "StartControllers", be.WRAP ],
-    [ be.METHOD, "Rebind", be.WRAP_OPTIONAL_ARGS ]
+    [ be.METHOD, "Rebind", be.WRAP_OPTIONAL_ARGS, 1 ]
   ]
 })
 export class EveMultiEffect extends IRoot

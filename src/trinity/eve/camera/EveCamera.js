@@ -164,7 +164,7 @@ const CAMERA_YAW_PITCH_ROLL = new Float64Array(3);
     [ be.METHOD, "OrbitParent", be.WRAP ],
     [ be.METHOD, "RotateOnOrbit", be.WRAP ],
     [ be.METHOD, "Dolly", be.WRAP ],
-    [ be.METHOD, "Zoom", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "Zoom", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "ResetStartTime", be.WRAP ]
   ]
 })

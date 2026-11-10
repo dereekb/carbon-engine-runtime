@@ -123,7 +123,7 @@ function sphericalToCartesian(value, center)
     [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
     [ be.ATTR, "depthOffset", be.READWRITE | be.PERSIST ],
     [ be.METHOD, "AddStraightLine", be.WRAP ],
-    [ be.METHOD, "AddCurvedLineCrt", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddCurvedLineCrt", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "AddCurvedLineSph", be.WRAP ],
     [ be.METHOD, "AddSpheredLineCrt", be.WRAP ],
     [ be.METHOD, "AddSpheredLineSph", be.WRAP ],

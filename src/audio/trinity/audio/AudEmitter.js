@@ -148,7 +148,7 @@ export class AudEmitter extends AudGameObjResource
    * @renamed Py__init__
    * @param {string} [name] Emitter name; Carbon defaults it to empty.
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(name = "")
   {
     this.name = name;
@@ -160,7 +160,7 @@ export class AudEmitter extends AudGameObjResource
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   SendEvent(name, bypassPrefix = false)
   {
     return this.PostEvent(name, bypassPrefix);

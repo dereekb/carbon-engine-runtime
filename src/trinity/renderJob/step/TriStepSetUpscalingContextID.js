@@ -21,7 +21,7 @@ export class TriStepSetUpscalingContextID extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(upscalingContextID = 0xffffffff)
   {
     this.upscalingContextID = Number(upscalingContextID) >>> 0;

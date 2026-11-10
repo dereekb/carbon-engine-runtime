@@ -10,7 +10,7 @@ import { TriRenderStep } from "./TriRenderStep.js";
   // TriStepSetDebugRenderer_Blue.cpp:11-21, in Carbon's order.
   members: [
     [ be.ATTR, "renderer", be.READWRITE ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetDebugRenderer" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetDebugRenderer" ]
   ],
   chainTo: TriRenderStep
 })

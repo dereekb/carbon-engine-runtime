@@ -72,7 +72,7 @@ export class Tr2PrimitiveScene extends ITr2PickableScene
    * @adapted
    * @renamed PickObjectOnly
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   async PickObject(x, y, projection, view, viewport, _flags = 0)
   {
     const result = { components: 1, object: null };

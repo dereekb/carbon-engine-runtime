@@ -13,7 +13,7 @@ import { TriRenderStep } from "./TriRenderStep.js";
   interfaces: [ TriRenderStep ],
   members: [
     [ be.ATTR, "projection", be.READWRITE | be.PERSIST ],
-    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, "SetProjection" ]
+    [ be.METHOD, "__init__", be.WRAP_OPTIONAL_ARGS, 1, "SetProjection" ]
   ],
   chainTo: TriRenderStep
 })

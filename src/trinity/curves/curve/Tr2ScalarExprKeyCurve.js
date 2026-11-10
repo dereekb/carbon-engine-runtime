@@ -30,7 +30,7 @@ import "../../generated/include/enums.js";
     [ be.ATTR, "currentValue", be.READ ],
     [ be.ATTR_CHOOSER, "interpolation", be.READWRITE | be.PERSIST | be.ENUM, "trinity.ScalarInterpolationChooser" ],
     [ be.ATTR, "keys", be.READ | be.PERSIST ],
-    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS, 3 ],
     [ be.METHOD, "RemoveKey", be.WRAP ],
     [ be.METHOD, "GetKeyCount", be.WRAP ],
     [ be.METHOD, "GetValueAt", be.WRAP ],

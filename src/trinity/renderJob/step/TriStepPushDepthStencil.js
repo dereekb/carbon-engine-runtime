@@ -30,7 +30,7 @@ export class TriStepPushDepthStencil extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   __init__(depthStencil)
   {
     this.pushCurrent = arguments.length === 0;

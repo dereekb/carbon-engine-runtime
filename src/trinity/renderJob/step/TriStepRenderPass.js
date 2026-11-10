@@ -33,7 +33,7 @@ export class TriStepRenderPass extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(scene = null, passType = 0)
   {
     this.scene = scene;

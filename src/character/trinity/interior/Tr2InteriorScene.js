@@ -345,7 +345,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
    * @param {number} [_pickTypes=0] Carbon's optional Tr2PickTypes, unused by the donor.
    * @returns {Promise<object|null>} The picked object, or null.
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   async PickObject(x, y, projection, view, viewport, _pickTypes = 0)
   {
     const results = { components: ITr2PickableScene.PickComponent.PICK_OBJECT, object: null };

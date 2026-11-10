@@ -38,7 +38,7 @@ export class TriStepRenderEffect extends TriRenderStep
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(effect = null, shaderBuffer = null)
   {
     this.effect = effect;

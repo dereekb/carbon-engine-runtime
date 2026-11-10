@@ -27,7 +27,7 @@ export class TriStepSetVisualizationMode extends TriRenderStep
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(2)
   __init__(object = null, mode = 0)
   {
     this.SetObject(object);

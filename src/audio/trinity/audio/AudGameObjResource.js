@@ -101,7 +101,7 @@ function NowMs()
     [ be.METHOD, "SeekOnEventPercent", be.WRAP ],
     [ be.METHOD, "SeekOnEventMs", be.WRAP ],
     [ be.METHOD, "StopAll", be.WRAP ],
-    [ be.METHOD, "StopEvent", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "StopEvent", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "StopSound", be.WRAP ],
     [ be.METHOD, "GetSwitches", be.WRAP ],
     [ be.METHOD, "GetPlayingEvents", be.WRAP ],

@@ -101,7 +101,7 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
     [ be.ATTR, "captureIndexDataCapacity", be.READ ],
     [ be.PROP, "useLinearColorSpace" ],
     [ be.PROP, "gammaCorrectText" ],
-    [ be.METHOD, "PickObject", be.WRAP_OPTIONAL_ARGS ]
+    [ be.METHOD, "PickObject", be.WRAP_OPTIONAL_ARGS, 1 ]
   ]
 })
 export class Tr2Sprite2dScene extends ITr2Scene

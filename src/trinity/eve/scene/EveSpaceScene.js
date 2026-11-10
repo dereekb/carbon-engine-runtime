@@ -1032,7 +1032,7 @@ export class EveSpaceScene
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   async PickObject(x, y, projection, view, viewport, pickTypes = TR2_PICK_TYPE_DEFAULT)
   {
     const result = await this.PickObjectAndExtraData(x, y, projection, view, viewport, pickTypes);
@@ -1044,7 +1044,7 @@ export class EveSpaceScene
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   PickAsyncObject(listener, x, y, projection, view, viewport, pickTypes = TR2_PICK_TYPE_DEFAULT)
   {
     if (!listener) return null;
@@ -1056,7 +1056,7 @@ export class EveSpaceScene
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   async PickObjectAndAreaID(x, y, projection, view, viewport, pickTypes = TR2_PICK_TYPE_DEFAULT)
   {
     const result = await this.PickObjectAndExtraData(x, y, projection, view, viewport, pickTypes);
@@ -1068,7 +1068,7 @@ export class EveSpaceScene
    *
    * @adapted
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   async PickObjectAndExtraData(x, y, projection, view, viewport, pickTypes = TR2_PICK_TYPE_DEFAULT)
   {
     const listener = new EvePickingContext();
@@ -1088,7 +1088,7 @@ export class EveSpaceScene
    *
    * @implemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   PickAsyncObjectAndExtraData(listener, x, y, projection, view, viewport, pickTypes = TR2_PICK_TYPE_DEFAULT)
   {
     if (!listener) return null;

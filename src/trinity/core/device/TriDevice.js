@@ -1302,7 +1302,7 @@ export class TriDevice extends IRoot
    *
    * @notImplemented
    */
-  @be.mapMethodAndWrapOptionalArgs()
+  @be.mapMethodAndWrapOptionalArgs(1)
   CreateUpscalingContext(...args)
   {
     throw new Error("TriDevice.CreateUpscalingContext is not implemented in CarbonEngineJS.");

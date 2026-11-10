@@ -26,7 +26,7 @@ import { Tr2CurveQuaternionKey } from "../key/Tr2CurveQuaternionKey.js";
     [ be.ATTR_CHOOSER, "extrapolationAfter", be.ENUM | be.READWRITE | be.PERSIST, "trinity.Tr2CurveExtrapolation" ],
     [ be.METHOD, "GetValueAt", be.WRAP, "GetValue" ],
     [ be.METHOD, "OnKeysChanged", be.WRAP ],
-    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS ],
+    [ be.METHOD, "AddKey", be.WRAP_OPTIONAL_ARGS, 1 ],
     [ be.METHOD, "SetExtrapolation", be.WRAP ]
   ]
 })
