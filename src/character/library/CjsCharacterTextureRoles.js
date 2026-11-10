@@ -27,11 +27,8 @@ const DERIVED = "matches Graphene's working behaviour, today's look (Graphene 6a
  *   `_512`, `_256` and none (`CjsCharacterTextureRoles.splitTier`).
  *
  * The parts library's one texture-role table (character-structure-and-plugins.md, "One role per manager": the parts
- * library is the only code that parses content paths). It folds two tables that had grown apart: the paper doll's
- * `CjsPaperDollTextureRoles` (the entries below, with their sources) and the library builder's `QualifyTexture`
- * (CjsCharacterLibraryBuilder.js, the documents' `CjsCharacterCatalogTextureBinding` role names). `qualify` keeps the
- * builder's naming and acceptance; `lookup` keeps the paper doll's. Where they disagree, both are kept and marked
- * (`qualify`). The map size tiers and the `characterTextureQuality` setting live here too.
+ * library is the only code that parses content paths). The entries below carry their sources. The map size tiers
+ * and the `characterTextureQuality` setting live here too.
  *
  * Ours (no Carbon counterpart): Carbon ships no paper doll; the client's is Python. The name is a working name.
  */
@@ -137,42 +134,6 @@ export class CjsCharacterTextureRoles
         }
         return [];
     }
-
-    /**
-     * The library builder's qualification of an original texture (was `QualifyTexture` in CjsCharacterLibraryBuilder.js):
-     * its role in the documents' naming (`colorize-layer`, `diffuse-overlay`, ...), its target region and its quality,
-     * for a `CjsCharacterCatalogTextureBinding`. Applied at preparation, never by the renderer. It keeps the builder's
-     * acceptance, which differs from `lookup`'s (both kept, marked): it reads `.dds`, `.tga` and `.jpg` names and an
-     * `_hi` suffix, accepts every suffix under both families (`colorize_body_n`, which `lookup` does not source), and a
-     * bare `<name>_<suffix>` shorthand when the caller names the target (`targetHint`).
-     * @param {string} path The texture's path.
-     * @param {?string} targetHint The target region a shorthand name takes.
-     * @param {string} sourceVersion The source version the binding belongs to.
-     * @param {function(string, string): object} origin Makes the binding's origin record.
-     * @returns {{ path: string, role: string, target: string, quality: string, sourceVersion: string, origin: object }}
-     * @throws {Error} For a name with no role or no target.
-     */
-    static qualify(path, targetHint, sourceVersion, origin)
-    {
-        const name = path.split("/").at(-1).toLowerCase().replace(/\.(png|dds|tga|jpe?g)$/u, "");
-        const quality = name.match(/_(4k|512|256)(?:_hi)?$/u)?.[1] ?? "standard";
-        const family = name.replace(/_(4k|512|256)(?:_hi)?$/u, "").replace(/_hi$/u, "");
-        const explicit = family.match(/^(colorize|comp)_(body|head|hair|acc)_(tn|mn|[dnslzm])$/u);
-        const short = family.match(/_(tn|[dnslz])$/u);
-        const target = explicit?.[2] ?? targetHint;
-        const map = explicit?.[3] ?? short?.[1];
-        if (!target || !map || !CjsCharacterTextureRoles.regions.includes(target))
-            throw new Error(`Texture role/target is unqualified: ${path}`);
-        const suffix = explicit?.[1] === "comp" ? "overlay" : "source";
-        const role = CjsCharacterTextureRoles.qualifiedRoles[map];
-        return { path, role: role.includes("-") ? role : role + "-" + suffix, target, quality, sourceVersion, origin: origin(path, "character-texture-role-v1") };
-    }
-
-    /**
-     * The documents' role name of each suffix (`qualify`): a name without `-` takes `-overlay` for the `comp` family and
-     * `-source` otherwise.
-     */
-    static qualifiedRoles = { l: "colorize-layer", z: "colorize-zones", m: "cut-mask", tn: "twist-normal", mn: "normal-overlay", d: "diffuse", n: "normal", s: "specular" };
 
     /**
      * Each suffix's role. `families`: the name prefixes it is sourced for. `property`: the effect texture parameter

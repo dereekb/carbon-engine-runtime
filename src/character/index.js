@@ -9,7 +9,6 @@
 
 export { CjsCharacterLibraryBuilder } from "./library/CjsCharacterLibraryBuilder.js";
 export { CjsCharacterLibrary } from "./library/CjsCharacterLibrary.js";
-export { CjsCharacterLibraryDocuments } from "./library/CjsCharacterLibraryDocuments.js";
 export { CjsCharacterLibraryManager } from "./library/CjsCharacterLibraryManager.js";
 export { CjsCharacterTextureRoles } from "./library/CjsCharacterTextureRoles.js";
 export { CjsCharacterFactory } from "./factory/CjsCharacterFactory.js";

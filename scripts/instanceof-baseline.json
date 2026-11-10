@@ -4,7 +4,6 @@
   "src/audio/library/CjsAudioLibrary.js": 1,
   "src/audio/trinity/audio/AudEventCurve.js": 1,
   "src/character/library/CjsCharacterLibrary.js": 2,
-  "src/character/library/CjsCharacterLibraryDocuments.js": 1,
   "src/character/library/CjsCharacterLibraryManager.js": 1,
   "src/character/model/resolution/CjsCharacterAppearanceResolver.js": 29,
   "src/core/platform/backendSelection.js": 3,

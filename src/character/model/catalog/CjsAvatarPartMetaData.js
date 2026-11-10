@@ -7,10 +7,6 @@ import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
  * `!!python/object:paperDoll.AvatarPartMetaData` in metadata.yaml content.
  *
  * `dependantModifiers` and `occludesModifiers` keep the raw authored strings.
- * `dependencies` and `occlusions` hold ordered `CjsCharacterModifierReference`
- * projections beside them, each with its `authoredValue`, an
- * optional normalized unsuffixed `modifierPath`, and exact `partSource` /
- * `modifierLocation` relationships only when a join is exact.
  */
 @meta.define({ className: "CjsAvatarPartMetaData", aliases: [ "paperDoll.AvatarPartMetaData" ] })
 @meta.exposureChainTo(CjsCharacterRecord)
@@ -56,14 +52,6 @@ export class CjsAvatarPartMetaData extends CjsCharacterRecord
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.list("string")
     occludesModifiers = [];
-
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("CjsCharacterModifierReference")
-    dependencies = [];
-
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("CjsCharacterModifierReference")
-    occlusions = [];
 
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.int32

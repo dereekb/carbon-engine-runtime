@@ -10,11 +10,6 @@ import { meta, type } from "#schema";
 export class CjsCharacterRecord
 {
 
-    /** The schema-12 document key this record was folded under, or "". */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.string
-    recordID = "";
-
     /**
      * The item's library ID: opaque; never parse it. Today it is the item's `res:` path (a generated ID for an item
      * that is no file); later a graphic ID. The library assigns it when it stores the item, if missing.

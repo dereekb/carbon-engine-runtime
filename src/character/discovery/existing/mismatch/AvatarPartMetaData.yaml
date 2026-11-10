@@ -2,7 +2,7 @@
 # Compared registered inherited, exposed persisted names and types; ownership is a separate flag.
 # type differs: occludesModifiers: Authored null in 11 of 215 occurrences; registered list<string> metadata has no nullable declaration.
 # Runtime declaration: src/character/model/catalog/CjsAvatarPartMetaData.js:54
-# Class-only persisted members (not mismatches): sourcePath, dependencies, occlusions, recordID.
+# Class-only persisted members (not mismatches): sourcePath.
 # End runtime comparison.
 #
 # Raw res-file shape; build 3646012.

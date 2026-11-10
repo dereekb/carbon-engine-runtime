@@ -50,14 +50,11 @@ function fixture(t)
     return { builder, resMan, paths, reads };
 }
 
-test("flat values retain source identities and leave legacy payloads unchanged", () =>
+test("library values are its items by kind, version 1, and keep their source identities", () =>
 {
     const library = new CjsCharacterLibrary();
-    const legacy = library.GetValues();
-    assert.equal(legacy.schemaVersion, 11);
-    assert.equal(Object.hasOwn(legacy, "sourceNames"), false);
-    assert.equal(Object.hasOwn(legacy, "cameras"), false);
-    library.schemaVersion = 13;
+    assert.equal(library.GetValues().schemaVersion, 1);
+    assert.throws(() => CjsCharacterLibrary.from({ ...library.GetValues(), schemaVersion: 13 }), /schema version 1/u, "earlier formats are not read");
     const camera = new CjsCharacterCamera();
     camera.field_of_view = 0.123456789;
     library.AddKind("cameras", CAMERA, camera);
@@ -165,29 +162,13 @@ test("eager loading stores opaque paths without decoding and loads every indexed
     assert.equal(library.blackResources[0].value, ROOT + "/mesh.red");
 });
 
-test("legacy formats reject flat fields and Reindex refreshes paired flat identities", () =>
-{
-    const library = new CjsCharacterLibrary();
-    assert.throws(() => CjsCharacterLibrary.from({...library.GetValues(), cameras: []}), /schema-13 field/);
-    library.schemaVersion = 13;
-    const first = new CjsCharacterCamera(), second = new CjsCharacterCamera();
-    library.AddKind("cameras", "first", first);
-    assert.equal(library.GetKindRecord("cameras", "first"), first);
-    library.cameras[0] = second;
-    library.sourceNames.get("cameras")[0] = "second";
-    library.Reindex();
-    assert.equal(library.GetKindRecord("cameras", "first"), null);
-    assert.equal(library.GetKindRecord("cameras", "second"), second);
-});
-
-test("async library replacement detaches the previous source loader", async t =>
+test("installing another library detaches the previous source loader", async t =>
 {
     const { builder, reads } = fixture(t);
     await builder.Build({ lazy: true });
     const next = new CjsCharacterLibrary();
-    next.schemaVersion = 13;
-    const manager = new CjsCharacterLibraryManager(null, { sourceBuilder: builder, resourceLoader: async () => next });
-    assert.equal(await manager.LoadLibraryAsync("res:/replacement"), true);
+    const manager = new CjsCharacterLibraryManager(null, { sourceBuilder: builder });
+    manager.InstallLibrary(next);
     assert.equal(manager.GetLibrary(), next);
     await assert.rejects(manager.GetCamera(CAMERA), /Unresolved/);
     assert.equal(reads.length, 0);
@@ -217,7 +198,6 @@ test("a pending part join cannot cross a library replacement", async t =>
     const manager = new CjsCharacterLibraryManager(null, { sourceBuilder: builder });
     const pending = manager.GetPart(ROOT);
     const next = new CjsCharacterLibrary();
-    next.schemaVersion = 13;
     manager.InstallLibrary(next);
     release();
     await assert.rejects(pending, /replaced/);

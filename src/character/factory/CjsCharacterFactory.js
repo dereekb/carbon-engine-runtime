@@ -394,7 +394,8 @@ export class CjsCharacterFactory
 
     /**
      * A `.prs` recipe, as its typed record (`CjsCharacterRecipe`), read through Blue's resMan
-     * (`registerObjectBuilders`).
+     * (`registerObjectBuilders`). Each call answers the caller's own record, as every library answer is: the object
+     * builder caches the file's parse, not its records. The record's `_pdpID` is its path, as the library gives one.
      * @param {string} path The file's canonical `res:` path.
      * @returns {Promise<import("../model/source/CjsCharacterRecipe.js").CjsCharacterRecipe>} The record; a file that does
      *   not load rejects.
@@ -403,6 +404,7 @@ export class CjsCharacterFactory
     {
         const record = await blue.resMan.LoadObject(path);
         if (!record) throw new Error("Character recipe did not load: " + path);
+        CjsSchema.setValues(record, { _pdpID: path }, { initialize: false });
         return record;
     }
 

@@ -1,7 +1,7 @@
 // The character factory's DNA core: reading and writing a DNA, the sex defaults, and their merge.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CjsCharacterFactory, CjsPaperDollDefinition, CjsPaperDollInstance } from "../../../npm/dist/character/index.js";
+import { CjsCharacterFactory, CjsCharacterPdpType, CjsPaperDollDefinition, CjsPaperDollInstance } from "../../../npm/dist/character/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
 
@@ -158,6 +158,9 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     ROOT + "topmiddle/shirt01/types/shirt01.type", ROOT + "topmiddle/shirt01/plain.color", ROOT + "makeup/eyeliner/eyeliner_01/types/eyeliner_01.type"
   ];
   installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });
+  const [ first, second ] = [ await CjsCharacterFactory.fetchRecipe(PRS), await CjsCharacterFactory.fetchRecipe(PRS) ];
+  assert.notEqual(first, second, "each caller its own recipe record");
+  assert.deepEqual([ first._pdpID, first._pdpType ], [ PRS, CjsCharacterPdpType.RECIPE ]);
   const { dna, problems } = await CjsCharacterFactory.readRecipe(PRS);
   assert.equal(dna.sex, "female");
   assert.deepEqual(dna.parts.lipstick, { enabled: true, option: "lipstick_01", weight: 1,

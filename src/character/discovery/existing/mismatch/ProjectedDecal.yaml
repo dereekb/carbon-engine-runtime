@@ -4,7 +4,7 @@
 # Runtime declaration: src/character/model/catalog/CjsProjectedDecal.js:58
 # type differs: textureResource: All 181 authored occurrences are null; registered string metadata has no nullable declaration.
 # Runtime declaration: src/character/model/catalog/CjsProjectedDecal.js:49
-# Class-only persisted members (not mismatches): sourcePath, recordID.
+# Class-only persisted members (not mismatches): sourcePath.
 # End runtime comparison.
 #
 # Raw res-file shape; build 3646012.
