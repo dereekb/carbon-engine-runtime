@@ -1,6 +1,7 @@
 import { babel } from "@rollup/plugin-babel";
 import json from "@rollup/plugin-json";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isUnshippedSource } from "./scripts/lib/unshipped-source.js";
@@ -68,9 +69,21 @@ function packageName(id)
     return id.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
 }
 
+// Package `#` imports resolve to their source files, so dist holds relative paths. A browser does not
+// read package.json `imports`, and a module worker does not inherit the page's import map: a `#` left
+// in dist fails there (resource.worker.bundle.js importing a per-file format module).
+const sourceRequire = createRequire(path.join(root, "package.json"));
+const packageImports = {
+    name: "cjs-package-imports-relative",
+    resolveId(source)
+    {
+        return source.startsWith("#") ? sourceRequire.resolve(source) : null;
+    }
+};
+
 export default {
     input,
-    external: id => id.startsWith("#") || id.startsWith("node:") || dependencies.has(packageName(id)),
+    external: id => id.startsWith("node:") || dependencies.has(packageName(id)),
     output: {
         // npm/dist, or the staging directory build-npm-staged.js swaps in at the end.
         dir: `${process.env.CJS_NPM_OUT || "npm"}/dist`,
@@ -80,6 +93,7 @@ export default {
         sourcemap: true
     },
     plugins: [
+        packageImports,
         json({ compact: true }),
         babel({
             babelHelpers: "bundled",
