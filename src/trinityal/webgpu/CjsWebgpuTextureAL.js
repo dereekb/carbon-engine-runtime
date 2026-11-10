@@ -53,6 +53,25 @@ const VIEW_DIMENSION_OF_TYPE = Object.freeze({
 });
 
 /**
+ * Whether a GPUTexture can give a view of this dimension: a cube needs six
+ * square layers, as a cube view takes them all (a cube array a multiple of
+ * six), 3d a 3d texture, and the
+ * 2d kinds a 2d one (WebGPU's createView validation).
+ *
+ * @param {object} texture A `GPUTexture`.
+ * @param {string} viewDimension A `GPUTextureViewDimension`.
+ * @returns {boolean} Whether the view is valid.
+ */
+function CanView(texture, viewDimension)
+{
+  if (viewDimension === "3d") return texture.dimension === "3d";
+  if (texture.dimension !== "2d") return false;
+  if (viewDimension === "cube") return texture.width === texture.height && texture.depthOrArrayLayers === 6;
+  if (viewDimension === "cube-array") return texture.width === texture.height && texture.depthOrArrayLayers % 6 === 0;
+  return true;
+}
+
+/**
  * The formats core WebGPU accepts with STORAGE_BINDING (the WebGPU spec's
  * texture format capabilities table). D3D lets far more formats be UAVs.
  */
@@ -440,6 +459,11 @@ export class CjsWebgpuTextureAL extends Tr2DeviceResourceAL
   GetDeviceTextureView(viewDimension = VIEW_DIMENSION_OF_TYPE[this._desc?.GetType()] ?? "2d", colorSpace = 0, sampleType)
   {
     if (!this._texture) return null;
+    // A view this texture cannot give (a cube of a 2D texture: content binds
+    // deathless_hangar_scene_02a_ref.dds, a 2D DXT5, as a scene cube map) is
+    // null, so the set binds the dummy. D3D11 fails that SRV the same way and
+    // the slot reads zero; an invalid WebGPU view would void the whole pass.
+    if (!CanView(this._texture, viewDimension)) return null;
 
     // Translated colour-texture reads use Carbon's R32_FLOAT view. An
     // authored DepthTexture2D instead requires the native depth attachment.
