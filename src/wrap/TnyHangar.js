@@ -18,6 +18,13 @@ import { TnyControllers, ParseEnumValues } from "./objects/TnyControllers.js";
 /** Bay placements in a layout-built hangar, by size (the SOF layout placement names). */
 const BAY_PLACEMENTS = { small: "small_dock_ships", medium: "medium_dock_ships" };
 
+/** The docker's docking-machine states in which the ship has landed. */
+const DOCKED_STATES = new Set([ "docked", "docked_after_skinChange" ]);
+
+/** The docker's states between an undock starting and the ship landing again (docked excluded). */
+const UNDOCK_STATES = new Set([ "InitalizeUndock", "Short_Wait", "docked_2_undocked", "undock_cancelled_ships_with_Roll",
+    "undock_cancelled_ships_NonRoll", "undock_cancelled_NonRollShip" ]);
+
 /** How a ship enters a bay. */
 const ENTRIES = [ "docked", "dock", "appear" ];
 
@@ -211,51 +218,159 @@ export class TnyHangar extends TnyScene
     }
 
     /**
-     * Undocks a bay's ship: the docker flies it out (and, the hangar view
-     * never leaving, round again: its undock_cancelled states); a hangar
-     * without a docker plays its own undock (controller variable `Undock`).
+     * Undocks a bay's ship, as the client drives it (FOUND: the docker never
+     * touches the hangar; its docking_hangar parameter is unused):
+     * - the docker's `docked` to 0 flies the ship out, and the content always
+     *   runs undock_cancelled and docks it again (the hangar view never leaves);
+     * - the hangar's own `Undock` trigger (Hangar_Controller on every hangar,
+     *   and the racial audio controllers) plays its undock effects and resets;
+     * - `Docking_State` 2 (undocking) where the hangar has one (AIR, Jita),
+     *   back to 1 (docked) when the docker lands the ship again (Sync).
+     * The docker only leaves its docked state, so an undock asked while the
+     * ship is still docking waits until it has landed.
      *
      * @param {number} [bay=this.active] The bay.
-     * @returns {boolean} Whether a ship was there.
+     * @returns {boolean} Whether a ship was there to undock.
      */
     Undock(bay = this.active)
     {
         const record = this._bays[bay];
         if (!record?.ship) return false;
-        if (this.kind === "origin") SetVariable(this.hangar.wrapped.controllers, "Undock", 1);
-        else record.effect.SetControllerVariable("docked", 0);
+        if (this.kind !== "origin" && !DOCKED_STATES.has(this._DockerState(record)))
+        {
+            record.undockPending = true;
+            return true;
+        }
+        this._StartUndock(record);
         return true;
     }
 
+    /** Sends the undock to the docker and the hangar's own controllers. */
+    _StartUndock(record)
+    {
+        record.undockPending = false;
+        if (record.effect && this.kind !== "origin") record.effect.SetControllerVariable("docked", 0);
+        const hangar = this.hangar.wrapped;
+        hangar.SetControllerVariable("Undock", 1);
+        if (this.hangar.controllers.GetVariable("Docking_State") !== null) hangar.SetControllerVariable("Docking_State", 2);
+        record.undocking = true;
+        record.leftDock = false;
+    }
+
+    /** The state of the hangar's own Undock machine (Hangar_Controller), or null without one. */
+    _HangarUndockState()
+    {
+        // Jita's CH_Jita_DockingController also names a machine Undock; the hangar's own is the one with the Undock variable.
+        for (const controller of this.hangar.controllers._Controllers())
+        {
+            if (!controller.GetVariableByName("Undock")) continue;
+            const machine = controller.stateMachines.find(each => each.name === "Undock");
+            if (machine) return machine.GetCurrentState()?.name ?? null;
+        }
+        return null;
+    }
+
+    /** The docker's docking machine state for a bay, or null without one. */
+    _DockerState(record)
+    {
+        const docker = record.effect ? record.effect.controllers.find(controller => controller.name === "docker") : null;
+        const machine = docker ? docker.stateMachines.find(each => each.name === "docking") : null;
+        const state = machine ? machine.GetCurrentState() : null;
+        return state ? state.name : null;
+    }
+
     /**
-     * Cancels an undock the docker has begun, by its authored path: while the
-     * docking machine is in InitalizeUndock (the init_undock range), docked
-     * back to 1 takes InitalizeUndock_2_docked and the ship settles again.
-     * Once past it (Short_Wait, docked_2_undocked) the content itself always
-     * runs undock_cancelled and docks again; there is nothing to drive.
+     * A bay's docking phase, for a UI to enable and highlight its controls:
+     * "empty", "docking" (flying in or settling), "docked", or "undocking"
+     * (an undock asked for or under way, until the ship has landed again);
+     * with whether Undock and CancelUndock would act now.
+     *
+     * @param {number} [bay=this.active] The bay.
+     * @returns {{phase: string, canUndock: boolean, canCancelUndock: boolean}} The phase.
+     */
+    GetBayState(bay = this.active)
+    {
+        const record = this._bays[bay];
+        if (!record?.ship) return { phase: "empty", canUndock: false, canCancelUndock: false };
+        if (this.kind === "origin") return { phase: record.undocking ? "undocking" : "docked", canUndock: !record.undocking, canCancelUndock: false };
+        const state = this._DockerState(record);
+        const phase = record.undockPending || record.undocking ? "undocking" : DOCKED_STATES.has(state) ? "docked" : "docking";
+        return { phase, canUndock: phase === "docked", canCancelUndock: this.CanCancelUndock(bay) };
+    }
+
+    /**
+     * Each frame: applies an undock that waited for the ship to land, ends an
+     * undock once the docker has docked the ship again (Docking_State back to
+     * 1), and announces "bays" when any bay's phase changed.
+     */
+    Sync()
+    {
+        super.Sync();
+        let changed = false;
+        for (const record of this._bays)
+        {
+            const state = record.ship ? this._DockerState(record) : null;
+            if (record.undockPending && DOCKED_STATES.has(state)) this._StartUndock(record);
+            if (record.undocking && UNDOCK_STATES.has(state)) record.leftDock = true;
+            if (record.undocking && this.kind !== "origin" && record.leftDock && DOCKED_STATES.has(state))
+            {
+                record.undocking = record.leftDock = false;
+                if (this.hangar.controllers.GetVariable("Docking_State") !== null) this.hangar.wrapped.SetControllerVariable("Docking_State", 1);
+            }
+            // Without a docker the hangar's own Undock machine is the undock: it resets the
+            // variable on entering Undocking and leaves that state once its effect has played.
+            if (record.undocking && this.kind === "origin")
+            {
+                const undocking = this._HangarUndockState() === "Undocking";
+                if (undocking) record.leftDock = true;
+                else if (record.leftDock)
+                {
+                    record.undocking = record.leftDock = false;
+                    if (this.hangar.controllers.GetVariable("Docking_State") !== null) this.hangar.wrapped.SetControllerVariable("Docking_State", 1);
+                }
+            }
+            const key = JSON.stringify(this.GetBayState(record.index));
+            if (key !== record.lastState) { record.lastState = key; changed = true; }
+        }
+        if (changed && this._onModified) this._onModified("bays");
+    }
+
+    /**
+     * Cancels an undock, by the docker's authored path: while the docking
+     * machine is in InitalizeUndock (the init_undock range), docked back to 1
+     * takes InitalizeUndock_2_docked and the ship settles again. Once past it
+     * (Short_Wait, docked_2_undocked) the content itself always runs
+     * undock_cancelled and docks again; there is nothing to drive. An undock
+     * still waiting for the ship to land is simply dropped.
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {boolean} Whether an undock was cancelled.
      */
     CancelUndock(bay = this.active)
     {
+        const record = this._bays[bay];
+        if (record?.undockPending)
+        {
+            record.undockPending = false;
+            return true;
+        }
         if (!this.CanCancelUndock(bay)) return false;
-        this._bays[bay].effect.SetControllerVariable("docked", 1);
+        record.effect.SetControllerVariable("docked", 1);
         return true;
     }
 
     /**
-     * Whether CancelUndock would act: the bay's docker is in InitalizeUndock.
+     * Whether CancelUndock would act: an undock waits for the ship to land,
+     * or the bay's docker is in InitalizeUndock.
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {boolean} Whether its undock can still be cancelled.
      */
     CanCancelUndock(bay = this.active)
     {
-        const effect = this._bays[bay]?.effect;
-        if (!effect || this.kind === "origin") return false;
-        const machine = effect.controllers.find(controller => controller.name === "docker")?.stateMachines.find(each => each.name === "docking");
-        return machine?.GetCurrentState()?.name === "InitalizeUndock";
+        const record = this._bays[bay];
+        if (!record?.effect || this.kind === "origin") return false;
+        return record.undockPending || this._DockerState(record) === "InitalizeUndock";
     }
 
     /** The hangar's actions, for the type info: CancelUndock only while it can act. */
@@ -317,7 +432,8 @@ export class TnyHangar extends TnyScene
             if (camera) bay.camera = vec3.clone(camera.position); // alloc: kept by the bay
             bays.push(this._Place(bay));
         }
-        this._bays = bays.map((bay, index) => Object.assign(bay, { index, ship: null, effect: null, saved: null }));
+        this._bays = bays.map((bay, index) => Object.assign(bay, { index, ship: null, effect: null, saved: null,
+            undockPending: false, undocking: false, leftDock: false, lastState: null }));
     }
 
     /** A layout bay: its transform is its placed hull's; its camera point its own transition locator. */
@@ -504,6 +620,7 @@ export class TnyHangar extends TnyScene
     {
         const { ship, effect, saved } = bay;
         bay.ship = bay.effect = bay.saved = null;
+        bay.undockPending = bay.undocking = bay.leftDock = false;
         const finish = () =>
         {
             const objects = this.wrapped.objects;

@@ -165,7 +165,8 @@ export class TnyControllers
      * hangar's Undock, the docker's skinChange). The trigger rule is DERIVED
      * from the content's shape. Trigger runs one; it can run again.
      *
-     * @returns {{name: string, kind: "event"|"trigger", controller: string}[]} The actions.
+     * @returns {{name: string, kind: "event"|"trigger", controller: string, running: boolean}[]} The actions;
+     *   a trigger is running until the content has set it back to 0 (an event has no running state).
      */
     GetActions()
     {
@@ -173,7 +174,7 @@ export class TnyControllers
         for (const controller of this._Controllers())
         {
             for (const handler of controller.eventHandlers)
-                if (IsPublic(handler.name) && !actions.has(handler.name)) actions.set(handler.name, { name: handler.name, kind: "event", controller: controller.name });
+                if (IsPublic(handler.name) && !actions.has(handler.name)) actions.set(handler.name, { name: handler.name, kind: "event", controller: controller.name, running: false });
             const resets = new Map();
             for (const machine of controller.stateMachines)
                 for (const state of machine.states)
@@ -186,7 +187,8 @@ export class TnyControllers
             {
                 const values = resets.get(variable.name);
                 if (!IsPublic(variable.name) || variable.defaultValue !== 0 || !values || actions.has(variable.name)) continue;
-                if (values.every(value => Number(value) === 0)) actions.set(variable.name, { name: variable.name, kind: "trigger", controller: controller.name });
+                if (values.every(value => Number(value) === 0))
+                    actions.set(variable.name, { name: variable.name, kind: "trigger", controller: controller.name, running: variable.GetValue() !== 0 });
             }
         }
         return [ ...actions.values() ];
