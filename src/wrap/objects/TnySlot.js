@@ -88,25 +88,27 @@ export class TnySlot extends CjsGraphRoot
     }
 
     /**
-     * `resPath` or `faction` changed: mount, remount or unmount, then tell the UI.
-     * A failed mount is logged and `resPath` goes back to what is mounted.
+     * `resPath` or `faction` changed: mount, remount or unmount, and tell the
+     * UI once that has finished. A failed mount is logged, `resPath` goes back
+     * to what is mounted, and that is announced.
      *
      * @param {string} name The member.
      * @returns {boolean} True.
      */
     OnModified(name)
     {
-        if (name === "resPath" || name === "faction")
+        if (name !== "resPath" && name !== "faction")
         {
-            const work = this.resPath ? this._Mount(this.resPath, this.faction || null) : Promise.resolve(this._Unmount());
-            work.catch(error =>
-            {
-                console.error(`TnySlot ${this.locatorName}${this.number} mount failed`, error);
-                this.resPath = this._mounted;
-                if (this._onModified) this._onModified("resPath");
-            });
+            if (this._onModified) this._onModified(name);
+            return true;
         }
-        if (this._onModified) this._onModified(name);
+        const work = this.resPath ? this._Mount(this.resPath, this.faction || null) : Promise.resolve(this._Unmount());
+        work.then(() => { if (this._onModified) this._onModified(name); }, error =>
+        {
+            console.error(`TnySlot ${this.locatorName}${this.number} mount failed`, error);
+            this.resPath = this._mounted;
+            if (this._onModified) this._onModified("resPath");
+        });
         return true;
     }
 
