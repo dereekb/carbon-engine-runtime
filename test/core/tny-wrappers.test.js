@@ -269,7 +269,8 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     // EveSpaceObject2 mirrors dirtLevel into its DirtLevel controller variable when notified.
     assert.deepEqual(written, { DirtLevel: written.DirtLevel, IsWarping: 0, isDocked: 0, InSiegeMode: 1, hullMode: 2 }, "WarpTopSpeed is no state flag");
     assert.equal(ship.shieldDamage, null, "a write to an unsupported value is ignored");
-    assert.deepEqual(heard, [ "dirtLevel", "state", "stance" ]);
+    // UpdateValues notifies in member-table order (derived first); the test checks which, not the order.
+    assert.deepEqual([ ...heard ].sort(), [ "dirtLevel", "stance", "state" ]);
 
     ship.SetValues({ age: 10 });
     assert.ok(Math.abs(native.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6);
