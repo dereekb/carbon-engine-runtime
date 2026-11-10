@@ -33,7 +33,8 @@ export class CjsCharacterObjectBuilder
      * @param {string} path Original logical source path.
      * @param {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>> }} configuration
      *   The kinds the caller reads (`className`, `envelope`, `items`: the class of an envelope list's mapping
-     *   entries) and their list forms (`normalizeCharacterYamlValues`).
+     *   entries; `slots`, `leading`, `list`: the fields an envelope list splits into, `ReadEnvelope`) and their list forms
+     *   (`normalizeCharacterYamlValues`).
      * @param {object} [options={}] YAML reader options, including an alias bound.
      */
     constructor(bytes, kind, path, configuration, options = {})
@@ -88,7 +89,7 @@ export class CjsCharacterObjectBuilder
         const object = existing || new Constructor();
         if (!existing)
         {
-            const values = identified.envelope ? { name: this._path, value: raw } : raw;
+            const values = identified.envelope ? ReadEnvelope(raw, this._path, identified) : raw;
             CjsSchema.assertValues(values, identified.className);
             CjsSchema.setValues(object, normalizeCharacterYamlValues(Constructor, values, sourceLists), { initialize: false });
         }
@@ -197,7 +198,7 @@ export class CjsCharacterObjectBuilder
      * @param {*} value Parsed YAML value.
      * @param {string} kind Configured source family.
      * @param {Object<string, object>} kinds The caller's kind declarations.
-     * @returns {{kind:string,className:string,envelope?:boolean,items?:string}} Identified declaration.
+     * @returns {{kind:string,className:string,envelope?:boolean,items?:string,slots?:string[],leading?:string,list?:string}} Identified declaration.
      */
     static inspect(value, kind, kinds)
     {
@@ -229,6 +230,35 @@ export class CjsCharacterObjectBuilder
     {
         return this._sources.get(object) || null;
     }
+}
+
+/**
+ * An envelope file's values: its path as `name`, and the file's list as `value`, or, where the kind names them, the
+ * list's items by position as its `slots` fields (a `.type` tuple; a shorter tuple leaves the last fields at their
+ * defaults), or a leading string as its `leading` field and the rest as its `list` field (a recipe's sex and
+ * modifiers).
+ * @param {*} raw The file's value.
+ * @param {string} path The file's path.
+ * @param {{ slots?: string[], leading?: string, list?: string }} declaration The kind's declaration.
+ * @returns {object} The record's values.
+ * @throws {TypeError} For a kind with `slots` or a `list` field whose file is not a list, or a tuple longer than its
+ *   slots.
+ */
+function ReadEnvelope(raw, path, declaration)
+{
+    if (!declaration.slots && !declaration.list) return { name: path, value: raw };
+    if (!Array.isArray(raw)) throw new TypeError(`${path} must be a list`);
+    const values = { name: path };
+    if (declaration.slots)
+    {
+        if (raw.length > declaration.slots.length) throw new TypeError(`${path} has ${raw.length} items; its kind names ${declaration.slots.length}`);
+        for (let i = 0; i < raw.length; i++) values[declaration.slots[i]] = raw[i];
+        return values;
+    }
+    const leading = declaration.leading && typeof raw[0] === "string";
+    if (leading) values[declaration.leading] = raw[0];
+    values[declaration.list] = leading ? raw.slice(1) : raw;
+    return values;
 }
 
 /**

@@ -268,10 +268,10 @@ export class CjsCharacterFactory
     static async readRecipe(path, sex = "")
     {
         const library = blue.characterLibrary, recipe = await CjsCharacterFactory.fetchRecipe(path);
-        const recipeSex = recipe.GetSex() || sex;
+        const recipeSex = recipe.sex || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
         const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._partsByCategory();
-        for (const entry of recipe.GetModifiers())
+        for (const entry of recipe.modifiers)
         {
             const found = await library.ResolveRecipeEntry(recipeSex, entry);
             if (found === null) { problems.push(entry.path + ": no part (no paper doll category)"); continue; }
@@ -360,7 +360,7 @@ export class CjsCharacterFactory
 
     /**
      * The shipped character recipes for a sex: the `.prs` files under the character root (`recipeConfiguration.match`;
-     * the scenes' recipes are not characters) that name that sex (`GetSex`; a recipe that names none is left out),
+     * the scenes' recipes are not characters) that name that sex (`sex`; a recipe that names none is left out),
      * sorted. Each recipe is read once (`fetchRecipe`); one that cannot be read is left out.
      * @param {"female"|"male"} sex The sex.
      * @returns {Promise<string[]>} The recipes' `res:` paths.
@@ -373,7 +373,7 @@ export class CjsCharacterFactory
             let recipe;
             try { recipe = await CjsCharacterFactory.fetchRecipe(path); }
             catch { continue; }
-            if (recipe.GetSex() === sex) found.push(path);
+            if (recipe.sex === sex) found.push(path);
         }
         return found;
     }
@@ -381,13 +381,13 @@ export class CjsCharacterFactory
     /**
      * The factory's recipe format, as the parts library's configuration declares the files it reads
      * (`CjsCharacterLibraryConfiguration`): a recipe entry, with its colours and shape weights, is DNA, not part data
-     * (Ruru, 2026-11-09). `kinds`: the `.prs` record, an envelope whose list's mappings are
-     * `CjsCharacterRecipeModifier` records (`items`; the leading sex stays as written). `sourceLists`: the modifier's
+     * (Ruru, 2026-11-09). `kinds`: the `.prs` record, an envelope whose list's leading string is its `sex` and whose
+     * mappings are its `modifiers`, `CjsCharacterRecipeModifier` records (`items`). `sourceLists`: the modifier's
      * list forms (`normalizeCharacterYamlValues`). `match`: the character recipes `listRecipes` lists.
      * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>>, match: string }}
      */
     static recipeConfiguration = {
-        kinds: { recipes: { className: "CjsCharacterRecipe", envelope: true, items: "CjsCharacterRecipeModifier" } },
+        kinds: { recipes: { className: "CjsCharacterRecipe", envelope: true, items: "CjsCharacterRecipeModifier", leading: "sex", list: "modifiers" } },
         sourceLists: { CjsCharacterRecipeModifier: { specularcolors: [ "specularColor1", "specularColor2", "specularColor3" ] } },
         match: "res:/graphics/character/**/*.prs"
     };

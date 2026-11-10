@@ -15,7 +15,7 @@ const COLOURS = [ [ .1, .2, .3, 1 ], [ .4, .5, .6, 1 ], [ .7, .8, .9, 1 ] ];
 
 function services(t)
 {
-  const overrides = { FetchType: async path => ({ value: [ path.slice(ROOT.length, path.indexOf("/types/")), "", "" ] }) };
+  const overrides = { FetchType: async path => ({ partPath: path.slice(ROOT.length, path.indexOf("/types/")), variation: "", colorVariant: "" }) };
   installPartsLibrary(t, ROOT, FILES, { overrides });
 }
 

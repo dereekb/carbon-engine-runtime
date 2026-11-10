@@ -32,10 +32,14 @@ function Library(t)
     return new CjsCharacterLibraryManager().Initialize(blue);
 }
 
-test("FetchType answers each .type tuple as Graphene's readYaml did", async t =>
+test("FetchType names each .type tuple's slots as Graphene's readYaml read them", async t =>
 {
     const library = Library(t);
-    for (const { path, value } of expected.types) assert.deepEqual((await library.FetchType(path)).value, value, path);
+    for (const { path, value } of expected.types)
+    {
+        const record = await library.FetchType(path);
+        assert.deepEqual([ record.partPath, record.variation, record.colorVariant, record.bloodlineIDs ], [ ...value.slice(0, 3), value[3] ?? [] ], path);
+    }
 });
 
 test("FetchProjectedDecal answers the projection fields the tattoo bake reads as readYaml did", async t =>
@@ -54,6 +58,8 @@ test("the factory's FetchRecipe answers the modifiers' category, path and weight
     for (const { path, value } of expected.recipes)
     {
         const record = await CjsCharacterFactory.fetchRecipe(path);
-        assert.deepEqual(record.value.map(entry => typeof entry === "string" || entry === null ? entry : { category: entry.category, path: entry.path, weight: entry.weight }), value, path);
+        const read = record.modifiers.map(entry => entry === null ? entry : { category: entry.category, path: entry.path, weight: entry.weight });
+        if (record.sex) read.unshift(record.sex);
+        assert.deepEqual(read, value, path);
     }
 });

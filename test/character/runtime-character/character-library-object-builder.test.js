@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
     CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
     CjsCharacterPost, CjsCharacterScalarPost, CjsCharacterPose,
-    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene
+    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType
 } from "../../../npm/dist/character/index.js";
 import { InitializeTrinityStub } from "../../support/trinityStub.js";
 
@@ -51,16 +51,27 @@ test("root dictionaries hydrate typed records and preserve Number precision", ()
 test("recipes retain leading sex, typed modifiers, source refs and embedded decal spelling", () =>
 {
     const recipe = Builder('- female\n- category: tattoo\n  path: tattoo/armleft/example\n  weight: 0.2\n  colorvariation: null\n  colors: "((0.1, 0.2, 0.3, 1),)"\n  decaldata: !!python/object:paperDoll.ProjectedDecal\n    layeres: 3\n    texturePath: res:/Original/Decal.dds\n', "recipes").CreateObject();
-    assert.equal(recipe.value[0], "female");
-    assert.equal(Object.getPrototypeOf(recipe.value[1]), CjsCharacterRecipeModifier.prototype);
-    assert.equal(recipe.value[1].colorvariation, "");
-    assert.equal(recipe.value[1].colors, "((0.1, 0.2, 0.3, 1),)");
-    assert.equal(Object.getPrototypeOf(recipe.value[1].decaldata), CjsProjectedDecal.prototype);
-    assert.equal(recipe.value[1].decaldata.layeres, 3);
-    assert.equal(recipe.value[1].decaldata.texturePath, "res:/Original/Decal.dds");
+    assert.equal(recipe.sex, "female");
+    assert.equal(Object.getPrototypeOf(recipe.modifiers[0]), CjsCharacterRecipeModifier.prototype);
+    assert.equal(recipe.modifiers[0].colorvariation, "");
+    assert.equal(recipe.modifiers[0].colors, "((0.1, 0.2, 0.3, 1),)");
+    assert.equal(Object.getPrototypeOf(recipe.modifiers[0].decaldata), CjsProjectedDecal.prototype);
+    assert.equal(recipe.modifiers[0].decaldata.layeres, 3);
+    assert.equal(recipe.modifiers[0].decaldata.texturePath, "res:/Original/Decal.dds");
     const noSex = Builder("- category: hair\n  path: hair/style\n  weight: 1\n", "recipes").CreateObject();
-    assert.equal(noSex.value.length, 1);
-    assert.equal(noSex.value[0].path, "hair/style");
+    assert.equal(noSex.sex, "");
+    assert.equal(noSex.modifiers.length, 1);
+    assert.equal(noSex.modifiers[0].path, "hair/style");
+});
+
+test("a .type tuple's slots read into named fields; a shorter tuple keeps the defaults; a longer one throws", () =>
+{
+    const full = Builder("!!python/tuple [tattoo/head/example, v1, ink, [5, 6]]", "types").CreateObject();
+    assert.equal(Object.getPrototypeOf(full), CjsCharacterType.prototype);
+    assert.deepEqual([ full.partPath, full.variation, full.colorVariant, full.bloodlineIDs ], [ "tattoo/head/example", "v1", "ink", [ 5, 6 ] ]);
+    const short = Builder("!!python/tuple [hair/bob, '', '']", "types").CreateObject();
+    assert.deepEqual([ short.partPath, short.colorVariant, short.bloodlineIDs ], [ "hair/bob", "", [] ]);
+    assert.throws(() => Builder("[a, b, c, [], extra]", "types").CreateObject(), /has 5 items/u);
 });
 
 test("native light type records apply only the approved numeric boolean conversion", () =>

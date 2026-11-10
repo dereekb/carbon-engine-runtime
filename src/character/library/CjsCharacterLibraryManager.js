@@ -102,10 +102,10 @@ export class CjsCharacterLibraryManager
     async ResolveTypeColor(path)
     {
         const record = await this.GetType(path);
-        if (!record.value[2]) return null;
+        if (!record.colorVariant) return null;
         const boundary = path.indexOf("/paperdoll/");
         if (boundary < 0) throw new Error(`Type has no paperdoll source context: ${path}`);
-        const target = normalizeResourcePath(path.slice(0, boundary + 11) + record.value[0] + "/" + record.value[2] + ".color");
+        const target = normalizeResourcePath(path.slice(0, boundary + 11) + record.partPath + "/" + record.colorVariant + ".color");
         return this.GetColorVariation(target);
     }
 
@@ -361,7 +361,6 @@ export class CjsCharacterLibraryManager
      * @param {object} option An option from `FetchOptions`.
      * @returns {Promise<{ part: string, variation: string, colorVariant: string, folders: string[], metadataPath: ?string, metadata: ?object, occludes: string[], dependants: string[], numColorAreas: number, projection: ?string, models: string[] }>}
      *   The facts, shared by every caller (not to be changed).
-     * @throws {Error} For a `.type` that is not three strings.
      */
     FetchOptionPart(option)
     {
@@ -378,11 +377,7 @@ export class CjsCharacterLibraryManager
             }
             else if (option.typePath !== null)
             {
-                const value = (await this.FetchType(option.typePath)).value;
-                if (!Array.isArray(value)) throw new Error("Unsupported character type " + option.typePath);
-                [ part, variation = "", colorVariant = "" ] = value;
-                if (typeof part !== "string" || typeof variation !== "string" || typeof colorVariant !== "string")
-                    throw new Error("Unsupported character type " + option.typePath);
+                ({ partPath: part, variation, colorVariant } = await this.FetchType(option.typePath));
                 // Res paths are case-insensitive and indexed lowercase; seven tattoo types name their part in mixed case.
                 part = part.toLowerCase();
                 const base = root + part + "/", own = base + variation + "/";

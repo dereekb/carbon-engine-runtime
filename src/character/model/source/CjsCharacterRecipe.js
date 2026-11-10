@@ -5,7 +5,8 @@ import { meta, type } from "#schema";
 // Resource pattern: res:/graphics/character/*
 
 /**
- * A recipe sequence retaining its leading sex string when present and ordered modifier records.
+ * A recipe: the sex its first line names, then its ordered modifier records. The file is one list; the reader
+ * (`CjsCharacterFactory.recipeConfiguration`) splits its leading string from its mappings.
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterRecipe")
@@ -18,34 +19,17 @@ export class CjsCharacterRecipe
     name = "";
 
     /**
-     * Mixed source sequence: optional leading string and CjsCharacterRecipeModifier records. The reader
-     * supplies record instances; the writer retains source layout.
+     * The sex the file's first line names (`female`, `male`), or "" when it names none: 58 of the 63 recipes under
+     * res:/graphics/character carry it (src/character/discovery/prs.yaml:527), all 317 scene recipes do
+     * (scenes_prs.yaml:1049).
      */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("unknown")
-    value = [];
+    @type.string
+    sex = "";
 
-    /**
-     * The ordered modifier records, without the leading sex string. The string is optional: 58 of the 63 recipes
-     * under res:/graphics/character carry it (src/character/discovery/prs.yaml:527), all 317 scene recipes do
-     * (scenes_prs.yaml:1049).
-     * @cjs
-     * @returns {Array<import("./CjsCharacterRecipeModifier.js").CjsCharacterRecipeModifier>}
-     */
-    GetModifiers()
-    {
-        return typeof this.value[0] === "string" ? this.value.slice(1) : this.value;
-    }
-
-    /**
-     * The sex the recipe names on its first line (`female`, `male`), or "" for a recipe that names none (5 of 63 shipped
-     * character recipes).
-     * @cjs
-     * @returns {string}
-     */
-    GetSex()
-    {
-        return typeof this.value[0] === "string" ? this.value[0] : "";
-    }
+    /** The file's modifier records, in file order. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.list("CjsCharacterRecipeModifier")
+    modifiers = [];
 
 }

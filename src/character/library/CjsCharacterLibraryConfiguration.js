@@ -15,7 +15,7 @@ export class CjsCharacterLibraryConfiguration
         avatarPartMetaData: { className: "CjsAvatarPartMetaData" },
         colorVariations: { className: "CjsCharacterColorVariation" },
         baseColors: { className: "CjsCharacterBaseColor", envelope: true },
-        types: { className: "CjsCharacterType", envelope: true },
+        types: { className: "CjsCharacterType", envelope: true, slots: [ "partPath", "variation", "colorVariant", "bloodlineIDs" ] },
         projectedDecals: { className: "CjsProjectedDecal" },
         cameras: { className: "CjsCharacterCamera" },
         cameraSequences: { className: "CjsCharacterCameraSequence", envelope: true },
