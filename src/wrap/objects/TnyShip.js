@@ -7,6 +7,25 @@ import { TnyMotion } from "./TnyMotion.js";
 /** The decal effect SOF uses for a hull's kill counter (EveSOF DECAL_EFFECT_NAMES, USAGE_KILLCOUNTER). */
 const KILL_COUNTER_EFFECT = /decalcounterv5\.fx$/i;
 
+/**
+ * The exclusive ship states: a controller variable belongs to one when its name
+ * names the subject AND has a state flag's shape (`IsWarping`, `isDocked`,
+ * `InSiegeMode`), so `WarpTopSpeed` never receives a 1. After Graphene's
+ * ShipStates and skindr's ShipControls. `always` names the variable set even
+ * when no controller declares it: the docker multi-effect drives a ship's
+ * `IsWarping` and `isDocked` (res:/dx9/model/hangar/shared/docker/multieffect_docker_01a.black).
+ */
+const SHIP_STATES = [
+    { name: "warp", test: /warp/i, always: "IsWarping" },
+    { name: "dock", test: /dock/i, always: "isDocked" },
+    { name: "siege", test: /siege/i },
+    { name: "attack", test: /attack|aggress|combat/i }
+];
+const STATE_SHAPE = /^_?(?:[iI]s|[iI]n|[hH]as|[uU]se)[A-Z]|(?:^|_|[a-z])(?:Mode|On|Enabled|Active|Requested)$/;
+
+/** The stance variable a tactical ship's controllers declare. */
+const STANCE = /stance/i;
+
 /** Speeds in metres per second that the parameters accept. */
 const MAX_SPEED = 100000;
 
@@ -51,6 +70,75 @@ export class TnyShip extends TnyMobile
 
     /** The motion `speed` installed as the ship's translation curve, or null. */
     _motion = null;
+
+    /** The state SetState last set. */
+    _state = "standard";
+
+    /**
+     * The states this ship offers: standard, warp and dock always (a state
+     * nothing drives is still valid: docked doing nothing is its effect), plus
+     * siege and attack where its controllers declare them (operator, 2026-11-10).
+     *
+     * @returns {string[]} State names.
+     */
+    GetStates()
+    {
+        const names = this.controllers.GetVariableNames();
+        return [ "standard", ...SHIP_STATES.filter(state => state.always || names.some(name => state.test.test(name) && STATE_SHAPE.test(name))).map(state => state.name) ];
+    }
+
+    /** @returns {string} The state SetState last set. */
+    GetState()
+    {
+        return this._state;
+    }
+
+    /**
+     * Enters one state: its variables go to 1 and every other state's to 0,
+     * through the ship's SetControllerVariable. "standard" sets them all to 0.
+     *
+     * @param {string} name A name from GetStates.
+     */
+    SetState(name)
+    {
+        if (!this.GetStates().includes(name)) throw new RangeError(`${this.constructor.className} has no state ${name}.`);
+        const names = this.controllers.GetVariableNames();
+        for (const state of SHIP_STATES)
+        {
+            const variables = new Set(names.filter(variable => state.test.test(variable) && STATE_SHAPE.test(variable)));
+            if (state.always) variables.add(state.always);
+            for (const variable of variables) this.wrapped.SetControllerVariable(variable, state.name === name ? 1 : 0);
+        }
+        this._state = name;
+    }
+
+    /**
+     * The stances a tactical ship's controllers declare, from the stance
+     * variable's own enumValues; empty when it has none.
+     *
+     * @returns {{variable: string, choices: {name: string, value: number}[]}|null} The stance variable, or null.
+     */
+    GetStances()
+    {
+        for (const controller of this.controllers.GetControllers())
+        {
+            const variable = controller.variables.find(entry => STANCE.test(entry.name));
+            if (variable) return { variable: variable.name, choices: variable.choices ?? [] };
+        }
+        return null;
+    }
+
+    /**
+     * Sets the stance, independent of the state.
+     *
+     * @param {number} value A choice's value from GetStances.
+     */
+    SetStance(value)
+    {
+        const stances = this.GetStances();
+        if (!stances) throw new RangeError(`${this.constructor.className} has no stance.`);
+        this.controllers.SetVariable(stances.variable, value);
+    }
 
     /**
      * Sets the speed along the ship's heading, installing the motion on first use.

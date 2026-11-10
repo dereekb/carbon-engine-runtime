@@ -2,6 +2,7 @@ import { CjsSchema } from "#schema";
 import { CjsLibrary } from "../../core/CjsLibrary.js";
 import { EveSpaceObject2 } from "../../trinity/eve/spaceObject/EveSpaceObject2.js";
 import { Tr2ExternalParameter } from "../../trinity/core/binding/Tr2ExternalParameter.js";
+import { TnyControllers } from "./TnyControllers.js";
 
 /**
  * The dirt level for weeks since a ship was last cleaned. Ours, client
@@ -62,6 +63,15 @@ export class TnySpaceObject
 
     /** Existing object graph; wrapping neither copies nor initializes it. */
     wrapped = null;
+
+    /** What the object's controllers expose (TnyControllers). */
+    get controllers()
+    {
+        return this._controllers ??= new TnyControllers(this);
+    }
+
+    /** Built on first use. */
+    _controllers = null;
 
     /** Weeks for the `age` parameter. */
     _age = 0;

@@ -15,3 +15,5 @@ export * from "./objects/TnySpaceObject.js";
 export * from "./objects/TnyMobile.js";
 export * from "./objects/TnyShip.js";
 export * from "./objects/TnyStationary.js";
+export * from "./objects/TnyControllers.js";
+export * from "./objects/TnyMotion.js";

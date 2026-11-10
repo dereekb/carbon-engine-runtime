@@ -9,6 +9,8 @@ import { EveMobile } from "../../npm/dist/trinity/eve/spaceObject/EveMobile.js";
 import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
+import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
+import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/expression/Tr2ControllerFloatVariable.js";
 import { TnyMotion } from "../../npm/dist/wrap/objects/TnyMotion.js";
 import { dirtLevelFromWeeks } from "../../npm/dist/wrap/objects/TnySpaceObject.js";
 import { Tr2PostProcess2 } from "../../npm/dist/trinity/postProcess/Tr2PostProcess2.js";
@@ -259,4 +261,37 @@ test("speed moves the ship along its heading through its translation curve", () 
     motion.Update__Ticks(4e7, out);
     assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "a stop holds the position reached");
     assert.deepEqual(Array.from(motion.GetValueDotAt__Ticks(4e7, out)), [ 0, 0, 0 ]);
+});
+
+test("ship states: three always, siege and attack only where controllers declare them, set exclusively", t =>
+{
+    const native = new EveShip2(), controller = new Tr2Controller();
+    controller.name = "shipStates";
+    const variable = (name, variableType = 2, enumValues = "") =>
+    {
+        const entry = new Tr2ControllerFloatVariable();
+        Object.assign(entry, { name, variableType, enumValues });
+        controller.variables.Append(entry);
+    };
+    variable("IsWarping");
+    variable("InSiegeMode");
+    variable("WarpTopSpeed", 0);
+    variable("shipStance", 3, "defense = 1, sharpshooter = 2, propulsion = 3");
+    native.controllers.Append(controller);
+    const ship = new TnyShip(native);
+
+    assert.deepEqual(ship.GetStates(), [ "standard", "warp", "dock", "siege" ]);
+    const exposure = ship.controllers.GetControllers();
+    assert.equal(exposure[0].name, "shipStates");
+    assert.deepEqual(exposure[0].variables.map(entry => entry.name), [ "IsWarping", "InSiegeMode", "WarpTopSpeed", "shipStance" ]);
+    assert.deepEqual(ship.GetStances().choices.map(choice => choice.name), [ "defense", "sharpshooter", "propulsion" ]);
+
+    const set = t.mock.method(native, "SetControllerVariable");
+    ship.SetState("siege");
+    const written = Object.fromEntries(set.mock.calls.map(call => call.arguments));
+    assert.deepEqual(written, { IsWarping: 0, isDocked: 0, InSiegeMode: 1 }, "WarpTopSpeed is no state flag");
+    assert.equal(ship.GetState(), "siege");
+    assert.throws(() => ship.SetState("attack"), /no state attack/);
+    ship.SetStance(2);
+    assert.deepEqual(set.mock.calls.at(-1).arguments, [ "shipStance", 2 ]);
 });
