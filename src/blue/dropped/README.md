@@ -51,8 +51,9 @@ The plain data this reader made wrote a shared object as `{ _ref }`, and SOF's
 projections did not resolve it, so 333 plane set items of the catalog projected
 as defaults. The objects carry the shared object itself.
 
-The tests of this reader's own internals are kept beside it in `black/test/`.
-They are not run.
+The tests of this reader's own internals were deleted, because they imported
+Node-only modules into shipped source and could not run. They last lived in
+`src/blue/dropped/black/test/` at runtime `0b2e0d32a`.
 
 Replacement surfaces:
 
