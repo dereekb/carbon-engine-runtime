@@ -15,7 +15,6 @@ import { Tr2StateMachineTransition } from "../../npm/dist/trinity/controllers/st
 import { Tr2ActionPlayMeshAnimation } from "../../npm/dist/trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/expression/Tr2ControllerFloatVariable.js";
-import { TnyMotion } from "../../npm/dist/wrap/objects/TnyMotion.js";
 import { dirtLevelFromWeeks } from "../../npm/dist/wrap/objects/TnySpaceObject.js";
 import { Tr2PostProcess2 } from "../../npm/dist/trinity/postProcess/Tr2PostProcess2.js";
 
@@ -280,19 +279,31 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     assert.equal(heard.at(-1), "age", "after Destruct nothing is announced");
 });
 
-test("speed moves the ship along its heading through its translation curve", () =>
+test("speed is supported only with a Destiny ball, and drives the ball through its park", t =>
 {
     const ship = TnyShip.fromWrapped(new EveShip2());
-    ship.SetValues({ speed: 100 });
-    assert.ok(ship.wrapped.translationCurve instanceof TnyMotion);
-    assert.equal(ship.wrapped.maxSpeed, 250, "a ship with no max speed takes the booster default");
-    const motion = ship.wrapped.translationCurve, out = new Float32Array(3);
-    motion.Update__Ticks(0, out);
-    motion.Update__Ticks(2e7, out);
-    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "two seconds at 100 m/s along +Z");
-    ship.SetValues({ speed: 0 });
-    motion.Update__Ticks(4e7, out);
-    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "a stop holds the position reached");
+    assert.equal(ship.GetValues().speed, null, "no ball, no speed");
+    // A stand-in with the park commands and ball accessors TnyShip uses; the runtime never imports Destiny.
+    const commands = [];
+    const park = { SetMaxSpeed: (...a) => commands.push([ "SetMaxSpeed", ...a ]), GotoDirection: (...a) => commands.push([ "GotoDirection", ...a ]),
+        SetSpeedFraction: (...a) => commands.push([ "SetSpeedFraction", ...a ]) };
+    const ball = { mPark: park, mId: 7n, vx: 0, vy: 0, vz: 0, maxVelocity: 300 };
+    let typeInfoChanged = 0;
+    ship._onTypeInfoModified = () => typeInfoChanged++;
+    ship.SetBall(ball);
+    assert.equal(ship.wrapped.translationCurve, ball);
+    assert.equal(ship.wrapped.rotationCurve, ball);
+    assert.equal(typeInfoChanged, 1);
+    assert.equal(ship.GetValues().speed, 0);
+    assert.equal(ship.wrapped.maxSpeed, 300, "a ship with no max speed takes the ball's");
+    commands.length = 0;
+    ship.SetValues({ speed: 150 });
+    assert.deepEqual(commands.map(command => command[0]), [ "GotoDirection", "SetSpeedFraction" ]);
+    assert.deepEqual(commands[0].slice(1), [ 7n, 0, 0, 1 ], "along the ship's heading");
+    assert.equal(commands[1][2], 0.5);
+    ship.SetBall(null);
+    assert.equal(ship.GetValues().speed, null);
+    assert.equal(ship.wrapped.translationCurve, null);
 });
 
 test("wrapper ids are unique and kept; identity is read-only", () =>

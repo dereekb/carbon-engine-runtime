@@ -5,7 +5,6 @@ import { Type } from "../../trinity/controllers/enums.js";
 import { Tr2ActionPlayMeshAnimation } from "../../trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";
 import { EveShip2 } from "../../trinity/eve/spaceObject/EveShip2.js";
 import { TnyMobile } from "./TnyMobile.js";
-import { TnyMotion } from "./TnyMotion.js";
 import { TnyShipIdentity } from "./TnyShipIdentity.js";
 
 /** The decal effect SOF uses for a hull's kill counter (EveSOF DECAL_EFFECT_NAMES, USAGE_KILLCOUNTER). */
@@ -50,9 +49,9 @@ export class TnyShip extends TnyMobile
         alwaysOnIntensity: [ 0, 10 ], warpIntensity: [ 0, 10 ], staticTrailLength: [ 0, 10000 ] };
 
     /**
-     * Metres per second along the ship's heading. It really moves the ship
-     * (TnyMotion), so its world velocity, EveShip2.speed and ShipSpeed() follow.
-     * Null on a ship with authored motion.
+     * Metres per second along the ship's heading, driving its Destiny ball
+     * (SetBall), so its world velocity, EveShip2.speed and ShipSpeed() follow.
+     * Null without a ball.
      */
     @meta.mapAttribute(VALUE)
     @type.float32
@@ -98,8 +97,11 @@ export class TnyShip extends TnyMobile
     @type.int32
     stance = null;
 
-    /** The motion `speed` installed as the ship's translation curve, or null. */
-    _motion = null;
+    /**
+     * The ship's Destiny client ball (server/destiny CjsDestinyClientBall), or
+     * null. The application owns the park; the runtime never imports Destiny.
+     */
+    _ball = null;
 
     /** The states found: each state's controller variables. */
     _states = new Map();
@@ -114,7 +116,7 @@ export class TnyShip extends TnyMobile
         const ship = this.wrapped;
         const take = (member, value) => { this._supported.add(member); this[member] = value; };
 
-        if (!ship.translationCurve || CjsSchema.cast(ship.translationCurve, TnyMotion)) take("speed", this._motion ? vec3.length(this._motion.velocity) : 0);
+        if (this._ball) take("speed", Math.hypot(this._ball.vx, this._ball.vy, this._ball.vz));
         take("maxSpeed", ship.maxSpeed);
         if (ship.decals.some(decal => KILL_COUNTER_EFFECT.test(decal.decalEffect?.effectFilePath ?? "")))
             take("displayKillCounterValue", ship.displayKillCounterValue);
@@ -179,6 +181,7 @@ export class TnyShip extends TnyMobile
             case "maxSpeed":
                 this._Bind(ship, "maxSpeed").SetValue(this.maxSpeed);
                 if (ship.boosters) this._Bind(ship.boosters, "maxVel").SetValue(this.maxSpeed);
+                if (this._ball) this._ball.mPark.SetMaxSpeed(this._ball.mId, this.maxSpeed);
                 return;
             case "displayKillCounterValue": this._Bind(ship, name).SetValue(Math.round(this[name])); return;
             case "alwaysOn":
@@ -209,22 +212,50 @@ export class TnyShip extends TnyMobile
     }
 
     /**
-     * Sets the speed along the ship's heading, installing the motion on first use.
-     * A ship with no maxSpeed gets its booster set's maxVel (EveBoosterSet2's 250 when none),
-     * so ShipSpeed()/ShipMaxSpeed() has a scale.
+     * Attaches the ship's Destiny client ball, or detaches it with null. The
+     * ball becomes the ship's translation and rotation curve, as Carbon's
+     * client binds a ship to its ball, so the ship moves and turns on the
+     * scene clock through the ball's own *_Ticks methods. `speed` is supported
+     * only while a ball is attached, so the type info changes.
+     *
+     * @param {object|null} ball A CjsDestinyClientBall in a park the application pumps, or null.
+     */
+    SetBall(ball)
+    {
+        const ship = this.wrapped;
+        this._ball = ball;
+        ship.translationCurve = ball;
+        ship.rotationCurve = ball;
+        if (ball)
+        {
+            this._supported.add("speed");
+            this.speed = Math.hypot(ball.vx, ball.vy, ball.vz);
+            if (!(ship.maxSpeed > 0)) this.SetValues({ maxSpeed: ball.maxVelocity > 0 ? ball.maxVelocity : 250 });
+            else ball.mPark.SetMaxSpeed(ball.mId, ship.maxSpeed);
+        }
+        else
+        {
+            this._supported.delete("speed");
+            this.speed = null;
+        }
+        if (this._onTypeInfoModified) this._onTypeInfoModified();
+    }
+
+    /**
+     * Drives the ball: heads along the ship's heading at a throttle of
+     * speed / maxSpeed (Destiny's GotoDirection and SetSpeedFraction, which
+     * clamps to [0, 1]).
      */
     _SetSpeed(speed)
     {
-        const ship = this.wrapped;
-        if (!this._motion)
+        const ball = this._ball, park = ball.mPark;
+        if (speed > 0)
         {
-            this._motion = new TnyMotion();
-            ship.translationCurve = this._motion;
-            if (!(ship.maxSpeed > 0)) this.SetValues({ maxSpeed: ship.boosters ? ship.boosters.maxVel : 250 });
+            // The heading: the ship's local +Z in world space.
+            const heading = vec3.transformQuat(vec3.create(), [ 0, 0, 1 ], this.wrapped.worldRotation);
+            park.GotoDirection(ball.mId, heading[0], heading[1], heading[2]);
         }
-        // The heading: the ship's local +Z in world space.
-        const heading = vec3.transformQuat(vec3.create(), [ 0, 0, 1 ], ship.worldRotation);
-        this._motion.SetVelocity(vec3.scale(heading, heading, speed));
+        park.SetSpeedFraction(ball.mId, this.maxSpeed > 0 ? speed / this.maxSpeed : 0);
     }
 
     /** The state and stance choices. */

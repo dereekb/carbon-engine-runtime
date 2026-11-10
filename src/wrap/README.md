@@ -26,7 +26,7 @@ Carbon's shape, made for this instance (class `TnyShip_<id>`, its Tny layers and
 capabilities as interfaces, supported members with flags, ranges and
 choices). `GetValues()` returns every member; null means unsupported.
 `SetValues(values)` pushes changes to the native owners and calls
-`_onModified(name)`. Ships add speed (which moves the ship), states, stance,
+`_onModified(name)`. Ships add speed (driving a Destiny ball given with `SetBall`), states, stance,
 kill marks and booster members. `controllers` and `overlays` show what those
 owners expose.
 

@@ -22,4 +22,3 @@ export * from "./objects/TnySpaceObjectIdentity.js";
 export * from "./objects/TnyShipIdentity.js";
 export * from "./objects/TnySkinIdentity.js";
 export * from "./objects/TnySkinrIdentity.js";
-export * from "./objects/TnyMotion.js";
