@@ -47,8 +47,12 @@ export class TnyShip extends TnyMobile
 
     static identityClass = TnyShipIdentity;
 
-    static ranges = { ...TnyMobile.ranges, speed: [ 0, 100000 ], maxSpeed: [ 1, 100000 ], displayKillCounterValue: [ 0, 999 ],
-        alwaysOnIntensity: [ 0, 10 ], warpIntensity: [ 0, 10 ], staticTrailLength: [ 0, 10000 ] };
+    /**
+     * Graphene's editor limits (MissingAnnotations, the demo's settings).
+     * Speed has none of its own: the Destiny ball holds it to maxSpeed.
+     */
+    static ranges = { ...TnyMobile.ranges, speed: [ 0, Infinity ], maxSpeed: [ 0.01, Infinity ], displayKillCounterValue: [ 0, 999 ],
+        alwaysOnIntensity: [ 0, 2 ], warpIntensity: [ 0, 1 ], staticTrailLength: [ 0, 5000 ] };
 
     /**
      * Metres per second along the ship's heading, driving its Destiny ball

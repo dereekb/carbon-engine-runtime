@@ -65,8 +65,8 @@ export class TnySpaceObject extends CjsGraphRoot
     /** The identity class this layer fills in. */
     static identityClass = TnySpaceObjectIdentity;
 
-    /** Numeric ranges for the type info; a write is clamped to them. */
-    static ranges = { dirtLevel: [ 0, 1 ], age: [ 0, 520 ], activationStrength: [ 0, 1 ],
+    /** Numeric ranges for the type info; a write is clamped to them. Graphene's editor limits: age in weeks 0-260. */
+    static ranges = { dirtLevel: [ 0, 1 ], age: [ 0, 260 ], activationStrength: [ 0, 1 ],
         shieldDamage: [ 0, 1 ], armorDamage: [ 0, 1 ], hullDamage: [ 0, 1 ] };
 
     /** Seconds a module animation fades over (a quarter of it); Graphene's demo value. */

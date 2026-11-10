@@ -12,6 +12,7 @@ import { TnyScene } from "./TnyScene.js";
 import { TnySpaceObject } from "./objects/TnySpaceObject.js";
 import { TnyStationary } from "./objects/TnyStationary.js";
 import { TnyShip } from "./objects/TnyShip.js";
+import { TnyControllers } from "./objects/TnyControllers.js";
 
 /** Bay placements in a layout-built hangar, by size (the SOF layout placement names). */
 const BAY_PLACEMENTS = { small: "small_dock_ships", medium: "medium_dock_ships" };
@@ -40,28 +41,40 @@ export class TnyHangar extends TnyScene
     static className = "TnyHangar";
 
     /**
-     * Facts per hangar hull: its own scene and, for layout-built hangars, the
-     * docker. A hull not listed gets an empty sunless scene and `DOCKER`.
-     * Pairings marked DERIVED are not stated by the content: which Upwell
-     * scene goes with which hangar, and the Deathless ones, are client choices.
+     * The known hangars by hull: a display name, the SDE graphic and the DNA
+     * it gives, the hangar's own scene and, for Deathless, its docker. A hull
+     * not listed gets an empty sunless scene and `DOCKER`. Which Upwell scene
+     * goes with which Upwell hangar, and which Deathless scene with which hull,
+     * are client choices (DERIVED here).
      */
-    static DEFAULTS = {
-        ah1: { scene: "res:/dx9/model/hangar/amarr/ah1/ah1_scene.black" },
-        ch1: { scene: "res:/dx9/model/hangar/caldari/ch1/ch1_scene.black" },
-        gh1: { scene: "res:/dx9/model/hangar/gallente/gh1/gh1_scene.black" },
-        mh1: { scene: "res:/dx9/model/hangar/minmatar/mh1/mh1_scene.black" },
-        chjita: { scene: "res:/dx9/model/hangar/caldari/chjita/chjita_scene.black" },
-        airh1: { scene: "res:/dx9/model/hangar/air/airh1/airh1_scene.black" },
-        airh2: { scene: "res:/dx9/model/hangar/air/airh2/airh2_scene.black" },
-        gensh1_t1a: { scene: "res:/dx9/model/hangar/generic/standard/gensh1/gensh1_scene.black" },
-        gench1_t1a: { scene: "res:/dx9/model/hangar/generic/capital/gench1/gench1_scene.black" },
-        // DERIVED: the Upwell scenes 01a/01b, refinery and engineering complex all fit both Upwell hulls.
-        mgenh_ow01: { scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
-        mgenh_ch01: { scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
-        // DERIVED: which Deathless scene goes with which hull.
-        mdeha01: { scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_01.black",
+    static defaults = {
+        ah1: { name: "Amarr Hangar", graphicID: 24407, dna: "ah1:amarrbase:amarr:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/amarr/ah1/ah1_scene.black" },
+        ch1: { name: "Caldari Hangar", graphicID: 24408, dna: "ch1:caldaribase:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/caldari/ch1/ch1_scene.black" },
+        gh1: { name: "Gallente Hangar", graphicID: 24409, dna: "gh1:gallentebase:gallente:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/gallente/gh1/gh1_scene.black" },
+        mh1: { name: "Minmatar Hangar", graphicID: 24410, dna: "mh1:minmatarbase:minmatar:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/minmatar/mh1/mh1_scene.black" },
+        chjita: { name: "Jita Hangar", graphicID: 24525, dna: "chjita:caldarinavy:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/caldari/chjita/chjita_scene.black" },
+        airh1: { name: "AIR Hangar", graphicID: 25044, dna: "airh1:air:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/air/airh1/airh1_scene.black" },
+        airh2: { name: "AIR Hangar 2", graphicID: 33091, dna: "airh2:air_interior:generic:layout?library_generic",
+            scene: "res:/dx9/model/hangar/air/airh2/airh2_scene.black" },
+        gensh1_t1a: { name: "Generic Hangar", graphicID: 24411, dna: "gensh1_t1a:upwell:generic",
+            scene: "res:/dx9/model/hangar/generic/standard/gensh1/gensh1_scene.black" },
+        gench1_t1a: { name: "Generic Capital Hangar", graphicID: 24412, dna: "gench1_t1a:upwell:generic",
+            scene: "res:/dx9/model/hangar/generic/capital/gench1/gench1_scene.black" },
+        mgenh_ow01: { name: "Upwell Hangar", graphicID: 25235, dna: "mgenh_ow01:upwell_interior:generic:layout?upwell_hangar;hangar_announcements",
+            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
+        mgenh_ch01: { name: "Upwell Capital Hangar", graphicID: 25568, dna: "mgenh_ch01:upwell_interior:generic:layout?upwell_capitalhangar",
+            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
+        mdeha01: { name: "Deathless Hangar", graphicID: 26303, dna: "mdeha01:deathless:angel:layout?deathless_hangar",
+            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_01.black",
             docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" },
-        mdeha03: { scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_02.black",
+        mdeha03: { name: "Deathless Hangar 2", graphicID: 26356, dna: "mdeha03:deathless:minmatar:layout?deathless_hangar",
+            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_02.black",
             docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" }
     };
 
@@ -110,7 +123,7 @@ export class TnyHangar extends TnyScene
         if (!library) throw new Error("TnyHangar requires an initialized CjsLibrary.");
         const object = await TnySpaceObject.acquire({ dna, awaitResources });
         const hangar = TnyStationary.fromWrapped(object, { dna });
-        const path = scene ?? TnyHangar.DEFAULTS[hangar.identity.hull]?.scene ?? null;
+        const path = scene ?? TnyHangar.defaults[hangar.identity.hull]?.scene ?? null;
         const result = new TnyHangar(path ? await library.Fetch(path) : TnyHangar.CreateSunlessScene());
         result.hangar = hangar;
         result.AddObject(hangar);
@@ -210,6 +223,21 @@ export class TnyHangar extends TnyScene
         else record.effect.SetControllerVariable("docked", 0);
         return true;
     }
+
+    /**
+     * The hangar's controllers (its own, its overlays' and container
+     * children's, such as a `*_docking_ctrl`) and those of the effects
+     * driving its ships (the docker; me_generic with `HangarType`).
+     *
+     * @returns {TnyControllers} The controllers.
+     */
+    get controllers()
+    {
+        return this._controllers ??= new TnyControllers(this.hangar, () => this._bays.filter(bay => bay.effect).map(bay => bay.effect));
+    }
+
+    /** The controllers view, made on first use. */
+    _controllers = null;
 
     /** Removes the hangar's effects and timers; the ships and the hangar stay in the scene. */
     Destruct()
@@ -373,7 +401,7 @@ export class TnyHangar extends TnyScene
             quat.identity(native.modelRotationCurve.value);
             native.modelTranslationCurve = null;
 
-            const path = TnyHangar.DEFAULTS[this.hangar.identity.hull]?.docker ?? TnyHangar.DOCKER;
+            const path = TnyHangar.defaults[this.hangar.identity.hull]?.docker ?? TnyHangar.DOCKER;
             const effect = bay.effect = await library.Fetch(path);
             effect.SetParameter("docking_ship", native);
             effect.SetParameter("docking_dock", bay.dock);

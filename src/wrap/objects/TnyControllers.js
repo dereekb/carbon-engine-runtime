@@ -1,6 +1,8 @@
 import { CjsSchema } from "#schema";
 import { Type } from "../../trinity/controllers/enums.js";
 import { EveChildContainer } from "../../trinity/eve/child/EveChildContainer.js";
+import { Tr2Controller } from "../../trinity/controllers/Tr2Controller.js";
+import { Tr2ControllerReference } from "../../trinity/controllers/Tr2ControllerReference.js";
 
 /** Variable types by their Tr2ControllerFloatVariable::Type value. */
 const TYPE_NAMES = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BOOLEAN]: "boolean", [Type.ENUM]: "enum" };
@@ -31,16 +33,25 @@ export class TnyControllers
     /** The TnySpaceObject whose controllers these are. */
     owner = null;
 
-    /** @param {import("./TnySpaceObject.js").TnySpaceObject} owner The wrapper. */
-    constructor(owner)
+    /** Gives the multi-effects listed beside the owner's own controllers; none by default. */
+    effects = () => [];
+
+    /**
+     * @param {import("./TnySpaceObject.js").TnySpaceObject} owner The wrapper.
+     * @param {Function} [effects] Gives EveMultiEffects driving the owner (a hangar's docker),
+     *   whose controllers are listed and set too.
+     */
+    constructor(owner, effects = null)
     {
         this.owner = owner;
+        if (effects) this.effects = effects;
     }
 
     /**
      * The Tr2Controllers the object's SetControllerVariable reaches and that
-     * hold a controller list: its own, its overlays' (EveMeshOverlayEffect) and
-     * its container effect children's (EveChildContainer). Other children
+     * hold a controller list: its own, its overlays' (EveMeshOverlayEffect),
+     * its container effect children's (EveChildContainer) and the given
+     * effects', a Tr2ControllerReference standing for the controller it loaded. Other children
      * answer the variable through their own SetControllerVariable without
      * listing controllers, so they are not shown.
      *
@@ -56,7 +67,14 @@ export class TnyControllers
             const container = CjsSchema.cast(child, EveChildContainer);
             if (container) found.push(...container.controllers);
         }
-        return found;
+        for (const effect of this.effects()) found.push(...effect.controllers);
+        // A Tr2ControllerReference shows the controller it loaded, once loaded.
+        return found.flatMap(controller =>
+        {
+            const reference = CjsSchema.cast(controller, Tr2ControllerReference);
+            const target = CjsSchema.cast(reference ? reference.controller : controller, Tr2Controller);
+            return target ? [ target ] : [];
+        });
     }
 
     /**
@@ -118,5 +136,6 @@ export class TnyControllers
     {
         if (!Number.isFinite(value)) throw new TypeError("A controller variable takes a number.");
         this.owner.wrapped.SetControllerVariable(name, value);
+        for (const effect of this.effects()) effect.SetControllerVariable(name, value);
     }
 }

@@ -18,8 +18,9 @@ acquires through `CjsLibrary.Fetch` and starts the controllers;
 `AddObject`/`RemoveObject` use the scene's native list.
 
 **Camera.** `tny.controls` (`TnyCameraControls` over the driver's camera),
-`tny.Focus(object, { animate })` and `tny.SetInteractive(on)`. The camera
-follows a focused object as it moves.
+`tny.Focus(object, { animate, from })` and `tny.SetInteractive(on)`. The
+camera follows a focused object. Wheel and keys need the canvas focusable
+(`tabindex`).
 
 **Values.** A wrapper declares what its object exposes. `GetTypeInfo()` has
 Carbon's shape, made for this instance (class `TnyShip_<id>`, its Tny layers and
@@ -29,6 +30,12 @@ choices). `GetValues()` returns every member; null means unsupported.
 `_onModified(name)`. Ships add speed (driving a Destiny ball given with `SetBall`), states, stance,
 kill marks and booster members. `controllers` and `overlays` show what those
 owners expose.
+
+**Hangars.** `TnyHangar.fetch({ dna, scene })` builds a hangar (`TnyHangar.defaults`
+lists the known ones) and its bays: layout placements, a capital
+`ship_placement`, or the origin. `SetShip(ship, { bay, entry })` hands the ship
+to the content's docker (or `me_generic_hangar_vfx_01a`); `Undock`, `GetShip`,
+`GetBays`, `GetCameraPoint`, `controllers`.
 
 **Weapons.** `slots` lists `TnySlot`s from the hull's weapon locators; writing
 a slot's `resPath` mounts or unmounts, and `SetTarget`, `Fire`, `Idle`,
