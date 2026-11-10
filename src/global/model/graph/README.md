@@ -7,7 +7,8 @@ CjsGraph.define(Constructor, definition) registers a stable name and the class's
 member declarations. Each member compiles once to one flat object: a `GRAPH_TYPES` entry's data,
 then name, flags, edge and a slot for anything rare. Every walk, reader and writer reads that one
 shape. CjsGraphClassInfo retains the compiled members in `declared` and the last derived record in
-`compiled`: the members, `byName`, `persistByName` (derived first, PERSIST only) and the class's
+`compiled`: the members, `byName`, `persistByName` (derived first, PERSIST only), `memberNames` and
+`notifyNames` (each name once, member order, for notification) and the class's
 facts, among them `bases`, its C++ base list, and `chainTo`, the class its exposure table continues
 into. Member lookup walks `chainTo`, as Carbon's walks `mParentClassInfo`; the prototype chain is the bases. Default values are not cloned or instantiated, and must not later be assigned as shared
 mutable instance storage.

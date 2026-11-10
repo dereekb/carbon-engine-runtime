@@ -1035,15 +1035,26 @@ export class CjsGraph
   {
     if (!info.declared.notify) return;
 
-    const { members, byName } = info.compiled;
+    const { byName, memberNames, notifyNames } = info.compiled;
 
-    for (let i = 0; i < members.length; i++)
+    if (names === null)
     {
-      const member = members[i];
-      // A same-name alternative further down the chain is not a second member.
-      if (byName[member.name][0] !== member) continue;
-      if (names !== null && names.indexOf(member.name) === -1) continue;
-      if (all || (member.flags & EDITFLAGS.NOTIFY) !== 0) object.OnModified(member.name);
+      for (let i = 0; i < notifyNames.length; i++) object.OnModified(notifyNames[i]);
+      return;
+    }
+
+    // Carbon only ever tells one member: straight to it, no walk.
+    if (names.length === 1)
+    {
+      const candidates = byName[names[0]];
+      if (candidates && (all || (candidates[0].flags & EDITFLAGS.NOTIFY) !== 0)) object.OnModified(names[0]);
+      return;
+    }
+
+    const order = all ? memberNames : notifyNames;
+    for (let i = 0; i < order.length; i++)
+    {
+      if (names.indexOf(order[i]) !== -1) object.OnModified(order[i]);
     }
   }
 
@@ -1737,8 +1748,17 @@ export class CjsGraph
 
     const { declared } = info;
 
+    // Each name once, in member-table order; the first candidate decides NOTIFY, as lookups do.
+    const memberNames = [], notifyNames = [];
+    for (const member of members)
+    {
+      if (byName[member.name][0] !== member) continue;
+      memberNames.push(member.name);
+      if ((member.flags & EDITFLAGS.NOTIFY) !== 0) notifyNames.push(member.name);
+    }
+
     return {
-      revision: this._revision, parent, members, byName, persistByName, tables: [], defaults: null, ui: null,
+      revision: this._revision, parent, members, byName, persistByName, memberNames, notifyNames, tables: [], defaults: null, ui: null,
       name: declared.name,
       interfaces: declared.interfaces,
       bases: declared.bases ?? [],
