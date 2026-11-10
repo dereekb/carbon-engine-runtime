@@ -2601,6 +2601,37 @@ test("SOF emits first-hull audio, filtered controllers, and model curve resource
   assert.equal(getRegisteredClassName(hydrated.root.modelTranslationCurve.constructor), "Tr2TranslationAdapter");
 });
 
+test("SOF gates a controller that names a visibility group; an unnamed one stays ungated", async () => {
+  // EVE build 3682781 authors visibilityGroup on the academy_air overlay
+  // spawners only; police and event factions declare no "primary".
+  assert.equal(new EveSOFDataHullController().visibilityGroup, "");
+  const persisted = CjsSchema.getSchema(EveSOFDataHullController).members.find(member => member.name === "visibilityGroup");
+  assert.equal(persisted?.edit?.persist, true);
+
+  const build = async (groups) => {
+    const data = createData();
+    data.faction[0].visibilityGroupSet = { visibilityGroups: groups.map(str => ({ str })) };
+    data.hull[0].controllers = [
+      { path: "res:/standard.red" },
+      { path: "res:/academy.red", visibilityGroup: "academy_air" },
+    ];
+    const sof = new EveSOF();
+    assert.equal(sof.dataMgr.SetData(data), true);
+    const resolved = [];
+    (await sof.SetObjectResourceResolver((path, context) => {
+      if (context.role === "controller") resolved.push(path);
+      return { kind: "Tr2ControllerReference", fields: { path } };
+    }));
+    const dna = (await sof.CreateDna("rifter:minmatar:minmatar"));
+    assert.deepEqual(dna.GetHullControllers().map(controller => controller.visibilityGroupName), [undefined, "academy_air"]);
+    (await sof.Build("rifter", "minmatar", "minmatar"));
+    return resolved;
+  };
+  assert.deepEqual(await build(["police"]), ["res:/standard.red"]);
+  assert.deepEqual(await build(["primary"]), ["res:/standard.red"]);
+  assert.deepEqual(await build(["primary", "academy_air"]), ["res:/standard.red", "res:/academy.red"]);
+});
+
 test("SOF object resource resolution is explicit and synchronous", async () => {
   const data = createData();
   data.hull[0].controllers = [{ path: "res:/controller.red" }];

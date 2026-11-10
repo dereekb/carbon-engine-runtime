@@ -787,10 +787,24 @@ function projectHullSoundEmitters(values)
 
 function projectHullControllers(values)
 {
-  return (Array.isArray(values) ? values : []).filter(Boolean).map(value => ({
-    path: String(value.path ?? ""),
-    buildFilter: Number(value.buildFilter ?? 0xffffffff) >>> 0
-  }));
+  return (Array.isArray(values) ? values : []).filter(Boolean).map(value => {
+    const controller = {
+      path: String(value.path ?? ""),
+      buildFilter: Number(value.buildFilter ?? 0xffffffff) >>> 0
+    };
+    // EVE build 3682781 authors m_visibilityGroup on a few controllers (the
+    // academy_air overlay spawners). Only an authored group gates its
+    // controller: an unnamed one stays ungated, as every controller was
+    // before, so factions that declare no "primary" (police, event skins)
+    // keep their standard controllers.
+    const group = String(value.visibilityGroup ?? "");
+    if (group)
+    {
+      controller.visibilityGroup = ccpHashFnv1(group);
+      controller.visibilityGroupName = group;
+    }
+    return controller;
+  });
 }
 
 function projectHullBooster(value)

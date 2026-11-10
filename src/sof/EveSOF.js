@@ -2440,6 +2440,9 @@ export class EveSOF extends IRoot
     for (const controller of dna.GetHullControllers())
     {
       if (((Number(controller.buildFilter) >>> 0) & (Number(buildFlags) >>> 0)) === 0) continue;
+      // An authored visibility group gates its controller like any hull set;
+      // a controller naming none is ungated (EveSOFDataMgr projectHullControllers).
+      if (controller.visibilityGroup !== undefined && !dna.IsInVisibilityData(controller.visibilityGroup)) continue;
       const descriptor = this._resolveObjectResource(controller.path, "controller");
       if (descriptor) rootFields.controllers.push(this._addObjectResource(document, descriptor));
     }

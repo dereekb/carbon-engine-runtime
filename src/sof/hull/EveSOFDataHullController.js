@@ -23,6 +23,20 @@ export class EveSOFDataHullController extends IRoot
   path = "";
 
   /**
+   * m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST]
+   *
+   * Adapted: authored since EVE build 3682781 on a few controllers (the
+   * academy_air overlay spawners); a Black reader refused the whole hull
+   * record without it. Empty means ungated: SetupControllers gates only a
+   * controller that names a group, so factions without "primary" keep the
+   * controllers every hull carried before.
+   */
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
+
+  @type.string
+  visibilityGroup = "";
+
+  /**
    * Carbon MAP_PROPERTY_READONLY "name" over GetName
    * (EveSOFData_Blue.cpp:902): the controller path's basename without its extension. Carbon persists no name for
    * this class; the getter derives it.
