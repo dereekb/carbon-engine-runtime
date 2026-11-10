@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -8,22 +10,14 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 test("published source is organization-independent and browser-safe", async () =>
 {
-    const sourceRoot = path.join(packageRoot, "src");
-    const pending = [ sourceRoot ];
-    const files = [];
-
-    while (pending.length)
-    {
-        const directory = pending.pop();
-
-        for (const entry of await fs.readdir(directory, { withFileTypes: true }))
-        {
-            const target = path.join(directory, entry.name);
-
-            if (entry.isDirectory()) pending.push(target);
-            if (entry.isFile() && entry.name.endsWith(".js")) files.push(target);
-        }
-    }
+    // The published source is what git keeps: tracked files and new ones not yet added, never an ignored local
+    // workspace (src/character/carbon-donor/, a side-by-side port that is never committed, imported or exported).
+    const listed = spawnSync("git", [ "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "src" ], { cwd: packageRoot, encoding: "utf8" });
+    assert.equal(listed.status, 0, listed.stderr);
+    const files = [ ...new Set(listed.stdout.split("\0").filter(file => file.endsWith(".js"))) ]
+        .map(file => path.join(packageRoot, file))
+        .filter(file => existsSync(file));
+    assert.ok(files.length > 1000, `git listed only ${files.length} source files`);
 
     for (const file of files)
     {
