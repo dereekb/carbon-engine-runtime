@@ -2,10 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
     CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
-    CjsCharacterPost, CjsCharacterScalarPost, CjsCharacterPose,
+    CjsCharacterPost, CjsCharacterPose,
     CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType, CjsCharacterColorVariation
 } from "../../../npm/dist/character/index.js";
 import { InitializeTrinityStub } from "../../support/trinityStub.js";
+import { installPartsLibrary } from "../../support/partsLibrary.js";
 
 // Character builds Trinity objects, so Trinity runs, on the stub backend.
 InitializeTrinityStub();
@@ -29,7 +30,9 @@ test("content inspection separates camera/post layouts without decoding other re
     const vector = Builder("lut: true\nlut_influence: !!python/tuple [0.1, 0.2, 0.3, 0.4]\nlut_path: res:/test/lut.dds\n", "posts").CreateObject();
     const scalar = Builder('lut: ""\nlut_influence: 0\nlut_path: ""\n', "posts").CreateObject();
     assert.equal(Object.getPrototypeOf(vector), CjsCharacterPost.prototype);
-    assert.equal(Object.getPrototypeOf(scalar), CjsCharacterScalarPost.prototype);
+    assert.equal(Object.getPrototypeOf(scalar), CjsCharacterPost.prototype, "one class for both layouts");
+    assert.deepEqual([ scalar.lut, scalar.lut_influence, CjsCharacterObjectBuilder.getSource(scalar).kind ], [ false, [ 0, 0, 0, 0 ], "scalarPosts" ]);
+    assert.throws(() => Builder('lut: x\nlut_influence: 0\nlut_path: ""\n', "posts").CreateObject(), /unread/u);
     assert.equal(vector.lut_path, "res:/test/lut.dds");
     assert.throws(() => Builder("lut: true\nlut_influence: 1\n", "posts").CreateObject(), /Unrecognized/);
 });
@@ -117,4 +120,18 @@ test("sculpting limits retain duplicate source pairs and expose the last value",
     assert.equal(builder.GetSourceDocument().get("limits", true).items.length, 2);
     assert.throws(() => new CjsCharacterObjectBuilder(source, "sculptingLimits", "test.yaml", CjsCharacterLibraryConfiguration, { uniqueKeys: true }), /unique/);
     assert.throws(() => Builder("field_of_view: 1\nfield_of_view: 2\n", "cameras"), /unique/);
+});
+
+test("GetPost answers a post in either layout; ListPostNames lists both", async t =>
+{
+    const POSTS = "res:/animation_gstate/scenes/example/";
+    const vector = POSTS + "a/post.yaml", scalar = POSTS + "b/post.yaml";
+    const { library } = installPartsLibrary(t, "res:/graphics/character/female/paperdoll/", [ vector, scalar ], { text: {
+        [vector]: "lut: true\nlut_influence: !!python/tuple [1, 1, 1, 1]\nlut_path: res:/test/lut.dds\ntransmission_noise: false\n",
+        [scalar]: "lut: ''\nlut_influence: 0\nlut_path: ''\n"
+    } });
+    library._StartLazySource();
+    assert.equal((await library.GetPost(vector)).lut_path, "res:/test/lut.dds");
+    assert.deepEqual((await library.GetPost(scalar)).lut_influence, [ 0, 0, 0, 0 ]);
+    assert.deepEqual(await library.ListPostNames(), [ vector, scalar ]);
 });

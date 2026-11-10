@@ -1147,35 +1147,30 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * Returns one posts record by its canonical identity.
+     * Returns one post by its canonical identity, in either layout: the library files a scalar-layout post under
+     * `scalarPosts`, its layout, and both are `CjsCharacterPost` records.
      * @param {string} name Stored or indexed source name.
-     * @returns {Promise<object>} Typed record.
+     * @returns {Promise<import("../model/source/CjsCharacterPost.js").CjsCharacterPost>} The post.
+     * @throws {Error} For a name that is no post.
      */
-    GetPost(name)
+    async GetPost(name)
     {
-        return this.GetKindRecord("posts", name);
+        const found = () => this._library.GetKindRecord("posts", name) || this._library.GetKindRecord("scalarPosts", name);
+        if (!found() && this._sourceBuilder && this._sourceBuilder.ListSourceNames("posts").includes(name))
+        {
+            const generation = this._installGeneration;
+            await this._sourceBuilder.LoadRecord("posts", name);
+            if (generation !== this._installGeneration) throw new Error("Character library was replaced during a kind load.");
+        }
+        const record = found();
+        if (!record) throw new Error(`Unresolved character posts reference: ${name}`);
+        return record;
     }
 
-    /** @returns {Promise<Array<string>>} Exact posts names after source identification. */
-    ListPostNames()
+    /** @returns {Promise<Array<string>>} Every post's name, in either layout, after source identification. */
+    async ListPostNames()
     {
-        return this.ListKindNames("posts");
-    }
-
-    /**
-     * Returns one scalarPosts record by its canonical identity.
-     * @param {string} name Stored or indexed source name.
-     * @returns {Promise<object>} Typed record.
-     */
-    GetScalarPost(name)
-    {
-        return this.GetKindRecord("scalarPosts", name);
-    }
-
-    /** @returns {Promise<Array<string>>} Exact scalarPosts names after source identification. */
-    ListScalarPostNames()
-    {
-        return this.ListKindNames("scalarPosts");
+        return [ ...await this.ListKindNames("posts"), ...await this.ListKindNames("scalarPosts") ].sort();
     }
 
     /**

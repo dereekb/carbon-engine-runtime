@@ -36,7 +36,6 @@ export { CjsCharacterPostBaseNames } from "./CjsCharacterPostBaseNames.js";
 export { CjsCharacterPreset } from "./CjsCharacterPreset.js";
 export { CjsCharacterRecipe } from "./CjsCharacterRecipe.js";
 export { CjsCharacterRecipeModifier } from "./CjsCharacterRecipeModifier.js";
-export { CjsCharacterScalarPost } from "./CjsCharacterScalarPost.js";
 export { CjsCharacterScene } from "./CjsCharacterScene.js";
 export { CjsCharacterSceneCharacter } from "./CjsCharacterSceneCharacter.js";
 export { CjsCharacterSculptingLimits } from "./CjsCharacterSculptingLimits.js";

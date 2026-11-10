@@ -71,6 +71,7 @@ export class CjsCharacterObjectBuilder
         const Constructor = CjsSchema.getConstructor(identified.className);
         if (!Constructor) throw new TypeError(`Character kind ${identified.kind} requires registered ${identified.className}.`);
         if (identified.kind === "lights") raw = ReadTypeRecords(raw, sourceLists);
+        if (identified.kind === "scalarPosts") raw = ReadScalarPost(raw, this._path);
         if (identified.items)
         {
             // An envelope list whose mappings are records of its declared class (a recipe's modifiers); its other
@@ -259,6 +260,22 @@ function ReadEnvelope(raw, path, declaration)
     if (leading) values[declaration.leading] = raw[0];
     values[declaration.list] = leading ? raw.slice(1) : raw;
     return values;
+}
+
+/**
+ * A post written in the scalar layout, as `CjsCharacterPost` values. Every scalar post shipped (114 of build 3646012's
+ * 317 scene posts, scenes_post.yaml) is the empty post: `lut: ''`, `lut_influence: 0`; it reads as no LUT, influence
+ * zero, and its own `lut_path`. The library keeps the item's layout (`scalarPosts`), so it writes back as it was read.
+ * Derived (2026-11-10): the empty values are the only scalar ones, so no other reading is stated.
+ * @param {object} raw The file's values.
+ * @param {string} path The file's path.
+ * @returns {object} The post's values.
+ * @throws {TypeError} For a scalar post with other values.
+ */
+function ReadScalarPost(raw, path)
+{
+    if (raw.lut !== "" || raw.lut_influence !== 0) throw new TypeError(`${path}: a scalar post other than the empty one is unread`);
+    return { lut: false, lut_influence: [ 0, 0, 0, 0 ], lut_path: raw.lut_path };
 }
 
 /**

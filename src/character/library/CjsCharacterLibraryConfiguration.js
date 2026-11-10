@@ -24,7 +24,7 @@ export class CjsCharacterLibraryConfiguration
         lights: { className: "Tr2InteriorScene" },
         backgrounds: { className: "CjsCharacterBackground" },
         posts: { className: "CjsCharacterPost" },
-        scalarPosts: { className: "CjsCharacterScalarPost" },
+        scalarPosts: { className: "CjsCharacterPost" },
         characters: { className: "CjsCharacterPreset" },
         scenes: { className: "CjsCharacterScene" },
         curveSetMetadata: { className: "CjsCharacterCurveSetMetadata" },

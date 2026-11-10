@@ -103,7 +103,7 @@ export class CjsCharacterLibrary
 
     /** Flat scalarPosts holdings; schema 13 only. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("CjsCharacterScalarPost")
+    @type.list("CjsCharacterPost")
     scalarPosts = [];
 
     /** Flat characters holdings; schema 13 only. */

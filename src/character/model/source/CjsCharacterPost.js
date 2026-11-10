@@ -5,7 +5,9 @@ import { meta, type } from "#schema";
 // Resource pattern: res:/graphics/character/global/paperdolllibrary/posts/*
 
 /**
- * The vector post variant, separate from scalar post settings.
+ * A post's LUT settings. Files write it in two layouts; the scalar one (`lut: ''`, `lut_influence: 0`) is always the
+ * empty post, and the reader reads it into these fields (`CjsCharacterObjectBuilder`, `ReadScalarPost`). The layout
+ * is the library's fact about the item, not a field.
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterPost")
