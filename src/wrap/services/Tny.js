@@ -143,6 +143,27 @@ export class Tny
     }
 
     /**
+     * Loads another environment (an EveSpaceScene resource) and draws it from
+     * the next frame, moving the objects the current scene shows into it. The
+     * previous scene is not destroyed. A failed load leaves the current scene.
+     *
+     * @param {string} path The scene's resource path.
+     * @returns {Promise<TnyScene>} The new scene, also `this.scene`.
+     */
+    async LoadScene(path)
+    {
+        const next = await this._engine.TnyScene.fetch(path);
+        const previous = this.scene;
+        for (const object of previous.GetObjects())
+        {
+            previous.RemoveObject(object);
+            next.AddObject(object);
+        }
+        this.SetScene(next);
+        return next;
+    }
+
+    /**
      * Replaces the default scene draw. The handler runs inside the device's
      * render job each frame, after Blue's tick; it may call `RenderScene`.
      *

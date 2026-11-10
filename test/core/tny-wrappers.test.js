@@ -5,6 +5,7 @@ import { TnyShip } from "../../npm/dist/wrap/objects/TnyShip.js";
 import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
+import { Tr2PostProcess2 } from "../../npm/dist/trinity/postProcess/Tr2PostProcess2.js";
 
 test("ship acquisition preserves the library contract and starts controllers without reinitializing", async t =>
 {
@@ -146,4 +147,42 @@ test("shared library is published only after initialization and cleared on shutd
     assert.equal(CjsLibrary.instance, null, "failed startup must release the shared slot");
     await other.Initialize({ sof: null, characterLibrary: null });
     assert.equal(CjsLibrary.instance, other);
+});
+
+test("scene post process loads a template by name or path and restores the authored one", async t =>
+{
+    const library = new CjsLibrary(), nativeScene = new EveSpaceScene();
+    t.after(() => nativeScene.Destruct());
+    t.after(() => library.Shutdown());
+    await library.Initialize({ sof: null, characterLibrary: null });
+    const authored = new Tr2PostProcess2(), loaded = new Tr2PostProcess2();
+    nativeScene.postprocess = authored;
+    const paths = [];
+    t.mock.method(library, "Fetch", async path => { paths.push(path); return path.endsWith("bad.black") ? {} : loaded; });
+    const scene = TnyScene.fromWrapped(nativeScene);
+
+    assert.equal(await scene.SetPostProcess("env_amarr_01a"), "res:/dx9/postprocess/environmenttemplate/env_amarr_01a.black");
+    assert.equal(nativeScene.postprocess, loaded);
+    assert.equal(await scene.SetPostProcess("res:/other/post.black"), "res:/other/post.black");
+    assert.deepEqual(paths, [ "res:/dx9/postprocess/environmenttemplate/env_amarr_01a.black", "res:/other/post.black" ]);
+    await assert.rejects(scene.SetPostProcess("res:/bad.black"), /not a Tr2PostProcess2/);
+    assert.equal(nativeScene.postprocess, loaded, "a rejected load leaves the post process");
+    assert.equal(await scene.SetPostProcess(null), null);
+    assert.equal(nativeScene.postprocess, authored);
+    assert.equal(scene.postProcessPath, null);
+});
+
+test("scene tracks the wrappers it shows", t =>
+{
+    const nativeScene = new EveSpaceScene();
+    t.after(() => nativeScene.Destruct());
+    const scene = TnyScene.fromWrapped(nativeScene);
+    const first = new TnyShip(new EveShip2()), second = new TnyShip(new EveShip2());
+    scene.AddObject(first);
+    scene.AddObject(second);
+    scene.AddObject(first);
+    assert.deepEqual(scene.GetObjects(), [ first, second ]);
+    scene.RemoveObject(first);
+    scene.RemoveObject(first);
+    assert.deepEqual(scene.GetObjects(), [ second ]);
 });
