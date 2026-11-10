@@ -318,6 +318,10 @@ test("scene ballpark is a declared value pushed to EveSpaceScene.ballpark, null 
     const scene = TnyScene.fromWrapped(native);
     assert.equal(scene.GetValues().ballpark, null, "unset");
     assert.ok("ballpark" in scene.GetTypeInfo()[2]);
+    const sharpening = scene.GetTypeInfo()[2].sharpeningStrength;
+    assert.equal(scene.GetValues().sharpeningStrength, null, "no post process (or no compute): no sharpening");
+    assert.equal(sharpening.available, false);
+    assert.ok(sharpening.reason, "an unavailable value says why");
     const heard = [];
     scene._onModified = name => heard.push(name);
     // A stand-in for the host's Destiny park: the scene calls GetReferencePoint only. A

@@ -9,6 +9,7 @@ import { TnyMobile } from "./objects/TnyMobile.js";
 import { TnyShip } from "./objects/TnyShip.js";
 import { TnyStationary } from "./objects/TnyStationary.js";
 import { Tr2PostProcess2 } from "../trinity/postProcess/Tr2PostProcess2.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../trinity/core/context/Tr2RenderContext.js";
 
 /**
  * Application wrapper over an existing space scene: its membership, post
@@ -31,8 +32,25 @@ export class TnyScene extends CjsGraphRoot
     @type.object.ref("IEveBallpark")
     ballpark = null;
 
+    /**
+     * The scene's default post process's Tr2PostProcess2.sharpeningStrength,
+     * 0 to 1 (Graphene's range): the CAS strength after tonemapping, off at
+     * 0 (Carbon HEAD 2276880b, Tr2PostProcessRenderer.useSharpeningStrength).
+     * Null when the scene has no post process, or the backend has no compute
+     * (the renderer skips CAS there); the type info says which.
+     */
+    @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
+    @type.float32
+    sharpeningStrength = null;
+
     /** Existing scene graph; native lists retain their own admission and notifications. */
     wrapped = null;
+
+    /** Numeric ranges for the type info; a write is clamped to them. */
+    static ranges = { sharpeningStrength: [ 0, 1 ] };
+
+    /** Why each unsupported value is unavailable, by name; absent when it is available. */
+    _unavailable = new Map();
 
     /** The UI's change handler, called with a member's name; null when none. */
     _onModified = null;
@@ -58,6 +76,7 @@ export class TnyScene extends CjsGraphRoot
         const wrapper = new this();
         wrapper.wrapped = scene;
         wrapper.ballpark = scene.ballpark;
+        wrapper._DiscoverPost();
         return wrapper;
     }
 
@@ -84,17 +103,39 @@ export class TnyScene extends CjsGraphRoot
         const interfaces = Object.fromEntries(CjsSchema.getClassNames(this.constructor).filter(name => name.startsWith("Tny")).reverse().map(name => [ name, 0 ]));
         const members = {};
         for (const member of CjsSchema.getSchema(this.constructor).members)
+        {
+            const range = this.constructor.ranges[member.key], reason = this._unavailable.get(member.key) ?? null;
             members[member.name] = { type: member.type?.kind ?? member.type, iid_name: "", iid_ver: 0, description: "",
-                editflags: meta.READWRITE | meta.NOTIFY, min: null, max: null, choosers: null };
+                editflags: meta.READWRITE | meta.NOTIFY, min: range ? range[0] : null, max: range ? range[1] : null, choosers: null,
+                available: reason === null, reason };
+        }
         return [ classInfo, interfaces, members, {} ];
     }
 
-    /** A value changed: push it to the scene, then tell the UI. */
+    /** A value changed: ignore it when unavailable, clamp it, push it to the scene, then tell the UI. */
     OnModified(name)
     {
+        if (this._unavailable.has(name))
+        {
+            this[name] = null;
+            return true;
+        }
+        const range = this.constructor.ranges[name];
+        if (range && typeof this[name] === "number") this[name] = Math.min(range[1], Math.max(range[0], this[name]));
         if (name === "ballpark") this.wrapped.ballpark = this.ballpark;
+        else if (name === "sharpeningStrength") this.wrapped.postprocess.sharpeningStrength = this.sharpeningStrength;
         if (this._onModified) this._onModified(name);
         return true;
+    }
+
+    /** Takes the post process's sharpening, or says why there is none. */
+    _DiscoverPost()
+    {
+        const al = Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL();
+        this._unavailable.delete("sharpeningStrength");
+        if (!al || al.GetCaps().SUPPORTS_COMPUTE === false) this._unavailable.set("sharpeningStrength", "The backend has no compute; the renderer skips sharpening.");
+        else if (!this.wrapped.postprocess) this._unavailable.set("sharpeningStrength", "The scene has no post process.");
+        this.sharpeningStrength = this._unavailable.has("sharpeningStrength") ? null : this.wrapped.postprocess.sharpeningStrength;
     }
 
     /**
@@ -169,6 +210,7 @@ export class TnyScene extends CjsGraphRoot
         {
             this.wrapped.postprocess = this._authoredPostProcess;
             this.postProcessPath = null;
+            this._PostChanged();
             return null;
         }
         if (typeof source !== "string" || !source) throw new TypeError("TnyScene.SetPostProcess requires a template name, a path or null.");
@@ -180,8 +222,20 @@ export class TnyScene extends CjsGraphRoot
         if (!CjsSchema.cast(postProcess, Tr2PostProcess2)) throw new TypeError(`${path} is not a Tr2PostProcess2.`);
         this.wrapped.postprocess = postProcess;
         this.postProcessPath = path;
+        this._PostChanged();
         return path;
     }
+
+    /** Another post process is in use: its sharpening is the value now; the UI hears of it. */
+    _PostChanged()
+    {
+        this._DiscoverPost();
+        if (this._onTypeInfoModified) this._onTypeInfoModified();
+        if (this._onModified) this._onModified("sharpeningStrength");
+    }
+
+    /** The UI's type-info change handler; null when none. */
+    _onTypeInfoModified = null;
 
     /** @returns {TnySpaceObject[]} The wrappers this scene added, in order. */
     GetObjects()
