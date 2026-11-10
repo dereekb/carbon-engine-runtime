@@ -158,18 +158,22 @@ export class Tny
 
     /**
      * Points the camera at an object: frames its bounding sphere, at once or
-     * as an eased flight (TnyCameraControls Frame and Fly). Null clears the
-     * focus without moving the camera.
+     * as an eased flight (TnyCameraControls Frame and Fly), or looks at it
+     * from a given point (LookFrom; a hangar bay's `GetCameraPoint`). Null
+     * clears the focus without moving the camera.
      *
      * @param {TnySpaceObject|null} object The object, or null.
      * @param {object} [options]
-     * @param {boolean} [options.animate=false] Fly rather than jump.
+     * @param {boolean} [options.animate=false] Fly rather than jump; not with `from`.
+     * @param {number[]|null} [options.from=null] A world point to look from.
      * @returns {boolean} Whether the camera moved; false while the object has no bounds yet.
      */
-    Focus(object, { animate = false } = {})
+    Focus(object, { animate = false, from = null } = {})
     {
         this.focus = object;
-        if (!object || !object.GetBoundingSphere()) return false;
+        const bounds = object?.GetBoundingSphere();
+        if (!bounds) return false;
+        if (from) { this.controls.LookFrom(from, bounds.centre); return true; }
         return animate ? this.controls.Fly() : this.controls.Frame();
     }
 

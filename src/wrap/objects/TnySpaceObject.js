@@ -1,4 +1,5 @@
 import { CjsSchema, meta, type } from "#schema";
+import { vec4 } from "#math/vec4";
 import { CjsGraphRoot } from "../../global/model/graph/CjsGraphRoot.js";
 import { INotify } from "../../blue/exposure/INotify.js";
 import { CjsBlueGraph } from "../../blue/formats/graph/CjsBlueGraph.js";
@@ -58,6 +59,8 @@ export class TnySpaceObject extends CjsGraphRoot
 {
     /** The native class this wrapper borrows. */
     static wrappedClass = EveSpaceObject2;
+
+    static scratch = { vec4_0: vec4.create() };
 
     /** The identity class this layer fills in. */
     static identityClass = TnySpaceObjectIdentity;
@@ -240,9 +243,9 @@ export class TnySpaceObject extends CjsGraphRoot
     GetBoundingSphere()
     {
         this.wrapped.UpdateWorldBounds();
-        const sphere = new Float32Array(4);
-        if (!this.wrapped.GetBoundingSphere(sphere, 0)) return null;
-        return { centre: [ sphere[0], sphere[1], sphere[2] ], radius: sphere[3] };
+        const { vec4_0 } = TnySpaceObject.scratch;
+        if (!this.wrapped.GetBoundingSphere(vec4_0, 0)) return null;
+        return { centre: [ vec4_0[0], vec4_0[1], vec4_0[2] ], radius: vec4_0[3] };
     }
 
     /** What the object's controllers expose (TnyControllers). */

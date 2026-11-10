@@ -11,6 +11,7 @@ export * from "./gizmos/index.js";
 export * from "./outline/index.js";
 export * from "./services/index.js";
 export * from "./TnyScene.js";
+export * from "./TnyHangar.js";
 export * from "./objects/TnySpaceObject.js";
 export * from "./objects/TnyMobile.js";
 export * from "./objects/TnyShip.js";

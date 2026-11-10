@@ -251,10 +251,9 @@ export class TnySlot extends CjsGraphRoot
     _Point()
     {
         const ship = this.owner.wrapped, point = new EveSpaceObject2();
-        const position = new Float32Array(3);
+        const position = point.worldPosition;
         ship.GetWorldPosition(position);
         position[0] += Math.max(ship.GetRadius() * 8, 1000);
-        point.worldPosition.set(position);
         point.modelWorldPosition.set(position);
         point.worldTransform.set([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, position[0], position[1], position[2], 1 ]);
         return point;

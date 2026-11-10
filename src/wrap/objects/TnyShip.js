@@ -43,6 +43,8 @@ export class TnyShip extends TnyMobile
 {
     static wrappedClass = EveShip2;
 
+    static scratch = { vec3_0: vec3.create() };
+
     static identityClass = TnyShipIdentity;
 
     static ranges = { ...TnyMobile.ranges, speed: [ 0, 100000 ], maxSpeed: [ 1, 100000 ], displayKillCounterValue: [ 0, 999 ],
@@ -252,7 +254,8 @@ export class TnyShip extends TnyMobile
         if (speed > 0)
         {
             // The heading: the ship's local +Z in world space.
-            const heading = vec3.transformQuat(vec3.create(), [ 0, 0, 1 ], this.wrapped.worldRotation);
+            const { vec3_0 } = TnyShip.scratch;
+            const heading = vec3.transformQuat(vec3_0, [ 0, 0, 1 ], this.wrapped.worldRotation);
             park.GotoDirection(ball.mId, heading[0], heading[1], heading[2]);
         }
         park.SetSpeedFraction(ball.mId, this.maxSpeed > 0 ? speed / this.maxSpeed : 0);

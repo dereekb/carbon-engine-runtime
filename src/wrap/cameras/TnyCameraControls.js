@@ -337,6 +337,25 @@ export class TnyCameraControls
     this.SetFieldOfView(pose.fieldOfView);
   }
 
+  /**
+   * Puts the eye at a world point, looking at a centre, at once. EveCamera
+   * places its eye at the centre plus (cos p sin y, -sin p, cos p cos y) times
+   * its distance (fromYawPitchRollCarbon with roll 0), so the angles follow
+   * from the direction.
+   *
+   * @param {number[]} eye The eye's world position.
+   * @param {number[]} centre The point looked at.
+   */
+  LookFrom(eye, centre)
+  {
+    const d = [ eye[0] - centre[0], eye[1] - centre[1], eye[2] - centre[2] ];
+    const distance = Math.hypot(d[0], d[1], d[2]);
+    if (!(distance > 0)) throw new RangeError("LookFrom needs an eye away from the centre.");
+    this.Cancel();
+    this.SetPose({ yaw: Math.atan2(d[0], d[2]), pitch: -Math.asin(d[1] / distance), distance, center: Array.from(centre),
+      fieldOfView: this.camera.fieldOfView, frontClip: this.camera.frontClip, backClip: this._baseBackClip });
+  }
+
   /** Fits optional world box corners, otherwise the provider's sphere, to the projection, at once. */
   Frame()
   {
