@@ -3,6 +3,7 @@ import { Type } from "../../trinity/controllers/enums.js";
 import { EveChildContainer } from "../../trinity/eve/child/EveChildContainer.js";
 import { Tr2Controller } from "../../trinity/controllers/Tr2Controller.js";
 import { Tr2ControllerReference } from "../../trinity/controllers/Tr2ControllerReference.js";
+import { Tr2ActionSetValue } from "../../trinity/controllers/action/Tr2ActionSetValue.js";
 
 /** Variable types by their Tr2ControllerFloatVariable::Type value. */
 const TYPE_NAMES = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BOOLEAN]: "boolean", [Type.ENUM]: "enum" };
@@ -99,6 +100,63 @@ export class TnyControllers
                 state: machine.GetCurrentState()?.name ?? null
             }))
         }));
+    }
+
+    /**
+     * The "do something" actions the content offers: each controller event
+     * (Tr2ControllerEventHandler, run by HandleControllerEvent), and each
+     * trigger variable, a public variable defaulting to 0 that its own
+     * controller's states only ever set back to 0 once they have run (the
+     * hangar's Undock, the docker's skinChange). The trigger rule is DERIVED
+     * from the content's shape. Trigger runs one; it can run again.
+     *
+     * @returns {{name: string, kind: "event"|"trigger", controller: string}[]} The actions.
+     */
+    GetActions()
+    {
+        const actions = new Map();
+        for (const controller of this._Controllers())
+        {
+            for (const handler of controller.eventHandlers)
+                if (IsPublic(handler.name) && !actions.has(handler.name)) actions.set(handler.name, { name: handler.name, kind: "event", controller: controller.name });
+            const resets = new Map();
+            for (const machine of controller.stateMachines)
+                for (const state of machine.states)
+                    for (const action of state.actions)
+                    {
+                        const set = CjsSchema.cast(action, Tr2ActionSetValue);
+                        if (set && set.attribute === "value" && set.path) (resets.get(set.path) ?? resets.set(set.path, []).get(set.path)).push(set.value);
+                    }
+            for (const variable of controller.variables)
+            {
+                const values = resets.get(variable.name);
+                if (!IsPublic(variable.name) || variable.defaultValue !== 0 || !values || actions.has(variable.name)) continue;
+                if (values.every(value => Number(value) === 0)) actions.set(variable.name, { name: variable.name, kind: "trigger", controller: controller.name });
+            }
+        }
+        return [ ...actions.values() ];
+    }
+
+    /**
+     * Runs an action from GetActions: an event goes to every controller
+     * (HandleControllerEvent), a trigger variable is set to 1 and the content
+     * sets it back.
+     *
+     * @param {string} name The action.
+     * @returns {boolean} Whether it was an action.
+     */
+    Trigger(name)
+    {
+        const action = this.GetActions().find(each => each.name === name);
+        if (!action) return false;
+        if (action.kind === "trigger")
+        {
+            this.SetVariable(name, 1);
+            return true;
+        }
+        this.owner.wrapped.HandleControllerEvent(name);
+        for (const effect of this.effects()) effect.HandleControllerEvent(name);
+        return true;
     }
 
     /**

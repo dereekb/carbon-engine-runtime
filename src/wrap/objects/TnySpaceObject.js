@@ -430,10 +430,31 @@ export class TnySpaceObject extends CjsGraphRoot
         return CjsSchema.getClassNames(this.constructor).filter(name => name.startsWith("Tny")).reverse();
     }
 
-    /** The actions that work on this instance, with signatures. */
+    /**
+     * The actions that work on this instance, with signatures: Destruct, and
+     * Trigger with the content's actions (TnyControllers.GetActions).
+     */
     _Methods()
     {
-        return { Destruct: "()" };
+        const actions = this.controllers.GetActions().map(action => action.name);
+        return { Destruct: "()", ...(actions.length ? { Trigger: `(action: ${actions.join("|")})` } : {}) };
+    }
+
+    /**
+     * Runs one of the content's actions (a controller event, or a trigger
+     * variable the content resets): TnyControllers.Trigger.
+     *
+     * @param {string} action The action's name.
+     * @returns {boolean} Whether it was an action.
+     */
+    Trigger(action)
+    {
+        return this.controllers.Trigger(action);
+    }
+
+    /** Reads back what the content changes by itself and announces it; the space object has nothing to read. */
+    Sync()
+    {
     }
 
     /** A member's choices, `[[value, name], ...]`, or null. */

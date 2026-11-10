@@ -334,6 +334,8 @@ export class Tny
             const before = focus ? [ focus[0], focus[1], focus[2] ] : null;
             blue.os.PumpOS();
             this._Follow(before);
+            // What the content changed by itself (a docker docking the ship) reaches the UI.
+            if (this.scene) this.scene.Sync();
         };
         this._frame = globalThis.requestAnimationFrame(tick);
     }

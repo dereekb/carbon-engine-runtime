@@ -237,6 +237,12 @@ export class TnyScene extends CjsGraphRoot
     /** The UI's type-info change handler; null when none. */
     _onTypeInfoModified = null;
 
+    /** Lets each wrapper read back what the content changed by itself this frame (TnySpaceObject.Sync). */
+    Sync()
+    {
+        for (const object of this._objects) object.Sync();
+    }
+
     /** @returns {TnySpaceObject[]} The wrappers this scene added, in order. */
     GetObjects()
     {

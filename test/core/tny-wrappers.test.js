@@ -10,6 +10,7 @@ import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
 import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2StateMachine.js";
+import { Tr2ActionSetValue } from "../../npm/dist/trinity/controllers/action/Tr2ActionSetValue.js";
 import { Tr2StateMachineState } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineState.js";
 import { Tr2StateMachineTransition } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineTransition.js";
 import { Tr2ActionPlayMeshAnimation } from "../../npm/dist/trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";
@@ -230,16 +231,23 @@ test("ship values: discovered once, null where unsupported, pushed to native own
         const entry = new Tr2ControllerFloatVariable();
         Object.assign(entry, { name, variableType, enumValues });
         controller.variables.Append(entry);
+        return entry;
     };
-    variable("IsWarping");
-    variable("InSiegeMode");
+    const isWarping = variable("IsWarping");
+    // A trigger: defaults to 0 and the controller's own state only sets it back to 0.
+    variable("StopShipRequested");
+    variable("_private");
+    const inSiegeMode = variable("InSiegeMode");
     variable("WarpTopSpeed", 0);
     // Named unlike ShipStance: found by what it is, an enum variable driving a machine that plays mesh animations.
-    variable("hullMode", 3, "Defence=1, Speed=2, Sniper=3");
+    const hullMode = variable("hullMode", 3, "Defence=1, Speed=2, Sniper=3");
     const machine = new Tr2StateMachine(), state = new Tr2StateMachineState(), transition = new Tr2StateMachineTransition();
     transition.condition = "hullMode==2";
     state.transitions.Append(transition);
     state.actions.Append(new Tr2ActionPlayMeshAnimation());
+    const reset = new Tr2ActionSetValue();
+    Object.assign(reset, { path: "StopShipRequested", attribute: "value", value: "0" });
+    state.actions.Append(reset);
     machine.states.Append(state);
     controller.stateMachines.Append(machine);
     native.controllers.Append(controller);
@@ -247,7 +255,7 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     const ship = TnyShip.fromWrapped(native, { name: "Probe" });
     const values = ship.GetValues();
     assert.equal(values.name, "Probe");
-    assert.equal(values.state, "standard");
+    assert.deepEqual([ values.warp, values.dock, values.siege, values.attack ], [ false, false, false, null ], "each state its own value; no attack flag here");
     assert.equal(values.shield, null, "no impact overlay, no shield, armour or hull");
     assert.equal(values.alwaysOn, null, "no booster set");
     assert.equal(values.displayKillCounterValue, null, "no kill-counter decal");
@@ -258,23 +266,35 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     assert.deepEqual(Object.keys(interfaces), [ "TnySpaceObject", "TnyMobile", "TnyShip", "stance" ]);
     assert.ok(!("shield" in members) && "age" in members && !("dirtLevel" in members), "age is the value; dirtLevel stays internal");
     assert.deepEqual(members.stance.choosers, [ [ 1, "Defence" ], [ 2, "Speed" ], [ 3, "Sniper" ] ]);
-    assert.deepEqual(members.state.choosers.map(choice => choice[0]), [ "standard", "warp", "dock", "siege" ]);
+    assert.ok(!("state" in members) && members.warp.type === "boolean" && "siege" in members && !("attack" in members));
+    assert.deepEqual(ship.controllers.GetActions().map(action => [ action.name, action.kind ]), [ [ "StopShipRequested", "trigger" ] ]);
+    assert.match(ship.GetTypeInfo()[3].Trigger, /StopShipRequested/, "actions are methods, not values");
+    assert.ok(!ship.controllers.GetVariableNames().includes("_private"), "a leading _ is private");
 
     const heard = [], written = {};
     ship._onModified = name => heard.push(name);
     t.mock.method(native, "SetControllerVariable", (name, value) => { written[name] = value; });
-    ship.SetValues({ age: 10, state: "siege", stance: 2, shield: 0.5 });
+    ship.SetValues({ age: 10, siege: true, stance: 2, shield: 0.5 });
     assert.ok(Math.abs(native.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6, "age writes the native dirtLevel");
     // EveSpaceObject2 mirrors dirtLevel into its DirtLevel controller variable when notified.
-    assert.deepEqual(written, { DirtLevel: written.DirtLevel, IsWarping: 0, isDocked: 0, InSiegeMode: 1, hullMode: 2 }, "WarpTopSpeed is no state flag");
+    assert.deepEqual(written, { DirtLevel: written.DirtLevel, InSiegeMode: 1, hullMode: 2 }, "siege alone; WarpTopSpeed is no state flag");
     assert.equal(ship.shield, null, "a write to an unsupported value is ignored");
     // UpdateValues notifies in member-table order (derived first); the test checks which, not the order.
-    assert.deepEqual([ ...heard ].sort(), [ "age", "stance", "state" ]);
+    assert.deepEqual([ ...heard ].sort(), [ "age", "siege", "stance" ]);
+
+    // The content turns warp on by itself: Sync reads it back and announces it.
+    // (SetControllerVariable is mocked above, so the native siege and stance are set by hand to match.)
+    inSiegeMode.value = 1;
+    hullMode.value = 2;
+    isWarping.value = 1;
+    ship.Sync();
+    assert.equal(ship.warp, true);
+    assert.equal(heard.at(-1), "warp");
 
     ship.Destruct();
     ship.SetValues({ age: 20 });
     assert.equal(heard.includes("age"), true);
-    assert.equal(heard.at(-1), "age", "after Destruct nothing is announced");
+    assert.equal(heard.at(-1), "warp", "after Destruct nothing is announced");
 });
 
 test("speed is supported only with a Destiny ball, and drives the ball through its park", t =>

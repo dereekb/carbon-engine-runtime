@@ -93,10 +93,30 @@ export class TnyShip extends TnyMobile
     @type.float32
     staticTrailLength = null;
 
-    /** The ship state: "standard", "warp", "dock", and "siege"/"attack" where its controllers have them. */
+    /**
+     * Warp: the controller variable IsWarping (and any other warp flag its
+     * controllers have). Each state is its own value, as the content's
+     * effects are separate; several can be on at once. A change the content
+     * makes itself (the hangar docker turning warp off) is announced by Sync.
+     */
     @meta.mapAttribute(VALUE)
-    @type.string
-    state = null;
+    @type.boolean
+    warp = null;
+
+    /** Docked: isDocked (and any other dock flag). */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    dock = null;
+
+    /** Siege mode, on ships whose controllers have a siege flag (InSiegeMode). */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    siege = null;
+
+    /** Attack mode, on ships whose controllers have an attack flag. */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    attack = null;
 
     /** The stance's value from its enum choices, on ships with a stance. */
     @meta.mapAttribute(VALUE)
@@ -133,7 +153,7 @@ export class TnyShip extends TnyMobile
         }
 
         this._states = this._FindStates();
-        take("state", "standard");
+        for (const name of this._states.keys()) take(name, this._ReadState(name));
         this._stance = this._FindStance();
         if (this._stance) take("stance", this.controllers.GetVariable(this._stance.variable));
     }
@@ -199,22 +219,44 @@ export class TnyShip extends TnyMobile
             case "alwaysOnIntensity": case "warpIntensity": case "staticTrailLength":
                 this._Bind(ship.boosters, name).SetValue(this[name]);
                 return;
-            case "state": this._SetState(this.state); return;
+            case "warp": case "dock": case "siege": case "attack":
+                for (const variable of this._states.get(name)) this.wrapped.SetControllerVariable(variable, this[name] ? 1 : 0);
+                return;
             case "stance": this.controllers.SetVariable(this._stance.variable, this.stance); return;
             default: super._Push(name);
         }
     }
 
-    /** Enters one state: its variables to 1, every other state's to 0; an unknown one is refused. */
-    _SetState(name)
+    /** Whether a state is on: any of its controller variables is non-zero. */
+    _ReadState(name)
     {
-        if (!this._states.has(name))
+        return this._states.get(name).some(variable => (this.controllers.GetVariable(variable) ?? 0) !== 0);
+    }
+
+    /**
+     * Reads back what the content changes by itself (a docker turning warp
+     * or dock on and off, a machine moving the stance) and announces each
+     * change through _onModified, without pushing it down again.
+     */
+    Sync()
+    {
+        super.Sync();
+        for (const name of this._states.keys())
         {
-            this.state = "standard";
-            return;
+            const on = this._ReadState(name);
+            if (on === this[name]) continue;
+            this[name] = on;
+            if (this._onModified) this._onModified(name);
         }
-        for (const [ state, variables ] of this._states)
-            for (const variable of variables) this.wrapped.SetControllerVariable(variable, state === name ? 1 : 0);
+        if (this._stance)
+        {
+            const stance = this.controllers.GetVariable(this._stance.variable);
+            if (stance !== null && stance !== this.stance)
+            {
+                this.stance = stance;
+                if (this._onModified) this._onModified("stance");
+            }
+        }
     }
 
     /**
@@ -265,10 +307,9 @@ export class TnyShip extends TnyMobile
         park.SetSpeedFraction(ball.mId, this.maxSpeed > 0 ? speed / this.maxSpeed : 0);
     }
 
-    /** The state and stance choices. */
+    /** The stance choices. */
     _Choices(name)
     {
-        if (name === "state") return [ ...this._states.keys() ].map(state => [ state, state ]);
         if (name === "stance" && this._stance) return this._stance.choices.map(choice => [ choice.value, choice.name ]);
         return super._Choices(name);
     }
