@@ -11,7 +11,8 @@ function isBareSpecifier(value)
     return !value.startsWith(".") && !value.startsWith("/") && !path.isAbsolute(value);
 }
 
-function resolveBrowserModule(source)
+/** Resolves a bare dependency specifier to the file a browser should load (its `browser`/ESM build). */
+export function resolveBrowserModule(source)
 {
     if (source.startsWith("gl-matrix/")) return packageRequire.resolve(source);
 
