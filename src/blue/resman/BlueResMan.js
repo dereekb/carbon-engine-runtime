@@ -2012,8 +2012,8 @@ export class BlueResMan
    * @param {string} cacheKey MotherLode key.
    * @param {IBlueResManNotifications|null} [notifications=null] Told of the
    *   new resource before insertion (BlueResMan.cpp:237-240).
-   * @returns {BlueAsyncRes} Canonical dynamic resource.
-   * @throws {Error} If no constructor is registered or it yields no resource.
+   * @returns {BlueAsyncRes|null} Canonical dynamic resource; null, as Carbon's,
+   *   when no constructor is registered (logged) or it yields no resource.
    */
   _CreateDynamicResource(key, cacheKey, notifications = null)
   {
@@ -2024,15 +2024,11 @@ export class BlueResMan
     const constructor = this._dynamicConstructors.get(name);
     if (!constructor)
     {
-      throw BlueResMan._dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_CONSTRUCTOR_MISSING",
-        `no dynamic constructor is registered for "${name}"`);
+      CcpLog.CCP_LOGERR_CH(CcpLog.GetModuleChannel("blue"), "No dynamic constructor found for resource name, %s", key);
+      return null;
     }
     const resource = constructor.GetResource(query);
-    if (!CjsSchema.cast(resource, IBlueResource))
-    {
-      throw BlueResMan._dynamicResourceError(key, name, "CJS_RESMAN_DYNAMIC_RESOURCE_UNAVAILABLE",
-        `dynamic constructor "${name}" returned no IBlueResource-compatible resource`);
-    }
+    if (!CjsSchema.cast(resource, IBlueResource)) return null;
     if (notifications) notifications.OnResourceCreated(resource);
     this._dynamicResources.add(resource);
 
@@ -3397,16 +3393,6 @@ export class BlueResMan
     const error = new Error(`BlueResMan ${message}`);
     error.code = code;
     error.pending = pending.map(resource => resource.GetPath());
-    return error;
-  }
-
-  static _dynamicResourceError(path, name, code, message)
-  {
-    const error = new Error(`BlueResMan ${message} (${path})`);
-    error.code = code;
-    error.path = path;
-    error.name = "CjsResManDynamicResourceError";
-    error.constructorName = name;
     return error;
   }
 

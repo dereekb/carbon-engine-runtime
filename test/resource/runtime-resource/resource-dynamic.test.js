@@ -99,25 +99,15 @@ test("dynamic constructor names are lowercased and can be unregistered", () =>
   assert.deepEqual(built, [ "Some/Query" ]);
 
   resMan.UnregisterResourceConstructor("PROBE");
-  assert.throws(
-    () => resMan.GetResource("dynamic:/probe/other"),
-    error => error.code === "CJS_RESMAN_DYNAMIC_CONSTRUCTOR_MISSING"
-  );
+  assert.equal(resMan.GetResource("dynamic:/probe/other"), null);
 });
 
-test("an unknown dynamic name and a constructor yielding nothing are raised by name", () =>
+test("an unknown dynamic name and a constructor yielding nothing give null, as Carbon's (BlueResMan.cpp:225-235)", () =>
 {
   const { resMan } = countingManager();
-  assert.throws(
-    () => resMan.GetResource("dynamic:/nothing/here"),
-    error => error.code === "CJS_RESMAN_DYNAMIC_CONSTRUCTOR_MISSING"
-      && error.constructorName === "nothing"
-  );
+  assert.equal(resMan.GetResource("dynamic:/nothing/here"), null);
   resMan.RegisterResourceConstructor("empty", { GetResource() { return null; }, IsCacheable() { return false; } });
-  assert.throws(
-    () => resMan.GetResource("dynamic:/empty/x"),
-    error => error.code === "CJS_RESMAN_DYNAMIC_RESOURCE_UNAVAILABLE"
-  );
+  assert.equal(resMan.GetResource("dynamic:/empty/x"), null);
   assert.throws(() => resMan.RegisterResourceConstructor("", { GetResource() {} }), TypeError);
 });
 
