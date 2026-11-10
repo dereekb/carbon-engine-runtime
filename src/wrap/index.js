@@ -18,4 +18,8 @@ export * from "./objects/TnyStationary.js";
 export * from "./objects/TnyControllers.js";
 export * from "./objects/TnyOverlays.js";
 export * from "./objects/TnySlot.js";
+export * from "./objects/TnySpaceObjectIdentity.js";
+export * from "./objects/TnyShipIdentity.js";
+export * from "./objects/TnySkinIdentity.js";
+export * from "./objects/TnySkinrIdentity.js";
 export * from "./objects/TnyMotion.js";

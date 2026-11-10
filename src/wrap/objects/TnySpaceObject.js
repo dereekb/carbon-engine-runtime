@@ -1,13 +1,19 @@
-import { CjsSchema } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
+import { CjsGraphRoot } from "../../global/model/graph/CjsGraphRoot.js";
+import { INotify } from "../../blue/exposure/INotify.js";
+import { CjsBlueGraph } from "../../blue/formats/graph/CjsBlueGraph.js";
 import { CjsLibrary } from "../../core/CjsLibrary.js";
 import { EveSpaceObject2 } from "../../trinity/eve/spaceObject/EveSpaceObject2.js";
 import { Tr2ExternalParameter } from "../../trinity/core/binding/Tr2ExternalParameter.js";
+import { EveSOFDNA } from "../../sof/EveSOFDNA.js";
+import { blue } from "../../blue/index.js";
 import { TnyControllers } from "./TnyControllers.js";
 import { TnyOverlays } from "./TnyOverlays.js";
+import { TnySpaceObjectIdentity } from "./TnySpaceObjectIdentity.js";
 
 /**
  * The dirt level for weeks since a ship was last cleaned. Ours, client
- * behaviour as found in ccpwgl (EveSpaceObject2.getdirtLevelFromWeeks); Carbon
+ * behaviour as found in ccpwgl (EveSpaceObject2.getDirtLevelFromWeeks); Carbon
  * only consumes m_dirtLevel. Moved here from Graphene's TrinityShipAge.
  *
  * @param {number} weeks Weeks since the last clean.
@@ -18,60 +24,226 @@ export function dirtLevelFromWeeks(weeks)
     return Math.max(0.7 - 1 / (Math.pow(Math.max(weeks, 0), 0.65) + 1 / 2.7), 0);
 }
 
-/**
- * Application convenience for a live space object acquired through the shared
- * library. Ours: ccpwgl's TnySpaceObject (our own code there) is the shape.
- * Subclasses narrow the native class they borrow; `fetch` on a subclass
- * requires that class.
- */
-export class TnySpaceObject
-{
-    static className = "TnySpaceObject";
+/** The module animations on the impact overlay, by their native names (EveSpaceObject2.SetImpactAnimation). */
+const ANIMATIONS = [ "shieldboost", "shieldhardening", "armorhardening", "armorrepair", "hullrepair" ];
 
+/** Members a UI writes and the wrapper hears, as a member flag set. */
+const VALUE = meta.READWRITE | meta.NOTIFY;
+
+/** A schema member's edit facts as Carbon's EDITFLAGS bitmask, for the type info. */
+function EditFlags(edit)
+{
+    if (!edit) return 0;
+    return (edit.read ? meta.READ : 0) | (edit.write ? meta.WRITE : 0) | (edit.notify ? meta.NOTIFY : 0)
+        | (edit.hidden ? meta.HIDDEN : 0) | (edit.persist ? meta.PERSIST : 0) | (edit.rpersist ? meta.RPERSIST : 0);
+}
+
+/** Wrappers made so far; each takes the next as its id. */
+let wrapperCount = 0;
+
+/**
+ * Sits between a live space object and a UI: declares what the object
+ * exposes, holds the values, and pushes writes down to the native owners. A UI
+ * reads only the wrapper: its type info, its values and its notifications.
+ * Ours, after ccpwgl's TnySpaceObject (our own code there); the client's
+ * Python role (tny.md, operator 2026-11-07).
+ *
+ * Every declared member is always present; null means the object does not
+ * support it, writes to it are ignored and a UI does not draw it. Hull facts
+ * are discovered once, after the object is built.
+ */
+@meta.define({ className: "TnySpaceObject" })
+@meta.mapInterface(INotify)
+export class TnySpaceObject extends CjsGraphRoot
+{
     /** The native class this wrapper borrows. */
     static wrappedClass = EveSpaceObject2;
 
-    /** Its registered name, for errors. */
-    static wrappedName = "EveSpaceObject2";
+    /** The identity class this layer fills in. */
+    static identityClass = TnySpaceObjectIdentity;
 
-    /**
-     * The user-level parameters of every space object (tny.md, operator
-     * 2026-11-07). Each names the native member it drives where one exists.
-     * `available` limits one to objects that support it; `read`/`write`
-     * delegate to the native owner.
-     */
-    static parameters = [
-        { name: "dirtLevel", type: "number", min: 0, max: 1,
-            read: o => o.wrapped.dirtLevel, write: (o, v) => o._Bind(o.wrapped, "dirtLevel").SetValue(v) },
-        // Ours, client behaviour as found in ccpwgl (EveSpaceObject2.getdirtLevelFromWeeks,
-        // src/eve/object/EveSpaceObject2.js:2985-2990; Graphene TrinityShipAge): weeks to dirtLevel.
-        { name: "age", type: "number", min: 0, max: 520,
-            read: o => o._age, write: (o, v) => { o._age = v; o.SetParameter("dirtLevel", dirtLevelFromWeeks(v)); } },
-        { name: "activationStrength", type: "number", min: 0, max: 1,
-            read: o => o.wrapped.activationStrength, write: (o, v) => o._Bind(o.wrapped, "activationStrength").SetValue(v) },
-        // Damage taken, 0 to 1, over the core damage overlays: SetImpactDamageState takes the
-        // remaining shield, armour and hull (EveSpaceObject2.SetImpactDamageState).
-        ...[ "shieldDamage", "armorDamage", "hullDamage" ].map((name, index) => ({ name, type: "number", min: 0, max: 1,
-            read: o => o._damage[index], write: (o, v) => { o._damage[index] = v; o._ApplyDamage(); } })),
-        // Module animations on the impact overlay (EveSpaceObject2.SetImpactAnimation), by their native names.
-        ...[ "shieldboost", "shieldhardening", "armorhardening", "armorrepair", "hullrepair" ].map(name => ({ name, type: "boolean",
-            read: o => o._animations.has(name),
-            write: (o, v) => { if (v) o._animations.add(name); else o._animations.delete(name); o.wrapped.SetImpactAnimation(name, v, TnySpaceObject.ANIMATION_DURATION); } })),
-        // The client's cloak: res:/fisfx/cloaking/cloaking(_skinned).black as an overlay (TnyOverlays),
-        // the skinned file when the hull's shaders are skinned, as Graphene's demo picks. Writing returns a promise.
-        { name: "cloak", type: "boolean",
-            read: o => o.overlays.Has(o._CloakPath()),
-            write: (o, v) => v ? (o.overlays.Has(o._CloakPath()) ? Promise.resolve() : o.overlays.Add(o._CloakPath())) : Promise.resolve(o.overlays.Remove(o._CloakPath())) }
-    ];
+    /** Numeric ranges for the type info; a write is clamped to them. */
+    static ranges = { dirtLevel: [ 0, 1 ], age: [ 0, 520 ], activationStrength: [ 0, 1 ],
+        shieldDamage: [ 0, 1 ], armorDamage: [ 0, 1 ], hullDamage: [ 0, 1 ] };
 
     /** Seconds a module animation fades over (a quarter of it); Graphene's demo value. */
     static ANIMATION_DURATION = 4;
 
-    /** Existing object graph; wrapping neither copies nor initializes it. */
+    /** The user's name for the object, written to the native `name` too. */
+    @meta.mapAttribute(VALUE)
+    @type.string
+    name = null;
+
+    /** What the object is, filled in by the library (TnySpaceObjectIdentity), read-only. */
+    @meta.mapAttribute(meta.READ)
+    @type.object.ref("TnySpaceObjectIdentity")
+    identity = null;
+
+    /** EveSpaceObject2.dirtLevel. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    dirtLevel = null;
+
+    /**
+     * Weeks since the last clean, written to dirtLevel. Ours, client behaviour
+     * as found in ccpwgl; Graphene's TrinityShipAge.
+     */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    age = null;
+
+    /** EveSpaceObject2.activationStrength. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    activationStrength = null;
+
+    /** Shield damage taken, 0 to 1, over the core damage overlays (SetImpactDamageState). */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    shieldDamage = null;
+
+    /** Armour damage taken, 0 to 1. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    armorDamage = null;
+
+    /** Hull damage taken, 0 to 1. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    hullDamage = null;
+
+    /** Shield booster animation (SetImpactAnimation). */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    shieldboost = null;
+
+    /** Shield hardener animation. */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    shieldhardening = null;
+
+    /** Armour hardener animation. */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    armorhardening = null;
+
+    /** Armour repairer animation. */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    armorrepair = null;
+
+    /** Hull repairer animation. */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    hullrepair = null;
+
+    /** The client's cloak: res:/fisfx/cloaking/cloaking(_skinned).black as an overlay (TnyOverlays). */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    cloak = null;
+
+    /** The borrowed native object; a UI never reads it. */
     wrapped = null;
 
-    /** The DNA it was fetched with, or null; turret painting reads it. */
-    dna = null;
+    /** This wrapper's id, kept for its life (across skin changes too). */
+    id = 0;
+
+    /** Called with a member's name after the wrapper handled a change to it; set by a UI. */
+    _onModified = null;
+
+    /** Called when this wrapper's type info changes (a skin change); set by a UI. */
+    _onTypeInfoModified = null;
+
+    /** Members discovery found supported. */
+    _supported = new Set();
+
+    /** Tr2ExternalParameter bindings by target and attribute, built on first write. */
+    _bindings = new Map();
+
+    /** The object's controllers (TnyControllers); built on first use. */
+    _controllers = null;
+
+    /** The object's overlays (TnyOverlays); built on first use. */
+    _overlays = null;
+
+    /** The JS constructor is the no-argument one; wrap a live object with `fromWrapped`. */
+    constructor()
+    {
+        super();
+        this.id = ++wrapperCount;
+    }
+
+    /**
+     * Acquires a fresh object through the library and wraps it in this class.
+     * The library owns DNA hydration and the resource wait.
+     *
+     * @param {object} options What to fetch.
+     * @param {string} [options.dna] DNA; give this or `resPath`.
+     * @param {string} [options.resPath] Object resource path; give this or `dna`.
+     * @param {boolean} [options.awaitResources=false] Resolve once the object's resources have loaded.
+     * @param {string} [options.name] The user's name for it.
+     * @returns {Promise<TnySpaceObject>} An instance of the class it was called on.
+     */
+    static async fetch(options = {})
+    {
+        return this.fromWrapped(await TnySpaceObject.acquire(options), options);
+    }
+
+    /**
+     * Wraps a live object: starts its controllers once and discovers what it supports.
+     *
+     * @param {object} object The live object.
+     * @param {{name?: string|null, dna?: string|null}} [options] Fetch options.
+     * @returns {TnySpaceObject} The wrapper.
+     * @throws {TypeError} When the object is not this class's native class.
+     */
+    static fromWrapped(object, { name = null, dna = null } = {})
+    {
+        const className = CjsSchema.getClassName(this);
+        if (!CjsSchema.cast(object, this.wrappedClass))
+            throw new TypeError(`${className} requires a live ${CjsSchema.getClassName(this.wrappedClass)}.`);
+        const wrapper = new this();
+        wrapper.wrapped = object;
+        object.StartControllers();
+        wrapper._Discover(dna);
+        if (name !== null) wrapper.SetValues({ name });
+        return wrapper;
+    }
+
+    /**
+     * Validates fetch options and acquires the object through the library.
+     *
+     * @param {object} options See `fetch`.
+     * @returns {Promise<object|null>} The live object.
+     */
+    static async acquire({ dna = null, resPath = null, awaitResources = false, name = null, ...unknown } = {})
+    {
+        const className = CjsSchema.getClassName(this);
+        const library = CjsLibrary.instance;
+        if (!library) throw new Error(`${className} requires an initialized CjsLibrary.`);
+        const extra = Object.keys(unknown);
+        if (extra.length) throw new TypeError(`${className}.fetch does not take ${extra.join(", ")}.`);
+        const source = dna ?? resPath;
+        if (typeof source !== "string" || !source || (dna !== null && resPath !== null))
+            throw new TypeError(`${className} requires DNA or an object path.`);
+        if (name !== null && typeof name !== "string") throw new TypeError(`${className} name must be a string.`);
+        return library.Fetch(source, { awaitResources });
+    }
+
+    /**
+     * The object's world-space bounding sphere, through the native bounds
+     * (`UpdateWorldBounds`, `GetBoundingSphere`), or null while it has none.
+     * For the host's camera framing.
+     *
+     * @returns {{centre: number[], radius: number}|null} The sphere.
+     */
+    GetBoundingSphere()
+    {
+        this.wrapped.UpdateWorldBounds();
+        const sphere = new Float32Array(4);
+        if (!this.wrapped.GetBoundingSphere(sphere, 0)) return null;
+        return { centre: [ sphere[0], sphere[1], sphere[2] ], radius: sphere[3] };
+    }
 
     /** What the object's controllers expose (TnyControllers). */
     get controllers()
@@ -79,99 +251,129 @@ export class TnySpaceObject
         return this._controllers ??= new TnyControllers(this);
     }
 
-    /** Built on first use. */
-    _controllers = null;
-
-    /** The object's overlays beyond its core damage ones (TnyOverlays). */
+    /** The object's mesh overlays beyond its core damage ones (TnyOverlays). */
     get overlays()
     {
         return this._overlays ??= new TnyOverlays(this);
     }
 
-    /** Built on first use. */
-    _overlays = null;
+    /**
+     * Every declared value; null where the object does not support it.
+     *
+     * @param {object} [options] Graph get options; `full` is the default.
+     * @returns {object} The values.
+     */
+    GetValues(options)
+    {
+        return super.GetValues({ full: true, ...options });
+    }
 
-    /** The cloak overlay for this hull: skinned when its opaque areas use skinned shaders. */
+    /**
+     * Discovers what the object supports and takes its current values. Hull
+     * facts are found once here; a skin change runs it again.
+     *
+     * @param {string|null} dna The DNA it was built from.
+     */
+    _Discover(dna)
+    {
+        const object = this.wrapped;
+        this._supported.clear();
+        const take = (member, value) => { this._supported.add(member); this[member] = value; };
+
+        take("name", object.name ?? "");
+        take("dirtLevel", object.dirtLevel);
+        take("age", 0);
+        take("activationStrength", object.activationStrength);
+        take("cloak", false);
+        // Every hull has the core damage overlays; an object without an impact overlay has none.
+        if (object.impactOverlay)
+        {
+            for (const member of [ "shieldDamage", "armorDamage", "hullDamage" ]) take(member, 0);
+            for (const member of ANIMATIONS) take(member, false);
+        }
+        this.identity = this._Identity(dna);
+    }
+
+    /**
+     * What the object is, from its DNA through the SOF's own parser; SDE facts
+     * (typeID, typeName, graphicID) stay null until a service supplies them.
+     */
+    _Identity(dna)
+    {
+        const identity = new this.constructor.identityClass();
+        if (!dna) return identity;
+        identity.dna = dna;
+        // A library started without a SOF cannot parse DNA; the rest stays unknown.
+        if (!blue.sof) return identity;
+        const parsed = new EveSOFDNA();
+        parsed.Setup(dna, blue.sof.dataMgr);
+        if (parsed.IsValid())
+        {
+            identity.hull = parsed.GetHullNames()[0] ?? null;
+            identity.faction = parsed.GetFactionName() || null;
+            identity.race = parsed.GetRaceName() || null;
+        }
+        return identity;
+    }
+
+    /**
+     * A member changed (SetValues, UpdateValues): ignore it when unsupported,
+     * clamp it to its range, push it down to the native owner, then tell the UI.
+     *
+     * @param {string} name The member.
+     * @returns {boolean} True.
+     */
+    OnModified(name)
+    {
+        if (!this._supported.has(name))
+        {
+            this[name] = null;
+            return true;
+        }
+        const range = this.constructor.ranges[name];
+        if (range && typeof this[name] === "number") this[name] = Math.min(range[1], Math.max(range[0], this[name]));
+        this._Push(name);
+        if (this._onModified) this._onModified(name);
+        return true;
+    }
+
+    /** Writes one supported member to its native owner. */
+    _Push(name)
+    {
+        const object = this.wrapped;
+        switch (name)
+        {
+            case "name": object.name = this.name; return;
+            case "dirtLevel": case "activationStrength": this._Bind(object, name).SetValue(this[name]); return;
+            case "age": this.SetValues({ dirtLevel: dirtLevelFromWeeks(this.age) }); return;
+            case "shieldDamage": case "armorDamage": case "hullDamage":
+                // SetImpactDamageState takes what remains of shield, armour and hull.
+                object.SetImpactDamageState(1 - this.shieldDamage, 1 - this.armorDamage, 1 - this.hullDamage, true);
+                return;
+            case "cloak": this._SetCloak(this.cloak); return;
+            default:
+                if (ANIMATIONS.includes(name)) object.SetImpactAnimation(name, this[name], TnySpaceObject.ANIMATION_DURATION);
+        }
+    }
+
+    /** Adds or removes the cloak overlay; a load failure is logged and the value restored. */
+    _SetCloak(on)
+    {
+        const path = this._CloakPath();
+        const change = on ? (this.overlays.Has(path) ? Promise.resolve() : this.overlays.Add(path)) : Promise.resolve(this.overlays.Remove(path));
+        change.catch(error =>
+        {
+            console.error(`${CjsSchema.getClassName(this.constructor)} cloak failed`, error);
+            this.cloak = false;
+            if (this._onModified) this._onModified("cloak");
+        });
+    }
+
+    /** The cloak overlay for this hull: skinned when its opaque areas use skinned shaders, as Graphene picks. */
     _CloakPath()
     {
         const skinned = this.wrapped.mesh?.opaqueAreas.some(area => /skinned/i.test(area.effect?.effectFilePath ?? "")) ?? false;
         return `res:/fisfx/cloaking/${skinned ? "cloaking_skinned" : "cloaking"}.black`;
-    }
-
-    /** Weeks for the `age` parameter. */
-    _age = 0;
-
-    /** Shield, armour and hull damage taken, 0 to 1. */
-    _damage = [ 0, 0, 0 ];
-
-    /** Module animations switched on. */
-    _animations = new Set();
-
-    /** Tr2ExternalParameter bindings by target and attribute, built on first write. */
-    _bindings = new Map();
-
-    /**
-     * The parameters this object supports, for a UI to list.
-     *
-     * @returns {{name: string, type: string, min?: number, max?: number}[]} Descriptors.
-     */
-    GetParameters()
-    {
-        return this.constructor.parameters
-            .filter(parameter => !parameter.available || parameter.available(this))
-            .map(({ name, type, min, max }) => ({ name, type, ...(min === undefined ? {} : { min, max }) }));
-    }
-
-    /**
-     * Reads one parameter.
-     *
-     * @param {string} name A name from GetParameters.
-     * @returns {number|boolean} Its value.
-     */
-    GetParameter(name)
-    {
-        return this._Parameter(name).read(this);
-    }
-
-    /**
-     * Writes one parameter through its native owner.
-     *
-     * @param {string} name A name from GetParameters.
-     * @param {number|boolean} value A number within its range, or a boolean.
-     * @returns {*} What the write returns: a promise for parameters that load content (cloak).
-     */
-    SetParameter(name, value)
-    {
-        const parameter = this._Parameter(name);
-        if (parameter.type === "boolean")
-        {
-            if (typeof value !== "boolean") throw new TypeError(`${name} takes a boolean.`);
-        }
-        else if (!Number.isFinite(value) || value < parameter.min || value > parameter.max)
-        {
-            throw new RangeError(`${name} takes a number from ${parameter.min} to ${parameter.max}.`);
-        }
-        else if (parameter.type === "integer" && !Number.isInteger(value))
-        {
-            throw new RangeError(`${name} takes a whole number.`);
-        }
-        return parameter.write(this, value);
-    }
-
-    /** The descriptor for a supported parameter. */
-    _Parameter(name)
-    {
-        const parameter = this.constructor.parameters.find(entry => entry.name === name);
-        if (!parameter || (parameter.available && !parameter.available(this)))
-            throw new RangeError(`${this.constructor.className} has no parameter ${name}.`);
-        return parameter;
-    }
-
-    /** Pushes the damage taken to the impact overlay as remaining shield, armour and hull. */
-    _ApplyDamage()
-    {
-        const [ shield, armor, hull ] = this._damage;
-        this.wrapped.SetImpactDamageState(1 - shield, 1 - armor, 1 - hull, true);
     }
 
     /**
@@ -195,77 +397,63 @@ export class TnySpaceObject
         return binding;
     }
 
-    /** Borrows a compatible live object without initializing or copying it. */
-    constructor(wrapped)
+    /**
+     * Carbon's GetTypeInfo shape (blueexposure/TypeInfo.cpp:70-195), made up by
+     * this wrapper for this instance: never the native class's. The class name
+     * carries the wrapper's id so nothing caches one object's answer as a
+     * class's. Interfaces are the Tny layers and capabilities it has; members
+     * only what it supports; methods only the actions that work on it.
+     *
+     * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.
+     */
+    GetTypeInfo()
     {
-        const { wrappedClass, wrappedName, className } = this.constructor;
-        if (!CjsSchema.cast(wrapped, wrappedClass)) throw new TypeError(`${className} requires a live ${wrappedName}.`);
-        this.wrapped = wrapped;
+        const className = CjsSchema.getClassName(this.constructor);
+        const classInfo = { module: "tny", classname: `${className}_${this.id}`, description: this._Description(), autovar: 0, signatures: {} };
+        const interfaces = {};
+        for (const name of this._Interfaces()) interfaces[name] = 0;
+        const members = {};
+        for (const member of CjsSchema.getSchema(this.constructor).members)
+        {
+            if (this[member.key] === null && member.key !== "identity") continue;
+            const range = this.constructor.ranges[member.key];
+            members[member.name] = { type: member.type?.kind ?? member.type, iid_name: "", iid_ver: 0, description: "",
+                editflags: EditFlags(member.edit), min: range ? range[0] : null, max: range ? range[1] : null,
+                choosers: this._Choices(member.key) };
+        }
+        return [ classInfo, interfaces, members, this._Methods() ];
     }
 
-    /**
-     * Acquires a fresh object through the library and starts its existing
-     * controllers. The library owns DNA hydration and the resource wait; this
-     * does not initialize the graph again. Fetch and controller failures reject.
-     *
-     * @param {object} options What to fetch.
-     * @param {string} [options.dna] DNA; give this or `resPath`.
-     * @param {string} [options.resPath] Object resource path; give this or `dna`.
-     * @param {boolean} [options.awaitResources=false] Resolve once the object's resources have loaded.
-     * @param {string} [options.name] Sets the object's `name`.
-     * @returns {Promise<TnySpaceObject>} An instance of the class it was called on.
-     */
-    static async fetch(options = {})
+    /** The Tny layers and capabilities this instance has. */
+    _Interfaces()
     {
-        return this.fromWrapped(await TnySpaceObject.acquire(options), options);
+        return CjsSchema.getClassNames(this.constructor).filter(name => name.startsWith("Tny")).reverse();
     }
 
-    /**
-     * Wraps an acquired object in this class, sets its name and starts its controllers.
-     *
-     * @param {object} object The live object.
-     * @param {{name?: string|null, dna?: string|null}} [options] Fetch options.
-     * @returns {TnySpaceObject} The wrapper.
-     */
-    static fromWrapped(object, { name = null, dna = null } = {})
+    /** The actions that work on this instance, with signatures. */
+    _Methods()
     {
-        const wrapper = new this(object);
-        wrapper.dna = dna;
-        if (name !== null) wrapper.wrapped.name = name;
-        wrapper.wrapped.StartControllers();
-        return wrapper;
+        return { Destruct: "()" };
     }
 
-    /**
-     * The object's world-space bounding sphere, through the native bounds
-     * (`UpdateWorldBounds`, `GetBoundingSphere`), or null while it has none.
-     *
-     * @returns {{centre: number[], radius: number}|null} The sphere.
-     */
-    GetBoundingSphere()
+    /** A member's choices, `[[value, name], ...]`, or null. */
+    _Choices(_name)
     {
-        this.wrapped.UpdateWorldBounds();
-        const sphere = new Float32Array(4);
-        if (!this.wrapped.GetBoundingSphere(sphere, 0)) return null;
-        return { centre: [ sphere[0], sphere[1], sphere[2] ], radius: sphere[3] };
+        return null;
     }
 
-    /**
-     * Validates fetch options and acquires the object through the library.
-     *
-     * @param {object} options See `fetch`.
-     * @returns {Promise<object|null>} The live object.
-     */
-    static async acquire({ dna = null, resPath = null, awaitResources = false, name = null, ...unknown } = {})
+    /** A one-line description for the type info. */
+    _Description()
     {
-        const library = CjsLibrary.instance;
-        if (!library) throw new Error(`${this.className} requires an initialized CjsLibrary.`);
-        const extra = Object.keys(unknown);
-        if (extra.length) throw new TypeError(`${this.className}.fetch does not take ${extra.join(", ")}.`);
-        const source = dna ?? resPath;
-        if (typeof source !== "string" || !source || (dna !== null && resPath !== null))
-            throw new TypeError(`${this.className} requires DNA or an object path.`);
-        if (name !== null && typeof name !== "string") throw new TypeError(`${this.className} name must be a string.`);
-        return library.Fetch(source, { awaitResources });
+        return this.identity?.dna ?? "";
+    }
+
+    /** Detaches the UI and this wrapper; the native object is the library's. */
+    Destruct()
+    {
+        this._onModified = null;
+        this._onTypeInfoModified = null;
     }
 }
+
+CjsBlueGraph.define(TnySpaceObject, "TnySpaceObject");

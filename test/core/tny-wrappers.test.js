@@ -9,6 +9,10 @@ import { EveMobile } from "../../npm/dist/trinity/eve/spaceObject/EveMobile.js";
 import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
+import { Tr2StateMachine } from "../../npm/dist/trinity/controllers/state/Tr2StateMachine.js";
+import { Tr2StateMachineState } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineState.js";
+import { Tr2StateMachineTransition } from "../../npm/dist/trinity/controllers/state/Tr2StateMachineTransition.js";
+import { Tr2ActionPlayMeshAnimation } from "../../npm/dist/trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";
 import { Tr2Controller } from "../../npm/dist/trinity/controllers/Tr2Controller.js";
 import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/expression/Tr2ControllerFloatVariable.js";
 import { TnyMotion } from "../../npm/dist/wrap/objects/TnyMotion.js";
@@ -114,9 +118,9 @@ test("membership uses native notifications and never clears on absent removal", 
     const nativeScene = new EveSpaceScene();
     t.after(() => nativeScene.Destruct());
     const scene = TnyScene.fromWrapped(nativeScene);
-    const first = new TnyShip(new EveShip2());
-    const second = new TnyShip(new EveShip2());
-    const absent = new TnyShip(new EveShip2());
+    const first = TnyShip.fromWrapped(new EveShip2());
+    const second = TnyShip.fromWrapped(new EveShip2());
+    const absent = TnyShip.fromWrapped(new EveShip2());
     const notify = t.mock.method(nativeScene, "OnListModified");
     const start = t.mock.method(first.wrapped, "StartControllers");
 
@@ -185,7 +189,7 @@ test("scene tracks the wrappers it shows", t =>
     const nativeScene = new EveSpaceScene();
     t.after(() => nativeScene.Destruct());
     const scene = TnyScene.fromWrapped(nativeScene);
-    const first = new TnyShip(new EveShip2()), second = new TnyShip(new EveShip2());
+    const first = TnyShip.fromWrapped(new EveShip2()), second = TnyShip.fromWrapped(new EveShip2());
     scene.AddObject(first);
     scene.AddObject(second);
     scene.AddObject(first);
@@ -219,54 +223,9 @@ test("scene Fetch wraps each object in its most specific wrapper and adds it", a
     await assert.rejects(TnyShip.fetch({ dna: "station:a:b" }), /TnyShip requires a live EveShip2/);
 });
 
-test("ship parameters are discovered from the object and written through native owners", t =>
-{
-    const ship = new TnyShip(new EveShip2());
-    const names = ship.GetParameters().map(parameter => parameter.name);
-    for (const name of [ "dirtLevel", "age", "activationStrength", "shieldDamage", "armorDamage", "hullDamage", "shieldboost", "speed", "maxSpeed" ])
-        assert.ok(names.includes(name), name);
-    assert.ok(!names.includes("displayKillCounterValue"), "no kill-counter decal, no kill marks");
-    assert.ok(!names.some(name => name.startsWith("boosters.")), "no booster set, no booster values");
-    assert.throws(() => ship.SetParameter("boosters.alwaysOn", true), /has no parameter/);
-    assert.throws(() => ship.SetParameter("dirtLevel", 2), /from 0 to 1/);
-    assert.throws(() => ship.SetParameter("shieldboost", 1), /boolean/);
-
-    ship.SetParameter("dirtLevel", 0.25);
-    assert.equal(ship.wrapped.dirtLevel, 0.25);
-    ship.SetParameter("age", 10);
-    assert.equal(ship.GetParameter("age"), 10);
-    assert.ok(Math.abs(ship.wrapped.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6);
-
-    const damage = t.mock.method(ship.wrapped, "SetImpactDamageState");
-    ship.SetParameter("armorDamage", 0.25);
-    assert.deepEqual(damage.mock.calls[0].arguments, [ 1, 0.75, 1, true ], "remaining shield, armour, hull");
-    const animation = t.mock.method(ship.wrapped, "SetImpactAnimation");
-    ship.SetParameter("armorrepair", true);
-    assert.deepEqual(animation.mock.calls[0].arguments.slice(0, 2), [ "armorrepair", true ]);
-    assert.equal(ship.GetParameter("armorrepair"), true);
-});
-
-test("speed moves the ship along its heading through its translation curve", () =>
-{
-    const ship = new TnyShip(new EveShip2());
-    ship.SetParameter("speed", 100);
-    assert.ok(ship.wrapped.translationCurve instanceof TnyMotion);
-    assert.equal(ship.wrapped.maxSpeed, 250, "a ship with no max speed takes the booster default");
-    assert.equal(ship.GetParameter("speed"), 100);
-    const motion = ship.wrapped.translationCurve, out = new Float32Array(3);
-    motion.Update__Ticks(0, out);
-    motion.Update__Ticks(2e7, out);
-    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "two seconds at 100 m/s along +Z");
-    ship.SetParameter("speed", 0);
-    motion.Update__Ticks(4e7, out);
-    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "a stop holds the position reached");
-    assert.deepEqual(Array.from(motion.GetValueDotAt__Ticks(4e7, out)), [ 0, 0, 0 ]);
-});
-
-test("ship states: three always, siege and attack only where controllers declare them, set exclusively", t =>
+test("ship values: discovered once, null where unsupported, pushed to native owners and announced", t =>
 {
     const native = new EveShip2(), controller = new Tr2Controller();
-    controller.name = "shipStates";
     const variable = (name, variableType = 2, enumValues = "") =>
     {
         const entry = new Tr2ControllerFloatVariable();
@@ -276,22 +235,69 @@ test("ship states: three always, siege and attack only where controllers declare
     variable("IsWarping");
     variable("InSiegeMode");
     variable("WarpTopSpeed", 0);
-    variable("shipStance", 3, "defense = 1, sharpshooter = 2, propulsion = 3");
+    // Named unlike ShipStance: found by what it is, an enum variable driving a machine that plays mesh animations.
+    variable("hullMode", 3, "Defence=1, Speed=2, Sniper=3");
+    const machine = new Tr2StateMachine(), state = new Tr2StateMachineState(), transition = new Tr2StateMachineTransition();
+    transition.condition = "hullMode==2";
+    state.transitions.Append(transition);
+    state.actions.Append(new Tr2ActionPlayMeshAnimation());
+    machine.states.Append(state);
+    controller.stateMachines.Append(machine);
     native.controllers.Append(controller);
-    const ship = new TnyShip(native);
 
-    assert.deepEqual(ship.GetStates(), [ "standard", "warp", "dock", "siege" ]);
-    const exposure = ship.controllers.GetControllers();
-    assert.equal(exposure[0].name, "shipStates");
-    assert.deepEqual(exposure[0].variables.map(entry => entry.name), [ "IsWarping", "InSiegeMode", "WarpTopSpeed", "shipStance" ]);
-    assert.deepEqual(ship.GetStances().choices.map(choice => choice.name), [ "defense", "sharpshooter", "propulsion" ]);
+    const ship = TnyShip.fromWrapped(native, { name: "Probe" });
+    const values = ship.GetValues();
+    assert.equal(values.name, "Probe");
+    assert.equal(values.state, "standard");
+    assert.equal(values.shieldDamage, null, "no impact overlay, no damage");
+    assert.equal(values.alwaysOn, null, "no booster set");
+    assert.equal(values.displayKillCounterValue, null, "no kill-counter decal");
+    assert.equal(values.slots, null, "no weapon locators");
 
-    const set = t.mock.method(native, "SetControllerVariable");
-    ship.SetState("siege");
-    const written = Object.fromEntries(set.mock.calls.map(call => call.arguments));
-    assert.deepEqual(written, { IsWarping: 0, isDocked: 0, InSiegeMode: 1 }, "WarpTopSpeed is no state flag");
-    assert.equal(ship.GetState(), "siege");
-    assert.throws(() => ship.SetState("attack"), /no state attack/);
-    ship.SetStance(2);
-    assert.deepEqual(set.mock.calls.at(-1).arguments, [ "shipStance", 2 ]);
+    const [ classInfo, interfaces, members ] = ship.GetTypeInfo();
+    assert.equal(classInfo.classname, `TnyShip_${ship.id}`);
+    assert.deepEqual(Object.keys(interfaces), [ "TnySpaceObject", "TnyMobile", "TnyShip", "stance" ]);
+    assert.ok(!("shieldDamage" in members) && "dirtLevel" in members);
+    assert.deepEqual(members.stance.choosers, [ [ 1, "Defence" ], [ 2, "Speed" ], [ 3, "Sniper" ] ]);
+    assert.deepEqual(members.state.choosers.map(choice => choice[0]), [ "standard", "warp", "dock", "siege" ]);
+
+    const heard = [], written = {};
+    ship._onModified = name => heard.push(name);
+    t.mock.method(native, "SetControllerVariable", (name, value) => { written[name] = value; });
+    ship.SetValues({ dirtLevel: 0.25, state: "siege", stance: 2, shieldDamage: 0.5 });
+    assert.ok(Math.abs(native.dirtLevel - 0.25) < 1e-6);
+    // EveSpaceObject2 mirrors dirtLevel into its DirtLevel controller variable when notified.
+    assert.deepEqual(written, { DirtLevel: written.DirtLevel, IsWarping: 0, isDocked: 0, InSiegeMode: 1, hullMode: 2 }, "WarpTopSpeed is no state flag");
+    assert.equal(ship.shieldDamage, null, "a write to an unsupported value is ignored");
+    assert.deepEqual(heard, [ "dirtLevel", "state", "stance" ]);
+
+    ship.SetValues({ age: 10 });
+    assert.ok(Math.abs(native.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6);
+    ship.Destruct();
+    ship.SetValues({ dirtLevel: 0.5 });
+    assert.equal(heard.includes("age"), true);
+    assert.equal(heard.at(-1), "age", "after Destruct nothing is announced");
+});
+
+test("speed moves the ship along its heading through its translation curve", () =>
+{
+    const ship = TnyShip.fromWrapped(new EveShip2());
+    ship.SetValues({ speed: 100 });
+    assert.ok(ship.wrapped.translationCurve instanceof TnyMotion);
+    assert.equal(ship.wrapped.maxSpeed, 250, "a ship with no max speed takes the booster default");
+    const motion = ship.wrapped.translationCurve, out = new Float32Array(3);
+    motion.Update__Ticks(0, out);
+    motion.Update__Ticks(2e7, out);
+    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "two seconds at 100 m/s along +Z");
+    ship.SetValues({ speed: 0 });
+    motion.Update__Ticks(4e7, out);
+    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "a stop holds the position reached");
+});
+
+test("wrapper ids are unique and kept; identity is read-only", () =>
+{
+    const first = TnyShip.fromWrapped(new EveShip2()), second = TnyShip.fromWrapped(new EveShip2());
+    assert.notEqual(first.id, second.id);
+    assert.equal(first.identity.SetValues({ hull: "x" }), false);
+    assert.equal(first.identity.hull, null);
 });

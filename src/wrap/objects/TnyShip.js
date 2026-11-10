@@ -1,8 +1,12 @@
-import { CjsSchema } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
 import { vec3 } from "#math/vec3";
+import { CjsBlueGraph } from "../../blue/formats/graph/CjsBlueGraph.js";
+import { Type } from "../../trinity/controllers/enums.js";
+import { Tr2ActionPlayMeshAnimation } from "../../trinity/controllers/action/Tr2ActionPlayMeshAnimation.js";
 import { EveShip2 } from "../../trinity/eve/spaceObject/EveShip2.js";
 import { TnyMobile } from "./TnyMobile.js";
 import { TnyMotion } from "./TnyMotion.js";
+import { TnyShipIdentity } from "./TnyShipIdentity.js";
 
 /** The decal effect SOF uses for a hull's kill counter (EveSOF DECAL_EFFECT_NAMES, USAGE_KILLCOUNTER). */
 const KILL_COUNTER_EFFECT = /decalcounterv5\.fx$/i;
@@ -14,6 +18,7 @@ const KILL_COUNTER_EFFECT = /decalcounterv5\.fx$/i;
  * ShipStates and skindr's ShipControls. `always` names the variable set even
  * when no controller declares it: the docker multi-effect drives a ship's
  * `IsWarping` and `isDocked` (res:/dx9/model/hangar/shared/docker/multieffect_docker_01a.black).
+ * Warp and dock are offered on every ship (operator, 2026-11-10).
  */
 const SHIP_STATES = [
     { name: "warp", test: /warp/i, always: "IsWarping" },
@@ -23,121 +28,184 @@ const SHIP_STATES = [
 ];
 const STATE_SHAPE = /^_?(?:[iI]s|[iI]n|[hH]as|[uU]se)[A-Z]|(?:^|_|[a-z])(?:Mode|On|Enabled|Active|Requested)$/;
 
-/** The stance variable a tactical ship's controllers declare. */
-const STANCE = /stance/i;
+/** Members a UI writes and the wrapper hears. */
+const VALUE = meta.READWRITE | meta.NOTIFY;
 
-/** Speeds in metres per second that the parameters accept. */
-const MAX_SPEED = 100000;
+/** The booster set members a ship offers, EveBoosterSet2's own names (Graphene's Boosters group). */
+const BOOSTER_MEMBERS = [ "alwaysOn", "alwaysOnIntensity", "warpIntensity", "staticTrailLength" ];
 
-/** A ship (EveShip2). Ours, after ccpwgl's TnyShip. `TnyShip.fetch({ dna })` requires a ship. */
+/**
+ * A ship (EveShip2): adds motion, kill marks, boosters, states and stance.
+ * Ours, after ccpwgl's TnyShip.
+ */
+@meta.define({ className: "TnyShip" })
+@meta.exposureChainTo(TnyMobile)
 export class TnyShip extends TnyMobile
 {
-    static className = "TnyShip";
-
     static wrappedClass = EveShip2;
 
-    static wrappedName = "EveShip2";
+    static identityClass = TnyShipIdentity;
 
-    static parameters = [
-        ...TnyMobile.parameters,
-        // Moves the ship along its heading (TnyMotion), so its world velocity, EveShip2.speed
-        // and everything reading ShipSpeed() follow. Only on a ship with no authored motion.
-        { name: "speed", type: "number", min: 0, max: MAX_SPEED,
-            available: o => !o.wrapped.translationCurve || CjsSchema.cast(o.wrapped.translationCurve, TnyMotion) !== null,
-            read: o => o._motion ? vec3.length(o._motion.velocity) : 0,
-            write: (o, v) => o._SetSpeed(v) },
-        // EveShip2.maxSpeed, and the booster set's maxVel it scales trails by (EveBoosterSet2.cpp:109).
-        { name: "maxSpeed", type: "number", min: 1, max: MAX_SPEED,
-            read: o => o.wrapped.maxSpeed,
-            write: (o, v) => { o._Bind(o.wrapped, "maxSpeed").SetValue(v); if (o.wrapped.boosters) o._Bind(o.wrapped.boosters, "maxVel").SetValue(v); } },
-        // Kill marks, on hulls with a kill-counter decal.
-        { name: "displayKillCounterValue", type: "integer", min: 0, max: 999,
-            available: o => o.wrapped.decals.some(decal => KILL_COUNTER_EFFECT.test(decal.decalEffect?.effectFilePath ?? "")),
-            read: o => o.wrapped.displayKillCounterValue,
-            write: (o, v) => o._Bind(o.wrapped, "displayKillCounterValue").SetValue(v) },
-        // Booster set members (EveBoosterSet2), on ships with boosters; Graphene's Boosters group.
-        { name: "boosters.alwaysOn", type: "boolean", available: o => !!o.wrapped.boosters,
-            read: o => o.wrapped.boosters.alwaysOn,
-            // alwaysOn skips Carbon's 200 m trail minimum (EveBoosterSet2.cpp:383-387); off physics,
-            // staticTrailLength sets the trail (Graphene TrinityBoosterParameters).
-            write: (o, v) => { o._Bind(o.wrapped.boosters, "alwaysOn").SetValue(v); o._Bind(o.wrapped.boosters, "physicsUpdate").SetValue(!v); } },
-        ...[ [ "alwaysOnIntensity", 10 ], [ "warpIntensity", 10 ] ].map(([ member, max ]) => ({
-            name: `boosters.${member}`, type: "number", min: 0, max, available: o => !!o.wrapped.boosters,
-            read: o => o.wrapped.boosters[member], write: (o, v) => o._Bind(o.wrapped.boosters, member).SetValue(v) })),
-        { name: "boosters.staticTrailLength", type: "number", min: 0, max: 10000, available: o => !!o.wrapped.boosters?.trails,
-            read: o => o.wrapped.boosters.staticTrailLength, write: (o, v) => o._Bind(o.wrapped.boosters, "staticTrailLength").SetValue(v) }
-    ];
+    static ranges = { ...TnyMobile.ranges, speed: [ 0, 100000 ], maxSpeed: [ 1, 100000 ], displayKillCounterValue: [ 0, 999 ],
+        alwaysOnIntensity: [ 0, 10 ], warpIntensity: [ 0, 10 ], staticTrailLength: [ 0, 10000 ] };
+
+    /**
+     * Metres per second along the ship's heading. It really moves the ship
+     * (TnyMotion), so its world velocity, EveShip2.speed and ShipSpeed() follow.
+     * Null on a ship with authored motion.
+     */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    speed = null;
+
+    /** EveShip2.maxSpeed, and the booster set's maxVel it scales trails by (EveBoosterSet2.cpp:109). */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    maxSpeed = null;
+
+    /** Kill marks (EveShip2.displayKillCounterValue), on hulls with a kill-counter decal. */
+    @meta.mapAttribute(VALUE)
+    @type.uint32
+    displayKillCounterValue = null;
+
+    /** EveBoosterSet2.alwaysOn; switching it also switches physicsUpdate (Graphene). */
+    @meta.mapAttribute(VALUE)
+    @type.boolean
+    alwaysOn = null;
+
+    /** EveBoosterSet2.alwaysOnIntensity. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    alwaysOnIntensity = null;
+
+    /** EveBoosterSet2.warpIntensity. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    warpIntensity = null;
+
+    /** EveBoosterSet2.staticTrailLength, on sets with trails. */
+    @meta.mapAttribute(VALUE)
+    @type.float32
+    staticTrailLength = null;
+
+    /** The ship state: "standard", "warp", "dock", and "siege"/"attack" where its controllers have them. */
+    @meta.mapAttribute(VALUE)
+    @type.string
+    state = null;
+
+    /** The stance's value from its enum choices, on ships with a stance. */
+    @meta.mapAttribute(VALUE)
+    @type.int32
+    stance = null;
 
     /** The motion `speed` installed as the ship's translation curve, or null. */
     _motion = null;
 
-    /** The state SetState last set. */
-    _state = "standard";
+    /** The states found: each state's controller variables. */
+    _states = new Map();
 
-    /**
-     * The states this ship offers: standard, warp and dock always (a state
-     * nothing drives is still valid: docked doing nothing is its effect), plus
-     * siege and attack where its controllers declare them (operator, 2026-11-10).
-     *
-     * @returns {string[]} State names.
-     */
-    GetStates()
+    /** The stance: its variable name and choices, or null. */
+    _stance = null;
+
+    /** Finds the ship's own facts after the space object's. */
+    _Discover(dna)
     {
-        const names = this.controllers.GetVariableNames();
-        return [ "standard", ...SHIP_STATES.filter(state => state.always || names.some(name => state.test.test(name) && STATE_SHAPE.test(name))).map(state => state.name) ];
+        super._Discover(dna);
+        const ship = this.wrapped;
+        const take = (member, value) => { this._supported.add(member); this[member] = value; };
+
+        if (!ship.translationCurve || CjsSchema.cast(ship.translationCurve, TnyMotion)) take("speed", this._motion ? vec3.length(this._motion.velocity) : 0);
+        take("maxSpeed", ship.maxSpeed);
+        if (ship.decals.some(decal => KILL_COUNTER_EFFECT.test(decal.decalEffect?.effectFilePath ?? "")))
+            take("displayKillCounterValue", ship.displayKillCounterValue);
+        if (ship.boosters)
+        {
+            for (const member of BOOSTER_MEMBERS)
+                if (member !== "staticTrailLength" || ship.boosters.trails) take(member, ship.boosters[member]);
+        }
+
+        this._states = this._FindStates();
+        take("state", "standard");
+        this._stance = this._FindStance();
+        if (this._stance) take("stance", this.controllers.GetVariable(this._stance.variable));
     }
 
-    /** @returns {string} The state SetState last set. */
-    GetState()
+    /** Each offered state's controller variables (warp and dock always). */
+    _FindStates()
     {
-        return this._state;
-    }
-
-    /**
-     * Enters one state: its variables go to 1 and every other state's to 0,
-     * through the ship's SetControllerVariable. "standard" sets them all to 0.
-     *
-     * @param {string} name A name from GetStates.
-     */
-    SetState(name)
-    {
-        if (!this.GetStates().includes(name)) throw new RangeError(`${this.constructor.className} has no state ${name}.`);
         const names = this.controllers.GetVariableNames();
+        const states = new Map([ [ "standard", [] ] ]);
         for (const state of SHIP_STATES)
         {
-            const variables = new Set(names.filter(variable => state.test.test(variable) && STATE_SHAPE.test(variable)));
-            if (state.always) variables.add(state.always);
-            for (const variable of variables) this.wrapped.SetControllerVariable(variable, state.name === name ? 1 : 0);
+            const variables = names.filter(name => state.test.test(name) && STATE_SHAPE.test(name));
+            if (!variables.length && !state.always) continue;
+            if (state.always && !variables.includes(state.always)) variables.push(state.always);
+            states.set(state.name, variables);
         }
-        this._state = name;
+        return states;
     }
 
     /**
-     * The stances a tactical ship's controllers declare, from the stance
-     * variable's own enumValues; empty when it has none.
-     *
-     * @returns {{variable: string, choices: {name: string, value: number}[]}|null} The stance variable, or null.
+     * The stance, found by what it is rather than by name (the Anhinga's
+     * variable is named differently): an enum controller variable that a state
+     * machine's transitions test and whose machine plays mesh animations, as
+     * res:/dx9/model/controller/shipstance.black's ShipStance does.
      */
-    GetStances()
+    _FindStance()
     {
-        for (const controller of this.controllers.GetControllers())
+        for (const controller of this.controllers._Controllers())
         {
-            const variable = controller.variables.find(entry => STANCE.test(entry.name));
-            if (variable) return { variable: variable.name, choices: variable.choices ?? [] };
+            for (const variable of controller.variables)
+            {
+                if (variable.variableType !== Type.ENUM) continue;
+                const test = new RegExp(`\\b${variable.name}\\b`);
+                const drives = controller.stateMachines.some(machine =>
+                    machine.states.some(state => state.transitions.some(transition => test.test(transition.condition)))
+                    && machine.states.some(state => state.actions.some(action => CjsSchema.cast(action, Tr2ActionPlayMeshAnimation))));
+                if (drives) return { variable: variable.name, choices: this.controllers.GetControllers()
+                    .flatMap(entry => entry.variables).find(entry => entry.name === variable.name).choices };
+            }
         }
         return null;
     }
 
-    /**
-     * Sets the stance, independent of the state.
-     *
-     * @param {number} value A choice's value from GetStances.
-     */
-    SetStance(value)
+    /** Pushes the ship's own members, else the space object's. */
+    _Push(name)
     {
-        const stances = this.GetStances();
-        if (!stances) throw new RangeError(`${this.constructor.className} has no stance.`);
-        this.controllers.SetVariable(stances.variable, value);
+        const ship = this.wrapped;
+        switch (name)
+        {
+            case "speed": this._SetSpeed(this.speed); return;
+            case "maxSpeed":
+                this._Bind(ship, "maxSpeed").SetValue(this.maxSpeed);
+                if (ship.boosters) this._Bind(ship.boosters, "maxVel").SetValue(this.maxSpeed);
+                return;
+            case "displayKillCounterValue": this._Bind(ship, name).SetValue(Math.round(this[name])); return;
+            case "alwaysOn":
+                // alwaysOn skips Carbon's 200 m trail minimum (EveBoosterSet2.cpp:383-387); off physics,
+                // staticTrailLength sets the trail (Graphene TrinityBoosterParameters).
+                this._Bind(ship.boosters, "alwaysOn").SetValue(this.alwaysOn);
+                this._Bind(ship.boosters, "physicsUpdate").SetValue(!this.alwaysOn);
+                return;
+            case "alwaysOnIntensity": case "warpIntensity": case "staticTrailLength":
+                this._Bind(ship.boosters, name).SetValue(this[name]);
+                return;
+            case "state": this._SetState(this.state); return;
+            case "stance": this.controllers.SetVariable(this._stance.variable, this.stance); return;
+            default: super._Push(name);
+        }
+    }
+
+    /** Enters one state: its variables to 1, every other state's to 0; an unknown one is refused. */
+    _SetState(name)
+    {
+        if (!this._states.has(name))
+        {
+            this.state = "standard";
+            return;
+        }
+        for (const [ state, variables ] of this._states)
+            for (const variable of variables) this.wrapped.SetControllerVariable(variable, state === name ? 1 : 0);
     }
 
     /**
@@ -152,10 +220,30 @@ export class TnyShip extends TnyMobile
         {
             this._motion = new TnyMotion();
             ship.translationCurve = this._motion;
-            if (!(ship.maxSpeed > 0)) this.SetParameter("maxSpeed", ship.boosters ? ship.boosters.maxVel : 250);
+            if (!(ship.maxSpeed > 0)) this.SetValues({ maxSpeed: ship.boosters ? ship.boosters.maxVel : 250 });
         }
         // The heading: the ship's local +Z in world space.
         const heading = vec3.transformQuat(vec3.create(), [ 0, 0, 1 ], ship.worldRotation);
         this._motion.SetVelocity(vec3.scale(heading, heading, speed));
     }
+
+    /** The state and stance choices. */
+    _Choices(name)
+    {
+        if (name === "state") return [ ...this._states.keys() ].map(state => [ state, state ]);
+        if (name === "stance" && this._stance) return this._stance.choices.map(choice => [ choice.value, choice.name ]);
+        return super._Choices(name);
+    }
+
+    /** Adds the capabilities a ship may have. */
+    _Interfaces()
+    {
+        const names = super._Interfaces();
+        if (this.stance !== null) names.push("stance");
+        if (this.alwaysOn !== null) names.push("boosters");
+        if (this.displayKillCounterValue !== null) names.push("killmarks");
+        return names;
+    }
 }
+
+CjsBlueGraph.define(TnyShip, "TnyShip");

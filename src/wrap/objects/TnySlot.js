@@ -1,5 +1,8 @@
-import { CjsSchema } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
+import { CjsGraphRoot } from "../../global/model/graph/CjsGraphRoot.js";
+import { INotify } from "../../blue/exposure/INotify.js";
 import { Copier } from "../../blue/exposure/Copier.js";
+import { CjsBlueGraph } from "../../blue/formats/graph/CjsBlueGraph.js";
 import { blue } from "../../blue/index.js";
 import { CjsLibrary } from "../../core/CjsLibrary.js";
 import { EveTurretSet } from "../../trinity/eve/attachment/turrets/EveTurretSet.js";
@@ -12,33 +15,54 @@ const FAMILIES = { turret: "turrets", launcher: "launchers", missile: "launchers
 /**
  * One weapon slot on a mobile object: the authored locators of one family and
  * number (`locator_turret_1a`, `locator_turret_1b`, ...). Ours, after ccpwgl's
- * TnySlot and Graphene's TrinityFitting (our own code in both). A slot holds
- * one EveTurretSet and drives it through its own states.
+ * TnySlot and Graphene's TrinityFitting (our own code in both). Writing
+ * `resPath` mounts or (with "") unmounts; the actions are methods.
  */
-export class TnySlot
+@meta.define({ className: "TnySlot" })
+@meta.mapInterface(INotify)
+export class TnySlot extends CjsGraphRoot
 {
-    static className = "TnySlot";
+    /** "turrets", "launchers", "xlTurrets", "atomics", "chains" or "bombs". */
+    @meta.mapAttribute(meta.READ)
+    @type.string
+    family = "";
+
+    /** The slot number in its family. */
+    @meta.mapAttribute(meta.READ)
+    @type.int32
+    number = 0;
+
+    /** How many locators (turret mounts) the slot has. */
+    @meta.mapAttribute(meta.READ)
+    @type.int32
+    mounts = 0;
+
+    /** The locator name prefix the turret set binds to (`locator_turret_`). */
+    @meta.mapAttribute(meta.READ)
+    @type.string
+    locatorName = "";
+
+    /** The mounted EveTurretSet's resource path; "" when empty. Writing it mounts or unmounts. */
+    @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
+    @type.string
+    resPath = "";
+
+    /** A SOF faction for the weapon's colours; "" paints it with the ship's DNA. */
+    @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
+    @type.string
+    faction = "";
 
     /** The TnyMobile this slot belongs to. */
     owner = null;
 
-    /** "turrets", "launchers", "xlTurrets", "atomics", "chains" or "bombs". */
-    family = "";
-
-    /** The slot number in its family. */
-    number = 0;
-
-    /** The locator name prefix the turret set binds to (`locator_turret_`). */
-    locatorName = "";
-
-    /** How many locators (turret mounts) the slot has. */
-    mounts = 0;
-
-    /** The mounted turret set's resource path, or null. */
-    resPath = null;
+    /** Called with a member's name once the slot handled a change; set by a UI. */
+    _onModified = null;
 
     /** The slot's EveTurretSet; an empty, hidden one reserves the slot's place. */
     _set = null;
+
+    /** The path actually mounted. */
+    _mounted = "";
 
     /** Increases on each mount or unmount, so a slower earlier mount does not land. */
     _generation = 0;
@@ -64,47 +88,68 @@ export class TnySlot
     }
 
     /**
+     * `resPath` or `faction` changed: mount, remount or unmount, then tell the UI.
+     * A failed mount is logged and `resPath` goes back to what is mounted.
+     *
+     * @param {string} name The member.
+     * @returns {boolean} True.
+     */
+    OnModified(name)
+    {
+        if (name === "resPath" || name === "faction")
+        {
+            const work = this.resPath ? this._Mount(this.resPath, this.faction || null) : Promise.resolve(this._Unmount());
+            work.catch(error =>
+            {
+                console.error(`TnySlot ${this.locatorName}${this.number} mount failed`, error);
+                this.resPath = this._mounted;
+                if (this._onModified) this._onModified("resPath");
+            });
+        }
+        if (this._onModified) this._onModified(name);
+        return true;
+    }
+
+    /**
      * Mounts a turret set: loads it and its firing effect through the library,
      * gives the ship its own copies, paints it with a faction or the ship's
      * DNA through the SOF, and binds it to this slot's locators.
      *
-     * @param {string} resPath An EveTurretSet resource path.
-     * @param {object} [options]
-     * @param {string|null} [options.faction=null] A SOF faction for its colours; null uses the ship's DNA.
-     * @returns {Promise<boolean>} False when a later Mount or Unmount superseded this one.
+     * @returns {Promise<boolean>} False when a later change superseded this one.
      */
-    async Mount(resPath, { faction = null } = {})
+    async _Mount(resPath, faction)
     {
         const library = CjsLibrary.instance;
         if (!library) throw new Error("TnySlot requires an initialized CjsLibrary.");
         const generation = ++this._generation;
         const set = await this._Load(library, resPath, EveTurretSet);
         if (set.firingEffectResPath) set.SetFiringEffect(await this._Load(library, set.firingEffectResPath));
+        const dna = this.owner.identity?.dna ?? null;
         if (faction) await blue.sof.SetupTurretMaterialFromFaction(set, faction);
-        else if (this.owner.dna) await blue.sof.SetupTurretMaterialFromDNA(set, this.owner.dna);
+        else if (dna) await blue.sof.SetupTurretMaterialFromDNA(set, dna);
         if (generation !== this._generation) return false;
 
         this._Place(set);
-        this.resPath = resPath;
+        this._mounted = resPath;
         set.EnterStateIdle();
         return true;
     }
 
     /** Takes the weapon off, leaving the slot reserved. */
-    Unmount()
+    _Unmount()
     {
         ++this._generation;
-        if (!this.resPath) return;
+        if (!this._mounted) return;
         this._set.EnterStateIdle();
         const empty = new EveTurretSet();
         empty.display = false;
         this._Place(empty);
-        this.resPath = null;
+        this._mounted = "";
     }
 
     /**
      * Aims the weapon at an object, or at a point near the ship when none is
-     * given (Graphene's preview aims at a random point eight radii out).
+     * given (Graphene's preview aims at a point eight radii out).
      *
      * @param {import("./TnySpaceObject.js").TnySpaceObject|null} [target=null] What to aim at.
      */
@@ -139,10 +184,27 @@ export class TnySlot
     /** Packs the weapon away. */
     Deactivate() { this._Mounted().EnterStateDeactive(); }
 
+    /**
+     * The actions that work on this slot now, with signatures: only Mount by
+     * value when empty, the weapon's actions when one is mounted.
+     *
+     * @returns {object} Method names to signatures.
+     */
+    GetMethods()
+    {
+        return this._mounted ? { SetTarget: "(target)", Fire: "()", Idle: "()", Reload: "()", Deactivate: "()" } : {};
+    }
+
+    /** Detaches the UI. */
+    Destruct()
+    {
+        this._onModified = null;
+    }
+
     /** The mounted set, or an error when the slot is empty. */
     _Mounted()
     {
-        if (!this.resPath) throw new Error(`Slot ${this.locatorName}${this.number} has no weapon.`);
+        if (!this._mounted) throw new Error(`Slot ${this.locatorName}${this.number} has no weapon.`);
         return this._set;
     }
 
@@ -150,7 +212,7 @@ export class TnySlot
     async _Load(library, path, Type = null)
     {
         const loaded = await library.Fetch(path);
-        if (Type && !CjsSchema.cast(loaded, Type)) throw new TypeError(`${path} is not an ${Type.className ?? "expected object"}.`);
+        if (Type && !CjsSchema.cast(loaded, Type)) throw new TypeError(`${path} is not an ${CjsSchema.getClassName(Type)}.`);
         return new Copier().CloneTo(loaded);
     }
 
@@ -162,7 +224,7 @@ export class TnySlot
     _Place(set)
     {
         const ship = this.owner.wrapped;
-        for (const slot of this.owner.GetSlots()) if (!slot._set) slot._Reserve();
+        for (const slot of this.owner.slots) if (!slot._set) slot._Reserve();
         set.locatorName = this.locatorName;
         set.slotNumber = this.number;
         const index = ship.turretSets.indexOf(this._set);
@@ -189,11 +251,12 @@ export class TnySlot
         const ship = this.owner.wrapped, point = new EveSpaceObject2();
         const position = new Float32Array(3);
         ship.GetWorldPosition(position);
-        const distance = Math.max(ship.GetRadius() * 8, 1000);
-        position[0] += distance;
+        position[0] += Math.max(ship.GetRadius() * 8, 1000);
         point.worldPosition.set(position);
         point.modelWorldPosition.set(position);
         point.worldTransform.set([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, position[0], position[1], position[2], 1 ]);
         return point;
     }
 }
+
+CjsBlueGraph.define(TnySlot, "TnySlot");
