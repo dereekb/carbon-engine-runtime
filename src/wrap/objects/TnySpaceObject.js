@@ -70,6 +70,9 @@ export class TnySpaceObject
     /** Existing object graph; wrapping neither copies nor initializes it. */
     wrapped = null;
 
+    /** The DNA it was fetched with, or null; turret painting reads it. */
+    dna = null;
+
     /** What the object's controllers expose (TnyControllers). */
     get controllers()
     {
@@ -221,12 +224,13 @@ export class TnySpaceObject
      * Wraps an acquired object in this class, sets its name and starts its controllers.
      *
      * @param {object} object The live object.
-     * @param {{name?: string|null}} [options] Fetch options.
+     * @param {{name?: string|null, dna?: string|null}} [options] Fetch options.
      * @returns {TnySpaceObject} The wrapper.
      */
-    static fromWrapped(object, { name = null } = {})
+    static fromWrapped(object, { name = null, dna = null } = {})
     {
         const wrapper = new this(object);
+        wrapper.dna = dna;
         if (name !== null) wrapper.wrapped.name = name;
         wrapper.wrapped.StartControllers();
         return wrapper;
