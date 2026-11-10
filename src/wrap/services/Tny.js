@@ -284,9 +284,24 @@ export class Tny
             // Queued pointer and held-key input moves the camera before the driver updates it.
             this.input.Update((now - previous) / 1000);
             previous = now;
+            const focus = this.focus?.wrapped.worldPosition;
+            const before = focus ? [ focus[0], focus[1], focus[2] ] : null;
             blue.os.PumpOS();
+            this._Follow(before);
         };
         this._frame = globalThis.requestAnimationFrame(tick);
+    }
+
+    /**
+     * Moves the camera's centre by however far the focused object moved this
+     * tick, so a moving ship stays in view and the user's pan is kept. The
+     * driver updates the camera before the scene, so it trails by one frame.
+     */
+    _Follow(before)
+    {
+        const focus = this.focus?.wrapped.worldPosition;
+        if (!before || !focus || !this.camera.useExtraTranslation) return;
+        for (let axis = 0; axis < 3; axis++) this.camera.extraTranslation[axis] += focus[axis] - before[axis];
     }
 
     /** One frame's draw; a failure is kept and logged once, and later frames still run. */

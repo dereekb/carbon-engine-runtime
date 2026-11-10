@@ -9,6 +9,8 @@ import { EveMobile } from "../../npm/dist/trinity/eve/spaceObject/EveMobile.js";
 import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
+import { TnyMotion } from "../../npm/dist/wrap/objects/TnyMotion.js";
+import { dirtLevelFromWeeks } from "../../npm/dist/wrap/objects/TnySpaceObject.js";
 import { Tr2PostProcess2 } from "../../npm/dist/trinity/postProcess/Tr2PostProcess2.js";
 
 test("ship acquisition preserves the library contract and starts controllers without reinitializing", async t =>
@@ -213,4 +215,48 @@ test("scene Fetch wraps each object in its most specific wrapper and adds it", a
     assert.equal(objects.ship.StartControllers.mock.callCount(), 1);
     await assert.rejects(scene.Fetch({ dna: "none:a:b" }), /live EveSpaceObject2/);
     await assert.rejects(TnyShip.fetch({ dna: "station:a:b" }), /TnyShip requires a live EveShip2/);
+});
+
+test("ship parameters are discovered from the object and written through native owners", t =>
+{
+    const ship = new TnyShip(new EveShip2());
+    const names = ship.GetParameters().map(parameter => parameter.name);
+    for (const name of [ "dirtLevel", "age", "activationStrength", "shieldDamage", "armorDamage", "hullDamage", "shieldboost", "speed", "maxSpeed" ])
+        assert.ok(names.includes(name), name);
+    assert.ok(!names.includes("displayKillCounterValue"), "no kill-counter decal, no kill marks");
+    assert.ok(!names.some(name => name.startsWith("boosters.")), "no booster set, no booster values");
+    assert.throws(() => ship.SetParameter("boosters.alwaysOn", true), /has no parameter/);
+    assert.throws(() => ship.SetParameter("dirtLevel", 2), /from 0 to 1/);
+    assert.throws(() => ship.SetParameter("shieldboost", 1), /boolean/);
+
+    ship.SetParameter("dirtLevel", 0.25);
+    assert.equal(ship.wrapped.dirtLevel, 0.25);
+    ship.SetParameter("age", 10);
+    assert.equal(ship.GetParameter("age"), 10);
+    assert.ok(Math.abs(ship.wrapped.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6);
+
+    const damage = t.mock.method(ship.wrapped, "SetImpactDamageState");
+    ship.SetParameter("armorDamage", 0.25);
+    assert.deepEqual(damage.mock.calls[0].arguments, [ 1, 0.75, 1, true ], "remaining shield, armour, hull");
+    const animation = t.mock.method(ship.wrapped, "SetImpactAnimation");
+    ship.SetParameter("armorrepair", true);
+    assert.deepEqual(animation.mock.calls[0].arguments.slice(0, 2), [ "armorrepair", true ]);
+    assert.equal(ship.GetParameter("armorrepair"), true);
+});
+
+test("speed moves the ship along its heading through its translation curve", () =>
+{
+    const ship = new TnyShip(new EveShip2());
+    ship.SetParameter("speed", 100);
+    assert.ok(ship.wrapped.translationCurve instanceof TnyMotion);
+    assert.equal(ship.wrapped.maxSpeed, 250, "a ship with no max speed takes the booster default");
+    assert.equal(ship.GetParameter("speed"), 100);
+    const motion = ship.wrapped.translationCurve, out = new Float32Array(3);
+    motion.Update__Ticks(0, out);
+    motion.Update__Ticks(2e7, out);
+    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "two seconds at 100 m/s along +Z");
+    ship.SetParameter("speed", 0);
+    motion.Update__Ticks(4e7, out);
+    assert.deepEqual(Array.from(out), [ 0, 0, 200 ], "a stop holds the position reached");
+    assert.deepEqual(Array.from(motion.GetValueDotAt__Ticks(4e7, out)), [ 0, 0, 0 ]);
 });
