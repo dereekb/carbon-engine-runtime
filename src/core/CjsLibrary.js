@@ -294,6 +294,44 @@ export class CjsLibrary
     return device;
   }
 
+  /**
+   * The browser backend AcquireBackend acquired (CjsBrowserBackend), owned by
+   * this library and released by Shutdown; null otherwise.
+   */
+  backend = null;
+
+  /**
+   * Acquires the browser's device backend on a canvas, WebGPU else WebGL2, and,
+   * unless `effects` were configured, configures the effect policy it draws.
+   * Runs before Initialize, because effects are committed at startup. Attach
+   * its abstraction layer with AttachTrinity after Initialize. Ours: Carbon's
+   * client builds its device itself.
+   *
+   * @param {object} options CjsBrowserBackend.create options: `canvas`, `preference`, `alphaMode`.
+   * @param {string} [options.shaderModel="depth"] The shader model `/effect/` paths resolve to.
+   * @returns {Promise<CjsBrowserBackend>} The backend, also `this.backend`.
+   * @throws {Error} After Initialize, or when a backend is already held.
+   */
+  async AcquireBackend({ shaderModel = "depth", ...options } = {})
+  {
+    if (this._previousServices || this._initialization) throw new Error("AcquireBackend runs before Initialize.");
+    if (this.backend) throw new Error("This library already holds a backend.");
+    const { CjsBrowserBackend } = await import("./platform/CjsBrowserBackend.js");
+    this.backend = await CjsBrowserBackend.create(options);
+    if (!Object.keys(this._configuration.effects).length)
+      this.SetConfiguration({ effects: this.backend.GetEffectConfiguration(shaderModel) });
+    return this.backend;
+  }
+
+  /** Releases the backend AcquireBackend acquired. */
+  _ReleaseBackend()
+  {
+    if (!this.backend) return;
+    const backend = this.backend;
+    this.backend = null;
+    backend.Destroy();
+  }
+
   /** Whether AttachTrinity started Trinity, so Shutdown stops it. */
   _startedTrinity = false;
 
@@ -552,11 +590,18 @@ export class CjsLibrary
     finally { this._initialization = null; }
   }
 
-  /** Restores the exact prior slots and tick activation without destroying borrowed providers. */
+  /**
+   * Restores the exact prior slots and tick activation without destroying borrowed
+   * providers, then releases a backend AcquireBackend acquired.
+   */
   async Shutdown()
   {
     if (this._initialization) await this._initialization;
-    if (!this._previousServices) return this;
+    if (!this._previousServices)
+    {
+      this._ReleaseBackend();
+      return this;
+    }
     if (this._startedTrinity)
     {
       // The font manager's tick first: trinity.Shutdown drops the reference.
@@ -573,6 +618,8 @@ export class CjsLibrary
     installBlueServices(this._previousServices, this._previousServices.running);
     this._previousServices = null;
     activeLibrary = null;
+    // After Trinity stopped: the device no longer renders through it.
+    this._ReleaseBackend();
     return this;
   }
 

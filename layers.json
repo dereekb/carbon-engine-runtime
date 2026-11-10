@@ -403,11 +403,15 @@
         "audio",
         "character",
         "input",
-        "trinityal/webgpu"
+        "trinityal",
+        "trinityal/webgpu",
+        "trinityal/webgl2"
       ],
       "why": [
         "Composition. It is allowed to know about everything below it, which is",
-        "exactly why nothing below is allowed to know about it."
+        "exactly why nothing below is allowed to know about it.",
+        "Both device backends: core/platform/CjsBrowserBackend acquires the one",
+        "the browser supports and hands it to CjsLibrary.AttachTrinity."
       ]
     },
     "tools": {
