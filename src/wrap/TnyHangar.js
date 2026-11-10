@@ -262,6 +262,7 @@ export class TnyHangar extends TnyScene
         {
             this.kind = "layout";
             this._PairExits(bays, containers);
+            this._PairCameras(bays);
         }
         else
         {
@@ -340,6 +341,30 @@ export class TnyHangar extends TnyScene
                 vec3.transformQuat(vec3_0, vec3_0, quat.invert(quat_0, bay.rotation));
                 bay.exit = [ vec3_0[0], vec3_0[1], vec3_0[2], vec3.length(vec3_0) ];
             }
+        }
+    }
+
+    /**
+     * Deathless and AIR hangars keep `*_dock_camera_transition_points` on the
+     * hangar's own hull, several locators per set, rather than one on each
+     * bay; a bay without its own takes the nearest (DERIVED pairing).
+     */
+    _PairCameras(bays)
+    {
+        const root = this.hangar.wrapped;
+        for (const bay of bays)
+        {
+            if (bay.camera) continue;
+            const set = (root.locatorSets ?? []).find(each => each.name === `${bay.size}_dock_camera_transition_points`);
+            let best = null, distance = Infinity;
+            for (const locator of set ? set.locators : [])
+            {
+                const { vec3_0 } = TnyHangar.scratch;
+                vec3.transformMat4(vec3_0, locator.position, root.worldTransform);
+                const d = vec3.distance(vec3_0, bay.position);
+                if (d < distance) { distance = d; best = locator; }
+            }
+            if (best) bay.camera = vec3.transformMat4(vec3.create(), best.position, root.worldTransform); // alloc: kept by the bay
         }
     }
 
