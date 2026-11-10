@@ -79,7 +79,7 @@ export class TnyCameraControls
     this.getViewport = getViewport;
     this.getBounds = getBounds;
     this.preferences = {
-      orbitButton: 0, panButton: 1, invertX: true, invertY: true,
+      orbitButton: 0, panButton: [ 1, 2 ], invertX: true, invertY: true,
       orbitSensitivity: 0.1, panSensitivity: 1, dollySensitivity: 0.0015, fovSensitivity: 0.001,
       minFieldOfView: 5 * Math.PI / 180, maxFieldOfView: 120 * Math.PI / 180, frameMargin: 1.1,
       // Farthest wheel/key zoom, in metres: past any solar system (~670 AU).
@@ -176,7 +176,7 @@ export class TnyCameraControls
     if ((event.type === "pointerdown" || event.type === "wheel") && (event.ctrl || event.alt || event.meta)) return result.PASS;
     if (event.type === "pointerdown")
     {
-      if (event.button === this.preferences.panButton || event.button === this.preferences.orbitButton && event.shift)
+      if ([].concat(this.preferences.panButton).includes(event.button) || event.button === this.preferences.orbitButton && event.shift)
         this._gesture = "pan";
       else if (event.button === this.preferences.orbitButton) this._gesture = "orbit";
       else return result.PASS;

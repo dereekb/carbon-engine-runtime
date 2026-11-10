@@ -69,11 +69,12 @@ export class TnyControllers
         }
         for (const effect of this.effects()) found.push(...effect.controllers);
         // A Tr2ControllerReference shows the controller it loaded, once loaded.
+        // A controller whose name starts with "_" is private to the content.
         return found.flatMap(controller =>
         {
             const reference = CjsSchema.cast(controller, Tr2ControllerReference);
             const target = CjsSchema.cast(reference ? reference.controller : controller, Tr2Controller);
-            return target ? [ target ] : [];
+            return target && IsPublic(target.name) ? [ target ] : [];
         });
     }
 
@@ -86,7 +87,7 @@ export class TnyControllers
     {
         return this._Controllers().map(controller => ({
             name: controller.name,
-            variables: controller.variables.map(variable => ({
+            variables: controller.variables.filter(variable => IsPublic(variable.name)).map(variable => ({
                 name: variable.name,
                 type: TYPE_NAMES[variable.variableType] ?? "number",
                 value: variable.GetValue(),
@@ -107,17 +108,18 @@ export class TnyControllers
      */
     GetVariableNames()
     {
-        return [ ...new Set(this._Controllers().flatMap(controller => controller.variables.map(variable => variable.name))) ];
+        return [ ...new Set(this._Controllers().flatMap(controller => controller.variables.map(variable => variable.name).filter(IsPublic))) ];
     }
 
     /**
      * A variable's value in the first controller that declares it.
      *
      * @param {string} name The variable.
-     * @returns {number|null} Its value, or null when no controller declares it.
+     * @returns {number|null} Its value, or null when no controller declares it or it is private.
      */
     GetVariable(name)
     {
+        if (!IsPublic(name)) return null;
         for (const controller of this._Controllers())
         {
             const variable = controller.GetVariableByName(name);
@@ -134,8 +136,15 @@ export class TnyControllers
      */
     SetVariable(name, value)
     {
+        if (!IsPublic(name)) throw new RangeError(`${name} is private to the content.`);
         if (!Number.isFinite(value)) throw new TypeError("A controller variable takes a number.");
         this.owner.wrapped.SetControllerVariable(name, value);
         for (const effect of this.effects()) effect.SetControllerVariable(name, value);
     }
+}
+
+/** Whether a controller or variable name is public: content marks private ones with a leading "_". */
+function IsPublic(name)
+{
+    return !String(name).startsWith("_");
 }
