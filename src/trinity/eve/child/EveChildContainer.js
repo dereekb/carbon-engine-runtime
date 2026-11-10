@@ -194,7 +194,7 @@ export class EveChildContainer extends EveChildTransform
    * @adapted Carbon's row is READ; ours persists it only so SOF can populate it through values until the SOF build path returns.
    * @type {ITr2GrannyAnimationOwner|null}
    */
-  @meta.persist
+  @meta.mapAttribute(meta.PERSIST)
   @type.object.ref.weak("ITr2GrannyAnimationOwner")
   animationOwner = null;
 
@@ -205,7 +205,7 @@ export class EveChildContainer extends EveChildTransform
    * @adapted Carbon's row is READ; ours persists it only so SOF can populate it through values until the SOF build path returns.
    * @type {number}
    */
-  @meta.persist
+  @meta.mapAttribute(meta.PERSIST)
   @type.int32
   @type.enum("trinity.EveSpaceObjectChild.Origin")
   origin = 0;

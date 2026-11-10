@@ -3,17 +3,14 @@ import { exposure as be } from "#be";
 import { IsMatch } from "#blue";
 import { IInitialize } from "../../../../blue/exposure/IInitialize.js";
 // Maintained CarbonEngineJS implementation; generated schema is reference-only.
-import { CjsSchema, type } from "#schema";
+import { type } from "#schema";
 import { INotify } from "#blue";
 import { EveSmartLightBaseAttributeModifier } from "./EveSmartLightBaseAttributeModifier.js";
 import { IEveSmartLightGroupAttributeModifier } from "./IEveSmartLightGroupAttributeModifier.js";
 import { EveSmartLightAttributeModifierBucket } from "./EveSmartLightAttributeModifierBucket.js";
 
 /** EveSmartLightAttributeModifierControllerVariableListener (eve/smartLights/attributeModifiers) - generated from schema shapeHash 8438774e.... */
-@CjsSchema.be.define({
-  className: "EveSmartLightAttributeModifierControllerVariableListener",
-  fields: [{ name: "active", type: { kind: "boolean" }, edit: { read: true, write: false, persist: false, notify: false }, carbon: { member: true } }]
-})
+@be.define("EveSmartLightAttributeModifierControllerVariableListener")
 @be.inherit(IInitialize)
 @be.mapInterface(EveSmartLightAttributeModifierBucket)
 @be.mapInterface(IEveSmartLightGroupAttributeModifier)
