@@ -21,4 +21,5 @@ export * from "./incarna/index.js";
 export * from "./application/index.js";
 export { createCharacterYamlTagHandlers, readCharacterYamlObject } from "./formats/yaml.js";
 export { CjsCharacterObjectBuilder } from "./formats/CjsCharacterObjectBuilder.js";
+export { CjsCharacterPdpType } from "./formats/CjsCharacterPdpType.js";
 export { CjsCharacterLibraryConfiguration } from "./library/CjsCharacterLibraryConfiguration.js";

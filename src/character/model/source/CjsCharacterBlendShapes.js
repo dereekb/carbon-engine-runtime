@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/blendshapes.yaml
 // Resource pattern: res:/graphics/character/unique/characterselect/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterBlendShapes")
-export class CjsCharacterBlendShapes
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterBlendShapes extends CjsCharacterRecord
 {
 
     /** Library identity for this unnamed root; not a key added to the original file. */

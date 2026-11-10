@@ -23,9 +23,6 @@ export class CjsCharacterObjectBuilder
     /** The caller's configuration: its kinds and their list forms. @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>> }} */
     _configuration = null;
 
-    /** Weak source associations retain authored presence without polluting data classes. */
-    static _sources = new WeakMap();
-
     /**
      * Parses one already acquired source with its configured family.
      * @param {string|ArrayBuffer|ArrayBufferView} bytes Original YAML input.
@@ -94,7 +91,8 @@ export class CjsCharacterObjectBuilder
             CjsSchema.assertValues(values, identified.className);
             CjsSchema.setValues(object, normalizeCharacterYamlValues(Constructor, values, sourceLists), { initialize: false });
         }
-        CjsCharacterObjectBuilder._sources.set(object, { builder: this, kind: identified.kind });
+        // The file shape it was read from travels with the record (CjsCharacterRecord._pdpType).
+        if (identified.pdpType) CjsSchema.setValues(object, { _pdpType: identified.pdpType }, { initialize: false });
         return object;
     }
 
@@ -221,16 +219,6 @@ export class CjsCharacterObjectBuilder
         if (!declaration || declaration.pathOnly) throw new TypeError(`Character YAML has no text kind ${selected}.`);
         return { kind: selected, ...declaration };
     }
-
-    /**
-     * Finds the original layout for one loaded record without retaining the record.
-     * @param {object} object Record returned by this builder.
-     * @returns {{builder:CjsCharacterObjectBuilder,kind:string}|null} Source association.
-     */
-    static getSource(object)
-    {
-        return this._sources.get(object) || null;
-    }
 }
 
 /**
@@ -265,7 +253,7 @@ function ReadEnvelope(raw, path, declaration)
 /**
  * A post written in the scalar layout, as `CjsCharacterPost` values. Every scalar post shipped (114 of build 3646012's
  * 317 scene posts, scenes_post.yaml) is the empty post: `lut: ''`, `lut_influence: 0`; it reads as no LUT, influence
- * zero, and its own `lut_path`. The library keeps the item's layout (`scalarPosts`), so it writes back as it was read.
+ * zero, and its own `lut_path`; its `_pdpType` (`POST_SCALAR`) keeps the layout, so it writes back as it was read.
  * Derived (2026-11-10): the empty values are the only scalar ones, so no other reading is stated.
  * @param {object} raw The file's values.
  * @param {string} path The file's path.

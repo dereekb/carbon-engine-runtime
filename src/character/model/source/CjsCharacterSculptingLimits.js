@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/scultpinglimits.yaml
 // Resource pattern: res:/graphics/character/global/facesetup/scultpinglimits/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterSculptingLimits")
-export class CjsCharacterSculptingLimits
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterSculptingLimits extends CjsCharacterRecord
 {
 
     /** Authored string, retained without normalization of spelling. */

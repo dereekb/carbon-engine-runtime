@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/scenes_curve_cache_list.yaml
 // Resource pattern: res:/animation_gstate/scenes/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterCurveCacheList")
-export class CjsCharacterCurveCacheList
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterCurveCacheList extends CjsCharacterRecord
 {
 
     /** Library identity for this unnamed root; not a key added to the original file. */

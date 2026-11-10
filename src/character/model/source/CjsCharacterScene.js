@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/scenes_scene.yaml
 // Resource pattern: res:/animation_gstate/scenes/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterScene")
-export class CjsCharacterScene
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterScene extends CjsCharacterRecord
 {
 
     /** Ordered authored character records. */

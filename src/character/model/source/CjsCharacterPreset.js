@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/characters.yaml
 // Resource pattern: res:/graphics/character/global/paperdolllibrary/characters/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterPreset")
-export class CjsCharacterPreset
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterPreset extends CjsCharacterRecord
 {
 
     /** Authored animation string; observed presets contain the literal placeholder PATH. */

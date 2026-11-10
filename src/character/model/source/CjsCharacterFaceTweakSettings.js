@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/facetweaksettings.yaml
 // Resource pattern: res:/graphics/character/global/facesetup/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterFaceTweakSettings")
-export class CjsCharacterFaceTweakSettings
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterFaceTweakSettings extends CjsCharacterRecord
 {
 
     /** Authored names and gamma values. */

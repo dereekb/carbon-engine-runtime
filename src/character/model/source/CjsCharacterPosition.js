@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/positions.yaml
 // Additional discovery: scenes_position.yaml
@@ -9,7 +10,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterPosition")
-export class CjsCharacterPosition
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterPosition extends CjsCharacterRecord
 {
 
     /** Authored four-component rotation tuple. Plain number storage avoids float32 rounding; source length is 4. */

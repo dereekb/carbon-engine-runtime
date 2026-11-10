@@ -1,8 +1,10 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 /** Character library value record; no resource decoding or character construction. */
 @meta.define("CjsCharacterNamedValue")
-export class CjsCharacterNamedValue
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterNamedValue extends CjsCharacterRecord
 {
 
     /** Lookup name. */

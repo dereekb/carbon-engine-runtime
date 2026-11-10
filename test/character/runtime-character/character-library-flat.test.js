@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
     CjsCharacterLibrary, CjsCharacterLibraryBuilder, CjsCharacterLibraryConfiguration, CjsCharacterLibraryManager,
-    CjsCharacterObjectBuilder, CjsCharacterCamera, CjsCharacterColorVariation
+    CjsCharacterObjectBuilder, CjsCharacterCamera, CjsCharacterColorVariation, CjsCharacterPdpType
 } from "../../../npm/dist/character/index.js";
 import { BluePaths, BlueResMan, BlueResFileSystemRemote, RemoteFileCache } from "../../../npm/dist/blue/index.js";
 import { installBlueServices } from "../../../npm/dist/blue/blue.js";
@@ -82,7 +82,9 @@ test("lazy Blue reads load each record once on first need, preserve unrelated YA
     assert.equal(reads.length, 0);
     const manager = new CjsCharacterLibraryManager(null, { sourceBuilder: builder });
     const [a,b] = await Promise.all([manager.GetCamera(CAMERA), manager.GetCamera(CAMERA)]);
-    assert.equal(a,b);
+    // Each caller gets its own copy of the one record read (the library gives out data, not references).
+    assert.notEqual(a, b);
+    assert.deepEqual(a, b);
     // One record, not its family: the camera sequence beside it is not read yet.
     assert.deepEqual(reads, [CAMERA]);
     assert.deepEqual(await manager.ListCameraNames(), [CAMERA]);
@@ -93,7 +95,7 @@ test("lazy Blue reads load each record once on first need, preserve unrelated YA
     // A character .yaml loads under its own ex; plain .yaml stays the generic reader (above).
     const direct = await resMan.LoadObject(CAMERA, CjsCharacterObjectBuilder.getLoadOptions(CAMERA));
     assert.notEqual(direct, a);
-    assert.equal(CjsCharacterObjectBuilder.getSource(direct).kind, "cameras");
+    assert.equal(direct._pdpType, CjsCharacterPdpType.CAMERA);
     await assert.rejects(manager.GetCamera("res:/missing.yaml"), /Unresolved/);
 });
 
@@ -121,14 +123,16 @@ test("GetPart joins exact records and paths without acquiring opaque resources",
     await builder.Build({ lazy: true });
     const manager = new CjsCharacterLibraryManager(null, { sourceBuilder: builder });
     const part = await manager.GetPart("topmiddle/shirtcf01");
-    assert.equal(await manager.GetPart(ROOT), part);
+    const again = await manager.GetPart(ROOT);
+    assert.notEqual(again, part, "a copy per call");
+    assert.deepEqual(again, part);
     assert.equal(part.metadata.dependantModifiers[0], "utilityshapes/test###0.25");
     assert.equal(part.dependantModifiers[0].weight, 0.25);
     assert.equal(part.dependantModifiers[0].path, "utilityshapes/test");
     assert.deepEqual(part.blackPaths, [ROOT + "/mesh.red"]);
     assert.deepEqual(part.texturePaths, [ROOT + "/diffuse.png"]);
     assert.ok(part.types.has("shirt"));
-    assert.equal(await manager.ResolveTypeColor(ROOT + "/types/shirt.type"), part.colorVariations.get("default"));
+    assert.deepEqual(await manager.ResolveTypeColor(ROOT + "/types/shirt.type"), part.colorVariations.get("default"));
     assert.ok(reads.every(path => !/\.(png|red)$/u.test(path)));
     await assert.rejects(manager.ResolveReference(ROOT + "/missing.color"), /Unresolved/);
     await assert.rejects(manager.GetPart("topmiddle/missing"), /Unresolved/);
@@ -140,7 +144,9 @@ test("FetchAvatarPartMetaData starts the lazy source and reads only that metadat
     const { reads } = fixture(t);
     const manager = new CjsCharacterLibraryManager();
     const metadata = await manager.FetchAvatarPartMetaData(ROOT + "/metadata.yaml");
-    assert.equal(await manager.FetchAvatarPartMetaData(ROOT + "/metadata.yaml"), metadata);
+    const again = await manager.FetchAvatarPartMetaData(ROOT + "/metadata.yaml");
+    assert.notEqual(again, metadata, "a copy per call");
+    assert.deepEqual(again, metadata);
     assert.deepEqual(metadata.dependantModifiers, [ "utilityshapes/test###0.25" ]);
     assert.equal(metadata.numColorAreas, -1);
     assert.deepEqual(reads, [ ROOT + "/metadata.yaml" ]);
@@ -195,7 +201,7 @@ test("removing a completed part lets the next query make a fresh join", async t 
     assert.equal(manager.GetLibrary().RemoveKind("parts", ROOT), true);
     const second = await manager.GetPart(ROOT);
     assert.notEqual(first, second);
-    assert.equal(first.metadata, second.metadata);
+    assert.deepEqual(first.metadata, second.metadata);
 });
 
 test("a pending part join cannot cross a library replacement", async t =>

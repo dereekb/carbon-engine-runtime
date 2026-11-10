@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 import { PixelFormat } from "#consts/render-context";
 
 /**
@@ -6,7 +7,8 @@ import { PixelFormat } from "#consts/render-context";
  * material-mask decode the library runs on loaded textures (`CjsCharacterLibraryManager.FetchMaterialMaskAreas`).
  */
 @meta.define("CjsCharacterTexture")
-export class CjsCharacterTexture
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterTexture extends CjsCharacterRecord
 {
 
     /** Lookup name. */

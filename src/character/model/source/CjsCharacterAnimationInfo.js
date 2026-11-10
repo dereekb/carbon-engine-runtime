@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/animation_animinfo.yaml
 // Resource pattern: res:/animation/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterAnimationInfo")
-export class CjsCharacterAnimationInfo
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterAnimationInfo extends CjsCharacterRecord
 {
 
     /** Library identity for this unnamed root; not a key added to the original file. */

@@ -241,15 +241,16 @@ export class CjsCharacterLibraryBuilder
             const Constructor = CjsSchema.getConstructor(declaration.className);
             record = new Constructor();
             const value = declaration.className === "CjsCharacterNamedValue" ? { name: path, value: path } : { name: path, resFilePath: path };
+            value._pdpType = declaration.pdpType;
             CjsSchema.setValues(record, value, { initialize: false });
         }
         else
         {
             record = await this._resMan.LoadObject(path, CjsCharacterObjectBuilder.getLoadOptions(path));
             if (!record) throw new Error(`Character source did not load: ${path}`);
-            const source = CjsCharacterObjectBuilder.getSource(record);
-            if (!source) throw new TypeError(`Character source bypassed its configured object builder: ${path}`);
-            actual = source.kind;
+            // The reader names the file shape it read (a shared family's file is either of two); `lights` is a
+            // Carbon class, which carries none.
+            if (declaration.pdpType) actual = CjsCharacterLibraryConfiguration.kindOf(record._pdpType);
         }
         this._flatLibrary.AddKind(actual, path, record);
         return record;

@@ -1,3 +1,5 @@
+import { CjsCharacterPdpType } from "../formats/CjsCharacterPdpType.js";
+
 /** Declarative source families for the flat character library. */
 export class CjsCharacterLibraryConfiguration
 {
@@ -9,47 +11,62 @@ export class CjsCharacterLibraryConfiguration
         "res:/ui/texture/charactercreation/backdrops/", "res:/staticdata/"
     ];
 
-    /** Source kinds and their approved class/container declarations. */
+    /**
+     * Source kinds and their approved class/container declarations; `pdpType` is the file shape the reader sets on each
+     * record (`CjsCharacterRecord._pdpType`). `lights` reads into a Carbon class, which carries none.
+     */
     static kinds = {
-        parts: { className: "CjsCharacterPart", derived: true },
-        avatarPartMetaData: { className: "CjsAvatarPartMetaData" },
-        colorVariations: { className: "CjsCharacterColorVariation" },
-        baseColors: { className: "CjsCharacterBaseColor", envelope: true },
-        types: { className: "CjsCharacterType", envelope: true, slots: [ "partPath", "variation", "colorVariant", "bloodlineIDs" ] },
-        projectedDecals: { className: "CjsProjectedDecal" },
-        cameras: { className: "CjsCharacterCamera" },
-        cameraSequences: { className: "CjsCharacterCameraSequence", envelope: true },
-        positions: { className: "CjsCharacterPosition" },
-        poses: { className: "CjsCharacterPose", envelope: true },
+        parts: { className: "CjsCharacterPart", pdpType: CjsCharacterPdpType.PART, derived: true },
+        avatarPartMetaData: { className: "CjsAvatarPartMetaData", pdpType: CjsCharacterPdpType.AVATAR_PART_META_DATA },
+        colorVariations: { className: "CjsCharacterColorVariation", pdpType: CjsCharacterPdpType.COLOR_VARIATION },
+        baseColors: { className: "CjsCharacterBaseColor", pdpType: CjsCharacterPdpType.BASE_COLOR, envelope: true },
+        types: { className: "CjsCharacterType", pdpType: CjsCharacterPdpType.TYPE, envelope: true, slots: [ "partPath", "variation", "colorVariant", "bloodlineIDs" ] },
+        projectedDecals: { className: "CjsProjectedDecal", pdpType: CjsCharacterPdpType.PROJECTED_DECAL },
+        cameras: { className: "CjsCharacterCamera", pdpType: CjsCharacterPdpType.CAMERA },
+        cameraSequences: { className: "CjsCharacterCameraSequence", pdpType: CjsCharacterPdpType.CAMERA_SEQUENCE, envelope: true },
+        positions: { className: "CjsCharacterPosition", pdpType: CjsCharacterPdpType.POSITION },
+        poses: { className: "CjsCharacterPose", pdpType: CjsCharacterPdpType.POSE, envelope: true },
         lights: { className: "Tr2InteriorScene" },
-        backgrounds: { className: "CjsCharacterBackground" },
-        posts: { className: "CjsCharacterPost" },
-        scalarPosts: { className: "CjsCharacterPost" },
-        characters: { className: "CjsCharacterPreset" },
-        scenes: { className: "CjsCharacterScene" },
-        curveSetMetadata: { className: "CjsCharacterCurveSetMetadata" },
-        curveCacheLists: { className: "CjsCharacterCurveCacheList", envelope: true },
-        materialSets: { className: "CjsCharacterMaterialSet" },
-        animationInfo: { className: "CjsCharacterAnimationInfo", envelope: true, generic: true },
-        movementStates: { className: "CjsCharacterMovementStates", envelope: true, generic: true },
-        animationData: { className: "CjsCharacterAnimationData", envelope: true, generic: true },
-        animationOffsets: { className: "CjsCharacterAnimationOffsets", envelope: true, generic: true },
-        bindPoses: { className: "CjsCharacterBindPose", envelope: true, generic: true },
-        postBaseNames: { className: "CjsCharacterPostBaseNames", envelope: true, generic: true },
-        blendShapes: { className: "CjsCharacterBlendShapes", envelope: true, generic: true },
-        faceMappings: { className: "CjsCharacterFaceMapping", envelope: true, generic: true },
-        faceTweakSettings: { className: "CjsCharacterFaceTweakSettings", generic: true },
-        modifierNames: { className: "CjsCharacterModifierNames", envelope: true, generic: true },
-        sculptingLimits: { className: "CjsCharacterSculptingLimits", generic: true },
-        fieldSets: { className: "CjsCharacterFieldSet", generic: true },
-        clips: { className: "CjsCharacterClip", pathOnly: true },
-        rigs: { className: "CjsCharacterRig", pathOnly: true },
-        gstates: { className: "CjsCharacterGState", pathOnly: true },
-        textures: { className: "CjsCharacterTexture", pathOnly: true },
-        blackResources: { className: "CjsCharacterNamedValue", pathOnly: true },
-        geometryResources: { className: "CjsCharacterNamedValue", pathOnly: true },
-        staticResources: { className: "CjsCharacterNamedValue", pathOnly: true }
+        backgrounds: { className: "CjsCharacterBackground", pdpType: CjsCharacterPdpType.BACKGROUND },
+        posts: { className: "CjsCharacterPost", pdpType: CjsCharacterPdpType.POST },
+        scalarPosts: { className: "CjsCharacterPost", pdpType: CjsCharacterPdpType.POST_SCALAR },
+        characters: { className: "CjsCharacterPreset", pdpType: CjsCharacterPdpType.PRESET },
+        scenes: { className: "CjsCharacterScene", pdpType: CjsCharacterPdpType.SCENE },
+        curveSetMetadata: { className: "CjsCharacterCurveSetMetadata", pdpType: CjsCharacterPdpType.CURVE_SET_METADATA },
+        curveCacheLists: { className: "CjsCharacterCurveCacheList", pdpType: CjsCharacterPdpType.CURVE_CACHE_LIST, envelope: true },
+        materialSets: { className: "CjsCharacterMaterialSet", pdpType: CjsCharacterPdpType.MATERIAL_SET },
+        animationInfo: { className: "CjsCharacterAnimationInfo", pdpType: CjsCharacterPdpType.ANIMATION_INFO, envelope: true, generic: true },
+        movementStates: { className: "CjsCharacterMovementStates", pdpType: CjsCharacterPdpType.MOVEMENT_STATES, envelope: true, generic: true },
+        animationData: { className: "CjsCharacterAnimationData", pdpType: CjsCharacterPdpType.ANIMATION_DATA, envelope: true, generic: true },
+        animationOffsets: { className: "CjsCharacterAnimationOffsets", pdpType: CjsCharacterPdpType.ANIMATION_OFFSETS, envelope: true, generic: true },
+        bindPoses: { className: "CjsCharacterBindPose", pdpType: CjsCharacterPdpType.BIND_POSE, envelope: true, generic: true },
+        postBaseNames: { className: "CjsCharacterPostBaseNames", pdpType: CjsCharacterPdpType.POST_BASE_NAMES, envelope: true, generic: true },
+        blendShapes: { className: "CjsCharacterBlendShapes", pdpType: CjsCharacterPdpType.BLEND_SHAPES, envelope: true, generic: true },
+        faceMappings: { className: "CjsCharacterFaceMapping", pdpType: CjsCharacterPdpType.FACE_MAPPING, envelope: true, generic: true },
+        faceTweakSettings: { className: "CjsCharacterFaceTweakSettings", pdpType: CjsCharacterPdpType.FACE_TWEAK_SETTINGS, generic: true },
+        modifierNames: { className: "CjsCharacterModifierNames", pdpType: CjsCharacterPdpType.MODIFIER_NAMES, envelope: true, generic: true },
+        sculptingLimits: { className: "CjsCharacterSculptingLimits", pdpType: CjsCharacterPdpType.SCULPTING_LIMITS, generic: true },
+        fieldSets: { className: "CjsCharacterFieldSet", pdpType: CjsCharacterPdpType.FIELD_SET, generic: true },
+        clips: { className: "CjsCharacterClip", pdpType: CjsCharacterPdpType.CLIP, pathOnly: true },
+        rigs: { className: "CjsCharacterRig", pdpType: CjsCharacterPdpType.RIG, pathOnly: true },
+        gstates: { className: "CjsCharacterGState", pdpType: CjsCharacterPdpType.GSTATE, pathOnly: true },
+        textures: { className: "CjsCharacterTexture", pdpType: CjsCharacterPdpType.TEXTURE, pathOnly: true },
+        blackResources: { className: "CjsCharacterNamedValue", pdpType: CjsCharacterPdpType.BLACK_RESOURCE, pathOnly: true },
+        geometryResources: { className: "CjsCharacterNamedValue", pdpType: CjsCharacterPdpType.GEOMETRY_RESOURCE, pathOnly: true },
+        staticResources: { className: "CjsCharacterNamedValue", pdpType: CjsCharacterPdpType.STATIC_RESOURCE, pathOnly: true }
     };
+
+    /**
+     * The kind a file shape is stored under: a shared family's file (cameras, posts) is read before its shape is known.
+     * @param {number} pdpType A `CjsCharacterPdpType` value.
+     * @returns {string} The kind.
+     * @throws {Error} For a value no kind declares.
+     */
+    static kindOf(pdpType)
+    {
+        for (const [ kind, declaration ] of Object.entries(this.kinds)) if (declaration.pdpType === pdpType) return kind;
+        throw new Error("No character kind has file shape " + pdpType);
+    }
 
     /** Explicit path rules; camera/post content variants are identified after reading. */
     static rows = [

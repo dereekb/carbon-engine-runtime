@@ -404,6 +404,17 @@ export class CjsCharacterLibrary
         if (!CjsSchema.assertValues(input, "CjsCharacterLibrary.SetValues")) return false;
         const changed = ReadValues(this, input, options);
         this._kindIndexes.clear();
+        // A prebuilt library's items keep the IDs they were written with; one written without gets its name, as AddKind.
+        if (this.schemaVersion === 13)
+        {
+            for (const [ kind, declaration ] of Object.entries(CjsCharacterLibraryConfiguration.kinds))
+            {
+                if (!declaration.pdpType) continue;
+                const records = this.GetKind(kind), names = this.sourceNames.get(kind) ?? [];
+                for (let i = 0; i < records.length; i++)
+                    if (records[i]._pdpID === "" && names[i]) CjsSchema.setValues(records[i], { _pdpID: names[i] }, { initialize: false });
+            }
+        }
         return changed instanceof Set && !changed.size ? false : changed;
     }
 
@@ -519,19 +530,23 @@ export class CjsCharacterLibrary
     }
 
     /**
-     * Pairs a typed record with its canonical source identity.
+     * Pairs a typed record with its canonical source identity, and gives it its library ID (`_pdpID`) where it has
+     * none: today the identity itself (opaque to every reader of it).
      * @param {string} kind Configured kind.
-     * @param {string} name Library identity; never stored inside the raw record.
+     * @param {string} name Library identity.
      * @param {object} record Registered typed record.
      * @returns {object} The stored record.
      */
     AddKind(kind, name, record)
     {
         const records = this.GetKind(kind);
-        const Constructor = CjsSchema.getConstructor(CjsCharacterLibraryConfiguration.kinds[kind].className);
+        const declaration = CjsCharacterLibraryConfiguration.kinds[kind];
+        const Constructor = CjsSchema.getConstructor(declaration.className);
         if (!CjsSchema.cast(record, Constructor)) throw new TypeError(`Invalid record for ${kind}`);
         if (typeof name !== "string" || !name.trim()) throw new TypeError("Character source name must be nonempty.");
         if (this.GetKindRecord(kind, name)) throw new TypeError(`Duplicate ${kind} name ${name}`);
+        // `lights` is a Carbon class, which carries no library ID.
+        if (declaration.pdpType && record._pdpID === "") CjsSchema.setValues(record, { _pdpID: name }, { initialize: false });
         const names = this.sourceNames.get(kind) ?? [];
         records.push(record);
         names.push(name);

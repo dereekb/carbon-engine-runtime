@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/face.yaml
 // Resource pattern: res:/graphics/character/global/facesetup/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterFaceMapping")
-export class CjsCharacterFaceMapping
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterFaceMapping extends CjsCharacterRecord
 {
 
     /** Library identity for this unnamed root; not a key added to the original file. */

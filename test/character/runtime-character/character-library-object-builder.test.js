@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
     CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
     CjsCharacterPost, CjsCharacterPose,
-    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType, CjsCharacterColorVariation
+    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType, CjsCharacterColorVariation, CjsCharacterPdpType
 } from "../../../npm/dist/character/index.js";
 import { InitializeTrinityStub } from "../../support/trinityStub.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
@@ -26,12 +26,12 @@ test("content inspection separates camera/post layouts without decoding other re
     const positional = Builder("[!!python/tuple [1, 2, 3], !!python/tuple [4, 5, 6], 1, 2, 3, !!python/tuple [a,b,c,d,e]]", "cameras").CreateObject();
     assert.equal(Object.getPrototypeOf(positional), CjsCharacterCameraSequence.prototype);
     assert.equal(positional.value.length, 6);
-    assert.equal(CjsCharacterObjectBuilder.getSource(positional).kind, "cameraSequences");
+    assert.equal(positional._pdpType, CjsCharacterPdpType.CAMERA_SEQUENCE, "the reader names the file shape it read");
     const vector = Builder("lut: true\nlut_influence: !!python/tuple [0.1, 0.2, 0.3, 0.4]\nlut_path: res:/test/lut.dds\n", "posts").CreateObject();
     const scalar = Builder('lut: ""\nlut_influence: 0\nlut_path: ""\n', "posts").CreateObject();
     assert.equal(Object.getPrototypeOf(vector), CjsCharacterPost.prototype);
     assert.equal(Object.getPrototypeOf(scalar), CjsCharacterPost.prototype, "one class for both layouts");
-    assert.deepEqual([ scalar.lut, scalar.lut_influence, CjsCharacterObjectBuilder.getSource(scalar).kind ], [ false, [ 0, 0, 0, 0 ], "scalarPosts" ]);
+    assert.deepEqual([ scalar.lut, scalar.lut_influence, scalar._pdpType, vector._pdpType ], [ false, [ 0, 0, 0, 0 ], CjsCharacterPdpType.POST_SCALAR, CjsCharacterPdpType.POST ]);
     assert.throws(() => Builder('lut: x\nlut_influence: 0\nlut_path: ""\n', "posts").CreateObject(), /unread/u);
     assert.equal(vector.lut_path, "res:/test/lut.dds");
     assert.throws(() => Builder("lut: true\nlut_influence: 1\n", "posts").CreateObject(), /Unrecognized/);
@@ -100,15 +100,14 @@ test("native light type records apply only the approved numeric boolean conversi
     assert.throws(() => Builder("type: MissingLight\n", "lights").CreateObject(), /Unregistered/);
 });
 
-test("scalar roots stay scalar values and source associations do not enter records", () =>
+test("scalar roots stay scalar values; the record carries its file shape and no other source state", () =>
 {
     const builder = Builder("a b c\n", "modifierNames");
     const names = builder.CreateObject();
     assert.equal(names.value, "a b c");
     assert.equal(names.name, "res:/test/character/source.yaml");
-    assert.equal(CjsCharacterObjectBuilder.getSource(names).builder, builder);
+    assert.deepEqual([ names._pdpType, names._pdpID ], [ CjsCharacterPdpType.MODIFIER_NAMES, "" ], "the library, not the reader, assigns the ID");
     assert.equal(Object.hasOwn(names, "source"), false);
-    assert.equal(CjsCharacterObjectBuilder.getSource({}), null);
     assert.throws(() => builder.CreateObject(1), /root object marker/);
 });
 

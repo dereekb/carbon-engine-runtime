@@ -3,6 +3,7 @@ import { CjsSchema } from "#schema";
 import { CjsPaperDollDefinition } from "../application/CjsPaperDollDefinition.js";
 import { CjsCharacterLibraryManager } from "../library/CjsCharacterLibraryManager.js";
 import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
+import { CjsCharacterPdpType } from "../formats/CjsCharacterPdpType.js";
 import { normalizeResourcePath } from "#utils/path";
 import female from "./defaults/defaultFemalePaperDoll.json" with { type: "json" };
 import male from "./defaults/defaultMalePaperDoll.json" with { type: "json" };
@@ -362,7 +363,7 @@ export class CjsCharacterFactory
      * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, (string|string[]|object)>>, match: string }}
      */
     static recipeConfiguration = {
-        kinds: { recipes: { className: "CjsCharacterRecipe", envelope: true, items: "CjsCharacterRecipeModifier", leading: "sex", list: "modifiers" } },
+        kinds: { recipes: { className: "CjsCharacterRecipe", pdpType: CjsCharacterPdpType.RECIPE, envelope: true, items: "CjsCharacterRecipeModifier", leading: "sex", list: "modifiers" } },
         sourceLists: {
             CjsCharacterRecipeModifier: {
                 colorvariation: "colorVariation",

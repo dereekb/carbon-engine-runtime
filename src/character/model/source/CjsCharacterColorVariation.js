@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 import { vec4 } from "#math/vec4";
 
 // Discovery: src/character/discovery/color.yaml
@@ -11,7 +12,8 @@ import { vec4 } from "#math/vec4";
  * field names are the former catalog record's (CjsCharacterMaterialProfile: `patternTransform`, `patternRotation`).
  */
 @meta.define("CjsCharacterColorVariation")
-export class CjsCharacterColorVariation
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterColorVariation extends CjsCharacterRecord
 {
 
     /** Colour area 1's RGBA colour (the file's `colors[0]`). */

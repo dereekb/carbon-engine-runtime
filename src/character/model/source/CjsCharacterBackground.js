@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/backgrounds.yaml
 // Additional discovery: scenes_background.yaml
@@ -9,7 +10,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterBackground")
-export class CjsCharacterBackground
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterBackground extends CjsCharacterRecord
 {
 
     /** Authored numeric value, retained at JavaScript number precision. */

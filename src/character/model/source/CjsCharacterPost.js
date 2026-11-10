@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/posts.yaml
 // Additional discovery: scenes_post.yaml
@@ -6,12 +7,13 @@ import { meta, type } from "#schema";
 
 /**
  * A post's LUT settings. Files write it in two layouts; the scalar one (`lut: ''`, `lut_influence: 0`) is always the
- * empty post, and the reader reads it into these fields (`CjsCharacterObjectBuilder`, `ReadScalarPost`). The layout
- * is the library's fact about the item, not a field.
+ * empty post, and the reader reads it into these fields (`CjsCharacterObjectBuilder`, `ReadScalarPost`). Its
+ * `_pdpType` keeps the layout it was read from.
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterPost")
-export class CjsCharacterPost
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterPost extends CjsCharacterRecord
 {
 
     /** Authored boolean value. */

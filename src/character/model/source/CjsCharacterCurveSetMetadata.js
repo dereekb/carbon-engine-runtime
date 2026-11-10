@@ -1,4 +1,5 @@
 import { meta, type } from "#schema";
+import { CjsCharacterRecord } from "../CjsCharacterRecord.js";
 
 // Discovery: src/character/discovery/curvesets_metadata.yaml
 // Resource pattern: res:/animation_gstate/scenes/*
@@ -8,7 +9,8 @@ import { meta, type } from "#schema";
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterCurveSetMetadata")
-export class CjsCharacterCurveSetMetadata
+@meta.exposureChainTo(CjsCharacterRecord)
+export class CjsCharacterCurveSetMetadata extends CjsCharacterRecord
 {
 
     /** Authored integer value. */
