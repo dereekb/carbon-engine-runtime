@@ -14,11 +14,19 @@ const TYPE_NAMES = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BO
  * @param {string} text The authored list.
  * @returns {{name: string, value: number}[]} The choices, in order.
  */
-function ParseEnumValues(text)
+export function ParseEnumValues(text)
 {
-    return String(text).split(",").map(entry => entry.split("="))
-        .filter(parts => parts.length === 2 && parts[0].trim())
-        .map(([ name, value ]) => ({ name: name.trim(), value: Number(value) }));
+    // Carbon documents "value=name" pairs (Tr2ControllerFloatVariable_Blue.cpp:31) and never
+    // parses them; content writes both orders ("0=default", "AmarrBase = 1"): the number is the value.
+    return String(text).split(",").map(entry => entry.split("=").map(part => part.trim()))
+        .filter(parts => parts.length === 2 && parts[0] && parts[1])
+        .map(([ left, right ]) => IsNumber(left) && !IsNumber(right) ? { name: right, value: Number(left) } : { name: left, value: Number(right) });
+}
+
+/** Whether a string is a number. */
+function IsNumber(text)
+{
+    return text !== "" && Number.isFinite(Number(text));
 }
 
 /**

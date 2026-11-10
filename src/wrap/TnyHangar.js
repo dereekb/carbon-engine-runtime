@@ -13,7 +13,7 @@ import { TnyScene } from "./TnyScene.js";
 import { TnySpaceObject } from "./objects/TnySpaceObject.js";
 import { TnyStationary } from "./objects/TnyStationary.js";
 import { TnyShip } from "./objects/TnyShip.js";
-import { TnyControllers } from "./objects/TnyControllers.js";
+import { TnyControllers, ParseEnumValues } from "./objects/TnyControllers.js";
 
 /** Bay placements in a layout-built hangar, by size (the SOF layout placement names). */
 const BAY_PLACEMENTS = { small: "small_dock_ships", medium: "medium_dock_ships" };
@@ -564,8 +564,7 @@ function HangarType(effect, identity)
         const variable = controller.variables?.find(each => each.name === "HangarType");
         if (variable) enumValues = variable.enumValues;
     }
-    const entries = new Map(enumValues.split(",").map(entry => entry.split("=").map(part => part.trim()))
-        .filter(([ name, value ]) => name && value !== undefined).map(([ name, value ]) => [ name.toLowerCase(), Number(value) ]));
+    const entries = new Map(ParseEnumValues(enumValues).map(({ name, value }) => [ name.toLowerCase(), value ]));
     for (const candidate of [ identity.faction, identity.faction && `${identity.faction}base`, identity.race && `${identity.race}base` ])
         if (candidate && entries.has(candidate.toLowerCase())) return entries.get(candidate.toLowerCase());
     return null;
