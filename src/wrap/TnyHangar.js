@@ -426,17 +426,25 @@ export class TnyHangar extends TnyScene
             native.rotationCurve = rotation;
             native.modelRotationCurve = new Tr2CurveConstant();
             quat.identity(native.modelRotationCurve.value);
-            native.modelTranslationCurve = null;
 
             const path = TnyHangar.defaults[this.hangar.identity.hull]?.docker ?? TnyHangar.DOCKER;
             const effect = bay.effect = await library.Fetch(path);
             effect.SetParameter("docking_ship", native);
             effect.SetParameter("docking_dock", bay.dock);
+            const docking = effect.curveSets.find(set => set.name === "docking_cs") ?? null;
             if (bay.exit)
             {
-                const exit = effect.curveSets.find(set => set.name === "docking_cs")?.curves.find(curve => curve.name === "exit_point");
+                const exit = docking?.curves.find(curve => curve.name === "exit_point");
                 if (exit) exit.value.set(bay.exit);
             }
+            // Ours: the docker's Y is `input(0)*input(1)+input1+input2+input(2)+input(3)*0`:
+            // input(3), the authored lift ShipOffsetY = (radius.y - centre.y) * pi/4 of the
+            // ship's shape ellipsoid, is multiplied by 0, and input3 (shapeEllipsoidRadius.y)
+            // is not read, so the ship's origin sits on the pad and its lower half sinks.
+            // That lift goes on the model translation, which nothing in the docker writes.
+            const lift = new Tr2TranslationAdapter();
+            vec3.set(lift.value, 0, (native.shapeEllipsoidRadius[1] - native.shapeEllipsoidCenter[1]) * Math.PI / 4, 0);
+            native.modelTranslationCurve = lift;
             effect.SetControllerVariable("isCapital", bay.size === "capital" ? 1 : 0);
             effect.SetControllerVariable("docked", entry === "dock" ? 0 : 1);
             if (entry === "appear") effect.SetControllerVariable("skinChange", 1);
