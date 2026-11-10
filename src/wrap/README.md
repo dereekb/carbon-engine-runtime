@@ -5,8 +5,11 @@ canvas: the library acquires WebGPU or WebGL2, Trinity attaches, a scene
 driver and `EveCamera` are installed, and one frame loop pumps Blue. Without
 it, a host that already runs the engine can use the wrappers below directly.
 
-`TnyShip.fetch({ dna | resPath, awaitResources, name })` acquires a live ship
-through `CjsLibrary.Fetch` and starts its native controllers once.
+`TnySpaceObject` (EveSpaceObject2), `TnyMobile`, `TnyShip` and `TnyStationary`
+mirror the native classes. `X.fetch({ dna | resPath, awaitResources, name })`
+acquires a live object of that class through `CjsLibrary.Fetch` and starts its
+native controllers once; `scene.Fetch(options)` picks the most specific wrapper
+and adds it.
 `awaitResources` waits on `BlueResMan.Watch`. `CjsLibrary.instance` is the
 initialized library; it is null during startup and after shutdown.
 

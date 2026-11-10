@@ -1,7 +1,10 @@
 import { CjsSchema } from "#schema";
 import { CjsLibrary } from "../core/CjsLibrary.js";
 import { EveSpaceScene } from "../trinity/eve/scene/EveSpaceScene.js";
+import { TnySpaceObject } from "./objects/TnySpaceObject.js";
+import { TnyMobile } from "./objects/TnyMobile.js";
 import { TnyShip } from "./objects/TnyShip.js";
+import { TnyStationary } from "./objects/TnyStationary.js";
 import { Tr2PostProcess2 } from "../trinity/postProcess/Tr2PostProcess2.js";
 
 /** Application membership wrapper over an existing space scene. */
@@ -40,8 +43,32 @@ export class TnyScene
     }
 
     /**
-     * Adds a ship through the native scene list, once. The scene owns registration.
-     * @param {TnyShip} object Ship to add.
+     * The wrapper classes `Fetch` chooses from, most specific first: the first
+     * whose native class the object is wins (ccpwgl's TnyScene.EVE_CLASS).
+     */
+    static WRAPPERS = [ TnyShip, TnyMobile, TnyStationary, TnySpaceObject ];
+
+    /**
+     * Acquires a space object, wraps it in the most specific wrapper, starts
+     * its controllers and adds it to this scene.
+     *
+     * @param {object} options `TnySpaceObject.fetch` options: `dna` or `resPath`, `awaitResources`, `name`.
+     * @returns {Promise<TnySpaceObject>} The wrapper, now in this scene.
+     * @throws {TypeError} When the object is no space object.
+     */
+    async Fetch(options = {})
+    {
+        const object = await TnySpaceObject.acquire(options);
+        const Wrapper = TnyScene.WRAPPERS.find(Candidate => CjsSchema.cast(object, Candidate.wrappedClass));
+        if (!Wrapper) throw new TypeError("TnyScene.Fetch requires a live EveSpaceObject2.");
+        const wrapper = Wrapper.fromWrapped(object, options);
+        this.AddObject(wrapper);
+        return wrapper;
+    }
+
+    /**
+     * Adds a space object through the native scene list, once. The scene owns registration.
+     * @param {TnySpaceObject} object Object to add.
      * @returns {boolean} True when newly added; false when already present.
      */
     AddObject(object)
@@ -49,14 +76,14 @@ export class TnyScene
         this._ValidateObject(object);
         const objects = this.wrapped.objects;
         if (objects.indexOf(object.wrapped) !== -1) return false;
-        if (!objects.Append(object.wrapped)) throw new TypeError("The scene rejected the ship.");
+        if (!objects.Append(object.wrapped)) throw new TypeError("The scene rejected the object.");
         this._objects.push(object);
         return true;
     }
 
     /**
-     * Removes membership without destroying the ship or its resources.
-     * @param {TnyShip} object Ship to remove.
+     * Removes membership without destroying the object or its resources.
+     * @param {TnySpaceObject} object Object to remove.
      * @returns {boolean} Whether the ship was present and removed.
      */
     RemoveObject(object)
@@ -101,7 +128,7 @@ export class TnyScene
         return path;
     }
 
-    /** @returns {TnyShip[]} The wrappers this scene added, in order. */
+    /** @returns {TnySpaceObject[]} The wrappers this scene added, in order. */
     GetObjects()
     {
         return this._objects.slice();
@@ -122,7 +149,7 @@ export class TnyScene
     /** Rejects incompatible wrappers before mutating the native list. */
     _ValidateObject(object)
     {
-        if (!CjsSchema.cast(object, TnyShip))
-            throw new TypeError("TnyScene requires a TnyShip.");
+        if (!CjsSchema.cast(object, TnySpaceObject))
+            throw new TypeError("TnyScene requires a TnySpaceObject.");
     }
 }

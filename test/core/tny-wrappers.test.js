@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsLibrary } from "../../npm/dist/core/CjsLibrary.js";
 import { TnyShip } from "../../npm/dist/wrap/objects/TnyShip.js";
+import { TnyMobile } from "../../npm/dist/wrap/objects/TnyMobile.js";
+import { TnyStationary } from "../../npm/dist/wrap/objects/TnyStationary.js";
+import { EveStation2 } from "../../npm/dist/trinity/eve/spaceObject/EveStation2.js";
+import { EveMobile } from "../../npm/dist/trinity/eve/spaceObject/EveMobile.js";
 import { TnyScene } from "../../npm/dist/wrap/TnyScene.js";
 import { EveShip2 } from "../../npm/dist/trinity/eve/spaceObject/EveShip2.js";
 import { EveSpaceScene } from "../../npm/dist/trinity/eve/scene/EveSpaceScene.js";
@@ -120,7 +124,7 @@ test("membership uses native notifications and never clears on absent removal", 
     assert.equal(start.mock.callCount(), 0, "adding does not restart controllers");
     assert.equal(scene.RemoveObject(absent), false);
     assert.equal(nativeScene.objects.length, 2, "Remove(-1) would incorrectly clear both ships");
-    assert.throws(() => scene.AddObject(first.wrapped), /TnyShip/);
+    assert.throws(() => scene.AddObject(first.wrapped), /TnySpaceObject/);
     assert.equal(scene.RemoveObject(first), true);
     assert.equal(nativeScene.objects[0], second.wrapped);
     assert.equal(scene.RemoveObject(first), false);
@@ -185,4 +189,28 @@ test("scene tracks the wrappers it shows", t =>
     scene.RemoveObject(first);
     scene.RemoveObject(first);
     assert.deepEqual(scene.GetObjects(), [ second ]);
+});
+
+test("scene Fetch wraps each object in its most specific wrapper and adds it", async t =>
+{
+    const library = new CjsLibrary(), nativeScene = new EveSpaceScene();
+    t.after(() => nativeScene.Destruct());
+    t.after(() => library.Shutdown());
+    await library.Initialize({ sof: null, characterLibrary: null });
+    const objects = { ship: new EveShip2(), station: new EveStation2(), mobile: new EveMobile() };
+    for (const object of Object.values(objects)) t.mock.method(object, "StartControllers");
+    t.mock.method(library, "Fetch", async source => objects[source.split(":")[0]] ?? null);
+    const scene = TnyScene.fromWrapped(nativeScene);
+
+    const ship = await scene.Fetch({ dna: "ship:a:b" });
+    const station = await scene.Fetch({ dna: "station:a:b", name: "Home" });
+    const mobile = await scene.Fetch({ dna: "mobile:a:b" });
+    assert.equal(ship.constructor, TnyShip);
+    assert.equal(station.constructor, TnyStationary);
+    assert.equal(mobile.constructor, TnyMobile);
+    assert.equal(objects.station.name, "Home");
+    assert.deepEqual(scene.GetObjects(), [ ship, station, mobile ]);
+    assert.equal(objects.ship.StartControllers.mock.callCount(), 1);
+    await assert.rejects(scene.Fetch({ dna: "none:a:b" }), /live EveSpaceObject2/);
+    await assert.rejects(TnyShip.fetch({ dna: "station:a:b" }), /TnyShip requires a live EveShip2/);
 });
