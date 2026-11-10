@@ -62,6 +62,20 @@ export class TnySpaceObject
     }
 
     /**
+     * The object's world-space bounding sphere, through the native bounds
+     * (`UpdateWorldBounds`, `GetBoundingSphere`), or null while it has none.
+     *
+     * @returns {{centre: number[], radius: number}|null} The sphere.
+     */
+    GetBoundingSphere()
+    {
+        this.wrapped.UpdateWorldBounds();
+        const sphere = new Float32Array(4);
+        if (!this.wrapped.GetBoundingSphere(sphere, 0)) return null;
+        return { centre: [ sphere[0], sphere[1], sphere[2] ], radius: sphere[3] };
+    }
+
+    /**
      * Validates fetch options and acquires the object through the library.
      *
      * @param {object} options See `fetch`.

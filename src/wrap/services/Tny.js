@@ -39,6 +39,15 @@ export class Tny
     /** The scene render driver (EveSpaceSceneRenderDriver); null before Initialize. */
     driver = null;
 
+    /** The camera controls (TnyCameraControls) over `camera`; null before Initialize. */
+    controls = null;
+
+    /** The browser input router (TnyInputMan) on the canvas; null before Initialize. */
+    input = null;
+
+    /** The object the camera frames (`Focus`), or null. */
+    focus = null;
+
     /** Device pixels per CSS pixel the canvas is sized at, read every frame. */
     pixelRatio = 1;
 
@@ -118,6 +127,11 @@ export class Tny
 
             this.driver = engine.createSpaceSceneDriver();
             this.camera = this.driver.camera = new engine.EveCamera();
+            this.input = new engine.TnyInputMan().Attach({ target: canvas });
+            this.controls = new engine.TnyCameraControls({ camera: this.camera,
+                getViewport: () => ({ width: canvas.width, height: canvas.height }),
+                getBounds: () => this.focus?.GetBoundingSphere() ?? { centre: [ 0, 0, 0 ], radius: 0 } });
+            this.controls.Install(this.input);
             this._Start();
 
             this.SetScene(scene ? await engine.TnyScene.fetch(scene) : engine.TnyScene.fromWrapped(CreateEmptyScene(engine)));
@@ -140,6 +154,34 @@ export class Tny
     {
         this.scene = scene;
         this.driver.scene = scene.wrapped;
+    }
+
+    /**
+     * Points the camera at an object: frames its bounding sphere, at once or
+     * as an eased flight (TnyCameraControls Frame and Fly). Null clears the
+     * focus without moving the camera.
+     *
+     * @param {TnySpaceObject|null} object The object, or null.
+     * @param {object} [options]
+     * @param {boolean} [options.animate=false] Fly rather than jump.
+     * @returns {boolean} Whether the camera moved; false while the object has no bounds yet.
+     */
+    Focus(object, { animate = false } = {})
+    {
+        this.focus = object;
+        if (!object || !object.GetBoundingSphere()) return false;
+        return animate ? this.controls.Fly() : this.controls.Frame();
+    }
+
+    /**
+     * Turns the user's camera input on or off; programmatic camera calls still work.
+     *
+     * @param {boolean} enabled Whether pointer and key input moves the camera.
+     */
+    SetInteractive(enabled)
+    {
+        if (enabled) this.controls.Install(this.input);
+        else this.controls.Uninstall();
     }
 
     /**
@@ -225,11 +267,15 @@ export class Tny
         this._jobs.recurring.push(this._job);
         device.SetRenderJobs(this._jobs);
 
-        const tick = () =>
+        let previous = globalThis.performance.now();
+        const tick = now =>
         {
             // The next frame first, so a throw out of PumpOS does not end the loop.
             this._frame = globalThis.requestAnimationFrame(tick);
             this._FitCanvas();
+            // Queued pointer and held-key input moves the camera before the driver updates it.
+            this.input.Update((now - previous) / 1000);
+            previous = now;
             blue.os.PumpOS();
         };
         this._frame = globalThis.requestAnimationFrame(tick);
@@ -276,9 +322,11 @@ export class Tny
             if (index >= 0) this._jobs.recurring.splice(index, 1);
             this._job = null;
         }
+        if (this.controls) this.controls.Uninstall();
+        if (this.input) this.input.Destruct();
         const library = this.library;
         this.library = null;
-        this.scene = this.camera = this.driver = null;
+        this.scene = this.camera = this.driver = this.controls = this.input = this.focus = null;
         this.backend = null;
         if (library) await library.Shutdown();
     }
@@ -287,7 +335,7 @@ export class Tny
 /** Loads the engine modules Initialize composes; Tny itself imports none. */
 async function LoadEngine()
 {
-    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, scene, tnyScene ] = await Promise.all([
+    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, tnyScene ] = await Promise.all([
         import("../../core/CjsLibrary.js"),
         import("../../core/scene/createSpaceSceneDriver.js"),
         import("../../blue/io/CjsBlueResFileSystemFetch.js"),
@@ -296,6 +344,8 @@ async function LoadEngine()
         import("../../trinity/index.js"),
         import("../../trinity/renderJob/index.js"),
         import("../../trinity/eve/camera/EveCamera.js"),
+        import("../input/TnyInputMan.js"),
+        import("../cameras/TnyCameraControls.js"),
         import("../../trinity/eve/scene/EveSpaceScene.js"),
         import("../TnyScene.js")
     ]);
@@ -312,6 +362,8 @@ async function LoadEngine()
         TriRenderJob: renderJob.TriRenderJob,
         TriStepPythonCB: renderJob.TriStepPythonCB,
         EveCamera: camera.EveCamera,
+        TnyInputMan: input.TnyInputMan,
+        TnyCameraControls: controls.TnyCameraControls,
         EveSpaceScene: scene.EveSpaceScene,
         TnyScene: tnyScene.TnyScene
     };
