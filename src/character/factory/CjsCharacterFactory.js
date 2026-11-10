@@ -294,68 +294,40 @@ export class CjsCharacterFactory
                     ? await library.FetchRecipeOption(recipeSex, found.category, entry) : null;
                 if (recipeOption === null)
                 {
-                    problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorvariation + "')" + (CjsCharacterLibraryManager.categories[found.category].maps === "garment" ? ", and the build ships no such folder" : ""));
+                    problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorVariation + "')" + (CjsCharacterLibraryManager.categories[found.category].maps === "garment" ? ", and the build ships no such folder" : ""));
                     continue;
                 }
                 if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
                 const value = { enabled: true, option: "recipe", recipePath: recipeOption.path, recipeVariation: recipeOption.variation };
                 if (entry.weight > 0) value.weight = entry.weight;
-                const palette = entry.colorvariation ? (await library.FetchPalettes(recipeOption)).find(record => record.name === entry.colorvariation) ?? null : null;
+                const palette = entry.colorVariation ? (await library.FetchPalettes(recipeOption)).find(record => record.name === entry.colorVariation) ?? null : null;
                 if (palette !== null) value.palette = palette.path;
-                else if (entry.colorvariation) problems.push(entry.path + ": no palette " + entry.colorvariation + " in its recipe option");
+                else if (entry.colorVariation) problems.push(entry.path + ": no palette " + entry.colorVariation + " in its recipe option");
                 dna.parts[name] = value;
                 continue;
             }
             if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
             const value = { enabled: true, option: found.option };
             if (entry.weight > 0) value.weight = entry.weight;
-            const read = CjsCharacterFactory._readRecipeColors(entry);
-            if (read.problem) problems.push(entry.path + ": " + read.problem);
-            if (read.colors)
+            // A pattern entry's own pattern colours are read and not applied: the part draws its colour variation's
+            // palette, whose pattern is its own. PROVISIONAL, with the colour ruling.
+            if (entry.pattern) problems.push(entry.path + ": pattern " + entry.pattern + ": its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)");
+            if (entry.colors.length && entry.colors.length !== 3) problems.push(entry.path + ": " + entry.colors.length + " colours, not one per area; skipped");
+            if (entry.colors.length === 3)
             {
-                value.colors = read.colors;
+                value.colors = entry.colors.map(color => Array.from(color));
                 value.specularColors = [ entry.specularColor1, entry.specularColor2, entry.specularColor3 ].map(color => Array.from(color));
             }
-            else if (entry.colorvariation)
+            else if (entry.colorVariation)
             {
                 const option = (await library.FetchOptions(recipeSex, found.category)).find(value => value.id === found.option);
-                const palette = (await library.FetchPalettes(option)).find(record => record.name === entry.colorvariation) ?? null;
+                const palette = (await library.FetchPalettes(option)).find(record => record.name === entry.colorVariation) ?? null;
                 if (palette !== null) value.palette = palette.path;
-                else problems.push(entry.path + ": no palette " + entry.colorvariation + " for " + found.option);
+                else problems.push(entry.path + ": no palette " + entry.colorVariation + " for " + found.option);
             }
             dna.parts[name] = value;
         }
         return { dna: CjsCharacterFactory.readJSON(dna), problems };
-    }
-
-    /**
-     * The shapes a recipe entry's `colors` takes (found: every `.prs` under `res:/graphics/character/` and
-     * `res:/animation_gstate/`, build 3670638, 380 recipes): a list of RGBA tuples, written `[(..), (..), (..)]` or as
-     * a tuple of tuples, then any scalars. `colors`: three tuples, one colour per area (3990 entries). `pattern`: an
-     * entry that names a `pattern` holds that pattern's colours as a patterned palette's `patternColors` does
-     * (`CjsCharacterColorVariation.patternOf`): the three pattern colours, the colours of areas 2 and 3, the placement
-     * (offset x, y; repeat x, y) and the rotation (20 entries, all garments and arms).
-     * @type {Object<string, { tuples: number, scalars: number }>}
-     */
-    static recipeColorShapes = { colors: { tuples: 3, scalars: 0 }, pattern: { tuples: 6, scalars: 1 } };
-
-    /**
-     * An entry's own colours, read by its shape (`recipeColorShapes`). A pattern entry's colours are read and not
-     * applied: the part draws its colour variation's palette, whose pattern is its own. PROVISIONAL, with the colour
-     * ruling. A shape that is neither is reported and its colours skipped, never thrown for the whole recipe.
-     * @param {{ colors: string, pattern: string }} entry The recipe entry.
-     * @returns {{ colors?: number[][], problem?: string }} The colours to apply, and what was not applied.
-     */
-    static _readRecipeColors(entry)
-    {
-        if (entry.colors === "") return {};
-        const tuples = [ ...entry.colors.matchAll(/\(([^()]*)\)/gu) ].map(match => match[1].split(",").map(Number));
-        const scalars = entry.colors.replace(/\(([^()]*)\)/gu, "").split(/[\[\],\s()]+/u).filter(token => token !== "").map(Number);
-        const shape = entry.pattern ? CjsCharacterFactory.recipeColorShapes.pattern : CjsCharacterFactory.recipeColorShapes.colors;
-        if (tuples.length !== shape.tuples || scalars.length !== shape.scalars || tuples.some(tuple => tuple.length !== 4 || !tuple.every(Number.isFinite)) || !scalars.every(Number.isFinite))
-            return { problem: "colours in an unread shape (" + tuples.length + " tuples, " + scalars.length + " scalars); skipped" };
-        if (entry.pattern) return { problem: "pattern " + entry.pattern + ": its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)" };
-        return { colors: tuples };
     }
 
     /**
@@ -383,12 +355,23 @@ export class CjsCharacterFactory
      * (`CjsCharacterLibraryConfiguration`): a recipe entry, with its colours and shape weights, is DNA, not part data
      * (Ruru, 2026-11-09). `kinds`: the `.prs` record, an envelope whose list's leading string is its `sex` and whose
      * mappings are its `modifiers`, `CjsCharacterRecipeModifier` records (`items`). `sourceLists`: the modifier's
-     * list forms (`normalizeCharacterYamlValues`). `match`: the character recipes `listRecipes` lists.
-     * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, string[]>>, match: string }}
+     * list forms (`normalizeCharacterYamlValues`). A modifier's `colors` text takes two shapes (every `.prs` under
+     * `res:/graphics/character/` and `res:/animation_gstate/`, build 3670638, 380 recipes): three RGBA tuples, one per
+     * colour area (3990 entries); or, for an entry that names a `pattern`, the pattern's items as a patterned palette
+     * writes them (20 entries, all garments and arms). `match`: the character recipes `listRecipes` lists.
+     * @type {{ kinds: Object<string, object>, sourceLists: Object<string, Object<string, (string|string[]|object)>>, match: string }}
      */
     static recipeConfiguration = {
         kinds: { recipes: { className: "CjsCharacterRecipe", envelope: true, items: "CjsCharacterRecipeModifier", leading: "sex", list: "modifiers" } },
-        sourceLists: { CjsCharacterRecipeModifier: { specularcolors: [ "specularColor1", "specularColor2", "specularColor3" ] } },
+        sourceLists: {
+            CjsCharacterRecipeModifier: {
+                colorvariation: "colorVariation",
+                decaldata: "decalData",
+                decalweight: "decalWeight",
+                specularcolors: [ "specularColor1", "specularColor2", "specularColor3" ],
+                colors: { text: true, list: "colors", pattern: [ "patternColor1", "patternColor2", "patternColor3", "patternAreaColor2", "patternAreaColor3", "patternTransform", "patternRotation" ] }
+            }
+        },
         match: "res:/graphics/character/**/*.prs"
     };
 

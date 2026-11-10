@@ -711,15 +711,15 @@ export class CjsCharacterLibraryManager
      * Ours, as `FetchOptions`.
      *
      * @param {"female"|"male"} sex The sex.
-     * @param {{ path: string, variation?: string, colorvariation?: string }} entry The recipe entry.
+     * @param {{ path: string, variation?: string, colorVariation?: string }} entry The recipe entry.
      * @returns {Promise<?{ category: string, option: ?string, path?: string, nude?: true }>} The selection: its category,
      *   and its option (with the option's path below the root) or null when no option matches (always null in a category
      *   with no option rule: `head`). `nude` marks an entry naming its category's bare part (`feet/feet_nude`; derived: the
      *   content's `_nude` folders name no option). Null for a path in no category.
      */
-    async ResolveRecipeEntry(sex, { path, variation = "", colorvariation = "" })
+    async ResolveRecipeEntry(sex, { path, variation = "", colorVariation = "" })
     {
-        const lower = path.toLowerCase(), wanted = colorvariation.toLowerCase();
+        const lower = path.toLowerCase(), wanted = colorVariation.toLowerCase();
         const category = Object.keys(CjsCharacterLibraryManager.categories).filter(name => lower.startsWith(name + "/")).sort((a, b) => b.length - a.length)[0];
         if (!category) return null;
         if (CjsCharacterLibraryManager.categories[category].options === null) return { category, option: null };
@@ -894,7 +894,7 @@ export class CjsCharacterLibraryManager
      *   then have.
      * @returns {Promise<?{ colors: Float32Array[], specularColors: ?Float32Array[], pattern: ?object }>} The
      *   colours, and the pattern of a patterned palette that is allowed; null for a skipped pattern.
-     * @throws {Error} For a malformed pattern, or a palette the options refuse.
+     * @throws {Error} For a palette the options refuse.
      */
     async FetchPalette(path, { pattern = "allow", neutralSpecular = false, specular = false } = {})
     {
@@ -909,7 +909,7 @@ export class CjsCharacterLibraryManager
         return {
             colors: [ Float32Array.from(value.color1), Float32Array.from(value.color2), Float32Array.from(value.color3) ],
             specularColors: specular ? specularColors.map(color => Float32Array.from(color)) : null,
-            pattern: value.pattern ? CjsCharacterColorVariation.patternOf(value, path) : null
+            pattern: value.pattern ? CjsCharacterColorVariation.patternOf(value) : null
         };
     }
 

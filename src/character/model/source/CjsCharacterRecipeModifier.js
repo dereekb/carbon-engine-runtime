@@ -6,76 +6,117 @@ import { vec4 } from "#math/vec4";
 // Resource pattern: res:/graphics/character/*
 
 /**
- * One authored modifier in a recipe. Optional presence is retained by the reader/writer.
+ * One modifier in a recipe: a part or shape, its weight, and the material values the game stored resolved for it
+ * (`colorVariation` only names the palette they came from). The reader translates the file's keys and its `colors`
+ * text (`CjsCharacterFactory.recipeConfiguration.sourceLists`); the field names follow the former catalog record's
+ * (CjsCharacterRecipeEntry) and the palette's (`CjsCharacterColorVariation`).
  * Storage defaults initialize empty records; they are not inferred authored defaults.
  */
 @meta.define("CjsCharacterRecipeModifier")
 export class CjsCharacterRecipeModifier
 {
 
-    /** Authored string, retained without normalization of spelling. */
+    /** The modifier's category, as written. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.string
     category = "";
 
-    /** Authored string; unlike a colour variation this field is not a colour array. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.string
-    colors = "";
-
-    /** Authored part or modifier reference; retained without resolving it to an object. */
+    /** The part or shape the modifier names, below the paper doll root, as written; 97 entries have none. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.string
     path = "";
 
-    /** Optional authored tuck flag. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.boolean
-    tuck = false;
-
-    /** Authored numeric value, retained at JavaScript number precision. */
+    /** A morph strength for shapes, a layer amount for makeup. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.float64
     weight = 0;
 
-    /** Authored local colour-variation name. Input null normalizes to an empty string. */
+    /** The tuck flag (true in every shipped recipe that writes it). */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.path(".color")
-    colorvariation = "";
+    @type.boolean
+    tuck = false;
 
-    /** Colour area 1's specular colour (the recipe's `specularcolors[0]`); neutral grey when it has none. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.color
-    specularColor1 = vec4.fromValues(.5, .5, .5, 1);
-
-    /** Colour area 2's specular colour (the recipe's `specularcolors[1]`); neutral grey when it has none. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.color
-    specularColor2 = vec4.fromValues(.5, .5, .5, 1);
-
-    /** Colour area 3's specular colour (the recipe's `specularcolors[2]`); neutral grey when it has none. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.color
-    specularColor3 = vec4.fromValues(.5, .5, .5, 1);
-
-    /** Authored variation name. */
+    /** The part's variation folder (`v0`, `v1`...), or "". */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.string
     variation = "";
 
-    /** Authored string, retained without normalization of spelling. */
+    /** The palette the colours came from, by its file stem (the file's `colorvariation`), or "". */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.string
+    colorVariation = "";
+
+    /**
+     * The modifier's own colours, one per colour area (the file's `colors` text, three tuples); empty when it states
+     * none or names a pattern.
+     */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.list("color")
+    colors = [];
+
+    /** Colour area 1's specular colour (the file's `specularcolors[0]`); neutral grey when it has none. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    specularColor1 = vec4.fromValues(.5, .5, .5, 1);
+
+    /** Colour area 2's specular colour (`specularcolors[1]`); neutral grey when it has none. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    specularColor2 = vec4.fromValues(.5, .5, .5, 1);
+
+    /** Colour area 3's specular colour (`specularcolors[2]`); neutral grey when it has none. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    specularColor3 = vec4.fromValues(.5, .5, .5, 1);
+
+    /** The pattern the modifier names, as written, or "". With one, the `colors` text holds the pattern fields below. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.string
     pattern = "";
 
-    /** Optional inline tagged decal record, or null. */
+    /** The pattern colour the pattern texture's R channel selects. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.object.ref("CjsProjectedDecal")
-    decaldata = null;
+    @type.color
+    patternColor1 = vec4.create();
 
-    /** Optional authored decal weight. */
+    /** The pattern colour the pattern texture's G channel selects. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    patternColor2 = vec4.create();
+
+    /** The pattern colour the pattern texture's B channel selects. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    patternColor3 = vec4.create();
+
+    /** Colour area 2's colour under the pattern. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    patternAreaColor2 = vec4.create();
+
+    /** Colour area 3's colour under the pattern. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.color
+    patternAreaColor3 = vec4.create();
+
+    /** The pattern's placement: offset x, y, then repeat x, y. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.vec4
+    patternTransform = vec4.create();
+
+    /** The pattern's rotation in degrees. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
     @type.float64
-    decalweight = 0;
+    patternRotation = 0;
+
+    /** A full inline projected decal (the file's `decaldata`), or null. */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.object.ref("CjsProjectedDecal")
+    decalData = null;
+
+    /** The decal's weight (the file's `decalweight`). */
+    @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
+    @type.float64
+    decalWeight = 0;
 
 }

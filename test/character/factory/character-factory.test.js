@@ -173,7 +173,7 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
   assert.deepEqual(problems.sort(), [
     "bodyshapes/thinshape: no part (no paper doll category)",
     "hair/long01: hair is not applied until the instance owns meshes (R6)",
-    "makeup/eyeliner/eyeliner_01: colours in an unread shape (2 tuples, 0 scalars); skipped",
+    "makeup/eyeliner/eyeliner_01: 2 colours, not one per area; skipped",
     "topmiddle/shirt01: pattern Camo: its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)"
   ]);
 });

@@ -11,7 +11,7 @@ import { installBlueServices } from "../../npm/dist/blue/blue.js";
 import "./frameLoop.js";
 
 /** A `.color` file's text, with every colour the given grey. */
-export const COLOR = (value = 0.5) => `colors: [!!python/tuple [${value},${value},${value},1], !!python/tuple [${value},${value},${value},1], !!python/tuple [${value},${value},${value},1]]\npattern: ''\npatternColors: []\n`;
+export const COLOR = (value = 0.5) => `colors: [!!python/tuple [${value},${value},${value},1], !!python/tuple [${value},${value},${value},1], !!python/tuple [${value},${value},${value},1]]\npattern: ''\npatternColors: [!!python/tuple [0.2,0.2,0.2,1.0], !!python/tuple [0.6,0.6,0.6,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0,0,8,8], 0.0]\n`;
 
 /**
  * Installs Blue's paths, resMan and a parts library over a synthetic build for one test.

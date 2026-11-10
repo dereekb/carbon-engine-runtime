@@ -153,14 +153,15 @@ export class CjsCharacterLibraryConfiguration
     ];
 
     /**
-     * The list forms of the kinds' files, by record class: each listed key of a file holds one tuple per named field
-     * (`normalizeCharacterYamlValues`). The `.prs` recipes are the character factory's
+     * The list forms of the kinds' files, by record class: each listed key of a file holds one tuple or number per
+     * named field (`normalizeCharacterYamlValues`). The `.prs` recipes are the character factory's
      * (`CjsCharacterFactory.recipeConfiguration`), so their modifier's list forms are too.
      */
     static sourceLists = {
         CjsCharacterColorVariation: {
             colors: [ "color1", "color2", "color3" ],
-            specularColors: [ "specularColor1", "specularColor2", "specularColor3" ]
+            specularColors: [ "specularColor1", "specularColor2", "specularColor3" ],
+            patternColors: [ "patternColor1", "patternColor2", "patternColor3", "patternAreaColor2", "patternAreaColor3", "patternTransform", "patternRotation" ]
         },
         CjsCharacterAttributes: {
             ambientColor: [ "ambientColor" ],

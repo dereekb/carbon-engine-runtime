@@ -7,7 +7,7 @@ import "../../support/frameLoop.js";
 
 const ROOT = "res:/graphics/character/female/paperdoll/";
 const META = "!!python/object:paperDoll.AvatarPartMetaData\n";
-const COLOR = value => `colors: [!!python/tuple [${value},0,0,1], !!python/tuple [0,${value},0,1], !!python/tuple [0,0,${value},1]]\npattern: ''\npatternColors: []\n`;
+const COLOR = value => `colors: [!!python/tuple [${value},0,0,1], !!python/tuple [0,${value},0,1], !!python/tuple [0,0,${value},1]]\npattern: ''\npatternColors: [!!python/tuple [0.2,0.2,0.2,1.0], !!python/tuple [0.6,0.6,0.6,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0.5,0.5,0.5,1.0], !!python/tuple [0,0,8,8], 0.0]\n`;
 const OPAQUE = "opaque";
 
 /** A synthetic build: one garment with a variation, an underwear folder, eye shadow, blush, a map decal and a head. */
@@ -138,11 +138,11 @@ test("an archetype's bloodline is the head that depends on it; a recipe entry se
     assert.equal(await library.FetchBloodline("female", "archetypes/cdshape"), "deteis", "the head's name, not the archetype type's spelling");
     assert.equal(await library.FetchBloodline("female", "archetypes/aashape"), null);
     const resolve = entry => library.ResolveRecipeEntry("female", entry);
-    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorvariation: "black" }), { category: "outer", option: "coat01_black", path: "outer/coat01" });
-    assert.deepEqual(await resolve({ path: "outer/Coat01", variation: "v0", colorvariation: "missing" }), { category: "outer", option: "coat01_plain", path: "outer/coat01" }, "'' is v0; case does not matter");
-    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorvariation: "red" }), { category: "outer", option: null }, "a pairing no type presets");
-    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "V1", colorvariation: "Black" }), { category: "outer", option: "coat01_black", path: "outer/coat01" }, "no name compares with case");
-    assert.deepEqual(await resolve({ path: "makeup/eyeshadow/eyeshadow_01", colorvariation: "aqua_a" }), { category: "makeup/eyeshadow", option: "eyeshadow_01", path: "makeup/eyeshadow/eyeshadow_01" }, "a makeup entry's colour variation is a palette");
+    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorVariation: "black" }), { category: "outer", option: "coat01_black", path: "outer/coat01" });
+    assert.deepEqual(await resolve({ path: "outer/Coat01", variation: "v0", colorVariation: "missing" }), { category: "outer", option: "coat01_plain", path: "outer/coat01" }, "'' is v0; case does not matter");
+    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "v1", colorVariation: "red" }), { category: "outer", option: null }, "a pairing no type presets");
+    assert.deepEqual(await resolve({ path: "outer/coat01", variation: "V1", colorVariation: "Black" }), { category: "outer", option: "coat01_black", path: "outer/coat01" }, "no name compares with case");
+    assert.deepEqual(await resolve({ path: "makeup/eyeshadow/eyeshadow_01", colorVariation: "aqua_a" }), { category: "makeup/eyeshadow", option: "eyeshadow_01", path: "makeup/eyeshadow/eyeshadow_01" }, "a makeup entry's colour variation is a palette");
     assert.deepEqual(await resolve({ path: "bottomunderwear/boxers01" }), { category: "bottomunderwear", option: "boxers01", path: "bottomunderwear/boxers01" });
     assert.deepEqual(await resolve({ path: "hair/long01" }), { category: "hair", option: null }, "a listed category with no matching type");
     assert.deepEqual(await resolve({ path: "head/caldari_deteis" }), { category: "head", option: null }, "a category with no option rule");

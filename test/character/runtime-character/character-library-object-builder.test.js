@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
     CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
     CjsCharacterPost, CjsCharacterScalarPost, CjsCharacterPose,
-    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType
+    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType, CjsCharacterColorVariation
 } from "../../../npm/dist/character/index.js";
 import { InitializeTrinityStub } from "../../support/trinityStub.js";
 
@@ -53,11 +53,11 @@ test("recipes retain leading sex, typed modifiers, source refs and embedded deca
     const recipe = Builder('- female\n- category: tattoo\n  path: tattoo/armleft/example\n  weight: 0.2\n  colorvariation: null\n  colors: "((0.1, 0.2, 0.3, 1),)"\n  decaldata: !!python/object:paperDoll.ProjectedDecal\n    layeres: 3\n    texturePath: res:/Original/Decal.dds\n', "recipes").CreateObject();
     assert.equal(recipe.sex, "female");
     assert.equal(Object.getPrototypeOf(recipe.modifiers[0]), CjsCharacterRecipeModifier.prototype);
-    assert.equal(recipe.modifiers[0].colorvariation, "");
-    assert.equal(recipe.modifiers[0].colors, "((0.1, 0.2, 0.3, 1),)");
-    assert.equal(Object.getPrototypeOf(recipe.modifiers[0].decaldata), CjsProjectedDecal.prototype);
-    assert.equal(recipe.modifiers[0].decaldata.layeres, 3);
-    assert.equal(recipe.modifiers[0].decaldata.texturePath, "res:/Original/Decal.dds");
+    assert.equal(recipe.modifiers[0].colorVariation, "");
+    assert.deepEqual(recipe.modifiers[0].colors.map(color => Array.from(color)), [ [ 0.1, 0.2, 0.3, 1 ] ]);
+    assert.equal(Object.getPrototypeOf(recipe.modifiers[0].decalData), CjsProjectedDecal.prototype);
+    assert.equal(recipe.modifiers[0].decalData.layeres, 3);
+    assert.equal(recipe.modifiers[0].decalData.texturePath, "res:/Original/Decal.dds");
     const noSex = Builder("- category: hair\n  path: hair/style\n  weight: 1\n", "recipes").CreateObject();
     assert.equal(noSex.sex, "");
     assert.equal(noSex.modifiers.length, 1);
@@ -72,6 +72,20 @@ test("a .type tuple's slots read into named fields; a shorter tuple keeps the de
     const short = Builder("!!python/tuple [hair/bob, '', '']", "types").CreateObject();
     assert.deepEqual([ short.partPath, short.colorVariant, short.bloodlineIDs ], [ "hair/bob", "", [] ]);
     assert.throws(() => Builder("[a, b, c, [], extra]", "types").CreateObject(), /has 5 items/u);
+});
+
+test("a palette's seven pattern items read into its pattern fields; another length throws", () =>
+{
+    const colors = "colors: [!!python/tuple [1, 0, 0, 1], !!python/tuple [0, 1, 0, 1], !!python/tuple [0, 0, 1, 1]]\npattern: caldari_C\n";
+    const palette = Builder(colors + "patternColors: [!!python/tuple [0.1, 0.2, 0.3], !!python/tuple [0.4, 0.5, 0.6, 1], !!python/tuple [0.7, 0.8, 0.9, 1], !!python/tuple [0, 0, 0, 1], !!python/tuple [1, 1, 1, 1], !!python/tuple [0, 0, 8, 8], 45.0]\n", "colorVariations").CreateObject();
+    assert.deepEqual(Array.from(palette.patternColor1), [ 0.1, 0.2, 0.3, 1 ].map(Math.fround));
+    assert.deepEqual(Array.from(palette.patternAreaColor3), [ 1, 1, 1, 1 ]);
+    assert.deepEqual(Array.from(palette.patternTransform), [ 0, 0, 8, 8 ]);
+    assert.equal(palette.patternRotation, 45);
+    const read = CjsCharacterColorVariation.patternOf(palette);
+    assert.equal(read.map, "res:/graphics/character/patterns/caldari_c_z.dds");
+    assert.deepEqual([ read.colors.length, read.areas.length, read.rotation ], [ 3, 2, 45 ]);
+    assert.throws(() => Builder(colors + "patternColors: []\n", "colorVariations").CreateObject(), /must list 7 item/u);
 });
 
 test("native light type records apply only the approved numeric boolean conversion", () =>
