@@ -1,4 +1,7 @@
-import { CjsSchema } from "#schema";
+import { CjsSchema, meta, type } from "#schema";
+import { CjsGraphRoot } from "../global/model/graph/CjsGraphRoot.js";
+import { INotify } from "../blue/exposure/INotify.js";
+import { CjsBlueGraph } from "../blue/formats/graph/CjsBlueGraph.js";
 import { CjsLibrary } from "../core/CjsLibrary.js";
 import { EveSpaceScene } from "../trinity/eve/scene/EveSpaceScene.js";
 import { TnySpaceObject } from "./objects/TnySpaceObject.js";
@@ -7,20 +10,32 @@ import { TnyShip } from "./objects/TnyShip.js";
 import { TnyStationary } from "./objects/TnyStationary.js";
 import { Tr2PostProcess2 } from "../trinity/postProcess/Tr2PostProcess2.js";
 
-/** Application membership wrapper over an existing space scene. */
-export class TnyScene
+/**
+ * Application wrapper over an existing space scene: its membership, post
+ * process and values. A graph class like the object wrappers: `GetValues`,
+ * `SetValues`, `GetTypeInfo`, and `_onModified(name)` after a change.
+ */
+@meta.define({ className: "TnyScene" })
+@meta.mapInterface(INotify)
+export class TnyScene extends CjsGraphRoot
 {
     static className = "TnyScene";
+
+    /**
+     * EveSpaceScene.ballpark (IEveBallpark): the scene shifts its origin by
+     * the ballpark's reference point each frame (EveUpdateContext.UpdateOrigin),
+     * so the world moves past the ego ball. Null when unset; the host owns the
+     * park (the runtime never imports Destiny).
+     */
+    @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
+    @type.object.ref("IEveBallpark")
+    ballpark = null;
 
     /** Existing scene graph; native lists retain their own admission and notifications. */
     wrapped = null;
 
-    /** Borrows a space scene without initializing, rendering or copying it. */
-    constructor(wrapped)
-    {
-        if (!CjsSchema.cast(wrapped, EveSpaceScene)) throw new TypeError("TnyScene requires a live EveSpaceScene.");
-        this.wrapped = wrapped;
-    }
+    /** The UI's change handler, called with a member's name; null when none. */
+    _onModified = null;
 
     /**
      * Acquires an authored space scene, preserving acquisition and type failures.
@@ -39,7 +54,47 @@ export class TnyScene
     /** Adapts an existing space scene without acquiring or initializing it again. */
     static fromWrapped(scene)
     {
-        return new TnyScene(scene);
+        if (!CjsSchema.cast(scene, EveSpaceScene)) throw new TypeError("TnyScene requires a live EveSpaceScene.");
+        const wrapper = new this();
+        wrapper.wrapped = scene;
+        wrapper.ballpark = scene.ballpark;
+        return wrapper;
+    }
+
+    /**
+     * Every declared value; null where unset. The ballpark is the host's own
+     * object, not graph data, so it comes back as itself (the graph's
+     * copyOverride, Carbon's Copier m_override), and SetValues keeps it so.
+     */
+    GetValues(options)
+    {
+        return super.GetValues({ full: true, copyOverride: object => object === this.ballpark ? object : undefined, ...options });
+    }
+
+    /**
+     * Carbon's type info shape for this scene: class `TnyScene`, its Tny layers
+     * as interfaces, and its members.
+     *
+     * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.
+     */
+    GetTypeInfo()
+    {
+        const className = CjsSchema.getClassName(this.constructor);
+        const classInfo = { module: "tny", classname: className, description: "", autovar: 0, signatures: {} };
+        const interfaces = Object.fromEntries(CjsSchema.getClassNames(this.constructor).filter(name => name.startsWith("Tny")).reverse().map(name => [ name, 0 ]));
+        const members = {};
+        for (const member of CjsSchema.getSchema(this.constructor).members)
+            members[member.name] = { type: member.type?.kind ?? member.type, iid_name: "", iid_ver: 0, description: "",
+                editflags: meta.READWRITE | meta.NOTIFY, min: null, max: null, choosers: null };
+        return [ classInfo, interfaces, members, {} ];
+    }
+
+    /** A value changed: push it to the scene, then tell the UI. */
+    OnModified(name)
+    {
+        if (name === "ballpark") this.wrapped.ballpark = this.ballpark;
+        if (this._onModified) this._onModified(name);
+        return true;
     }
 
     /**
@@ -153,3 +208,5 @@ export class TnyScene
             throw new TypeError("TnyScene requires a TnySpaceObject.");
     }
 }
+
+CjsBlueGraph.define(TnyScene, "TnyScene");

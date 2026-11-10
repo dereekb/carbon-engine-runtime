@@ -66,8 +66,7 @@ export class TnySpaceObject extends CjsGraphRoot
     static identityClass = TnySpaceObjectIdentity;
 
     /** Numeric ranges for the type info; a write is clamped to them. Graphene's editor limits: age in weeks 0-260. */
-    static ranges = { dirtLevel: [ 0, 1 ], age: [ 0, 260 ], activationStrength: [ 0, 1 ],
-        shieldDamage: [ 0, 1 ], armorDamage: [ 0, 1 ], hullDamage: [ 0, 1 ] };
+    static ranges = { age: [ 0, 260 ], activationStrength: [ 0, 1 ], shield: [ 0, 1 ], armor: [ 0, 1 ], hull: [ 0, 1 ] };
 
     /** Seconds a module animation fades over (a quarter of it); Graphene's demo value. */
     static ANIMATION_DURATION = 4;
@@ -82,14 +81,10 @@ export class TnySpaceObject extends CjsGraphRoot
     @type.object.ref("TnySpaceObjectIdentity")
     identity = null;
 
-    /** EveSpaceObject2.dirtLevel. */
-    @meta.mapAttribute(VALUE)
-    @type.float32
-    dirtLevel = null;
-
     /**
-     * Weeks since the last clean, written to dirtLevel. Ours, client behaviour
-     * as found in ccpwgl; Graphene's TrinityShipAge.
+     * Weeks since the last clean, written to the native dirtLevel (which is
+     * not a value here). Ours, client behaviour as found in ccpwgl; Graphene's
+     * TrinityShipAge.
      */
     @meta.mapAttribute(VALUE)
     @type.float32
@@ -100,20 +95,24 @@ export class TnySpaceObject extends CjsGraphRoot
     @type.float32
     activationStrength = null;
 
-    /** Shield damage taken, 0 to 1, over the core damage overlays (SetImpactDamageState). */
+    /**
+     * Shield left, 1 full to 0 gone: SetImpactDamageState's `shield`, which
+     * drives the core damage overlays and the ShieldDamage controller variable
+     * (Carbon gives that variable what remains, despite its name).
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
-    shieldDamage = null;
+    shield = null;
 
-    /** Armour damage taken, 0 to 1. */
+    /** Armour left, 1 to 0 (SetImpactDamageState `armor`). */
     @meta.mapAttribute(VALUE)
     @type.float32
-    armorDamage = null;
+    armor = null;
 
-    /** Hull damage taken, 0 to 1. */
+    /** Hull left, 1 to 0 (SetImpactDamageState `hull`). */
     @meta.mapAttribute(VALUE)
     @type.float32
-    hullDamage = null;
+    hull = null;
 
     /** Shield booster animation (SetImpactAnimation). */
     @meta.mapAttribute(VALUE)
@@ -284,14 +283,13 @@ export class TnySpaceObject extends CjsGraphRoot
         const take = (member, value) => { this._supported.add(member); this[member] = value; };
 
         take("name", object.name ?? "");
-        take("dirtLevel", object.dirtLevel);
         take("age", 0);
         take("activationStrength", object.activationStrength);
         take("cloak", false);
         // Every hull has the core damage overlays; an object without an impact overlay has none.
         if (object.impactOverlay)
         {
-            for (const member of [ "shieldDamage", "armorDamage", "hullDamage" ]) take(member, 0);
+            for (const member of [ "shield", "armor", "hull" ]) take(member, 1);
             for (const member of ANIMATIONS) take(member, false);
         }
         this.identity = this._Identity(dna);
@@ -347,11 +345,10 @@ export class TnySpaceObject extends CjsGraphRoot
         switch (name)
         {
             case "name": object.name = this.name; return;
-            case "dirtLevel": case "activationStrength": this._Bind(object, name).SetValue(this[name]); return;
-            case "age": this.SetValues({ dirtLevel: dirtLevelFromWeeks(this.age) }); return;
-            case "shieldDamage": case "armorDamage": case "hullDamage":
-                // SetImpactDamageState takes what remains of shield, armour and hull.
-                object.SetImpactDamageState(1 - this.shieldDamage, 1 - this.armorDamage, 1 - this.hullDamage, true);
+            case "activationStrength": this._Bind(object, name).SetValue(this[name]); return;
+            case "age": this._Bind(object, "dirtLevel").SetValue(dirtLevelFromWeeks(this.age)); return;
+            case "shield": case "armor": case "hull":
+                object.SetImpactDamageState(this.shield, this.armor, this.hull, true);
                 return;
             case "cloak": this._SetCloak(this.cloak); return;
             default:

@@ -10,6 +10,8 @@ are installed, and one frame loop pumps Blue. `Close()` undoes it.
 **Environment.** `tny.LoadScene(path)` swaps the scene and carries the shown
 objects across. `scene.SetPostProcess(nameOrPath | null)` sets the default post
 process from a shipped environment template, or restores the authored one.
+`scene.SetValues({ ballpark })` hands it the host's Destiny park, so the world
+moves past the ego ball.
 
 **Objects.** `TnySpaceObject`, `TnyMobile`, `TnyShip` and `TnyStationary`
 mirror the native classes. `X.fetch({ dna | resPath, awaitResources, name })`

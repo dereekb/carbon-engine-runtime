@@ -1,4 +1,5 @@
-import { CjsSchema } from "#schema";
+import { CjsSchema, meta } from "#schema";
+import { CjsBlueGraph } from "../blue/formats/graph/CjsBlueGraph.js";
 import { vec3 } from "#math/vec3";
 import { quat } from "#math/quat";
 import { mat4 } from "#math/mat4";
@@ -36,6 +37,7 @@ const ENTRIES = [ "docked", "dock", "appear" ];
  * - every other hangar (racial, AIR, the older generic ones): one bay at the
  *   origin; `me_generic_hangar_vfx_01a` animates the ship.
  */
+@meta.define({ className: "TnyHangar" })
 export class TnyHangar extends TnyScene
 {
     static className = "TnyHangar";
@@ -124,7 +126,7 @@ export class TnyHangar extends TnyScene
         const object = await TnySpaceObject.acquire({ dna, awaitResources });
         const hangar = TnyStationary.fromWrapped(object, { dna });
         const path = scene ?? TnyHangar.defaults[hangar.identity.hull]?.scene ?? null;
-        const result = new TnyHangar(path ? await library.Fetch(path) : TnyHangar.CreateSunlessScene());
+        const result = TnyHangar.fromWrapped(path ? await library.Fetch(path) : TnyHangar.CreateSunlessScene());
         result.hangar = hangar;
         result.AddObject(hangar);
         result._FindBays();
@@ -472,6 +474,8 @@ export class TnyHangar extends TnyScene
         this._timers.add(timer);
     }
 }
+
+CjsBlueGraph.define(TnyHangar, "TnyHangar");
 
 /** The first locator of a named set, or null. */
 function FindLocator(sets, name)

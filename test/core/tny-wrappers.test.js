@@ -248,7 +248,7 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     const values = ship.GetValues();
     assert.equal(values.name, "Probe");
     assert.equal(values.state, "standard");
-    assert.equal(values.shieldDamage, null, "no impact overlay, no damage");
+    assert.equal(values.shield, null, "no impact overlay, no shield, armour or hull");
     assert.equal(values.alwaysOn, null, "no booster set");
     assert.equal(values.displayKillCounterValue, null, "no kill-counter decal");
     assert.equal(values.slots, null, "no weapon locators");
@@ -256,25 +256,23 @@ test("ship values: discovered once, null where unsupported, pushed to native own
     const [ classInfo, interfaces, members ] = ship.GetTypeInfo();
     assert.equal(classInfo.classname, `TnyShip_${ship.id}`);
     assert.deepEqual(Object.keys(interfaces), [ "TnySpaceObject", "TnyMobile", "TnyShip", "stance" ]);
-    assert.ok(!("shieldDamage" in members) && "dirtLevel" in members);
+    assert.ok(!("shield" in members) && "age" in members && !("dirtLevel" in members), "age is the value; dirtLevel stays internal");
     assert.deepEqual(members.stance.choosers, [ [ 1, "Defence" ], [ 2, "Speed" ], [ 3, "Sniper" ] ]);
     assert.deepEqual(members.state.choosers.map(choice => choice[0]), [ "standard", "warp", "dock", "siege" ]);
 
     const heard = [], written = {};
     ship._onModified = name => heard.push(name);
     t.mock.method(native, "SetControllerVariable", (name, value) => { written[name] = value; });
-    ship.SetValues({ dirtLevel: 0.25, state: "siege", stance: 2, shieldDamage: 0.5 });
-    assert.ok(Math.abs(native.dirtLevel - 0.25) < 1e-6);
+    ship.SetValues({ age: 10, state: "siege", stance: 2, shield: 0.5 });
+    assert.ok(Math.abs(native.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6, "age writes the native dirtLevel");
     // EveSpaceObject2 mirrors dirtLevel into its DirtLevel controller variable when notified.
     assert.deepEqual(written, { DirtLevel: written.DirtLevel, IsWarping: 0, isDocked: 0, InSiegeMode: 1, hullMode: 2 }, "WarpTopSpeed is no state flag");
-    assert.equal(ship.shieldDamage, null, "a write to an unsupported value is ignored");
+    assert.equal(ship.shield, null, "a write to an unsupported value is ignored");
     // UpdateValues notifies in member-table order (derived first); the test checks which, not the order.
-    assert.deepEqual([ ...heard ].sort(), [ "dirtLevel", "stance", "state" ]);
+    assert.deepEqual([ ...heard ].sort(), [ "age", "stance", "state" ]);
 
-    ship.SetValues({ age: 10 });
-    assert.ok(Math.abs(native.dirtLevel - dirtLevelFromWeeks(10)) < 1e-6);
     ship.Destruct();
-    ship.SetValues({ dirtLevel: 0.5 });
+    ship.SetValues({ age: 20 });
     assert.equal(heard.includes("age"), true);
     assert.equal(heard.at(-1), "age", "after Destruct nothing is announced");
 });
@@ -312,4 +310,23 @@ test("wrapper ids are unique and kept; identity is read-only", () =>
     assert.notEqual(first.id, second.id);
     assert.equal(first.identity.SetValues({ hull: "x" }), false);
     assert.equal(first.identity.hull, null);
+});
+
+test("scene ballpark is a declared value pushed to EveSpaceScene.ballpark, null when unset", () =>
+{
+    const native = new EveSpaceScene();
+    const scene = TnyScene.fromWrapped(native);
+    assert.equal(scene.GetValues().ballpark, null, "unset");
+    assert.ok("ballpark" in scene.GetTypeInfo()[2]);
+    const heard = [];
+    scene._onModified = name => heard.push(name);
+    // A stand-in for the host's Destiny park: the scene calls GetReferencePoint only. A
+    // class instance, as a park is: the graph keeps it as a reference (a plain bag would be read as data).
+    const park = new class { GetReferencePoint(_time, out) { return out; } }();
+    scene.SetValues({ ballpark: park });
+    assert.equal(native.ballpark, park);
+    assert.equal(scene.GetValues().ballpark, park, "the host's park comes back as itself, not as values");
+    assert.deepEqual(heard, [ "ballpark" ]);
+    scene.SetValues({ ballpark: null });
+    assert.equal(native.ballpark, null);
 });
