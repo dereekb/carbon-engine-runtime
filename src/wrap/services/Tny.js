@@ -206,6 +206,48 @@ export class Tny
     }
 
     /**
+     * The engine's settings for a settings UI: every registered setting with
+     * its type, current value, when a change applies, its menu category and
+     * choices, and whether CjsLibrary makes it available here and why not.
+     *
+     * @returns {{name: string, type: string, value: *, applies: string, category: string[]|null, values: Array|null, available: boolean, reason: string|null}[]} The settings.
+     */
+    GetSettings()
+    {
+        const settings = this._engine.TriSettingsRegistrar.getSettings();
+        return settings.GetNames().map(name =>
+        {
+            const entry = settings.FindSetting(name);
+            const { available, reason } = this.library.GetSettingAvailability(name);
+            return { name, type: entry.valueType, value: settings.GetValue(name), applies: entry.applies,
+                category: entry.category ?? null, values: entry.values ?? null, available, reason };
+        });
+    }
+
+    /**
+     * Reads one setting.
+     *
+     * @param {string} name A registered setting.
+     * @returns {*} Its value.
+     */
+    GetSetting(name)
+    {
+        return this._engine.TriSettingsRegistrar.getSettings().GetValue(name);
+    }
+
+    /**
+     * Writes one setting through CjsLibrary, which validates it, applies it to
+     * its owner and holds forced settings at their fixed value.
+     *
+     * @param {string} name A registered setting.
+     * @param {*} value A value of its type.
+     */
+    SetSetting(name, value)
+    {
+        this.library.SetConfiguration({ settings: { [name]: value } });
+    }
+
+    /**
      * Replaces the default scene draw. The handler runs inside the device's
      * render job each frame, after Blue's tick; it may call `RenderScene`.
      *
@@ -358,7 +400,7 @@ export class Tny
 /** Loads the engine modules Initialize composes; Tny itself imports none. */
 async function LoadEngine()
 {
-    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, sceneDriver, tnyScene ] = await Promise.all([
+    const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, sceneDriver, tnyScene, settingsRegistrar ] = await Promise.all([
         import("../../core/CjsLibrary.js"),
         import("../../core/scene/createSpaceSceneDriver.js"),
         import("../../blue/io/CjsBlueResFileSystemFetch.js"),
@@ -371,7 +413,8 @@ async function LoadEngine()
         import("../cameras/TnyCameraControls.js"),
         import("../../trinity/eve/scene/EveSpaceScene.js"),
         import("../../trinity/eve/scene/EveSpaceSceneRenderDriver.js"),
-        import("../TnyScene.js")
+        import("../TnyScene.js"),
+        import("../../trinity/core/TriSettingsRegistrar.js")
     ]);
     return {
         CjsLibrary: core.CjsLibrary,
@@ -381,6 +424,7 @@ async function LoadEngine()
         TR2SHADERMODEL: consts.TR2SHADERMODEL,
         trinity: trinityIndex.trinity,
         Tr2Renderer: trinityIndex.Tr2Renderer,
+        TriSettingsRegistrar: settingsRegistrar.TriSettingsRegistrar,
         Tr2RenderContext_GetMainThreadRenderContext: trinityIndex.Tr2RenderContext_GetMainThreadRenderContext,
         Tr2RenderJobs: renderJob.Tr2RenderJobs,
         TriRenderJob: renderJob.TriRenderJob,
