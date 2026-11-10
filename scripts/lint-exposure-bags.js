@@ -278,8 +278,10 @@ export function compareBag(bag, rows)
             findings.push({ key: `${carbon.label} flags`, detail: `Carbon's flags are ${carbon.row.flags.join(" | ")} (${where}); the bag's evaluate to ${member.flags === null ? "an expression it cannot read" : `0x${member.flags.toString(16)}`}.` });
         if (carbon.accessor && !(bag.accessors ?? new Set()).has(member.key))
             findings.push({ key: `${carbon.label} accessor`, detail: `${carbon.row.macro} over ${carbon.row.member} (${where}) is realised as an accessor "${member.key}"; the class has no such getter.` });
-        // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds.
-        const key = carbon.family === "METHOD" && member.key ? member.key.replace(/__\w+$/, "") : member.key;
+        // An overload split (`Name__Discriminator`) carries the row on the variant the macro binds. A key that is Carbon's own name
+        // is kept whole, since Carbon names can contain `__` themselves (TriMatrix's Py__init__).
+        const split = carbon.family === "METHOD" && member.key && !(carbon.keys ?? []).includes(member.key);
+        const key = split ? member.key.replace(/__\w+$/, "") : member.key;
         if (carbon.keys && !carbon.keys.includes(key))
             findings.push({ key: `${carbon.label} key`, detail: `${carbon.label} lands on "${member.key}"; the key is ${carbon.keys.map(key => `"${key}"`).join(" or ")} (${carbon.source}, ${where}).` });
     }

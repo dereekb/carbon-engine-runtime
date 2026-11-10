@@ -1,5 +1,5 @@
 import { exposure as be } from "#be";
-import { CjsSchema } from "#schema";
+import { type } from "#schema";
 import { Tr2Sprite2dDisplayList } from "./Tr2Sprite2dDisplayList.js";
 import { Tr2Sprite2dDisplayListEntry } from "./Tr2Sprite2dDisplayListEntry.js";
 import { Tr2Effect } from "../shader/Tr2Effect.js";
@@ -63,86 +63,93 @@ const s_layerIndices = [0, 1, 3, 3, 1, 2];
  * Complete canonical members retain native order and indexed aliases. Legacy
  * getField/getDefaults expose no Scene fields; use Blue declaration consumers.
  */
-@CjsSchema.be.define({
-  className: "Tr2Sprite2dScene",
+@be.define({
+  name: "Tr2Sprite2dScene",
+  inherit: [ INotify, Tr2DeviceResource ],
+  interfaces: [ ITr2Scene, ITr2Updateable, INotify ],
+  // Tr2Sprite2dScene_Blue.cpp:30-252, in Carbon's order.
   members: [
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"name","type":{"kind":"wstring"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"display","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"drawWireFrame","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"ignoreClip","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":1},"name":"lastPickPos","type":{"kind":"vec2"},"edit":{"read":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"isFullscreen","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"is2dRender","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"is2dPick","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"translation","type":{"kind":"vec3"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"displayX","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true},"key":"translation","index":0},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"displayY","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true},"key":"translation","index":1},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"rotation","type":{"kind":"quat"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"scaling","type":{"kind":"vec3"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"displayWidth","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"displayHeight","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"depthMin","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"depthMax","type":{"kind":"float32"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE_WITH_CHOOSER","flags":19,"chooser":"trinity.Tr2SpriteObjectPickState"},"name":"pickState","type":{"kind":"int32"},"edit":{"read":true,"write":true,"persist":true},"enum":{"enumType":"trinity.Tr2SpriteObjectPickState"}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"clearBackground","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"backgroundColor","type":{"kind":"color"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":17},"name":"children","type":{"kind":"list","className":"ITr2SpriteObject","itemType":"ITr2SpriteObject"},"edit":{"read":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":17},"name":"background","type":{"kind":"list","className":"ITr2SpriteObject","itemType":"ITr2SpriteObject"},"edit":{"read":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":19},"name":"clearFinishedCurveSets","type":{"kind":"boolean"},"edit":{"read":true,"write":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":17},"name":"curveSets","type":{"kind":"list","className":"TriCurveSet","itemType":"TriCurveSet"},"edit":{"read":true,"persist":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":1},"name":"ubershader2d","type":{"kind":"rootRef","className":"Tr2Effect"},"edit":{"read":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":1},"name":"ubershader3d","type":{"kind":"rootRef","className":"Tr2Effect"},"edit":{"read":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":3},"name":"defaultTextureUpdates","type":{"kind":"boolean"},"edit":{"read":true,"write":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":3},"name":"maxItemsToRender","type":{"kind":"uint32"},"edit":{"read":true,"write":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":3},"name":"maxDrawCallsToRender","type":{"kind":"uint32"},"edit":{"read":true,"write":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":7},"name":"maxSpriteCount","type":{"kind":"uint32"},"edit":{"read":true,"write":true,"notify":true}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_ATTRIBUTE","flags":1},"name":"captureIndexDataCapacity","type":{"kind":"uint32"},"edit":{"read":true}}
-  ],
-  // MAP_PROPERTY rows (Tr2Sprite2dScene_Blue.cpp:229-239): flags derived from the accessors.
-  properties: [
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_PROPERTY","flags":3},"name":"useLinearColorSpace","type":{"kind":"boolean"},"property":{"persisted":false}},
-    {"carbon":{"member":true},"exposure":{"macro":"MAP_PROPERTY","flags":3},"name":"gammaCorrectText","type":{"kind":"boolean"},"property":{"persisted":false}}
+    [ be.ATTR, "name", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "display", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "drawWireFrame", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "ignoreClip", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "lastPickPos", be.READ ],
+    [ be.ATTR, "isFullscreen", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "is2dRender", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "is2dPick", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "translation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayX", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayY", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "rotation", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "scaling", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayWidth", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "displayHeight", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depthMin", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "depthMax", be.READWRITE | be.PERSIST ],
+    [ be.ATTR_CHOOSER, "pickState", be.READWRITE | be.PERSIST | be.ENUM, "trinity.Tr2SpriteObjectPickState" ],
+    [ be.ATTR, "clearBackground", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "backgroundColor", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "children", be.READ | be.PERSIST ],
+    [ be.ATTR, "background", be.READ | be.PERSIST ],
+    [ be.ATTR, "clearFinishedCurveSets", be.READWRITE | be.PERSIST ],
+    [ be.ATTR, "curveSets", be.READ | be.PERSIST ],
+    [ be.ATTR, "ubershader2d", be.READ ],
+    [ be.ATTR, "ubershader3d", be.READ ],
+    [ be.ATTR, "defaultTextureUpdates", be.READWRITE ],
+    [ be.ATTR, "maxItemsToRender", be.READWRITE ],
+    [ be.ATTR, "maxDrawCallsToRender", be.READWRITE ],
+    [ be.ATTR, "maxSpriteCount", be.READWRITE | be.NOTIFY ],
+    [ be.ATTR, "captureIndexDataCapacity", be.READ ],
+    [ be.PROP, "useLinearColorSpace" ],
+    [ be.PROP, "gammaCorrectText" ],
+    [ be.METHOD, "PickObject", be.WRAP_OPTIONAL_ARGS ]
   ]
 })
-@be.inherit(INotify, Tr2DeviceResource)
-@be.mapInterface(ITr2Scene)
-@be.mapInterface(ITr2Updateable)
-@be.mapInterface(INotify)
 export class Tr2Sprite2dScene extends ITr2Scene
 {
   /** Native wide-string scene label. @type {string} */
+  @type.wstring
   name = "";
 
   /** Whether update and rendering work is enabled; clocks are retained while hidden. @type {boolean} */
+  @type.boolean
   display = true;
 
   /** Requests wireframe fill while the scene renders. @type {boolean} */
+  @type.boolean
   drawWireFrame = false;
 
   /** Disables scene clipping for native rendering diagnostics. @type {boolean} */
+  @type.boolean
   ignoreClip = false;
 
   /** Coordinates of the most recent pick in scene space. @type {Float32Array} */
+  @type.vec2
   lastPickPos = vec2.create();
 
   /** Requests native viewport-sized display dimensions each rendered frame. @type {boolean} */
+  @type.boolean
   isFullscreen = false;
 
   /** Selects screen-space rather than 3D scene rendering. @type {boolean} */
+  @type.boolean
   is2dRender = true;
 
   /** Selects screen-space picking rather than a projected 3D pick. @type {boolean} */
+  @type.boolean
   is2dPick = true;
 
   /**
    * Scene translation; displayX and displayY alias the first two components.
    *
-   * @adapted Native stored translation component exposed through an indexed canonical member (displayX, displayY).
+   * @adapted Carbon maps displayX and displayY on m_translation.x and .y; here they are accessors over the first two components.
    * @type {Float32Array}
    */
+  @type.vec3
   translation = vec3.create();
 
   /** Reads the native translation component alias. @returns {number} displayX coordinate. */
+  @type.float32
   get displayX()
   {
     return this.translation[0];
@@ -155,6 +162,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
   }
 
   /** Reads the native translation component alias. @returns {number} displayY coordinate. */
+  @type.float32
   get displayY()
   {
     return this.translation[1];
@@ -167,63 +175,84 @@ export class Tr2Sprite2dScene extends ITr2Scene
   }
 
   /** Scene orientation quaternion for 3D rendering. @type {Float32Array} */
+  @type.quat
   rotation = quat.create();
 
   /** Scene scale for 3D rendering, initially one on each axis. @type {Float32Array} */
+  @type.vec3
   scaling = vec3.fromValues(1, 1, 1);
 
   /** Displayed scene width, updated by the native renderer when fullscreen. @type {number} */
+  @type.float32
   displayWidth = 1;
 
   /** Displayed scene height, updated by the native renderer when fullscreen. @type {number} */
+  @type.float32
   displayHeight = 1;
 
   /** Lower bound of the native scene depth range. @type {number} */
+  @type.float32
   depthMin = 0;
 
   /** Upper bound of the native scene depth range. @type {number} */
+  @type.float32
   depthMax = 0;
 
   /** Native chooser controlling scene and child picking. @type {number} */
+  @type.int32
+  @type.enum("trinity.Tr2SpriteObjectPickState")
   pickState = 1;
 
   /** Requests clearing the render target to backgroundColor before rendering. @type {boolean} */
+  @type.boolean
   clearBackground = false;
 
   /** Native packed-color default 0x000000ff represented as RGBA [0,0,1,0]. @type {Float32Array} */
+  @type.color
   backgroundColor = vec4.fromValues(0, 0, 1, 0);
 
   /** Owned sprites contained by this scene; no container-parent callback is installed by native Scene. @type {BlueList<ITr2SpriteObject>} */
+  @type.list("ITr2SpriteObject")
   children = new BlueList(ITr2SpriteObject, { className: null, listOps: 0 });
 
   /** Owned non-pickable background sprites that fill the scene extent. @type {BlueList<ITr2SpriteObject>} */
+  @type.list("ITr2SpriteObject")
   background = new BlueList(ITr2SpriteObject, { className: null, listOps: 0 });
 
   /** Removes stopped curve sets after all sets have received the current update. @type {boolean} */
+  @type.boolean
   clearFinishedCurveSets = false;
 
   /** Owned curve sets updated with raw real and simulation clocks in list order. @type {BlueList<TriCurveSet>} */
+  @type.list("TriCurveSet")
   curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet", listOps: 0 });
 
   /** Carbon m_uberShader2d: the 2D UI effect, created by the constructor. @type {Tr2Effect|null} */
+  @type.object.ref("Tr2Effect")
   ubershader2d = null;
 
   /** Carbon m_uberShader3d: the 3D UI effect, created by the constructor. @type {Tr2Effect|null} */
+  @type.object.ref("Tr2Effect")
   ubershader3d = null;
 
   /** Native diagnostic flag that flashes the default texture during rendering. @type {boolean} */
+  @type.boolean
   defaultTextureUpdates = false;
 
   /** Maximum sprite/items submitted by the native renderer; UINT32_MAX means unlimited. @type {number} */
+  @type.uint32
   maxItemsToRender = 4294967295;
 
   /** Maximum native draw calls submitted; UINT32_MAX means unlimited. @type {number} */
+  @type.uint32
   maxDrawCallsToRender = 4294967295;
 
   /** Maximum sprites per direct draw call; a notified change clamps it and releases resources. @type {number} */
+  @type.uint32
   maxSpriteCount = 1024;
 
   /** Capacity, in indices, of the display-list capture index storage; grows as needed. @type {number} */
+  @type.uint32
   captureIndexDataCapacity = 1536;
 
   /** Carbon m_useLinearColorSpace, behind the Blue useLinearColorSpace property. @type {boolean} */
@@ -264,6 +293,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
   }
 
   /** Blue useLinearColorSpace (Tr2Sprite2dScene_Blue.cpp:229-233). @returns {boolean} Whether UI colour math is linear. */
+  @type.boolean
   get useLinearColorSpace()
   {
     return this._IsUsingLinearColorSpace();
@@ -276,6 +306,7 @@ export class Tr2Sprite2dScene extends ITr2Scene
   }
 
   /** Blue gammaCorrectText (Tr2Sprite2dScene_Blue.cpp:235-239). @returns {boolean} Whether font output is gamma corrected. */
+  @type.boolean
   get gammaCorrectText()
   {
     return this._IsGammaCorrectingText();
@@ -1448,7 +1479,6 @@ export class Tr2Sprite2dScene extends ITr2Scene
    * @param {number} [_pickFilter] Carbon's unused Be::Optional<int> pick filter.
    * @returns {ITr2SpriteObject|null} The picked object.
    */
-  @be.mapMethodAndWrapOptionalArgs()
   PickObject(x, y, projection = null, view = null, viewport = null, _pickFilter = undefined)
   {
     let finalX = x, finalY = y;

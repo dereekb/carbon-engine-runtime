@@ -590,15 +590,20 @@ test("TriMatrix persists its matrix elements, and PTriMatrix members hold the ma
 {
   const matrix = new TriMatrix();
   assert.equal(CjsSchema.getConstructor("TriMatrix"), TriMatrix);
-  assert.deepEqual(CjsSchema.getSchema(TriMatrix).members.slice(0, 2).map(({ name, key, index }) => [ name, key, index ]),
-    [ [ "_11", "_matrix", 0 ], [ "_12", "_matrix", 1 ] ]);
+  // The element rows are accessors over the mat4 (TriMatrix_Blue.cpp:18-33).
+  assert.deepEqual(CjsSchema.getSchema(TriMatrix).properties.slice(0, 2).map(({ name, key }) => [ name, key ]),
+    [ [ "_11", "_11" ], [ "_12", "_12" ] ]);
   assert.deepEqual(Array.from(matrix.GetMatrix()), [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]);
   matrix.Translation(1, 2, 3);
   const other = new TriMatrix();
   other.Scaling(2, 2, 2);
   // Carbon this * other applies this first: the translation is then scaled.
-  matrix.Multiply(other);
+  matrix.PyMultiply(other);
   assert.deepEqual(Array.from(matrix.GetMatrix().subarray(12, 15)), [ 2, 4, 6 ]);
+  // The _41.._43 members are the translation elements, and Py__init__ fills elements in _11.._44 order.
+  assert.deepEqual([ matrix._41, matrix._42, matrix._43 ], [ 2, 4, 6 ]);
+  other.Py__init__(5, 6);
+  assert.deepEqual([ other._11, other._12, other._13 ], [ 5, 6, 0 ]);
   for (const Owner of [ Tr2InteriorPlaceable, Tr2SkinnedObject ])
   {
     const type = CjsSchema.getField(Owner, "transform")?.type;
