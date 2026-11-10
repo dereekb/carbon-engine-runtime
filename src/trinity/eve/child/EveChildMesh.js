@@ -1063,20 +1063,25 @@ export class EveChildMesh extends EveChildTransform
       this._perObjectData.ps.Set("impactDataOffset", [ this.damageOverlay.GetDataTextureOffset() ]);
     }
 
-    // Carbon (cpp:962-970): attachments refresh their lights from the updated
-    // world transform. Bones come from GetBoneTransforms (animationUpdater) -
-    // null until the JS animation seam exists.
-    for (const attachment of this.attachments)
+    // Carbon EveChildMesh.cpp:1081-1089: the attachments refresh their lights
+    // from the updated world transform and the mesh's bone palette, so a light
+    // on a bone follows it. The palette is fetched only when there are attachments.
+    if (this.attachments.length)
     {
-      if (!attachment) continue;
-      attachment.UpdateLights(this.worldTransform, null, 0, this._activationStrength, 0);
+      const { bones, boneCount } = this.GetBoneTransforms();
+
+      for (const attachment of this.attachments)
+      {
+        if (!attachment) continue;
+        attachment.UpdateLights(this.worldTransform, bones, boneCount, this._activationStrength, 0);
+      }
     }
 
     this.UpdateMorphAnimationBuffer();
 
     // Carbon (cpp:974-997): world AABB from the mesh bounds, world sphere
     // enclosing it. The skinned GetBounds overload (animation transforms +
-    // morph targets, cpp:977-982) awaits the animation seam; the maintained
+    // morph targets, cpp:977-982) is not ported yet; the maintained
     // Tr2MeshBase GetBounds supplies the static/material bounds meanwhile.
     this._worldBoundsValid = false;
     const bounds = this.mesh ? this.mesh.GetBounds() : null;
@@ -1224,7 +1229,7 @@ export class EveChildMesh extends EveChildTransform
    * sphere, the parent LOD, and the authored screen-size thresholds, recording
    * the mesh and per-instance screen sizes the batch path then draws at.
    *
-   * @adapted Bone-fed decal bounds still await the decal seam and the raytracing refresh is not ported yet; the LOD/screen-size math and the bone-fed attachment pass are ported.
+   * @adapted The raytracing refresh is not ported yet; the LOD/screen-size math and the bone-fed attachment and decal passes are ported.
    */
 
   UpdateVisibility(updateContext, _parentTransform = null, parentLod = Tr2Lod.TR2_LOD_HIGH)
@@ -1313,12 +1318,17 @@ export class EveChildMesh extends EveChildTransform
 
     if (this._isVisible)
     {
+      // Carbon EveChildMesh.cpp:441-452: an initialized animation updater gives
+      // each decal the mesh's bone palette before the decal's own visibility, so
+      // a decal follows the bone it is parented to. Carbon passes &m_parentData
+      // (cpp:451), refreshed in UpdateAsyncronous.
+      const updater = this.animationUpdater;
+      const animated = !!updater && updater.IsInitialized();
+
       for (const decal of this.decals)
       {
-        // Carbon (cpp:441-446) feeds animated bone matrices to the decal first
-        // - skipped until the JS animation seam exists. Carbon passes
-        // &m_parentData (cpp:450), refreshed in UpdateSyncronous.
-        decal?.UpdateVisibility(updateContext, this._parentData);
+        if (animated) decal.SetBoneMatrix(bones, boneCount);
+        decal.UpdateVisibility(updateContext, this._parentData);
       }
     }
 

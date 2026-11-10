@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
-import { EveSpaceObject2, EveUpdateContext, Tr2Lod, Tr2Mesh, TriFrustum } from "../../npm/dist/trinity/index.js";
+import { EveSpaceObject2, EveSpaceObjectDecal, EveUpdateContext, Tr2GrannyAnimation, Tr2Lod, Tr2Mesh, TriFrustum } from "../../npm/dist/trinity/index.js";
 import { EveChildMesh } from "../../npm/dist/trinity/eve/child/EveChildMesh.js";
 
 // Carbon's decal data flow is an UPDATE PASS, not a values transport: the owner
@@ -11,12 +11,52 @@ import { EveChildMesh } from "../../npm/dist/trinity/eve/child/EveChildMesh.js";
 function decalSpy()
 {
   const seen = [];
+  const calls = [];
   return {
     seen,
+    calls,
     boneCalls: 0,
-    SetBoneMatrix() { this.boneCalls += 1; },
-    UpdateVisibility(_updateContext, parentData) { seen.push(parentData); return true; }
+    SetBoneMatrix(bones, boneCount) { this.boneCalls += 1; calls.push({ method: "SetBoneMatrix", bones, boneCount }); },
+    UpdateVisibility(_updateContext, parentData) { seen.push(parentData); calls.push({ method: "UpdateVisibility" }); return true; }
   };
+}
+
+/** A child mesh with unit bounds and no geometry, updated once under a parent; everything else is the real class. */
+function updatedChild(configure = () => {})
+{
+  const child = new EveChildMesh();
+  child.mesh = new (class extends Tr2Mesh
+  {
+    GetBounds() { return { min: [ -1, -1, -1 ], max: [ 1, 1, 1 ] }; }
+    GetAreas() { return []; }
+  })();
+  configure(child);
+
+  child.UpdateAsyncronous(new EveUpdateContext(), {
+    localToWorldTransform: mat4.create(),
+    spaceObjectParent: new EveSpaceObject2(),
+    activationStrength: 1,
+    boneCount: 0,
+    bones: null
+  });
+  return child;
+}
+
+/** A real animation updater pinned to a two-bone palette whose bone 1 has moved; `initialized` is its IsInitialized answer. */
+function animationUpdater(initialized)
+{
+  const palette = new Float32Array(24);
+  palette.set([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 ], 0);
+  palette.set([ 1, 0, 0, 0, 0, 1, 0, -450, 0, 0, 1, 0 ], 12);
+
+  const updater = new (class extends Tr2GrannyAnimation
+  {
+    IsInitialized() { return initialized; }
+    HasMeshBinding() { return true; }
+    GetMeshBoneCount() { return 2; }
+    GetMeshBoneMatrixList() { return palette; }
+  })();
+  return { updater, palette };
 }
 
 function visibleHull()
@@ -126,4 +166,61 @@ test("a child mesh hands its decals its own ParentData, placed by the child", ()
   assert.deepEqual(Array.from(parentData.transform.slice(12, 15)), [ 7, 8, 9 ]);
   assert.deepEqual(Array.from(parentData.shipData), [ 0.5, 0.6, 0.7, 0.8 ].map(Math.fround),
     "cpp:1015 - the rest comes from the space object parent");
+});
+
+// EveChildMesh.cpp:441-452: an initialized animation updater's bone palette goes
+// to each decal before the decal's own UpdateVisibility, so a decal on an
+// animated part follows its bone instead of staying where the part rested.
+test("an animated child mesh gives each decal its bone palette before the decal's visibility", () =>
+{
+  const { updater, palette } = animationUpdater(true);
+  const child = updatedChild(value => { value.animationUpdater = updater; });
+  const spy = decalSpy();
+  Array.prototype.push.call(child.decals, spy);
+
+  // A real decal parented to the moved bone, beside the spy.
+  const decal = new EveSpaceObjectDecal();
+  decal.decalEffect = {};
+  decal.parentBoneIndex = 1;
+  Array.prototype.push.call(child.decals, decal);
+
+  assert.equal(child.UpdateVisibility(visibleContext, null, Tr2Lod.TR2_LOD_HIGH), true);
+
+  assert.deepEqual(spy.calls.map(call => call.method), [ "SetBoneMatrix", "UpdateVisibility" ], "cpp:447-451 - the bones come first");
+  assert.equal(spy.calls[0].bones, palette, "cpp:447 - GetBoneTransforms' palette, borrowed");
+  assert.equal(spy.calls[0].boneCount, 2);
+  assert.deepEqual(Array.from(decal._parentBoneMatrix.slice(12, 15)), [ 0, -450, 0 ], "the decal rides bone 1");
+});
+
+test("a child mesh whose animation updater is not initialized gives its decals no bone palette", () =>
+{
+  const { updater } = animationUpdater(false);
+  const child = updatedChild(value => { value.animationUpdater = updater; });
+  const spy = decalSpy();
+  Array.prototype.push.call(child.decals, spy);
+
+  assert.equal(child.UpdateVisibility(visibleContext, null, Tr2Lod.TR2_LOD_HIGH), true);
+  assert.deepEqual(spy.calls.map(call => call.method), [ "UpdateVisibility" ], "cpp:445 - no initialized updater, no SetBoneMatrix");
+});
+
+// EveChildMesh.cpp:1081-1089: the attachments' lights take the mesh's bone palette
+// with the world transform, so a light on a bone follows it.
+test("a child mesh passes its bone palette to its attachments' lights", () =>
+{
+  const { updater, palette } = animationUpdater(true);
+  const calls = [];
+  const attachment = { UpdateLights(...args) { calls.push(args); } };
+  const child = updatedChild(value =>
+  {
+    value.animationUpdater = updater;
+    Array.prototype.push.call(value.attachments, attachment);
+  });
+
+  assert.equal(calls.length, 1, "cpp:1084-1088 - one UpdateLights per attachment");
+  const [ transform, bones, boneCount, activationStrength, boosterGain ] = calls[0];
+  assert.equal(transform, child.worldTransform);
+  assert.equal(bones, palette, "cpp:1083 - GetBoneTransforms' palette, borrowed");
+  assert.equal(boneCount, 2);
+  assert.equal(activationStrength, 1);
+  assert.equal(boosterGain, 0, "cpp:1087 - the child has no booster gain of its own");
 });
