@@ -21,20 +21,18 @@ acquires through `CjsLibrary.Fetch` and starts the controllers;
 `tny.Focus(object, { animate })` and `tny.SetInteractive(on)`. The camera
 follows a focused object as it moves.
 
-**Parameters.** `GetParameters()`, `GetParameter(name)`, `SetParameter(name,
-value)`: only what the object supports, under native names where it has them
-(dirtLevel, activationStrength, the three damages, module animations, cloak;
-on ships speed, maxSpeed, kill marks, booster values). `speed` moves the ship.
+**Values.** A wrapper declares what its object exposes. `GetTypeInfo()` has
+Carbon's shape, made for this instance (class `TnyShip_<id>`, its Tny layers and
+capabilities as interfaces, supported members with flags, ranges and
+choices). `GetValues()` returns every member; null means unsupported.
+`SetValues(values)` pushes changes to the native owners and calls
+`_onModified(name)`. Ships add speed (which moves the ship), states, stance,
+kill marks and booster members. `controllers` and `overlays` show what those
+owners expose.
 
-**States and controllers.** `ship.GetStates()`/`SetState(name)`: standard,
-warp and dock always, siege and attack where its controllers declare them.
-`GetStances()`/`SetStance(value)`. `object.controllers` (`TnyControllers`)
-shows only what the controllers expose; `object.overlays` (`TnyOverlays`)
-lists, adds and removes mesh overlays.
-
-**Weapons.** `ship.GetSlots()` returns `TnySlot`s from the hull's weapon
-locators: `Mount(resPath, { faction })`, `Unmount`, `SetTarget`, `Fire`,
-`Idle`, `Reload`, `Deactivate`.
+**Weapons.** `slots` lists `TnySlot`s from the hull's weapon locators; writing
+a slot's `resPath` mounts or unmounts, and `SetTarget`, `Fire`, `Idle`,
+`Reload` and `Deactivate` act.
 
 **Settings.** `tny.GetSettings()`, `GetSetting(name)`, `SetSetting(name, value)`
 with the library's availability.
