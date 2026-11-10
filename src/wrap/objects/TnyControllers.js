@@ -68,46 +68,93 @@ export class TnyControllers
      */
     _Controllers()
     {
+        return this._Entries().filter(entry => entry.controller).map(entry => entry.controller);
+    }
+
+    /**
+     * Each controller with where it sits, as Graphene's Parameters lists them:
+     * its owner (the object, an overlay, a container child or a driving
+     * effect, by name), its index in that owner's list, and for a
+     * Tr2ControllerReference not loaded yet its path and no controller.
+     * A controller whose name starts with "_" is private to the content.
+     *
+     * @returns {{controller: object|null, owner: string, index: number, path: string|null}[]} The entries.
+     */
+    _Entries()
+    {
         const object = this.owner.wrapped;
-        const found = [ ...object.controllers ];
-        for (const overlay of object.overlayEffects) found.push(...overlay.controllers);
+        const root = object.name || CjsSchema.getClassName(object.constructor);
+        const lists = [ [ root, object.controllers ] ];
+        for (const overlay of object.overlayEffects) lists.push([ `${root} / ${overlay.name || "overlay"}`, overlay.controllers ]);
         for (const child of object.effectChildren)
         {
             const container = CjsSchema.cast(child, EveChildContainer);
-            if (container) found.push(...container.controllers);
+            if (container) lists.push([ `${root} / ${container.name || "child"}`, container.controllers ]);
         }
-        for (const effect of this.effects()) found.push(...effect.controllers);
-        // A Tr2ControllerReference shows the controller it loaded, once loaded.
-        // A controller whose name starts with "_" is private to the content.
-        return found.flatMap(controller =>
+        for (const effect of this.effects()) lists.push([ effect.name || "effect", effect.controllers ]);
+        const entries = [];
+        for (const [ owner, controllers ] of lists)
         {
-            const reference = CjsSchema.cast(controller, Tr2ControllerReference);
-            const target = CjsSchema.cast(reference ? reference.controller : controller, Tr2Controller);
-            return target && IsPublic(target.name) ? [ target ] : [];
-        });
+            for (const [ index, each ] of [ ...controllers ].entries())
+            {
+                const reference = CjsSchema.cast(each, Tr2ControllerReference);
+                const controller = CjsSchema.cast(reference ? reference.controller : each, Tr2Controller);
+                if (controller && !IsPublic(controller.name)) continue;
+                if (controller || reference) entries.push({ controller, owner, index, path: reference && !controller ? reference.path : null, reference });
+            }
+        }
+        return entries;
+    }
+
+    /** Starts every controller (Tr2Controller.Start), as Graphene's Start all. */
+    Start()
+    {
+        for (const entry of this._Entries()) (entry.reference ?? entry.controller).Start();
+    }
+
+    /** Stops every controller. */
+    Stop()
+    {
+        for (const entry of this._Entries()) (entry.reference ?? entry.controller).Stop();
+    }
+
+    /** Stops and starts every controller again. */
+    Restart()
+    {
+        this.Stop();
+        this.Start();
     }
 
     /**
      * The controllers, as their exposure describes them.
      *
-     * @returns {{name: string, variables: object[], stateMachines: {name: string, state: string|null}[]}[]} One per controller.
+     * @returns {{name: string, owner: string, index: number, loading: string|null, variables: object[], stateMachines: {name: string, state: string|null}[]}[]}
+     *   One per controller: `owner` names where it sits, `index` its place there; a reference still
+     *   loading has `loading` (its path) and no variables.
      */
     GetControllers()
     {
-        return this._Controllers().map(controller => ({
-            name: controller.name,
-            variables: controller.variables.filter(variable => IsPublic(variable.name)).map(variable => ({
-                name: variable.name,
-                type: TYPE_NAMES[variable.variableType] ?? "number",
-                value: variable.GetValue(),
-                defaultValue: variable.defaultValue,
-                ...(variable.variableType === Type.ENUM ? { choices: ParseEnumValues(variable.enumValues) } : {})
-            })),
-            stateMachines: controller.stateMachines.map(machine => ({
-                name: machine.name,
-                state: machine.GetCurrentState()?.name ?? null
-            }))
-        }));
+        return this._Entries().map(({ controller, owner, index, path }) =>
+        {
+            if (!controller) return { name: "", owner, index, loading: path, variables: [], stateMachines: [] };
+            return {
+                name: controller.name,
+                owner,
+                index,
+                loading: null,
+                variables: controller.variables.filter(variable => IsPublic(variable.name)).map(variable =>
+                {
+                    // Authored choices make a select whatever the type, as Graphene's Parameters do.
+                    const choices = ParseEnumValues(variable.enumValues);
+                    return { name: variable.name, type: TYPE_NAMES[variable.variableType] ?? "number", value: variable.GetValue(),
+                        defaultValue: variable.defaultValue, ...(choices.length ? { choices } : {}) };
+                }),
+                stateMachines: controller.stateMachines.filter(machine => IsPublic(machine.name)).map(machine => ({
+                    name: machine.name,
+                    state: machine.GetCurrentState()?.name ?? null
+                }))
+            };
+        });
     }
 
     /**
