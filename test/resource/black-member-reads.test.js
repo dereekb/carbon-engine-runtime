@@ -31,9 +31,9 @@ test("inherited members read from the narrow and wide tables, by index, into the
   class Base {}
   class Record extends Base { get narrow() { throw new Error("live getter must not run"); } }
   CjsSchema.define(Base, { className: "BlackReadsBase", members: [ member("narrow", "string", { key: "_narrow" }) ] });
-  CjsSchema.define(Record, {
+  CjsSchema.be.define(Record, {
     className: "BlackReadsRecord", members: [ member("wide", "wstring") ],
-    properties: [ { name: "narrow", key: "narrow", type: { kind: "uint32" }, property: { persisted: false } } ]
+    properties: [ { exposure: { macro: "MAP_PROPERTY_READONLY", flags: 1 }, name: "narrow", key: "narrow", type: { kind: "uint32" }, property: { persisted: false } } ]
   });
   CjsSchema.meta.exposureChainTo(Base)(Record);
   const f = new Fixture();
@@ -48,9 +48,9 @@ test("inherited members read from the narrow and wide tables, by index, into the
 test("a member a class does not persist, or a class Blue lacks, fails the read with Carbon's message", () =>
 {
   class OnlyProperty { get value() { return 0; } set value(_) { assert.fail("setter"); } }
-  CjsSchema.define(OnlyProperty, {
+  CjsSchema.be.define(OnlyProperty, {
     className: "BlackReadsPropertyOnly", members: [],
-    properties: [ { name: "value", key: "value", type: { kind: "float32" }, property: { persisted: false } } ]
+    properties: [ { exposure: { macro: "MAP_PROPERTY", flags: 3 }, name: "value", key: "value", type: { kind: "float32" }, property: { persisted: false } } ]
   });
   const f = new Fixture();
   readFails(f.Finish(f.Object(1, "BlackReadsPropertyOnly", [ [ "value", u32(0) ] ])), /Invalid attribute: value/);
@@ -75,10 +75,10 @@ test("stored keys bypass accessors, shared references stay shared, and children 
   carbonInterfaceDecorator([ IInitialize ])(Root);
   CjsSchema.define(First, { className: "BlackReadsFirst", members: [] });
   CjsSchema.define(Later, { className: "BlackReadsLater", members: [] });
-  CjsSchema.define(Root, {
+  CjsSchema.be.define(Root, {
     className: "BlackReadsRoot",
     members: [ member("label", "string", { key: "_label" }), member("first", "rootRef"), member("later", "rootRef"), member("shared", "rootRef") ],
-    properties: [ { name: "label", key: "label", type: { kind: "string" }, property: { persisted: false } } ]
+    properties: [ { exposure: { macro: "MAP_PROPERTY", flags: 3 }, name: "label", key: "label", type: { kind: "string" }, property: { persisted: false } } ]
   });
   // No reference back to the root: Carbon registers an object's reference only once it is read (BlackReader.cpp:405).
   const f = new Fixture();
@@ -119,8 +119,8 @@ test("each stored write of a NOTIFY member is reported, and an unmapped Initiali
     OnModified(name) { notifications.push([ name, this._value, this.quiet ]); return false; }
   }
   carbonInterfaceDecorator([ INotify ])(Notified);
-  CjsSchema.define(Notified, { className: "BlackReadsNotified", members: [
-    member("value", "uint32", { key: "_value", edit: { persist: true, notify: true } }), member("quiet", "uint32")
+  CjsSchema.be.define(Notified, { className: "BlackReadsNotified", members: [
+    member("value", "uint32", { key: "_value", exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }), member("quiet", "uint32")
   ] });
   assert.equal(ClassInfo.exposeToBlue(Notified).meta.isInitialize, false);
   const f = new Fixture();

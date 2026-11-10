@@ -7,6 +7,7 @@ import { IInitialize } from "../../npm/dist/blue/exposure/IInitialize.js";
 import { INotify } from "../../npm/dist/blue/exposure/INotify.js";
 import { BeObjectMetadata } from "../../npm/dist/blue/services/BlueObjectMetadata.js";
 import { registerClass, unregisterClass } from "../../npm/dist/blue/exposure/classes/registry.js";
+const be = CjsSchema.exposure;
 
 let sequence = 0;
 const name = () => `DeclaredConstruction${++sequence}`;
@@ -86,17 +87,17 @@ test("declared embedded population preserves storage and bypasses SetValues", ()
 // DictReader::FindEntry matches a property only when PERSIST (DictReader.cpp:706).
 test("declared lifecycle never reads an unrelated live property", () => {
   class Node { get unused() { assert.fail("unrelated getter"); } }
-  define(Node, { unused: [ meta.property(), type.rootRef("IRoot") ] });
+  define(Node, { unused: [ meta.mapPropertyReadOnly(), type.rootRef("IRoot") ] });
   assert.ok(reader().CreateObject({}, Node) instanceof Node);
   assert.ok(reader({ initialize: false }).CreateObject({}, Node) instanceof Node);
   class ReadOnly { get unused() { assert.fail("read-only getter"); } }
-  define(ReadOnly, { unused: [ meta.property(), type.rootRef("IRoot") ] });
+  define(ReadOnly, { unused: [ meta.mapPropertyReadOnly(), type.rootRef("IRoot") ] });
   assert.throws(() => reader().CreateObject({ unused: null }, ReadOnly), /Invalid attribute/);
 });
 
 test("declared resources are excluded before input access and create no anchors or notifications", () => {
   class Owner { value = 0; get cache() { assert.fail("resource storage read"); } OnModified() { assert.fail("resource notify"); } }
-  define(Owner, { value: type.int32, cache: [meta.property(), type.resource("Unused")] }, [INotify]);
+  define(Owner, { value: type.int32, cache: [meta.mapPropertyReadOnly(), type.resource("Unused")] }, [INotify]);
   const source = Object.defineProperty({ value: 2 }, "cache", { enumerable: true, get() { assert.fail("incoming resource read"); } });
   assert.equal(reader().CreateObject(source, Owner).value, 2);
 });
@@ -132,7 +133,7 @@ test("nested declared collections construct nodes and preserve borrowed identiti
     static from() { assert.fail("legacy factory"); }
     Initialize() { this.initialized++; }
   }
-  const childName = define(Child, { value: type.int32, cache: [meta.property(), type.resource("Unused")] }, [IInitialize]);
+  const childName = define(Child, { value: type.int32, cache: [meta.mapPropertyReadOnly(), type.resource("Unused")] }, [IInitialize]);
   const childType = { kind: "rootRef", className: childName };
   const list = { kind: "list", itemType: childType };
   const cases = [
@@ -226,11 +227,11 @@ test("declared embedded storage rejects known and missing aliases without replac
 
 test("only mapped lifecycle runs, and IInitialize suppresses mapped notify", () => {
   class Notify { value = 0; notices = []; Initialize() { assert.fail("unmapped Initialize"); } OnModified(key) { this.notices.push(key); } }
-  define(Notify, { value: [type.int32, CjsSchema.be.notify] }, [INotify]);
+  define(Notify, { value: [type.int32, be.mapAttribute(be.NOTIFY)] }, [INotify]);
   const value = reader().CreateObject({ value: 1 }, Notify);
   assert.deepEqual(value.notices, ["value"]);
   class Both { value = 0; calls = 0; Initialize() { this.calls++; } OnModified() { assert.fail("suppressed notify"); } }
-  define(Both, { value: [type.int32, CjsSchema.be.notify] }, [IInitialize, INotify]);
+  define(Both, { value: [type.int32, be.mapAttribute(be.NOTIFY)] }, [IInitialize, INotify]);
   assert.equal(reader().CreateObject({ value: 1 }, Both).calls, 1);
   assert.equal(reader({ initialize: false }).CreateObject({ value: 1 }, Both).calls, 0);
 });

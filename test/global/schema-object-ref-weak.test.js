@@ -9,6 +9,7 @@ import { YamlWriter } from "../../src/blue/formats/yaml/YamlWriter.js";
 import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { getCarbonTypeDefinition } from "../../src/blue/schema/types/carbonTypes.js";
 import { CjsGraph } from "../../src/global/model/graph/index.js";
+import { exposure as be } from "#be";
 
 // `type.object.ref.weak` is IROOTPTR in every way but one fact: the member does not own its target.
 // Each test runs the same operation over `ref` and `ref.weak` and requires the same answer.
@@ -17,24 +18,24 @@ class RefWeakLeaf
 {
   value = 0;
 }
-CjsSchema.define(RefWeakLeaf, { className: "RefWeakLeaf", fields: {
-  value: [ type.int32, CjsSchema.be.persist ]
+CjsSchema.be.define(RefWeakLeaf, { className: "RefWeakLeaf", fields: {
+  value: [ type.int32, be.mapAttribute(be.PERSIST) ]
 } });
 
 class OwnedHolder
 {
   target = null;
 }
-CjsSchema.define(OwnedHolder, { className: "RefWeakOwnedHolder", fields: {
-  target: [ type.object.ref("RefWeakLeaf"), CjsSchema.be.persist ]
+CjsSchema.be.define(OwnedHolder, { className: "RefWeakOwnedHolder", fields: {
+  target: [ type.object.ref("RefWeakLeaf"), be.mapAttribute(be.PERSIST) ]
 } });
 
 class UnownedHolder
 {
   target = null;
 }
-CjsSchema.define(UnownedHolder, { className: "RefWeakUnownedHolder", fields: {
-  target: [ type.object.ref.weak("RefWeakLeaf"), CjsSchema.be.persist ]
+CjsSchema.be.define(UnownedHolder, { className: "RefWeakUnownedHolder", fields: {
+  target: [ type.object.ref.weak("RefWeakLeaf"), be.mapAttribute(be.PERSIST) ]
 } });
 
 /** The same graph under each holder class. */
@@ -69,8 +70,8 @@ test("object.weak stays Carbon's weak reference", () =>
 test("a subclass that redeclares the member replaces the ownership fact", () =>
 {
   class Redeclared extends UnownedHolder {}
-  CjsSchema.define(Redeclared, { className: "RefWeakRedeclared", fields: {
-    target: [ type.object.ref("RefWeakLeaf"), CjsSchema.be.persist ]
+  CjsSchema.be.define(Redeclared, { className: "RefWeakRedeclared", fields: {
+    target: [ type.object.ref("RefWeakLeaf"), be.mapAttribute(be.PERSIST) ]
   } });
 
   const merged = CjsSchema.getSchema(Redeclared).fields.find(member => member.name === "target");

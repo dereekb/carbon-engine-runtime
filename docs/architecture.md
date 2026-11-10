@@ -364,14 +364,14 @@ name is `meta.mapAttribute(name, { index })`, or `blue.attribute` for Carbon's
 `MAP_ATTRIBUTE_WITH_CHOOSER` chooser table without that bit: the member reports
 the registered enum's chooser and its flags stay as declared, as on the lights'
 `flags`.
-`blue.property(name?, { persisted })` (`meta.property` for ours) is Carbon's
-`MAP_PROPERTY` row: it goes on a getter, with its setter, whose bodies call the
-class's Get/Set methods, and the type is declared with `type.*`. Its flags are
-derived and never written: a getter and setter are READWRITE, a getter alone is
-READ, and `persisted` adds PERSIST (`MAP_PROPERTY_PERSISTED`). Readers, writers
+`be.mapProperty(name?)`, `be.mapPropertyReadOnly` and `be.mapPropertyPersisted`
+(`meta.mapProperty*` for ours) are Carbon's `MAP_PROPERTY`, `MAP_PROPERTY_READONLY`
+and `MAP_PROPERTY_PERSISTED` rows: each goes on a getter, with its setter, whose
+bodies call the class's Get/Set methods, and the type is declared with `type.*`.
+The macro fixes the flags: READWRITE, READ, and READWRITE with PERSIST. Readers, writers
 and the values interface reach a property through its accessors, and only a
-persisted property is read or written. An accessor that carries flags and no
-property declaration is instead a `MAP_ATTRIBUTE` whose storage is the
+persisted property is read or written. An accessor with a `be.mapAttribute` row
+and no property row is instead a `MAP_ATTRIBUTE` whose storage is the
 accessor's path (`Tr2SkinnedObject`'s `m_lod` members): it keeps its flags,
 NOTIFY included, and is read, written and copied like a stored member.
 `meta.abstract` (ours) and `blue.abstract` (a Carbon pure virtual) record status
@@ -380,7 +380,7 @@ declaring class and the declared parameters.
 
 type.binary is Carbon's BINARYBLOCK, a custom binary block: how a member is
 stored, beside the type of the value it holds (`@type.binary` with
-`@type.uint32Array`). It requires blue.persistOnly, and a class that
+`@type.uint32Array`). It requires `be.mapAttribute(be.PERSISTONLY)`, and a class that
 maps ICustomPersist; define refuses it otherwise. Readers only move the bytes:
 Black reads a signed byte length and the raw bytes, Red a base64 `!!binary`
 scalar, and both hand them to the instance's AllocateReadBuffer and

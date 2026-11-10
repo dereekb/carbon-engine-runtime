@@ -4,6 +4,7 @@ import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
 import { type } from "../../src/blue/schema/index.js";
 import { Copier } from "../../src/blue/exposure/Copier.js";
 import { ClassInfo } from "../../src/blue/base/ClassInfo.js";
+import { exposure as be } from "../../src/blue/exposure/be.js";
 
 
 
@@ -15,8 +16,8 @@ class ResourceLeaf
 {
     value = 1;
 }
-CjsSchema.define(ResourceLeaf, { className: "ResourceBlackCopyLeaf", fields: {
-    value: [type.int32, CjsSchema.be.persist]
+CjsSchema.be.define(ResourceLeaf, { className: "ResourceBlackCopyLeaf", fields: {
+    value: [ type.int32, be.mapAttribute(be.PERSIST) ]
 } });
 
 class ResourceHolder
@@ -25,11 +26,11 @@ class ResourceHolder
     _cache = new ResourceLeaf();
     ordinary = null;
 }
-CjsSchema.define(ResourceHolder, { className: "ResourceBlackCopyHolder", fields: {
-    count: [type.uint32, CjsSchema.be.persist],
+CjsSchema.be.define(ResourceHolder, { className: "ResourceBlackCopyHolder", fields: {
+    count: [ type.uint32, be.mapAttribute(be.PERSIST) ],
     // Contradictory persistence flags must never override the runtime-only fact.
-    _cache: [type.resource(ResourceLeaf), CjsSchema.be.persist],
-    ordinary: [type.rootRef(ResourceLeaf), CjsSchema.be.persist]
+    _cache: [ type.resource(ResourceLeaf), be.mapAttribute(be.PERSIST) ],
+    ordinary: [ type.rootRef(ResourceLeaf), be.mapAttribute(be.PERSIST) ]
 } });
 
 class ResourceBase
@@ -55,8 +56,8 @@ class ResourceProperty extends ResourceBase
 {
     get cache() { throw new Error("resource property getter must not run"); }
 }
-CjsSchema.define(ResourceProperty, { className: "ResourceBlackCopyProperty", properties: [
-    { name: "cache", key: "cache", type: { kind: "rootRef", runtimeOnly: true }, property: { persisted: false } }
+CjsSchema.be.define(ResourceProperty, { className: "ResourceBlackCopyProperty", properties: [
+    { exposure: { macro: "MAP_PROPERTY_READONLY", flags: 1 }, name: "cache", key: "cache", type: { kind: "rootRef", runtimeOnly: true }, property: { persisted: false } }
 ] });
 CjsSchema.meta.exposureChainTo(ResourceBase)(ResourceProperty);
 

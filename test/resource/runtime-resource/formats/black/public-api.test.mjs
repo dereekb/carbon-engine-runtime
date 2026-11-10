@@ -11,14 +11,14 @@ import { BlackReader } from "../../../../../npm/dist/blue/formats/black/BlackRea
 import { Fixture, f32 } from "../../../../support/blackFixture.js";
 
 class Child { name = ""; weight = 0; }
-CjsSchema.define(Child, { className: "BlackFormatApiChild", members: [
-    { name: "name", key: "name", type: { kind: "string" }, edit: { persist: true } },
-    { name: "weight", key: "weight", type: { kind: "float32" }, edit: { persist: true } }
+CjsSchema.be.define(Child, { className: "BlackFormatApiChild", members: [
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "name", key: "name", type: { kind: "string" }, edit: { persist: true } },
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "weight", key: "weight", type: { kind: "float32" }, edit: { persist: true } }
 ] });
 class Parent { first = null; second = null; }
-CjsSchema.define(Parent, { className: "BlackFormatApiParent", members: [
-    { name: "first", key: "first", type: { kind: "rootRef" }, edit: { persist: true } },
-    { name: "second", key: "second", type: { kind: "rootRef" }, edit: { persist: true } }
+CjsSchema.be.define(Parent, { className: "BlackFormatApiParent", members: [
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "first", key: "first", type: { kind: "rootRef" }, edit: { persist: true } },
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "second", key: "second", type: { kind: "rootRef" }, edit: { persist: true } }
 ] });
 
 /** A parent whose two members share one child. */

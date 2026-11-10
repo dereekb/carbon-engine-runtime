@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CjsSchema, type } from "#schema";
+const be = CjsSchema.exposure;
 
 
 let serial = 0;
 
-test("edit decorators record Blue flags without extra access permissions", () =>
+test("exposure rows record Blue flags without extra access permissions", () =>
 {
   class Flags {}
+  const bits = { read: be.READ, write: be.WRITE, readwrite: be.READWRITE, notify: be.NOTIFY, hidden: be.HIDDEN, persist: be.PERSIST,
+    rpersist: be.RPERSIST, persistOnly: be.PERSISTONLY };
   const expected = {
     read: { read: true }, write: { write: true },
     readwrite: { read: true, write: true }, notify: { notify: true },
@@ -16,7 +19,7 @@ test("edit decorators record Blue flags without extra access permissions", () =>
   };
   CjsSchema.define(Flags, {
     className: "BlueEditFlagsProbe",
-    fields: Object.fromEntries(Object.keys(expected).map(name => [name, [type.int32, CjsSchema.be[name]]]))
+    fields: Object.fromEntries(Object.keys(expected).map(name => [name, [type.int32, be.mapAttribute(bits[name])]]))
   });
   for (const [name, metadata] of Object.entries(expected))
   {
@@ -29,7 +32,7 @@ test("enum chooser metadata exposes the Blue ENUM flag through inheritance", () 
   class Base {}
   class Derived extends Base {}
   CjsSchema.define(Base, { className: "EditEnumBase", fields: {
-    choice: [type.int32, type.enum({ First: 1, Second: 2 }), CjsSchema.be.persist]
+    choice: [type.int32, type.enum({ First: 1, Second: 2 }), be.mapAttribute(be.PERSIST)]
   } });
   CjsSchema.define(Derived, { className: "EditEnumDerived" });
   // ENUM is the enum record itself, not an edit bit.
@@ -53,12 +56,12 @@ for (const route of ["composition", "schema"])
       writable = 0;
     }
     CjsSchema.define(Record, { className: `EditPersistenceProbe${serial++}`, fields: {
-      stored: [type.int32, CjsSchema.be.persist],
-      legacy: [type.int32, CjsSchema.be.read, CjsSchema.be.rpersist],
-      combined: [type.int32, CjsSchema.be.persist, CjsSchema.be.rpersist],
-      hidden: [type.int32, CjsSchema.be.persistOnly],
-      computed: [type.int32, CjsSchema.be.read],
-      writable: [type.int32, CjsSchema.be.write]
+      stored: [type.int32, be.mapAttribute(be.PERSIST)],
+      legacy: [type.int32, be.mapAttribute(be.READ | be.RPERSIST)],
+      combined: [type.int32, be.mapAttribute(be.PERSIST | be.RPERSIST)],
+      hidden: [type.int32, be.mapAttribute(be.PERSISTONLY)],
+      computed: [type.int32, be.mapAttribute(be.READ)],
+      writable: [type.int32, be.mapAttribute(be.WRITE)]
     } });
     if (route === "composition") CjsSchema.meta.values(Record, { kind: "class" });
     const object = new Record();

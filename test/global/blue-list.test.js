@@ -6,6 +6,7 @@ import { CjsSchema, type } from "@carbonenginejs/runtime/schema";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
 import { mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { MarkerTag } from "../support/markerTags.js";
+import { exposure as be } from "#be";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const legacyBlue = CjsSchema.be;
@@ -15,11 +16,11 @@ class Item
   value = 0;
   peer = null;
 }
-CjsSchema.define(Item, {
+CjsSchema.be.define(Item, {
   className: "TestBlueListItem",
   fields: {
-    value: [ type.float64, legacyBlue.persist ],
-    peer: [ type.rootRef("TestBlueListItem"), legacyBlue.persist ]
+    value: [ type.float64, be.mapAttribute(be.PERSIST) ],
+    peer: [ type.rootRef("TestBlueListItem"), be.mapAttribute(be.PERSIST) ]
   }
 });
 legacyBlue.interface()(Item);

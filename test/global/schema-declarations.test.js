@@ -34,10 +34,11 @@ test("the public decorator surface has one namespace per vocabulary and preserve
     assert.equal(schemaExports.type, CjsSchema.type);
     for (const name of ["blue", "type"]) assert.equal(Object.hasOwn(meta, name), false, "alias dropped: meta." + name);
     assert.equal(Object.hasOwn(schemaExports, "blue"), false, "be comes from #be; blue is the service");
-    for (const name of ["read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly"])
+    // The edit-flag and property decorators are retired: flags and properties are exposure rows (map*).
+    for (const name of ["read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly", "property"])
     {
-        assert.equal(typeof meta[name], "function", "generic flag: " + name);
-        assert.equal(typeof CjsSchema.be[name], "function", "Carbon flag: " + name);
+        assert.equal(Object.hasOwn(meta, name), false, "removed generic decorator: meta." + name);
+        assert.equal(Object.hasOwn(CjsSchema.be, name), false, "removed Carbon decorator: CjsSchema.be." + name);
     }
     for (const name of ["interface", "inherit", "chainTo", "method", "define"])
         assert.equal(typeof CjsSchema.be[name], "function", "Carbon declaration: " + name);
@@ -76,7 +77,7 @@ test("Stage-3 and explicit declarations produce the same separate stored and liv
         set boosters(value) {}
     }
     applyStage3(metadata, "_boosters", "field", [ be.mapAttribute(be.PERSISTONLY, "boosters"), type.rootRef("Booster") ]);
-    applyStage3(metadata, "boosters", "getter", [ type.rootRef("Booster"), blue.property(), meta.note("probe") ]);
+    applyStage3(metadata, "boosters", "getter", [ type.rootRef("Booster"), be.mapProperty(), meta.note("probe") ]);
     meta.define({ className: "DeclarationDecorated" })(Decorated, { kind: "class", metadata });
 
     class Explicit
@@ -88,7 +89,7 @@ test("Stage-3 and explicit declarations produce the same separate stored and liv
         className: "DeclarationExplicit",
         members: [ { name: "boosters", key: "_boosters", type: { kind: "rootRef", className: "Booster" }, edit: { persist: true, persistOnly: true, hidden: true }, carbon: { member: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 24 } } ],
         properties: {
-            boosters: [ type.rootRef("Booster"), blue.property(), meta.note("probe") ]
+            boosters: [ type.rootRef("Booster"), be.mapProperty(), meta.note("probe") ]
         }
     });
     const decorated = CjsSchema.getSchema(Decorated);
@@ -137,7 +138,7 @@ test("imperative metadata and explicit fields infer accessors without evaluating
     }
     const before = Object.getOwnPropertyDescriptor(Accessors.prototype, "value");
     CjsSchema.decorateField(Accessors, "value", meta.note("probe"), type.float32);
-    CjsSchema.define(Accessors, { className: "DeclarationAccessors", fields: { value: blue.property() } });
+    CjsSchema.define(Accessors, { className: "DeclarationAccessors", fields: { value: be.mapProperty() } });
     assert.equal(reads, 0);
     assert.deepEqual(Object.getOwnPropertyDescriptor(Accessors.prototype, "value"), before);
     assert.equal(CjsSchema.getSchema(Accessors).properties[0].impl.note, "probe");
@@ -181,12 +182,12 @@ test("explicit field declarations do not inherit a shadowed getter's live-proper
 {
     let reads = 0;
     class Base { get value() { reads++; throw new Error("getter read"); } }
-    CjsSchema.define(Base, { className: "DeclarationShadowBase", fields: { value: [ blue.property(), type.int32 ] } });
+    CjsSchema.define(Base, { className: "DeclarationShadowBase", fields: { value: [ be.mapPropertyReadOnly(), type.int32 ] } });
     class Explicit extends Base { value = 2; }
-    CjsSchema.define(Explicit, { className: "DeclarationShadowExplicit", fields: { value: [ type.int32, blue.persist ] } });
+    CjsSchema.define(Explicit, { className: "DeclarationShadowExplicit", fields: { value: [ type.int32, be.mapAttribute(be.PERSIST) ] } });
     class Decorated extends Base { value = 2; }
     const metadata = {};
-    applyStage3(metadata, "value", "field", [ type.int32, blue.persist ]);
+    applyStage3(metadata, "value", "field", [ type.int32, be.mapAttribute(be.PERSIST) ]);
     meta.define({ className: "DeclarationShadowDecorated" })(Decorated, { kind: "class", metadata });
     assert.deepEqual(withoutOwners(CjsSchema.getSchema(Explicit).members), withoutOwners(CjsSchema.getSchema(Decorated).members));
     assert.equal(CjsSchema.getSchema(Explicit).members[0].role, "member");
@@ -214,12 +215,12 @@ test("native tables keep class occurrences and derived-first ordering while lega
     class Base {}
     CjsSchema.define(Base, {
         className: "DeclarationBase",
-        fields: { stored: [ meta.mapAttribute(meta.NONE, "shared"), type.float32, blue.persist ], baseOnly: type.uint32 }
+        fields: { stored: [ meta.mapAttribute(meta.NONE, "shared"), type.float32, be.mapAttribute(be.PERSIST) ], baseOnly: type.uint32 }
     });
     class Derived extends Base { get shared() { throw new Error("getter read"); } }
     CjsSchema.define(Derived, {
         className: "DeclarationDerived",
-        fields: { derivedOnly: type.uint32, shared: [ blue.property(), type.float32 ] },
+        fields: { derivedOnly: type.uint32, shared: [ be.mapPropertyReadOnly(), type.float32 ] },
         members: [ { name: "shared", key: "derivedStorage", type: { kind: "float32" } } ]
     });
     const schema = CjsSchema.getSchema(Derived);

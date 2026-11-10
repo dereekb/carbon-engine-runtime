@@ -10,6 +10,7 @@ import { ClassInfo } from "../../npm/dist/blue/base/ClassInfo.js";
 import { BLACK_DESTINATION } from "../../npm/dist/blue/base/PersistedMember.js";
 import "../../npm/dist/trinity/index.js";
 import { composeStubResMan } from "../support/stubResMan.js";
+import { exposure as be } from "../../npm/dist/blue/exposure/be.js";
 
 const { meta } = CjsSchema;
 
@@ -20,17 +21,17 @@ class StructListRecord
     name = "";
     value = [0, 0, 0, 0];
 }
-CjsSchema.define(StructListRecord, { className: "StructListRecord", struct: { size: 24 }, fields: {
-    name: [CjsSchema.be.persist, meta.struct.SHAREDSTRING_1(0)],
-    value: [CjsSchema.be.persist, meta.struct.FLOAT32_4(8)]
+CjsSchema.be.define(StructListRecord, { className: "StructListRecord", struct: { size: 24 }, fields: {
+    name: [ be.mapAttribute(be.PERSIST), meta.struct.SHAREDSTRING_1(0) ],
+    value: [ be.mapAttribute(be.PERSIST), meta.struct.FLOAT32_4(8) ]
 } });
 
 class StructListOwner
 {
     records = [];
 }
-CjsSchema.define(StructListOwner, { className: "StructListOwner", fields: {
-    records: [type.structList("StructListRecord"), CjsSchema.be.persist]
+CjsSchema.be.define(StructListOwner, { className: "StructListOwner", fields: {
+    records: [ type.structList("StructListRecord"), be.mapAttribute(be.PERSIST) ]
 } });
 
 test("structList declares a BlueStructureList of its item class", () =>
@@ -164,8 +165,8 @@ class StructReferenceLifecycle
     OnModified(name) { this.notifications.push([name, this.records.map(record => record.name)]); }
 }
 CjsSchema.be.interface(IInitialize, INotify)(StructReferenceLifecycle, { kind: "class" });
-CjsSchema.define(StructReferenceLifecycle, { className: "StructReferenceLifecycle", fields: {
-    records: [type.structList("StructListRecord"), CjsSchema.be.persist, CjsSchema.be.notify]
+CjsSchema.be.define(StructReferenceLifecycle, { className: "StructReferenceLifecycle", fields: {
+    records: [ type.structList("StructListRecord"), be.mapAttribute(be.NOTIFY | be.PERSIST) ]
 } });
 
 for (const declarations of [false, true]) test(`struct references resolve before lifecycle (${declarations ? "declared" : "values"})`, () =>
@@ -214,8 +215,8 @@ test("new values-only owners notify after their struct references resolve", () =
         OnModified(name) { this.notifications.push([name, this.records.map(record => record.name)]); }
     }
     CjsSchema.be.interface(INotify)(NotifiedStructOwner, { kind: "class" });
-    CjsSchema.define(NotifiedStructOwner, { className: "NotifiedStructOwner", fields: {
-        records: [type.structList("StructListRecord"), CjsSchema.be.notify]
+    CjsSchema.be.define(NotifiedStructOwner, { className: "NotifiedStructOwner", fields: {
+        records: [ type.structList("StructListRecord"), be.mapAttribute(be.NOTIFY) ]
     } });
     const owner = CjsSchema.from("NotifiedStructOwner", {
         records: [{ _ref: "record" }, { _id: "record", name: "ready" }]

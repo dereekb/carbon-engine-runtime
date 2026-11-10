@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { blue, CjsBlueEnumRegistry, EnumRegistrationType } from "#blue";
 import { CjsSchema, type } from "#schema";
 import { MarkerTag } from "../support/markerTags.js";
+const be = CjsSchema.exposure;
 
 test("Blue enum names preserve Carbon chooser order, aliases and partial masks", () =>
 {
@@ -98,7 +99,7 @@ test("Blue and schema share registration and resolve qualified fields after regi
     }
     class Host { mode = 1; }
     CjsSchema.define(Host, { className: "RegistryEnumHost", fields: {
-        mode: [type.int32, type.enum("test.LateEnum"), CjsSchema.be.persist]
+        mode: [type.int32, type.enum("test.LateEnum"), be.mapAttribute(be.PERSIST)]
     } });
     assert.throws(() => CjsSchema.getSchema(Host), ReferenceError);
     const values = blue.enums.RegisterEnum("test.LateEnum", { FIRST: 1, SECOND: 2 });

@@ -4,15 +4,16 @@ import { CjsSchema } from "../../src/blue/schema/CjsSchema.js";
 import { type } from "../../src/blue/schema/index.js";
 import { blue } from "../../src/blue/index.js";
 import { MarkerTag } from "../support/markerTags.js";
+import { exposure as be } from "#be";
 
 class Effect
 {
   name = "";
 }
-CjsSchema.define(Effect, {
+CjsSchema.be.define(Effect, {
   className: "BlueClassesManagerEffect",
   fields: {
-    name: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.string ]
+    name: [ be.mapAttribute(be.READWRITE | be.PERSIST), type.string ]
   }
 });
 
@@ -27,13 +28,13 @@ class Holder
   transient = null;
   items = [];
 }
-CjsSchema.define(Holder, {
+CjsSchema.be.define(Holder, {
   className: "BlueClassesManagerHolder",
   fields: {
-    name: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.string ],
-    persisted: [ CjsSchema.be.readwrite, CjsSchema.be.persist, type.rootRef("IRoot") ],
-    transient: [ CjsSchema.be.readwrite, type.rootRef("IRoot") ],
-    items: [ CjsSchema.be.read, CjsSchema.be.persist, type.list("IRoot") ]
+    name: [ be.mapAttribute(be.READWRITE | be.PERSIST), type.string ],
+    persisted: [ be.mapAttribute(be.READWRITE | be.PERSIST), type.rootRef("IRoot") ],
+    transient: [ be.mapAttribute(be.READWRITE), type.rootRef("IRoot") ],
+    items: [ be.mapAttribute(be.READ | be.PERSIST), type.list("IRoot") ]
   }
 });
 

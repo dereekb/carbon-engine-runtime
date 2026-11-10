@@ -20,7 +20,7 @@ function Shape()
   };
 }
 
-const FIELDS = { position: [ type.float32, meta.persist ], count: [ type.uint32 ] };
+const FIELDS = { position: [ type.float32, meta.mapAttribute(meta.PERSIST) ], count: [ type.uint32 ] };
 const METHODS = { Apply: [ meta.note("probe") ] };
 
 /**
@@ -105,7 +105,7 @@ test("meta.define({ carbon }) compiles as meta.carbon does", () =>
   const Decorated = Shape(), Bagged = Shape();
   for (const Constructor of [ Decorated, Bagged ])
   {
-    CjsSchema.decorateField(Constructor, "position", type.float32, meta.persist);
+    CjsSchema.decorateField(Constructor, "position", type.float32, meta.mapAttribute(meta.PERSIST));
     CjsSchema.decorateField(Constructor, "count", type.uint32);
   }
   meta.carbon([ "CarbonFormDecorated", "CarbonFormShared" ])(Decorated);

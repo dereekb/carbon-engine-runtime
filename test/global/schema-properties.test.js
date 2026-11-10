@@ -22,8 +22,8 @@ function readBlack(bytes)
 import { CjsGraphFormat } from "../../src/blue/formats/graph/index.js";
 import { YamlReader } from "../../src/blue/formats/yaml/YamlReader.js";
 
-/** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const legacyBlue = CjsSchema.be;
+/** Carbon exposure rows (#be). */
+const be = CjsSchema.exposure;
 
 /** BlueTypes.h EDITFLAGS: READ 0x1, WRITE 0x2, PERSIST 0x10. */
 const READ = 0x1, WRITE = 0x2, PERSIST = 0x10;
@@ -32,9 +32,9 @@ class PropertyLeaf
 {
   value = 0;
 }
-legacyBlue.interface()(PropertyLeaf);
-CjsSchema.define(PropertyLeaf, { className: "SchemaPropertyLeaf", members: [
-  { name: "value", key: "value", type: { kind: "int32" }, edit: { read: true, write: true, persist: true } }
+CjsSchema.be.interface()(PropertyLeaf);
+CjsSchema.be.define(PropertyLeaf, { className: "SchemaPropertyLeaf", members: [
+  { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "value", key: "value", type: { kind: "int32" }, edit: { read: true, write: true, persist: true } }
 ] });
 
 /** The shape the ruling gives: Carbon's Get/Set methods, and accessors that only call them. */
@@ -58,9 +58,9 @@ class PropertyProbe
   get count() { return this.GetCount(); }
 }
 CjsSchema.define(PropertyProbe, { className: "SchemaPropertyProbe", fields: {
-  target: [ legacyBlue.property(undefined, { persisted: true }), type.rootRef("SchemaPropertyLeaf") ],
-  scale: [ legacyBlue.property(), type.float32 ],
-  count: [ meta.property("itemCount"), type.uint32 ]
+  target: [ be.mapPropertyPersisted(), type.rootRef("SchemaPropertyLeaf") ],
+  scale: [ be.mapProperty(), type.float32 ],
+  count: [ meta.mapPropertyReadOnly("itemCount"), type.uint32 ]
 } });
 
 const property = name => CjsSchema.getSchema(PropertyProbe).properties.find(entry => entry.name === name);
@@ -75,8 +75,9 @@ test("flags are derived: a pair is READWRITE, a getter alone READ, persisted add
   const [ , , members ] = blue.classes.GetTypeInfo(new PropertyProbe());
   assert.equal(members.target.editflags, READ | WRITE | PERSIST);
   assert.equal(members.scale.editflags, READ | WRITE);
-  assert.equal(members.itemCount.editflags, READ);
   assert.equal(members.target.iid_name, "SchemaPropertyLeaf");
+  // Our meta row is not Blue's: GetTypeInfo lists only Carbon's rows.
+  assert.equal(members.itemCount, undefined);
   assert.equal(members.count, undefined);
 });
 
@@ -88,7 +89,7 @@ test("the schema records the getter and setter, and blue stamps the row as Carbo
   assert.equal(property("scale").property.setter, descriptor.set);
   assert.equal(property("itemCount").property.setter, null);
   assert.equal(property("scale").carbon.member, true);
-  assert.equal(property("itemCount").carbon, undefined, "meta.property is ours");
+  assert.equal(property("itemCount").carbon, undefined, "meta.mapPropertyReadOnly is ours");
   assert.match(blue.classes.GetPersistedClassesReport(), /SchemaPropertyProbe:\n- {3}target:/);
 });
 
@@ -152,46 +153,24 @@ test("graph round-trips only the persisted property, through its accessors", () 
   assert.ok(result.root.calls.includes("SetTarget"));
 });
 
-test("a property is declared on a getter, takes only persisted, and has no index", () =>
+test("a property row needs a getter, and a persisted one a setter", () =>
 {
-  const context = kind => ({ kind, name: "value", metadata: {}, addInitializer() {} });
-  assert.throws(() => legacyBlue.property()(undefined, context("field")), /decorates a getter/);
-  assert.throws(() => meta.property()(undefined, context("method")), /decorates a getter/);
-  assert.throws(() => meta.property()(undefined, context("setter")), /decorates a getter/);
-  assert.throws(() => legacyBlue.property(undefined, { notify: true }), /only \{ persisted \}/);
-  assert.throws(() => legacyBlue.property(undefined, { persisted: 1 }), /boolean/);
-
   class GetterOnly { get value() { return 1; } }
   assert.throws(() => CjsSchema.define(GetterOnly, { className: "SchemaPropertyGetterOnly",
-    fields: { value: [ legacyBlue.property(undefined, { persisted: true }), type.int32 ] } }), /takes a setter/);
+    fields: { value: [ be.mapPropertyPersisted(), type.int32 ] } }), /setter/);
   class Field { value = 1; }
   assert.throws(() => CjsSchema.define(Field, { className: "SchemaPropertyField",
-    fields: { value: [ legacyBlue.property(), type.int32 ] } }), /needs a getter/);
+    fields: { value: [ be.mapProperty(), type.int32 ] } }), /getter/);
 });
 
-test("separate flag decorators on a property are refused, in either decorator order", () =>
+test("attribute flags on a property are refused", () =>
 {
-  const context = (kind, metadata) => ({ kind, name: "value", metadata, addInitializer() {} });
-  for (const flag of [ "read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly" ])
-  {
-    // A flag after the property (decorators apply bottom-up, so it sits above it).
-    const declared = {};
-    legacyBlue.property()(undefined, context("getter", declared));
-    assert.throws(() => legacyBlue[flag](undefined, context("getter", declared)), /flags are derived/, "blue." + flag);
-    assert.throws(() => meta[flag](undefined, context("setter", declared)), /flags are derived/, "meta." + flag + " on the setter");
-
-    // A flag before the property.
-    const flagged = {};
-    legacyBlue[flag](undefined, context("getter", flagged));
-    assert.throws(() => meta.property()(undefined, context("getter", flagged)), /flags are derived/, "property over " + flag);
-  }
-
-  class Legacy { get value() { return 1; } set value(_) {} }
-  assert.throws(() => CjsSchema.define(Legacy, { className: "SchemaPropertyLegacyFlags",
-    fields: { value: [ legacyBlue.property(), legacyBlue.readwrite, type.int32 ] } }), /flags are derived/);
+  class Mixed { get value() { return 1; } set value(_) {} }
+  assert.throws(() => CjsSchema.be.define(Mixed, { className: "SchemaPropertyMixedFlags",
+    fields: { value: [ be.mapProperty(), be.mapAttribute(be.READWRITE), type.int32 ] } }), /flags are derived|property/);
   class Explicit { get value() { return 1; } set value(_) {} }
   assert.throws(() => CjsSchema.define(Explicit, { className: "SchemaPropertyExplicitFlags",
-    properties: [ { name: "value", key: "value", type: { kind: "int32" }, edit: { read: true }, property: { persisted: false } } ] }),
+    properties: [ { exposure: { macro: "MAP_PROPERTY", flags: 3 }, name: "value", key: "value", type: { kind: "int32" }, edit: { read: true }, property: { persisted: false } } ] }),
   /flags are derived/);
 });
 
@@ -199,7 +178,7 @@ test("an accessor with a type but no declaration is refused", () =>
 {
   class Undeclared { get value() { return 1; } }
   assert.throws(() => CjsSchema.define(Undeclared, { className: "SchemaPropertyUndeclared",
-    fields: { value: type.int32 } }), /declare it with blue.property or meta.property/);
+    fields: { value: type.int32 } }), /declare it with be\.mapProperty\* or meta\.mapProperty\*/);
 });
 
 // An attribute written as a path accessor: Tr2SkinnedObject_Blue.cpp:49-51 maps
@@ -216,7 +195,7 @@ class AttributeOwner
   OnModified(name) { this.modified.push(name); return true; }
 }
 CjsSchema.define(AttributeOwner, { className: "SchemaAttributeAccessorOwner", fields: {
-  highDetailModel: [ legacyBlue.notify, legacyBlue.readwrite, legacyBlue.persist, type.rootRef("SchemaPropertyLeaf") ]
+  highDetailModel: [ be.mapAttribute(be.READWRITE | be.PERSIST | be.NOTIFY), type.rootRef("SchemaPropertyLeaf") ]
 } });
 CjsSchema.be.interface(INotify)(AttributeOwner);
 

@@ -25,6 +25,7 @@ import test from "node:test";
 import * as lifecycle from "../../../src/global/model/lifecycle/index.js";
 import * as schema from "../../../src/blue/schema/index.js";
 import * as types from "../../../src/blue/schema/types/index.js";
+import { exposure as be } from "#be";
 
 const coreTypes = { ...lifecycle, ...schema, ...types };
 const {
@@ -299,22 +300,22 @@ test("schema.hideInherited removes inherited fields only from the schema surface
         own = "own-default";
     }
 
-    CjsSchema.define(HideBase, {
+    CjsSchema.be.define(HideBase, {
         className: "HideBase",
         fields: [
-            { name: "visible", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "hidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "secondHidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "visible", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "hidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "secondHidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.hideInherited(["hidden"])(HideChild, {
         kind: "class",
         metadata: Object.create(null)
     });
-    CjsSchema.define(HideChild, {
+    CjsSchema.be.define(HideChild, {
         className: "HideChild",
         fields: [
-            { name: "own", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "own", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.meta.exposureChainTo(HideBase)(HideChild);
@@ -370,11 +371,11 @@ test("schema.hideInherited removes inherited fields only from the schema surface
         kind: "class",
         metadata: Object.create(null)
     });
-    CjsSchema.define(HideGrandchild, {
+    CjsSchema.be.define(HideGrandchild, {
         className: "HideGrandchild",
         fields: [
-            { name: "hidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "extra", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "hidden", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "extra", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.meta.exposureChainTo(HideChild)(HideGrandchild);
@@ -415,9 +416,9 @@ test("schema.hideInherited registers through Stage-3 metadata and rejects typos"
     };
 
     decorateField("visible", schema.type.string);
-    decorateField("visible", CjsSchema.be.persist);
+    decorateField("visible", be.mapAttribute(be.PERSIST));
     decorateField("hidden", schema.type.string);
-    decorateField("hidden", CjsSchema.be.persist);
+    decorateField("hidden", be.mapAttribute(be.PERSIST));
     CjsSchema.meta.define({ className: "Stage3HideBase" })(Stage3HideBase, {
         kind: "class",
         metadata: baseMetadata
@@ -848,22 +849,22 @@ test("GetValues export options control persistence, type tags and refs", () => {
         name = "";
         value = 0;
     }
-    CjsSchema.define(ExportChild, {
+    CjsSchema.be.define(ExportChild, {
         className: "ExportChild",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
     class ExportChildSpecial extends ExportChild
     {
     }
-    CjsSchema.define(ExportChildSpecial, {
+    CjsSchema.be.define(ExportChildSpecial, {
         className: "ExportChildSpecial",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.meta.exposureChainTo(ExportChild)(ExportChildSpecial);
@@ -875,13 +876,13 @@ test("GetValues export options control persistence, type tags and refs", () => {
         child = null;
         children = [];
     }
-    CjsSchema.define(ExportRoot, {
+    CjsSchema.be.define(ExportRoot, {
         className: "ExportRoot",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "runtimeFlag", type: { kind: "boolean" }, edit: { read: true, write: true } },
-            { name: "child", type: { kind: "rootRef", className: "ExportChild" }, edit: { read: true, persist: true } },
-            { name: "children", type: { kind: "list", itemType: "ExportChild" }, edit: { read: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 3 }, name: "runtimeFlag", type: { kind: "boolean" }, edit: { read: true, write: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, name: "child", type: { kind: "rootRef", className: "ExportChild" }, edit: { read: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, name: "children", type: { kind: "list", itemType: "ExportChild" }, edit: { read: true, persist: true } }
         ]
     });
 
@@ -948,12 +949,12 @@ test("imports _ref identity: shared children, cycles, self and forward reference
         next = null;
         items = [];
     }
-    CjsSchema.define(RefNode, {
+    CjsSchema.be.define(RefNode, {
         className: "RefNode",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "next", type: { kind: "rootRef", className: "RefNode" }, edit: { read: true, write: true, persist: true } },
-            { name: "items", type: { kind: "list", itemType: "RefNode" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "next", type: { kind: "rootRef", className: "RefNode" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "items", type: { kind: "list", itemType: "RefNode" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -998,10 +999,10 @@ test("from and singular imports honor polymorphic _type", () => {
     {
         name = "";
     }
-    CjsSchema.define(PolyBase, {
+    CjsSchema.be.define(PolyBase, {
         className: "PolyBase",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1009,11 +1010,11 @@ test("from and singular imports honor polymorphic _type", () => {
     {
         extra = 0;
     }
-    CjsSchema.define(PolySpecial, {
+    CjsSchema.be.define(PolySpecial, {
         className: "PolySpecial",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "extra", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "extra", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.meta.exposureChainTo(PolyBase)(PolySpecial);
@@ -1022,10 +1023,10 @@ test("from and singular imports honor polymorphic _type", () => {
     {
         child = null;
     }
-    CjsSchema.define(PolyHost, {
+    CjsSchema.be.define(PolyHost, {
         className: "PolyHost",
         fields: [
-            { name: "child", type: { kind: "rootRef", className: "PolyBase" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "child", type: { kind: "rootRef", className: "PolyBase" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1057,10 +1058,10 @@ test("reference import errors are loud and specific", () => {
     {
         name = "";
     }
-    CjsSchema.define(StrictRefNode, {
+    CjsSchema.be.define(StrictRefNode, {
         className: "StrictRefNode",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1068,10 +1069,10 @@ test("reference import errors are loud and specific", () => {
     {
         name = "";
     }
-    CjsSchema.define(StrictOther, {
+    CjsSchema.be.define(StrictOther, {
         className: "StrictOther",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1081,12 +1082,12 @@ test("reference import errors are loud and specific", () => {
         nodes = [];
         others = [];
     }
-    CjsSchema.define(StrictRefHost, {
+    CjsSchema.be.define(StrictRefHost, {
         className: "StrictRefHost",
         fields: [
-            { name: "node", type: { kind: "rootRef", className: "StrictRefNode" }, edit: { read: true, write: true, persist: true } },
-            { name: "nodes", type: { kind: "list", itemType: "StrictRefNode" }, edit: { read: true, write: true, persist: true } },
-            { name: "others", type: { kind: "list", itemType: "StrictOther" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "node", type: { kind: "rootRef", className: "StrictRefNode" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "nodes", type: { kind: "list", itemType: "StrictRefNode" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "others", type: { kind: "list", itemType: "StrictOther" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1120,22 +1121,22 @@ test("list items honor an explicit _type on input", () => {
         name = "";
         value = 0;
     }
-    CjsSchema.define(MapChild, {
+    CjsSchema.be.define(MapChild, {
         className: "MapChild",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
     class MapChildAlt extends MapChild
     {
     }
-    CjsSchema.define(MapChildAlt, {
+    CjsSchema.be.define(MapChildAlt, {
         className: "MapChildAlt",
         fields: [
-            { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
-            { name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } },
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "value", type: { kind: "float32" }, edit: { read: true, write: true, persist: true } }
         ]
     });
     CjsSchema.meta.exposureChainTo(MapChild)(MapChildAlt);
@@ -1144,10 +1145,10 @@ test("list items honor an explicit _type on input", () => {
     {
         children = [];
     }
-    CjsSchema.define(MapHost, {
+    CjsSchema.be.define(MapHost, {
         className: "MapHost",
         fields: [
-            { name: "children", type: { kind: "list", itemType: "MapChild" }, edit: { read: true, write: true, persist: true } }
+            { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "children", type: { kind: "list", itemType: "MapChild" }, edit: { read: true, write: true, persist: true } }
         ]
     });
 
@@ -1294,9 +1295,9 @@ test("an export estimated past sizeWarningBytes logs one warning naming its root
     {
         name = "";
     }
-    CjsSchema.define(SizedNode, {
+    CjsSchema.be.define(SizedNode, {
         className: "SizedNode",
-        fields: [ { name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } } ]
+        fields: [ { exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, name: "name", type: { kind: "string" }, edit: { read: true, write: true, persist: true } } ]
     });
     const node = new SizedNode();
     node.name = "x".repeat(1000);

@@ -1,42 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import fs from "node:fs";
 import { transformSync } from "@babel/core";
 import decoratorsPlugin from "@babel/plugin-proposal-decorators";
 import { IRoot } from "../../src/blue/exposure/IRoot.js";
 import { unregisterClass, getClassRegistration, getClassRegistrationRevision } from "../../src/blue/exposure/classes/registry.js";
 import { exposure } from "#be";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
-import { hasOwnInterfaceTable, mappedInterfaces, ownMappedInterfaces } from "../../src/blue/compose/interface.js";
+import { hasOwnInterfaceTable, mappedInterfaces } from "../../src/blue/compose/interface.js";
 import { BlueClasses } from "../../src/blue/exposure/BlueClasses.js";
+const be = CjsSchema.exposure;
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;
-
-// All explicit member/decorator rows of the five preparation samples. Bodies
-// are inert: this test proves declaration parity, not engine behaviour.
-const samples = JSON.parse(fs.readFileSync(new URL("./fixtures/decorator-sample-shapes.json", import.meta.url)));
-const flags = { read: 1, write: 2, readwrite: 3, notify: 4, hidden: 8, persist: 16, rpersist: 32, persistOnly: 24 };
-const spaces = { meta, blue, type };
-/** Markers that became JSDoc tags (decorator-upgrade.md § 00, 2026-10-30). */
-const STATUS_TAGS = new Set([ "implemented", "adapted", "notImplemented", "notSupported", "renamed", "cjs" ]);
-const contracts = new Map();
-const registeredEnums = new Set();
-const fn = function () {};
-const getter = function () { return null; };
-const setter = function (value) { void value; };
-
-/** Fixture references are registered literal identities, never reflection names. */
-function contract(name)
-{
-    if (!contracts.has(name))
-    {
-        class Contract {}
-        meta.interface(name)(Contract);
-        contracts.set(name, Contract);
-    }
-    return contracts.get(name);
-}
 
 /** Removes only the identity of a fixture owner; every other exported field is compared. */
 function comparable(value)
@@ -46,105 +21,6 @@ function comparable(value)
     return Object.fromEntries(Object.entries(value).filter(([key]) => key !== "declaringClass")
         .map(([key,entry]) => [key, comparable(entry)]));
 }
-
-/** Builds the same class shape through legacy stacks or their new complete-row spelling. */
-function sampleClass(sample, modern)
-{
-    class Sample {}
-    for (const m of sample.members)
-    {
-        if (m.kind === "constructor") continue;
-        const target = m.static ? Sample : Sample.prototype;
-        if (m.kind === "method") Object.defineProperty(target, m.name, { value: fn, configurable: true });
-        if (m.kind === "get" || m.kind === "set") Object.defineProperty(target, m.name, {
-            ...Object.getOwnPropertyDescriptor(target, m.name), configurable: true,
-            [m.kind]: m.kind === "get" ? getter : setter
-        });
-    }
-    for (const m of sample.members)
-    {
-        const target = m.static ? Sample : Sample.prototype;
-        const stack = m.decorators.filter(d => d.name.startsWith("blue.") && flags[d.name.slice(5)] !== undefined);
-        const chooser = m.decorators.find(d => d.name === "blue.chooser");
-        const prop = m.decorators.find(d => d.name === "blue.property");
-        if (modern && stack.length)
-        {
-            const bits = stack.reduce((mask,d) => mask | flags[d.name.slice(5)], 0);
-            const map = chooser ? exposure.mapAttributeWithChooser(bits, chooser.args[0]) : exposure.mapAttribute(bits);
-            map(target, m.name);
-        }
-        for (const d of m.decorators)
-        {
-            if (modern && (stack.includes(d) || chooser === d)) continue;
-            const [ns,key] = d.name.split(".");
-            // The fixture predates marker tags: the status-only markers are JSDoc tags now, with no decorator to apply.
-            if (ns === "meta" && STATUS_TAGS.has(key)) continue;
-            if (ns === "type" && ["enum","flags"].includes(key) || d.name === "blue.chooser")
-            {
-                const enumName = d.args[0];
-                if (!registeredEnums.has(enumName))
-                {
-                    CjsSchema.defineEnum({ ZERO: 0, ONE: 1 }, { name: enumName, chooser: [{ name: "ZERO", value: 0 }, { name: "ONE", value: 1 }] });
-                    registeredEnums.add(enumName);
-                }
-            }
-            let decorator = spaces[ns][key];
-            if (modern && d === prop)
-            {
-                const desc = Object.getOwnPropertyDescriptor(Sample.prototype, m.name);
-                decorator = desc.set ? exposure.mapProperty() : exposure.mapPropertyReadOnly();
-            }
-            else if (d.call) decorator = decorator(...d.args);
-            decorator(target, m.name);
-        }
-        // The old record store can express the exact new exposure fact too.
-        // Compare all fields, including macro kind/flags, against that explicit oracle.
-        if (!modern && stack.length)
-        {
-            const bits = stack.reduce((mask,d) => mask | flags[d.name.slice(5)], 0);
-            CjsSchema.defineField(Sample, m.name, "exposure", { macro: chooser ? "MAP_ATTRIBUTE_WITH_CHOOSER" : "MAP_ATTRIBUTE", flags: bits,
-                ...(chooser ? { chooser: chooser.args[0] } : {}) });
-        }
-        if (!modern && prop)
-        {
-            const writable = !!Object.getOwnPropertyDescriptor(Sample.prototype, m.name).set;
-            CjsSchema.defineField(Sample, m.name, "exposure", { macro: writable ? "MAP_PROPERTY" : "MAP_PROPERTY_READONLY", flags: writable ? 3 : 1 });
-        }
-    }
-    for (const d of sample.decorators)
-    {
-        if (d.name === "blue.interface")
-        {
-            const refs = d.args.map(arg => contract(arg.$expr));
-            if (modern) for (const ref of refs) exposure.mapInterface(ref)(Sample);
-            else blue.interface(...refs)(Sample);
-        }
-        if (d.name === "blue.chainTo")
-        {
-            const parent = contract(d.args[0].$expr);
-            (modern ? exposure.exposureChainTo(parent) : blue.chainTo(parent))(Sample);
-        }
-    }
-    const name = sample.name === "BlueCallbackManThreadData" ? "BlueCallbackMan::ThreadData" : sample.name;
-    if (sample.name === "BlueCallbackManThreadData")
-        (modern ? meta.carbon(name) : meta.define({ className: name, carbon: name }))(Sample);
-    else
-    {
-        if (!modern) blue.interface()(Sample);
-        (modern ? exposure.define(name) : blue.define(name))(Sample);
-    }
-    return Sample;
-}
-
-for (const sample of samples) test(`complete metadata pair: ${sample.name}`, () =>
-{
-    const Old = sampleClass(sample, false);
-    unregisterClass(CjsSchema.getClassName(Old));
-    const New = sampleClass(sample, true);
-    assert.deepEqual(comparable(CjsSchema.getSchema(New)), comparable(CjsSchema.getSchema(Old)));
-    const names = C => [...ownMappedInterfaces(C)].map(x => x === C ? "<self>" : CjsSchema.getClassName(x));
-    assert.deepEqual(names(New), names(Old));
-});
 
 test("exposed definitions add self and IRoot; native and own interfaces do not create tables", () =>
 {
@@ -169,7 +45,7 @@ test("complete attributes do not inherit parent flags, and ENUM comes only from 
     class Parent { value = 0; }
     class Child extends Parent {}
     CjsSchema.defineEnum({ ZERO: 0 }, { name: "Target.Flags", chooser: [{name:"ZERO",value:0}] });
-    CjsSchema.decorateField(Parent, "value", blue.readwrite, blue.persist, type.int32);
+    CjsSchema.decorateField(Parent, "value", be.mapAttribute(be.READWRITE | be.PERSIST), type.int32);
     blue.define("TargetParent")(Parent);
     CjsSchema.decorateField(Child, "value", exposure.mapAttributeWithChooser(exposure.READ, "Target.Flags"), type.enum("Target.Flags"));
     exposure.define("TargetChild")(Child);
@@ -294,7 +170,7 @@ test("own complete attributes keep explicit flags and aliases without Carbon ori
 test("legacy named/indexed own attributes coexist with zero-mask target declarations", () =>
 {
     class Sample { value = 0; other = 0; }
-    CjsSchema.decorateField(Sample, "value", meta.mapAttribute(meta.NONE, "legacy"), meta.readwrite, type.float32);
+    CjsSchema.decorateField(Sample, "value", meta.mapAttribute(meta.NONE, "legacy"), meta.mapAttribute(meta.READWRITE), type.float32);
     CjsSchema.decorateField(Sample, "other", meta.mapAttribute(meta.NONE), type.int32);
     meta.define("Goal3LegacyAttribute")(Sample);
     const members=CjsSchema.getSchema(Sample).members;
@@ -312,8 +188,8 @@ test("object ownership aliases preserve complete legacy class information and Bl
     {
         class Old { value = null; }
         class New { value = null; }
-        CjsSchema.decorateField(Old,"value",type[oldName](argument),meta.readwrite);
-        CjsSchema.decorateField(New,"value",type.object[newName](argument),meta.readwrite);
+        CjsSchema.decorateField(Old,"value",type[oldName](argument),meta.mapAttribute(meta.READWRITE));
+        CjsSchema.decorateField(New,"value",type.object[newName](argument),meta.mapAttribute(meta.READWRITE));
         const suffix=typeof argument==="string"?"Name":"Class";
         meta.define(`Goal3Old${oldName}${suffix}`)(Old);
         meta.define(`Goal3New${oldName}${suffix}`)(New);

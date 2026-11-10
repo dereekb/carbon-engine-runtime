@@ -31,7 +31,7 @@ class Owner {
     notifications = [];
     OnModified(name) { this.notifications.push(name); }
 }
-const field = (type, notify = false) => ({ type, edit: { persist: true, notify } });
+const field = (type, notify = false) => ({ type, exposure: { macro: "MAP_ATTRIBUTE", flags: notify ? 20 : 16 }, edit: { persist: true, notify } });
 CjsSchema.define(Item, { className: "BlackNativeListItem", fields: {
     value: field({ kind: "uint32" }, true), parent: field({ kind: "rootRef", className: "BlackNativeListOwner" })
 } });

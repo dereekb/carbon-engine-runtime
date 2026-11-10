@@ -10,9 +10,8 @@ import { blackBuilder, readBlack } from "../support/blackReader.js";
 import { EveBoosterSet2, EveEntity, EveMobile, EveShip2, EveSpaceObject2, TriDevice, trinity, Tr2Renderer } from "../../npm/dist/trinity/index.js";
 import { ITr2ShLightingReceiver } from "../../npm/dist/trinity/core/lighting/ITr2ShLightingReceiver.js";
 import { ITr2SecondaryLightSource } from "../../npm/dist/trinity/core/lighting/ITr2SecondaryLightSource.js";
+const be = CjsSchema.exposure;
 
-/** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.be;
 
 test("native lifecycle mappings belong to space objects and boosters and reach derived ships", () =>
 {
@@ -80,7 +79,7 @@ test("having lifecycle methods without native mappings does not opt into Black o
   }
   CjsSchema.define(UnmappedLifecycle, {
     className: "BlueFoundationUnmappedLifecycle",
-    fields: { value: [ type.float32, blue.persist, blue.notify ] }
+    fields: { value: [ type.float32, be.mapAttribute(be.PERSIST | be.NOTIFY) ] }
   });
   const reader = blackBuilder(authoredUnmappedBytes());
   const source = reader.CreateObject();

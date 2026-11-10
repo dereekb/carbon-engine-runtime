@@ -10,6 +10,7 @@ import { Copier } from "../../src/blue/exposure/Copier.js";
 import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
 import { INotify } from "../../src/blue/exposure/INotify.js";
 import { applyReaderMember, finalizeReaderObject } from "../../src/blue/schema/hydration.js";
+import { exposure as be } from "../../src/blue/exposure/be.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;
@@ -199,17 +200,17 @@ class InterfaceLifecycleParent
   Initialize() { this.calls.push(["initialize", this.value]); return true; }
   OnModified(name) { this.calls.push(["notify", name, this.value]); return true; }
 }
-CjsSchema.define(InterfaceLifecycleParent, {
+CjsSchema.be.define(InterfaceLifecycleParent, {
   className: "InterfaceTableLifecycleParent",
-  fields: { value: [type.int32, blue.persist, blue.notify] }
+  fields: { value: [ type.int32, be.mapAttribute(be.NOTIFY | be.PERSIST) ] }
 });
 blue.interface(IInitialize, INotify)(InterfaceLifecycleParent);
 
 // Its table ends, so nothing of the parent's is exposed: it maps value again itself, as Carbon's would have to.
 class InterfaceLifecycleEnded extends InterfaceLifecycleParent {}
-CjsSchema.define(InterfaceLifecycleEnded, {
+CjsSchema.be.define(InterfaceLifecycleEnded, {
   className: "InterfaceTableLifecycleEnded",
-  fields: { value: [type.int32, blue.persist, blue.notify] }
+  fields: { value: [ type.int32, be.mapAttribute(be.NOTIFY | be.PERSIST) ] }
 });
 blue.interface(INotify, InterfaceLifecycleParent)(InterfaceLifecycleEnded);
 

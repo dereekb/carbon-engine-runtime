@@ -12,6 +12,7 @@ import { ClassInfo } from "../../npm/dist/blue/base/ClassInfo.js";
 import { BLACK_DESTINATION } from "../../npm/dist/blue/base/PersistedMember.js";
 import { declaredMemberType, structureLayout } from "../../npm/dist/blue/schema/compileClassInfo.js";
 import { VARTYPE } from "../../npm/dist/global/consts/blue.js";
+import { exposure as be } from "../../npm/dist/blue/exposure/be.js";
 
 const entry = (className, name) =>
 {
@@ -42,9 +43,9 @@ test("declared kinds give Carbon's VARTYPE and destination", () =>
 test("persisted members keep their declared key and table order", () =>
 {
   class Owner { _boosters = null; baseName = ""; }
-  CjsSchema.define(Owner, { className: "BlackMetaFirstPersisted", members: [
-    { name: "boosters", key: "_boosters", type: { kind: "rootRef" }, edit: { persist: true } },
-    { name: "baseName", key: "baseName", type: { kind: "wstring" }, edit: { persist: true } }
+  CjsSchema.be.define(Owner, { className: "BlackMetaFirstPersisted", members: [
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "boosters", key: "_boosters", type: { kind: "rootRef" }, edit: { persist: true } },
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "baseName", key: "baseName", type: { kind: "wstring" }, edit: { persist: true } }
   ] });
   const { entries } = ClassInfo.exposeToBlue(Owner).meta;
   assert.deepEqual([ ...entries.keys() ], [ "boosters", "baseName" ]);
@@ -56,7 +57,7 @@ test("persisted members keep their declared key and table order", () =>
 test("a structure list's item class must be registered and declare a structure", () =>
 {
   class Item { value = 0; }
-  CjsSchema.define(Item, { className: "BlackMetaNoStructItem", fields: { value: [ type.uint32, CjsSchema.be.persist ] } });
+  CjsSchema.be.define(Item, { className: "BlackMetaNoStructItem", fields: { value: [ type.uint32, be.mapAttribute(be.PERSIST) ] } });
   assert.throws(() => structureLayout("BlackMetaNoStructItem"), /BlackMetaNoStructItem has no structureDefinition/);
   assert.throws(() => structureLayout("BlackMetaNeverRegisteredItem"), /BlackMetaNeverRegisteredItem is not registered \(import its package\)/);
 });

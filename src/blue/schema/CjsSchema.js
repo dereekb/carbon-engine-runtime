@@ -98,9 +98,6 @@ const STRUCT_TYPES = {
     BYTE_1: ["int8", "int8", 1, 1]
 };
 
-/** The member flags `meta` and `blue` share (Carbon's Be::EDITFLAGS). */
-const FLAG_NAMES = Object.freeze([ "read", "write", "readwrite", "notify", "hidden", "persist", "rpersist", "persistOnly" ]);
-
 /**
  * Reusable schema/decorator metadata surface.
  *
@@ -800,7 +797,7 @@ export class CjsSchema
          * the block's bytes only; the class decodes them through its
          * ICustomPersist methods. It implies nothing else: the member also
          * declares the value it holds (`uint32Array`, ...) and
-         * `blue.persistOnly`, and `define` refuses it without either, or
+         * `be.mapAttribute(be.PERSISTONLY)`, and `define` refuses it without either, or
          * on a class that does not map ICustomPersist.
          */
         binary: fieldDecorator("type", { binary: true }),
@@ -902,45 +899,6 @@ export class CjsSchema
          * that genuinely does not carry part of its parent's shape.
          */
         hideInherited: fieldNames => hiddenInheritedFieldsDecorator(normalizeHiddenInheritedFields(fieldNames))
-    };
-
-    // Be::EDITFLAGS, exactly (`blueexposure/include/BlueTypes.h:282-311`).
-    // Every member below is one of Carbon's; nothing else belongs here. The
-    // namespace was called `io` until 2026-09-18, which named about a third of
-    // what it holds - only PERSIST and RPERSIST are I/O, NOTIFY is wiring,
-    // HIDDEN and FLAGS are editor hints, READ and WRITE are access control.
-    /**
-     * Blue edit flags, one boolean per EDITFLAGS bit: read 0x001, write 0x002,
-     * notify 0x004, hidden 0x008, persist 0x010, rpersist 0x020; persistOnly is
-     * HIDDEN | PERSIST. FLAGS 0x100 and ENUM 0x200 come from the member's type
-     * (`type.flags`, `type.enum`), not from an edit decorator. The masks and
-     * EDIT_FORCELONG are not decorators. Flags combine independently, and
-     * persistence does not imply script access.
-     *
-     * - `notify` calls `OnModified(nameOrNames)` once for changed values.
-     *   Equal writes do not notify. `notify: false`, `markDirty: false` and
-     *   `skipUpdate: true` suppress this call without retaining names.
-     * - Values transport does not enforce READ, and direct JS field access is
-     *   never intercepted.
-     */
-    static #edit = {
-        // MODMASK 0x00F
-        read: fieldDecorator("edit", { read: true }),
-        write: fieldDecorator("edit", { write: true }),
-        readwrite: fieldDecorator("edit", { read: true, write: true }),
-        notify: fieldDecorator("edit", { notify: true }),
-        hidden: fieldDecorator("edit", { hidden: true }),
-
-        // SERMASK 0x0F0
-        persist: fieldDecorator("edit", { persist: true }),
-        // RPERSIST 0x020 - "like PERSIST but only unserialize (read only)":
-        // the value loads from a document and is never written back out.
-        rpersist: fieldDecorator("edit", { rpersist: true }),
-
-        // PERSISTONLY = HIDDEN | PERSIST, for hidden attributes.
-        persistOnly: fieldDecorator("edit", { persist: true, persistOnly: true, hidden: true }),
-
-
     };
 
     // Composition decorators: type/edit/carbon/impl/jessica DESCRIBE, compose
@@ -1109,10 +1067,9 @@ export class CjsSchema
     /**
      * Public grouping; these aliases share the existing implementations.
      * The `map*` family is our own exposure rows, the same decorators as
-     * `be`'s without the Blue flag (`createMapNamespace`).
-     * `property(name?, { persisted? })` declares a getter, with its
-     * setter, as Carbon's `MAP_PROPERTY*` row; its flags are derived
-     * (`propertyDecorator`).
+     * `be`'s without the Blue flag (`createMapNamespace`). Edit flags and
+     * properties are declared only through those rows (`meta.mapAttribute`,
+     * `meta.mapProperty*`).
      * Explicit `members`/`properties` arrays use { name, key, index?, ...metadata }
      * and retain multiple indexed routes on one key. Legacy `fields` inputs and
      * decorator arrays remain JS-keyed and also populate the compatibility view.
@@ -1120,10 +1077,6 @@ export class CjsSchema
     static meta = {
         ...exposureConstants(),
         ...exposureRowConstants(),
-        // Ruling 2026-10-15: flags are global - they describe behaviour for any
-        // member, ours included. `blue` (below) is the same flags stamped as
-        // Carbon's; `type` is the shared type vocabulary.
-        ...Object.fromEntries(FLAG_NAMES.map(name => [ name, this.#edit[name] ])),
         ui: { ...this.#jessica, components: createComponentsNamespace() },
         // No `ours`: a member or method without the blue stamp is ours (ruling 2026-10-15).
         // The status-only markers (implemented, adapted, notImplemented, notSupported, renamed, cjs) are JSDoc tags
@@ -1164,7 +1117,6 @@ export class CjsSchema
         setting: SETTING_DECORATOR,
         struct: createStructNamespace(),
         ...createMapNamespace(false),
-        property: (name, options) => propertyDecorator(name, options, false),
         chooser: values => chooserDecorator(values),
         define: (definitionOrConstructor, definition) => defineEntry(definitionOrConstructor, definition, false),
         hideInherited: this.hideInherited
@@ -1180,19 +1132,13 @@ export class CjsSchema
     /**
      * The Carbon-stamped decorators (ruling 2026-10-15): each is the `meta`
      * decorator of the same name, and also records that the member, method or
-     * class is Carbon's. `interface`, `inherit` and `chainTo` exist only here.
+     * class is Carbon's. Edit flags and properties are exposure rows
+     * (`be.mapAttribute`, `be.mapProperty*`, from `#be`), not decorators here. `interface`, `inherit` and `chainTo` exist only here.
      * `define` takes a class name, a definition object or, for a class without
      * decorators, the constructor and its definition. Extra donors live in class JSDoc.
      */
     static be = {
-        ...Object.fromEntries(FLAG_NAMES.map(name =>
-        {
-            const { namespace, value } = getDecoratorMetadata(this.#edit[name]);
-            return [ name, combinedFieldDecorator({ [namespace]: value, carbon: { member: true } }) ];
-        })),
         ...this.#carbon,
-        // Carbon's `MAP_PROPERTY*` row: `meta.property` stamped as Carbon's member.
-        property: (name, options) => propertyDecorator(name, options, true),
         // Carbon's `MAP_ATTRIBUTE_WITH_CHOOSER` chooser table: `meta.chooser` stamped as Carbon's member.
         chooser: values =>
         {
@@ -2037,7 +1983,7 @@ function declarationDecorator(role, name, options = {})
 }
 
 /**
- * `meta.property` / `blue.property`: Carbon's `MAP_PROPERTY`,
+ * The record behind `be.mapProperty*` / `meta.mapProperty*`: Carbon's `MAP_PROPERTY`,
  * `MAP_PROPERTY_READONLY` and `MAP_PROPERTY_PERSISTED`
  * (blueexposure/include/BlueExposureMacrosPython.h:182-230). Each builds a
  * `VarEntry` with no storage (offset and size 0), the getter and setter
@@ -2052,7 +1998,7 @@ function declarationDecorator(role, name, options = {})
  *
  * @param {string} [name] Exposed name, when it differs from the accessor key.
  * @param {{persisted?: boolean}} [options] `persisted`: `MAP_PROPERTY_PERSISTED`.
- * @param {boolean} carbon Whether the row is Carbon's (`blue.property`).
+ * @param {boolean} carbon Whether the row is Carbon's (`be.mapProperty*`).
  * @returns {Function} The getter decorator.
  */
 function propertyDecorator(name, options = {}, carbon)
@@ -2102,8 +2048,8 @@ function propertyDecorator(name, options = {}, carbon)
 function RejectPropertyFlags(key)
 {
     throw new TypeError(
-        `"${String(key)}" is a property: its flags are derived. Declare it with blue.property or ` +
-        "meta.property alone (READWRITE with a setter, READ without, { persisted: true } adds PERSIST)."
+        `"${String(key)}" is a property: its flags are derived. Declare it with be.mapProperty* or ` +
+        "meta.mapProperty* alone (mapProperty is READWRITE, ReadOnly READ, Persisted adds PERSIST)."
     );
 }
 
@@ -2145,7 +2091,7 @@ function registerDeclaredProperties(Constructor)
             const exposed = Object.keys(entry).filter(namespace =>
                 ![ "name", "key", "role", "index", "declaringClass", "impl" ].includes(namespace));
             if (!exposed.length) continue;
-            throw new TypeError(`${where} is an accessor with ${exposed.join(", ")} metadata; declare it with blue.property or meta.property, or give an attribute its flags.`);
+            throw new TypeError(`${where} is an accessor with ${exposed.join(", ")} metadata; declare it with be.mapProperty* or meta.mapProperty*, or map it as an attribute.`);
         }
 
         // The getter is recorded by the first pass; flags present before it were written.
@@ -2603,7 +2549,7 @@ function RejectInvalidBinaryMembers(Constructor, schema)
     {
         if (member.edit?.persistOnly !== true)
         {
-            throw new TypeError(`${schema.className}.${member.name}: type.binary requires blue.persistOnly.`);
+            throw new TypeError(`${schema.className}.${member.name}: type.binary requires be.mapAttribute(be.PERSISTONLY).`);
         }
     }
     const mapsCustomPersist = [ ...mappedInterfaces(Constructor) ].some(Interface => getRegisteredClassName(Interface) === "ICustomPersist");

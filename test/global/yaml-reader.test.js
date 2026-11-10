@@ -17,10 +17,12 @@ import "../../npm/dist/blue/values.js";
 let serial = 0;
 function register(Constructor, fields, extra = {})
 {
-  CjsSchema.define(Constructor, {
+  // Carbon exposure rows (MAP_ATTRIBUTE): only exposed members are in the member table the reader walks.
+  CjsSchema.be.define(Constructor, {
     className: "YamlReaderTest" + ++serial,
     members: Object.entries(fields).map(([key, type]) => ({
       key, name: key, type: typeof type === "string" ? { kind: type } : type,
+      exposure: { macro: "MAP_ATTRIBUTE", flags: type?.binary ? 24 : 19 },
       edit: type?.binary ? { persist: true, persistOnly: true, hidden: true } : { persist: true, read: true, write: true }
     })),
     ...extra
@@ -199,7 +201,7 @@ test("donor unknown scalar member recovery leaves its value on the cursor", () =
 test("persisted script-read-only storage is restored by native readers", () => {
   class Root { value = 1; }
   const name = register(Root, {}, { members: [
-    { key: "value", name: "value", type: { kind: "int32" }, edit: { read: true, persist: true } }
+    { key: "value", name: "value", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, edit: { read: true, persist: true } }
   ] });
   assert.equal(read(`type: ${name}\nvalue: 8`).value, 8);
 });

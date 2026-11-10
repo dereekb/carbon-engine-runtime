@@ -14,7 +14,7 @@ const blue = CjsSchema.be;
 
 import { Fixture, bytesOf, concat, u8, u16, i32, u32, f32, i64, floats } from "../support/blackFixture.js";
 
-const field = (type, notify = false) => ({ type, edit: { persist: true, notify } });
+const field = (type, notify = false) => ({ type, exposure: { macro: "MAP_ATTRIBUTE", flags: notify ? 20 : 16 }, edit: { persist: true, notify } });
 
 class Leaf
 {
@@ -72,7 +72,7 @@ class Owner
     set prop(value) { this._prop = value + 1; }
     OnModified(name) { this.notified.push(name); }
 }
-CjsSchema.define(Owner, { className: "BlackPortOwner", fields: {
+CjsSchema.be.define(Owner, { className: "BlackPortOwner", fields: {
     count: field({ kind: "uint32" }, true),
     negative: field({ kind: "int16" }),
     big: field({ kind: "int64" }),
@@ -90,7 +90,7 @@ CjsSchema.define(Owner, { className: "BlackPortOwner", fields: {
     records: field({ kind: "structList", className: "BlackPortRecord" }),
     list: field({ kind: "list", itemType: "BlackPortLeaf" }, true)
 }, properties: [
-    { name: "prop", key: "prop", role: "property", type: { kind: "uint32" }, edit: { persist: true } }
+    { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, name: "prop", key: "prop", role: "property", type: { kind: "uint32" }, edit: { persist: true } }
 ] });
 blue.interface(INotify)(Owner);
 

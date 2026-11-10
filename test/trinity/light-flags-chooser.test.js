@@ -76,13 +76,13 @@ test("meta.chooser declares a chooser without the ENUM bit; a missing chooser th
   CjsSchema.define(ChooserProbe, {
     className: "ChooserProbe",
     fields: {
-      bits: [ type.uint16, CjsSchema.meta.readwrite, meta.chooser("test.ChooserProbeFlags") ]
+      // A chooser reaches Blue through its row (MAP_ATTRIBUTE_WITH_CHOOSER), without the ENUM bit.
+      bits: [ type.uint16, CjsSchema.exposure.mapAttributeWithChooser(CjsSchema.exposure.READWRITE, "test.ChooserProbeFlags") ]
     }
   });
   const [ , , members ] = blue.classes.GetTypeInfo(new ChooserProbe());
   assert.equal(members.bits.editflags, 0x003);
   assert.deepEqual(members.bits.choosers, [ [ "One", 1, "first" ] ]);
-  assert.equal(CjsSchema.getField(ChooserProbe, "bits").carbon, undefined, "meta.chooser is ours");
 
   class NoChooserProbe {}
   CjsSchema.define(NoChooserProbe, {

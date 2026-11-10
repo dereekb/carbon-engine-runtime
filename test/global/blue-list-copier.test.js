@@ -9,6 +9,7 @@ import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
 import { INotify } from "../../src/blue/exposure/INotify.js";
 import { CjsSchema, type } from "../../src/blue/schema/index.js";
 import { BLUELISTEVENT } from "../../src/global/consts/blue.js";
+import { exposure as be } from "../../src/blue/exposure/be.js";
 
 /** Carbon-stamped legacy decorators; #schema no longer exports them. */
 const blue = CjsSchema.be;
@@ -26,17 +27,17 @@ class Leaf
 }
 blue.inherit(ItemContract)(Leaf);
 blue.interface(ItemContract)(Leaf);
-CjsSchema.define(Leaf, { className: "BlueListCopierLeaf", fields: {
-  value: [ type.int32, blue.persist ],
-  owner: [ type.rootRef("BlueListCopierHost"), blue.persist ]
+CjsSchema.be.define(Leaf, { className: "BlueListCopierLeaf", fields: {
+  value: [ type.int32, be.mapAttribute(be.PERSIST) ],
+  owner: [ type.rootRef("BlueListCopierHost"), be.mapAttribute(be.PERSIST) ]
 } });
 
 class DerivedLeaf extends Leaf
 {
   extra = 0;
 }
-CjsSchema.define(DerivedLeaf, { className: "BlueListCopierDerivedLeaf", fields: {
-  extra: [ type.int32, blue.persist ]
+CjsSchema.be.define(DerivedLeaf, { className: "BlueListCopierDerivedLeaf", fields: {
+  extra: [ type.int32, be.mapAttribute(be.PERSIST) ]
 } });
 
 class Host
@@ -52,9 +53,9 @@ class Host
   }
 }
 blue.interface(IInitialize)(Host);
-CjsSchema.define(Host, { className: "BlueListCopierHost", fields: {
-  items: [ type.list("BlueListCopierItem"), blue.persist ],
-  sibling: [ type.rootRef("BlueListCopierItem"), blue.persist ]
+CjsSchema.be.define(Host, { className: "BlueListCopierHost", fields: {
+  items: [ type.list("BlueListCopierItem"), be.mapAttribute(be.PERSIST) ],
+  sibling: [ type.rootRef("BlueListCopierItem"), be.mapAttribute(be.PERSIST) ]
 } });
 
 class Observer extends IListNotify
@@ -128,8 +129,8 @@ test("empty explicitly configured lists dispatch before the object-content heuri
 {
   class UnregisteredItem {}
   class EmptyHost { items = new BlueList(UnregisteredItem); }
-  CjsSchema.define(EmptyHost, { className: "BlueListCopierEmptyHost", fields: {
-    items: [ type.list("BlueListCopierUnregisteredItem"), blue.persist ]
+  CjsSchema.be.define(EmptyHost, { className: "BlueListCopierEmptyHost", fields: {
+    items: [ type.list("BlueListCopierUnregisteredItem"), be.mapAttribute(be.PERSIST) ]
   } });
   const source = new EmptyHost(), destination = new EmptyHost();
   const old = MakeLeaf(1), originalList = destination.items;
@@ -161,8 +162,8 @@ test("array declarations preserve explicit storage and notify the owner after li
     }
   }
   blue.interface(INotify)(ArrayHost);
-  CjsSchema.define(ArrayHost, { className: "BlueListCopierArrayHost", fields: {
-    items: [ type.array({ kind: "rootRef", className: "BlueListCopierItem" }), blue.persist ]
+  CjsSchema.be.define(ArrayHost, { className: "BlueListCopierArrayHost", fields: {
+    items: [ type.array({ kind: "rootRef", className: "BlueListCopierItem" }), be.mapAttribute(be.PERSIST) ]
   } });
   const source = new ArrayHost(), destination = new ArrayHost(), original = destination.items;
   source.items.push(MakeLeaf(12));
@@ -225,8 +226,8 @@ test("generic root and embedded struct copies need no fabricated registered list
   assert.equal(destination[0].value, 8);
   assert.notEqual(destination[0], source[0]);
   class EmbeddedHost { items = new BlueList(ItemContract); }
-  CjsSchema.define(EmbeddedHost, { className: "BlueListCopierEmbeddedHost", fields: {
-    items: [ type.object.embed("IList"), blue.persist ]
+  CjsSchema.be.define(EmbeddedHost, { className: "BlueListCopierEmbeddedHost", fields: {
+    items: [ type.object.embed("IList"), be.mapAttribute(be.PERSIST) ]
   } });
   const from = new EmbeddedHost(), to = new EmbeddedHost(), original = to.items;
   from.items.push(MakeLeaf(3));
@@ -322,9 +323,9 @@ for (const failure of [ "false", "throw" ])
 test("plain list and map fallback keeps its established shared-child copy behavior", () =>
 {
   class PlainHost { items = []; byName = new Map(); }
-  CjsSchema.define(PlainHost, { className: "BlueListCopierPlainHost", fields: {
-    items: [ type.list("BlueListCopierItem"), blue.persist ],
-    byName: [ type.map("BlueListCopierItem"), blue.persist ]
+  CjsSchema.be.define(PlainHost, { className: "BlueListCopierPlainHost", fields: {
+    items: [ type.list("BlueListCopierItem"), be.mapAttribute(be.PERSIST) ],
+    byName: [ type.map("BlueListCopierItem"), be.mapAttribute(be.PERSIST) ]
   } });
   const source = new PlainHost(), shared = MakeLeaf(6);
   source.items.push(shared);

@@ -1,15 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsSchema, meta, type } from "../../src/blue/schema/index.js";
+const be = CjsSchema.exposure;
 
-/** Carbon-stamped legacy decorators; #schema no longer exports them. */
-const blue = CjsSchema.be;
 
 test("schema-only values use canonical member names without Blue services", () =>
 {
     class Record { value = 1; }
     CjsSchema.define(Record, { className: "SchemaOnlyKeyRecord", fields: {
-        value: [meta.mapAttribute(meta.NONE, "Value"), type.int32, blue.readwrite]
+        value: [meta.mapAttribute(meta.NONE, "Value"), type.int32, be.mapAttribute(be.READWRITE)]
     } });
     const item = new Record();
     CjsSchema.setValues(item, { Value: 4 });

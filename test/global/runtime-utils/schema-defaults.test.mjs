@@ -125,7 +125,7 @@ test("CjsSchema.getDefaults reads an explicitly registered schema accessor", () 
     CjsSchema.decorateField(
         SchemaDefaultAccessorProbe,
         "color",
-        meta.read,
+        meta.mapAttribute(meta.READ),
         type.color
     );
     CjsSchema.define(SchemaDefaultAccessorProbe, {
