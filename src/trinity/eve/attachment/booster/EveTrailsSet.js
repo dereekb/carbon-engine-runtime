@@ -211,6 +211,18 @@ export class EveTrailsSet
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+  }
+
+  /**
    * Carbon OnModified (cpp:175-183): a new mesh path reloads.
    *
    * @implemented
