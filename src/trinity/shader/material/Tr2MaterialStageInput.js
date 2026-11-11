@@ -41,6 +41,18 @@ export class Tr2MaterialStageInput
   @type.rawStruct("CcpMallocBuffer")
   constantMirror = null;
 
+  /**
+   * Releases the native stage's constant-buffer value member.
+   * Carbon: trinity/trinity/Shader/Tr2Material.cpp:94-97 and Tr2Material.h:98.
+   * @adapted No shared-constant-buffer table is acquired here, so there is no shared key to release.
+   * @adapted Explicit AL release replaces the native value member's destructor in JavaScript.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.constantBuffer.Destroy();
+  }
+
   // States against Tr2Material.cpp:158-199, both adapted: no GPU constant buffer or shared-buffer table (Tr2SharedConstantBuffers) is involved, so
   // AllocateConstants only sizes the zeroed mirror and GetSharedConstantBuffer keeps a copy of the contents where Carbon clears the mirror and
   // shares a GPU buffer.
