@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Tr2BufferAL } from "../../npm/dist/trinityal/index.js";
-import { Tr2Sprite2dScene, Tr2Sprite2dD3DVertex } from "../../npm/dist/trinity/index.js";
+import { Tr2Sprite2dScene, Tr2Sprite2dD3DVertex, Tr2Sprite2dContainer } from "../../npm/dist/trinity/index.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/core/context/Tr2RenderContext.js";
 
 /**
@@ -119,6 +119,32 @@ function captureContext(t)
   scene._SelectEffect = () => true;
   return { scene, allocations, draws, context };
 }
+
+test("container destruction releases its captured list before detaching children", t =>
+{
+  const { scene, allocations } = captureContext(t);
+  const container = new Tr2Sprite2dContainer(), child = new Tr2Sprite2dContainer();
+  container.children.Append(child);
+  assert.equal(child._parent, container);
+  scene.StartCapture(container);
+  scene.RenderTriangleVerts([new Tr2Sprite2dD3DVertex()], 1, [0, 0, 0], 3);
+  const list = scene.EndCapture(null);
+  container._cachedDisplayList = list;
+  const destruct = list.Destruct.bind(list);
+  t.mock.method(list, "Destruct", () =>
+  {
+    assert.equal(child._parent, container, "derived cleanup precedes base detachment");
+    destruct();
+  });
+  container.Destruct();
+  container.Destruct();
+  assert.equal(container._cachedDisplayList, null);
+  assert.equal(list.Destruct.mock.callCount(), 1);
+  assert.ok(allocations.every(buffer => !buffer.alive));
+  assert.equal(child._parent, null);
+  assert.deepEqual(Array.from(container.children), [child]);
+  scene._CleanUpStacksAfterRender();
+});
 
 test("capture retains global indices across texture batches and replays without ring uploads", t =>
 {
