@@ -190,6 +190,17 @@ export class TriPoolAllocator
     }
   }
 
+  /**
+   * Carbon destructor (TriPoolAllocator.cpp:16-24) frees previous/current pools.
+   * @adapted Dropping both typed-array views releases JS backing storage; GC replaces CCP_FREE without detaching retained external views.
+   */
+  OnDestruct()
+  {
+    this.#previousPools.length = 0;
+    this.#pool = this.#poolUints = null;
+    this.#cursor = 0;
+  }
+
   // C++ needs no registration step: Allocate<T>() resolves the layout from the
   // type system, so every Carbon struct is allocatable the moment the pool
   // exists. The frame pool reproduces that by registering the whole catalog
