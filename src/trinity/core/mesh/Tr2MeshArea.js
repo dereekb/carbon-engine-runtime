@@ -9,6 +9,8 @@ import { meta, type } from "#schema";
 /**
  * One drawable range of a mesh: the index and count of geometry groups plus the
  * effect, shadow, depth and LOD state that decide how the range is batched.
+ * Carbon destructor: trinity/trinity/Tr2MeshArea.cpp:26-34.
+ * @adapted No own hook is needed: SetJointMappingAnimRig(nullptr) only drops a borrowed pointer; its JS array is GC-managed and has no release action.
  */
 @be.define("Tr2MeshArea")
 
