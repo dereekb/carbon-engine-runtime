@@ -43,7 +43,8 @@ test("each list is shuffled once at registration, and an empty list unregisters 
 
   RegisterVideoPlaylists(resMan, { list: [ "res:/video/a.webm" ] });
   RegisterVideoPlaylists(resMan, { list: [] });
-  assert.throws(() => resMan.GetResource("dynamic:/list"));
+  // An unregistered dynamic: name gives null, as Carbon's (BlueResMan.cpp:225-235).
+  assert.equal(resMan.GetResource("dynamic:/list"), null);
 });
 
 test("a playlist needs at least one video", () =>
