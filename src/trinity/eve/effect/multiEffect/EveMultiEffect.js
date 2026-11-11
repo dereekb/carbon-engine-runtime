@@ -57,6 +57,7 @@ export class EveMultiEffect extends IRoot
   /**
    * Unlinks controllers for deletion and detaches this owner's native back pointers.
    * Carbon: trinity/trinity/Eve/EveMultiEffect.cpp:23-29.
+   * @adapted Detaches owned list observers as BlueList member destruction does (blueexposure/include/BlueListUtil.h:198-204), retaining content.
    * @adapted Detaches JS strong back references; native BlueList destruction suppresses removal callbacks.
    * Native removal behavior: EveMultiEffect.cpp:99,119; blueexposure/include/BlueListUtil.h:198-204.
    * @returns {void}
@@ -66,6 +67,9 @@ export class EveMultiEffect extends IRoot
     for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
     for (const parameter of this.parameters) parameter.SetOwner(null);
     for (const binding of this.bindings) binding.SetOwner(null);
+    this.bindings.SetNotify(null);
+    this.parameters.SetNotify(null);
+    this.controllers.SetNotify(null);
   }
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
