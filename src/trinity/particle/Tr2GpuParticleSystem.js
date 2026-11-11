@@ -352,7 +352,7 @@ export class Tr2GpuParticleSystem
    * does not destroy buffers or effects that may still be shared by callers.
    *
    * Carbon: Tr2GpuParticleSystem destructor (trinity/trinity/Particle/Tr2GpuParticleSystem.cpp:106-119).
-   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @adapted Explicit Destroy releases by-value constant-buffer shares (Tr2GpuParticleSystem.h:241-245); the graph dispatches base teardown.
    * @returns {void}
    */
   OnDestruct()
@@ -362,6 +362,9 @@ export class Tr2GpuParticleSystem
       this._variableStore = null;
       for (const slot of EFFECT_SLOTS) this.SetVariableStore(this[slot]);
     }
+    this._emitCB.Destroy();
+    this._updateCB.Destroy();
+    this._sortCB.Destroy();
   }
 
   /**
