@@ -36,6 +36,18 @@ import { vec4 } from "#math/vec4";
 })
 export class TriValueBinding extends INotify
 {
+  /**
+   * Removes this binding from its current reroutable destination.
+   * Carbon: trinity/trinity/TriValueBinding.cpp:25-32.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    const destination = CjsSchema.cast(this.GetCurrentDestinationObject(), ITriReroutable);
+    if (destination) destination.UnregisterBinding(this);
+  }
+
   /** m_name (std::string) [READWRITE, PERSIST] */
 
   @type.string
