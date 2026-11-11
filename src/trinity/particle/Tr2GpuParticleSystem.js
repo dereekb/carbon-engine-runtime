@@ -354,6 +354,7 @@ export class Tr2GpuParticleSystem
    * Carbon: Tr2GpuParticleSystem destructor (trinity/trinity/Particle/Tr2GpuParticleSystem.cpp:106-119).
    * @adapted Explicit Destroy releases by-value constant-buffer shares (Tr2GpuParticleSystem.h:241-245); the graph dispatches base teardown.
    * @adapted The existing no-compute backend owns extra rendering resources, released through its private helper.
+   * @adapted Native reference buffers/effects (h:146-176) remain shared; CPU emitter records (h:225-237) need no active release. Profile timers (h:273-276) are not acquired in JS.
    * @returns {void}
    */
   OnDestruct()
