@@ -1538,10 +1538,11 @@ export class Tr2InteriorScene extends ITr2PickableScene
   }
 
   /**
-   * Explicit JS final lifetime releases the shadow wrappers owned by this scene.
+   * Releases owned shadow wrappers, batches and picking data, then detaches shadow variables.
    *
    * Carbon: Tr2InteriorScene::~Tr2InteriorScene (trinity/trinity/Interior/Tr2InteriorScene.cpp:188-200).
    * @adapted Preserves explicit shadow and picking ownership; graph dispatch runs the device-resource base afterward.
+   * @adapted Explicitly detaches owned list observers, matching native BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), without clearing content.
    */
   OnDestruct()
   {
@@ -1552,10 +1553,16 @@ export class Tr2InteriorScene extends ITr2PickableScene
     this.backgroundCubemapRes = null;
     this._whiteTexture = null;
     this._noiseTexture = null;
-    // Carbon's destructor (cpp:191-194).
+    // Carbon's destructor (cpp:190-199).
+    this._primaryRenderBatches.Clear();
     this._pickingBatches.Clear();
     this._opaquePickingBatches.Clear();
     this._pickBuffer.Destruct();
+    const store = Tr2VariableStore.globalStore();
+    for (let index = 0; index < 4; index++) store.FindVariable(`SpotlightShadow${index}`).SetValue(null);
+    this.dynamics.SetNotify(null);
+    this.lights.SetNotify(null);
+    this.cells.SetNotify(null);
   }
 
   static VisualizeMethod = VisualizeMethod;
