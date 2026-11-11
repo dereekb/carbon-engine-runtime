@@ -30,6 +30,18 @@ import { Tr2StateMachineState } from "./Tr2StateMachineState.js";
 export class Tr2StateMachine
 {
   /**
+   * Detaches this state machine's owned state-list observer.
+   * Carbon: trinity/trinity/Controllers/Tr2StateMachine.cpp:8-21.
+   * @adapted Explicit observer detach replaces BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), retaining states.
+   * @adapted Native sim-time rebase registration is unsupported and never acquired in this port.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.states.SetNotify(null);
+  }
+
+  /**
    * Owned, ordered list of Tr2StateMachineState references. List operations
    * notify this machine so it can maintain state linkage.
    * @type {BlueList}
