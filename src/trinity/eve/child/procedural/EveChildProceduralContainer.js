@@ -56,6 +56,17 @@ import { IEveChildTransformModifier } from "../modifiers/IEveChildTransformModif
 })
 export class EveChildProceduralContainer extends EveChildTransform
 {
+  /**
+   * Detaches the selected child's parent and owner pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/ProceduralContainer/EveChildProceduralContainer.cpp:15-18.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.UnregisterChild(this.selectedObject);
+  }
+
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildProceduralContainer_Blue.cpp:24 */
 
