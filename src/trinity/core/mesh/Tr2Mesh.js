@@ -294,9 +294,8 @@ export class Tr2Mesh extends Tr2MeshBase
   }
 
   /**
-   * Removes this owner's resource notification links.
+   * Removes both geometry notification links, the complete native destructor body.
    * Carbon: trinity/trinity/Tr2Mesh.cpp:14-24.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
    */
