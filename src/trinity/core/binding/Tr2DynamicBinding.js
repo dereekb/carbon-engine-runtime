@@ -15,8 +15,8 @@ import { TriValueBinding } from "./TriValueBinding.js";
  * its owner's parameter map, builds a weak TriValueBinding and starts copying
  * after a configured delay.
  *
- * Times are Be::Time, Blue 100ns ticks. Every instance takes part in sim-time
- * rebasing from construction, as Carbon's does.
+ * Times are Be::Time, Blue 100ns ticks. Native sim-time rebase registration
+ * is not acquired in the browser; see the constructor adaptation.
  */
 @be.define({
   name: "Tr2DynamicBinding",
@@ -176,6 +176,7 @@ export class Tr2DynamicBinding extends INotify
    * @returns {void}
    * Carbon: Tr2DynamicBinding destructor (trinity/trinity/Tr2DynamicBinding.cpp:185-190).
    * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
+   * @adapted No sim-time subscription is acquired by the JS constructor, so there is none to unregister (native cpp:182,187).
    */
   OnDestruct()
   {
