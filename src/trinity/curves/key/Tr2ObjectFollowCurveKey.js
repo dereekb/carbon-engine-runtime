@@ -42,6 +42,19 @@ import { Tr2FollowCurveKeyInterpolation, RotationSetting } from "../enums.js";
 })
 export class Tr2ObjectFollowCurveKey extends ITr2FollowCurveKey
 {
+  /**
+   * Runs the native destructor body.
+   * Carbon: Tr2ObjectFollowCurveKey destructor (trinity/trinity/Curves/Tr2FollowCurveKey.cpp:22-26).
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.object = null;
+    this._locator = null;
+  }
+
+
   /** Authored key name. */
 
   @type.string
