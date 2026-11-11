@@ -353,6 +353,7 @@ export class Tr2GpuParticleSystem
    *
    * Carbon: Tr2GpuParticleSystem destructor (trinity/trinity/Particle/Tr2GpuParticleSystem.cpp:106-119).
    * @adapted Explicit Destroy releases by-value constant-buffer shares (Tr2GpuParticleSystem.h:241-245); the graph dispatches base teardown.
+   * @adapted The existing no-compute backend owns extra rendering resources, released through its private helper.
    * @returns {void}
    */
   OnDestruct()
@@ -365,6 +366,7 @@ export class Tr2GpuParticleSystem
     this._emitCB.Destroy();
     this._updateCB.Destroy();
     this._sortCB.Destroy();
+    if (this._noCompute) this._noCompute.Destroy();
   }
 
   /**
