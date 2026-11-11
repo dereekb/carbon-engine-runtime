@@ -3,7 +3,10 @@
 // Verify fields against format-carbon resources/Tr2AsyncSave.json.
 import { CjsSchema, type } from "#schema";
 
-/** Retained-only reference shape mirroring Carbon's abstract prepare/save callback base, superseded by promise-based format `Write`/`WriteAsync` operations and resource-level save-status compatibility methods. */
+/**
+ * Dropped reference shape; format writers own supported JS saving.
+ * @adapted No runtime destructor: this class is not exported or acquired. Native Resources/Tr2AsyncSave.cpp:14-17,85-117 cancels save/prepare queue IDs; maintained HostBitmap and TriTextureRes save entry points throw before acquiring those callbacks.
+ */
 export class Tr2AsyncSave
 {
 
