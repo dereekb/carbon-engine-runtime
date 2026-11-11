@@ -129,6 +129,20 @@ export class EveTacticalOverlay
   }
 
   /**
+   * Detaches the owned variable store from the three authored effects.
+   * Carbon: trinity/trinity/Eve/UI/EveTacticalOverlay.cpp:92-99.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this._variableStore = null;
+    this._SetVariableStore(this.anchorEffect);
+    this._SetVariableStore(this.connectorEffect);
+    this._SetVariableStore(this.velocityEffect);
+  }
+
+  /**
    * Attaches the owned variable store to every authored effect.
    *
    * @implemented
