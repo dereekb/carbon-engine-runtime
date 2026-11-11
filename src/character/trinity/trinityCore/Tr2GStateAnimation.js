@@ -13,6 +13,7 @@ import { Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
  *
  * Advancing the graph by itself (transitions, the per-frame update) needs Granny's proprietary GState runtime and is not
  * supported; loading it, its parameters and its time controls are portable, and the time controls are ported.
+ * @adapted No own teardown hook: native destructor/Cleanup (Tr2GStateAnimation.cpp:66-79,1168-1219) release Granny/GState instances, poses, bindings and bone storage and detach resource notifications. This class acquires none of them: path setters only store strings, loading is unimplemented and instantiation is unsupported.
  */
 @be.define({
   name: "Tr2GStateAnimation",
