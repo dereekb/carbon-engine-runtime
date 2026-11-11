@@ -59,6 +59,34 @@ test("a GSF carries animation references, not geometry or a skeleton", () =>
   );
 });
 
+test("loaded GState destruction releases its file and map without destroying shared animation resources", async t =>
+{
+  const manager = managerFor(t, CjsGr2Format.readGsf(gsfRaw()));
+  manager.RegisterObjectLoader("gsf", data => data);
+  manager.RegisterExtension("gsf", Tr2GrannyStateRes);
+  const owner = await manager.FetchResource("res:/owner.gsf");
+  const peer = await manager.FetchResource("res:/peer.gsf");
+  const animation = new TriGrannyRes();
+  const destroy = t.mock.method(animation, "Destruct", () => assert.fail("shared animation must not be destroyed"));
+  const path = owner.GetGStateAnimFileRefPaths()[0];
+  owner.SetAnimationResource(path, animation);
+  peer.SetAnimationResource(path, animation);
+  const retained = owner.GetStateMachine();
+  assert.ok(retained);
+  assert.equal(owner.IsFullyLoaded(), true);
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    owner.Destruct();
+    assert.equal(owner.GetStateMachine(), null);
+    assert.equal(owner.GetAnimationResource(path), null);
+    assert.equal(owner.IsFullyLoaded(), false);
+    assert.equal(peer.GetStateMachine(), retained);
+    assert.equal(peer.GetAnimationResource(path), animation);
+    assert.equal(destroy.mock.callCount(), 0);
+  }
+  peer.Destruct();
+});
+
 
 test("geometry is not mistaken for a GState during native loading", async t =>
 {
