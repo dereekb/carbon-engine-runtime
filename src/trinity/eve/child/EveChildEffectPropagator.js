@@ -105,6 +105,17 @@ function SortByCircleDist(lhs, rhs)
 })
 export class EveChildEffectPropagator extends EveChildContainer
 {
+  /**
+   * Detaches the propagated effect's parent and owner pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildEffectPropagator.cpp:40-43.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.UnregisterChild(this._effect);
+  }
+
 
   /**
    * m_type (PropagationType - enum PropagationType) [READWRITE, PERSIST, ENUM, NOTIFY]
