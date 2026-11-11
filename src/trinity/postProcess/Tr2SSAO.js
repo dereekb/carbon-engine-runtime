@@ -60,6 +60,18 @@ function DispatchSize(tileSize, totalSize)
 @be.inherit(IRoot)
 export class Tr2SSAO extends IRoot
 {
+  /**
+   * Releases the native by-value constant-buffer member.
+   * Carbon: Tr2SSAO member (trinity/trinity/Tr2SSAO.h:103).
+   * @adapted Explicit Destroy replaces implicit shared_ptr member release; referenced effects and textures retain their existing lifetime policy.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this._cortaoConstantBuffer.Destroy();
+  }
+
+
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2SSAO_Blue.cpp:26); chooser SSAOQualityChooser (trinity/trinity/Tr2SSAO_Blue.cpp:8). */
   @be.mapAttributeWithChooser(be.READWRITE | be.NOTIFY | be.ENUM, "trinity.SSAOQuality")
   @type.int32
