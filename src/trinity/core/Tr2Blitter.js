@@ -253,6 +253,19 @@ export class Tr2Blitter
     this.#blitFilteredEffect = null;
   }
 
+  /**
+   * Unregisters the blitter's global shader variables.
+   * Carbon: trinity/trinity/Tr2Blitter.cpp:31-35.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    const store = Tr2VariableStore.globalStore();
+    store.UnregisterVariable(BLIT_SOURCE);
+    store.UnregisterVariable("mipLevel");
+  }
+
   /** Drops the declaration handle and the buffer, as `ReleaseResources` does. */
   ReleaseResources()
   {
