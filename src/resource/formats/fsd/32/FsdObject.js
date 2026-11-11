@@ -1,6 +1,3 @@
-import { IRoot } from "../../../../blue/exposure/IRoot.js";
-import { CjsSchema } from "#schema/CjsSchema";
-
 // Source: fsd/FsdObject.h
 // Source: fsd/FsdObject.cpp
 // Source: fsd/FsdObject_Blue.cpp
@@ -20,12 +17,13 @@ import { PyErr_SetString, PyExc } from "./pyErr.js";
  * attributes present, a `uint32_t` offset per present variable-offset
  * attribute, and the variable-sized data those offsets are relative to.
  *
- * Carbon exposes `GetAttr` to Python as `__getattr__` (FsdObject_Blue.cpp);
- * here it is called directly. Carbon's FsdObject is a Blue class, but the FSD
- * format module may import nothing outside FSD and the shared format helpers,
- * so it is a plain class here.
+ * Carbon's FsdObject is `BLUE_CLASS(FsdObject) : public IRoot` (FsdObject.h:10-11) only so Python reaches
+ * `GetAttr` as `__getattr__` (FsdObject_Blue.cpp) and for its lockobj.
+ *
+ * @adapted a plain class, not an IRoot: JS has no Python to expose it to and calls `GetAttr` directly, and the FSD
+ *   format module imports nothing outside FSD and the shared format helpers.
  */
-export class FsdObject extends IRoot
+export class FsdObject
 {
     /** @type {ObjectSchemaAttributes|null} The object's schema. */
     _objectSchemaAttributes = null;
@@ -188,6 +186,3 @@ function ThrowUnlistedOptional(attributeName, path)
     error.variant = "fsd32";
     throw error;
 }
-
-
-CjsSchema.exposure.define("FsdObject")(FsdObject);

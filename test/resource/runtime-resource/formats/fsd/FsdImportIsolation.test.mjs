@@ -26,6 +26,12 @@ const SHARED_FORMAT_MODULES = new Set([
     "global/utils/bytes.js",
     "global/utils/is.js",
     "global/math/num.js",
+    // Leaves of modules admitted above, visible since the build writes # imports as relative paths:
+    "global/utils/validation.js", // the 64-bit schema decoder's pure argument checks
+    "global/math/random.js", // num.js's own import
+    "global/math/sseReciprocalSqrtTable.json.js", // num.js's own import
+    "global/consts/media/metadata.js", // CjsFormat's StreamType
+    "blue/enums/CjsBlueEnumRegistry.js", // where metadata.js registers its enums; imports nothing
 ].map(name => path.join(PACKAGE_ROOT, "npm", "dist", name)));
 
 test("the built FSD entry imports directly and identifies synthetic modern bytes", async () =>
