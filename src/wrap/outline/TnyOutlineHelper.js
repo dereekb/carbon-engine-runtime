@@ -409,12 +409,10 @@ export class TnyOutlineHelper extends ITr2RenderNode
   /**
    * Releases owned textures/effects; detaching the nodes from the job is the caller's job.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs Preserves this browser/wrapper owner's existing cleanup through graph lifetime dispatch.
    * @cjs
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._destroyed) return;
     this._destroyed = true;

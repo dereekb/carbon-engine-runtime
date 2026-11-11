@@ -371,7 +371,7 @@ export class TnyHangar extends TnyScene
      * Removes the hangar's effects and timers; the ships and the hangar stay in the scene.
      * @cjs
      */
-    Destruct()
+    OnDestruct()
     {
         for (const timer of this._timers) clearTimeout(timer);
         this._timers.clear();

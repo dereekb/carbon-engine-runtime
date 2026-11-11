@@ -120,11 +120,9 @@ export class CjsWebgpuVideoColorSampler
   /**
    * Cancel mapping and release the three owned buffers with their texture.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs Preserves this browser/wrapper owner's existing cleanup through graph lifetime dispatch.
    */
-  Destruct()
+  OnDestruct()
   {
     this._destroyed = true;
     this._partial.destroy();

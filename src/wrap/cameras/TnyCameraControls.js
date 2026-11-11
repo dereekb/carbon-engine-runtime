@@ -758,12 +758,10 @@ export class TnyCameraControls
   /**
    * Releases routing and observers; the borrowed camera remains host-owned.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs Preserves this browser/wrapper owner's existing cleanup through graph lifetime dispatch.
    * @cjs
    */
-  Destruct()
+  OnDestruct()
   {
     this.Uninstall();
     this._listeners.clear();

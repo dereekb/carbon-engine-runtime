@@ -170,11 +170,9 @@ export class CjsWebgpuConstantArena
   /**
    * Releases every page.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs Preserves this browser/wrapper owner's existing cleanup through graph lifetime dispatch.
    */
-  Destruct()
+  OnDestruct()
   {
     for (const page of this._pages) page?.destroy?.();
 

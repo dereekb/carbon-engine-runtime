@@ -112,9 +112,10 @@ export class CjsPaperDoll
 
     /**
      * Releases what the doll was handed, so nothing it owned is renewed through it again.
+     * @cjs Preserves existing application-owned references; no native counterpart.
      * @returns {void}
      */
-    Destruct()
+    OnDestruct()
     {
         this.compositors = [];
         this.skeletonResource = null;

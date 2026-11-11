@@ -19,6 +19,23 @@ import { Tr2ControllerFloatVariable } from "../../npm/dist/trinity/controllers/e
 import { dirtLevelFromWeeks } from "../../npm/dist/wrap/objects/TnySpaceObject.js";
 import { Tr2PostProcess2 } from "../../npm/dist/trinity/postProcess/Tr2PostProcess2.js";
 
+test("mobile wrapper teardown visits slots before detaching base listeners", () =>
+{
+    const mobile = new TnyMobile();
+    const listener = () => {};
+    mobile._onModified = mobile._onTypeInfoModified = listener;
+    let slotCalls = 0;
+    mobile.slots = [{ Destruct()
+    {
+        assert.equal(mobile._onModified, listener, "derived slots retire before base listener cleanup");
+        slotCalls++;
+    } }];
+    mobile.Destruct();
+    assert.equal(slotCalls, 1);
+    assert.equal(mobile._onModified, null);
+    assert.equal(mobile._onTypeInfoModified, null);
+});
+
 test("ship acquisition preserves the library contract and starts controllers without reinitializing", async t =>
 {
     const library = new CjsLibrary(), ship = new EveShip2();

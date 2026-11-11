@@ -259,7 +259,7 @@ export class TnySlot extends CjsGraphRoot
      * Detaches the UI.
      * @cjs
      */
-    Destruct()
+    OnDestruct()
     {
         this._onModified = null;
     }

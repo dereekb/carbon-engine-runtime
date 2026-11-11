@@ -52,10 +52,9 @@ export class TnyMobile extends TnySpaceObject
      * Detaches the slots too.
      * @cjs
      */
-    Destruct()
+    OnDestruct()
     {
         for (const slot of this.slots ?? []) slot.Destruct();
-        super.Destruct();
     }
 
     /**

@@ -549,7 +549,7 @@ export class TnySpaceObject extends CjsGraphRoot
      * Detaches the UI and this wrapper; the native object is the library's.
      * @cjs
      */
-    Destruct()
+    OnDestruct()
     {
         this._onModified = null;
         this._onTypeInfoModified = null;
