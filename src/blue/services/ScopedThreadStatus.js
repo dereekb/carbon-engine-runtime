@@ -28,8 +28,10 @@ export class ScopedThreadStatus
    * previous status.
    *
    * @adapted
+   * Carbon: ScopedThreadStatus destructor (blue/include/IBlueThreadMonitor.h:31-34).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     BeThreadMonitor.SetThreadStatus(this._prevStatus);
   }

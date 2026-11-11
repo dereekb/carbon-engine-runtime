@@ -80,8 +80,10 @@ export class Tr2LockGuard
    *
    * @adapted JavaScript has no deterministic destructor; the owner calls this
    *   when it releases the resource.
+   * Carbon: Tr2LockGuard destructor (trinity/trinityal/Tr2LockGuard.cpp:13-16).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     this._memory = null;
   }

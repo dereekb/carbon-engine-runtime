@@ -156,11 +156,10 @@ export class Tr2MouseCursor
     /**
      * Releases any owned object URL and clears the cursor value.
      *
-     * Temporary destructor stand-in: exists because teardown is required before
-     * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-     * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+     * Carbon: Tr2MouseCursor destructor (trinity/trinity/UI/Tr2MouseCursor.cpp:26-34).
+     * @adapted Browser URL/CSS cleanup replaces native cursor deletion; graph dispatch retains the existing teardown.
      */
-    Destruct()
+    OnDestruct()
     {
         if (this.#objectUrl && typeof globalThis.URL?.revokeObjectURL === "function")
         {
