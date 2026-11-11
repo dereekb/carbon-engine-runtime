@@ -754,6 +754,7 @@ export class EveSpaceObject2 extends EveEntity
   /**
    * Releases damage-filter sessions, geometry notifications and owner back pointers.
    * Carbon: trinity/trinity/Eve/SpaceObject/EveSpaceObject2.cpp:235-257.
+   * @adapted Detaches owned list observers as BlueList member destruction does (blueexposure/include/BlueListUtil.h:198-204), retaining content.
    * @adapted Removes any manager-owned geometry link; native notification acquisition is currently unported.
    * @adapted Audio geometry is unported and audio teardown is outside this task's scope.
    * @returns {void}
@@ -764,6 +765,12 @@ export class EveSpaceObject2 extends EveEntity
     if (this._geometryResFromMesh) blue.resMan.notify.Remove(this, this._geometryResFromMesh);
     for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
     for (const child of this.effectChildren) child.SetOwner(null);
+    this.controllers.SetNotify(null);
+    this.lights.SetNotify(null);
+    this.effectChildren.SetNotify(null);
+    this.overlayEffects.SetNotify(null);
+    this.decals.SetNotify(null);
+    this.attachments.SetNotify(null);
   }
 
   /** Carbon m_boneOffsets: where this ship's palette landed in the bone ring, this frame and last.
