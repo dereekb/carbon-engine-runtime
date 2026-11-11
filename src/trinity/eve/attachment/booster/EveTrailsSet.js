@@ -211,15 +211,16 @@ export class EveTrailsSet
   }
 
   /**
-   * Removes this owner's resource notification link.
+   * Cleans the trail declaration, detaches geometry and releases device storage.
    * Carbon: trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
    */
   OnDestruct()
   {
+    this.Cleanup();
     if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+    this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
   /**
@@ -275,14 +276,14 @@ export class EveTrailsSet
   }
 
   /**
-   * Carbon ReleaseResources (cpp:213-217).
+   * Carbon ReleaseResources (EveTrailsSet.cpp:231-235).
    *
-   * @adapted Tr2SuballocatedBuffer has no Free, so the allocation is dropped
-   *   rather than returned.
+   * @adapted Frees through the allocation's parent because shared buffers are per render context.
    */
 
   ReleaseResources(_storage)
   {
+    if (this._instanceBuffer && this._instanceBuffer.IsValid()) this._instanceBuffer._parent.Free(this._instanceBuffer);
     this._instanceBuffer = null;
     this._vertexDeclHandle = Tr2EffectStateManager.Unknown;
   }
