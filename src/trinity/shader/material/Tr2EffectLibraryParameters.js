@@ -54,6 +54,21 @@ export class Tr2EffectLibraryParameters
   @type.boolean
   usedTexturesDirty = false;
 
+  /**
+   * Releases the library's native stage and resource-set value members.
+   * Carbon: trinity/trinity/Shader/Tr2Material.h:156-167.
+   * @adapted Explicit owned-member calls replace C++ value destruction; the library has no written destructor body.
+   * @adapted Bindless used-texture storage is unported and never acquired by this class.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.globalResourceSet.Destroy();
+    this.globalResourceSetDesc.OnDestruct();
+    this.globalInput.OnDestruct();
+    this.localInput.OnDestruct();
+  }
+
   // States: Tr2Material.cpp:108-117, statement for statement.
 
   /**
