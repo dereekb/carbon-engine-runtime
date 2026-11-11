@@ -129,6 +129,18 @@ export class Tr2GrannyTrack extends IRoot
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: trinity/trinity/Curves/Tr2GrannyTrack.cpp:14-21.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
+  }
+
+  /**
    * Carbon RebuildCachedData (Tr2GrannyTrack.cpp:78-84): binds the tracks once
    * the resource is good.
    *
