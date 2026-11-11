@@ -7,6 +7,7 @@ import { TriRenderStep } from "./TriRenderStep.js";
 /**
  * Step for Carbon's Windows-only cross-process render synchronization, which has
  * no browser equivalent and therefore always fails.
+ * @adapted No destructor hook: RenderJob/TriStepRemoteSync.cpp:24-40 closes three Windows event handles; Execute acquires none in the browser.
  */
 @be.define("TriStepRemoteSync")
 @be.mapInterface(TriRenderStep)
