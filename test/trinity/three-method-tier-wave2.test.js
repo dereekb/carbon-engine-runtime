@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  EveChildContainer,
   EveChildExplosion,
   Tr2ManipulationTool,
   Tr2RotationTool
@@ -122,9 +123,12 @@ test("EveChildExplosion shares, aliases and rebases as Carbon's copier flow does
   const explosion = new EveChildExplosion();
 
   // A shared subgraph: the shared container persists a child list holding
-  // the node every spawned copy must ALIAS.
+  // the node every spawned copy must ALIAS. The local explosions are
+  // EveSpaceObjectChild (EveChildExplosion.h:77, :80); a container persists its
+  // children, while EveChildExplosion maps m_objects READ only (_Blue.cpp:108),
+  // so the Copier, which copies PERSIST rows (Copier.cpp:165), skips them.
   const sharedThing = new EveChildExplosion();
-  const sharedRoot = new EveChildExplosion();
+  const sharedRoot = new EveChildContainer();
   sharedRoot.objects.push(sharedThing);
   explosion.localExplosionShared = sharedRoot;
 
@@ -135,7 +139,7 @@ test("EveChildExplosion shares, aliases and rebases as Carbon's copier flow does
 
   // Through the real copier: a copied local explosion aliases the shared
   // node and duplicates everything else.
-  const local = new EveChildExplosion();
+  const local = new EveChildContainer();
   const ownChild = new EveChildExplosion();
   local.objects.push(sharedThing, ownChild);
   const copy = blue.classes.CopyTo__Callbacks(local, null, from => explosion.CopyElement(from), null);
