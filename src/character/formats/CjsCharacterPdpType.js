@@ -51,5 +51,6 @@ export const CjsCharacterPdpType = Object.freeze({
     BLACK_RESOURCE: 35,
     GEOMETRY_RESOURCE: 36,
     STATIC_RESOURCE: 37,
-    RECIPE: 38
+    RECIPE: 38,
+    LIGHT_RIG: 39
 });

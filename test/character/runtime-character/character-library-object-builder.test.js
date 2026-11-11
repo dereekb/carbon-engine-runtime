@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
     CjsCharacterObjectBuilder, CjsCharacterFactory, CjsCharacterLibraryConfiguration, CjsCharacterCamera, CjsCharacterCameraSequence,
     CjsCharacterPost, CjsCharacterPose,
-    CjsCharacterRecipeModifier, CjsProjectedDecal, Tr2InteriorScene, CjsCharacterType, CjsCharacterColorVariation, CjsCharacterPdpType
+    CjsCharacterRecipeModifier, CjsProjectedDecal, CjsCharacterLightRig, Tr2InteriorLightSource, CjsCharacterType, CjsCharacterColorVariation, CjsCharacterPdpType
 } from "../../../npm/dist/character/index.js";
 import { InitializeTrinityStub } from "../../support/trinityStub.js";
 import { installPartsLibrary } from "../../support/partsLibrary.js";
@@ -91,13 +91,17 @@ test("a palette's seven pattern items read into its pattern fields; another leng
     assert.throws(() => Builder(colors + "patternColors: []\n", "colorVariations").CreateObject(), /must list 7 item/u);
 });
 
-test("native light type records apply only the approved numeric boolean conversion", () =>
+test("a light rig reads its scene's lights, makes no scene, and applies only the approved numeric boolean conversion", () =>
 {
-    const scene = Builder("type: Tr2InteriorScene\nlights:\n- type: Tr2InteriorLightSource\n  name: test\n  primaryLighting: 0\n  useKelvinColor: 1\n", "lights").CreateObject();
-    assert.equal(Object.getPrototypeOf(scene), Tr2InteriorScene.prototype);
-    assert.equal(scene.lights[0].primaryLighting, false);
-    assert.equal(scene.lights[0].useKelvinColor, true);
-    assert.throws(() => Builder("type: MissingLight\n", "lights").CreateObject(), /Unregistered/);
+    const rig = Builder("type: Tr2InteriorScene\nlights:\n- type: Tr2InteriorLightSource\n  name: test\n  primaryLighting: 0\n  useKelvinColor: 1\n", "lights").CreateObject();
+    assert.equal(Object.getPrototypeOf(rig), CjsCharacterLightRig.prototype);
+    assert.equal(rig._pdpType, CjsCharacterPdpType.LIGHT_RIG);
+    assert.equal(Object.getPrototypeOf(rig.lights[0]), Tr2InteriorLightSource.prototype);
+    assert.equal(rig.lights[0].primaryLighting, false);
+    assert.equal(rig.lights[0].useKelvinColor, true);
+    assert.throws(() => Builder("type: MissingLight\n", "lights").CreateObject(), /saved as a Tr2InteriorScene/);
+    assert.throws(() => Builder("type: Tr2InteriorScene\nsunDirection: [0, 0, 1]\n", "lights").CreateObject(), /only lights/);
+    assert.throws(() => Builder("type: Tr2InteriorScene\nlights:\n- type: MissingLight\n", "lights").CreateObject(), /Unregistered/);
 });
 
 test("scalar roots stay scalar values; the record carries its file shape and no other source state", () =>

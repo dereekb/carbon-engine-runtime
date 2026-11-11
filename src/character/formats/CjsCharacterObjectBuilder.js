@@ -67,7 +67,7 @@ export class CjsCharacterObjectBuilder
         const identified = CjsCharacterObjectBuilder.inspect(raw, this._kind, this._configuration.kinds);
         const Constructor = CjsSchema.getConstructor(identified.className);
         if (!Constructor) throw new TypeError(`Character kind ${identified.kind} requires registered ${identified.className}.`);
-        if (identified.kind === "lights") raw = ReadTypeRecords(raw, sourceLists);
+        if (identified.kind === "lights") raw = ReadLightRig(raw, this._path, sourceLists);
         if (identified.kind === "scalarPosts") raw = ReadScalarPost(raw, this._path);
         if (identified.items)
         {
@@ -264,6 +264,22 @@ function ReadScalarPost(raw, path)
 {
     if (raw.lut !== "" || raw.lut_influence !== 0) throw new TypeError(`${path}: a scalar post other than the empty one is unread`);
     return { lut: false, lut_influence: [ 0, 0, 0, 0 ], lut_path: raw.lut_path };
+}
+
+/**
+ * A light rig's values: the lights of the `Tr2InteriorScene` the file saves them in. The scene itself is not made.
+ * @param {*} raw The file's value.
+ * @param {string} path The file's path.
+ * @param {Object<string, Object<string, string[]>>} sourceLists The caller's list forms, by record class.
+ * @returns {{ lights: Array<object> }} The rig's values.
+ * @throws {TypeError} For a file that is not a scene holding only lights.
+ */
+function ReadLightRig(raw, path, sourceLists)
+{
+    if (raw?.type !== "Tr2InteriorScene") throw new TypeError(`${path}: a light rig is saved as a Tr2InteriorScene`);
+    const other = Object.keys(raw).filter(key => key !== "type" && key !== "lights");
+    if (other.length) throw new TypeError(`${path}: a light rig's scene holds only lights, not ${other.join(", ")}`);
+    return { lights: ReadTypeRecords(raw.lights ?? [], sourceLists) };
 }
 
 /**

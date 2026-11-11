@@ -22,6 +22,7 @@ export { CjsCharacterFieldSet } from "./CjsCharacterFieldSet.js";
 export { CjsCharacterGeneric } from "./CjsCharacterGeneric.js";
 export { CjsCharacterHookNames } from "./CjsCharacterHookNames.js";
 export { CjsCharacterKeymap } from "./CjsCharacterKeymap.js";
+export { CjsCharacterLightRig } from "./CjsCharacterLightRig.js";
 export { CjsCharacterMale } from "./CjsCharacterMale.js";
 export { CjsCharacterMaterial } from "./CjsCharacterMaterial.js";
 export { CjsCharacterMaterialSet } from "./CjsCharacterMaterialSet.js";

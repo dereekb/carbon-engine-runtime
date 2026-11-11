@@ -1141,9 +1141,9 @@ export class CjsCharacterLibraryManager
     }
 
     /**
-     * Returns one lights record by its canonical identity.
+     * Returns one light rig by its canonical identity: a copy, whose `lights` a user adds to a scene of their own.
      * @param {string} name Stored or indexed source name.
-     * @returns {Promise<object>} Typed record.
+     * @returns {Promise<import("../model/source/CjsCharacterLightRig.js").CjsCharacterLightRig>} The rig.
      */
     GetLight(name)
     {

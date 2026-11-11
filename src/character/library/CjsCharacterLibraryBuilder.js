@@ -236,9 +236,8 @@ export class CjsCharacterLibraryBuilder
         {
             record = await this._resMan.LoadObject(path, CjsCharacterObjectBuilder.getLoadOptions(path));
             if (!record) throw new Error(`Character source did not load: ${path}`);
-            // The reader names the file shape it read (a shared family's file is either of two); `lights` is a
-            // Carbon class, which carries none.
-            if (declaration.pdpType) actual = CjsCharacterLibraryConfiguration.kindOf(record._pdpType);
+            // The reader names the file shape it read (a shared family's file is either of two).
+            actual = CjsCharacterLibraryConfiguration.kindOf(record._pdpType);
         }
         this._flatLibrary.AddKind(actual, path, record);
         return record;

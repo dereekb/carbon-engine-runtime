@@ -81,7 +81,7 @@ export class CjsCharacterLibrary
 
     /** Flat lights holdings. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("Tr2InteriorScene")
+    @type.list("CjsCharacterLightRig")
     lights = [];
 
     /** Flat backgrounds holdings. */
@@ -195,7 +195,6 @@ export class CjsCharacterLibrary
         this._kindIndexes.clear();
         for (const [ kind, declaration ] of Object.entries(CjsCharacterLibraryConfiguration.kinds))
         {
-            if (!declaration.pdpType) continue;
             const records = this.GetKind(kind), names = this.sourceNames.get(kind) ?? [];
             for (let i = 0; i < records.length; i++)
                 if (records[i]._pdpID === "" && names[i]) CjsSchema.setValues(records[i], { _pdpID: names[i] }, { initialize: false });
@@ -256,8 +255,7 @@ export class CjsCharacterLibrary
         if (!CjsSchema.cast(record, Constructor)) throw new TypeError(`Invalid record for ${kind}`);
         if (typeof name !== "string" || !name.trim()) throw new TypeError("Character source name must be nonempty.");
         if (this.GetKindRecord(kind, name)) throw new TypeError(`Duplicate ${kind} name ${name}`);
-        // `lights` is a Carbon class, which carries no library ID.
-        if (declaration.pdpType && record._pdpID === "") CjsSchema.setValues(record, { _pdpID: name }, { initialize: false });
+        if (record._pdpID === "") CjsSchema.setValues(record, { _pdpID: name }, { initialize: false });
         const names = this.sourceNames.get(kind) ?? [];
         records.push(record);
         names.push(name);

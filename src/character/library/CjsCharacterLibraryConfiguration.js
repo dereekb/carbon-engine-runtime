@@ -13,7 +13,7 @@ export class CjsCharacterLibraryConfiguration
 
     /**
      * Source kinds and their approved class/container declarations; `pdpType` is the file shape the reader sets on each
-     * record (`CjsCharacterRecord._pdpType`). `lights` reads into a Carbon class, which carries none.
+     * record (`CjsCharacterRecord._pdpType`).
      */
     static kinds = {
         parts: { className: "CjsCharacterPart", pdpType: CjsCharacterPdpType.PART, derived: true },
@@ -26,7 +26,7 @@ export class CjsCharacterLibraryConfiguration
         cameraSequences: { className: "CjsCharacterCameraSequence", pdpType: CjsCharacterPdpType.CAMERA_SEQUENCE, envelope: true },
         positions: { className: "CjsCharacterPosition", pdpType: CjsCharacterPdpType.POSITION },
         poses: { className: "CjsCharacterPose", pdpType: CjsCharacterPdpType.POSE, envelope: true },
-        lights: { className: "Tr2InteriorScene" },
+        lights: { className: "CjsCharacterLightRig", pdpType: CjsCharacterPdpType.LIGHT_RIG },
         backgrounds: { className: "CjsCharacterBackground", pdpType: CjsCharacterPdpType.BACKGROUND },
         posts: { className: "CjsCharacterPost", pdpType: CjsCharacterPdpType.POST },
         scalarPosts: { className: "CjsCharacterPost", pdpType: CjsCharacterPdpType.POST_SCALAR },
