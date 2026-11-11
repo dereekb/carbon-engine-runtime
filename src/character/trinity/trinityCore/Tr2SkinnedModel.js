@@ -239,14 +239,14 @@ export class Tr2SkinnedModel extends Tr2Model
   }
 
   /**
-   * Removes this owner's resource notification link.
+   * Releases the selected skeleton before removing the geometry notification link.
    * Carbon: trinity/trinity/Tr2SkinnedModel.cpp:23-30.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
    */
   OnDestruct()
   {
+    this.ReleaseCachedData(this.geometryRes);
     if (this.geometryRes) blue.resMan.notify.Remove(this, this.geometryRes);
   }
 
