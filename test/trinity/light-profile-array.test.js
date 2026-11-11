@@ -98,6 +98,11 @@ test("the texture array gates dimensions, reuses released slots, and rounds capa
     assert.equal(c.GetElementIndex(), 0, "first-fit reuse of the released slot");
     assert.equal(a.IsValid(), false, "released handles stay invalid");
     a.Release(); // idempotent
+    assert.equal(c.IsValid(), true, "repeating release cannot invalidate the replacement handle");
+    assert.ok(array.GetElement(c.GetElementIndex()), "reused slot survives the old handle's repeated release");
+    assert.equal(b.IsValid(), true, "a peer handle remains valid");
+    assert.ok(array.GetElement(b.GetElementIndex()), "a peer slice remains present");
+    assert.equal(a.GetArray(), null, "released handle no longer retains its array");
 
     let changes = 0;
     const listener = { Changed() { changes += 1; } };
