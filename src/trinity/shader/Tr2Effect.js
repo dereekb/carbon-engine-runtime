@@ -1095,6 +1095,18 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: trinity/trinity/Shader/Tr2Effect.cpp:266-280.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.effectResource) blue.resMan.notify.Remove(this, this.effectResource);
+  }
+
+  /**
    * Carbon's SetEffectPathName (Tr2Effect.cpp:413-417): stores the authored
    * path and initializes, even when the path is unchanged. An unchanged path
    * keeps its acquired effect resource.
