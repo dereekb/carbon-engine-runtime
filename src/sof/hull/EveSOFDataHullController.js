@@ -26,6 +26,14 @@ export class EveSOFDataHullController extends IRoot
   path = "";
 
   /**
+   * m_visibilityGroup (BlueSharedString) [READWRITE, PERSIST], `PRIMARY_VISIBILITY_GROUP` by default.
+   * Carbon: MAP_ATTRIBUTE (trinity/trinity/Eve/SpaceObjectFactory/EveSOFData_Blue.cpp:911); default EveSOFData.cpp:9, :300-302.
+   */
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
+  @type.string
+  visibilityGroup = "primary";
+
+  /**
    * Carbon MAP_PROPERTY_READONLY "name" over GetName
    * (EveSOFData_Blue.cpp:902): the controller path's basename without its extension. Carbon persists no name for
    * this class; the getter derives it.
