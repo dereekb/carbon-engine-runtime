@@ -155,6 +155,18 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: trinity/trinity/Tr2GrannyPrimitiveSet.cpp:24-33.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
+  }
+
+  /**
    * Rebuilds only a successfully prepared current resource (cpp:194-202).
    *
    * Prepares now, as Carbon does, rather than on first use: CreatePrimitive
