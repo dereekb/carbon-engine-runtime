@@ -47,6 +47,7 @@ import { IsMatch, blue, EnumRegistrationType, BlueList } from "#blue";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 import { IEveSpaceObjectAttachmentOwner } from "../attachment/IEveSpaceObjectAttachmentOwner.js";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../controllers/enums.js";
 import { IEveSpaceObjectAttachment } from "../attachment/IEveSpaceObjectAttachment.js";
 import { Tr2Light } from "../lights/Tr2Light.js";
 import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
@@ -172,6 +173,18 @@ export class EveChildContainer extends EveChildTransform
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildContainer.cpp:56-63.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    this.UnregisterChildren(this.objects);
+  }
 
   @type.object.ref("EveChildInheritProperties")
   inheritProperties = null;
