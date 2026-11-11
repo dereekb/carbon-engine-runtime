@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
-import { Tny } from "../../src/wrap/services/Tny.js";
-import { TnyServiceAPI } from "../../src/wrap/services/TnyServiceAPI.js";
-import { CjsIndexedDBStorage } from "../../src/resource/storage/index.js";
+import { Tny } from "../../npm/dist/wrap/services/Tny.js";
+import { TnyServiceAPI } from "../../npm/dist/wrap/services/TnyServiceAPI.js";
+import { CjsIndexedDBStorage } from "../../npm/dist/resource/storage/index.js";
 
 test("API results survive owners, isolate builds, and reject actual-build fallback", async () =>
 {

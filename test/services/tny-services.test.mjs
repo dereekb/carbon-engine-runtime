@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { Worker } from "node:worker_threads";
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb";
-import { Tny, TnyService } from "../../src/wrap/services/index.js";
-import { CjsIndexedDBStorage, CjsStorageBackend } from "../../src/resource/storage/index.js";
+import { Tny, TnyService } from "../../npm/dist/wrap/services/index.js";
+import { CjsIndexedDBStorage, CjsStorageBackend } from "../../npm/dist/resource/storage/index.js";
 
 class StoredService extends TnyService
 {
@@ -137,7 +137,7 @@ test("constructor failure is retryable and recursive construction is diagnosed",
 
 test("standalone service/storage owner runs inside a worker without browser globals", async () =>
 {
-    const moduleUrl = new URL("../../src/wrap/services/index.js", import.meta.url).href;
+    const moduleUrl = new URL("../../npm/dist/wrap/services/index.js", import.meta.url).href;
     const worker = new Worker(`
         const { parentPort } = require('node:worker_threads');
         (async () => {

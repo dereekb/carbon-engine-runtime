@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Tny} from '../../src/wrap/services/Tny.js';
-import {TnyServiceAPI} from '../../src/wrap/services/TnyServiceAPI.js';
-import {CjsTableData} from '../../src/resource/format/CjsTableData.js';
+import {Tny} from '../../npm/dist/wrap/services/Tny.js';
+import {TnyServiceAPI} from '../../npm/dist/wrap/services/TnyServiceAPI.js';
+import {CjsTableData} from '../../npm/dist/resource/format/CjsTableData.js';
 
 test('shared headers describe and round-trip positional rows without operational descriptions',async()=>{
  const header={name:'types',description:'Items',columns:[{name:'typeID',primaryKey:true,type:'int32',description:'ID'},{name:'name',type:'string'}]};
