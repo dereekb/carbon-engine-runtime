@@ -127,6 +127,15 @@ export class HostBitmap extends BitmapDimensions
   }
 
   /**
+   * Carbon destructor (imageio/HostBitmap.cpp:59-62) releases image storage.
+   * @implemented
+   */
+  OnDestruct()
+  {
+    this.Destroy();
+  }
+
+  /**
    * Resize `_data`, keeping the prefix, as `CcpMallocBuffer::resize` does.
    *
    * @param {number} size New byte size.

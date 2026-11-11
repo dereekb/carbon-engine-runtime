@@ -108,6 +108,24 @@ test("a new bitmap is invalid and Destroy keeps the sizes (HostBitmap.cpp:230-24
   assert.equal(new HostBitmap().GetRawData(), null);
 });
 
+test("standalone ImageIO bitmap graph teardown releases bytes without invalidating retained views", () =>
+{
+  const owner = bitmap(8, 4, 1, BGRA), peer = bitmap(8, 4, 1, BGRA);
+  const retained = owner.GetRawData();
+  retained.fill(19);
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    owner.Destruct();
+    assert.equal(owner.IsValid(), false);
+    assert.equal(owner.GetRawData(), null);
+    assert.equal(owner.GetFormat(), F.PIXEL_FORMAT_UNKNOWN);
+    assert.equal(owner.GetWidth(), 8);
+    assert.equal(peer.IsValid(), true);
+    assert.ok(retained.every(value => value === 19));
+  }
+  peer.Destruct();
+});
+
 test("Create sizes an uncompressed full chain, and refuses bad compressed sizes", () =>
 {
   // 8x4 BGRA full chain: 8x4 + 4x2 + 2x1 + 1x1 pixels = 32+8+2+1 = 43 px * 4.
