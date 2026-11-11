@@ -7,6 +7,29 @@ import { HostBitmap } from "../../npm/dist/global/imageio/index.js";
 import { CjsPngFormat } from "../../npm/dist/resource/formats/png/index.js";
 import { Tr2HostBitmap } from "../../npm/dist/trinity/core/Tr2HostBitmap.js";
 
+test("Trinity bitmap destruction releases CPU bytes while retaining native dimensions and external views", () =>
+{
+  const bitmap = new Tr2HostBitmap(), peer = new Tr2HostBitmap();
+  const format = Tr2HostBitmap.PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM;
+  assert.equal(bitmap.Create(2, 2, 1, format), true);
+  assert.equal(peer.Create(2, 2, 1, format), true);
+  const retained = bitmap.GetRawData();
+  retained.fill(23);
+  peer.GetRawData().fill(51);
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    bitmap.Destruct();
+    assert.equal(bitmap.IsValid(), false);
+    assert.equal(bitmap.GetRawData(), null);
+    assert.equal(bitmap.GetRawDataSize(), 0);
+    assert.deepEqual([bitmap.GetWidth(), bitmap.GetHeight()], [2, 2]);
+    assert.ok(retained.every(value => value === 23));
+    assert.equal(peer.IsValid(), true);
+    assert.ok(peer.GetRawData().every(value => value === 51));
+  }
+  peer.Destruct();
+});
+
 test("maintained Trinity host bitmap shares native storage with a decoded PNG", async () =>
 {
   const rgba = Uint8Array.from({ length: 16 * 8 * 4 }, (_, i) => (i * 37 + 11) & 255);
