@@ -9,6 +9,7 @@ import { type } from "#schema";
 /**
  * One key of a TriEventCurve: a time in seconds plus either a named event string
  * or a callable and its arguments to invoke when the playhead crosses it.
+ * @adapted No own teardown hook: native Curves/TriEventKey.cpp:16-22 only decrements Python callable/argument references; JS stores GC-owned values, with no acquired listener or external handle.
  */
 @be.define({
   name: "TriEventKey",
