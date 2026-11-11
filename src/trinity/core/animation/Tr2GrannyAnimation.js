@@ -443,6 +443,23 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
   /**
+   * Removes primary and secondary resource notification links.
+   * Carbon: trinity/trinity/Tr2GrannyAnimation.cpp:99-120.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace native targets; grannyRes also holds
+   *   Carbon's borrowed geometry resource, selected by _sharedGeometry.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
+    for (const resource of this._secondaryResources.values())
+    {
+      if (resource) blue.resMan.notify.Remove(this, resource);
+    }
+  }
+
+  /**
    * Replaces the primary resource: stops listening to the old one, cleans up,
    * holds the new one and listens to it. Carbon does this inline at Initialize
    * (Tr2GrannyAnimation.cpp:323-339), SetSharedGeometryRes (cpp:283-293) and the

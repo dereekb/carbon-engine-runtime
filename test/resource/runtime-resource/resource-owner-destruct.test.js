@@ -3,6 +3,7 @@ import test from "node:test";
 import "../../../npm/dist/index.js";
 import "../../../npm/dist/character/index.js";
 import { BlueAsyncRes, BlueResMan, blue } from "../../../npm/dist/blue/index.js";
+import { IBlueAsyncResNotifyTarget } from "../../../npm/dist/blue/interfaces/IBlueAsyncResNotifyTarget.js";
 import { CjsSchema } from "../../../npm/dist/blue/schema/index.js";
 import { getClassRegistrations, getRegisteredConstructor } from "../../../npm/dist/blue/exposure/classes/registry.js";
 
@@ -55,9 +56,49 @@ function checkOwner(name)
   });
 }
 
-// As each link-only hook lands, its own and inherited concrete owners enter
-// this suite automatically. Completion coverage is checked after all hooks land.
+// Both discovery directions matter: exercise hooks, and fail for an owner with
+// no hook. A future private map/nested holder also needs its own fixture.
 const hooks = getClassRegistrations().filter(({ type }) =>
   Object.hasOwn(type.prototype, "OnDestruct") && typeof type.prototype.RemoveCachedData === "function");
 test("link-only teardown discovery exercises registered hooks", () => assert.ok(hooks.length));
 for (const { name } of hooks) checkOwner(name);
+
+test("every registered resource owner has a teardown hook, including abstract bases", () =>
+{
+  for (const { name, type } of getClassRegistrations())
+  {
+    if (type === IBlueAsyncResNotifyTarget || typeof type.prototype.RemoveCachedData !== "function") continue;
+    assert.equal(typeof type.prototype.OnDestruct, "function", `${name}: resource owner has no teardown hook`);
+  }
+});
+
+for (const primaryType of ["TriGrannyRes", "TriGeometryRes"])
+{
+  test(`animation teardown removes ${primaryType} primary and map links while preserving holders`, () =>
+  {
+    const previous = blue.resMan, manager = new BlueResMan();
+    blue.resMan = manager;
+    try
+    {
+      const Animation = getRegisteredConstructor("Tr2GrannyAnimation");
+      const Resource = getRegisteredConstructor(primaryType), Granny = getRegisteredConstructor("TriGrannyRes");
+      const owner = new Animation(), primary = new Resource(), secondary = new Granny();
+      if (primaryType === "TriGeometryRes") owner.SetSharedGeometryRes(primary);
+      else owner.SetGrannyResource(primary);
+      owner.SetSecondaryGrannyResource("res:/alias-a.gr2", primary);
+      owner.SetSecondaryGrannyResource("res:/alias-b.gr2", primary);
+      owner.SetSecondaryGrannyResource("res:/secondary.gr2", secondary);
+      owner.SetSecondaryGrannyResource("res:/pending.gr2", null);
+      const map = owner._secondaryResources, entries = Array.from(map);
+      assert.equal(manager.notify.GetByOwner(owner).length, 4);
+      owner.OnDestruct(); owner.OnDestruct();
+      assert.deepEqual(manager.notify.GetByOwner(owner), []);
+      assert.deepEqual(manager.notify.GetByResource(primary), []);
+      assert.deepEqual(manager.notify.GetByResource(secondary), []);
+      assert.equal(owner.grannyRes, primary);
+      assert.equal(owner._secondaryResources, map);
+      assert.deepEqual(Array.from(map), entries);
+    }
+    finally { blue.resMan = previous; }
+  });
+}
