@@ -35,7 +35,12 @@ function composed()
     {
       created.textures += 1;
 
-      return { kind: "texture", descriptor, createView: view => ({ kind: "view", dimension: view.dimension }) };
+      // A GPUTexture's own fields, which the view checks read.
+      return {
+        kind: "texture", descriptor, dimension: descriptor.dimension ?? "2d", width: descriptor.size.width,
+        height: descriptor.size.height ?? 1, depthOrArrayLayers: descriptor.size.depthOrArrayLayers ?? 1, format: descriptor.format,
+        createView: view => ({ kind: "view", dimension: view.dimension })
+      };
     },
     createSampler(descriptor) { created.samplers += 1; return { kind: "sampler", descriptor }; },
     queue: { writeBuffer() {} },

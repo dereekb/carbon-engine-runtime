@@ -32,6 +32,12 @@ function composed()
       return {
         kind: "texture",
         descriptor,
+        // A GPUTexture's own fields, which the view checks read.
+        dimension: descriptor.dimension ?? "2d",
+        width: descriptor.size.width,
+        height: descriptor.size.height ?? 1,
+        depthOrArrayLayers: descriptor.size.depthOrArrayLayers ?? 1,
+        format: descriptor.format,
         destroy() { calls.destroyed = true; },
         createView(view)
         {
