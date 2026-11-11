@@ -155,14 +155,16 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
   }
 
   /**
-   * Removes this owner's resource notification link.
+   * Releases primitive buffers and removes device and resource registrations.
    * Carbon: trinity/trinity/Tr2GrannyPrimitiveSet.cpp:24-33.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @adapted JavaScript has no reference count to Unlock; IRoot.Unlock is unsupported.
    * @returns {void}
    */
   OnDestruct()
   {
+    this.ReleaseResources();
+    CjsSchema.getConstructor("TriDevice").UnregisterResource(this);
     if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
   }
 
