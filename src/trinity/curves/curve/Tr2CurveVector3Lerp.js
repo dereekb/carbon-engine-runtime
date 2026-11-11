@@ -17,6 +17,18 @@ import { Tr2CurveVector3LerpKeyInterpolation } from "../enums.js";
 export class Tr2CurveVector3Lerp extends ITriVectorFunction
 {
   /**
+   * Runs the native destructor body.
+   * Carbon: Tr2CurveVector3Lerp destructor (trinity/trinity/Curves/Tr2CurveVector3Lerp.cpp:16-19).
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.curve = null;
+  }
+
+
+  /**
    * Authored curve label stored as native std::string.
    * @type {string}
    */
