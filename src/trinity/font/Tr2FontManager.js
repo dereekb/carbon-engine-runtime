@@ -86,6 +86,19 @@ const INT_MAX = 0x7fffffff;
 @be.abstract
 export class Tr2FontManager extends IRoot
 {
+  /**
+   * Carbon destructor releases FreeType (trinity/trinity/Font/Tr2FontManager.cpp:133-137).
+   * @adapted Browser-owned font engines have no native release; the existing CPU glyph-cache cleanup is retained.
+   * @adapted Shutdown tick removal (cpp:76-84) also runs here so direct destruction releases this manager's acquired registration.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    blue.os.UnregisterForTicks(this, s_cookie);
+    this.ClearCachedGlyphs();
+  }
+
+
 
   /**
    * m_glyphCacheBudget (size_t) [READWRITE], default 512 KiB (Tr2FontManager.cpp:101).
@@ -138,9 +151,7 @@ export class Tr2FontManager extends IRoot
    * Carbon `Shutdown` (Tr2FontManager.cpp:76-84): unregisters the tick and
    * drops the singleton.
    *
-   * @adapted Carbon's destructor tears down FreeType (`FTC_Manager_Done`,
-   *   cpp:133-137); here clearing the CPU sbit cache stands in for it, because
-   *   JS has no destructor and the browser owns the font engine.
+   * @adapted The existing shutdown caller delegates tick/cache cleanup to public Destruct.
    * @returns {void}
    */
 
@@ -150,8 +161,7 @@ export class Tr2FontManager extends IRoot
     const fontManager = trinity.fontManager;
     if (fontManager)
     {
-      blue.os.UnregisterForTicks(fontManager, s_cookie);
-      fontManager.ClearCachedGlyphs();
+      fontManager.Destruct();
     }
 
     trinity.fontManager = null;
