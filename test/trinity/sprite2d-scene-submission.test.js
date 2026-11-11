@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Tr2BufferAL } from "../../npm/dist/trinityal/index.js";
 import { Tr2Sprite2dScene, Tr2Sprite2dD3DVertex } from "../../npm/dist/trinity/index.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/core/context/Tr2RenderContext.js";
 
@@ -133,7 +134,12 @@ test("capture retains global indices across texture batches and replays without 
   assert.deepEqual(Array.from(new Uint32Array(allocations[1].bytes.buffer).slice(0, 6)), [0, 1, 0, 2, 2, 2]);
   scene.ReplayCapture(list);
   assert.deepEqual(draws, [[2, 0, 1], [3, 3, 1]]);
+  const retained = [new Tr2BufferAL({ copy: list.vertexBuffer }), new Tr2BufferAL({ copy: list.indexBuffer })];
   list.Destruct();
+  list.Destruct();
+  assert.equal(list.entries.length, 0);
+  assert.ok(allocations.every(buffer => buffer.alive), "copied buffer shares survive display-list teardown");
+  retained.forEach(buffer => buffer.Destroy());
   assert.ok(allocations.every(buffer => !buffer.alive));
   scene._CleanUpStacksAfterRender();
 });
