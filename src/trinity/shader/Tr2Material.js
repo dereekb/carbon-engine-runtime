@@ -77,6 +77,18 @@ export class Tr2Material extends IRoot
   compatibleWithGdr = false;
 
   /**
+   * Releases technique-owned pass and library storage before the material is retired.
+   * Carbon: trinity/trinity/Shader/Tr2Material.h:248-249.
+   * @adapted Explicit owned-value hooks replace native vector member destruction in JavaScript.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const technique of this.parametersForLibraries) technique.OnDestruct();
+    for (const technique of this.parametersForPasses) technique.OnDestruct();
+  }
+
+  /**
    * The resource-set hash, which doubles as the material's draw-sort key; 0
    * whenever the resource sets have been invalidated.
    */
