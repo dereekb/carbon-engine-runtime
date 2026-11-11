@@ -95,14 +95,17 @@ export class EveTacticalTrails
   fadeOutTime = 5;
 
   /**
-   * Carbon ReleaseResources (cpp:73-76): drops the interned declaration; the buffer is kept.
+   * Releases the declaration and vertex storage; the next update rebuilds the trail.
+   * Carbon: trinity/Eve/UI/EveTacticalTrails.cpp:73-81 and 244-258.
    *
-   * @implemented
+   * @adapted idle release destroys the buffer retained by Carbon, freeing
+   *   strongly registered AL storage without deterministic member destruction.
    */
 
   ReleaseResources(_storage)
   {
     this._vertexDeclHandle = Tr2EffectStateManager.Unknown;
+    this._vertexBuffer.Destroy();
   }
 
   /**
@@ -129,7 +132,6 @@ export class EveTacticalTrails
   Destruct()
   {
     this.ReleaseResources();
-    this._vertexBuffer.Destroy();
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { TriBatchType, RenderingMode } from "../../npm/dist/global/consts/graphics/index.js";
 import {
-  EveTacticalTrails, EveUpdateContext, TriDevice, Tr2Effect, Tr2TranslationAdapter, Tr2RenderContext_GetMainThreadRenderContext
+  EveTacticalTrails, EveUpdateContext, TriDevice, Tr2Effect, Tr2Renderer, Tr2TranslationAdapter, Tr2RenderContext_GetMainThreadRenderContext
 } from "../../npm/dist/trinity/index.js";
 import { TriRenderBatchAccumulator } from "../../npm/dist/trinity/core/batch/TriRenderBatch/TriRenderBatchAccumulator.js";
 import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
@@ -161,4 +161,46 @@ test("RegisterObject ignores a null and a repeat registration", (t) =>
   assert.equal(trails.trackedObjects.length, 1);
   assert.equal(trails.trackedObjects[0].ball.deref(), target);
   assert.deepEqual(logged, [ "EveTacticalTrails::RegisterObject: Object is null", "EveTacticalTrails::RegisterObject: Object already registered" ]);
+});
+
+test("idle trails rebuild released vertex storage through the next update and batch use", t =>
+{
+  const { make } = setup(t);
+  const resources = TriDevice._resourcesRegistered, generations = TriDevice._registeredGenerations;
+  const activeTime = TriDevice.activeTime;
+  TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
+  TriDevice.activeTime = 1000 * SECOND;
+  t.after(() =>
+  {
+    TriDevice._resourcesRegistered = resources; TriDevice._registeredGenerations = generations;
+    TriDevice.activeTime = activeTime;
+  });
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  const device = new TriDevice(), trails = make(), target = ball(0, 0, 0);
+  trails.trailEffect = new Tr2Effect();
+  trails.RegisterObject(target);
+  frame(trails, 1, target, [0, 0, 0]);
+  frame(trails, 2, target, [100, 0, 0]);
+  const batches = [], accumulator = { Commit: batch => batches.push(batch) };
+  trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT);
+  device._PreparePendingResources();
+  trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT);
+  assert.equal(batches.length, 1);
+  const buffer = trails._vertexBuffer, destroy = t.mock.method(buffer.TrinityALImpl_GetObject(), "Destroy");
+  TriDevice.activeTime += (TriDevice.resourceIdleRule + 1) * SECOND;
+  device.CollectResources(); device.CollectResources(); trails.ReleaseResources();
+  assert.equal(buffer.IsValid(), false);
+  assert.equal(destroy.mock.callCount(), 1);
+  batches.length = 0;
+  trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT);
+  assert.equal(batches.length, 0);
+  device._PreparePendingResources();
+  frame(trails, 3, target, [200, 0, 0]);
+  trails.GetBatches(accumulator, TriBatchType.TRIBATCHTYPE_TRANSPARENT);
+  assert.equal(batches.length, 1);
+  assert.equal(trails._vertexBuffer, buffer);
+  assert.equal(buffer.IsValid(), true);
+  assert.equal(batches[0].vertexStreams[0], buffer);
+  assert.equal(batches[0].indexCountPerInstance, 12);
+  trails.Destruct(); trails.Destruct();
 });
