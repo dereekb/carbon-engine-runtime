@@ -40,7 +40,17 @@ test("Tr2DeviceResource registers on construction and gates preparation on resou
   assert.equal(resource.PrepareResources(), false, "a failed _OnPrepareResources fails the prepare");
   assert.deepEqual(calls, [ "prepare" ]);
 
-  resource.Destruct();
+  const peer = new Resource();
+  const release = t.mock.method(resource, "ReleaseResources", () => assert.fail("base destruction must not dispatch resource release"));
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    resource.Destruct();
+    assert.equal(TriDevice.GetResourcesRegistered().includes(resource), false);
+    assert.equal(TriDevice.GetResourcesRegistered().includes(peer), true);
+    assert.equal(release.mock.callCount(), 0);
+  }
+  peer.Destruct();
+  assert.equal(TriDevice.GetResourcesRegistered().includes(peer), false);
 });
 
 test("Tr2DeviceResource's two obligations are abstract", () =>
