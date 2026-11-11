@@ -9,6 +9,7 @@
 // TriDebugTextRendererBitmaps.h. A browser has no GDI, so this is the baked
 // path (cpp:254-325) - Carbon's own non-Windows code, not a substitute.
 import { meta } from "#schema";
+import { Tr2DeviceResource } from "./device/Tr2DeviceResource.js";
 import { color as colorMath } from "#math/color";
 import { formatMessage } from "../../global/logging/ccpLog.js";
 import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
@@ -49,10 +50,16 @@ function FormatTruncated(msg, args)
   return formatMessage(msg, args).slice(0, BUFFER_SIZE - 1);
 }
 
-/** Queues and draws debug text (TriDebugTextRenderer.h:19-79). */
+/**
+ * Queues and draws debug text.
+ * Carbon: TriDebugTextRenderer (trinity/trinity/TriDebugTextRenderer.h:18-79)
+ */
 @meta.carbon("TriDebugTextRenderer")
+@meta.inherit(Tr2DeviceResource)
 export class TriDebugTextRenderer
 {
+  /** @cjs Shared debug-renderer infrastructure survives timer eviction, but not explicit device release. */
+  _neverPurge = true;
 
   /** m_entries: { font, rect, format, color, text } records, rect as { left, top, right, bottom }. */
   _entries = [];
@@ -159,7 +166,7 @@ export class TriDebugTextRenderer
   }
 
   /**
-   * Carbon OnPrepareResources (cpp:135-138): nothing to prepare; the text
+   * Carbon OnPrepareResources (cpp:131-134): nothing to prepare; the text
    * texture is created on first draw.
    *
    * @implemented
@@ -184,13 +191,14 @@ export class TriDebugTextRenderer
   }
 
   /**
-   * Carbon ReleaseResources (cpp:130-133): drops the text texture.
+   * Carbon ReleaseResources (cpp:126-129): drops the text texture.
    *
-   * @implemented
+   * @adapted Explicit AL destruction releases Carbon's old by-value texture before resetting the member.
    * @param {number} _s TriStorage flags.
    */
   ReleaseResources(_s)
   {
+    this._texture.Destroy();
     this._texture = new Tr2TextureAL();
   }
 
@@ -200,6 +208,7 @@ export class TriDebugTextRenderer
    * premultiplied B8G8R8A8 (alpha is the coverage, the colour's alpha is
    * ignored), places it in the rect by the format bits, and blits it.
    * Characters outside 1..127 are skipped, as Carbon's signed `*ch > 0` does.
+   * @adapted Drawing renews JS device residency instead of constructor registration; rasterization follows Carbon's non-Windows path.
    * @param {Tr2RenderContext} renderContext
    * @param {number} font
    * @param {string} string
@@ -209,6 +218,7 @@ export class TriDebugTextRenderer
    */
   _DrawText(renderContext, font, string, rect, format, vecColor)
   {
+    this.KeepAlive();
     const color = colorMath.toARGB(vecColor);
 
     if (!Tr2Renderer.IsResourceCreationAllowed())

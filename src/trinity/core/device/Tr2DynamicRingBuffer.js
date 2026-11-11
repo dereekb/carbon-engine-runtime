@@ -8,7 +8,7 @@
 import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { ALResult, Failed, Tr2FenceAL } from "#trinityal";
-import { Tr2Renderer } from "../Tr2Renderer.js";
+import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 
 /** Carbon's anonymous `Align` (cpp:9-12). */
@@ -19,6 +19,7 @@ function Align(offset, alignment)
 
 /**
  * Carbon `Tr2DynamicRingBuffer`: the base of the vertex and index rings.
+ * Carbon: Tr2DynamicRingBuffer (trinity/trinity/Tr2DynamicRingBuffer.h:22)
  *
  * Carbon's `Tr2BufferAL _buffer` is a value that is empty until created; here
  * it is null until created. `PutData` returns `{ result, offset }` for
@@ -27,6 +28,7 @@ function Align(offset, alignment)
  * @abstract
  */
 @meta.carbon("Tr2DynamicRingBuffer")
+@meta.inherit(Tr2DeviceResource)
 @be.abstract
 export class Tr2DynamicRingBuffer
 {
@@ -69,7 +71,7 @@ export class Tr2DynamicRingBuffer
    * Carbon's aligned PutData (cpp:50-117). Its three-argument overload is this
    * with alignment 4 (cpp:40-47).
    *
-   * @adapted
+   * @adapted Writes renew JS device residency; the returned object carries Carbon's result and offset out-parameter.
    * @param {ArrayBufferView} data The bytes.
    * @param {number} size Bytes to copy.
    * @param {number} alignment Alignment of the returned offset.
@@ -78,6 +80,7 @@ export class Tr2DynamicRingBuffer
    */
   PutData(data, size, alignment, renderContext)
   {
+    this.KeepAlive();
     this._lastPutSucceeded = false;
     this.TrimUnusedRegions(renderContext);
 
@@ -202,13 +205,14 @@ export class Tr2DynamicRingBuffer
   }
 
   /**
-   * Carbon Tr2DeviceResource::PrepareResources: creation only when the device allows it.
+   * Carbon: Tr2DeviceResource::PrepareResources (trinity/trinity/Tr2DeviceResource.cpp:21-33).
    *
-   * @implemented
+   * @adapted Explicit preparation renews JS residency; the base keeps the creation gate and readiness state.
    */
   PrepareResources()
   {
-    return Tr2Renderer.IsResourceCreationAllowed() ? this._OnPrepareResources() : true;
+    this.KeepAlive();
+    return Tr2DeviceResource.prototype.PrepareResources.call(this);
   }
 
   /**
@@ -307,10 +311,11 @@ export class Tr2DynamicRingBuffer
   /**
    * Carbon GetBuffer (cpp:353-356): the AL buffer, null before creation.
    *
-   * @implemented
+   * @adapted Binding renews JS device residency; Carbon retains the owner until destruction.
    */
   GetBuffer()
   {
+    this.KeepAlive();
     return this._buffer;
   }
 

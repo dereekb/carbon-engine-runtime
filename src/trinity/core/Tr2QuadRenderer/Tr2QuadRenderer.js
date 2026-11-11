@@ -13,7 +13,7 @@ import { Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { Failed, Tr2BufferDescriptionAL } from "#trinityal";
 import * as CcpLog from "../../../global/logging/ccpLog.js";
 import { Tr2RingVertexBuffer } from "../device/Tr2RingVertexBuffer.js";
-import { Tr2Renderer } from "../Tr2Renderer.js";
+import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 
@@ -33,9 +33,13 @@ function Lcm(a, b)
   return (a * b) / gcd(a, b);
 }
 
-/** Collects quads from every registered effect into one merged instance buffer and emits them as batches. */
+/**
+ * Collects quad instances and emits their batches.
+ * Carbon: Tr2QuadRenderer (trinity/trinity/Tr2QuadRenderer.h:22-23)
+ */
 @be.define({
   name: "Tr2QuadRenderer",
+  inherit: [ Tr2DeviceResource ],
   // Tr2QuadRenderer_Blue.cpp:11-19, in Carbon's order.
   members: [
     [ be.PROP_RO, "instanceBufferSize" ],
@@ -44,6 +48,8 @@ function Lcm(a, b)
 })
 export class Tr2QuadRenderer
 {
+  /** @cjs Shared renderer infrastructure survives timer eviction; native release still applies on reset. */
+  _neverPurge = true;
 
   /** m_vertexBufferOffset: the frame's ring offset, -1 when the upload failed (cpp:27). */
   @type.int32
@@ -304,13 +310,14 @@ export class Tr2QuadRenderer
   }
 
   /**
-   * Carbon Tr2DeviceResource::PrepareResources: creation only when the device allows it.
+   * Carbon: Tr2DeviceResource::PrepareResources (trinity/trinity/Tr2DeviceResource.cpp:21-33).
    *
-   * @implemented
+   * @adapted Explicit preparation renews JS residency; the base keeps the creation gate and readiness state.
    */
   PrepareResources()
   {
-    return Tr2Renderer.IsResourceCreationAllowed() ? this._OnPrepareResources() : true;
+    this.KeepAlive();
+    return Tr2DeviceResource.prototype.PrepareResources.call(this);
   }
 
   /**

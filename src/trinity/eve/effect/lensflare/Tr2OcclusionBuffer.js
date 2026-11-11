@@ -12,6 +12,8 @@ import { Tr2BufferAL } from "../../../../trinityal/Tr2BufferAL/index.js";
 //
 // Carbon keeps it as a function-local static singleton; getInstance is that.
 import { meta, type } from "#schema";
+import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
+import { TriStorageFlags } from "#consts/graphics";
 import { PixelFormat } from "#consts/render-context";
 import { OCCLUDER_MANAGEMENT_EFFECT_PATH } from "#consts/effectPaths";
 import { Tr2Effect } from "../../../shader/Tr2Effect.js";
@@ -30,10 +32,16 @@ const INITIAL_SIZE = 4;
 /** The float whose bits are `value`, as Carbon's `*reinterpret_cast<float*>( &clear )`. */
 const bitsAsFloat = value => new Float32Array(new Uint32Array([ value >>> 0 ]).buffer)[0];
 
-/** Allocates GPU slots for lens-flare occlusion and runs the buffer's per-frame compute. */
+/**
+ * Allocates GPU slots for lens-flare occlusion and runs their per-frame compute.
+ * Carbon: Tr2OcclusionBuffer (trinity/trinity/Eve/EveOccluder.h:20-49)
+ */
 @meta.carbon("Tr2OcclusionBuffer")
+@meta.inherit(Tr2DeviceResource)
 export class Tr2OcclusionBuffer
 {
+  /** @cjs The shared occlusion service survives timer eviction; explicit release retains native storage-mask behavior. */
+  _neverPurge = true;
 
   /** m_management (Tr2EffectPtr): Clear and CopyCounters (cpp:17-18). */
   @type.object.ref("Tr2Effect")
@@ -69,11 +77,12 @@ export class Tr2OcclusionBuffer
    * none is free, queued for Clear. Carbon returns a shared_ptr whose deleter
    * gives the slot back; JS has no RAII, so the holder calls DestroyOffset.
    *
-   * @adapted
+   * @adapted Allocation renews JS residency; the holder explicitly returns its slot because JS has no shared_ptr deleter.
    * @returns {number|null} The slot base, or null when none could be made.
    */
   AllocateOffset()
   {
+    this.KeepAlive();
     if (!this.free.length) this.ResizeBuffer();
     if (!this.free.length) return null;
 
@@ -88,12 +97,13 @@ export class Tr2OcclusionBuffer
    * CopyCounters over every slot. Queued slots are only forgotten once every
    * Clear dispatched, so a frame whose compute is not ready retries.
    *
-   * @implemented
+   * @adapted Processing renews JS residency instead of native constructor registration.
    * @param {Tr2RenderContext} renderContext The context to dispatch on.
    * @returns {void}
    */
   ProcessBuffer(renderContext)
   {
+    this.KeepAlive();
     let success = true;
 
     for (const offset of this.clear)
@@ -139,10 +149,12 @@ export class Tr2OcclusionBuffer
    * requeued for Clear.
    *
    * @implemented
+   * @param {number} storage Native storage mask.
    * @returns {void}
    */
-  ReleaseResources()
+  ReleaseResources(storage)
   {
+    if (!(storage & TriStorageFlags.TRISTORAGE_MANAGEDMEMORY)) return;
     this.clear.length = 0;
     for (let i = 0; i < this.size; i += ELEMENT_SIZE) this.clear.push(i);
   }
