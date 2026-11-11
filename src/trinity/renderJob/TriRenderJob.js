@@ -1,5 +1,6 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../blue/exposure/IRoot.js";
+import { Tr2DeviceResource } from "../core/device/Tr2DeviceResource.js";
 // Source: trinity/trinity/RenderJob/TriRenderJob.h
 // Source: trinity/trinity/RenderJob/TriRenderJob.cpp
 import { type } from "#schema";
@@ -12,12 +13,34 @@ import { blue, BlueList } from "#blue";
 /**
  * An ordered list of render steps plus the cursor and status that let the
  * sequence pause mid-list and resume on a later frame.
+ * Carbon: TriRenderJob (trinity/trinity/RenderJob/TriRenderJob.h:22-24)
  */
 @be.define("TriRenderJob")
 
-@be.inherit(IRoot)
+@be.inherit(IRoot, Tr2DeviceResource)
 export class TriRenderJob extends IRoot
 {
+  /** @cjs Scheduled render infrastructure survives idle collection; native device release remains callable. */
+  _neverPurge = true;
+
+  /**
+   * Carbon: TriRenderJob::OnPrepareResources (trinity/trinity/RenderJob/TriRenderJob.cpp:127-139).
+   * @adapted Follows BLUE_WITH_PYTHON=0: this runtime has no Python decorator-event bridge.
+   * @returns {boolean} True, as in Carbon without Python.
+   */
+  _OnPrepareResources()
+  {
+    return true;
+  }
+
+  /**
+   * Carbon: TriRenderJob::ReleaseResources (trinity/trinity/RenderJob/TriRenderJob.cpp:141-153).
+   * @adapted Follows BLUE_WITH_PYTHON=0; Python DoReleaseResources callbacks are unsupported, not emulated.
+   * @param {number} _storage Native storage mask, used only by the omitted Python callback.
+   */
+  ReleaseResources(_storage)
+  {
+  }
   static Status = TriRenderJobStatus;
 
   static RJ_INIT = 0;
@@ -72,7 +95,7 @@ export class TriRenderJob extends IRoot
    * Carbon TriRenderJob::Run (cpp:18-125): runs the steps in order against a snapshot of the list, resuming at the persisted cursor when the previous run left the job RJ_IN_PROGRESS, and stopping at the first step that does not return RS_OK or that disables the job.
    * Each step is bracketed by begin/end so the end hook runs even when execution throws. When stackGuard is set, the executor's render-target and depth-stencil depths are compared against the depths recorded on entry: shortfalls are reported as diagnostics and surplus pushes are popped back to the baseline.
    *
-   * @adapted
+   * @adapted Running renews JS device residency; JS snapshots the step list and brackets execution with context hooks.
    * @param {number} realTime wall-clock time passed through to each step
    * @param {number} simTime simulation time passed through to each step
    * @param {Tr2RenderContext|null} [executor] the render context the steps run against; null selects the main-thread render context, and anything that is not a Tr2RenderContext throws. Step dispatch is taken over through that context's SetStepExecutor. Nested jobs receive the same context.
@@ -82,6 +105,7 @@ export class TriRenderJob extends IRoot
   Run(realTime, simTime, executor = null)
   {
     if (!this.enabled) return TriRenderJob.Status.RJ_DONE;
+    this.KeepAlive();
 
     const context = executor ?? Tr2RenderContext_GetMainThreadRenderContext();
     if (!(context instanceof Tr2RenderContext))
