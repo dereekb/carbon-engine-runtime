@@ -625,6 +625,7 @@ export class EveLensflare
    * @adapted
    * @returns {void}
    * Carbon: EveLensflare destructor (trinity/trinity/Eve/EveLensflare.cpp:129-135).
+   * @adapted Detaches the owned controller-list observer as BlueList member destruction does (blueexposure/include/BlueListUtil.h:198-204).
    * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
   OnDestruct()
@@ -635,6 +636,7 @@ export class EveLensflare
     occlusionBuffer.DestroyOffset(this.backgroundOcclusionOffset);
     this.occlusionOffset = null;
     this.backgroundOcclusionOffset = null;
+    this.controllers.SetNotify(null);
   }
 
 
