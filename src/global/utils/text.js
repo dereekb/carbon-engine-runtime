@@ -59,3 +59,30 @@ export function parseUint64Prefix(value)
     if (integer > 18446744073709551615n) throw new RangeError("Integer magnitude exceeds uint64");
     return match[1] === "-" ? BigInt.asUintN(64, -integer) : integer;
 }
+
+/**
+ * Parses comma-separated name/number pairs ("xs = 1, s = 2") into choices.
+ *
+ * @param {string} text The authored list.
+ * @returns {{name: string, value: number}[]} The choices, in order.
+ * @cjs
+ */
+export function parseEnumValues(text)
+{
+    // Carbon documents "value=name" pairs (Tr2ControllerFloatVariable_Blue.cpp:31) and never
+    // parses them; content writes both orders ("0=default", "AmarrBase = 1"): the number is the value.
+    return String(text).split(",").map(entry => entry.split("=").map(part => part.trim()))
+        .filter(parts => parts.length === 2 && parts[0] && parts[1])
+        .map(([ left, right ]) => isEnumNumber(left) && !isEnumNumber(right) ? { name: right, value: Number(left) } : { name: left, value: Number(right) });
+}
+
+/**
+ * Whether a string is a number.
+ * @param {string} text Text to parse.
+ * @returns {boolean}
+ * @cjs
+ */
+function isEnumNumber(text)
+{
+    return text !== "" && Number.isFinite(Number(text));
+}

@@ -17,75 +17,102 @@ const FAMILIES = { turret: "turrets", launcher: "launchers", missile: "launchers
  * number (`locator_turret_1a`, `locator_turret_1b`, ...). Ours, after ccpwgl's
  * TnySlot and Graphene's TrinityFitting (our own code in both). Writing
  * `resPath` mounts or (with "") unmounts; the actions are methods.
+ * @cjs
  */
 @meta.define({ className: "TnySlot" })
+@meta.exposureChainTo(CjsGraphRoot)
 @meta.mapInterface(INotify)
 export class TnySlot extends CjsGraphRoot
 {
-    /** "turrets", "launchers", "xlTurrets", "atomics", "chains" or "bombs". */
+
+    /**
+     * "turrets", "launchers", "xlTurrets", "atomics", "chains" or "bombs".
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     family = "";
 
-    /** The slot number in its family. */
+    /**
+     * The slot number in its family.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.int32
     number = 0;
 
-    /** How many locators (turret mounts) the slot has. */
+    /**
+     * How many locators (turret mounts) the slot has.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.int32
     mounts = 0;
 
-    /** The locator name prefix the turret set binds to (`locator_turret_`). */
+    /**
+     * The locator name prefix the turret set binds to (`locator_turret_`).
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     locatorName = "";
 
-    /** The mounted EveTurretSet's resource path; "" when empty. Writing it mounts or unmounts. */
+    /**
+     * The mounted EveTurretSet's resource path; "" when empty. Writing it mounts or unmounts.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
     @type.string
     resPath = "";
 
-    /** A SOF faction for the weapon's colours; "" paints it with the ship's DNA. */
+    /**
+     * A SOF faction for the weapon's colours; "" paints it with the ship's DNA.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
     @type.string
     faction = "";
 
-    /** The TnyMobile this slot belongs to. */
+    /**
+     * The TnyMobile this slot belongs to.
+     * @type {object|null}
+     * @cjs
+     */
     owner = null;
 
-    /** Called with a member's name once the slot handled a change; set by a UI. */
+    /**
+     * Called with a member's name once the slot handled a change; set by a UI.
+     * @type {object|null}
+     * @cjs
+     */
     _onModified = null;
 
-    /** The slot's EveTurretSet; an empty, hidden one reserves the slot's place. */
+    /**
+     * The slot's EveTurretSet; an empty, hidden one reserves the slot's place.
+     * @type {object|null}
+     * @cjs
+     */
     _set = null;
 
-    /** The path actually mounted. */
+    /**
+     * The path actually mounted.
+     * @type {string}
+     * @cjs
+     */
     _mounted = "";
 
-    /** Increases on each mount or unmount, so a slower earlier mount does not land. */
-    _generation = 0;
-
     /**
-     * Groups an object's weapon locators into slots, ordered by family and number.
-     *
-     * @param {import("./TnyMobile.js").TnyMobile} owner The wrapper.
-     * @returns {TnySlot[]} The slots.
+     * Increases on each mount or unmount, so a slower earlier mount does not land.
+     * @type {number}
+     * @cjs
      */
-    static discover(owner)
-    {
-        const slots = new Map();
-        for (const locator of owner.wrapped.locators)
-        {
-            const match = LOCATOR.exec(locator.GetName());
-            if (!match) continue;
-            const id = `locator_${match[1]}_${match[2]}`;
-            if (!slots.has(id)) slots.set(id, Object.assign(new TnySlot(), { owner, family: FAMILIES[match[1].toLowerCase()], number: Number(match[2]), locatorName: `locator_${match[1]}_` }));
-            slots.get(id).mounts++;
-        }
-        return [ ...slots.values() ].sort((a, b) => a.family.localeCompare(b.family) || a.number - b.number);
-    }
+    _generation = 0;
 
     /**
      * `resPath` or `faction` changed: mount, remount or unmount, and tell the
@@ -94,6 +121,7 @@ export class TnySlot extends CjsGraphRoot
      *
      * @param {string} name The member.
      * @returns {boolean} True.
+     * @cjs
      */
     OnModified(name)
     {
@@ -103,7 +131,10 @@ export class TnySlot extends CjsGraphRoot
             return true;
         }
         const work = this.resPath ? this._Mount(this.resPath, this.faction || null) : Promise.resolve(this._Unmount());
-        work.then(() => { if (this._onModified) this._onModified(name); }, error =>
+        work.then(() =>
+        {
+            if (this._onModified) this._onModified(name);
+        }, error =>
         {
             console.error(`TnySlot ${this.locatorName}${this.number} mount failed`, error);
             this.resPath = this._mounted;
@@ -118,6 +149,9 @@ export class TnySlot extends CjsGraphRoot
      * DNA through the SOF, and binds it to this slot's locators.
      *
      * @returns {Promise<boolean>} False when a later change superseded this one.
+     * @param {string} resPath Resource path to acquire.
+     * @param {string|null} faction SOF faction override, or null to use ship DNA.
+     * @cjs
      */
     async _Mount(resPath, faction)
     {
@@ -137,7 +171,10 @@ export class TnySlot extends CjsGraphRoot
         return true;
     }
 
-    /** Takes the weapon off, leaving the slot reserved. */
+    /**
+     * Takes the weapon off, leaving the slot reserved.
+     * @cjs
+     */
     _Unmount()
     {
         ++this._generation;
@@ -154,6 +191,7 @@ export class TnySlot extends CjsGraphRoot
      * given (Graphene's preview aims at a point eight radii out).
      *
      * @param {import("./TnySpaceObject.js").TnySpaceObject|null} [target=null] What to aim at.
+     * @cjs
      */
     SetTarget(target = null)
     {
@@ -169,6 +207,7 @@ export class TnySlot extends CjsGraphRoot
      * targeting a point first if there is none.
      *
      * @returns {boolean} Whether the set entered firing.
+     * @cjs
      */
     Fire()
     {
@@ -177,40 +216,73 @@ export class TnySlot extends CjsGraphRoot
         return set.EnterStateFiring();
     }
 
-    /** Returns the weapon to idle. */
-    Idle() { this._Mounted().EnterStateIdle(); }
+    /**
+     * Returns the weapon to idle.
+     * @cjs
+     */
+    Idle()
+    {
+        this._Mounted().EnterStateIdle();
+    }
 
-    /** Plays the reload state. */
-    Reload() { this._Mounted().EnterStateReloading(); }
+    /**
+     * Plays the reload state.
+     * @cjs
+     */
+    Reload()
+    {
+        this._Mounted().EnterStateReloading();
+    }
 
-    /** Packs the weapon away. */
-    Deactivate() { this._Mounted().EnterStateDeactive(); }
+    /**
+     * Packs the weapon away.
+     * @cjs
+     */
+    Deactivate()
+    {
+        this._Mounted().EnterStateDeactive();
+    }
 
     /**
      * The actions that work on this slot now, with signatures: only Mount by
      * value when empty, the weapon's actions when one is mounted.
      *
      * @returns {object} Method names to signatures.
+     * @cjs
      */
     GetMethods()
     {
         return this._mounted ? { SetTarget: "(target)", Fire: "()", Idle: "()", Reload: "()", Deactivate: "()" } : {};
     }
 
-    /** Detaches the UI. */
+    /**
+     * Detaches the UI.
+     * @cjs
+     */
     Destruct()
     {
         this._onModified = null;
     }
 
-    /** The mounted set, or an error when the slot is empty. */
+    /**
+     * The mounted set, or an error when the slot is empty.
+     * @returns {EveTurretSet|null}
+     * @cjs
+     */
     _Mounted()
     {
         if (!this._mounted) throw new Error(`Slot ${this.locatorName}${this.number} has no weapon.`);
         return this._set;
     }
 
-    /** Loads a resource and returns this ship's own copy (resMan shares the loaded one). */
+    /**
+     * Loads a resource and returns this ship's own copy (resMan shares the loaded one).
+     * @param {CjsLibrary} library Initialized library used for resource acquisition.
+     * @param {string} path Resource or collection path.
+     * @param {Function|null} [Type] Required native class, or null to accept the loaded type.
+     * @returns {Promise<object>}
+     * @cjs
+     */
     async _Load(library, path, Type = null)
     {
         const loaded = await library.Fetch(path);
@@ -222,6 +294,8 @@ export class TnySlot extends CjsGraphRoot
      * Puts a set in this slot's place in the ship's turretSets, reserving
      * every slot first so clearing one never moves a later weapon (native
      * non-turret mounting assigns slots by order; Graphene's Reserve).
+     * @param {EveTurretSet} set Turret set to place in the reserved slot.
+     * @cjs
      */
     _Place(set)
     {
@@ -236,7 +310,10 @@ export class TnySlot extends CjsGraphRoot
         ship.RebuildTurretPositions();
     }
 
-    /** Adds an empty, hidden set for this slot. */
+    /**
+     * Adds an empty, hidden set for this slot.
+     * @cjs
+     */
     _Reserve()
     {
         const set = new EveTurretSet();
@@ -247,7 +324,11 @@ export class TnySlot extends CjsGraphRoot
         this._set = set;
     }
 
-    /** A point near the ship to aim at when no target is given. */
+    /**
+     * A point near the ship to aim at when no target is given.
+     * @returns {EveSpaceObject2}
+     * @cjs
+     */
     _Point()
     {
         const ship = this.owner.wrapped, point = new EveSpaceObject2();
@@ -258,6 +339,35 @@ export class TnySlot extends CjsGraphRoot
         point.worldTransform.set([ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, position[0], position[1], position[2], 1 ]);
         return point;
     }
+
+    /**
+     * Groups an object's weapon locators into slots, ordered by family and number.
+     *
+     * @param {import("./TnyMobile.js").TnyMobile} owner The wrapper.
+     * @returns {TnySlot[]} The slots.
+     * @cjs
+     */
+    static discover(owner)
+    {
+        const slots = new Map();
+        for (const locator of owner.wrapped.locators)
+        {
+            const match = LOCATOR.exec(locator.GetName());
+            if (!match) continue;
+            const id = `locator_${match[1]}_${match[2]}`;
+            if (!slots.has(id)) slots.set(id, Object.assign(new TnySlot(), { owner, family: FAMILIES[match[1].toLowerCase()], number: Number(match[2]), locatorName: `locator_${match[1]}_` }));
+            slots.get(id).mounts++;
+        }
+        return [ ...slots.values() ].sort((a, b) => a.family.localeCompare(b.family) || a.number - b.number);
+    }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnySlot";
+
 }
 
 CjsBlueGraph.define(TnySlot, "TnySlot");

@@ -19,6 +19,7 @@ import { TnySpaceObjectIdentity } from "./TnySpaceObjectIdentity.js";
  *
  * @param {number} weeks Weeks since the last clean.
  * @returns {number} The dirt level, never below 0.
+ * @cjs
  */
 export function dirtLevelFromWeeks(weeks)
 {
@@ -31,7 +32,12 @@ const ANIMATIONS = [ "shieldboost", "shieldhardening", "armorhardening", "armorr
 /** Members a UI writes and the wrapper hears, as a member flag set. */
 const VALUE = meta.READWRITE | meta.NOTIFY;
 
-/** A schema member's edit facts as Carbon's EDITFLAGS bitmask, for the type info. */
+/**
+ * A schema member's edit facts as Carbon's EDITFLAGS bitmask, for the type info.
+ * @param {object|null} edit Schema member edit flags, or null.
+ * @returns {number}
+ * @cjs
+ */
 function EditFlags(edit)
 {
     if (!edit) return 0;
@@ -52,31 +58,28 @@ let wrapperCount = 0;
  * Every declared member is always present; null means the object does not
  * support it, writes to it are ignored and a UI does not draw it. Hull facts
  * are discovered once, after the object is built.
+ * @cjs
  */
 @meta.define({ className: "TnySpaceObject" })
+@meta.exposureChainTo(CjsGraphRoot)
 @meta.mapInterface(INotify)
 export class TnySpaceObject extends CjsGraphRoot
 {
-    /** The native class this wrapper borrows. */
-    static wrappedClass = EveSpaceObject2;
 
-    static scratch = { vec4_0: vec4.create() };
-
-    /** The identity class this layer fills in. */
-    static identityClass = TnySpaceObjectIdentity;
-
-    /** Numeric ranges for the type info; a write is clamped to them. Graphene's editor limits: age in weeks 0-260. */
-    static ranges = { age: [ 0, 260 ], activationStrength: [ 0, 1 ], shield: [ 0, 1 ], armor: [ 0, 1 ], hull: [ 0, 1 ] };
-
-    /** Seconds a module animation fades over (a quarter of it); Graphene's demo value. */
-    static ANIMATION_DURATION = 4;
-
-    /** The user's name for the object, written to the native `name` too. */
+    /**
+     * The user's name for the object, written to the native `name` too.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.string
     name = null;
 
-    /** What the object is, filled in by the library (TnySpaceObjectIdentity), read-only. */
+    /**
+     * What the object is, filled in by the library (TnySpaceObjectIdentity), read-only.
+     * @type {object|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.object.ref("TnySpaceObjectIdentity")
     identity = null;
@@ -85,12 +88,18 @@ export class TnySpaceObject extends CjsGraphRoot
      * Weeks since the last clean, written to the native dirtLevel (which is
      * not a value here). Ours, client behaviour as found in ccpwgl; Graphene's
      * TrinityShipAge.
+     * @type {number|null}
+     * @cjs
      */
     @meta.mapAttribute(VALUE)
     @type.float32
     age = null;
 
-    /** EveSpaceObject2.activationStrength. */
+    /**
+     * EveSpaceObject2.activationStrength.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     activationStrength = null;
@@ -99,137 +108,149 @@ export class TnySpaceObject extends CjsGraphRoot
      * Shield left, 1 full to 0 gone: SetImpactDamageState's `shield`, which
      * drives the core damage overlays and the ShieldDamage controller variable
      * (Carbon gives that variable what remains, despite its name).
+     * @type {number|null}
+     * @cjs
      */
     @meta.mapAttribute(VALUE)
     @type.float32
     shield = null;
 
-    /** Armour left, 1 to 0 (SetImpactDamageState `armor`). */
+    /**
+     * Armour left, 1 to 0 (SetImpactDamageState `armor`).
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     armor = null;
 
-    /** Hull left, 1 to 0 (SetImpactDamageState `hull`). */
+    /**
+     * Hull left, 1 to 0 (SetImpactDamageState `hull`).
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     hull = null;
 
-    /** Shield booster animation (SetImpactAnimation). */
+    /**
+     * Shield booster animation (SetImpactAnimation).
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     shieldboost = null;
 
-    /** Shield hardener animation. */
+    /**
+     * Shield hardener animation.
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     shieldhardening = null;
 
-    /** Armour hardener animation. */
+    /**
+     * Armour hardener animation.
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     armorhardening = null;
 
-    /** Armour repairer animation. */
+    /**
+     * Armour repairer animation.
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     armorrepair = null;
 
-    /** Hull repairer animation. */
+    /**
+     * Hull repairer animation.
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     hullrepair = null;
 
-    /** The client's cloak: res:/fisfx/cloaking/cloaking(_skinned).black as an overlay (TnyOverlays). */
+    /**
+     * The client's cloak: res:/fisfx/cloaking/cloaking(_skinned).black as an overlay (TnyOverlays).
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     cloak = null;
 
-    /** The borrowed native object; a UI never reads it. */
+    /**
+     * The borrowed native object; a UI never reads it.
+     * @type {object|null}
+     * @cjs
+     */
     wrapped = null;
 
-    /** This wrapper's id, kept for its life (across skin changes too). */
+    /**
+     * This wrapper's id, kept for its life (across skin changes too).
+     * @type {number}
+     * @cjs
+     */
     id = 0;
 
-    /** Called with a member's name after the wrapper handled a change to it; set by a UI. */
+    /**
+     * Called with a member's name after the wrapper handled a change to it; set by a UI.
+     * @type {object|null}
+     * @cjs
+     */
     _onModified = null;
 
-    /** Called when this wrapper's type info changes (a skin change); set by a UI. */
+    /**
+     * Called when this wrapper's type info changes (a skin change); set by a UI.
+     * @type {object|null}
+     * @cjs
+     */
     _onTypeInfoModified = null;
 
-    /** Members discovery found supported. */
+    /**
+     * Members discovery found supported.
+     * @type {Set}
+     * @cjs
+     */
     _supported = new Set();
 
-    /** Tr2ExternalParameter bindings by target and attribute, built on first write. */
+    /**
+     * Tr2ExternalParameter bindings by target and attribute, built on first write.
+     * @type {Map}
+     * @cjs
+     */
     _bindings = new Map();
 
-    /** The object's controllers (TnyControllers); built on first use. */
+    /**
+     * The object's controllers (TnyControllers); built on first use.
+     * @type {object|null}
+     * @cjs
+     */
     _controllers = null;
 
-    /** The object's overlays (TnyOverlays); built on first use. */
+    /**
+     * The object's overlays (TnyOverlays); built on first use.
+     * @type {object|null}
+     * @cjs
+     */
     _overlays = null;
 
-    /** The JS constructor is the no-argument one; wrap a live object with `fromWrapped`. */
+    /**
+     * The JS constructor is the no-argument one; wrap a live object with `fromWrapped`.
+     * @cjs
+     */
     constructor()
     {
         super();
         this.id = ++wrapperCount;
-    }
-
-    /**
-     * Acquires a fresh object through the library and wraps it in this class.
-     * The library owns DNA hydration and the resource wait.
-     *
-     * @param {object} options What to fetch.
-     * @param {string} [options.dna] DNA; give this or `resPath`.
-     * @param {string} [options.resPath] Object resource path; give this or `dna`.
-     * @param {boolean} [options.awaitResources=false] Resolve once the object's resources have loaded.
-     * @param {string} [options.name] The user's name for it.
-     * @returns {Promise<TnySpaceObject>} An instance of the class it was called on.
-     */
-    static async fetch(options = {})
-    {
-        return this.fromWrapped(await TnySpaceObject.acquire(options), options);
-    }
-
-    /**
-     * Wraps a live object: starts its controllers once and discovers what it supports.
-     *
-     * @param {object} object The live object.
-     * @param {{name?: string|null, dna?: string|null}} [options] Fetch options.
-     * @returns {TnySpaceObject} The wrapper.
-     * @throws {TypeError} When the object is not this class's native class.
-     */
-    static fromWrapped(object, { name = null, dna = null } = {})
-    {
-        const className = CjsSchema.getClassName(this);
-        if (!CjsSchema.cast(object, this.wrappedClass))
-            throw new TypeError(`${className} requires a live ${CjsSchema.getClassName(this.wrappedClass)}.`);
-        const wrapper = new this();
-        wrapper.wrapped = object;
-        object.StartControllers();
-        wrapper._Discover(dna);
-        if (name !== null) wrapper.SetValues({ name });
-        return wrapper;
-    }
-
-    /**
-     * Validates fetch options and acquires the object through the library.
-     *
-     * @param {object} options See `fetch`.
-     * @returns {Promise<object|null>} The live object.
-     */
-    static async acquire({ dna = null, resPath = null, awaitResources = false, name = null, ...unknown } = {})
-    {
-        const className = CjsSchema.getClassName(this);
-        const library = CjsLibrary.instance;
-        if (!library) throw new Error(`${className} requires an initialized CjsLibrary.`);
-        const extra = Object.keys(unknown);
-        if (extra.length) throw new TypeError(`${className}.fetch does not take ${extra.join(", ")}.`);
-        const source = dna ?? resPath;
-        if (typeof source !== "string" || !source || (dna !== null && resPath !== null))
-            throw new TypeError(`${className} requires DNA or an object path.`);
-        if (name !== null && typeof name !== "string") throw new TypeError(`${className} name must be a string.`);
-        return library.Fetch(source, { awaitResources });
     }
 
     /**
@@ -238,6 +259,7 @@ export class TnySpaceObject extends CjsGraphRoot
      * For the host's camera framing.
      *
      * @returns {{centre: number[], radius: number}|null} The sphere.
+     * @cjs
      */
     GetBoundingSphere()
     {
@@ -247,13 +269,21 @@ export class TnySpaceObject extends CjsGraphRoot
         return { centre: [ vec4_0[0], vec4_0[1], vec4_0[2] ], radius: vec4_0[3] };
     }
 
-    /** What the object's controllers expose (TnyControllers). */
+    /**
+     * What the object's controllers expose (TnyControllers).
+     * @returns {TnyControllers}
+     * @cjs
+     */
     get controllers()
     {
         return this._controllers ??= new TnyControllers(this);
     }
 
-    /** The object's mesh overlays beyond its core damage ones (TnyOverlays). */
+    /**
+     * The object's mesh overlays beyond its core damage ones (TnyOverlays).
+     * @returns {TnyOverlays}
+     * @cjs
+     */
     get overlays()
     {
         return this._overlays ??= new TnyOverlays(this);
@@ -264,6 +294,7 @@ export class TnySpaceObject extends CjsGraphRoot
      *
      * @param {object} [options] Graph get options; `full` is the default.
      * @returns {object} The values.
+     * @cjs
      */
     GetValues(options)
     {
@@ -275,12 +306,17 @@ export class TnySpaceObject extends CjsGraphRoot
      * facts are found once here; a skin change runs it again.
      *
      * @param {string|null} dna The DNA it was built from.
+     * @cjs
      */
     _Discover(dna)
     {
         const object = this.wrapped;
         this._supported.clear();
-        const take = (member, value) => { this._supported.add(member); this[member] = value; };
+        const take = (member, value) =>
+        {
+            this._supported.add(member);
+            this[member] = value;
+        };
 
         take("name", object.name ?? "");
         take("age", 0);
@@ -298,6 +334,9 @@ export class TnySpaceObject extends CjsGraphRoot
     /**
      * What the object is, from its DNA through the SOF's own parser; SDE facts
      * (typeID, typeName, graphicID) stay null until a service supplies them.
+     * @param {string|null} dna SOF DNA, or null when unknown.
+     * @returns {TnySpaceObjectIdentity}
+     * @cjs
      */
     _Identity(dna)
     {
@@ -323,6 +362,7 @@ export class TnySpaceObject extends CjsGraphRoot
      *
      * @param {string} name The member.
      * @returns {boolean} True.
+     * @cjs
      */
     OnModified(name)
     {
@@ -338,7 +378,11 @@ export class TnySpaceObject extends CjsGraphRoot
         return true;
     }
 
-    /** Writes one supported member to its native owner. */
+    /**
+     * Writes one supported member to its native owner.
+     * @param {string} name Member or registration name.
+     * @cjs
+     */
     _Push(name)
     {
         const object = this.wrapped;
@@ -352,11 +396,15 @@ export class TnySpaceObject extends CjsGraphRoot
                 return;
             case "cloak": this._SetCloak(this.cloak); return;
             default:
-                if (ANIMATIONS.includes(name)) object.SetImpactAnimation(name, this[name], TnySpaceObject.ANIMATION_DURATION);
+                if (ANIMATIONS.includes(name)) object.SetImpactAnimation(name, this[name], TnySpaceObject.animationDuration);
         }
     }
 
-    /** Adds or removes the cloak overlay; a load failure is logged and the value restored. */
+    /**
+     * Adds or removes the cloak overlay; a load failure is logged and the value restored.
+     * @param {boolean} on Whether the cloak overlay should be present.
+     * @cjs
+     */
     _SetCloak(on)
     {
         const path = this._CloakPath();
@@ -369,7 +417,11 @@ export class TnySpaceObject extends CjsGraphRoot
         });
     }
 
-    /** The cloak overlay for this hull: skinned when its opaque areas use skinned shaders, as Graphene picks. */
+    /**
+     * The cloak overlay for this hull: skinned when its opaque areas use skinned shaders, as Graphene picks.
+     * @returns {string}
+     * @cjs
+     */
     _CloakPath()
     {
         const skinned = this.wrapped.mesh?.opaqueAreas.some(area => /skinned/i.test(area.effect?.effectFilePath ?? "")) ?? false;
@@ -380,6 +432,10 @@ export class TnySpaceObject extends CjsGraphRoot
      * A Carbon Tr2ExternalParameter on one member, whose SetValue converts and
      * notifies the owner (Tr2ExternalParameter.cpp:137-163), as Graphene's
      * editor writes these members.
+     * @param {object|null} target Target consumed by the operation; null clears it where supported.
+     * @param {string} attribute Exposed destination attribute name.
+     * @returns {Tr2ExternalParameter}
+     * @cjs
      */
     _Bind(target, attribute)
     {
@@ -405,6 +461,7 @@ export class TnySpaceObject extends CjsGraphRoot
      * only what it supports; methods only the actions that work on it.
      *
      * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.
+     * @cjs
      */
     GetTypeInfo()
     {
@@ -424,7 +481,11 @@ export class TnySpaceObject extends CjsGraphRoot
         return [ classInfo, interfaces, members, this._Methods() ];
     }
 
-    /** The Tny layers and capabilities this instance has. */
+    /**
+     * The Tny layers and capabilities this instance has.
+     * @returns {string[]}
+     * @cjs
+     */
     _Interfaces()
     {
         return CjsSchema.getClassNames(this.constructor).filter(name => name.startsWith("Tny")).reverse();
@@ -433,6 +494,8 @@ export class TnySpaceObject extends CjsGraphRoot
     /**
      * The actions that work on this instance, with signatures: Destruct, and
      * Trigger with the content's actions (TnyControllers.GetActions).
+     * @returns {object}
+     * @cjs
      */
     _Methods()
     {
@@ -446,35 +509,154 @@ export class TnySpaceObject extends CjsGraphRoot
      *
      * @param {string} action The action's name.
      * @returns {boolean} Whether it was an action.
+     * @cjs
      */
     Trigger(action)
     {
         return this.controllers.Trigger(action);
     }
 
-    /** Reads back what the content changes by itself and announces it; the space object has nothing to read. */
+    /**
+     * Reads back what the content changes by itself and announces it; the space object has nothing to read.
+     * @cjs
+     */
     Sync()
     {
     }
 
-    /** A member's choices, `[[value, name], ...]`, or null. */
+    /**
+     * A member's choices, `[[value, name], ...]`, or null.
+     * @param {string} _name Member name reserved for subclass choices.
+     * @returns {Array|null}
+     * @cjs
+     */
     _Choices(_name)
     {
         return null;
     }
 
-    /** A one-line description for the type info. */
+    /**
+     * A one-line description for the type info.
+     * @returns {string}
+     * @cjs
+     */
     _Description()
     {
         return this.identity?.dna ?? "";
     }
 
-    /** Detaches the UI and this wrapper; the native object is the library's. */
+    /**
+     * Detaches the UI and this wrapper; the native object is the library's.
+     * @cjs
+     */
     Destruct()
     {
         this._onModified = null;
         this._onTypeInfoModified = null;
     }
+
+    /**
+     * Acquires a fresh object through the library and wraps it in this class.
+     * The library owns DNA hydration and the resource wait.
+     *
+     * @param {object} options What to fetch.
+     * @param {string} [options.dna] DNA; give this or `resPath`.
+     * @param {string} [options.resPath] Object resource path; give this or `dna`.
+     * @param {boolean} [options.awaitResources=false] Resolve once the object's resources have loaded.
+     * @param {string} [options.name] The user's name for it.
+     * @returns {Promise<TnySpaceObject>} An instance of the class it was called on.
+     * @cjs
+     */
+    static async fetch(options = {})
+    {
+        return this.fromWrapped(await TnySpaceObject.acquire(options), options);
+    }
+
+    /**
+     * Wraps a live object: starts its controllers once and discovers what it supports.
+     *
+     * @param {object} object The live object.
+     * @param {{name?: string|null, dna?: string|null}} [options] Fetch options.
+     * @returns {TnySpaceObject} The wrapper.
+     * @throws {TypeError} When the object is not this class's native class.
+     * @cjs
+     */
+    static fromWrapped(object, { name = null, dna = null } = {})
+    {
+        const className = CjsSchema.getClassName(this);
+        if (!CjsSchema.cast(object, this.wrappedClass))
+            throw new TypeError(`${className} requires a live ${CjsSchema.getClassName(this.wrappedClass)}.`);
+        const wrapper = new this();
+        wrapper.wrapped = object;
+        object.StartControllers();
+        wrapper._Discover(dna);
+        if (name !== null) wrapper.SetValues({ name });
+        return wrapper;
+    }
+
+    /**
+     * Validates fetch options and acquires the object through the library.
+     *
+     * @param {object} options See `fetch`.
+     * @returns {Promise<object|null>} The live object.
+     * @cjs
+     */
+    static async acquire({ dna = null, resPath = null, awaitResources = false, name = null, ...unknown } = {})
+    {
+        const className = CjsSchema.getClassName(this);
+        const library = CjsLibrary.instance;
+        if (!library) throw new Error(`${className} requires an initialized CjsLibrary.`);
+        const extra = Object.keys(unknown);
+        if (extra.length) throw new TypeError(`${className}.fetch does not take ${extra.join(", ")}.`);
+        const source = dna ?? resPath;
+        if (typeof source !== "string" || !source || (dna !== null && resPath !== null))
+            throw new TypeError(`${className} requires DNA or an object path.`);
+        if (name !== null && typeof name !== "string") throw new TypeError(`${className} name must be a string.`);
+        return library.Fetch(source, { awaitResources });
+    }
+
+    /**
+     * The native class this wrapper borrows.
+     * @type {Function}
+     * @cjs
+     */
+    static wrappedClass = EveSpaceObject2;
+
+    /**
+     * Reusable synchronous math scratch; callers must not retain its values.
+     * @type {object}
+     * @cjs
+     */
+    static scratch = { vec4_0: vec4.create() };
+
+    /**
+     * The identity class this layer fills in.
+     * @type {Function}
+     * @cjs
+     */
+    static identityClass = TnySpaceObjectIdentity;
+
+    /**
+     * Numeric ranges for the type info; a write is clamped to them. Graphene's editor limits: age in weeks 0-260.
+     * @type {object}
+     * @cjs
+     */
+    static ranges = { age: [ 0, 260 ], activationStrength: [ 0, 1 ], shield: [ 0, 1 ], armor: [ 0, 1 ], hull: [ 0, 1 ] };
+
+    /**
+     * Seconds a module animation fades over (a quarter of it); Graphene's demo value.
+     * @type {number}
+     * @cjs
+     */
+    static animationDuration = 4;
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnySpaceObject";
+
 }
 
 CjsBlueGraph.define(TnySpaceObject, "TnySpaceObject");

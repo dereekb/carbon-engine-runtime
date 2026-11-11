@@ -36,59 +36,74 @@ const BOOSTER_MEMBERS = [ "alwaysOn", "alwaysOnIntensity", "warpIntensity", "sta
 /**
  * A ship (EveShip2): adds motion, kill marks, boosters, states and stance.
  * Ours, after ccpwgl's TnyShip.
+ * @cjs
  */
 @meta.define({ className: "TnyShip" })
 @meta.exposureChainTo(TnyMobile)
 export class TnyShip extends TnyMobile
 {
-    static wrappedClass = EveShip2;
-
-    static scratch = { vec3_0: vec3.create() };
-
-    static identityClass = TnyShipIdentity;
-
-    /**
-     * Graphene's editor limits (MissingAnnotations, the demo's settings).
-     * Speed has none of its own: the Destiny ball holds it to maxSpeed.
-     */
-    static ranges = { ...TnyMobile.ranges, speed: [ 0, Infinity ], maxSpeed: [ 0.01, Infinity ], displayKillCounterValue: [ 0, 999 ],
-        alwaysOnIntensity: [ 0, 2 ], warpIntensity: [ 0, 1 ], staticTrailLength: [ 0, 5000 ] };
 
     /**
      * Metres per second along the ship's heading, driving its Destiny ball
      * (SetBall), so its world velocity, EveShip2.speed and ShipSpeed() follow.
      * Null without a ball.
+     * @type {number|null}
+     * @cjs
      */
     @meta.mapAttribute(VALUE)
     @type.float32
     speed = null;
 
-    /** EveShip2.maxSpeed, and the booster set's maxVel it scales trails by (EveBoosterSet2.cpp:109). */
+    /**
+     * EveShip2.maxSpeed, and the booster set's maxVel it scales trails by (EveBoosterSet2.cpp:109).
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     maxSpeed = null;
 
-    /** Kill marks (EveShip2.displayKillCounterValue), on hulls with a kill-counter decal. */
+    /**
+     * Kill marks (EveShip2.displayKillCounterValue), on hulls with a kill-counter decal.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.uint32
     displayKillCounterValue = null;
 
-    /** EveBoosterSet2.alwaysOn; switching it also switches physicsUpdate (Graphene). */
+    /**
+     * EveBoosterSet2.alwaysOn; switching it also switches physicsUpdate (Graphene).
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     alwaysOn = null;
 
-    /** EveBoosterSet2.alwaysOnIntensity. */
+    /**
+     * EveBoosterSet2.alwaysOnIntensity.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     alwaysOnIntensity = null;
 
-    /** EveBoosterSet2.warpIntensity. */
+    /**
+     * EveBoosterSet2.warpIntensity.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     warpIntensity = null;
 
-    /** EveBoosterSet2.staticTrailLength, on sets with trails. */
+    /**
+     * EveBoosterSet2.staticTrailLength, on sets with trails.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.float32
     staticTrailLength = null;
@@ -98,27 +113,45 @@ export class TnyShip extends TnyMobile
      * controllers have). Each state is its own value, as the content's
      * effects are separate; several can be on at once. A change the content
      * makes itself (the hangar docker turning warp off) is announced by Sync.
+     * @type {boolean|null}
+     * @cjs
      */
     @meta.mapAttribute(VALUE)
     @type.boolean
     warp = null;
 
-    /** Docked: isDocked (and any other dock flag). */
+    /**
+     * Docked: isDocked (and any other dock flag).
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     dock = null;
 
-    /** Siege mode, on ships whose controllers have a siege flag (InSiegeMode). */
+    /**
+     * Siege mode, on ships whose controllers have a siege flag (InSiegeMode).
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     siege = null;
 
-    /** Attack mode, on ships whose controllers have an attack flag. */
+    /**
+     * Attack mode, on ships whose controllers have an attack flag.
+     * @type {boolean|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.boolean
     attack = null;
 
-    /** The stance's value from its enum choices, on ships with a stance. */
+    /**
+     * The stance's value from its enum choices, on ships with a stance.
+     * @type {number|null}
+     * @cjs
+     */
     @meta.mapAttribute(VALUE)
     @type.int32
     stance = null;
@@ -126,21 +159,39 @@ export class TnyShip extends TnyMobile
     /**
      * The ship's Destiny client ball (server/destiny CjsDestinyClientBall), or
      * null. The application owns the park; the runtime never imports Destiny.
+     * @type {object|null}
+     * @cjs
      */
     _ball = null;
 
-    /** The states found: each state's controller variables. */
+    /**
+     * The states found: each state's controller variables.
+     * @type {Map}
+     * @cjs
+     */
     _states = new Map();
 
-    /** The stance: its variable name and choices, or null. */
+    /**
+     * The stance: its variable name and choices, or null.
+     * @type {object|null}
+     * @cjs
+     */
     _stance = null;
 
-    /** Finds the ship's own facts after the space object's. */
+    /**
+     * Finds the ship's own facts after the space object's.
+     * @param {string|null} dna SOF DNA, or null when unknown.
+     * @cjs
+     */
     _Discover(dna)
     {
         super._Discover(dna);
         const ship = this.wrapped;
-        const take = (member, value) => { this._supported.add(member); this[member] = value; };
+        const take = (member, value) =>
+        {
+            this._supported.add(member);
+            this[member] = value;
+        };
 
         if (this._ball) take("speed", Math.hypot(this._ball.vx, this._ball.vy, this._ball.vz));
         take("maxSpeed", ship.maxSpeed);
@@ -158,7 +209,11 @@ export class TnyShip extends TnyMobile
         if (this._stance) take("stance", this.controllers.GetVariable(this._stance.variable));
     }
 
-    /** Each offered state's controller variables (warp and dock always). */
+    /**
+     * Each offered state's controller variables (warp and dock always).
+     * @returns {Map<string, string[]>}
+     * @cjs
+     */
     _FindStates()
     {
         const names = this.controllers.GetVariableNames();
@@ -178,6 +233,8 @@ export class TnyShip extends TnyMobile
      * variable is named differently): an enum controller variable that a state
      * machine's transitions test and whose machine plays mesh animations, as
      * res:/dx9/model/controller/shipstance.black's ShipStance does.
+     * @returns {object|null}
+     * @cjs
      */
     _FindStance()
     {
@@ -197,7 +254,11 @@ export class TnyShip extends TnyMobile
         return null;
     }
 
-    /** Pushes the ship's own members, else the space object's. */
+    /**
+     * Pushes the ship's own members, else the space object's.
+     * @param {string} name Member or registration name.
+     * @cjs
+     */
     _Push(name)
     {
         const ship = this.wrapped;
@@ -227,7 +288,12 @@ export class TnyShip extends TnyMobile
         }
     }
 
-    /** Whether a state is on: any of its controller variables is non-zero. */
+    /**
+     * Whether a state is on: any of its controller variables is non-zero.
+     * @param {string} name Member or registration name.
+     * @returns {boolean}
+     * @cjs
+     */
     _ReadState(name)
     {
         return this._states.get(name).some(variable => (this.controllers.GetVariable(variable) ?? 0) !== 0);
@@ -237,6 +303,7 @@ export class TnyShip extends TnyMobile
      * Reads back what the content changes by itself (a docker turning warp
      * or dock on and off, a machine moving the stance) and announces each
      * change through _onModified, without pushing it down again.
+     * @cjs
      */
     Sync()
     {
@@ -267,6 +334,7 @@ export class TnyShip extends TnyMobile
      * only while a ball is attached, so the type info changes.
      *
      * @param {object|null} ball A CjsDestinyClientBall in a park the application pumps, or null.
+     * @cjs
      */
     SetBall(ball)
     {
@@ -293,6 +361,8 @@ export class TnyShip extends TnyMobile
      * Drives the ball: heads along the ship's heading at a throttle of
      * speed / maxSpeed (Destiny's GotoDirection and SetSpeedFraction, which
      * clamps to [0, 1]).
+     * @param {number} speed Requested speed in metres per second.
+     * @cjs
      */
     _SetSpeed(speed)
     {
@@ -307,14 +377,23 @@ export class TnyShip extends TnyMobile
         park.SetSpeedFraction(ball.mId, this.maxSpeed > 0 ? speed / this.maxSpeed : 0);
     }
 
-    /** The stance choices. */
+    /**
+     * The stance choices.
+     * @param {string} name Member or registration name.
+     * @returns {Array|null}
+     * @cjs
+     */
     _Choices(name)
     {
         if (name === "stance" && this._stance) return this._stance.choices.map(choice => [ choice.value, choice.name ]);
         return super._Choices(name);
     }
 
-    /** Adds the capabilities a ship may have. */
+    /**
+     * Adds the capabilities a ship may have.
+     * @returns {string[]}
+     * @cjs
+     */
     _Interfaces()
     {
         const names = super._Interfaces();
@@ -323,6 +402,44 @@ export class TnyShip extends TnyMobile
         if (this.displayKillCounterValue !== null) names.push("killmarks");
         return names;
     }
+
+    /**
+     * Native class accepted by this wrapper.
+     * @type {Function}
+     * @cjs
+     */
+    static wrappedClass = EveShip2;
+
+    /**
+     * Reusable synchronous math scratch; callers must not retain its values.
+     * @type {object}
+     * @cjs
+     */
+    static scratch = { vec3_0: vec3.create() };
+
+    /**
+     * Identity class populated by this wrapper.
+     * @type {Function}
+     * @cjs
+     */
+    static identityClass = TnyShipIdentity;
+
+    /**
+     * Graphene's editor limits (MissingAnnotations, the demo's settings).
+     * Speed has none of its own: the Destiny ball holds it to maxSpeed.
+     * @type {object}
+     * @cjs
+     */
+    static ranges = { ...TnyMobile.ranges, speed: [ 0, Infinity ], maxSpeed: [ 0.01, Infinity ], displayKillCounterValue: [ 0, 999 ],
+        alwaysOnIntensity: [ 0, 2 ], warpIntensity: [ 0, 1 ], staticTrailLength: [ 0, 5000 ] };
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyShip";
+
 }
 
 CjsBlueGraph.define(TnyShip, "TnyShip");

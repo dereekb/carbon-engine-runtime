@@ -12,18 +12,29 @@ const SELF = "self_";
  * as `res:/fisfx/cloaking/*.black`. Ours. Adding does the client's part, as
  * Graphene's demo does: each object gets its own copy, the copy's `self_`
  * bindings are pointed at the object, and its curve set plays.
+ * @cjs
  */
 export class TnyOverlays
 {
-    static className = "TnyOverlays";
 
-    /** The TnySpaceObject whose overlays these are. */
+    /**
+     * The TnySpaceObject whose overlays these are.
+     * @type {object|null}
+     * @cjs
+     */
     owner = null;
 
-    /** For each overlay added here: its path and the object members its bindings drove, before. */
+    /**
+     * For each overlay added here: its path and the object members its bindings drove, before.
+     * @type {Map}
+     * @cjs
+     */
     _added = new Map();
 
-    /** @param {import("./TnySpaceObject.js").TnySpaceObject} owner The wrapper. */
+    /**
+     * @param {import("./TnySpaceObject.js").TnySpaceObject} owner The wrapper.
+     * @cjs
+     */
     constructor(owner)
     {
         this.owner = owner;
@@ -33,6 +44,7 @@ export class TnyOverlays
      * The object's overlays.
      *
      * @returns {{name: string, path: string|null, curveSet: string|null}[]} One per overlay; path is null for authored ones.
+     * @cjs
      */
     GetOverlays()
     {
@@ -48,6 +60,7 @@ export class TnyOverlays
      *
      * @param {string} path An EveMeshOverlayEffect resource path.
      * @returns {Promise<string>} The added overlay's name.
+     * @cjs
      */
     async Add(path)
     {
@@ -80,6 +93,7 @@ export class TnyOverlays
      *
      * @param {string} path The path given to Add.
      * @returns {boolean} Whether any was removed.
+     * @cjs
      */
     Remove(path)
     {
@@ -97,9 +111,21 @@ export class TnyOverlays
         return removed;
     }
 
-    /** @returns {boolean} Whether an overlay from this path is on the object. */
+    /**
+     * @returns {boolean} Whether an overlay from this path is on the object.
+     * @param {string} path Resource or collection path.
+     * @cjs
+     */
     Has(path)
     {
         return [ ...this._added.values() ].some(record => record.path === path);
     }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyOverlays";
+
 }

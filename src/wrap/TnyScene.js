@@ -15,18 +15,21 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "../trinity/core/con
  * Application wrapper over an existing space scene: its membership, post
  * process and values. A graph class like the object wrappers: `GetValues`,
  * `SetValues`, `GetTypeInfo`, and `_onModified(name)` after a change.
+ * @cjs
  */
 @meta.define({ className: "TnyScene" })
+@meta.exposureChainTo(CjsGraphRoot)
 @meta.mapInterface(INotify)
 export class TnyScene extends CjsGraphRoot
 {
-    static className = "TnyScene";
 
     /**
      * EveSpaceScene.ballpark (IEveBallpark): the scene shifts its origin by
      * the ballpark's reference point each frame (EveUpdateContext.UpdateOrigin),
      * so the world moves past the ego ball. Null when unset; the host owns the
      * park (the runtime never imports Destiny).
+     * @type {object|null}
+     * @cjs
      */
     @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
     @type.object.ref("IEveBallpark")
@@ -38,52 +41,76 @@ export class TnyScene extends CjsGraphRoot
      * 0 (Carbon HEAD 2276880b, Tr2PostProcessRenderer.useSharpeningStrength).
      * Null when the scene has no post process, or the backend has no compute
      * (the renderer skips CAS there); the type info says which.
+     * @type {number|null}
+     * @cjs
      */
     @meta.mapAttribute(meta.READWRITE | meta.NOTIFY)
     @type.float32
     sharpeningStrength = null;
 
-    /** Existing scene graph; native lists retain their own admission and notifications. */
+    /**
+     * Existing scene graph; native lists retain their own admission and notifications.
+     * @type {object|null}
+     * @cjs
+     */
     wrapped = null;
 
-    /** Numeric ranges for the type info; a write is clamped to them. */
-    static ranges = { sharpeningStrength: [ 0, 1 ] };
-
-    /** Why each unsupported value is unavailable, by name; absent when it is available. */
+    /**
+     * Why each unsupported value is unavailable, by name; absent when it is available.
+     * @type {Map}
+     * @cjs
+     */
     _unavailable = new Map();
 
-    /** The UI's change handler, called with a member's name; null when none. */
+    /**
+     * The UI's change handler, called with a member's name; null when none.
+     * @type {object|null}
+     * @cjs
+     */
     _onModified = null;
 
     /**
-     * Acquires an authored space scene, preserving acquisition and type failures.
-     * @param {string} path Scene resource path.
-     * @param {object} [options={}] Passed unchanged to the library.
-     * @returns {Promise<TnyScene>} Wrapper over the acquired scene.
+     * The UI's type-info change handler; null when none.
+     * @type {object|null}
+     * @cjs
      */
-    static async fetch(path, options = {})
-    {
-        const library = CjsLibrary.instance;
-        if (!library) throw new Error("TnyScene requires an initialized CjsLibrary.");
-        if (typeof path !== "string" || !path) throw new TypeError("TnyScene requires a scene resource path.");
-        return TnyScene.fromWrapped(await library.Fetch(path, options));
-    }
+    _onTypeInfoModified = null;
 
-    /** Adapts an existing space scene without acquiring or initializing it again. */
-    static fromWrapped(scene)
-    {
-        if (!CjsSchema.cast(scene, EveSpaceScene)) throw new TypeError("TnyScene requires a live EveSpaceScene.");
-        const wrapper = new this();
-        wrapper.wrapped = scene;
-        wrapper.ballpark = scene.ballpark;
-        wrapper._DiscoverPost();
-        return wrapper;
-    }
+    /**
+     * The wrappers added through AddObject.
+     * @type {Array}
+     * @cjs
+     */
+    _objects = [];
+
+    /**
+     * The template SetPostProcess loaded, or null while the authored one is in use.
+     * @type {object|null}
+     * @cjs
+     */
+    postProcessPath = null;
+
+    /**
+     * The post process captured on the first SetPostProcess call; null is a valid authored value.
+     * @type {object|null}
+     * @cjs
+     */
+    _authoredPostProcess = null;
+
+    /**
+     * Whether SetPostProcess has captured the authored value.
+     * @type {boolean}
+     * @cjs
+     */
+    _hasAuthoredPostProcess = false;
 
     /**
      * Every declared value; null where unset. The ballpark is the host's own
      * object, not graph data, so it comes back as itself (the graph's
      * copyOverride, Carbon's Copier m_override), and SetValues keeps it so.
+     * @param {object} options Options for this operation.
+     * @returns {object}
+     * @cjs
      */
     GetValues(options)
     {
@@ -95,6 +122,7 @@ export class TnyScene extends CjsGraphRoot
      * as interfaces, and its members.
      *
      * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.
+     * @cjs
      */
     GetTypeInfo()
     {
@@ -112,7 +140,12 @@ export class TnyScene extends CjsGraphRoot
         return [ classInfo, interfaces, members, {} ];
     }
 
-    /** A value changed: ignore it when unavailable, clamp it, push it to the scene, then tell the UI. */
+    /**
+     * A value changed: ignore it when unavailable, clamp it, push it to the scene, then tell the UI.
+     * @param {string} name Member or registration name.
+     * @returns {boolean}
+     * @cjs
+     */
     OnModified(name)
     {
         if (this._unavailable.has(name))
@@ -128,7 +161,10 @@ export class TnyScene extends CjsGraphRoot
         return true;
     }
 
-    /** Takes the post process's sharpening, or says why there is none. */
+    /**
+     * Takes the post process's sharpening, or says why there is none.
+     * @cjs
+     */
     _DiscoverPost()
     {
         const al = Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL();
@@ -139,23 +175,18 @@ export class TnyScene extends CjsGraphRoot
     }
 
     /**
-     * The wrapper classes `Fetch` chooses from, most specific first: the first
-     * whose native class the object is wins (ccpwgl's TnyScene.EVE_CLASS).
-     */
-    static WRAPPERS = [ TnyShip, TnyMobile, TnyStationary, TnySpaceObject ];
-
-    /**
      * Acquires a space object, wraps it in the most specific wrapper, starts
      * its controllers and adds it to this scene.
      *
      * @param {object} options `TnySpaceObject.fetch` options: `dna` or `resPath`, `awaitResources`, `name`.
      * @returns {Promise<TnySpaceObject>} The wrapper, now in this scene.
      * @throws {TypeError} When the object is no space object.
+     * @cjs
      */
     async Fetch(options = {})
     {
         const object = await TnySpaceObject.acquire(options);
-        const Wrapper = TnyScene.WRAPPERS.find(Candidate => CjsSchema.cast(object, Candidate.wrappedClass));
+        const Wrapper = TnyScene.wrappers.find(Candidate => CjsSchema.cast(object, Candidate.wrappedClass));
         if (!Wrapper) throw new TypeError("TnyScene.Fetch requires a live EveSpaceObject2.");
         const wrapper = Wrapper.fromWrapped(object, options);
         this.AddObject(wrapper);
@@ -166,6 +197,7 @@ export class TnyScene extends CjsGraphRoot
      * Adds a space object through the native scene list, once. The scene owns registration.
      * @param {TnySpaceObject} object Object to add.
      * @returns {boolean} True when newly added; false when already present.
+     * @cjs
      */
     AddObject(object)
     {
@@ -181,6 +213,7 @@ export class TnyScene extends CjsGraphRoot
      * Removes membership without destroying the object or its resources.
      * @param {TnySpaceObject} object Object to remove.
      * @returns {boolean} Whether the ship was present and removed.
+     * @cjs
      */
     RemoveObject(object)
     {
@@ -202,10 +235,15 @@ export class TnyScene extends CjsGraphRoot
      * @param {string|null} source A template name under
      *   `res:/dx9/postprocess/environmenttemplate/`, a resource path, or null.
      * @returns {Promise<string|null>} The path now in use, or null for the authored one.
+     * @cjs
      */
     async SetPostProcess(source)
     {
-        if (this._authoredPostProcess === undefined) this._authoredPostProcess = this.wrapped.postprocess;
+        if (!this._hasAuthoredPostProcess)
+        {
+            this._authoredPostProcess = this.wrapped.postprocess;
+            this._hasAuthoredPostProcess = true;
+        }
         if (source === null)
         {
             this.wrapped.postprocess = this._authoredPostProcess;
@@ -217,7 +255,7 @@ export class TnyScene extends CjsGraphRoot
 
         const library = CjsLibrary.instance;
         if (!library) throw new Error("TnyScene requires an initialized CjsLibrary.");
-        const path = source.includes("/") ? source : `${TnyScene.POST_PROCESS_TEMPLATES}${source}.black`;
+        const path = source.includes("/") ? source : `${TnyScene.postProcessTemplates}${source}.black`;
         const postProcess = await library.Fetch(path);
         if (!CjsSchema.cast(postProcess, Tr2PostProcess2)) throw new TypeError(`${path} is not a Tr2PostProcess2.`);
         this.wrapped.postprocess = postProcess;
@@ -226,7 +264,10 @@ export class TnyScene extends CjsGraphRoot
         return path;
     }
 
-    /** Another post process is in use: its sharpening is the value now; the UI hears of it. */
+    /**
+     * Another post process is in use: its sharpening is the value now; the UI hears of it.
+     * @cjs
+     */
     _PostChanged()
     {
         this._DiscoverPost();
@@ -234,39 +275,95 @@ export class TnyScene extends CjsGraphRoot
         if (this._onModified) this._onModified("sharpeningStrength");
     }
 
-    /** The UI's type-info change handler; null when none. */
-    _onTypeInfoModified = null;
-
-    /** Lets each wrapper read back what the content changed by itself this frame (TnySpaceObject.Sync). */
+    /**
+     * Lets each wrapper read back what the content changed by itself this frame (TnySpaceObject.Sync).
+     * @cjs
+     */
     Sync()
     {
-        for (const object of this._objects) object.Sync();
+        for (let i = 0; i < this._objects.length; i++) this._objects[i].Sync();
     }
 
-    /** @returns {TnySpaceObject[]} The wrappers this scene added, in order. */
+    /**
+     * @returns {TnySpaceObject[]} The wrappers this scene added, in order.
+     * @cjs
+     */
     GetObjects()
     {
         return this._objects.slice();
     }
 
-    /** The wrappers added through AddObject. */
-    _objects = [];
-
-    /** Where shipped environment post-process templates live. */
-    static POST_PROCESS_TEMPLATES = "res:/dx9/postprocess/environmenttemplate/";
-
-    /** The template SetPostProcess loaded, or null while the authored one is in use. */
-    postProcessPath = null;
-
-    /** The post process the scene was authored with; undefined until SetPostProcess first runs. */
-    _authoredPostProcess = undefined;
-
-    /** Rejects incompatible wrappers before mutating the native list. */
+    /**
+     * Rejects incompatible wrappers before mutating the native list.
+     * @param {TnySpaceObject} object Wrapper to validate before changing scene membership.
+     * @cjs
+     */
     _ValidateObject(object)
     {
         if (!CjsSchema.cast(object, TnySpaceObject))
             throw new TypeError("TnyScene requires a TnySpaceObject.");
     }
+
+    /**
+     * Acquires an authored space scene, preserving acquisition and type failures.
+     * @param {string} path Scene resource path.
+     * @param {object} [options={}] Passed unchanged to the library.
+     * @returns {Promise<TnyScene>} Wrapper over the acquired scene.
+     * @cjs
+     */
+    static async fetch(path, options = {})
+    {
+        const library = CjsLibrary.instance;
+        if (!library) throw new Error("TnyScene requires an initialized CjsLibrary.");
+        if (typeof path !== "string" || !path) throw new TypeError("TnyScene requires a scene resource path.");
+        return TnyScene.fromWrapped(await library.Fetch(path, options));
+    }
+
+    /**
+     * Adapts an existing space scene without acquiring or initializing it again.
+     * @param {EveSpaceScene} scene Borrowed native scene.
+     * @returns {TnyScene}
+     * @cjs
+     */
+    static fromWrapped(scene)
+    {
+        if (!CjsSchema.cast(scene, EveSpaceScene)) throw new TypeError("TnyScene requires a live EveSpaceScene.");
+        const wrapper = new this();
+        wrapper.wrapped = scene;
+        wrapper.ballpark = scene.ballpark;
+        wrapper._DiscoverPost();
+        return wrapper;
+    }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyScene";
+
+    /**
+     * Numeric ranges for the type info; a write is clamped to them.
+     * @type {object}
+     * @cjs
+     */
+    static ranges = { sharpeningStrength: [ 0, 1 ] };
+
+    /**
+     * The wrapper classes `Fetch` chooses from, most specific first: the first
+     * whose native class the object is wins (ccpwgl's TnyScene.EVE_CLASS).
+     * @type {Array}
+     * @cjs
+     */
+    static wrappers = [ TnyShip, TnyMobile, TnyStationary, TnySpaceObject ];
+
+    /**
+     * Where shipped environment post-process templates live.
+     * @type {string}
+     * @cjs
+     */
+    static postProcessTemplates = "res:/dx9/postprocess/environmenttemplate/";
+
 }
 
 CjsBlueGraph.define(TnyScene, "TnyScene");

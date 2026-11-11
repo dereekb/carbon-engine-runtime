@@ -1,3 +1,4 @@
+import { parseEnumValues } from "#utils/text";
 import { CjsSchema, meta } from "#schema";
 import { CjsBlueGraph } from "../blue/formats/graph/CjsBlueGraph.js";
 import { vec3 } from "#math/vec3";
@@ -13,7 +14,7 @@ import { TnyScene } from "./TnyScene.js";
 import { TnySpaceObject } from "./objects/TnySpaceObject.js";
 import { TnyStationary } from "./objects/TnyStationary.js";
 import { TnyShip } from "./objects/TnyShip.js";
-import { TnyControllers, ParseEnumValues } from "./objects/TnyControllers.js";
+import { TnyControllers } from "./objects/TnyControllers.js";
 
 /** Bay placements in a layout-built hangar, by size (the SOF layout placement names). */
 const BAY_PLACEMENTS = { small: "small_dock_ships", medium: "medium_dock_ships" };
@@ -43,119 +44,61 @@ const ENTRIES = [ "docked", "dock", "appear" ];
  *   with the docker;
  * - every other hangar (racial, AIR, the older generic ones): one bay at the
  *   origin; `me_generic_hangar_vfx_01a` animates the ship.
+ * @cjs
  */
 @meta.define({ className: "TnyHangar" })
 @meta.exposureChainTo(TnyScene)
 export class TnyHangar extends TnyScene
 {
-    static className = "TnyHangar";
 
     /**
-     * The known hangars by hull: a display name, the SDE graphic and the DNA
-     * it gives, the hangar's own scene and, for Deathless, its docker. A hull
-     * not listed gets an empty sunless scene and `DOCKER`. Which Upwell scene
-     * goes with which Upwell hangar, and which Deathless scene with which hull,
-     * are client choices (DERIVED here).
+     * The hangar object (TnyStationary).
+     * @type {object|null}
+     * @cjs
      */
-    static defaults = {
-        ah1: { name: "Amarr Hangar", graphicID: 24407, dna: "ah1:amarrbase:amarr:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/amarr/ah1/ah1_scene.black" },
-        ch1: { name: "Caldari Hangar", graphicID: 24408, dna: "ch1:caldaribase:caldari:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/caldari/ch1/ch1_scene.black" },
-        gh1: { name: "Gallente Hangar", graphicID: 24409, dna: "gh1:gallentebase:gallente:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/gallente/gh1/gh1_scene.black" },
-        mh1: { name: "Minmatar Hangar", graphicID: 24410, dna: "mh1:minmatarbase:minmatar:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/minmatar/mh1/mh1_scene.black" },
-        chjita: { name: "Jita Hangar", graphicID: 24525, dna: "chjita:caldarinavy:caldari:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/caldari/chjita/chjita_scene.black" },
-        airh1: { name: "AIR Hangar", graphicID: 25044, dna: "airh1:air:caldari:layout?hangar_announcements",
-            scene: "res:/dx9/model/hangar/air/airh1/airh1_scene.black" },
-        airh2: { name: "AIR Hangar 2", graphicID: 33091, dna: "airh2:air_interior:generic:layout?library_generic",
-            scene: "res:/dx9/model/hangar/air/airh2/airh2_scene.black" },
-        gensh1_t1a: { name: "Generic Hangar", graphicID: 24411, dna: "gensh1_t1a:upwell:generic",
-            scene: "res:/dx9/model/hangar/generic/standard/gensh1/gensh1_scene.black" },
-        gench1_t1a: { name: "Generic Capital Hangar", graphicID: 24412, dna: "gench1_t1a:upwell:generic",
-            scene: "res:/dx9/model/hangar/generic/capital/gench1/gench1_scene.black" },
-        mgenh_ow01: { name: "Upwell Hangar", graphicID: 25235, dna: "mgenh_ow01:upwell_interior:generic:layout?upwell_hangar;hangar_announcements",
-            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
-        mgenh_ch01: { name: "Upwell Capital Hangar", graphicID: 25568, dna: "mgenh_ch01:upwell_interior:generic:layout?upwell_capitalhangar",
-            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
-        mdeha01: { name: "Deathless Hangar", graphicID: 26303, dna: "mdeha01:deathless:angel:layout?deathless_hangar",
-            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_01.black",
-            docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" },
-        mdeha03: { name: "Deathless Hangar 2", graphicID: 26356, dna: "mdeha03:deathless:minmatar:layout?deathless_hangar",
-            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_02.black",
-            docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" }
-    };
-
-    /** The docker for a layout-built or capital hangar whose hull lists none. */
-    static DOCKER = "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a.black";
-
-    /** The effect that animates a ship in a hangar without bays. */
-    static HANGAR_EFFECT = "res:/dx9/model/hangar/shared/fx/me_generic_hangar_vfx_01a.black";
-
-    /**
-     * Ours: when SetShip is given no bay, a ship whose bounding sphere is
-     * smaller than this takes a small bay, otherwise a medium one. Nothing in
-     * Carbon or the content chooses a bay by size; the client does.
-     */
-    static SMALL_SHIP_RADIUS = 100;
-
-    static scratch = { vec3_0: vec3.create(), quat_0: quat.create() };
-
-    /** The hangar object (TnyStationary). */
     hangar = null;
 
-    /** "layout", "capital" or "origin": how ships are placed, from what the hangar holds. */
+    /**
+     * "layout", "capital" or "origin": how ships are placed, from what the hangar holds.
+     * @type {object|null}
+     * @cjs
+     */
     kind = null;
 
-    /** The bay the last SetShip filled, the one Undock() leaves; null before. */
+    /**
+     * The bay the last SetShip filled, the one Undock() leaves; null before.
+     * @type {object|null}
+     * @cjs
+     */
     active = null;
 
-    /** Bay records, by index. */
+    /**
+     * Bay records, by index.
+     * @type {Array}
+     * @cjs
+     */
     _bays = [];
 
-    /** Timers that remove dissolved ships. */
+    /**
+     * Timers that remove dissolved ships.
+     * @type {Set}
+     * @cjs
+     */
     _timers = new Set();
 
     /**
-     * Builds a hangar from its DNA and its scene, and finds its bays.
-     *
-     * @param {object} options
-     * @param {string} options.dna The hangar's DNA (hangars have graphicIDs, no typeIDs).
-     * @param {string} [options.scene] A scene path; omitted, the hull's default, else an empty sunless scene.
-     * @param {boolean} [options.awaitResources=false] Resolve once the hangar's resources have loaded.
-     * @returns {Promise<TnyHangar>} The hangar scene.
+     * The controllers view, made on first use.
+     * @type {object|null}
+     * @cjs
      */
-    static async fetch({ dna, scene, awaitResources = false } = {})
-    {
-        const library = CjsLibrary.instance;
-        if (!library) throw new Error("TnyHangar requires an initialized CjsLibrary.");
-        const object = await TnySpaceObject.acquire({ dna, awaitResources });
-        const hangar = TnyStationary.fromWrapped(object, { dna });
-        const path = scene ?? TnyHangar.defaults[hangar.identity.hull]?.scene ?? null;
-        const result = TnyHangar.fromWrapped(path ? await library.Fetch(path) : TnyHangar.CreateSunlessScene());
-        result.hangar = hangar;
-        result.AddObject(hangar);
-        result._FindBays();
-        return result;
-    }
-
-    /** An empty space scene with the sun off: the hangar's own lights light it. */
-    static CreateSunlessScene()
-    {
-        const scene = new EveSpaceScene();
-        scene.Initialize(Tr2RenderContext_GetMainThreadRenderContext());
-        vec3.set(scene.sunDiffuseColor, 0, 0, 0);
-        vec3.set(scene.sunDiffuseColorWithDynamicLights, 0, 0, 0);
-        return scene;
-    }
+    _controllers = null;
 
     /**
      * The bays, as data.
      *
      * @returns {{index: number, size: string, occupied: boolean, position: number[], camera: number[]|null}[]}
      *   `size` is "small", "medium", "capital" or "any".
+     * @cjs
      */
     GetBays()
     {
@@ -168,6 +111,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {TnyShip|null} The ship, or null.
+     * @cjs
      */
     GetShip(bay = this.active)
     {
@@ -181,6 +125,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {number[]|null} The point, or null when the hangar has none.
+     * @cjs
      */
     GetCameraPoint(bay = this.active)
     {
@@ -195,10 +140,11 @@ export class TnyHangar extends TnyScene
      *
      * @param {TnyShip|string} ship A ship, or DNA to fetch one.
      * @param {object} [options]
-     * @param {number} [options.bay] The bay; omitted, one chosen by the ship's size (ours, see SMALL_SHIP_RADIUS).
+     * @param {number} [options.bay] The bay; omitted, one chosen by the ship's size (ours, see smallShipRadius).
      * @param {"docked"|"dock"|"appear"} [options.entry="docked"] Already there, flying in, or fading in.
      *   A hangar without a docker has no fade; "appear" is "docked" there.
      * @returns {Promise<TnyShip>} The ship, now in this scene.
+     * @cjs
      */
     async SetShip(ship, { bay = undefined, entry = "docked" } = {})
     {
@@ -231,6 +177,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {boolean} Whether a ship was there to undock.
+     * @cjs
      */
     Undock(bay = this.active)
     {
@@ -245,7 +192,11 @@ export class TnyHangar extends TnyScene
         return true;
     }
 
-    /** Sends the undock to the docker and the hangar's own controllers. */
+    /**
+     * Sends the undock to the docker and the hangar's own controllers.
+     * @param {object} record Mutable bay record.
+     * @cjs
+     */
     _StartUndock(record)
     {
         record.undockPending = false;
@@ -257,7 +208,11 @@ export class TnyHangar extends TnyScene
         record.leftDock = false;
     }
 
-    /** The state of the hangar's own Undock machine (Hangar_Controller), or null without one. */
+    /**
+     * The state of the hangar's own Undock machine (Hangar_Controller), or null without one.
+     * @returns {string|null}
+     * @cjs
+     */
     _HangarUndockState()
     {
         // Jita's CH_Jita_DockingController also names a machine Undock; the hangar's own is the one with the Undock variable.
@@ -270,7 +225,12 @@ export class TnyHangar extends TnyScene
         return null;
     }
 
-    /** The docker's docking machine state for a bay, or null without one. */
+    /**
+     * The docker's docking machine state for a bay, or null without one.
+     * @param {object} record Mutable bay record.
+     * @returns {string|null}
+     * @cjs
+     */
     _DockerState(record)
     {
         const docker = record.effect ? record.effect.controllers.find(controller => controller.name === "docker") : null;
@@ -287,6 +247,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {{phase: string, canUndock: boolean, canCancelUndock: boolean}} The phase.
+     * @cjs
      */
     GetBayState(bay = this.active)
     {
@@ -302,13 +263,15 @@ export class TnyHangar extends TnyScene
      * Each frame: applies an undock that waited for the ship to land, ends an
      * undock once the docker has docked the ship again (Docking_State back to
      * 1), and announces "bays" when any bay's phase changed.
+     * @cjs
      */
     Sync()
     {
         super.Sync();
         let changed = false;
-        for (const record of this._bays)
+        for (let i = 0; i < this._bays.length; i++)
         {
+            const record = this._bays[i];
             const state = record.ship ? this._DockerState(record) : null;
             if (record.undockPending && DOCKED_STATES.has(state)) this._StartUndock(record);
             if (record.undocking && UNDOCK_STATES.has(state)) record.leftDock = true;
@@ -330,7 +293,11 @@ export class TnyHangar extends TnyScene
                 }
             }
             const key = JSON.stringify(this.GetBayState(record.index));
-            if (key !== record.lastState) { record.lastState = key; changed = true; }
+            if (key !== record.lastState)
+            {
+                record.lastState = key;
+                changed = true;
+            }
         }
         if (changed && this._onModified) this._onModified("bays");
     }
@@ -345,6 +312,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {boolean} Whether an undock was cancelled.
+     * @cjs
      */
     CancelUndock(bay = this.active)
     {
@@ -365,6 +333,7 @@ export class TnyHangar extends TnyScene
      *
      * @param {number} [bay=this.active] The bay.
      * @returns {boolean} Whether its undock can still be cancelled.
+     * @cjs
      */
     CanCancelUndock(bay = this.active)
     {
@@ -373,7 +342,11 @@ export class TnyHangar extends TnyScene
         return record.undockPending || this._DockerState(record) === "InitalizeUndock";
     }
 
-    /** The hangar's actions, for the type info: CancelUndock only while it can act. */
+    /**
+     * The hangar's actions, for the type info: CancelUndock only while it can act.
+     * @returns {object[]}
+     * @cjs
+     */
     GetTypeInfo()
     {
         const info = super.GetTypeInfo();
@@ -387,16 +360,17 @@ export class TnyHangar extends TnyScene
      * driving its ships (the docker; me_generic with `HangarType`).
      *
      * @returns {TnyControllers} The controllers.
+     * @cjs
      */
     get controllers()
     {
         return this._controllers ??= new TnyControllers(this.hangar, () => this._bays.filter(bay => bay.effect).map(bay => bay.effect));
     }
 
-    /** The controllers view, made on first use. */
-    _controllers = null;
-
-    /** Removes the hangar's effects and timers; the ships and the hangar stay in the scene. */
+    /**
+     * Removes the hangar's effects and timers; the ships and the hangar stay in the scene.
+     * @cjs
+     */
     Destruct()
     {
         for (const timer of this._timers) clearTimeout(timer);
@@ -404,7 +378,10 @@ export class TnyHangar extends TnyScene
         for (const bay of this._bays) if (bay.ship) this._Release(bay, false);
     }
 
-    /** Finds the bays from what the built hangar holds. */
+    /**
+     * Finds the bays from what the built hangar holds.
+     * @cjs
+     */
     _FindBays()
     {
         const root = this.hangar.wrapped;
@@ -436,7 +413,14 @@ export class TnyHangar extends TnyScene
             undockPending: false, undocking: false, leftDock: false, lastState: null }));
     }
 
-    /** A layout bay: its transform is its placed hull's; its camera point its own transition locator. */
+    /**
+     * A layout bay: its transform is its placed hull's; its camera point its own transition locator.
+     * @param {string} size Bay size category.
+     * @param {object} container Authored placement container.
+     * @param {object} hull Placed hull supplying the bay transform.
+     * @returns {object}
+     * @cjs
+     */
     _Bay(size, container, hull)
     {
         // alloc: kept by the bay
@@ -451,7 +435,12 @@ export class TnyHangar extends TnyScene
         return this._Place(bay);
     }
 
-    /** Moves a bay from hangar space into world space. */
+    /**
+     * Moves a bay from hangar space into world space.
+     * @param {object} bay Mutable bay record.
+     * @returns {object}
+     * @cjs
+     */
     _Place(bay)
     {
         const world = this.hangar.wrapped.worldTransform;
@@ -469,6 +458,9 @@ export class TnyHangar extends TnyScene
      * paired here by distance (DERIVED; the sets do not share an order). The
      * docker's `docking_cs` `exit_point` takes the bay-local vector to it and
      * its length (TriValueBindings feed them to the undock yaw).
+     * @param {object[]} bays Bay records to update.
+     * @param {object[]} containers Authored layout containers.
+     * @cjs
      */
     _PairExits(bays, containers)
     {
@@ -506,6 +498,8 @@ export class TnyHangar extends TnyScene
      * Deathless and AIR hangars keep `*_dock_camera_transition_points` on the
      * hangar's own hull, several locators per set, rather than one on each
      * bay; a bay without its own takes the nearest (DERIVED pairing).
+     * @param {object[]} bays Bay records to update.
+     * @cjs
      */
     _PairCameras(bays)
     {
@@ -520,18 +514,27 @@ export class TnyHangar extends TnyScene
                 const { vec3_0 } = TnyHangar.scratch;
                 vec3.transformMat4(vec3_0, locator.position, root.worldTransform);
                 const d = vec3.distance(vec3_0, bay.position);
-                if (d < distance) { distance = d; best = locator; }
+                if (d < distance)
+                {
+                    distance = d;
+                    best = locator;
+                }
             }
             if (best) bay.camera = vec3.transformMat4(vec3.create(), best.position, root.worldTransform); // alloc: kept by the bay
         }
     }
 
-    /** Ours: a free bay of the ship's size class, else any free bay, else the first of its size. */
+    /**
+     * Ours: a free bay of the ship's size class, else any free bay, else the first of its size.
+     * @param {TnyShip} ship Ship wrapper being placed.
+     * @returns {number}
+     * @cjs
+     */
     _ChooseBay(ship)
     {
         if (this._bays.length === 1) return 0;
         const radius = ship.GetBoundingSphere()?.radius ?? 0;
-        const size = radius < TnyHangar.SMALL_SHIP_RADIUS ? "small" : "medium";
+        const size = radius < TnyHangar.smallShipRadius ? "small" : "medium";
         const fits = this._bays.filter(bay => bay.size === size);
         const pick = fits.find(bay => !bay.ship) ?? this._bays.find(bay => !bay.ship) ?? fits[0] ?? this._bays[0];
         return pick.index;
@@ -544,6 +547,11 @@ export class TnyHangar extends TnyScene
      * is a Tr2CurveCombiner of the bay's position and that offset, which a
      * Tr2TranslationAdapter turns by the bay's rotation (its rotationOffset).
      * Other hangars: me_generic writes `modelTranslationCurve`.
+     * @param {object} bay Mutable bay record.
+     * @param {TnyShip} ship Ship wrapper being placed.
+     * @param {string} entry Entry animation mode.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
      */
     async _Seat(bay, ship, entry)
     {
@@ -559,7 +567,7 @@ export class TnyHangar extends TnyScene
             native.translationCurve = null;
             native.rotationCurve = null;
             native.modelTranslationCurve = new Tr2TranslationAdapter();
-            const effect = bay.effect = await library.Fetch(TnyHangar.HANGAR_EFFECT);
+            const effect = bay.effect = await library.Fetch(TnyHangar.hangarEffect);
             effect.SetParameter("ship", native);
             effect.SetParameter("Hangar", this.hangar.wrapped);
             effect.SetParameter("PostProcess", this.wrapped.postprocess);
@@ -583,7 +591,7 @@ export class TnyHangar extends TnyScene
             native.modelRotationCurve = new Tr2CurveConstant();
             quat.identity(native.modelRotationCurve.value);
 
-            const path = TnyHangar.defaults[this.hangar.identity.hull]?.docker ?? TnyHangar.DOCKER;
+            const path = TnyHangar.defaults[this.hangar.identity.hull]?.docker ?? TnyHangar.docker;
             const effect = bay.effect = await library.Fetch(path);
             effect.SetParameter("docking_ship", native);
             effect.SetParameter("docking_dock", bay.dock);
@@ -615,6 +623,10 @@ export class TnyHangar extends TnyScene
      * and the ship leaves the scene after the docker's
      * `dematerializationDuration`; otherwise it leaves the bay at once and
      * stays in the scene with its own curves back.
+     * @param {object} bay Mutable bay record.
+     * @param {boolean} dissolve Whether to remove the ship after its dissolve animation.
+     * @returns {void} Completion of the operation.
+     * @cjs
      */
     _Release(bay, dissolve)
     {
@@ -635,20 +647,152 @@ export class TnyHangar extends TnyScene
         const seconds = dissolve && effect ? GetVariable(effect.controllers, "dematerializationDuration") : null;
         if (seconds === null || this.kind === "origin") return finish();
         effect.SetControllerVariable("materialize", 0);
-        const timer = setTimeout(() => { this._timers.delete(timer); finish(); }, seconds * 1000);
+        const timer = setTimeout(() =>
+        {
+            this._timers.delete(timer);
+            finish();
+        }, seconds * 1000);
         this._timers.add(timer);
     }
+
+    /**
+     * Builds a hangar from its DNA and its scene, and finds its bays.
+     *
+     * @param {object} options
+     * @param {string} options.dna The hangar's DNA (hangars have graphicIDs, no typeIDs).
+     * @param {string} [options.scene] A scene path; omitted, the hull's default, else an empty sunless scene.
+     * @param {boolean} [options.awaitResources=false] Resolve once the hangar's resources have loaded.
+     * @returns {Promise<TnyHangar>} The hangar scene.
+     * @cjs
+     */
+    static async fetch({ dna, scene, awaitResources = false } = {})
+    {
+        const library = CjsLibrary.instance;
+        if (!library) throw new Error("TnyHangar requires an initialized CjsLibrary.");
+        const object = await TnySpaceObject.acquire({ dna, awaitResources });
+        const hangar = TnyStationary.fromWrapped(object, { dna });
+        const path = scene ?? TnyHangar.defaults[hangar.identity.hull]?.scene ?? null;
+        const result = TnyHangar.fromWrapped(path ? await library.Fetch(path) : TnyHangar.createSunlessScene());
+        result.hangar = hangar;
+        result.AddObject(hangar);
+        result._FindBays();
+        return result;
+    }
+
+    /**
+     * An empty space scene with the sun off: the hangar's own lights light it.
+     * @returns {EveSpaceScene}
+     * @cjs
+     */
+    static createSunlessScene()
+    {
+        const scene = new EveSpaceScene();
+        scene.Initialize(Tr2RenderContext_GetMainThreadRenderContext());
+        vec3.set(scene.sunDiffuseColor, 0, 0, 0);
+        vec3.set(scene.sunDiffuseColorWithDynamicLights, 0, 0, 0);
+        return scene;
+    }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyHangar";
+
+    /**
+     * The known hangars by hull: a display name, the SDE graphic and the DNA
+     * it gives, the hangar's own scene and, for Deathless, its docker. A hull
+     * not listed gets an empty sunless scene and `docker`. Which Upwell scene
+     * goes with which Upwell hangar, and which Deathless scene with which hull,
+     * are client choices (DERIVED here).
+     * @type {object}
+     * @cjs
+     */
+    static defaults = {
+        ah1: { name: "Amarr Hangar", graphicID: 24407, dna: "ah1:amarrbase:amarr:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/amarr/ah1/ah1_scene.black" },
+        ch1: { name: "Caldari Hangar", graphicID: 24408, dna: "ch1:caldaribase:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/caldari/ch1/ch1_scene.black" },
+        gh1: { name: "Gallente Hangar", graphicID: 24409, dna: "gh1:gallentebase:gallente:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/gallente/gh1/gh1_scene.black" },
+        mh1: { name: "Minmatar Hangar", graphicID: 24410, dna: "mh1:minmatarbase:minmatar:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/minmatar/mh1/mh1_scene.black" },
+        chjita: { name: "Jita Hangar", graphicID: 24525, dna: "chjita:caldarinavy:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/caldari/chjita/chjita_scene.black" },
+        airh1: { name: "AIR Hangar", graphicID: 25044, dna: "airh1:air:caldari:layout?hangar_announcements",
+            scene: "res:/dx9/model/hangar/air/airh1/airh1_scene.black" },
+        airh2: { name: "AIR Hangar 2", graphicID: 33091, dna: "airh2:air_interior:generic:layout?library_generic",
+            scene: "res:/dx9/model/hangar/air/airh2/airh2_scene.black" },
+        gensh1_t1a: { name: "Generic Hangar", graphicID: 24411, dna: "gensh1_t1a:upwell:generic",
+            scene: "res:/dx9/model/hangar/generic/standard/gensh1/gensh1_scene.black" },
+        gench1_t1a: { name: "Generic Capital Hangar", graphicID: 24412, dna: "gench1_t1a:upwell:generic",
+            scene: "res:/dx9/model/hangar/generic/capital/gench1/gench1_scene.black" },
+        mgenh_ow01: { name: "Upwell Hangar", graphicID: 25235, dna: "mgenh_ow01:upwell_interior:generic:layout?upwell_hangar;hangar_announcements",
+            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
+        mgenh_ch01: { name: "Upwell Capital Hangar", graphicID: 25568, dna: "mgenh_ch01:upwell_interior:generic:layout?upwell_capitalhangar",
+            scene: "res:/dx9/model/hangar/modular/scene/upwell_hangar_scene_01a.black" },
+        mdeha01: { name: "Deathless Hangar", graphicID: 26303, dna: "mdeha01:deathless:angel:layout?deathless_hangar",
+            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_01.black",
+            docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" },
+        mdeha03: { name: "Deathless Hangar 2", graphicID: 26356, dna: "mdeha03:deathless:minmatar:layout?deathless_hangar",
+            scene: "res:/dx9/model/hangar/modular/scene/deathless_hangar_scene_02.black",
+            docker: "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a_deathless.black" }
+    };
+
+    /**
+     * The docker for a layout-built or capital hangar whose hull lists none.
+     * @type {string}
+     * @cjs
+     */
+    static docker = "res:/dx9/model/hangar/shared/docker/multieffect_docker_01a.black";
+
+    /**
+     * The effect that animates a ship in a hangar without bays.
+     * @type {string}
+     * @cjs
+     */
+    static hangarEffect = "res:/dx9/model/hangar/shared/fx/me_generic_hangar_vfx_01a.black";
+
+    /**
+     * Ours: when SetShip is given no bay, a ship whose bounding sphere is
+     * smaller than this takes a small bay, otherwise a medium one. Nothing in
+     * Carbon or the content chooses a bay by size; the client does.
+     * @type {number}
+     * @cjs
+     */
+    static smallShipRadius = 100;
+
+    /**
+     * Reusable synchronous math scratch; callers must not retain its values.
+     * @type {object}
+     * @cjs
+     */
+    static scratch = { vec3_0: vec3.create(), quat_0: quat.create() };
+
 }
 
 CjsBlueGraph.define(TnyHangar, "TnyHangar");
 
-/** The first locator of a named set, or null. */
+/**
+ * The first locator of a named set, or null.
+ * @param {object[]|null} sets Authored locator sets.
+ * @param {string} name Member or registration name.
+ * @returns {object|null}
+ * @cjs
+ */
 function FindLocator(sets, name)
 {
     return (sets ?? []).find(each => each.name === name)?.locators[0] ?? null;
 }
 
-/** A controller variable's value, or null when no controller has it. */
+/**
+ * A controller variable's value, or null when no controller has it.
+ * @param {object[]} controllers Native controllers to inspect.
+ * @param {string} name Member or registration name.
+ * @returns {number|null}
+ * @cjs
+ */
 function GetVariable(controllers, name)
 {
     for (const controller of controllers)
@@ -659,12 +803,6 @@ function GetVariable(controllers, name)
     return null;
 }
 
-/** Sets a variable on every controller that has it. */
-function SetVariable(controllers, name, value)
-{
-    for (const controller of controllers) controller.SetVariable(name, value);
-}
-
 /**
  * me_generic's `HangarType` for a hangar, from the variable's own
  * `enumValues` ("Default = 0, AmarrBase = 1, ..., AirBase = 7, ..."): the
@@ -672,6 +810,10 @@ function SetVariable(controllers, name, value)
  * (amarrbase → AmarrBase, air → AirBase, caldari → CaldariBase). Only the
  * light-rig loader tells the racial values apart. Null when none matches,
  * leaving the default.
+ * @param {object} effect Multi-effect supplying hangar controller variables.
+ * @param {object} identity Explicit identity and provenance for the operation.
+ * @returns {number|null}
+ * @cjs
  */
 function HangarType(effect, identity)
 {
@@ -681,7 +823,7 @@ function HangarType(effect, identity)
         const variable = controller.variables?.find(each => each.name === "HangarType");
         if (variable) enumValues = variable.enumValues;
     }
-    const entries = new Map(ParseEnumValues(enumValues).map(({ name, value }) => [ name.toLowerCase(), value ]));
+    const entries = new Map(parseEnumValues(enumValues).map(({ name, value }) => [ name.toLowerCase(), value ]));
     for (const candidate of [ identity.faction, identity.faction && `${identity.faction}base`, identity.race && `${identity.race}base` ])
         if (candidate && entries.has(candidate.toLowerCase())) return entries.get(candidate.toLowerCase());
     return null;

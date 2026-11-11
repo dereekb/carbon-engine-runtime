@@ -7,19 +7,27 @@ import { TnySlot } from "./TnySlot.js";
 /**
  * A space object that moves (EveMobile): adds its weapon slots. Ours, after
  * ccpwgl's TnyMobile. Slots are hull facts, found once from its locators.
+ * @cjs
  */
 @meta.define({ className: "TnyMobile" })
 @meta.exposureChainTo(TnySpaceObject)
 export class TnyMobile extends TnySpaceObject
 {
-    static wrappedClass = EveMobile;
 
-    /** The weapon slots (TnySlot) the hull's locators define; null when it has none. */
+    /**
+     * The weapon slots (TnySlot) the hull's locators define; null when it has none.
+     * @type {object|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.list("TnySlot")
     slots = null;
 
-    /** Finds the slots once, then the rest. */
+    /**
+     * Finds the slots once, then the rest.
+     * @param {string|null} dna SOF DNA, or null when unknown.
+     * @cjs
+     */
     _Discover(dna)
     {
         super._Discover(dna);
@@ -30,18 +38,40 @@ export class TnyMobile extends TnySpaceObject
         }
     }
 
-    /** Adds "weapons" when the hull has slots. */
+    /**
+     * Adds "weapons" when the hull has slots.
+     * @returns {string[]}
+     * @cjs
+     */
     _Interfaces()
     {
         return this.slots ? [ ...super._Interfaces(), "weapons" ] : super._Interfaces();
     }
 
-    /** Detaches the slots too. */
+    /**
+     * Detaches the slots too.
+     * @cjs
+     */
     Destruct()
     {
         for (const slot of this.slots ?? []) slot.Destruct();
         super.Destruct();
     }
+
+    /**
+     * Native class accepted by this wrapper.
+     * @type {Function}
+     * @cjs
+     */
+    static wrappedClass = EveMobile;
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyMobile";
+
 }
 
 CjsBlueGraph.define(TnyMobile, "TnyMobile");

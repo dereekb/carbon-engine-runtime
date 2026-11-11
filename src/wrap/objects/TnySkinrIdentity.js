@@ -5,29 +5,56 @@ import { CjsGraphRoot } from "../../global/model/graph/CjsGraphRoot.js";
 /**
  * A SKINR design a ship wears, read-only. Ours. Its look (pattern and mesh
  * colours) is DNA and values, not identity. Null where it is not known.
+ * @cjs
  */
 @meta.define({ className: "TnySkinrIdentity" })
+@meta.exposureChainTo(CjsGraphRoot)
 export class TnySkinrIdentity extends CjsGraphRoot
 {
-    /** The design's name. */
+
+    /**
+     * The design's name.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     name = null;
 
-    /** Who designed it. */
+    /**
+     * Who designed it.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     author = null;
 
-    /** The design line it belongs to. */
+    /**
+     * The design line it belongs to.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     line = null;
 
-    /** Who sells it. */
+    /**
+     * Who sells it.
+     * @type {string|null}
+     * @cjs
+     */
     @meta.mapAttribute(meta.READ)
     @type.string
     seller = null;
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnySkinrIdentity";
+
 }
 
 CjsBlueGraph.define(TnySkinrIdentity, "TnySkinrIdentity");

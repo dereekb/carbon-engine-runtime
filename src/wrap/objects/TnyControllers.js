@@ -1,3 +1,7 @@
+import { parseEnumValues } from "#utils/text";
+
+// Preserve the existing wrap entry point while keeping one parser implementation.
+export { parseEnumValues as ParseEnumValues } from "#utils/text";
 import { CjsSchema } from "#schema";
 import { Type } from "../../trinity/controllers/enums.js";
 import { EveChildContainer } from "../../trinity/eve/child/EveChildContainer.js";
@@ -9,46 +13,34 @@ import { Tr2ActionSetValue } from "../../trinity/controllers/action/Tr2ActionSet
 const TYPE_NAMES = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BOOLEAN]: "boolean", [Type.ENUM]: "enum" };
 
 /**
- * Parses a variable's enumValues ("xs = 1, s = 2") into choices.
- *
- * @param {string} text The authored list.
- * @returns {{name: string, value: number}[]} The choices, in order.
- */
-export function ParseEnumValues(text)
-{
-    // Carbon documents "value=name" pairs (Tr2ControllerFloatVariable_Blue.cpp:31) and never
-    // parses them; content writes both orders ("0=default", "AmarrBase = 1"): the number is the value.
-    return String(text).split(",").map(entry => entry.split("=").map(part => part.trim()))
-        .filter(parts => parts.length === 2 && parts[0] && parts[1])
-        .map(([ left, right ]) => IsNumber(left) && !IsNumber(right) ? { name: right, value: Number(left) } : { name: left, value: Number(right) });
-}
-
-/** Whether a string is a number. */
-function IsNumber(text)
-{
-    return text !== "" && Number.isFinite(Number(text));
-}
-
-/**
  * What a space object's controllers expose, and nothing else: their variables
  * and their state machines' current states. Ours. Writes go through the
  * object's own SetControllerVariable, which in Carbon reaches the object's
  * controllers, effect children and overlays.
+ * @cjs
  */
 export class TnyControllers
 {
-    static className = "TnyControllers";
 
-    /** The TnySpaceObject whose controllers these are. */
+    /**
+     * The TnySpaceObject whose controllers these are.
+     * @type {object|null}
+     * @cjs
+     */
     owner = null;
 
-    /** Gives the multi-effects listed beside the owner's own controllers; none by default. */
+    /**
+     * Gives the multi-effects listed beside the owner's own controllers; none by default.
+     * @type {Function}
+     * @cjs
+     */
     effects = () => [];
 
     /**
      * @param {import("./TnySpaceObject.js").TnySpaceObject} owner The wrapper.
      * @param {Function} [effects] Gives EveMultiEffects driving the owner (a hangar's docker),
      *   whose controllers are listed and set too.
+     * @cjs
      */
     constructor(owner, effects = null)
     {
@@ -65,6 +57,7 @@ export class TnyControllers
      * listing controllers, so they are not shown.
      *
      * @returns {object[]} The native controllers.
+     * @cjs
      */
     _Controllers()
     {
@@ -79,6 +72,7 @@ export class TnyControllers
      * A controller whose name starts with "_" is private to the content.
      *
      * @returns {{controller: object|null, owner: string, index: number, path: string|null}[]} The entries.
+     * @cjs
      */
     _Entries()
     {
@@ -106,19 +100,28 @@ export class TnyControllers
         return entries;
     }
 
-    /** Starts every controller (Tr2Controller.Start), as Graphene's Start all. */
+    /**
+     * Starts every controller (Tr2Controller.Start), as Graphene's Start all.
+     * @cjs
+     */
     Start()
     {
         for (const entry of this._Entries()) (entry.reference ?? entry.controller).Start();
     }
 
-    /** Stops every controller. */
+    /**
+     * Stops every controller.
+     * @cjs
+     */
     Stop()
     {
         for (const entry of this._Entries()) (entry.reference ?? entry.controller).Stop();
     }
 
-    /** Stops and starts every controller again. */
+    /**
+     * Stops and starts every controller again.
+     * @cjs
+     */
     Restart()
     {
         this.Stop();
@@ -131,6 +134,7 @@ export class TnyControllers
      * @returns {{name: string, owner: string, index: number, loading: string|null, variables: object[], stateMachines: {name: string, state: string|null}[]}[]}
      *   One per controller: `owner` names where it sits, `index` its place there; a reference still
      *   loading has `loading` (its path) and no variables.
+     * @cjs
      */
     GetControllers()
     {
@@ -145,7 +149,7 @@ export class TnyControllers
                 variables: controller.variables.filter(variable => IsPublic(variable.name)).map(variable =>
                 {
                     // Authored choices make a select whatever the type, as Graphene's Parameters do.
-                    const choices = ParseEnumValues(variable.enumValues);
+                    const choices = parseEnumValues(variable.enumValues);
                     return { name: variable.name, type: TYPE_NAMES[variable.variableType] ?? "number", value: variable.GetValue(),
                         defaultValue: variable.defaultValue, ...(choices.length ? { choices } : {}) };
                 }),
@@ -167,6 +171,7 @@ export class TnyControllers
      *
      * @returns {{name: string, kind: "event"|"trigger", controller: string, running: boolean}[]} The actions;
      *   a trigger is running until the content has set it back to 0 (an event has no running state).
+     * @cjs
      */
     GetActions()
     {
@@ -201,6 +206,7 @@ export class TnyControllers
      *
      * @param {string} name The action.
      * @returns {boolean} Whether it was an action.
+     * @cjs
      */
     Trigger(name)
     {
@@ -220,6 +226,7 @@ export class TnyControllers
      * The names of every variable the controllers declare, without repeats.
      *
      * @returns {string[]} Variable names.
+     * @cjs
      */
     GetVariableNames()
     {
@@ -231,6 +238,7 @@ export class TnyControllers
      *
      * @param {string} name The variable.
      * @returns {number|null} Its value, or null when no controller declares it or it is private.
+     * @cjs
      */
     GetVariable(name)
     {
@@ -248,6 +256,7 @@ export class TnyControllers
      *
      * @param {string} name The variable.
      * @param {number} value Its new value.
+     * @cjs
      */
     SetVariable(name, value)
     {
@@ -256,9 +265,22 @@ export class TnyControllers
         this.owner.wrapped.SetControllerVariable(name, value);
         for (const effect of this.effects()) effect.SetControllerVariable(name, value);
     }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyControllers";
+
 }
 
-/** Whether a controller or variable name is public: content marks private ones with a leading "_". */
+/**
+ * Whether a controller or variable name is public: content marks private ones with a leading "_".
+ * @param {string} name Member or registration name.
+ * @returns {boolean}
+ * @cjs
+ */
 function IsPublic(name)
 {
     return !String(name).startsWith("_");
