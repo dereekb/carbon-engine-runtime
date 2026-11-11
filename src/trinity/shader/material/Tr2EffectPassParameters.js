@@ -70,6 +70,21 @@ export class Tr2EffectPassParameters
   @type.boolean
   usedTexturesDirty = false;
 
+  /**
+   * Disconnects rerouted values before releasing owned stage and resource-set storage.
+   * Carbon: trinity/trinity/Shader/Tr2Material.cpp:127-134 and Tr2Material.h:137-144.
+   * @adapted Explicit member teardown replaces C++ value destruction; reference-count Unlock is unsupported.
+   * @adapted Bindless used-texture storage is unported and never acquired by this class.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const parameter of this.reroutedParameters) parameter.SetDestination(null, 0);
+    this.resourceSet.Destroy();
+    this.resourceSetDesc.OnDestruct();
+    for (let i = this.stageInput.length - 1; i >= 0; i--) this.stageInput[i].OnDestruct();
+  }
+
   // States: AddUsedResource and AddReroutable are Tr2Material.cpp:136-146. AllocateConstantMirror and GetSharedConstantBuffer forward as cpp:148-156 do,
   // adapted: the stage array grows on demand and a bad index clamps to 0 where Carbon indexes a fixed array by shader type.
 
