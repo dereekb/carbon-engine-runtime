@@ -43,6 +43,17 @@ import { IEveSocketParameter } from "../socket/IEveSocketParameter.js";
 @be.mapAttribute(be.READWRITE | be.PERSIST, "staticTransform")
 export class EveChildSocket extends EveChildTransform
 {
+  /**
+   * Detaches the plug's parent and owner pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildSocket.cpp:23-26.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.UnregisterChild(this.plug);
+  }
+
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildSocket_Blue.cpp:28 */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
