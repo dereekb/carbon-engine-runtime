@@ -105,8 +105,10 @@ test("a live object is told OnModified once per changed NOTIFY member, in order"
   const transition = create("Tr2StateMachineTransition");
   const told = spy(transition);
 
+  // Told in member-table order, which is Carbon's macro order: name, then condition
+  // (Tr2StateMachineTransition_Blue.cpp:18-19), whatever order the values come in.
   CjsGraph.set(transition, { condition: "1", name: "first" });
-  assert.deepEqual(told, [ [ "OnModified", "condition" ], [ "OnModified", "name" ] ]);
+  assert.deepEqual(told, [ [ "OnModified", "name" ], [ "OnModified", "condition" ] ]);
 
   told.length = 0;
   assert.equal(CjsGraph.set(transition, { condition: "1", name: "first" }), false);
