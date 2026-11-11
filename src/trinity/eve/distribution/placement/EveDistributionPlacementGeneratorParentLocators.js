@@ -8,7 +8,11 @@ import { IEveDistributionPlacementGenerators } from "./IEveDistributionPlacement
 import { InitialPlacement } from "../attributeModifiers/InitialPlacement.js";
 import { PlacementDataWithIdentifier } from "../../PlacementDataWithIdentifier.js";
 
-/** Builds distribution placements from a named locator set resolved on the parent space object. */
+/**
+ * Builds distribution placements from a named locator set on the parent space object.
+ * Carbon destructor: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorParentLocators.cpp:14-21.
+ * @adapted No OnDestruct is needed: this port never replaces the locator-list notifier, so there is no saved notifier to restore.
+ */
 @be.define({
   name: "EveDistributionPlacementGeneratorParentLocators",
   inherit: [ INotify ],
