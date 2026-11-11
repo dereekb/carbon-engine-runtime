@@ -100,13 +100,61 @@ test("notified tessellation edits and device release rebuild owned storage", t =
   CjsSchema.setValues(cloud, { preTesselationLevel: 32 });
   assert.equal(cloud._indexBuffers.length, 1);
   cloud.ReleaseResources();
-  assert.equal(vertex.IsValid(), true, "native ReleaseResources retains the vertex buffer");
+  assert.equal(vertex.IsValid(), false, "idle release frees the owned vertex storage");
   assert.equal(cloud._declaration, Tr2EffectStateManager.Unknown);
   assert.equal(cloud.PrepareResources(), true);
   assert.equal(cloud._indexBuffers.length, 1);
   cloud.Destruct();
   assert.equal(vertex.IsValid(), false);
   assert.ok(!TriDevice.GetResourcesRegistered().includes(cloud));
+});
+
+test("idle expiry releases cloud buffers once and the next render use rebuilds them", t =>
+{
+  const { uploads } = setup(t);
+  const resources = TriDevice._resourcesRegistered, generations = TriDevice._registeredGenerations;
+  const activeTime = TriDevice.activeTime;
+  TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
+  TriDevice.activeTime = 1000 * 10000000;
+  t.after(() =>
+  {
+    TriDevice._resourcesRegistered = resources; TriDevice._registeredGenerations = generations;
+    TriDevice.activeTime = activeTime;
+  });
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  const device = new TriDevice(), cloud = new EveChildCloud();
+  cloud.isVisible = true; cloud.hasUpdated = true;
+  const renderables = [];
+  cloud.GetRenderables(renderables);
+  assert.deepEqual(renderables, []);
+  device._PreparePendingResources();
+  cloud.GetRenderables(renderables);
+  assert.deepEqual(renderables, [cloud]);
+  const vertex = cloud._vertexBuffer, indices = cloud._indexBuffers.slice();
+  const initialUploads = uploads.slice();
+  const destroys = [vertex, ...indices].map(buffer =>
+    t.mock.method(buffer.TrinityALImpl_GetObject(), "Destroy"));
+  TriDevice.activeTime += (TriDevice.resourceIdleRule + 1) * 10000000;
+  device.CollectResources(); device.CollectResources();
+  cloud.ReleaseResources();
+  assert.equal(vertex.IsValid(), false);
+  assert.ok(indices.every(buffer => !buffer.IsValid()));
+  assert.ok(destroys.every(destroy => destroy.mock.callCount() === 1));
+  renderables.length = 0;
+  cloud.GetRenderables(renderables);
+  assert.deepEqual(renderables, []);
+  device._PreparePendingResources();
+  cloud.GetRenderables(renderables);
+  assert.deepEqual(renderables, [cloud]);
+  assert.equal(cloud._vertexBuffer, vertex);
+  assert.equal(vertex.IsValid(), true);
+  assert.ok(cloud._indexBuffers.every(buffer => buffer.IsValid()));
+  assert.deepEqual(uploads.slice(initialUploads.length), initialUploads);
+  const rebuiltDestroys = [vertex, ...cloud._indexBuffers].map(buffer =>
+    t.mock.method(buffer.TrinityALImpl_GetObject(), "Destroy"));
+  cloud.Destruct(); cloud.Destruct();
+  assert.ok(rebuiltDestroys.every(destroy => destroy.mock.callCount() === 1));
+  assert.equal(device.GetResourcesRegistered().includes(cloud), false);
 });
 
 test("failed native buffer creation is reported and can be prepared again", t =>

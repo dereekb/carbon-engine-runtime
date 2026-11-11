@@ -163,7 +163,6 @@ export class EveChildCloud extends EveSpaceObjectChild
 
   Initialize()
   {
-    this._vertexBuffer.Destroy();
     this.ReleaseResources();
     if (this._state === Tr2DeviceResourceState.PREPARED) this.PrepareResources();
     return true;
@@ -191,14 +190,17 @@ export class EveChildCloud extends EveSpaceObjectChild
   }
 
   /**
-   * Explicit buffer destruction replaces native index-vector clear (cpp:275-279).
+   * Releases owned grid storage; preparation rebuilds both buffer kinds.
+   * Carbon: trinity/Eve/SpaceObject/Children/EveChildCloud.cpp:274-350.
    *
-   * @adapted
+   * @adapted idle release also destroys the vertex buffer retained by Carbon;
+   *   explicit AL destruction frees registered storage without C++ member RAII.
    */
 
   ReleaseResources()
   {
     this._declaration = Tr2EffectStateManager.Unknown;
+    this._vertexBuffer.Destroy();
     for (const buffer of this._indexBuffers) buffer.Destroy();
     this._indexBuffers.length = 0;
   }
@@ -213,7 +215,6 @@ export class EveChildCloud extends EveSpaceObjectChild
   Destruct()
   {
     this.ReleaseResources();
-    this._vertexBuffer.Destroy();
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
