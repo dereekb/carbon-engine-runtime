@@ -146,7 +146,7 @@ test("expiry never touches a replacement, including one the owner installs while
   state.advance(1100);
   manager.PurgeInactive({ time: 1100 });
   assert.equal(owner.resource, replacement);
-  assert.equal(calls.length, 0);
+  assert.deepEqual(calls, [["remove", resource]], "the owner handles its replaced slot");
   assert.equal(manager.notify.GetByOwner(owner).length, 0);
 
   owner.resource = resource;
@@ -200,22 +200,6 @@ test("two owner fields sharing one resource are let go once, and both clear", ()
   assert.equal(owner.other, null);
   assert.deepEqual(calls, [["remove", resource]]);
   assert.equal(manager.notify.GetByResource(resource).length, 0);
-});
-
-test("an owner that keeps an expired resource fails the sweep, naming the slot", () =>
-{
-  const { manager, resource, owner, advance } = fixture();
-  owner.RemoveCachedData = () => {};
-  manager.notify.Add(owner, resource, owner, "resource");
-  advance(1100);
-
-  assert.throws(() => manager.notify.Update(1100), error =>
-  {
-    assert.ok(error instanceof AggregateError);
-    assert.deepEqual(error.errors.map(item => item.message), [ "Resource owner kept  in resource after RemoveCachedData." ]);
-    return true;
-  });
-  assert.equal(manager.notify.GetByOwner(owner).length, 0, "the link still goes");
 });
 
 /** Real asynchronous load queues with synthetic data and a restored global manager. */
@@ -331,44 +315,45 @@ test("map links expire by key and preserve replacements installed before or whil
   assert.equal(map.get("third"), null);
 });
 
-test("a throwing owner is reported with the slot it kept, and the sweep finishes every other link", () =>
+test("expiry removes the failing owner's link and propagates its error immediately", () =>
 {
   const { manager, resource, owner, advance } = fixture();
   const second = new BlueAsyncRes();
   const other = holder([], { resource: second });
-  other.RemoveCachedData = () => { throw new Error("second failed"); };
   const third = new BlueAsyncRes();
   const last = holder([], { resource: third });
-  owner.RemoveCachedData = () => { throw new Error("first failed"); };
+  const failure = new Error("first failed");
+  owner.RemoveCachedData = () => { throw failure; };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(other, second, other, "resource");
   manager.notify.Add(last, third, last, "resource");
   advance(1100);
 
-  const kept = "Resource owner kept  in resource after RemoveCachedData.";
-  assert.throws(() => manager.notify.Update(1100), error =>
-  {
-    assert.ok(error instanceof AggregateError);
-    assert.deepEqual(error.errors.map(item => item.message), [ "first failed", kept, "second failed", kept ]);
-    return true;
-  });
-
+  assert.throws(() => manager.notify.Update(1100), error => error === failure);
   assert.equal(owner.resource, resource, "nothing clears a slot for its owner");
   assert.equal(other.resource, second);
+  assert.equal(last.resource, third, "later callbacks have not run");
+  assert.deepEqual(manager.notify.GetByOwner(owner), []);
+  manager.notify.Update(1100);
+  assert.equal(other.resource, null);
   assert.equal(last.resource, null);
-  assert.equal(manager.notify._targets.length, 0, "compaction still ran");
+  assert.equal(manager.notify._targets.length, 0, "a later successful sweep compacts inactive links");
   assert.equal(manager.notify._targetsByResource.size, 0);
 });
 
-test("a throwing owner does not stop Clear from clearing the others", () =>
+test("Clear propagates a callback failure directly after removing its link", () =>
 {
   const { manager, resource, owner } = fixture();
   const other = holder([], { resource });
-  owner.RemoveCachedData = () => { throw new Error("failed"); };
+  const failure = new Error("failed");
+  owner.RemoveCachedData = () => { throw failure; };
   manager.notify.Add(owner, resource, owner, "resource");
   manager.notify.Add(other, resource, other, "resource");
 
-  assert.throws(() => manager.notify.Clear(resource), AggregateError);
+  assert.throws(() => manager.notify.Clear(resource), error => error === failure);
+  assert.equal(other.resource, resource);
+  assert.deepEqual(manager.notify.GetByOwner(owner), []);
+  manager.notify.Clear(resource);
   assert.equal(other.resource, null);
   assert.equal(manager.notify.GetByResource(resource).length, 0);
 });

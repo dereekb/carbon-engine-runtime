@@ -236,7 +236,7 @@ export class BlueResMan
   linkExpirySeconds = null;
 
   /** @cjs Browser owner-link tracking; native resource callbacks remain on BlueAsyncRes. */
-  notify = new CjsBlueResManNotify(this, s_ch);
+  notify = new CjsBlueResManNotify(this);
 
   // The manager is no longer reachable from itself. Carbon's process-wide
   // handle is an extern beside the interface it points at, not a static on
