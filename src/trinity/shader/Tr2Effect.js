@@ -1095,15 +1095,22 @@ export class Tr2Effect extends Tr2Material
   }
 
   /**
-   * Removes this owner's resource notification link.
+   * Detaches material resources and releases this effect's cached shader handles.
    * Carbon: trinity/trinity/Shader/Tr2Effect.cpp:266-280.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @adapted No renderer effect registry exists here, so there is no UnregisterEffect call.
+   * @adapted Explicitly releases minted provider adapters because JS has no member RAII.
    * @returns {void}
    */
   OnDestruct()
   {
-    if (this.effectResource) blue.resMan.notify.Remove(this, this.effectResource);
+    for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
+    if (this.effectResource)
+    {
+      this.ReleaseCachedData(this.effectResource);
+      blue.resMan.notify.Remove(this, this.effectResource);
+    }
+    for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
   }
 
   /**
