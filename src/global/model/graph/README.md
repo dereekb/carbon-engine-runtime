@@ -90,7 +90,11 @@ no base definition may add to them.
 member in member-table order, for those named or, with no names, all. Unknown names throw unless
 `skipValidation`. It keeps no baseline and compares nothing.
 
-CjsGraphRoot is the optional base class: thin forwards and `__cjs`. No Destruct yet.
+CjsGraphRoot is the optional base class: thin forwards and `__cjs`. Its Destruct
+forwards to CjsGraph.destruct: declared own onDestruct hooks run derived-first,
+including bases, once per owning level. It does not traverse members, clear
+references, or change lifecycle state. Hooks must be repeat-safe and must not call
+super or another level's teardown manually.
 Blue's side is `blue/formats/graph/CjsBlueGraph.js`, which supplies definitions and flags.
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per

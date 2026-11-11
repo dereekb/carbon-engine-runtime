@@ -26,6 +26,7 @@ const STEPS = [
     "lint:exposure-bags",
     "lint:exposure-chains",
     "lint:class-shape",
+    "lint:destruct-hooks",
     "lint:class-file-naming",
     "lint:donor-comments",
     "lint:marker-tags",

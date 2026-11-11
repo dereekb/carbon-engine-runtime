@@ -76,6 +76,7 @@ export class CjsGraph
    * first being the declared one, and collection is true or "list", "array", "set" or "map".
    * interfaces names classes an instance also counts as without inheriting from them.
    * bases is its C++ base list and chainTo the class its exposure table continues into, or null.
+   * onDestruct is this level's own teardown function, or null; inherited hooks belong to bases.
    * whole means members is the class's complete list, so no base definition adds to it.
    * initialize, notify and listNotify say instances take Initialize, OnModified and
    * OnListModified. ownValues says instances hold values that are not members,
@@ -89,6 +90,8 @@ export class CjsGraph
     if (typeof ctor !== "function") throw new TypeError("Graph class requires a constructor.");
     const name = definition.name;
     if (typeof name !== "string" || !name) throw new TypeError("Graph class requires a stable name.");
+    if (definition.onDestruct != null && typeof definition.onDestruct !== "function")
+      throw new TypeError("Graph onDestruct must be a function or null.");
     const existing = this._classes.get(ctor);
     const named = this._names.get(name);
     if (named && named !== existing) throw new TypeError(`Graph class name already registered: ${name}`);
@@ -240,6 +243,49 @@ export class CjsGraph
     if (!info) throw new TypeError("Unknown graph class.");
     if (!info.compiled || info.compiled.revision !== this._revision) info.compiled = this._compile(info);
     return info;
+  }
+
+  /**
+   * Calls each declared teardown body, most-derived first, without releasing graph members.
+   * @cjs Explicit JS counterpart of C++ destructor-body chaining. No reference cascade, state
+   * change, or caller scheduling is implied. Hooks own their idempotence; errors propagate.
+   * @param {object} target The registered object.
+   * @param {...*} args Existing teardown arguments, forwarded unchanged to each hook.
+   * @returns {void}
+   */
+  static destruct(target, ...args)
+  {
+    const info = this.getClassInfo(target.constructor);
+    const hooks = info.compiled.destructors ??= this._getDestructors(info);
+    for (const hook of hooks) hook.apply(target, args);
+  }
+
+  /**
+   * Compiles owning levels once, in reverse construction order, including declared base lists.
+   * @cjs One JS object represents a shared ancestor once; exposure chains are not ancestry.
+   * @param {CjsGraphClassInfo} info The most-derived class.
+   * @returns {Function[]} Own hooks in destruction order.
+   */
+  static _getDestructors(info)
+  {
+    const seen = new Set(), active = new Set(), hooks = [];
+    const visit = owner =>
+    {
+      if (active.has(owner)) throw new TypeError(`Cyclic graph ancestry: ${owner.declared.name}`);
+      if (seen.has(owner)) return;
+      active.add(owner);
+      for (const base of owner.declared.bases ?? [])
+      {
+        const parent = typeof base === "string" ? this._names.get(base) : this._classes.get(base);
+        if (!parent) throw new TypeError(`Unknown graph base in ${owner.declared.name}`);
+        visit(parent);
+      }
+      active.delete(owner);
+      seen.add(owner);
+      if (owner.declared.onDestruct) hooks.push(owner.declared.onDestruct);
+    };
+    visit(info);
+    return hooks.reverse();
   }
 
   /**
@@ -1758,7 +1804,7 @@ export class CjsGraph
     }
 
     return {
-      revision: this._revision, parent, members, byName, persistByName, memberNames, notifyNames, tables: [], defaults: null, ui: null,
+      revision: this._revision, parent, members, byName, persistByName, memberNames, notifyNames, tables: [], defaults: null, ui: null, destructors: null,
       name: declared.name,
       interfaces: declared.interfaces,
       bases: declared.bases ?? [],

@@ -320,6 +320,7 @@
     "lint:device-imports": "node scripts/lint-device-imports.js",
     "lint:source": "node scripts/lint-source.js",
     "lint:class-shape": "node scripts/lint-class-shape.js",
+    "lint:destruct-hooks": "node scripts/lint-destruct-hooks.js",
     "lint:class-file-naming": "node scripts/lint-class-file-naming.js",
     "lint:donor-comments": "node scripts/lint-donor-comments.js",
     "lint:marker-tags": "node scripts/lint-marker-tags.js",

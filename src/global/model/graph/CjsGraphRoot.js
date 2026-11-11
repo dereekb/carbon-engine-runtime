@@ -11,6 +11,17 @@ export class CjsGraphRoot
   __cjs = { destructed: false };
 
   /**
+   * Runs the registered ancestry's teardown bodies without changing graph ownership or state.
+   * @cjs Thin forward to the graph; hooks own repeat-call safety.
+   * @param {...*} args Arguments required by this object's existing teardown contract.
+   * @returns {void}
+   */
+  Destruct(...args)
+  {
+    CjsGraph.destruct(this, ...args);
+  }
+
+  /**
    * Returns this object's values.
    * @cjs
    */
