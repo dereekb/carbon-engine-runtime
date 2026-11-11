@@ -139,7 +139,7 @@ test("public parity keeps previously clean subjects and adds newly promoted obli
   let script = await fs.readFile(auditUrl,"utf8");
   script = script.replace('from "@babel/parser"',`from ${JSON.stringify(import.meta.resolve("@babel/parser"))}`);
   script = script.replace('from "./carbon-decorators.js"',`from ${JSON.stringify(new URL("carbon-decorators.js",auditUrl).href)}`);
-  script = script.replace('from "../lib/carbon-header-shape.js"',`from ${JSON.stringify(new URL("../lib/carbon-header-shape.js",auditUrl).href)}`);
+  script = script.replace(/from "(\.\.\/lib\/[^"]+)"/g,(_,specifier) => `from ${JSON.stringify(new URL(specifier,auditUrl).href)}`);
   const audit = path.join(root,"scripts/trinity/audit_public_method_parity.js");
   await fs.writeFile(audit,script);
   const initial = {skipped:[{className:"A",family:"core",reason:"hand-maintained source exists"}]};
