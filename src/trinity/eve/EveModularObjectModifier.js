@@ -33,6 +33,17 @@ import { Tr2QuadRenderer } from "../core/Tr2QuadRenderer/Tr2QuadRenderer.js";
 })
 export class EveModularObjectModifier extends IRoot
 {
+  /**
+   * Applies final bounds when an edit session has an object.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveModularObjectModifier.cpp:41-50.
+   * @adapted Existing asynchronous edits also apply bounds as they finish; teardown adds no cancellation policy.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this._object) this.ApplyBounds();
+  }
+
   _object = null;
 
   _data = null;
@@ -284,10 +295,7 @@ export class EveModularObjectModifier extends IRoot
    * Recomputes culling bounds from the current modular part spheres
    * (EveModularObjectModifier.cpp:46-69).
    *
-   * @adapted Carbon applies the bounds once, from the modifier's destructor
-   *   (cpp:41-44). JavaScript has no deterministic destructor, so every edit
-   *   applies them as it completes; the bounds after the last edit are the ones
-   *   Carbon's destructor would set.
+   * @adapted Asynchronous JS edits also apply bounds on completion, before explicit teardown.
    */
   ApplyBounds()
   {
