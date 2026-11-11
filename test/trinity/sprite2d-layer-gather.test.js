@@ -4,11 +4,40 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  Tr2RenderContext_GetMainThreadRenderContext, Tr2Sprite2dContainer, Tr2Sprite2dLayer, Tr2Sprite2dScene
+  Tr2RenderContext_GetMainThreadRenderContext, Tr2Sprite2dContainer, Tr2Sprite2dLayer, Tr2Sprite2dScene, Tr2Sprite2dTexture, TriDevice
 } from "../../npm/dist/trinity/index.js";
+import { Tr2TextureAL } from "../../npm/dist/trinityal/index.js";
 import { Tr2SpriteObjectBlendMode, Tr2SpriteObjectEffect } from "../../npm/dist/trinity/generated/sprite2d/enums.js";
 
 Tr2RenderContext_GetMainThreadRenderContext().GetRenderContextAL().CreateDevice();
+
+test("layer teardown releases its target share and secondary listener while preserving peers", t =>
+{
+  const layer = new Tr2Sprite2dLayer(), peer = new Tr2Sprite2dLayer();
+  const texture = new Tr2Sprite2dTexture();
+  layer.textureSecondary = peer.textureSecondary = texture;
+  layer.displayWidth = layer.displayHeight = 8;
+  assert.equal(layer.PrepareResources(), true);
+  assert.equal(layer.IsGood(), true);
+  const retained = new Tr2TextureAL({ copy: layer._renderTarget });
+  const changed = t.mock.method(layer, "Sprite2dTextureChanged", () => {});
+  const peerChanged = t.mock.method(peer, "Sprite2dTextureChanged", () => {});
+  texture._SetDirty();
+  assert.equal(changed.mock.callCount(), 1);
+  assert.equal(peerChanged.mock.callCount(), 1);
+  assert.ok(TriDevice.GetResourcesRegistered().includes(layer));
+  layer.Destruct();
+  layer.Destruct();
+  assert.equal(layer._renderTarget.IsValid(), false);
+  assert.equal(retained.IsValid(), true);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(layer), false);
+  texture._SetDirty();
+  assert.equal(changed.mock.callCount(), 1);
+  assert.equal(peerChanged.mock.callCount(), 2);
+  retained.Destroy();
+  peer.Destruct();
+  texture.Destruct();
+});
 
 /**
  * A real scene whose StartLayer/EndLayer and container-path entry points are recorded. The layer
