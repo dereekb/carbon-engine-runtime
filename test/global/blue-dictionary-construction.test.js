@@ -274,7 +274,7 @@ test("declared forward reference notification observes the assigned target exact
     OnModified(property) { this.notices.push([property, this.startState]); return false; }
   }
   define(Owner, {
-    startState: { ...ref(childName), edit: { notify: true } },
+    startState: { ...ref(childName), exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } },
     states: { type: { kind: "list", itemType: childName } }
   }, [INotify]);
   const values = { startState: { _ref: "next" }, states: [{ _id: "next", value: 7 }] };
@@ -296,7 +296,7 @@ test("resolved declared references notify immediately and unresolved failures ne
     OnModified(property) { this.notices.push([property, this.selected, this.tail]); }
   }
   define(Owner, {
-    target: ref(childName), selected: { ...ref(childName), edit: { notify: true } }, tail: type.int32
+    target: ref(childName), selected: { ...ref(childName), exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }, tail: type.int32
   }, [INotify]);
   const target = new Owner();
   reader().ReadInto(target, { target: { _id: "known" }, selected: { _ref: "known" }, tail: 9 });
@@ -321,7 +321,7 @@ test("declared forward reference notifications retain mapped lifecycle suppressi
     OnModified() { assert.fail("IInitialize suppresses notifications"); }
     Initialize() { assert.equal(this.child, this.target); this.initialized++; }
   }
-  const fields = { child: { ...ref(childName), edit: { notify: true } }, target: ref(childName) };
+  const fields = { child: { ...ref(childName), exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }, target: ref(childName) };
   define(Unmapped, fields);
   define(Both, fields, [INotify, IInitialize]);
   const values = { child: { _ref: "child" }, target: { _id: "child" } };
@@ -339,7 +339,7 @@ test("legacy ReadInto retains non-plain input acceptance and immediate alias not
     OnModified(property) { this.notices.push([property, this.child]); }
   }
   define(Owner, {
-    child: { ...ref(childName), edit: { notify: true } }, target: ref(childName), value: type.int32
+    child: { ...ref(childName), exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }, target: ref(childName), value: type.int32
   }, [INotify]);
   class Input { value = 7; }
   const owner = new Owner();

@@ -15,12 +15,12 @@ const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
 const itemName = "BlueListReaderItem";
 
 class Item { value = 0; }
-CjsSchema.define(Item, { className: itemName, fields: { value: { type: { kind: "int32" }, edit: { persist: true } } } });
+CjsSchema.define(Item, { className: itemName, fields: { value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } } } });
 blue.interface()(Item);
 
 class WrongItem extends Item {}
 // No chain: it is not an Item to the list. It maps value itself, as Carbon's table would have to.
-CjsSchema.define(WrongItem, { className: "BlueListReaderWrongItem", fields: { value: { type: { kind: "int32" }, edit: { persist: true } } } });
+CjsSchema.define(WrongItem, { className: "BlueListReaderWrongItem", fields: { value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } } } });
 blue.interface()(WrongItem);
 
 class Owner
@@ -31,10 +31,10 @@ class Owner
   numbers = [];
 }
 CjsSchema.define(Owner, { className: "BlueListReaderOwner", fields: {
-  items: { type: { kind: "list", itemType: itemName }, edit: { persist: true } },
-  target: { type: { kind: "rootRef", className: itemName }, edit: { persist: true } },
-  ordinary: { type: { kind: "list", itemType: itemName }, edit: { persist: true } },
-  numbers: { type: { kind: "array", itemType: "int32" }, edit: { persist: true } }
+  items: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  target: { type: { kind: "rootRef", className: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  ordinary: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  numbers: { type: { kind: "array", itemType: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
 } });
 
 class Observer extends IListNotify
@@ -171,7 +171,7 @@ test("shared-context values notifications observe completed live lists", () =>
 {
   class NotifiedOwner extends LiveOwner {}
   CjsSchema.define(NotifiedOwner, { className: "BlueListReaderNotifiedOwner", fields: {
-    ordinary: { type: { kind: "list", itemType: itemName }, edit: { persist: true, notify: true } }
+    ordinary: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }
   } });
   blue.interface(IListNotify)(NotifiedOwner); blue.chainTo(LiveOwner)(NotifiedOwner);
   const owner = new NotifiedOwner(), context = CreateAnchorTable(), seen = [];
@@ -188,7 +188,7 @@ test("empty interface-typed refills detach objects even without a registered ite
 {
   class InterfaceOwner extends LiveOwner {}
   CjsSchema.define(InterfaceOwner, { className: "BlueListReaderInterfaceOwner", fields: {
-    ordinary: { type: { kind: "list", itemType: "UnregisteredListItemInterface" }, edit: { persist: true } }
+    ordinary: { type: { kind: "list", itemType: "UnregisteredListItemInterface" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
   } });
   blue.interface(IListNotify)(InterfaceOwner); blue.chainTo(LiveOwner)(InterfaceOwner);
   const owner = new InterfaceOwner(), child = MakeItem(1);
@@ -424,7 +424,7 @@ test("two declared fields addressing the same IList supersede its earlier pendin
     }
   }
   CjsSchema.define(AliasedOwner, { className: "BlueListReaderAliasedOwner", fields: {
-    replacement: { type: { kind: "list", itemType: itemName }, edit: { persist: true } }
+    replacement: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
   } });
   CjsSchema.meta.exposureChainTo(Owner)(AliasedOwner);
   const owner = new DictReader().CreateObject({

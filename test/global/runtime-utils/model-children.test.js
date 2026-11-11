@@ -16,8 +16,10 @@ class ChildModel
 }
 
 CjsSchema.defineField(ChildModel, "name", "type", { kind: "string" });
+CjsSchema.defineField(ChildModel, "name", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(ChildModel, "name", "edit", { persist: true });
 CjsSchema.defineField(ChildModel, "deleteRequested", "type", { kind: "boolean" });
+CjsSchema.defineField(ChildModel, "deleteRequested", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(ChildModel, "deleteRequested", "edit", { persist: true });
 CjsSchema.define(ChildModel, { className: "ChildMutationTestChild" });
 
@@ -74,6 +76,7 @@ CjsSchema.defineField(ParentModel, "children", "type", {
     kind: "list",
     itemType: "ChildMutationTestChild"
 });
+CjsSchema.defineField(ParentModel, "children", "exposure", { macro: "MAP_ATTRIBUTE", flags: 20 });
 CjsSchema.defineField(ParentModel, "children", "edit", { persist: true, notify: true });
 CjsSchema.define(ParentModel, { className: "ChildMutationTestParent" });
 

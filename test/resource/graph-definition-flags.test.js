@@ -26,12 +26,12 @@ CjsSchema.define(Chained, { className: "GraphFlagsChained", members: [] });
 CjsSchema.be.inherit(Face)(Thing, { kind: "class" });
 carbonChainToDecorator(Chained)(Thing, { kind: "class" });
 CjsSchema.define(Thing, { className: "GraphFlagsThing", members: [
-  { name: "readable", key: "readable", type: int32, edit: { read: true } },
-  { name: "only", key: "only", type: int32, edit: { persist: true, persistOnly: true, hidden: true } },
-  { name: "load", key: "load", type: int32, edit: { rpersist: true } },
-  { name: "noted", key: "noted", type: int32, edit: { read: true, write: true, persist: true, notify: true } },
-  { name: "mask", key: "mask", type: { kind: "int32", flags: true }, edit: { read: true, write: true } },
-  { name: "live", key: "live", type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } }
+  { name: "readable", key: "readable", type: int32, exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } },
+  { name: "only", key: "only", type: int32, exposure: { macro: "MAP_ATTRIBUTE", flags: 24 }, edit: { persist: true, persistOnly: true, hidden: true } },
+  { name: "load", key: "load", type: int32, exposure: { macro: "MAP_ATTRIBUTE", flags: 32 }, edit: { rpersist: true } },
+  { name: "noted", key: "noted", type: int32, exposure: { macro: "MAP_ATTRIBUTE", flags: 23 }, edit: { read: true, write: true, persist: true, notify: true } },
+  { name: "mask", key: "mask", type: { kind: "int32", flags: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 259 }, edit: { read: true, write: true } },
+  { name: "live", key: "live", type: { kind: "rootRef", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
 ] });
 CjsBlueGraph.define(Thing, "GraphFlagsThing");
 

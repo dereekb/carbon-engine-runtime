@@ -52,7 +52,7 @@ test("explicit member declarations are complete and do not merge inherited metad
     } });
     class Child extends Parent {}
     CjsSchema.define(Child, { className: "InheritedExplicitChild", members: [
-        { name: "value", key: "value", type: { kind: "int32" }, edit: { read: true } }
+        { name: "value", key: "value", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } }
     ] });
     const member = CjsSchema.getSchema(Child).members.find(entry => entry.declaringClass === Child);
     assert.deepEqual(member.edit, { read: true });

@@ -156,7 +156,7 @@ test("BlueResMan uses Black-first content routing for both red and black suffixe
 {
   class RedRouteRoot { name = ""; }
   CjsSchema.define(RedRouteRoot, { className: "RedRouteRoot", fields: {
-    name: { type: { kind: "string" }, edit: { persist: true } }
+    name: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
   } });
   const encoded = new TextEncoder().encode("type: RedRouteRoot\nname: yaml-content\n");
   const source = { Read() { return encoded; } };

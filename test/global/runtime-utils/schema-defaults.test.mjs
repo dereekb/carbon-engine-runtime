@@ -35,18 +35,11 @@ test("decorators install nothing per instance; getDefaults reads one instance wi
         }
     }
 
-    CjsSchema.defineField(
-        SchemaDefaultCaptureProbe,
-        "ID",
-        "edit",
-        { read: true }
-    );
-    CjsSchema.defineField(
-        SchemaDefaultCaptureProbe,
-        "optional",
-        "edit",
-        { read: true }
-    );
+    for (const name of [ "ID", "optional" ])
+    {
+        CjsSchema.defineField(SchemaDefaultCaptureProbe, name, "exposure", { macro: "MAP_ATTRIBUTE", flags: 1 });
+        CjsSchema.defineField(SchemaDefaultCaptureProbe, name, "edit", { read: true });
+    }
     CjsSchema.meta.define({
         className: "SchemaDefaultCaptureProbe"
     })(SchemaDefaultCaptureProbe, { kind: "class", metadata });

@@ -111,8 +111,8 @@ test("runtime-only and live getters are never read during saves", () =>
 {
     class Guarded { safe = 1; get dangerous() { throw new Error("getter evaluated"); } }
     CjsSchema.define(Guarded, { className: "GraphGuarded", members: [
-        { name: "safe", key: "safe", type: { kind: "int32" }, edit: { persist: true } },
-        { name: "dangerous", key: "dangerous", type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } }
+        { name: "safe", key: "safe", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+        { name: "dangerous", key: "dangerous", type: { kind: "rootRef", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     assert.deepEqual(text(Format.write(new Guarded())).root, { _type: "GraphGuarded", safe: 1 });
 });
@@ -142,7 +142,7 @@ test("mapped lifecycle runs once, after cycles resolve, and method presence alon
     CjsSchema.define(IInitialize, { className: "IInitialize" });
     let calls = 0;
     class Life { peer = null; Initialize() { assert.equal(this.peer.peer, this); calls++; } }
-    CjsSchema.define(Life, { className: "GraphLife", members: [{ name: "peer", key: "peer", type: { kind: "rootRef", className: "GraphLife" }, edit: { persist: true } }] });
+    CjsSchema.define(Life, { className: "GraphLife", members: [{ name: "peer", key: "peer", type: { kind: "rootRef", className: "GraphLife" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
     const graph = { _type: "GraphLife", _id: 1, peer: { _type: "GraphLife", _id: 2, peer: { _ref: 1 } } };
     read(graph);
     assert.equal(calls, 0);
@@ -155,11 +155,11 @@ test("struct collections allocate new value storage and embedded aliases resolve
 {
     class Item { count = 1; }
     class Owner { items = []; item = new Item(); }
-    CjsSchema.define(Item, { className: "GraphStructItem", members: [{ name: "count", key: "count", type: { kind: "int32" }, edit: { persist: true } }] });
+    CjsSchema.define(Item, { className: "GraphStructItem", members: [{ name: "count", key: "count", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
     registerClass({ name: "GraphStructAlias", type: Item });
     CjsSchema.define(Owner, { className: "GraphStructOwner", members: [
-        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "root", className: "GraphStructItem" } }, edit: { persist: true } },
-        { name: "item", key: "item", type: { kind: "root", className: "GraphStructItem" }, edit: { persist: true } }
+        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "root", className: "GraphStructItem" } }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+        { name: "item", key: "item", type: { kind: "root", className: "GraphStructItem" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const original = new Owner(); original.items.push(new Item()); original.items[0].count = 7;
     const result = Format.read(Format.write(original), { emit: "runtime" });
@@ -188,7 +188,7 @@ test("children of rejected collections are not initialized", () =>
     CjsSchema.define(Child, { className: "GraphDiscardedChild" });
     CjsSchema.be.interface(CjsSchema.getConstructor("IInitialize"))(Child);
     CjsSchema.define(Owner, { className: "GraphDiscardedOwner", members: [
-        { name: "children", key: "children", type: { kind: "set", itemType: { kind: "rootRef", className: "GraphDiscardedChild" } }, edit: { persist: true } }
+        { name: "children", key: "children", type: { kind: "set", itemType: { kind: "rootRef", className: "GraphDiscardedChild" } }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const result = read({ _type: "GraphDiscardedOwner", children: [{ _type: "GraphDiscardedChild" }, { _type: "Absent" }] });
     assert.equal(result.reports.length, 1);
@@ -224,9 +224,9 @@ test("failed struct collections retain every previous element unchanged", () =>
 {
     class Item { count = 1; }
     class Owner { items = [new Item()]; }
-    CjsSchema.define(Item, { className: "GraphAtomicStruct", members: [{ name: "count", key: "count", type: { kind: "int32" }, edit: { persist: true } }] });
+    CjsSchema.define(Item, { className: "GraphAtomicStruct", members: [{ name: "count", key: "count", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
     CjsSchema.define(Owner, { className: "GraphAtomicOwner", members: [
-        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "root", className: "GraphAtomicStruct" } }, edit: { persist: true } }
+        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "root", className: "GraphAtomicStruct" } }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const result = read({ _type: "GraphAtomicOwner", items: [{ _type: "GraphAtomicStruct", count: 99 }, 42] });
     assert.deepEqual(result.reports.map(item => item.path), ["/root/items/1"]);
@@ -251,10 +251,10 @@ test("native IList rejection restores previous contents and does not initialize 
     CjsSchema.define(NativeList, { className: "GraphNativeList" });
     CjsSchema.be.interface(IList)(NativeList);
     class Owner { items = new NativeList(); }
-    CjsSchema.define(Item, { className: "GraphNativeItem", members: [{ name: "value", key: "value", type: { kind: "int32" }, edit: { persist: true } }] });
+    CjsSchema.define(Item, { className: "GraphNativeItem", members: [{ name: "value", key: "value", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
     CjsSchema.be.interface(CjsSchema.getConstructor("IInitialize"))(Item);
     CjsSchema.define(Owner, { className: "GraphNativeOwner", members: [
-        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "rootRef", className: "GraphNativeItem" } }, edit: { persist: true } }
+        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "rootRef", className: "GraphNativeItem" } }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const result = read({ _type: "GraphNativeOwner", items: [{ _type: "GraphNativeItem", value: 1 }, { _type: "GraphNativeItem", value: 2 }] });
     assert.deepEqual(result.reports.map(item => item.path), ["/root/items"]);
@@ -267,10 +267,10 @@ test("embedded cycles fail at the member without recursing indefinitely", () =>
     class Item { child = null; }
     class Owner { item = new Item(); }
     CjsSchema.define(Item, { className: "GraphEmbeddedCycle", members: [
-        { name: "child", key: "child", type: { kind: "root", className: "GraphEmbeddedCycle" }, edit: { persist: true } }
+        { name: "child", key: "child", type: { kind: "root", className: "GraphEmbeddedCycle" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     CjsSchema.define(Owner, { className: "GraphEmbeddedCycleOwner", members: [
-        { name: "item", key: "item", type: { kind: "root", className: "GraphEmbeddedCycle" }, edit: { persist: true } }
+        { name: "item", key: "item", type: { kind: "root", className: "GraphEmbeddedCycle" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const owner = new Owner(); owner.item.child = owner.item;
     assert.throws(() => Format.write(owner), error => error.reports[0].path === "/root/item/child" && /cycle/u.test(error.message));
@@ -297,11 +297,11 @@ test("native plain struct records use only their declared class layout", () =>
     class Item { value = 0; }
     class Owner { items = []; item = { value: 0 }; }
     CjsSchema.define(Item, { className: "GraphNativeStruct", struct: { size: 4 }, members: [
-        { name: "value", key: "value", struct: { dataType: "FLOAT32_1", offset: 0 }, edit: { persist: true } }
+        { name: "value", key: "value", struct: { dataType: "FLOAT32_1", offset: 0 }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     CjsSchema.define(Owner, { className: "GraphNativeStructOwner", members: [
-        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "rawStruct", className: "GraphNativeStruct" } }, edit: { persist: true } },
-        { name: "item", key: "item", type: { kind: "rawStruct", className: "GraphNativeStruct" }, edit: { persist: true } }
+        { name: "items", key: "items", type: { kind: "list", itemType: { kind: "rawStruct", className: "GraphNativeStruct" } }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+        { name: "item", key: "item", type: { kind: "rawStruct", className: "GraphNativeStruct" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
     ] });
     const owner = new Owner(); owner.items = [{ value: 1.5, undeclared: "omit" }];
     const bytes = Format.write(owner);

@@ -25,7 +25,7 @@ class Item
   Initialize() { this.initializeCount++; }
 }
 CjsSchema.define(Item, { className: itemName, fields: {
-  value: { type: { kind: "int32" }, edit: { persist: true } }
+  value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
 } });
 blue.interface(IInitialize)(Item);
 
@@ -61,8 +61,8 @@ class Owner
 }
 blue.inherit(IListNotify)(Owner);
 CjsSchema.define(Owner, { className: ownerName, fields: {
-  name: { type: { kind: "string" }, edit: { persist: true } },
-  items: { type: { kind: "list", itemType: itemName }, edit: { read: true, persist: true } }
+  name: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  items: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, edit: { read: true, persist: true } }
 } });
 blue.interface(IListNotify, IInitialize)(Owner);
 
@@ -81,7 +81,7 @@ function AssertOwned(owner)
 
 class FilterBase { inheritedHidden = "retained"; }
 CjsSchema.define(FilterBase, { className: "BlueReaderFilterBase", fields: {
-  inheritedHidden: { type: { kind: "string" }, edit: { persist: true } }
+  inheritedHidden: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
 } });
 class FilterOwner extends FilterBase
 {
@@ -92,10 +92,10 @@ class FilterOwner extends FilterBase
 }
 meta.hideInherited(["inheritedHidden"])(FilterOwner);
 CjsSchema.define(FilterOwner, { className: "BlueReaderFilterOwner", fields: {
-  value: { type: { kind: "int32" }, edit: { persist: true } },
-  readonly: { type: { kind: "int32" }, edit: { read: true } },
-  cache: { type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } },
-  hiddenPersisted: { type: { kind: "string" }, edit: { hidden: true, persist: true, persistOnly: true } }
+  value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  readonly: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } },
+  cache: { type: { kind: "rootRef", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  hiddenPersisted: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 24 }, edit: { hidden: true, persist: true, persistOnly: true } }
 } });
 CjsSchema.meta.exposureChainTo(FilterBase)(FilterOwner);
 
@@ -106,13 +106,13 @@ class Notified
   OnModified(name) { this.notifications.push([name, this.value]); return true; }
 }
 CjsSchema.define(Notified, { className: "BlueReaderPlainNotified", fields: {
-  value: { type: { kind: "int32" }, edit: { persist: true, notify: true } }
+  value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }
 } });
 blue.interface(INotify)(Notified);
 class UnexposedNotify extends Notified {}
 // No chain, so INotify is not mapped. It maps value itself, as Carbon's table would have to.
 CjsSchema.define(UnexposedNotify, { className: "BlueReaderPlainUnexposedNotify", fields: {
-  value: { type: { kind: "int32" }, edit: { persist: true, notify: true } }
+  value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }
 } });
 blue.interface()(UnexposedNotify);
 

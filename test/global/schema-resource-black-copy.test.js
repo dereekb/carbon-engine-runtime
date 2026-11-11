@@ -9,7 +9,7 @@ import { exposure as be } from "../../src/blue/exposure/be.js";
 
 
 const member = (name, kind, extra = {}) => ({
-    name, key: name, type: { kind }, edit: { persist: true }, ...extra
+    name, key: name, type: { kind }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, ...extra
 });
 
 class ResourceLeaf
@@ -47,7 +47,7 @@ class ResourceDerived extends ResourceBase
 }
 CjsSchema.define(ResourceDerived, { className: "ResourceBlackCopyDerived", members: [
     member("cache", "rootRef", {
-        key: "_cache", type: { kind: "rootRef", className: "ResourceBlackCopyLeaf", runtimeOnly: true }, edit: {}
+        key: "_cache", type: { kind: "rootRef", className: "ResourceBlackCopyLeaf", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 0 }, edit: {}
     })
 ] });
 CjsSchema.meta.exposureChainTo(ResourceBase)(ResourceDerived);

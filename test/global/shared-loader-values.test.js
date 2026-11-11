@@ -55,7 +55,7 @@ test("dictionary editing diffs writes and suppresses notifications without queue
     OnModified(member) { this.calls.push(member); return true; }
   }
   CjsSchema.define(Record, { className: "SharedLoaderEditRecord", fields: [
-    { name: "value", key: "value", type: { kind: "int32" }, edit: { notify: true } }
+    { name: "value", key: "value", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }
   ] });
   const record = new Record();
   CjsSchema.setValues(record, { value: 1 });
@@ -147,8 +147,8 @@ test("mapped initialization suppresses construction notifications while later ed
     Initialize() { this.calls.push(["initialize", this.second]); }
   }
   CjsSchema.define(Record, { className: "SharedLoaderConstructionRecord", fields: [
-    { name: "first", key: "first", type: { kind: "int32" }, edit: { notify: true } },
-    { name: "second", key: "second", type: { kind: "int32" }, edit: { notify: true } }
+    { name: "first", key: "first", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } },
+    { name: "second", key: "second", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }
   ] });
   CjsSchema.be.interface(IInitialize)(Record);
   const values = { first: 1, second: 2 };
@@ -204,7 +204,7 @@ test("shared child creation hydrates the real Crisis graph before publishing it"
   WithStubResMan(t);
   class Owner { children = []; }
   CjsSchema.define(Owner, { className: "RealAssetChildCollectionOwner", fields: [
-    { name: "children", key: "children", type: { kind: "list", itemType: host._type }, edit: { persist: true } }
+    { name: "children", key: "children", type: { kind: "list", itemType: host._type }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
   ] });
   const owner = new Owner();
   let initializedAtPublication = false;
@@ -258,9 +258,9 @@ test("indexed members sharing one key stay distinct in notifications", () =>
     OnModified(names) { this.calls.push(names); return true; }
   }
   CjsSchema.define(Record, { className: "SharedLoaderNotificationIndexed", fields: [
-    { name: "value", key: "stored", type: { kind: "int32" }, edit: { notify: true } },
-    { name: "first", key: "slots", index: 0, type: { kind: "int32" }, edit: { notify: true } },
-    { name: "second", key: "slots", index: 1, type: { kind: "int32" }, edit: { notify: true } }
+    { name: "value", key: "stored", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } },
+    { name: "first", key: "slots", index: 0, type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } },
+    { name: "second", key: "slots", index: 1, type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }
   ] });
   const record = new Record();
   const changed = CjsSchema.setValues(record, { value: 2, first: 3, second: 4 });

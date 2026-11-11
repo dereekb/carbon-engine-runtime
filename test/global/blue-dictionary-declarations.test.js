@@ -18,7 +18,7 @@ test("same-owner stored members use exposed names without calling paired live ac
     set boosters(_) { assert.fail("paired setter"); }
     GetValues() { assert.fail("canonical declarations are not fieldless"); }
   }
-  CjsSchema.define(Pair, { className: identity(), members: [scalar("boosters", "_boosters", { edit: { persist: true, notify: true } })],
+  CjsSchema.define(Pair, { className: identity(), members: [scalar("boosters", "_boosters", { exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } })],
     properties: [scalar("boosters", "boosters", { property: { persisted: false } })] });
   const value = new Pair();
   const calls = [];
@@ -38,7 +38,7 @@ test("declaring owner precedes role across inheritance and filters never fall th
     get otherLive() { this.liveCalls++; return this.otherBacking; }
     set otherLive(value) { this.liveCalls++; this.otherBacking = value; }
   }
-  CjsSchema.define(Base, { className: identity(), members: [scalar("value", "base", { edit: { persist: true } })],
+  CjsSchema.define(Base, { className: identity(), members: [scalar("value", "base", { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } })],
     properties: [scalar("other", "otherLive", { property: { persisted: true } })] });
   class Derived extends Base {
     current = 30;
@@ -46,7 +46,7 @@ test("declaring owner precedes role across inheritance and filters never fall th
     get live() { return this.current; }
     set live(value) { this.current = value; }
   }
-  CjsSchema.define(Derived, { className: identity(), members: [scalar("other", "own", { edit: { persist: true } })],
+  CjsSchema.define(Derived, { className: identity(), members: [scalar("other", "own", { exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } })],
     properties: [scalar("value", "live", { property: { persisted: true } })] });
   const target = new Derived();
   read(target, { value: 7, other: 8 });
@@ -57,7 +57,7 @@ test("declaring owner precedes role across inheritance and filters never fall th
   assert.deepEqual(write(target, { persistOnly: true }), { other: 8, value: 7 });
   assert.equal(target.liveCalls, 0, "derived storage bypasses the inherited live property");
   class ReadOnly extends Base { readonly = 9; }
-  CjsSchema.define(ReadOnly, { className: identity(), members: [scalar("value", "readonly", { edit: { read: true } })] });
+  CjsSchema.define(ReadOnly, { className: identity(), members: [scalar("value", "readonly", { exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } })] });
   const locked = new ReadOnly();
   assert.equal(read(locked, { value: 99 }).size, 0);
   assert.equal(locked.base, 10);

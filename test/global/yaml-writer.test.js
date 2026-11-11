@@ -12,7 +12,7 @@ function register(Constructor, fields, extra = {})
     className: "YamlWriterTest" + ++serial,
     members: Object.entries(fields).map(([name, type]) => ({
       name, key: name, type: typeof type === "string" ? { kind: type } : type,
-      edit: { persist: true, read: true, write: true }
+      exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { persist: true, read: true, write: true }
     })),
     ...extra
   });

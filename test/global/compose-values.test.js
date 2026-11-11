@@ -25,6 +25,7 @@ function declare(fields, { compose = true } = {})
   for (const [ name, spec ] of Object.entries(fields))
   {
     CjsSchema.defineField(Fixture, name, "type", spec.type);
+    if (spec.exposure) CjsSchema.defineField(Fixture, name, "exposure", spec.exposure);
     if (spec.edit) CjsSchema.defineField(Fixture, name, "edit", spec.edit);
   }
 
@@ -70,8 +71,8 @@ test("returnBoolean gives Carbon's did-it-change answer", () =>
 test("a read-only field is refused, a persisted one is not", () =>
 {
   const Fixture = declare({
-    derived: { type: { kind: "string" }, edit: { read: true }, initial: "computed" },
-    stored: { type: { kind: "string" }, edit: { read: true, persist: true }, initial: "" }
+    derived: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true }, initial: "computed" },
+    stored: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, edit: { read: true, persist: true }, initial: "" }
   });
   const thing = new Fixture();
 
@@ -84,11 +85,11 @@ test("a read-only field is refused, a persisted one is not", () =>
 test("isWritableField matches the model path's rule exactly", () =>
 {
   assert.equal(isWritableField({ }), true, "no edit metadata is writable");
-  assert.equal(isWritableField({ edit: { write: true } }), true);
-  assert.equal(isWritableField({ edit: { persist: true } }), true);
-  assert.equal(isWritableField({ edit: { persistOnly: true } }), true);
-  assert.equal(isWritableField({ edit: { read: true } }), false);
-  assert.equal(isWritableField({ edit: { read: true, write: true } }), true);
+  assert.equal(isWritableField({ exposure: { macro: "MAP_ATTRIBUTE", flags: 2 }, edit: { write: true } }), true);
+  assert.equal(isWritableField({ exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }), true);
+  assert.equal(isWritableField({ exposure: { macro: "MAP_ATTRIBUTE", flags: 24 }, edit: { persistOnly: true } }), true);
+  assert.equal(isWritableField({ exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } }), false);
+  assert.equal(isWritableField({ exposure: { macro: "MAP_ATTRIBUTE", flags: 3 }, edit: { read: true, write: true } }), true);
 });
 
 test("a math field is coerced IN PLACE, keeping its identity", () =>
@@ -130,7 +131,7 @@ test("a field absent from the bag is left alone", () =>
 test("persistOnly filters the export", () =>
 {
   const Fixture = declare({
-    stored: { type: { kind: "string" }, edit: { persist: true }, initial: "a" },
+    stored: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, initial: "a" },
     transient: { type: { kind: "string" }, initial: "b" }
   });
   const thing = new Fixture();
@@ -195,8 +196,8 @@ test("OnModified receives the changed notified field names together", () =>
 {
   const seen = [];
   const Fixture = declare({
-    n: { type: { kind: "int32" }, initial: 0, edit: { notify: true } },
-    name: { type: { kind: "string" }, initial: "", edit: { notify: true } }
+    n: { type: { kind: "int32" }, initial: 0, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } },
+    name: { type: { kind: "string" }, initial: "", exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } }
   });
   Fixture.prototype.OnModified = function (propertyName)
   {
@@ -211,7 +212,7 @@ test("OnModified receives the changed notified field names together", () =>
 test("a positional OnModified override receives member identity", () =>
 {
   let received;
-  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, edit: { notify: true } } });
+  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } } });
   Fixture.prototype.OnModified = function (value) { received = value; return true; };
 
   new Fixture().SetValues({ n: 1 });
@@ -220,7 +221,7 @@ test("a positional OnModified override receives member identity", () =>
 
 test("OnModified returning false leaves the target dirty", () =>
 {
-  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, edit: { notify: true } } });
+  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } } });
   Fixture.prototype.OnModified = function () { return false; };
 
   const thing = new Fixture();
@@ -233,7 +234,7 @@ test("explicit nested UpdateValues calls back immediately", () =>
   let calls = 0;
   let depth = 0;
   let max = 0;
-  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, edit: { notify: true } } });
+  const Fixture = declare({ n: { type: { kind: "int32" }, initial: 0, exposure: { macro: "MAP_ATTRIBUTE", flags: 4 }, edit: { notify: true } } });
   Fixture.prototype.OnModified = function ()
   {
     depth += 1;

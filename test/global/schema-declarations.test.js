@@ -242,7 +242,7 @@ test("namespace projections preserve structural routes and filter descriptive me
     class Projected {}
     CjsSchema.define(Projected, {
         className: "DeclarationProjected",
-        members: [ { name: "wireName", key: "array", index: 0, type: { kind: "uint32" }, edit: { persist: true }, enum: { values: { Zero: 0 } } } ]
+        members: [ { name: "wireName", key: "array", index: 0, type: { kind: "uint32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, enum: { values: { Zero: 0 } } } ]
     });
     const schema = CjsSchema.getSchema(Projected, { namespaces: [ "type" ] });
     assert.deepEqual(schema.members[0], {

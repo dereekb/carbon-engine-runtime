@@ -30,16 +30,17 @@ test("the store is built once per class and its RTTI once per class info", () =>
   }
 });
 
-test("every schema row is found by its exposed name with its flags and key, and nothing else is", () =>
+test("every exposed schema row is found by its exposed name with its flags and key, and nothing else is", () =>
 {
   const problems = [];
   for (const { name, type } of registrations)
   {
     const rtti = classes.GetRtti(ClassInfo.exposeToBlue(type));
-    // The rows its exposure holds along the chain; the schema's own lineage follows extends, the bases.
+    // The rows its exposure holds along the chain; the schema's own lineage follows extends, the bases. A typed member
+    // without exposure is private and stays out of the table.
     const levels = CjsSchema.getExposedDeclarations(type);
     const byName = new Map();
-    for (const row of [ ...levels.flatMap(level => level.members), ...levels.flatMap(level => level.properties).filter(property => property.property || property.edit) ])
+    for (const row of [ ...levels.flatMap(level => level.members), ...levels.flatMap(level => level.properties) ].filter(row => row.exposure))
     {
       const list = byName.get(row.name) ?? [];
       list.push(row);

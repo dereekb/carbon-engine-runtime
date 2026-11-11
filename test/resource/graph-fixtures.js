@@ -26,7 +26,7 @@ export function fixtures(prefix)
         derived = 999;
         state = Uint8Array.of(0, 128, 255);
     }
-    const field = (name, kind, extra = {}) => ({ name, key: name, type: typeof kind === "string" ? { kind } : kind, edit: { persist: true }, ...extra });
+    const field = (name, kind, extra = {}) => ({ name, key: name, type: typeof kind === "string" ? { kind } : kind, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, ...extra });
     CjsSchema.define(Embedded, { className: `${prefix}Embedded`, members: [field("value", "int32")] });
     CjsSchema.define(Node, {
         className: `${prefix}Node`,
@@ -36,14 +36,14 @@ export function fixtures(prefix)
             field("children", { kind: "list", itemType: { kind: "rootRef", className: `${prefix}Node` } }),
             field("embedded", { kind: "root", className: `${prefix}Embedded` }),
             field("indices", { kind: "typedArray", arrayType: "Uint32Array" }), field("huge", "uint64"),
-            field("choice", "int32"), field("flags", "uint32", { edit: { persist: true, flags: true } }),
+            field("choice", "int32"), field("flags", "uint32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 272 }, edit: { persist: true, flags: true } }),
             field("colour", "linear"), field("scale", "scale"), field("path", "path"),
             field("tags", { kind: "set", itemType: { kind: "string" } }),
             field("named", { kind: "map", valueType: { kind: "int32" } }),
             field("value", "int32", { key: "_value", index: 0 }),
-            field("loadOnly", "int32", { edit: { rpersist: true } }),
+            field("loadOnly", "int32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 32 }, edit: { rpersist: true } }),
             field("runtime", { kind: "rootRef", runtimeOnly: true }),
-            field("derived", "int32", { edit: { read: true } }),
+            field("derived", "int32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } }),
             field("state", { kind: "custom", name: "state" })
         ]
     });

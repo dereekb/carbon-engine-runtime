@@ -25,8 +25,13 @@ function declareBaseless(persist = false)
 
   Object.defineProperty(Fixture, "name", { value: className });
   CjsSchema.defineField(Fixture, "position", "type", { kind: "vec3" });
-  if (persist) CjsSchema.defineField(Fixture, "position", "edit", { persist: true, read: true, write: true });
+  if (persist)
+  {
+    CjsSchema.defineField(Fixture, "position", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
+    CjsSchema.defineField(Fixture, "position", "edit", { persist: true, read: true, write: true });
+  }
   CjsSchema.defineField(Fixture, "derived", "type", { kind: "string" });
+  CjsSchema.defineField(Fixture, "derived", "exposure", { macro: "MAP_ATTRIBUTE", flags: 1 });
   CjsSchema.defineField(Fixture, "derived", "edit", { read: true });
   CjsSchema.define(Fixture, { className });
   return Fixture;

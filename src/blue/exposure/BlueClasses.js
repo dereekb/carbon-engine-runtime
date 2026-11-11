@@ -614,9 +614,8 @@ export class BlueClasses extends IBlueClasses
    * ClassInfo and each one along `mParentClassInfo`.
    *
    * @adapted the member type is the schema type kind, not Carbon's numeric
-   *   `Be::VarType` (see GetTypeInfo). A complete row's name is listed once,
-   *   the class's own first, where Carbon's dict keeps the last row written; an
-   *   older declaration without an exposure record is overwritten by a later one.
+   *   `Be::VarType` (see GetTypeInfo). A row's name is listed once, the
+   *   class's own first, where Carbon's dict keeps the last row written.
    * @param {Function} Constructor The class.
    * @param {number} flags IRoot flags; only the autovar bit is read.
    * @returns {Array<object>} `[classInfo, interfaces, members, methods]`.

@@ -39,7 +39,7 @@ class SampleFunction extends ITriFunction
   UpdateValue(time) { this.samples.push([time]); }
 }
 CjsSchema.define(SampleFunction, { className: "Phase2CurveSetSampleFunction", fields: {
-  name: { type: "string", edit: { read: true, write: true, persist: true } }
+  name: { type: "string", exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { read: true, write: true, persist: true } }
 } });
 legacyBlue.interface(ITriFunction)(SampleFunction, { kind: "class" });
 

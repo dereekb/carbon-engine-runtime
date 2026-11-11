@@ -16,7 +16,7 @@ import { blackBuilder, readBlack } from "../support/blackReader.js";
 
 const blue = CjsSchema.be;
 const { BELIST_UNLOADSTART, BELIST_LOADFINISHED } = BLUELISTEVENT;
-const member = (name, kind, extra = {}) => ({ name, key: name, role: "member", type: { kind }, edit: { persist: true }, ...extra });
+const member = (name, kind, extra = {}) => ({ name, key: name, role: "member", type: { kind }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, ...extra });
 
 /** A read that must fail: BlackReader returns null and says why. */
 function readFails(bytes, pattern)
@@ -215,7 +215,7 @@ test("reference collections keep the owner's storage; a list drops nulls, a map 
 
 const itemName = "BlackReadsListItem", ownerName = "BlackReadsListOwner";
 class ListItem { value = 0; initializeCount = 0; Initialize() { this.initializeCount++; } }
-CjsSchema.define(ListItem, { className: itemName, fields: { value: { type: { kind: "int32" }, edit: { persist: true } } } });
+CjsSchema.define(ListItem, { className: itemName, fields: { value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } } } });
 blue.interface(IInitialize)(ListItem);
 const Info = list => { const info = {}; list.GetInfo(info); return info; };
 class ListOwner
@@ -229,7 +229,7 @@ class ListOwner
   Initialize() { this.initializeCount++; this.childInitializeCounts = Array.from(this.items, item => item.initializeCount); }
 }
 blue.inherit(IListNotify)(ListOwner);
-CjsSchema.define(ListOwner, { className: ownerName, fields: { items: { type: { kind: "list", itemType: itemName }, edit: { read: true, persist: true } } } });
+CjsSchema.define(ListOwner, { className: ownerName, fields: { items: { type: { kind: "list", itemType: itemName }, exposure: { macro: "MAP_ATTRIBUTE", flags: 17 }, edit: { read: true, persist: true } } } });
 blue.interface(IListNotify, IInitialize)(ListOwner);
 
 test("a list member keeps the owner's IList, its observer, and duplicate children; children initialize as they are read", () =>
@@ -259,14 +259,14 @@ test("a list member keeps the owner's IList, its observer, and duplicate childre
 });
 
 class FilterBase { inheritedHidden = "retained"; }
-CjsSchema.define(FilterBase, { className: "BlackReadsFilterBase", fields: { inheritedHidden: { type: { kind: "string" }, edit: { persist: true } } } });
+CjsSchema.define(FilterBase, { className: "BlackReadsFilterBase", fields: { inheritedHidden: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } } } });
 class FilterOwner extends FilterBase { value = 0; readonly = 4; cache = { retained: true }; hiddenPersisted = "old"; }
 meta.hideInherited([ "inheritedHidden" ])(FilterOwner);
 CjsSchema.define(FilterOwner, { className: "BlackReadsFilterOwner", fields: {
-  value: { type: { kind: "int32" }, edit: { persist: true } },
-  readonly: { type: { kind: "int32" }, edit: { read: true } },
-  cache: { type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } },
-  hiddenPersisted: { type: { kind: "string" }, edit: { hidden: true, persist: true, persistOnly: true } }
+  value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  readonly: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 1 }, edit: { read: true } },
+  cache: { type: { kind: "rootRef", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
+  hiddenPersisted: { type: { kind: "string" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 24 }, edit: { hidden: true, persist: true, persistOnly: true } }
 } });
 CjsSchema.meta.exposureChainTo(FilterBase)(FilterOwner);
 
@@ -285,11 +285,11 @@ test("only persisted members read: a READ member, a hidden inherited one and an 
 });
 
 class Notified { value = 0; notifications = []; OnModified(name) { this.notifications.push([ name, this.value ]); return true; } }
-CjsSchema.define(Notified, { className: "BlackReadsPlainNotified", fields: { value: { type: { kind: "int32" }, edit: { persist: true, notify: true } } } });
+CjsSchema.define(Notified, { className: "BlackReadsPlainNotified", fields: { value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } } } });
 blue.interface(INotify)(Notified);
 class UnexposedNotify extends Notified {}
 // No chain, so INotify is not mapped; it maps value itself, as Carbon's table would have to.
-CjsSchema.define(UnexposedNotify, { className: "BlackReadsPlainUnexposedNotify", fields: { value: { type: { kind: "int32" }, edit: { persist: true, notify: true } } } });
+CjsSchema.define(UnexposedNotify, { className: "BlackReadsPlainUnexposedNotify", fields: { value: { type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } } } });
 blue.interface()(UnexposedNotify);
 
 test("OnModified is called only on a class that maps INotify", () =>

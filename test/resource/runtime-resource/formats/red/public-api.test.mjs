@@ -29,7 +29,7 @@ function declare(Constructor, name, fields)
 {
     CjsSchema.define(Constructor, { className: name, members: Object.entries(fields).map(([key, type]) => ({
         key, name: key, type: typeof type === "string" ? { kind: type } : type,
-        edit: { persist: true, read: true, write: true }
+        exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { persist: true, read: true, write: true }
     })) });
 }
 declare(RedContractLeaf, "RedContractLeaf", { value: "float32" });

@@ -6,7 +6,7 @@ import { IInitialize } from "../../src/blue/exposure/IInitialize.js";
 import { INotify } from "../../src/blue/exposure/INotify.js";
 
 const member = (name, type, extra = {}) => ({
-  name, key: name, role: "member", type: { kind: type }, edit: { persist: true }, ...extra
+  name, key: name, role: "member", type: { kind: type }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true }, ...extra
 });
 
 test("reader uses hidden backing data, not a live accessor or values service", () => {
@@ -20,7 +20,7 @@ test("reader uses hidden backing data, not a live accessor or values service", (
   }
   CjsSchema.be.interface(INotify)(Target);
   const target = new Target();
-  const field = member("value", "int32", { key: "_value", edit: { persist: true, hidden: true, notify: true } });
+  const field = member("value", "int32", { key: "_value", exposure: { macro: "MAP_ATTRIBUTE", flags: 28 }, edit: { persist: true, hidden: true, notify: true } });
   assert.equal(getReaderMemberValue(target, field), 3);
   applyReaderMember(target, field, 3);
   applyReaderMember(target, field, 7);
@@ -38,7 +38,7 @@ test("mapped initialization suppresses notifications even when initialization is
   }
   CjsSchema.be.interface(IInitialize, INotify)(Target);
   const target = new Target();
-  applyReaderMember(target, member("value", "int32", { edit: { persist: true, notify: true } }), 2);
+  applyReaderMember(target, member("value", "int32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }), 2);
   finalizeReaderObject(target, { initialize: false });
   assert.deepEqual(target.calls, []);
   assert.equal(finalizeReaderObject(target), target);
@@ -53,7 +53,7 @@ test("method presence and native base composition do not imply mapped reader int
     OnModified() { throw new Error("unmapped OnModified"); }
   }
   const target = new Target();
-  applyReaderMember(target, member("value", "int32", { edit: { persist: true, notify: true } }), 5);
+  applyReaderMember(target, member("value", "int32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }), 5);
   finalizeReaderObject(target);
   assert.equal(target.value, 5);
 });
@@ -68,7 +68,7 @@ test("reader interface mappings use stable identities across constructor copies"
   }
   CjsSchema.be.interface(OtherNotify)(Target);
   const target = new Target();
-  applyReaderMember(target, member("value", "int32", { edit: { persist: true, notify: true } }), 2);
+  applyReaderMember(target, member("value", "int32", { exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } }), 2);
   assert.deepEqual(target.calls, ["value"]);
 });
 
@@ -87,15 +87,15 @@ test("stored-member reads and writes reject accessor routes without invoking the
   assert.throws(() => getReaderMemberValue(target, field), /backing key/);
   assert.throws(() => applyReaderMember(target, field, 1), /backing key/);
   assert.equal(calls, 0);
-  assert.throws(() => applyReaderMember({}, { ...field, role: "property", edit: { read: true, write: true } }, 1), /stored PERSIST/);
-  assert.throws(() => applyReaderMember({}, { ...field, edit: { rpersist: true } }, 1), /stored PERSIST/);
+  assert.throws(() => applyReaderMember({}, { ...field, role: "property", exposure: { macro: "MAP_ATTRIBUTE", flags: 3 }, edit: { read: true, write: true } }, 1), /stored PERSIST/);
+  assert.throws(() => applyReaderMember({}, { ...field, exposure: { macro: "MAP_ATTRIBUTE", flags: 32 }, edit: { rpersist: true } }, 1), /stored PERSIST/);
 });
 
 // MAP_PROPERTY_PERSISTED (BlueExposureMacrosPython.h:216-230): read through the getter, written through the setter.
 test("a persisted property is read and written through its accessors", () => {
   const calls = [];
   const target = { _value: 1, get value() { calls.push("get"); return this._value; }, set value(next) { calls.push("set"); this._value = next; } };
-  const field = member("value", "int32", { role: "property", edit: { read: true, write: true, persist: true } });
+  const field = member("value", "int32", { role: "property", exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { read: true, write: true, persist: true } });
   assert.equal(getReaderMemberValue(target, field), 1);
   applyReaderMember(target, field, 1);
   assert.equal(target._value, 1);
@@ -162,7 +162,7 @@ test("indexed storage rejects out-of-bounds data before reading or notifying", (
   }
   CjsSchema.be.interface(INotify)(Target);
   const target = new Target();
-  const field = member("outside", "float32", { key: "values", index: 1, edit: { persist: true, notify: true } });
+  const field = member("outside", "float32", { key: "values", index: 1, exposure: { macro: "MAP_ATTRIBUTE", flags: 20 }, edit: { persist: true, notify: true } });
   assert.throws(() => getReaderMemberValue(target, field), /storage length/);
   assert.throws(() => applyReaderMember(target, field, 5), /storage length/);
   assert.equal(target.calls, 0);

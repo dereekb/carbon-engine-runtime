@@ -20,6 +20,7 @@ class Observed
 }
 
 CjsSchema.defineField(Observed, "name", "type", { kind: "string" });
+CjsSchema.defineField(Observed, "name", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(Observed, "name", "edit", { persist: true });
 CjsSchema.define(Observed, { className: "ObjectRefTestObserved" });
 
@@ -31,12 +32,14 @@ class Observer
 }
 
 CjsSchema.defineField(Observer, "name", "type", { kind: "string" });
+CjsSchema.defineField(Observer, "name", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(Observer, "name", "edit", { persist: true });
 // The declared type names an interface on purpose: no registry resolves it.
 CjsSchema.defineField(Observer, "observer", "type", {
     kind: "rootRef",
     className: "IObjectRefTestInterface"
 });
+CjsSchema.defineField(Observer, "observer", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(Observer, "observer", "edit", { persist: true });
 CjsSchema.define(Observer, { className: "ObjectRefTestObserver" });
 
@@ -176,8 +179,10 @@ class ResourceHolder
 }
 
 CjsSchema.defineField(ResourceHolder, "resource", "type", { kind: "rootRef", className: "IObjectRefTestResource" });
+CjsSchema.defineField(ResourceHolder, "resource", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(ResourceHolder, "resource", "edit", { persist: true });
 CjsSchema.defineField(ResourceHolder, "resources", "type", { kind: "list", itemType: "IObjectRefTestResource" });
+CjsSchema.defineField(ResourceHolder, "resources", "exposure", { macro: "MAP_ATTRIBUTE", flags: 16 });
 CjsSchema.defineField(ResourceHolder, "resources", "edit", { persist: true });
 CjsSchema.define(ResourceHolder, { className: "ObjectRefTestResourceHolder" });
 

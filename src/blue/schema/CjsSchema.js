@@ -2174,6 +2174,13 @@ function applyDeclarationNamespace(entry, namespace, value)
     {
         entry[namespace] = mergeNamespace(entry[namespace], value);
     }
+
+    // A row with Carbon's macro stays Carbon's when our flags merge into it, in either order.
+    if (namespace === "exposure" && typeof entry.exposure?.macro === "string" && Object.hasOwn(entry.exposure, "origin"))
+    {
+        const { origin, ...carbon } = entry.exposure;
+        entry.exposure = carbon;
+    }
     return validateDeclaration(entry);
 }
 

@@ -25,7 +25,11 @@ function fixture(model, liveB = false)
   {
     CjsSchema.defineField(Probe, name, "type", { kind: "int32" });
     if (name === "b" && liveB) CjsSchema.defineField(Probe, name, "property", { persisted: true });
-    else CjsSchema.defineField(Probe, name, "edit", { persist: true, notify: name !== "quiet" });
+    else
+    {
+      CjsSchema.defineField(Probe, name, "exposure", { macro: "MAP_ATTRIBUTE", flags: name === "quiet" ? 16 : 20 });
+      CjsSchema.defineField(Probe, name, "edit", { persist: true, notify: name !== "quiet" });
+    }
   }
   CjsSchema.define(Probe, { className: `MemberNotificationProbe${serial++}` });
   if (!model)

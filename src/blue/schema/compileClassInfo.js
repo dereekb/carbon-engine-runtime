@@ -53,8 +53,8 @@ export function getDeclaredEditFlags(member)
 }
 
 /**
- * A member's `mEditFlags` as Carbon's table holds them: the bits its exposure macro wrote, or for
- * an older declaration what it declares.
+ * A member's `mEditFlags` as Carbon's table holds them: the bits its exposure macro wrote. A
+ * member without exposure is not in the table; for it this reports what it declares.
  *
  * @param {object} member Declared member.
  * @returns {number} Be::EDITFLAGS bits.
@@ -202,9 +202,7 @@ function findDescriptor(prototype, key)
 }
 
 /**
- * One member or property row as a `VarEntry`. The flags are the row's own when it carries an
- * exposure record; an older declaration without one has its editor bits derived from its edit
- * flags, `type.flags` and enum, as PyGetTypeInfo reports them.
+ * One exposed member or property row as a `VarEntry`, with the flags its exposure macro wrote.
  *
  * @param {Function} Constructor The class, for the property's accessors.
  * @param {object} member The schema's member or property record.
@@ -220,8 +218,9 @@ function varEntryOf(Constructor, member)
   entry.type = declaredMemberType(type).type;
   entry.iid = typeof reference === "function" ? Schema.getClassName(reference) : reference || null;
   entry.description = member.jessica && member.jessica.description ? member.jessica.description : "";
-  // An older declaration without an exposure record is in Blue's view, as PyGetTypeInfo lists it today.
-  entry.meta.blue = !member.exposure || member.exposure.origin !== "ours";
+  // Blue's stamp comes only from Carbon's exposure (`be`, which names its macro); ours (`meta.mapAttribute`, no macro) is
+  // in the table but not Blue's (operator, 2026-11-10).
+  entry.meta.blue = Boolean(member.exposure) && typeof member.exposure.macro === "string";
   entry.editFlags = getEditFlags(member);
   // A chooser names its enum, which may register after the class: the row resolves it on first read.
   const chooser = member.exposure ? (member.exposure.chooser ? member.chooser : null) : member.chooser ?? null;
@@ -286,16 +285,27 @@ export function compileClassInfo(Constructor)
   const Parent = registeredParent(Constructor);
   const own = new Set();
   for (let type = Constructor; type && type !== Parent; type = Object.getPrototypeOf(type)) own.add(type);
-  const seen = new Set();
   // Carbon's member-table order where the class declares an exposure bag (CjsSchema.orderByExposureRows).
-  const rows = Schema.orderByExposureRows(Constructor, [ ...schema.members, ...schema.properties.filter(property => property.property || property.edit) ]);
+  // Only exposed members enter the table, as only Carbon's MAP_* macros fill mMemberTable (BlueExposureMacros.h:149-155):
+  // Carbon's exposure (`be`) and ours (`meta.mapAttribute`). A typed or edit-flagged field without exposure is private and
+  // stays out (operator, 2026-11-10).
+  const declared = [ ...schema.members, ...schema.properties ];
+
+  // Edit flags are what an exposure macro writes; on a stored member with no exposure they would be dropped silently. A
+  // property's flags are read from its accessors (CjsSchema), not declared, so only members are checked.
+  for (const member of schema.members)
+  {
+    if (!member.exposure && own.has(member.declaringClass) && (getDeclaredEditFlags(member) & (EDITFLAGS.MODMASK | EDITFLAGS.SERMASK)) !== 0)
+    {
+      throw new Error(`${Schema.getClassName(Constructor)}.${member.name}: edit flags without exposure: use be.mapAttribute or meta.mapAttribute`);
+    }
+  }
+
+  const rows = Schema.orderByExposureRows(Constructor, declared.filter(member => member.exposure));
   for (const member of rows)
   {
     if (!own.has(member.declaringClass)) continue;
-    // An older declaration under a name a complete row already gave adds nothing (PyGetTypeInfo skips it too); two
-    // complete rows under one name are both kept, as both are in Carbon's table.
-    if (seen.has(member.name) && !member.exposure) continue;
-    if (member.exposure) seen.add(member.name);
+    // Two rows under one name are both kept, as both are in Carbon's table.
     const row = varEntryOf(Constructor, member);
     ci.memberTable.push(row);
     ci._declarations.set(row, member);
@@ -309,7 +319,7 @@ export function compileClassInfo(Constructor)
     for (const method of Schema.getDeclaredSchema(type).methods || [])
     {
       if (!method.exposure) continue;
-      const blue = method.exposure.origin !== "ours";
+      const blue = typeof method.exposure.macro === "string";
       for (const name of [ method.exposure.name ?? method.name, ...(method.exposure.aliases ?? []).map(alias => alias.name ?? method.name) ])
       {
         if (methodNames.has(name)) continue;

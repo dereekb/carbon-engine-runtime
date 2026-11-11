@@ -84,6 +84,7 @@ test("objects nested in a raw struct's records keep their identity through a val
     // reader must build and register it there, or later aliases dangle.
     class NestedParam {}
     CjsSchema.defineField(NestedParam, "name", "type", { kind: "string" });
+    CjsSchema.defineField(NestedParam, "name", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(NestedParam, "name", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(NestedParam, { className: "NestedParam" });
 
@@ -121,18 +122,22 @@ test("clone keeps a member's concrete class and ignores read-only members", () =
     // left the later { _ref } dangling (EveImpactOverlay.damageOverlay).
     class BaseItem {}
     CjsSchema.defineField(BaseItem, "name", "type", { kind: "string" });
+    CjsSchema.defineField(BaseItem, "name", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(BaseItem, "name", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(BaseItem, { className: "CloneBaseItem" });
     class DerivedItem extends BaseItem {}
     CjsSchema.defineField(DerivedItem, "extra", "type", { kind: "string" });
+    CjsSchema.defineField(DerivedItem, "extra", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(DerivedItem, "extra", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(DerivedItem, { className: "CloneDerivedItem" });
     CjsSchema.meta.exposureChainTo(BaseItem)(DerivedItem);
 
     class Owner {}
     CjsSchema.defineField(Owner, "view", "type", { kind: "rootRef", className: "CloneBaseItem" });
+    CjsSchema.defineField(Owner, "view", "exposure", { macro: "MAP_ATTRIBUTE", flags: 1 });
     CjsSchema.defineField(Owner, "view", "edit", { read: true });
     CjsSchema.defineField(Owner, "item", "type", { kind: "rootRef", className: "CloneBaseItem" });
+    CjsSchema.defineField(Owner, "item", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(Owner, "item", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(Owner, { className: "CloneOwner" });
 
@@ -153,6 +158,7 @@ test("a field-less model exports and clones inside a graph", () => {
     CjsSchema.define(EmptyModel, { className: "EmptyModel" });
     class HolderModel {}
     CjsSchema.defineField(HolderModel, "items", "type", { kind: "list", itemType: "EmptyModel" });
+    CjsSchema.defineField(HolderModel, "items", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(HolderModel, "items", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(HolderModel, { className: "HolderModel" });
 
@@ -193,8 +199,10 @@ test("EnumerateChildren walks are cycle-safe and GetResources visits every model
         CjsSchema.decorateField(GraphModel, field, schema.type.resource(GraphResource));
     }
     CjsSchema.defineField(GraphModel, "children", "type", { kind: "array", itemType: "GraphModel" });
+    CjsSchema.defineField(GraphModel, "children", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(GraphModel, "children", "edit", { read: true, write: true, persist: true });
     CjsSchema.defineField(GraphModel, "peer", "type", { kind: "rootRef", className: "GraphModel" });
+    CjsSchema.defineField(GraphModel, "peer", "exposure", { macro: "MAP_ATTRIBUTE", flags: 19 });
     CjsSchema.defineField(GraphModel, "peer", "edit", { read: true, write: true, persist: true });
     CjsSchema.define(GraphModel, { className: "GraphModel" });
 
@@ -611,7 +619,7 @@ test("defines a complete hydratable schema from a manual JSON declaration", () =
         fields: [{
             name: "value",
             type: { kind: "float32" },
-            edit: { read: true, write: true, persist: true }
+            exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { read: true, write: true, persist: true }
         }]
     });
 
@@ -624,7 +632,7 @@ test("defines a complete hydratable schema from a manual JSON declaration", () =
     assert.deepEqual(schema.fields, [{
         name: "value",
         type: { kind: "float32" },
-        edit: { read: true, write: true, persist: true }
+        exposure: { macro: "MAP_ATTRIBUTE", flags: 19 }, edit: { read: true, write: true, persist: true }
     }]);
     assert.deepEqual(CjsSchema.getValues(node), { value: 1.25 });
 });
@@ -650,6 +658,7 @@ test("uses schema metadata as the default schema value shape", () => {
 
     CjsSchema.defineField(SchemaNode, "name", "type", { kind: "string" });
     CjsSchema.defineField(SchemaNode, "position", "type", { kind: "vec3" });
+    CjsSchema.defineField(SchemaNode, "position", "exposure", { macro: "MAP_ATTRIBUTE", flags: 4 });
     CjsSchema.defineField(SchemaNode, "position", "edit", { notify: true });
     CjsSchema.defineField(SchemaNode, "child", "type", { kind: "root", className: "SchemaChild" });
     CjsSchema.defineField(SchemaNode, "children", "type", {
@@ -657,6 +666,7 @@ test("uses schema metadata as the default schema value shape", () => {
         itemType: { kind: "root", className: "SchemaChild" }
     });
     CjsSchema.defineField(SchemaNode, "computed", "type", { kind: "float32" });
+    CjsSchema.defineField(SchemaNode, "computed", "exposure", { macro: "MAP_ATTRIBUTE", flags: 1 });
     CjsSchema.defineField(SchemaNode, "computed", "edit", { read: true });
     CjsSchema.defineField(SchemaNode, "uiLocked", "type", { kind: "string" });
     CjsSchema.defineField(SchemaNode, "uiLocked", "jessica", { readOnly: true });

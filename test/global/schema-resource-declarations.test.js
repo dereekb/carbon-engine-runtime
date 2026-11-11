@@ -49,10 +49,10 @@ for (const persisted of [false, true]) {
 
 test("selected resource claims its exposed name before reading input", () => {
   class Base { old = 1; }
-  CjsSchema.define(Base, { className: name(), members: [{ name: "cache", key: "old", type: { kind: "int32" }, edit: { persist: true } }] });
+  CjsSchema.define(Base, { className: name(), members: [{ name: "cache", key: "old", type: { kind: "int32" }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
   class Owner extends Base { cache = null; real = 2; }
   CjsSchema.define(Owner, { className: name(), members: [
-    { name: "cache", key: "cache", type: { kind: "rootRef", runtimeOnly: true }, edit: { persist: true } },
+    { name: "cache", key: "cache", type: { kind: "rootRef", runtimeOnly: true }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } },
     { name: "real", key: "real", type: { kind: "int32" } }
   ] });
   const target = new Owner();
@@ -141,7 +141,7 @@ test("defaults never snapshot mapped Stage-3 resource storage", () => {
   assert.deepEqual(CjsSchema.getDefaults(Owner), { _type: CjsSchema.getClassName(Owner) });
 });
 
-test("derived ordinary type replaces resource marker while edit-only overrides retain it", () => {
+test("derived ordinary type replaces resource marker while a row mapping the inherited member retains it", () => {
   class Base { cache = null; }
   CjsSchema.define(Base, { className: name(), fields: { cache: type.resource("Resource") } });
   class Ordinary extends Base {}
@@ -149,7 +149,8 @@ test("derived ordinary type replaces resource marker while edit-only overrides r
   assert.equal(CjsSchema.getSchema(Ordinary).fields.find(field => field.name === "cache").type.runtimeOnly, undefined);
   assert.ok(Object.hasOwn(CjsSchema.getValuesFromSchema(new Ordinary()), "cache"));
   class StillResource extends Base {}
-  CjsSchema.define(StillResource, { className: name(), fields: { cache: { edit: { persist: true } } } });
+  meta.mapAttribute(meta.PERSIST, "cache")(StillResource, { kind: "class" });
+  CjsSchema.define(StillResource, { className: name() });
   assert.equal(Object.hasOwn(CjsSchema.getValuesFromSchema(new StillResource()), "cache"), false);
   assert.equal(CjsSchema.getSchema(StillResource).members[0].type.runtimeOnly, true);
   assert.equal(new DictReader().ReadInto(new StillResource(), incoming("cache")).size, 0);
@@ -169,14 +170,14 @@ test("metadata-only type inheritance never crosses roles, slots or explicit decl
   CjsSchema.define(Property, { className: name(), fields: { cache: meta.mapPropertyReadOnly() } });
   assert.equal(CjsSchema.getSchema(Property).properties[0].type, undefined);
   class Explicit extends Base {}
-  CjsSchema.define(Explicit, { className: name(), members: [{ name: "cache", key: "cache", edit: { persist: true } }] });
+  CjsSchema.define(Explicit, { className: name(), members: [{ name: "cache", key: "cache", exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }] });
   assert.equal(CjsSchema.getSchema(Explicit).members[0].type, undefined);
   class IndexedBase { slots = [null, null]; }
   CjsSchema.define(IndexedBase, { className: name(), fields: { slots: {
     declaration: { name: "cache", index: 0 }, type: { kind: "rootRef", runtimeOnly: true }
   } } });
   class Indexed extends IndexedBase {}
-  CjsSchema.define(Indexed, { className: name(), fields: { slots: { declaration: { name: "other", index: 1 }, edit: { persist: true } } } });
+  CjsSchema.define(Indexed, { className: name(), fields: { slots: { declaration: { name: "other", index: 1 }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } } } });
   assert.equal(CjsSchema.getSchema(Indexed).members[0].type, undefined);
   assert.equal(CjsSchema.getSchema(Base).members[0].type.runtimeOnly, true);
 });
