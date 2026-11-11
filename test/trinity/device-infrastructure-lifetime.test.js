@@ -3,10 +3,11 @@ import test from "node:test";
 import {
     TriDevice, Tr2Renderer, Tr2RingVertexBuffer, Tr2RingIndexBuffer,
     Tr2QuadRenderer, Tr2VertexDefinition, TriDebugTextRenderer, Tr2OcclusionBuffer,
+    Tr2Sprite2dScene, Tr2Sprite2dContainer,
     Tr2RenderContext_GetMainThreadRenderContext
 } from "../../npm/dist/trinity/index.js";
 import { TriStorageFlags } from "../../npm/dist/global/consts/graphics/trinityEnums.js";
-import { Tr2RenderContextALStub, Tr2BufferAL, Tr2FenceAL, ALResult } from "../../npm/dist/trinityal/index.js";
+import { Tr2RenderContextALStub, Tr2BufferAL, Tr2ConstantBufferAL, Tr2FenceAL, ALResult } from "../../npm/dist/trinityal/index.js";
 
 const SECOND = 10000000;
 
@@ -112,6 +113,55 @@ for (const Type of [Tr2RingVertexBuffer, Tr2RingIndexBuffer])
         ring.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
     });
 }
+
+test("sprite scene destruction unregisters owned rings and releases capture storage and constant-buffer share", t =>
+{
+    const { context, device } = setup(t);
+    const scene = new Tr2Sprite2dScene();
+    const rings = [scene._vertexBuffer, scene._indexBuffer];
+    for (const ring of rings)
+    {
+        assert.equal(ring.Create(32, 4), true);
+        assert.equal(device.GetResourcesRegistered().includes(ring), true);
+    }
+    const buffers = rings.map(ring => ring.GetBuffer());
+    const peers = buffers.map(buffer => new Tr2BufferAL({ copy: buffer }));
+    scene._uiTransformsCb.Create__Size(16, context);
+    assert.equal(scene._uiTransformsCb.IsValid(), true);
+    const constantsPeer = new Tr2ConstantBufferAL({ copy: scene._uiTransformsCb });
+    assert.ok(scene._captureVertexData.byteLength > 0);
+    assert.ok(scene._captureIndexData.byteLength > 0);
+    scene.StartCapture(new Tr2Sprite2dContainer());
+    const capture = scene._captureDisplayList;
+    const destructCapture = t.mock.method(capture, "Destruct", capture.Destruct.bind(capture));
+    try
+    {
+        for (let repeat = 0; repeat < 2; repeat++)
+        {
+            scene.Destruct();
+            assert.equal(scene._captureDisplayList, null);
+            assert.equal(destructCapture.mock.callCount(), 1);
+            assert.equal(scene._captureVertexData, null);
+            assert.equal(scene._captureIndexData, null);
+            assert.equal(scene._transformStack, null);
+            assert.equal(scene._depthStack, null);
+            assert.equal(scene._clipStack, null);
+            assert.equal(scene._uiTransformsCb.IsValid(), false);
+            assert.equal(constantsPeer.IsValid(), true);
+            rings.forEach((ring, index) =>
+            {
+                assert.equal(device.GetResourcesRegistered().includes(ring), false);
+                assert.equal(buffers[index].IsValid(), false);
+                assert.equal(peers[index].IsValid(), true);
+            });
+        }
+    }
+    finally
+    {
+        peers.forEach(peer => peer.Destroy());
+        constantsPeer.Destroy();
+    }
+});
 
 test("quad renderer registers on rendering; managed release invalidates declarations for rebuild", t =>
 {
