@@ -11,6 +11,7 @@ import { FLOAT_MAX } from "../../core/view/TriFrustum.js";
 import { IEveShadowCaster } from "../IEveShadowCaster.js";
 import { IListNotify } from "../../../blue/exposure/IListNotify.js";
 import { ITr2ControllerOwner } from "../../controllers/ITr2ControllerOwner.js";
+import { UnlinkReason } from "../../controllers/enums.js";
 import { ITr2SoundEmitterOwner } from "../ITr2SoundEmitterOwner.js";
 import { ITr2CurveSetOwner } from "../../curves/ITr2CurveSetOwner.js";
 import { ITr2ImpostorSource } from "../../core/mesh/ITr2ImpostorSource/ITr2ImpostorSource.js";
@@ -749,6 +750,21 @@ export class EveSpaceObject2 extends EveEntity
    * @type {import("../../resources/geometry/TriGeometryRes.js").TriGeometryRes|null}
    */
   _geometryResFromMesh = null;
+
+  /**
+   * Releases damage-filter sessions, geometry notifications and owner back pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/EveSpaceObject2.cpp:235-257.
+   * @adapted Removes any manager-owned geometry link; native notification acquisition is currently unported.
+   * @adapted Audio geometry is unported and audio teardown is outside this task's scope.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this._ReleaseDamageFilterSessions();
+    if (this._geometryResFromMesh) blue.resMan.notify.Remove(this, this._geometryResFromMesh);
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    for (const child of this.effectChildren) child.SetOwner(null);
+  }
 
   /** Carbon m_boneOffsets: where this ship's palette landed in the bone ring, this frame and last.
    * Current and previous frame offsets of this hull's palette in the bone ring.
