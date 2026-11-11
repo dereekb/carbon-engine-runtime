@@ -180,13 +180,10 @@ export class VideoPlaylistController extends IBlueDynamicResourceConstructor
   /**
    * Carbon _destroy; called by resource purge, never by an individual billboard.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: _VideoPlaylistController._destroy (videoplayer/python/videoplayer/playlistresource.py:146-155).
+   * @adapted Preserves existing asynchronous request and retry cancellation with owned browser-player teardown.
    */
-  Destruct()
+  OnDestruct()
   {
     this._generation++;
     this._CancelRead();

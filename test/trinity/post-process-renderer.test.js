@@ -27,6 +27,20 @@ import { PixelFormat, TextureType, Tr2GpuUsage } from "../../npm/dist/global/con
 import { float32ToBits } from "../../npm/dist/global/utils/bytes.js";
 import { Tr2GeometryBufferParameter } from "../../npm/dist/trinity/shader/index.js";
 
+test("public postprocess teardown deduplicates owned effects across direct and blur references", () =>
+{
+  const renderer = new Tr2PostProcessRenderer();
+  let releases = 0;
+  const effect = { Destruct() { releases++; } };
+  renderer.tonemappingEffect = effect;
+  renderer.bloomHighPassFilter = effect;
+  renderer._blurEffects.set(1, [effect, effect]);
+  renderer.Destruct();
+  assert.equal(releases, 1);
+  assert.equal(renderer._blurEffects.size, 0);
+  assert.equal(renderer._bloomConstantBuffer.IsValid(), false);
+});
+
 /** A context with the stub backend: the device without webgpu or webgl. */
 function stubContext()
 {

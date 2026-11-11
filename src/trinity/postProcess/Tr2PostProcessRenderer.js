@@ -230,11 +230,10 @@ export class Tr2PostProcessRenderer extends IRoot
   /**
    * Final owner teardown releases effect member values and the bloom constants.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2PostProcessRenderer members (trinity/trinity/PostProcess/Tr2PostProcessRenderer.h:161-255).
+   * @adapted Preserves explicit deduplicated effect and constant-buffer release in place of native member destruction.
    */
-  Destruct()
+  OnDestruct()
   {
     const effects = new Set([ this.tonemappingEffect, this._reactiveMaskEffect, this._transparencyMaskEffect, this.bloomHighPassFilter, this._downSamplerLuminancePreserve, this._downSampler, this._upsamplerHorizontal, this._upsamplerVertical, this.dynamicExposureToTextureShader, this.dynamicExposureCreateHistogramShader, this.dynamicExposureMergeHistogramShader, this.dynamicExposureMeasureExposureShader, this._fidelityFxCasShader, this._downsampleDepthEffect, this.fogColorEffect, this.fogCompositeEffect, this.depthOfFieldBokehBlurShader, this.depthOfFieldBokehFillShader, this._depthOfFieldBokehTAAShader, this.depthOfFieldCoCShader, this.godrayEffect, this.signalLossEffect, this.taaEffect, this._taaCopyEffect, this._grainShader, this.bloomDebugShader, this._dynamicExposureDebugShader ]);
     for (const pair of this._blurEffects.values()) for (const effect of pair) effects.add(effect);

@@ -441,13 +441,10 @@ export class Tr2ManipulationTool extends IRoot
   /**
    * Explicit release of the native tool's owned primitive and effect references.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: Tr2ManipulationTool::~Tr2ManipulationTool (trinity/trinity/Tr2ManipulationTool.cpp:37-39; Tr2ManipulationTool.h:33-34).
+   * @adapted Preserves explicit owned primitive/effect cleanup in place of native member destruction.
    */
-  Destruct()
+  OnDestruct()
   {
     const effects = new Set();
     for (const primitive of this.primitives)

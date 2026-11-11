@@ -1,10 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Tr2InteriorScene } from "../../../npm/dist/character/index.js";
-import { TriDevice, Tr2Renderer, Tr2VariableStore } from "../../../npm/dist/trinity/index.js";
+import { TriDevice, Tr2Renderer, Tr2VariableStore, Tr2RenderTarget } from "../../../npm/dist/trinity/index.js";
 import { TriVariableContentType } from "../../../npm/dist/trinity/generated/trinityCore/enums.js";
 import { TriStorageFlags } from "../../../npm/dist/global/consts/graphics/trinityEnums.js";
 import { StubContext } from "../../support/stubContext.js";
+
+test("public interior teardown releases owned shadows before unregistering its device base", t =>
+{
+    const scene = new Tr2InteriorScene(), order = [];
+    TriDevice.RegisterResource(scene);
+    const unregister = TriDevice.UnregisterResource;
+    t.mock.method(TriDevice, "UnregisterResource", function(resource)
+    {
+        if (resource === scene) order.push("base");
+        return unregister.call(this, resource);
+    });
+    const target = new Tr2RenderTarget();
+    t.mock.method(target, "Destroy", () => order.push("shadow"));
+    scene.lightRenderTargets.Append(target);
+    scene.Destruct();
+    scene.Destruct();
+    assert.deepEqual(order, ["shadow", "base", "base"]);
+    assert.equal(scene.lightRenderTargets.length, 0);
+    assert.equal(TriDevice.GetResourcesRegistered().includes(scene), false);
+    assert.equal(scene.IsGood(), false, "final scene teardown must not re-register the device resource");
+});
 
 for (const path of ["picking", "forward"])
 {

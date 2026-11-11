@@ -561,13 +561,10 @@ export class VideoPlayer
   /**
    * Explicit destructor for the shared resource owner; individual billboards never call it.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: VideoPlayer::~VideoPlayer (videoplayer/VideoPlayer.cpp:92-101).
+   * @adapted Preserves browser media cancellation and callback cleanup in place of native decoder ownership.
    */
-  Destruct()
+  OnDestruct()
   {
     this._ReleaseMedia();
     this.bgraTexture = null;
