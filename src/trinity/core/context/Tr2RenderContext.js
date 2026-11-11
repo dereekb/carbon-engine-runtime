@@ -204,11 +204,10 @@ export class Tr2RenderContext
   /**
    * Explicit context teardown releases owned state values before its backend.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2RenderContextBase::m_esm (trinity/trinity/Tr2RenderContext.h:25-35).
+   * @adapted Preserves existing context-owned state and geometry release before destroying the selected backend.
    */
-  Destruct()
+  OnDestruct()
   {
     this._esm.Destruct();
     this._esm.ReleaseRealizedObjects();

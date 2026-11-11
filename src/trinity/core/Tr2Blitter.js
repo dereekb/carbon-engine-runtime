@@ -1,3 +1,4 @@
+import { CjsGraph } from "../../global/model/graph/CjsGraph.js";
 // Source: trinity/trinity/Tr2Blitter.h
 //   trinity/trinity/Tr2Blitter.cpp
 //
@@ -237,26 +238,16 @@ export class Tr2Blitter
     return true;
   }
 
-  /**
-   * Final owner release includes both effects and their retained pass values.
-   *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   */
+  /** @cjs Thin public entry for this helper, without Blue schema/value exposure. */
   Destruct()
   {
-    this.ReleaseResources();
-    if (this.#blitEffect) this.#blitEffect.Destruct();
-    if (this.#blitFilteredEffect) this.#blitFilteredEffect.Destruct();
-    this.#blitEffect = null;
-    this.#blitFilteredEffect = null;
+    CjsGraph.destruct(this);
   }
 
   /**
    * Unregisters the blitter's global shader variables.
    * Carbon: trinity/trinity/Tr2Blitter.cpp:31-35.
-   * @implemented
+   * @adapted Retains existing owned effect/buffer release after native global unregister.
    * @returns {void}
    */
   OnDestruct()
@@ -264,6 +255,11 @@ export class Tr2Blitter
     const store = Tr2VariableStore.globalStore();
     store.UnregisterVariable(BLIT_SOURCE);
     store.UnregisterVariable("mipLevel");
+    this.ReleaseResources();
+    if (this.#blitEffect) this.#blitEffect.Destruct();
+    if (this.#blitFilteredEffect) this.#blitFilteredEffect.Destruct();
+    this.#blitEffect = null;
+    this.#blitFilteredEffect = null;
   }
 
   /** Drops the declaration handle and the buffer, as `ReleaseResources` does. */
@@ -468,3 +464,5 @@ export class Tr2Blitter
     return this.DrawHelper(renderContext, shader, material, null, true);
   }
 }
+
+CjsGraph.defineLifetime(Tr2Blitter, { onDestruct: Tr2Blitter.prototype.OnDestruct });

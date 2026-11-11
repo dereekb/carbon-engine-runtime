@@ -1461,11 +1461,10 @@ export class Tr2EffectStateManager
   /**
    * Explicitly releases values that Carbon releases with its state cache.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2EffectStateManager::CurrentValues (trinity/trinity/Shader/Tr2EffectStateManager.h:171-193).
+   * @adapted Preserves explicit release of cached AL buffer values in place of native member destruction.
    */
-  Destruct()
+  OnDestruct()
   {
     this._ReleaseBufferBindings();
     this.#isManagedRendering = false;

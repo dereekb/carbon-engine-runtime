@@ -14,8 +14,8 @@ test("blitter hook unregisters its globals while preserving unrelated variables"
   assert.ok(store.FindVariable("mipLevel"));
   try
   {
-    blitter.OnDestruct();
-    blitter.OnDestruct();
+    blitter.Destruct();
+    blitter.Destruct();
     assert.equal(store.FindVariable("BlitSource"), null);
     assert.equal(store.FindVariable("mipLevel"), null);
     assert.equal(store.FindVariable("BlitterDestructPeer"), peer);
