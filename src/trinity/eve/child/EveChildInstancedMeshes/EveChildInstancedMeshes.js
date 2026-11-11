@@ -2,6 +2,7 @@
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp
 // Source: trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes_Blue.cpp
 import { exposure as be } from "#be";
+import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
 import { EveEntity } from "../../EveEntity.js";
 import { IEveShadowCaster } from "../../IEveShadowCaster.js";
 import { IEveSpaceObjectChild } from "../IEveSpaceObjectChild.js";
@@ -16,7 +17,7 @@ import { RawData } from "../../../core/rawData/RawData.js";
 import { Tr2RenderReason } from "../../../generated/trinityCore/enums.js";
 import { EveMeshOverlayEffect } from "../../overlays/EveMeshOverlayEffect.js";
 import { TriRenderBatchAreaBlock } from "../../../core/batch/TriRenderBatch/index.js";
-import { TriBatchType } from "#consts/graphics";
+import { TriBatchType, TriStorageFlags } from "#consts/graphics";
 import { EveDamageOverlay } from "../../overlays/EveDamageOverlay.js";
 import { EveDamageOverlayOwnerInfo } from "../../overlays/EveDamageOverlayOwnerInfo.js";
 import { EveGetLocatorPose } from "../../locator/EveLocatorSets.js";
@@ -59,9 +60,10 @@ function FindDamageLocators(sets)
  * Space-object child that hands batches of instanced meshes to the engine's
  * instanced mesh manager, owning their registration handles, instance flags and
  * world cull bounds.
+ * Carbon: EveChildInstancedMeshes (trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h:16-24)
  */
 @be.define("EveChildInstancedMeshes")
-@be.inherit(ITr2Renderable, IEveShadowCaster, IEveInstanceMeshProvider)
+@be.inherit(ITr2Renderable, IEveShadowCaster, IEveInstanceMeshProvider, Tr2DeviceResource)
 @be.mapInterface(EveSpaceObjectChild)
 @be.mapInterface(IEveSpaceObjectChild)
 @be.mapInterface(EveEntity)
@@ -1585,6 +1587,26 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
   }
 
   /**
+   * Carbon: EveChildInstancedMeshes::ReleaseResources (trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp:1034-1040).
+   * @implemented
+   * @param {number} storage Native storage mask.
+   */
+  ReleaseResources(storage)
+  {
+    if (storage & TriStorageFlags.TRISTORAGE_MANAGEDMEMORY) this.UnregisterFromMeshManager();
+  }
+
+  /**
+   * Carbon: EveChildInstancedMeshes::OnPrepareResources (trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp:1042-1045).
+   * @implemented
+   * @returns {boolean} True; normal manager collection restores registration handles.
+   */
+  _OnPrepareResources()
+  {
+    return true;
+  }
+
+  /**
    * Carbon EveChildInstancedMeshes::AddMeshesToManager (cpp:741-828), the
    * InstancedMeshProvider entry the engine's CollectMeshes drives
    * (EveInstancedMeshManager.cpp:80-82; scene EveSpaceScene.cpp:1525).
@@ -1602,13 +1624,14 @@ export class EveChildInstancedMeshes extends EveSpaceObjectChild
    * pickingOwnerIndex is the mesh ordinal (pairs with GetSofSourceLocator's
    * meshIndex<<16 decode).
    *
-   * @adapted Manager allocation returns opaque handles instead of filling native output
+   * @adapted Collection renews JS device residency. Manager allocation returns opaque handles instead of filling native output
    *   parameters. Geometry presence and IsGood replace the native combined-vertex-declaration
    *   gate; the declaration argument is zero and the JavaScript object is the picking owner.
    */
 
   AddMeshesToManager(manager)
   {
+    this.KeepAlive();
     if (!this.hasUpdated)
     {
       return;

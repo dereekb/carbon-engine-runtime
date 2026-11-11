@@ -17,6 +17,7 @@ import { blue, IInitialize, INotify, IsMatch } from "#blue";
 import { PixelFormat, DepthStencilFormat } from "#consts/render-context";
 import { Tr2RenderTarget } from "../../../trinity/core/device/Tr2RenderTarget.js";
 import { Tr2DepthStencil } from "../../../trinity/core/device/Tr2DepthStencil.js";
+import { Tr2DeviceResource } from "../../../trinity/core/device/Tr2DeviceResource.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../../../trinity/core/context/Tr2RenderContext.js";
 import { Tr2DebugRenderer } from "../../../trinity/core/line/Tr2DebugRenderer.js";
 import { Tr2RenderContext } from "../../../trinity/core/context/Tr2RenderContext.js";
@@ -26,7 +27,7 @@ import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
 import { mat4 } from "#math/mat4";
 import { ShaderType } from "#consts/render-context";
-import { RenderingMode, TriBatchType } from "#consts/graphics";
+import { RenderingMode, TriBatchType, TriStorageFlags } from "#consts/graphics";
 import { Tr2ConstantBufferAL } from "#trinityal";
 import { PER_FRAME_VS, PER_FRAME_PS, Tr2Renderer } from "../../../trinity/core/Tr2Renderer.js";
 import { Tr2RenderUtils } from "../../../trinity/core/Tr2RenderUtils.js";
@@ -66,9 +67,10 @@ const UV_ADJUST = mat4.fromValues(0.5, 0, 0, 0, 0, -0.5, 0, 0, 0, 0, 1, 0, 0.5, 
  * through the supplied or installed Trinity context. Picking, physics-scene creation
  * remain unported. Forward submission is supported with shadows disabled;
  * allocating shadow targets does not implement shadow rendering.
+ * Carbon: Tr2InteriorScene (trinity/trinity/Interior/Tr2InteriorScene.h:45-53)
  */
 @be.define("Tr2InteriorScene")
-@be.inherit(IInitialize, INotify, ITr2Scene, ITr2MultiPassScene, ITr2VisualizationModeRenderer, ITr2DebugRenderable)
+@be.inherit(IInitialize, INotify, ITr2Scene, ITr2MultiPassScene, Tr2DeviceResource, ITr2VisualizationModeRenderer, ITr2DebugRenderable)
 @be.mapInterface(ITr2Scene)
 @be.mapInterface(ITr2MultiPassScene)
 @be.mapInterface(IInitialize)
@@ -77,6 +79,31 @@ const UV_ADJUST = mat4.fromValues(0.5, 0, 0, 0, 0, -0.5, 0, 0, 0, 0, 1, 0, 0.5, 
 @be.inherit(IListNotify)
 export class Tr2InteriorScene extends ITr2PickableScene
 {
+  /**
+   * Carbon: Tr2InteriorScene::ReleaseResources (trinity/trinity/Interior/Tr2InteriorScene.cpp:287-294).
+   * @adapted Explicitly destroys the old AL values before resetting Carbon's two by-value buffers.
+   * @param {number} storage Native storage mask; both classes are required.
+   */
+  ReleaseResources(storage)
+  {
+    if ((storage & TriStorageFlags.TRISTORAGE_ALL) === TriStorageFlags.TRISTORAGE_ALL)
+    {
+      this._perFramePSBuffer.Destroy();
+      this._perFrameVSBuffer.Destroy();
+      this._perFramePSBuffer = new Tr2ConstantBufferAL();
+      this._perFrameVSBuffer = new Tr2ConstantBufferAL();
+    }
+  }
+
+  /**
+   * Carbon: Tr2InteriorScene::OnPrepareResources (trinity/trinity/Interior/Tr2InteriorScene.cpp:296-299).
+   * @implemented
+   * @returns {boolean} True; picking and forward rendering fill the buffers on use.
+   */
+  _OnPrepareResources()
+  {
+    return true;
+  }
   // Carbon m_apexScene remains empty until the physics scene is installed.
   _apexScene = null;
 
@@ -570,12 +597,13 @@ export class Tr2InteriorScene extends ITr2PickableScene
    * Carbon SetPerFrameDataForPicking (h:220, cpp:1240-1250): populates and
    * binds the per-frame pixel and vertex shader data for the picking pass.
    *
-   * @implemented
+   * @adapted Picking renews JS device residency instead of native constructor registration.
    * @param {Tr2RenderContext} renderContext The context the pick renders on.
    * @returns {void}
    */
   SetPerFrameDataForPicking(renderContext)
   {
+    this.KeepAlive();
     this._PopulatePerFramePSData(this._perFramePSData, renderContext);
     this._PopulatePerFrameVSData(this._perFrameVSData);
     const vs = this._perFrameVSData.GetData(), ps = this._perFramePSData.GetData();
@@ -828,8 +856,7 @@ export class Tr2InteriorScene extends ITr2PickableScene
 
   /**
    * m_perFrameVSBuffer (Tr2InteriorScene.h:304).
-   * Waiting: Carbon replaces it in ReleaseResources( TRISTORAGE_ALL )
-   * (cpp:287-293); this scene has no ReleaseResources yet.
+   * Carbon replaces it in ReleaseResources(TRISTORAGE_ALL), cpp:287-293.
    */
   _perFrameVSBuffer = new Tr2ConstantBufferAL();
 
@@ -1067,11 +1094,12 @@ export class Tr2InteriorScene extends ITr2PickableScene
   /**
    * Carbon RenderFullForward (h:146, cpp:587-658).
    *
-   * @adapted the allocator belongs to the active JS context, so bind it here.
+   * @adapted Rendering renews JS device residency; the allocator belongs to the active JS context, so bind it here.
    *   Profiling markers are omitted; shadows retain their explicit unported gate.
    */
   _RenderFullForward(renderContext)
   {
+    this.KeepAlive();
     if (!this.visibilityResults) this.visibilityResults = new Tr2VisibilityResults();
     this._primaryRenderBatches.SetTriPoolAllocator(renderContext.GetTriPoolAllocator());
     Tr2VariableStore.globalStore().FindVariable("EnvMap1").SetValue(this.backgroundCubemapRes);

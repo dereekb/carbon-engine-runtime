@@ -7,6 +7,8 @@ import { RawData } from "../../npm/dist/trinity/core/rawData/RawData.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mat4 } from "../../npm/dist/global/math/mat4.js";
+import { TriDevice, Tr2Renderer } from "../../npm/dist/trinity/index.js";
+import { TriStorageFlags } from "../../npm/dist/global/consts/graphics/trinityEnums.js";
 import {
   EveChildInstancedMeshes,
   EveCustomMask,
@@ -17,6 +19,36 @@ import {
 
 
 const EPSILON = 1e-4;
+
+test("device release removes managed handles; normal collection restores and renews even on its early-out", t =>
+{
+  const provider = MakeProvider();
+  const manager = MakeManager();
+  const beforeTime = TriDevice.activeTime;
+  t.after(() => { TriDevice.activeTime = beforeTime; TriDevice.UnregisterResource(provider); });
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  provider.AddMeshesToManager(manager);
+  const first = provider._perObjectDataHandle;
+  assert.ok(TriDevice.GetResourcesRegistered().includes(provider));
+  TriDevice.activeTime += 10000000;
+  provider.AddMeshesToManager(manager);
+  assert.equal(provider._stamp, TriDevice.activeTime);
+  assert.equal(provider._perObjectDataHandle, first);
+  provider.ReleaseResources(TriStorageFlags.TRISTORAGE_VIDEOMEMORY);
+  assert.equal(provider._perObjectDataHandle, first);
+  provider.ReleaseResources(TriStorageFlags.TRISTORAGE_MANAGEDMEMORY);
+  assert.equal(provider._perObjectDataHandle, null);
+  assert.equal(provider._allRegistered, false);
+  assert.equal(manager.calls.removedGroups.length, 2);
+  assert.equal(manager.calls.removedSpheres.length, 1);
+  assert.ok(manager.calls.removedPerObject.includes(first));
+  assert.equal(provider.PrepareResources(), true);
+  provider.AddMeshesToManager(manager);
+  assert.notEqual(provider._perObjectDataHandle, first);
+  assert.equal(provider._allRegistered, true);
+  assert.equal(manager.calls.groups.length, 4);
+  provider.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
+});
 
 function assertClose(actual, expected, message, epsilon = EPSILON)
 {
