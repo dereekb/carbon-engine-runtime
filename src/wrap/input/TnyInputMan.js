@@ -1,21 +1,88 @@
 import { CjsSchema, meta } from "#schema";
 import { Tr2MainWindow } from "#input/Tr2MainWindow";
 
-/** Approved browser extension: queued shared camera/tool routing over Tr2MainWindow. */
+/**
+ * Approved browser extension: queued shared camera/tool routing over Tr2MainWindow.
+ * @cjs
+ */
 export class TnyInputMan
 {
-  static Result = Object.freeze({ PASS: 0, HANDLED: 1, CONSUME: 2, CAPTURE: 3, RELEASE: 4 });
+
+  /**
+   * Input consumers ordered by descending priority.
+   * @type {object[]}
+   * @cjs
+   */
   _consumers = [];
+
+  /**
+   * Pending normalized events in delivery order.
+   * @type {object[]}
+   * @cjs
+   */
   _queue = [];
+
+  /**
+   * Consumer holding exclusive pointer capture.
+   * @type {object|null}
+   * @cjs
+   */
   _owner = null;
+
+  /**
+   * Captured browser pointer identifier, or null.
+   * @type {number|null}
+   * @cjs
+   */
   _pointer = null;
+
+  /**
+   * Previous client-space pointer sample for movement deltas.
+   * @type {object|null}
+   * @cjs
+   */
   _lastPointer = null;
+
+  /**
+   * Cancellation generation used to reject stale asynchronous input.
+   * @type {number}
+   * @cjs
+   */
   _generation = 0;
+
+  /**
+   * Outstanding serialized event drain, or null.
+   * @type {Promise<void>|null}
+   * @cjs
+   */
   _pumping = null;
+
+  /**
+   * Borrowed host and owned callback installation.
+   * @type {object|null}
+   * @cjs
+   */
   _attachment = null;
+
+  /**
+   * Queue length at which additional non-coalesced pointer moves are dropped.
+   * @type {number}
+   * @cjs
+   */
   maxQueuedMoves = 256;
 
-  /** Installs exactly one raw input path. Borrowed adapters must have empty routing callbacks. */
+  /**
+   * Installs exactly one raw input path. Borrowed adapters must have empty routing callbacks.
+   * @param {object} [options] Options for this operation.
+   * @param {HTMLElement} options.target Explicit host input target.
+   * @param {Window} [options.window] Host window; defaults to the browser window.
+   * @param {Document} [options.document] Host document; defaults to the host window's document.
+   * @param {Tr2MainWindow|null} [options.mainWindow=null] Borrowed adapter, or null to create one.
+   * @param {Function} [options.getSize] Returns the target's backing width and height.
+   * @param {boolean} [options.preventDefault=true] Whether accepted pointer input suppresses browser defaults.
+   * @returns {this}
+   * @cjs
+   */
   Attach({ target, window: hostWindow = globalThis.window, document: hostDocument = hostWindow?.document,
     mainWindow = null, getSize = () => ({ width: target.width, height: target.height }), preventDefault = true } = {})
   {
@@ -23,13 +90,16 @@ export class TnyInputMan
     if (!target) throw new TypeError("Input requires an explicit host target.");
     const adapter = mainWindow || new Tr2MainWindow();
     const callbacks = {
-      onMouseDown: (_button, _x, _y, event) => this.#Pointer("pointerdown", event),
-      onMouseUp: (_button, _x, _y, event) => this.#Pointer("pointerup", event),
-      onMouseMove: (_x, _y, _dx, _dy, event) => this.#Pointer("pointermove", event),
-      onMouseWheel: (_delta, event) => this.#Pointer("wheel", event),
-      onKeyDown: (_key, _repeat, event) => this.#Key("keydown", event),
-      onKeyUp: (_key, event) => this.#Key("keyup", event),
-      onFocusChange: focused => { if (!focused) this.Cancel("focus-lost"); },
+      onMouseDown: (_button, _x, _y, event) => this._Pointer("pointerdown", event),
+      onMouseUp: (_button, _x, _y, event) => this._Pointer("pointerup", event),
+      onMouseMove: (_x, _y, _dx, _dy, event) => this._Pointer("pointermove", event),
+      onMouseWheel: (_delta, event) => this._Pointer("wheel", event),
+      onKeyDown: (_key, _repeat, event) => this._Key("keydown", event),
+      onKeyUp: (_key, event) => this._Key("keyup", event),
+      onFocusChange: focused =>
+      {
+        if (!focused) this.Cancel("focus-lost");
+      },
       onCompositionStart: () => this.Cancel("text-composition"),
       onPointerCancel: event =>
       {
@@ -44,7 +114,10 @@ export class TnyInputMan
     return this;
   }
 
-  /** Unregisters only callbacks owned by this manager; borrowed hosts remain attached. */
+  /**
+   * Unregisters only callbacks owned by this manager; borrowed hosts remain attached.
+   * @cjs
+   */
   Detach()
   {
     this.Cancel("detached");
@@ -56,7 +129,17 @@ export class TnyInputMan
     if (attachment.owned) attachment.adapter.Detach();
   }
 
-  /** Adds an explicitly described consumer; higher priority receives unowned input first. */
+  /**
+   * Adds an explicitly described consumer; higher priority receives unowned input first.
+   * @param {object} options Options for this operation.
+   * @param {Function} options.handle Receives each event and returns an input Result, possibly asynchronously.
+   * @param {Function} options.cancel Cancels captured or pending interactions synchronously.
+   * @param {Function|null} [options.preview=null] Synchronous keyboard-default policy.
+   * @param {Function|null} [options.update=null] Receives bounded frame deltas in seconds.
+   * @param {number} [options.priority=0] Higher priority receives unowned input first.
+   * @returns {object}
+   * @cjs
+   */
   Register({ handle, cancel, preview = null, update = null, priority = 0 })
   {
     if (typeof handle !== "function" || typeof cancel !== "function") throw new TypeError("Input consumers require handle and cancel callbacks.");
@@ -68,7 +151,11 @@ export class TnyInputMan
     return consumer;
   }
 
-  /** Cancels capture before removing its consumer. */
+  /**
+   * Cancels capture before removing its consumer.
+   * @param {object} consumer Registration handle returned by Register.
+   * @cjs
+   */
   Unregister(consumer)
   {
     if (this._owner === consumer) this.Cancel("consumer-removed");
@@ -77,7 +164,11 @@ export class TnyInputMan
     if (index >= 0) this._consumers.splice(index, 1);
   }
 
-  /** Queues normalized host input; only adjacent pointer moves may be coalesced. */
+  /**
+   * Queues normalized host input; only adjacent pointer moves may be coalesced.
+   * @param {object} event Normalized input event.
+   * @cjs
+   */
   Enqueue(event)
   {
     const last = this._queue.at(-1);
@@ -90,20 +181,37 @@ export class TnyInputMan
     this._queue.push(event);
   }
 
-  /** Drains at the host's chosen frame boundary; asynchronous handle picks serialize input. */
+  /**
+   * Drains at the host's chosen frame boundary; asynchronous handle picks serialize input.
+   * @param {number} [dt] Elapsed time in seconds.
+   * @returns {Promise<void>} Completion of the operation.
+   * @cjs
+   */
   Update(dt = 0)
   {
     if (this._pumping) return this._pumping;
-    this._pumping = this.#Drain().then(() =>
+    this._pumping = this._Drain().then(() =>
     {
       const boundedDt = Number.isFinite(dt) ? Math.max(0, Math.min(dt, 0.05)) : 0;
-      for (const consumer of [...this._consumers])
+      // Callbacks may register or remove consumers: retain this dispatch snapshot.
+      const consumers = this._consumers.slice();
+      for (let i = 0; i < consumers.length; i++)
+      {
+        const consumer = consumers[i];
         if (consumer.update && (!this._owner || this._owner === consumer)) consumer.update(boundedDt);
-    }).finally(() => { this._pumping = null; });
+      }
+    }).finally(() =>
+    {
+      this._pumping = null;
+    });
     return this._pumping;
   }
 
-  /** Cancels pending and captured interactions synchronously, including an outstanding pick. */
+  /**
+   * Cancels pending and captured interactions synchronously, including an outstanding pick.
+   * @param {string} [reason] Cancellation reason passed to consumers.
+   * @cjs
+   */
   Cancel(reason = "cancelled")
   {
     this._generation++;
@@ -112,7 +220,8 @@ export class TnyInputMan
     const pointer = this._pointer;
     this._pointer = null;
     this._lastPointer = null;
-    for (const consumer of [...this._consumers]) consumer.cancel(reason);
+    const consumers = this._consumers.slice();
+    for (let i = 0; i < consumers.length; i++) consumers[i].cancel(reason);
     const target = this._attachment?.target;
     if (target && pointer !== null && target.hasPointerCapture?.(pointer)) target.releasePointerCapture(pointer);
   }
@@ -123,6 +232,7 @@ export class TnyInputMan
    * Temporary destructor stand-in: exists because teardown is required before
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs
    */
   Destruct()
   {
@@ -130,8 +240,13 @@ export class TnyInputMan
     this._consumers.length = 0;
   }
 
-  /** The browser default/capture policy is synchronous; scene mutation stays queued. */
-  #Pointer(type, event)
+  /**
+   * The browser default/capture policy is synchronous; scene mutation stays queued.
+   * @param {string} type Normalized input event kind.
+   * @param {object} event Normalized input event.
+   * @cjs
+   */
+  _Pointer(type, event)
   {
     const { target, hostDocument, getSize, preventDefault } = this._attachment;
     if (hostDocument?.hidden || event.defaultPrevented) return;
@@ -169,8 +284,13 @@ export class TnyInputMan
     }
   }
 
-  /** Shortcuts only apply to the focused host and never intercept editable controls. */
-  #Key(type, event)
+  /**
+   * Shortcuts only apply to the focused host and never intercept editable controls.
+   * @param {string} type Normalized input event kind.
+   * @param {object} event Normalized input event.
+   * @cjs
+   */
+  _Key(type, event)
   {
     const { target, hostDocument } = this._attachment;
     const active = hostDocument?.activeElement;
@@ -185,8 +305,9 @@ export class TnyInputMan
     }
     const normalized = { type, code: event.code, repeat: !!event.repeat, shift: !!event.shiftKey,
       ctrl: !!event.ctrlKey, alt: !!event.altKey, meta: !!event.metaKey };
-    for (const consumer of this._consumers)
+    for (let i = 0; i < this._consumers.length; i++)
     {
+      const consumer = this._consumers[i];
       if (consumer.preview && consumer.preview(normalized))
       {
         event.preventDefault();
@@ -196,20 +317,32 @@ export class TnyInputMan
     this.Enqueue(normalized);
   }
 
-  /** Capture is exclusive; stale asynchronous answers cannot reclaim it after cancellation. */
-  async #Drain()
+  /**
+   * Capture is exclusive; stale asynchronous answers cannot reclaim it after cancellation.
+   * @returns {Promise<void>} Completion of the operation.
+   * @cjs
+   */
+  async _Drain()
   {
     while (this._queue.length)
     {
       const event = this._queue.shift(), generation = this._generation;
       const pointerEvent = event.type.startsWith("pointer") || event.type === "wheel";
-      const consumers = this._owner && pointerEvent ? [this._owner] : [...this._consumers];
-      for (const consumer of consumers)
+      const consumers = this._owner && pointerEvent ? [this._owner] : this._consumers.slice();
+      for (let i = 0; i < consumers.length; i++)
       {
+        const consumer = consumers[i];
         if (!this._consumers.includes(consumer)) continue;
         let result;
-        try { result = await consumer.handle(event); }
-        catch (error) { this.Cancel("input-error"); throw error; }
+        try
+        {
+          result = await consumer.handle(event);
+        }
+        catch (error)
+        {
+          this.Cancel("input-error");
+          throw error;
+        }
         if (generation !== this._generation || !this._consumers.includes(consumer)) break;
         if (result === TnyInputMan.Result.CAPTURE) this._owner = consumer;
         if (result === TnyInputMan.Result.RELEASE || event.type === "pointerup") this._owner = null;
@@ -217,6 +350,21 @@ export class TnyInputMan
       }
     }
   }
+
+  /**
+   * Stable identity for diagnostics and registration.
+   * @type {string}
+   * @cjs
+   */
+  static className = "TnyInputMan";
+
+  /**
+   * Input dispatch results; values at CONSUME or above stop propagation.
+   * @enum {number}
+   * @cjs
+   */
+  static Result = { PASS: 0, HANDLED: 1, CONSUME: 2, CAPTURE: 3, RELEASE: 4 };
+
 }
 
 CjsSchema.meta.define(TnyInputMan, {

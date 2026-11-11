@@ -35,57 +35,170 @@ const EFFECTS = {
  * the helper is created. Await loading and inspect error on failure.
  * While loading or with no active objects this node allows the scene to draw.
  * The application owns picking, clicks and retained hover during camera drags.
+ * @cjs
  */
 export class TnyOutlineHelper extends ITr2RenderNode
 {
+
+  /**
+   * Borrowed native object receiving the hover outline.
+   * @type {object|null}
+   * @cjs
+   */
   hovered = null;
 
+  /**
+   * Borrowed native objects receiving selection outlines.
+   * @type {Set<object>}
+   * @cjs
+   */
   selected = new Set();
 
+  /**
+   * Whether hover outlines are drawn.
+   * @type {boolean}
+   * @cjs
+   */
   hoveredEnabled = true;
 
+  /**
+   * Whether selection outlines are drawn.
+   * @type {boolean}
+   * @cjs
+   */
   selectedEnabled = true;
 
+  /**
+   * Whether selection styling takes precedence over hover styling.
+   * @type {boolean}
+   * @cjs
+   */
   selectedWins = true;
 
+  /**
+   * Hover outline RGBA colour.
+   * @type {Float32Array}
+   * @cjs
+   */
   hoveredColour = vec4.fromValues(1, 0.55, 0.1, 1);
 
+  /**
+   * Selection outline RGBA colour.
+   * @type {Float32Array}
+   * @cjs
+   */
   selectedColour = vec4.fromValues(1, 1, 1, 1);
 
+  /**
+   * Hover outline width in destination pixels, clamped to 1–8 when drawn.
+   * @type {number}
+   * @cjs
+   */
   hoveredWidth = 2;
 
+  /**
+   * Selection outline width in destination pixels, clamped to 1–8 when drawn.
+   * @type {number}
+   * @cjs
+   */
   selectedWidth = 2;
 
+  /**
+   * Composite stage: afterPost or beforePost.
+   * @type {string}
+   * @cjs
+   */
   compositePlacement = "afterPost";
 
+  /**
+   * Effect acquisition error retained for host inspection.
+   * @type {Error|null}
+   * @cjs
+   */
   error = null;
 
+  /**
+   * Owned node for compositing after post processing.
+   * @type {TnyOutlineCompositeNode|null}
+   * @cjs
+   */
   compositeNode = null;
 
+  /**
+   * Effect acquisition result; false after failure or destruction.
+   * @type {Promise<boolean>|null}
+   * @cjs
+   */
   loading = null;
 
+  /**
+   * Owned effects keyed by mask, skinnedMask and outline.
+   * @type {Object<string, Tr2Effect>}
+   * @cjs
+   */
   _effects = {};
 
+  /**
+   * Owned selection mask matching the scene depth size.
+   * @type {Tr2RenderTarget|null}
+   * @cjs
+   */
   _mask = null;
 
+  /**
+   * Rendering context that owns the current mask.
+   * @type {object|null}
+   * @cjs
+   */
   _context = null;
 
+  /**
+   * Mask frame awaiting its matching composite invocation.
+   * @type {object|null}
+   * @cjs
+   */
   _frame = null;
 
+  /**
+   * Whether all outline effects finished acquisition.
+   * @type {boolean}
+   * @cjs
+   */
   _ready = false;
 
+  /**
+   * Whether owned render resources have been released.
+   * @type {boolean}
+   * @cjs
+   */
   _destroyed = false;
 
+  /**
+   * Owned outline size and width parameter scratch.
+   * @type {Float32Array}
+   * @cjs
+   */
   _settings = vec4.create();
 
+  /**
+   * Owned RGBA mask-channel parameter scratch.
+   * @type {Float32Array}
+   * @cjs
+   */
   _channel = vec4.create();
 
+  /**
+   * Owned override-render step reused for each outlined object.
+   * @type {TriStepRenderObject}
+   * @cjs
+   */
   _step = new TriStepRenderObject();
 
   /**
    * Starts resource-manager acquisition without installing input or changing a driver.
    * @param {object} [options] hovered/selectedEnabled, Colour and Width (1–8 frame
    * pixels), selectedWins, and compositePlacement (afterPost or beforePost).
+   * @cjs
    */
   constructor(options = {})
   {
@@ -110,8 +223,8 @@ export class TnyOutlineHelper extends ITr2RenderNode
   /**
    * Acquires only through Blue; the application supplies resource routing.
    *
+   * @returns {Promise<void>} Completion of the operation.
    * @cjs
-   * @implemented
    */
   async _LoadEffects()
   {
@@ -134,7 +247,13 @@ export class TnyOutlineHelper extends ITr2RenderNode
     this._ready = !this._destroyed;
   }
 
-  /** Resets stale mask state before the driver's validation gate each frame. */
+  /**
+   * Resets stale mask state before the driver's validation gate each frame.
+   * @param {object[]} dimensions Input render-target dimensions.
+   * @param {object[]} outputs Named render outputs.
+   * @returns {boolean}
+   * @cjs
+   */
   Validate(dimensions, outputs)
   {
     this._frame = null;
@@ -143,7 +262,11 @@ export class TnyOutlineHelper extends ITr2RenderNode
       && (this.compositePlacement === "afterPost" || this.compositePlacement === "beforePost");
   }
 
-  /** Snapshots active objects and their styles; the winning mode owns overlap. */
+  /**
+   * Snapshots active objects and their styles; the winning mode owns overlap.
+   * @returns {object[]}
+   * @cjs
+   */
   _Modes()
   {
     const hovered = this.hoveredEnabled ? this.hovered : null;
@@ -158,7 +281,16 @@ export class TnyOutlineHelper extends ITr2RenderNode
     return (this.selectedWins ? [hover, selection] : [selection, hover]).filter(item => item.objects.length);
   }
 
-  /** Draws opaque hull batches into RG8 against the scene's published DepthMap. */
+  /**
+   * Draws opaque hull batches into RG8 against the scene's published DepthMap.
+   * @param {object[]} destinations Frame render destinations.
+   * @param {object[]} _outputs Unused named render outputs.
+   * @param {number} realTime Real frame timestamp in engine ticks.
+   * @param {number} simTime Simulation frame timestamp in engine ticks.
+   * @param {object|null} _rootTimer Unused render-job timer.
+   * @param {object} renderContext Active render context.
+   * @cjs
+   */
   Execute(destinations, _outputs, realTime, simTime, _rootTimer, renderContext)
   {
     this._frame = null;
@@ -215,7 +347,12 @@ export class TnyOutlineHelper extends ITr2RenderNode
     else this._frame = frame;
   }
 
-  /** Replaces the owned mask when depth size or rendering context changes. */
+  /**
+   * Replaces the owned mask when depth size or rendering context changes.
+   * @param {object} depth Scene depth texture.
+   * @param {object} renderContext Active render context.
+   * @cjs
+   */
   _EnsureMask(depth, renderContext)
   {
     const width = depth.GetWidth(), height = depth.GetHeight();
@@ -228,7 +365,13 @@ export class TnyOutlineHelper extends ITr2RenderNode
     if (!this._mask.IsValid()) throw new Error("Unable to create selection outline mask.");
   }
 
-  /** Blends one quad per active mode; widths are measured in destination pixels. */
+  /**
+   * Blends one quad per active mode; widths are measured in destination pixels.
+   * @param {object} destination Destination render target.
+   * @param {object} frame Retained mask frame and outline styles.
+   * @param {object} renderContext Active render context.
+   * @cjs
+   */
   _Composite(destination, frame, renderContext)
   {
     const effect = this._effects.outline;
@@ -269,6 +412,7 @@ export class TnyOutlineHelper extends ITr2RenderNode
    * Temporary destructor stand-in: exists because teardown is required before
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs
    */
   Destruct()
   {
@@ -284,6 +428,14 @@ export class TnyOutlineHelper extends ITr2RenderNode
     for (const effect of Object.values(this._effects)) effect.Destruct();
     this._effects = {};
   }
+
+  /**
+   * Stable identity for diagnostics and registration.
+   * @type {string}
+   * @cjs
+   */
+  static className = "TnyOutlineHelper";
+
 }
 
 CjsSchema.decorateMethod(TnyOutlineHelper, "Validate", CjsSchema.be.method);

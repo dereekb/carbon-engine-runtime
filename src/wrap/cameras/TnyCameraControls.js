@@ -14,24 +14,31 @@ const MOTION = {
   panLeft: [-1, 0], panRight: [1, 0], panUp: [0, -1], panDown: [0, 1]
 };
 
-/** Shared viewport interaction policy around Carbon's EveCamera motion and projection. */
+/**
+ * Shared viewport interaction policy around Carbon's EveCamera motion and projection.
+ * @cjs
+ */
 export class TnyCameraControls
 {
+
   /**
    * The borrowed camera; set by the constructor, which requires one.
    * @type {EveCamera|null}
+   * @cjs
    */
   camera = null;
 
   /**
    * Returns the viewport size for panning and framing, or null.
    * @type {Function|null}
+   * @cjs
    */
   getViewport = null;
 
   /**
    * Returns the world-space bounding sphere for framing, or null.
    * @type {Function|null}
+   * @cjs
    */
   getBounds = null;
 
@@ -39,39 +46,132 @@ export class TnyCameraControls
    * Interaction preferences: the constructor's defaults merged with the
    * caller's overrides.
    * @type {Object<string, *>}
+   * @cjs
    */
   preferences = {};
 
+  /**
+   * Borrowed input router while installed.
+   * @type {TnyInputMan|null}
+   * @cjs
+   */
   _input = null;
+
+  /**
+   * Registration handle owned by this input consumer.
+   * @type {object|null}
+   * @cjs
+   */
   _consumer = null;
+
+  /**
+   * Current pointer gesture, or null while idle.
+   * @type {string|null}
+   * @cjs
+   */
   _gesture = null;
 
-  /** Whether the current gesture has moved far enough to capture the pointer. */
+  /**
+   * Whether the current gesture has moved far enough to capture the pointer.
+   * @type {boolean}
+   * @cjs
+   */
   _gestureCaptured = false;
 
-  /** Pointer travel, in backing pixels, since the gesture's press. */
+  /**
+   * Pointer travel, in backing pixels, since the gesture's press.
+   * @type {number}
+   * @cjs
+   */
   _gestureTravel = 0;
 
-  /** How far a press may travel and still be a click (TnyTransformGizmo.CLICK_SLOP uses the same 4). */
-  static CLICK_SLOP = 4;
+  /**
+   * Held key codes mapped to motion actions.
+   * @type {Map<string, string>}
+   * @cjs
+   */
   _held = new Map();
+
+  /**
+   * Validated key bindings for the current interaction policy.
+   * @type {object|null}
+   * @cjs
+   */
   _keyBindings = null;
+
+  /**
+   * Owned projection scratch used by panning and framing.
+   * @type {Float32Array}
+   * @cjs
+   */
   _projection = mat4.create();
+
+  /**
+   * Pose observers, in registration order.
+   * @type {Set<Function>}
+   * @cjs
+   */
   _listeners = new Set();
+
+  /**
+   * Reset pose captured at construction or the first successful frame.
+   * @type {object|null}
+   * @cjs
+   */
   _initial = null;
+
+  /**
+   * Whether the first successful framing pose has replaced the initial pose.
+   * @type {boolean}
+   * @cjs
+   */
   _framedOnce = false;
-  /** A zero-size fit remains pending only until newer camera input or cancellation. */
+
+  /**
+   * A zero-size fit remains pending only until newer camera input or cancellation.
+   * @type {boolean}
+   * @cjs
+   */
   _pendingFrame = false;
+
+  /**
+   * Last accepted viewport width in backing pixels.
+   * @type {number}
+   * @cjs
+   */
   _viewportWidth = 0;
+
+  /**
+   * Last accepted viewport height in backing pixels.
+   * @type {number}
+   * @cjs
+   */
   _viewportHeight = 0;
 
-  /** The far clip a zoom never fits below: the camera's own, or a restored pose's. */
+  /**
+   * The far clip a zoom never fits below: the camera's own, or a restored pose's.
+   * @type {number}
+   * @cjs
+   */
   _baseBackClip = 0;
 
-  /** An eased flight to a framing pose, advanced by Update, or null. */
+  /**
+   * An eased flight to a framing pose, advanced by Update, or null.
+   * @type {object|null}
+   * @cjs
+   */
   _flight = null;
 
-  /** Borrows a camera; viewport and world-space sphere providers enable pan and framing. */
+  /**
+   * Borrows a camera; viewport and world-space sphere providers enable pan and framing.
+   * @param {object} [options] Options for this operation.
+   * @param {EveCamera} options.camera Borrowed camera.
+   * @param {Function|null} [options.getViewport] Returns backing-pixel width and height.
+   * @param {Function|null} [options.getBounds] Returns centre, radius and optional world-box corners.
+   * @param {object} [options.preferences] Overrides interaction defaults.
+   * @param {object} [options.keyBindings] Overrides keyboard actions.
+   * @cjs
+   */
   constructor({ camera, getViewport = null, getBounds = null, preferences = {}, keyBindings = {} } = {})
   {
     if (!camera) throw new TypeError("Camera controls require a camera.");
@@ -103,23 +203,33 @@ export class TnyCameraControls
    * clip) leaves depth no precision, and SSAO then darkens every hull.
    *
    * @param {number} reach Metres the far clip must reach.
+   * @cjs
    */
-  #FitBackClip(reach)
+  _FitBackClip(reach)
   {
     this.camera.backClip = Math.max(this._baseBackClip, reach * 1.05);
   }
 
-  /** Registers below gizmos, sharing one input route and one bounded frame clock. */
+  /**
+   * Registers below gizmos, sharing one input route and one bounded frame clock.
+   * @param {TnyInputMan} input Borrowed shared input router.
+   * @param {number} [priority] Dispatch priority; larger values run first.
+   * @returns {this}
+   * @cjs
+   */
   Install(input, priority = 0)
   {
     this.Uninstall();
     this._input = input;
     this._consumer = input.Register({ priority, handle: event => this.HandleInput(event),
-      preview: event => this.#KeyAction(event) !== null, update: dt => this.Update(dt), cancel: () => this.Cancel() });
+      preview: event => this._KeyAction(event) !== null, update: dt => this.Update(dt), cancel: () => this.Cancel() });
     return this;
   }
 
-  /** Stops routing and held motion without destroying the borrowed camera. */
+  /**
+   * Stops routing and held motion without destroying the borrowed camera.
+   * @cjs
+   */
   Uninstall()
   {
     if (this._input) this._input.Unregister(this._consumer);
@@ -127,7 +237,12 @@ export class TnyCameraControls
     this.Cancel();
   }
 
-  /** Applies key-code or Shift+key-code overrides; null unbinds, no arguments resets defaults. */
+  /**
+   * Applies key-code or Shift+key-code overrides; null unbinds, no arguments resets defaults.
+   * @param {object} [bindings] Key binding overrides; null values unbind actions.
+   * @returns {this}
+   * @cjs
+   */
   SetKeyBindings(bindings = {})
   {
     const next = { ...DEFAULT_KEYS, ...bindings }, used = new Set();
@@ -145,18 +260,27 @@ export class TnyCameraControls
     return this;
   }
 
-  /** Returns detached bindings for the host's settings UI and persistence. */
+  /**
+   * Returns detached bindings for the host's settings UI and persistence.
+   * @returns {object}
+   * @cjs
+   */
   GetKeyBindings()
   {
     return { ...this._keyBindings };
   }
 
-  /** Applies queued pointer gestures or records focused held-key actions. */
+  /**
+   * Applies queued pointer gestures or records focused held-key actions.
+   * @param {object} event Normalized input event.
+   * @returns {number}
+   * @cjs
+   */
   HandleInput(event)
   {
     const result = TnyInputMan.Result;
     if (event.type === "keyup" && this._held.delete(event.code)) return result.CONSUME;
-    const action = this.#KeyAction(event);
+    const action = this._KeyAction(event);
     if (action)
     {
       if (event.type === "keydown" && !event.repeat)
@@ -182,7 +306,7 @@ export class TnyCameraControls
       else return result.PASS;
       // Not captured yet: a press that never moves is a click, and the release
       // must reach the other consumers (the gizmo selects on it). The gesture
-      // captures once the pointer travels further than CLICK_SLOP.
+      // captures once the pointer travels further than clickSlop.
       this._gestureCaptured = false;
       this._gestureTravel = 0;
       return result.HANDLED;
@@ -199,7 +323,7 @@ export class TnyCameraControls
           return result.PASS;
         }
         this._gestureTravel += Math.abs(event.dx ?? 0) + Math.abs(event.dy ?? 0);
-        if (this._gestureTravel <= TnyCameraControls.CLICK_SLOP) return result.HANDLED;
+        if (this._gestureTravel <= TnyCameraControls.clickSlop) return result.HANDLED;
         this._gestureCaptured = true;
         starting = true;
       }
@@ -223,11 +347,15 @@ export class TnyCameraControls
     return result.PASS;
   }
 
-  /** Advances held input only; the host calls EveCamera.Update exactly once per frame. */
+  /**
+   * Advances held input only; the host calls EveCamera.Update exactly once per frame.
+   * @param {number} dt Elapsed time in seconds.
+   * @cjs
+   */
   Update(dt)
   {
     dt = Number.isFinite(dt) ? Math.max(0, Math.min(dt, 0.05)) : 0;
-    if (this._flight) this.#Fly(dt);
+    if (this._flight) this._Fly(dt);
     for (const action of this._held.values())
     {
       const motion = MOTION[action];
@@ -241,7 +369,12 @@ export class TnyCameraControls
     }
   }
 
-  /** Sends pointer motion to Carbon's existing orbit spring, with configurable inversion. */
+  /**
+   * Sends pointer motion to Carbon's existing orbit spring, with configurable inversion.
+   * @param {number} dx Horizontal movement in backing pixels.
+   * @param {number} dy Vertical movement in backing pixels.
+   * @cjs
+   */
   Orbit(dx, dy)
   {
     if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
@@ -252,10 +385,16 @@ export class TnyCameraControls
       dy * settings.orbitSensitivity * (settings.invertY ? 1 : -1));
   }
 
-  /** Moves the point of interest in the native camera's right/up basis at the current projection scale. */
+  /**
+   * Moves the point of interest in the native camera's right/up basis at the current projection scale.
+   * @param {number} dx Horizontal movement in backing pixels.
+   * @param {number} dy Vertical movement in backing pixels.
+   * @returns {boolean}
+   * @cjs
+   */
   Pan(dx, dy)
   {
-    const view = this.#Project(), camera = this.camera;
+    const view = this._Project(), camera = this.camera;
     if (!view || !Number.isFinite(dx) || !Number.isFinite(dy)) return false;
     this._flight = null;
     this._pendingFrame = false;
@@ -263,7 +402,7 @@ export class TnyCameraControls
     const y = dy * this.preferences.panSensitivity * 2 * camera.translationFromParent / (this._projection[5] * view.height);
     camera.useExtraTranslation = true;
     for (let axis = 0; axis < 3; axis++) camera.extraTranslation[axis] += camera.rightVec[axis] * x + camera.upVec[axis] * y;
-    this.#Changed();
+    this._Changed();
     return true;
   }
 
@@ -274,6 +413,8 @@ export class TnyCameraControls
    * clip, which left a large selection (whose 1% floor passes the far clip) or
    * a far-away body unreachable. A minDistance override permits close-ups;
    * the camera's own minimumDistance must also allow the requested distance.
+   * @param {number} delta Wheel or held-key motion amount.
+   * @cjs
    */
   Dolly(delta)
   {
@@ -287,23 +428,33 @@ export class TnyCameraControls
     const start = Math.max(Number.EPSILON, minimum, camera.translationFromParent);
     const distance = Math.min(maximum, Math.max(minimum,
       start * Math.exp(Math.max(-20, Math.min(20, delta * this.preferences.dollySensitivity)))));
-    this.#FitBackClip(distance + radius);
+    this._FitBackClip(distance + radius);
     camera.Dolly(distance - camera.translationFromParent);
-    this.#Changed();
+    this._Changed();
   }
 
-  /** Selects manual FOV in radians; disabling the zoom curve prevents the native update overwriting it. */
+  /**
+   * Selects manual FOV in radians; disabling the zoom curve prevents the native update overwriting it.
+   * @param {number} radians Field of view in radians.
+   * @returns {number}
+   * @cjs
+   */
   SetFieldOfView(radians)
   {
     if (!Number.isFinite(radians)) throw new RangeError("Field of view must be finite radians.");
     this._pendingFrame = false;
     this.camera.zoomCurve = null;
     this.camera.fieldOfView = Math.min(this.preferences.maxFieldOfView, Math.max(this.preferences.minFieldOfView, radians));
-    this.#Changed();
+    this._Changed();
     return this.camera.fieldOfView;
   }
 
-  /** Converts wheel or key motion to a manual FOV change. */
+  /**
+   * Converts wheel or key motion to a manual FOV change.
+   * @param {number} delta Wheel or held-key motion amount.
+   * @returns {number}
+   * @cjs
+   */
   AdjustFieldOfView(delta)
   {
     return this.SetFieldOfView(this.camera.fieldOfView + delta * this.preferences.fovSensitivity);
@@ -312,6 +463,8 @@ export class TnyCameraControls
   /**
    * Captures a detached pose for reset, host persistence and UI updates. Its
    * far clip is the base one; the far clip a zoom or frame fitted is not kept.
+   * @returns {object}
+   * @cjs
    */
   GetPose()
   {
@@ -321,7 +474,11 @@ export class TnyCameraControls
       frontClip: camera.frontClip, backClip: this._baseBackClip };
   }
 
-  /** Restores an explicit pose through native SetOrbit and complete camera fields. */
+  /**
+   * Restores an explicit pose through native SetOrbit and complete camera fields.
+   * @param {object} pose Detached camera pose with position, orbit and clipping values.
+   * @cjs
+   */
   SetPose(pose)
   {
     if (pose.center.length !== 3 || ![pose.yaw, pose.pitch, pose.distance, pose.fieldOfView, ...pose.center].every(Number.isFinite)
@@ -333,7 +490,7 @@ export class TnyCameraControls
     camera.extraTranslation.set(pose.center);
     if (pose.frontClip > 0) camera.frontClip = pose.frontClip;
     if (pose.backClip > camera.frontClip) this._baseBackClip = pose.backClip;
-    this.#FitBackClip(pose.distance);
+    this._FitBackClip(pose.distance);
     this.SetFieldOfView(pose.fieldOfView);
   }
 
@@ -345,6 +502,7 @@ export class TnyCameraControls
    *
    * @param {number[]} eye The eye's world position.
    * @param {number[]} centre The point looked at.
+   * @cjs
    */
   LookFrom(eye, centre)
   {
@@ -356,13 +514,17 @@ export class TnyCameraControls
       fieldOfView: this.camera.fieldOfView, frontClip: this.camera.frontClip, backClip: this._baseBackClip });
   }
 
-  /** Fits optional world box corners, otherwise the provider's sphere, to the projection, at once. */
+  /**
+   * Fits optional world box corners, otherwise the provider's sphere, to the projection, at once.
+   * @returns {boolean}
+   * @cjs
+   */
   Frame()
   {
-    const target = this.#FrameTarget();
+    const target = this._FrameTarget();
     if (!target) return false;
     this.Cancel();
-    this.#ApplyFrame(target);
+    this._ApplyFrame(target);
     return true;
   }
 
@@ -376,35 +538,53 @@ export class TnyCameraControls
    * stays between its start and end values, so the flight never passes
    * through the target and the far clip set at the start covers it. Orbit,
    * pan, zoom or Cancel stops it where it is.
+   * @returns {boolean}
+   * @cjs
    */
   Fly()
   {
-    const target = this.#FrameTarget();
+    const target = this._FrameTarget();
     if (!target) return false;
     this.Cancel();
     const camera = this.camera, duration = Math.max(0, this.preferences.flyDuration);
-    if (!duration) { this.#ApplyFrame(target); return true; }
+    if (!duration)
+    {
+      this._ApplyFrame(target);
+      return true;
+    }
     camera.zoomCurve = null;
     // The view's back axis in world space, the eye's direction from the point of interest.
     const matrix = camera.viewMatrix.transform, back = [ matrix[2], matrix[6], matrix[10] ];
     const backLength = Math.hypot(...back);
-    if (!(backLength > 0)) { this.#ApplyFrame(target); return true; }
+    if (!(backLength > 0))
+    {
+      this._ApplyFrame(target);
+      return true;
+    }
     for (let axis = 0; axis < 3; axis++) back[axis] /= backLength;
     const distance = Math.max(1e-3, camera.translationFromParent);
     const centre = camera.useExtraTranslation ? Array.from(camera.extraTranslation) : [ 0, 0, 0 ];
     const offset = [ 0, 1, 2 ].map(axis => centre[axis] + back[axis] * distance - target.centre[axis]);
     // The eye stays within max(start, end) of the target, so this far clip covers the whole flight.
-    this.#FitBackClip(Math.max(target.distance, Math.hypot(...offset)) + target.radius);
+    this._FitBackClip(Math.max(target.distance, Math.hypot(...offset)) + target.radius);
     this._flight = { target, time: 0, duration, distance, back, offset };
     return true;
   }
 
-  /** The pose Frame fits to the bounds, or null when the bounds or viewport are not ready. */
-  #FrameTarget()
+  /**
+   * The pose Frame fits to the bounds, or null when the bounds or viewport are not ready.
+   * @returns {object|null}
+   * @cjs
+   */
+  _FrameTarget()
   {
     if (!this.getBounds) return null;
-    const view = this.#Project();
-    if (!view) { this._pendingFrame = true; return null; }
+    const view = this._Project();
+    if (!view)
+    {
+      this._pendingFrame = true;
+      return null;
+    }
     const bounds = this.getBounds(), projection = this._projection, camera = this.camera;
     if (!(bounds.radius >= 0) || !Number.isFinite(bounds.radius) || bounds.centre.length !== 3
       || !Array.from(bounds.centre).every(Number.isFinite)) throw new RangeError("Cannot frame invalid bounds.");
@@ -441,12 +621,14 @@ export class TnyCameraControls
    * splits start at the camera's near clip and end at fixed distances
    * (Tr2ShadowMap SplitNr*), so a near clip past the first split leaves a
    * cascade with no depth range.
+   * @param {object} options Options for this operation.
+   * @cjs
    */
-  #ApplyFrame({ distance, radius, centre, view })
+  _ApplyFrame({ distance, radius, centre, view })
   {
     const camera = this.camera;
     camera.zoomCurve = null;
-    this.#FitBackClip(distance + radius);
+    this._FitBackClip(distance + radius);
     camera.translationFromParent = distance;
     camera.useExtraTranslation = true;
     camera.extraTranslation.set(centre);
@@ -454,17 +636,29 @@ export class TnyCameraControls
     this._viewportWidth = view.width;
     this._viewportHeight = view.height;
     this._pendingFrame = false;
-    if (!this._framedOnce) { this._initial = this.GetPose(); this._framedOnce = true; }
-    this.#Changed();
+    if (!this._framedOnce)
+    {
+      this._initial = this.GetPose();
+      this._framedOnce = true;
+    }
+    this._Changed();
   }
 
-  /** Advances a flight by dt seconds, landing exactly on its framing pose. */
-  #Fly(dt)
+  /**
+   * Advances a flight by dt seconds, landing exactly on its framing pose.
+   * @param {number} dt Elapsed time in seconds.
+   * @cjs
+   */
+  _Fly(dt)
   {
     const flight = this._flight, camera = this.camera;
     flight.time = Math.min(flight.duration, flight.time + dt);
     const t = flight.time / flight.duration;
-    if (t >= 1) { this.#ApplyFrame(flight.target); return; }
+    if (t >= 1)
+    {
+      this._ApplyFrame(flight.target);
+      return;
+    }
     const eased = t * t * t * t * (35 + t * (-84 + t * (70 - 20 * t)));
     const { target, back, offset } = flight;
     const distance = flight.distance * Math.pow(target.distance / flight.distance, eased);
@@ -494,10 +688,14 @@ export class TnyCameraControls
     camera.translationFromParent = distance;
     camera.useExtraTranslation = true;
     for (let axis = 0; axis < 3; axis++) camera.extraTranslation[axis] = target.centre[axis] + direction[axis] * length - back[axis] * distance;
-    this.#Changed();
+    this._Changed();
   }
 
-  /** Records viewport size without changing the pose; completes explicitly deferred zero-size fits. */
+  /**
+   * Records viewport size without changing the pose; completes explicitly deferred zero-size fits.
+   * @returns {boolean}
+   * @cjs
+   */
   Resize()
   {
     if (!this.getViewport) return false;
@@ -510,28 +708,43 @@ export class TnyCameraControls
     return changed;
   }
 
-  /** Restores the initial pose, or the first successful framing pose. */
+  /**
+   * Restores the initial pose, or the first successful framing pose.
+   * @cjs
+   */
   Reset()
   {
     this.Cancel();
     this.SetPose(this._initial);
   }
 
-  /** Cancels old motion and optionally frames a newly selected target. */
+  /**
+   * Cancels old motion and optionally frames a newly selected target.
+   * @param {boolean} [reframe] Whether to frame the new target after cancellation.
+   * @cjs
+   */
   TargetChanged(reframe = true)
   {
     this.Cancel();
     if (reframe) this.Frame();
   }
 
-  /** Registers a pose observer and returns its explicit removal callback. */
+  /**
+   * Registers a pose observer and returns its explicit removal callback.
+   * @param {Function} listener Pose observer receiving an owned pose snapshot.
+   * @returns {Function}
+   * @cjs
+   */
   Subscribe(listener)
   {
     this._listeners.add(listener);
     return () => this._listeners.delete(listener);
   }
 
-  /** Clears held gestures and resets Carbon's spring target on cancellation. */
+  /**
+   * Clears held gestures and resets Carbon's spring target on cancellation.
+   * @cjs
+   */
   Cancel()
   {
     this._gesture = null;
@@ -548,6 +761,7 @@ export class TnyCameraControls
    * Temporary destructor stand-in: exists because teardown is required before
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs
    */
   Destruct()
   {
@@ -555,16 +769,25 @@ export class TnyCameraControls
     this._listeners.clear();
   }
 
-  /** Resolves unmodified or Shift-modified keyboard actions without mutating browser dispatch. */
-  #KeyAction(event)
+  /**
+   * Resolves unmodified or Shift-modified keyboard actions without mutating browser dispatch.
+   * @param {object} event Normalized input event.
+   * @returns {string|null}
+   * @cjs
+   */
+  _KeyAction(event)
   {
     if ((event.type !== "keydown" && event.type !== "keyup") || event.ctrl || event.alt || event.meta || event.isComposing) return null;
     const chord = `${event.shift ? "Shift+" : ""}${event.code}`;
     return Object.keys(this._keyBindings).find(action => this._keyBindings[action] === chord) ?? null;
   }
 
-  /** Derives the native projection; callers provide viewport dimensions in the same units as pointer deltas. */
-  #Project()
+  /**
+   * Derives the native projection; callers provide viewport dimensions in the same units as pointer deltas.
+   * @returns {object|null}
+   * @cjs
+   */
+  _Project()
   {
     if (!this.getViewport) return null;
     const view = this.getViewport(), camera = this.camera;
@@ -574,12 +797,30 @@ export class TnyCameraControls
     return view;
   }
 
-  /** Publishes pose changes caused by these controls; native camera updates stay host-owned. */
-  #Changed()
+  /**
+   * Publishes pose changes caused by these controls; native camera updates stay host-owned.
+   * @cjs
+   */
+  _Changed()
   {
     const pose = this.GetPose();
     for (const listener of this._listeners) listener(pose);
   }
+
+  /**
+   * How far a press may travel and still be a click (TnyTransformGizmo.clickSlop uses the same 4).
+   * @type {number}
+   * @cjs
+   */
+  static clickSlop = 4;
+
+  /**
+   * Stable identity for diagnostics and registration.
+   * @type {string}
+   * @cjs
+   */
+  static className = "TnyCameraControls";
+
 }
 
 CjsSchema.meta.define(TnyCameraControls, {

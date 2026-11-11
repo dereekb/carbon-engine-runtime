@@ -10,65 +10,138 @@ import { Tr2ScalingTool } from "../../trinity/core/tool/Tr2ScalingTool.js";
 const TOOL_TYPES = { translation: Tr2TranslationTool, rotation: Tr2RotationTool, scaling: Tr2ScalingTool };
 const DEFAULT_KEY_BINDINGS = { off: "KeyQ", translation: "KeyW", rotation: "KeyE", scaling: "KeyR" };
 
-/** Thin composition of Carbon tools, GPU handle picking and explicit matrix targets. */
+/**
+ * Thin composition of Carbon tools, GPU handle picking and explicit matrix targets.
+ * @cjs
+ */
 export class TnyTransformGizmo
 {
+
+  /**
+   * Owned scene containing the active native manipulator.
+   * @type {Tr2PrimitiveScene}
+   * @cjs
+   */
   scene = new Tr2PrimitiveScene();
+
+  /**
+   * Borrowed transform target with explicit matrix accessors.
+   * @type {object|null}
+   * @cjs
+   */
   target = null;
 
   /**
    * The active transform mode: "translation", "rotation", "scaling" or "off".
    * Set through SetMode, which the constructor calls.
    * @type {string}
+   * @cjs
    */
   mode = "off";
 
   /**
    * The native tool for the active mode, or null when the mode is "off".
    * @type {Tr2TranslationTool|Tr2RotationTool|Tr2ScalingTool|null}
+   * @cjs
    */
   tool = null;
 
   /**
    * Edit space, "local" or "world"; set by the constructor.
    * @type {string}
+   * @cjs
    */
   space = "local";
 
   /**
    * Returns the current view for picking and dragging; set by the constructor.
    * @type {Function|null}
+   * @cjs
    */
   getView = null;
 
   /**
    * Called with (target, phase) as an edit progresses, or null.
    * @type {Function|null}
+   * @cjs
    */
   onChange = null;
 
   /**
    * Called when a click selects an object, or null.
    * @type {Function|null}
+   * @cjs
    */
   onSelect = null;
 
   /**
    * Resolves the object under (x, y, view) for click-select, or null.
    * @type {Function|null}
+   * @cjs
    */
   pickObject = null;
+
+  /**
+   * Borrowed input router while installed.
+   * @type {TnyInputMan|null}
+   * @cjs
+   */
   _input = null;
+
+  /**
+   * Registration handle owned by this input consumer.
+   * @type {object|null}
+   * @cjs
+   */
   _consumer = null;
+
+  /**
+   * Current edit snapshot retained until commit or cancellation.
+   * @type {object|null}
+   * @cjs
+   */
   _drag = null;
 
-  /** A left press that may become a click-select: where it started and how far it has moved. */
+  /**
+   * A left press that may become a click-select: where it started and how far it has moved.
+   * @type {object|null}
+   * @cjs
+   */
   _press = null;
+
+  /**
+   * Cancellation generation used to reject stale asynchronous input.
+   * @type {number}
+   * @cjs
+   */
   _generation = 0;
+
+  /**
+   * Owned orthonormal display frame; never the edited target matrix.
+   * @type {Float32Array}
+   * @cjs
+   */
   _frame = mat4.create();
+
+  /**
+   * Validated key bindings for the current interaction policy.
+   * @type {object|null}
+   * @cjs
+   */
   _keyBindings = null;
 
-  /** No DOM listeners or scene installation occurs during construction. */
+  /**
+   * No DOM listeners or scene installation occurs during construction.
+   * @param {object} [options] Options for this operation.
+   * @param {string} [options.mode="translation"] Initial tool mode.
+   * @param {string} [options.space="local"] Local or world edit space.
+   * @param {Function|null} [options.getView] Returns view, projection, viewport and render context.
+   * @param {Function|null} [options.onChange] Receives the target and edit phase.
+   * @param {Function|null} [options.onSelect] Receives the selected object or null after a miss.
+   * @param {Function|null} [options.pickObject] Asynchronous object picker.
+   * @param {object} [options.keyBindings] Overrides mode shortcuts.
+   * @cjs
+   */
   constructor({ mode = "translation", space = "local", getView = null, onChange = null, onSelect = null, pickObject = null, keyBindings = {} } = {})
   {
     if (space !== "local" && space !== "world") throw new TypeError("Gizmo space must be local or world.");
@@ -85,6 +158,9 @@ export class TnyTransformGizmo
    * Applies KeyboardEvent.code overrides to Q/W/E/R defaults. Null unbinds a
    * mode; an empty record restores defaults. Escape remains cancellation.
    * Duplicate or invalid bindings leave the previous mapping unchanged.
+   * @param {object} [bindings] Key binding overrides; null values unbind actions.
+   * @returns {this}
+   * @cjs
    */
   SetKeyBindings(bindings = {})
   {
@@ -101,13 +177,22 @@ export class TnyTransformGizmo
     return this;
   }
 
-  /** Returns a detached mapping for the host's rebinding UI and persistence. */
+  /**
+   * Returns a detached mapping for the host's rebinding UI and persistence.
+   * @returns {object}
+   * @cjs
+   */
   GetKeyBindings()
   {
     return { ...this._keyBindings };
   }
 
-  /** Switches native tools, cancelling any unfinished edit first. */
+  /**
+   * Switches native tools, cancelling any unfinished edit first.
+   * @param {string} mode Manipulator mode.
+   * @returns {this}
+   * @cjs
+   */
   SetMode(mode)
   {
     const Type = TOOL_TYPES[mode];
@@ -116,7 +201,7 @@ export class TnyTransformGizmo
     if (this.tool) this.tool.Destruct();
     this.mode = mode;
     this.tool = Type ? new Type() : null;
-    if (this.tool) this.tool.SetMoveCallback((current, next) => this.#Apply(current, next));
+    if (this.tool) this.tool.SetMoveCallback((current, next) => this._Apply(current, next));
     this.scene.manipulator = this.target ? this.tool : null;
     this.Sync();
     return this;
@@ -126,6 +211,9 @@ export class TnyTransformGizmo
    * Object and locator targets share this explicit record:
    * readLocal(out), writeLocal(matrix), readParentWorld(out). Writes must retain
    * the complete affine matrix; an SRT-only target cannot preserve shear.
+   * @param {object|null} target Target consumed by the operation; null clears it where supported.
+   * @returns {this}
+   * @cjs
    */
   SetTarget(target)
   {
@@ -138,17 +226,26 @@ export class TnyTransformGizmo
     return this;
   }
 
-  /** Installs only an input consumer; the host draws scene after its world scene. */
+  /**
+   * Installs only an input consumer; the host draws scene after its world scene.
+   * @param {TnyInputMan} input Borrowed shared input router.
+   * @param {number} [priority] Dispatch priority; larger values run first.
+   * @returns {this}
+   * @cjs
+   */
   Install(input, priority = 100)
   {
     this.Uninstall();
     this._input = input;
     this._consumer = input.Register({ priority, handle: event => this.HandleInput(event),
-      preview: event => this.#KeyMode(event) !== null, cancel: () => this.Cancel() });
+      preview: event => this._KeyMode(event) !== null, cancel: () => this.Cancel() });
     return this;
   }
 
-  /** Removes shared routing and rolls back an incomplete edit. */
+  /**
+   * Removes shared routing and rolls back an incomplete edit.
+   * @cjs
+   */
   Uninstall()
   {
     if (this._input) this._input.Unregister(this._consumer);
@@ -159,6 +256,7 @@ export class TnyTransformGizmo
   /**
    * Builds an orthonormal display frame only. The target matrix is never
    * decomposed or rebuilt: its shear and parent scaling survive every edit.
+   * @cjs
    */
   Sync()
   {
@@ -205,18 +303,27 @@ export class TnyTransformGizmo
     }
   }
 
-  /** Draws the native handle scene inside the host's current render context. */
+  /**
+   * Draws the native handle scene inside the host's current render context.
+   * @param {object} context Active render context.
+   * @cjs
+   */
   Render(context)
   {
     this.Sync();
     this.scene.Render(context);
   }
 
-  /** Queued input, with request cancellation checked after every GPU await. */
+  /**
+   * Queued input, with request cancellation checked after every GPU await.
+   * @param {object} event Normalized input event.
+   * @returns {Promise<number>}
+   * @cjs
+   */
   async HandleInput(event)
   {
     const result = TnyInputMan.Result;
-    const keyMode = this.#KeyMode(event);
+    const keyMode = this._KeyMode(event);
     if (keyMode)
     {
       if (event.type === "keydown" && !event.repeat && keyMode !== this.mode)
@@ -268,7 +375,7 @@ export class TnyTransformGizmo
     {
       const press = this._press;
       this._press = null;
-      if (press.moved <= TnyTransformGizmo.CLICK_SLOP && this.pickObject)
+      if (press.moved <= TnyTransformGizmo.clickSlop && this.pickObject)
       {
         const generation = this._generation;
         const object = await this.pickObject(press.x, press.y, this.getView());
@@ -282,8 +389,7 @@ export class TnyTransformGizmo
     {
       const drag = this._drag;
       const view = this.getView();
-      this.tool.Move(event.x, event.y, event.dx, event.dy, view.viewport,
-        view.view.GetTransform(mat4.create()), view.projection.GetMatrixWithoutViewAdjustment(mat4.create()));
+      this._Move(event.x, event.y, event.dx, event.dy, view);
       // Change callbacks may cancel the drag, replace its target or switch tools.
       if (this._drag !== drag) return result.RELEASE;
       drag.moved ||= !!(event.dx || event.dy);
@@ -298,8 +404,7 @@ export class TnyTransformGizmo
         // Carbon computes scale before advancing its handle. A zero-delta
         // final sample commits the last movement, including a coalesced drag.
         const view = this.getView();
-        this.tool.Move(event.x, event.y, 0, 0, view.viewport,
-          view.view.GetTransform(mat4.create()), view.projection.GetMatrixWithoutViewAdjustment(mat4.create()));
+        this._Move(event.x, event.y, 0, 0, view);
         if (this._drag !== drag) return result.RELEASE;
       }
       this._drag = null;
@@ -310,18 +415,51 @@ export class TnyTransformGizmo
     return result.PASS;
   }
 
-  /** Matches unmodified mode shortcuts without mutating during browser dispatch. */
-  #KeyMode(event)
+  /**
+   * Supplies temporary matrices to the native tool's synchronous Move call.
+   * The tool consumes them during the call; they are returned to the pool even
+   * if Move throws. Pool ownership also permits reentrant host callbacks.
+   * @param {number} x Pointer X in backing pixels.
+   * @param {number} y Pointer Y in backing pixels.
+   * @param {number} dx Horizontal movement in backing pixels.
+   * @param {number} dy Vertical movement in backing pixels.
+   * @param {object} view Host view, projection and viewport providers.
+   * @cjs
+   */
+  _Move(x, y, dx, dy, view)
+  {
+    const mat4_0 = mat4.alloc();
+    const mat4_1 = mat4.alloc();
+    try
+    {
+      this.tool.Move(x, y, dx, dy, view.viewport,
+        view.view.GetTransform(mat4.identity(mat4_0)),
+        view.projection.GetMatrixWithoutViewAdjustment(mat4.identity(mat4_1)));
+    }
+    finally
+    {
+      mat4.unalloc(mat4_0);
+      mat4.unalloc(mat4_1);
+    }
+  }
+
+  /**
+   * Matches unmodified mode shortcuts without mutating during browser dispatch.
+   * @param {object} event Normalized input event.
+   * @returns {string|null}
+   * @cjs
+   */
+  _KeyMode(event)
   {
     if ((event.type !== "keydown" && event.type !== "keyup")
       || event.shift || event.ctrl || event.alt || event.meta || event.isComposing) return null;
     return Object.keys(this._keyBindings).find(mode => this._keyBindings[mode] === event.code) ?? null;
   }
 
-  /** How far, in backing pixels, a press may travel and still count as a click. */
-  static CLICK_SLOP = 4;
-
-  /** Restores the exact initial local matrix and invalidates outstanding handle picks. */
+  /**
+   * Restores the exact initial local matrix and invalidates outstanding handle picks.
+   * @cjs
+   */
   Cancel()
   {
     this._generation++;
@@ -344,6 +482,7 @@ export class TnyTransformGizmo
    * Temporary destructor stand-in: exists because teardown is required before
    * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
    * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs
    */
   Destruct()
   {
@@ -354,8 +493,14 @@ export class TnyTransformGizmo
     this.target = null;
   }
 
-  /** Converts a native tool delta through its frame and the current parent matrix. */
-  #Apply(current, next)
+  /**
+   * Converts a native tool delta through its frame and the current parent matrix.
+   * @param {Float32Array} current Current native tool matrix.
+   * @param {Float32Array} next Proposed native tool matrix.
+   * @returns {boolean}
+   * @cjs
+   */
+  _Apply(current, next)
   {
     const mat4_0 = mat4.alloc();
     const mat4_1 = mat4.alloc();
@@ -400,6 +545,21 @@ export class TnyTransformGizmo
       mat4.unalloc(mat4_6);
     }
   }
+
+  /**
+   * How far, in backing pixels, a press may travel and still count as a click.
+   * @type {number}
+   * @cjs
+   */
+  static clickSlop = 4;
+
+  /**
+   * Stable identity for diagnostics and registration.
+   * @type {string}
+   * @cjs
+   */
+  static className = "TnyTransformGizmo";
+
 }
 
 CjsSchema.meta.define(TnyTransformGizmo, {
