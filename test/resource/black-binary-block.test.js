@@ -92,7 +92,10 @@ test("DictReader refuses a binary block; the values bag and the Copier carry non
 test("define refuses type.binary without persistOnly or without ICustomPersist", () =>
 {
   const persistOnly = { persist: true, persistOnly: true, hidden: true };
-  const field = edit => ({ name: "bytes", key: "bytes", type: { kind: "typedArray", arrayType: "Uint8Array", binary: true }, edit });
+  const field = edit => ({
+    name: "bytes", key: "bytes", type: { kind: "typedArray", arrayType: "Uint8Array", binary: true },
+    exposure: { macro: "MAP_ATTRIBUTE", flags: edit.hidden ? 0x18 : 0x10 }, edit
+  });
 
   class Persisting { bytes = new Uint8Array(0); AllocateReadBuffer() {} SetBufferAndSize() {} GetWriteBufferAndSize() {} ReleaseWriteBuffer() {} }
   blue.interface(ICustomPersist)(Persisting);
