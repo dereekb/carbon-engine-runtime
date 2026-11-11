@@ -81,14 +81,14 @@ export class TnySlot extends CjsGraphRoot
 
     /**
      * The TnyMobile this slot belongs to.
-     * @type {object|null}
+     * @type {TnyMobile|null}
      * @cjs
      */
     owner = null;
 
     /**
      * Called with a member's name once the slot handled a change; set by a UI.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _onModified = null;

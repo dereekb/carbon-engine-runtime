@@ -24,7 +24,7 @@ export class TnyControllers
 
     /**
      * The TnySpaceObject whose controllers these are.
-     * @type {object|null}
+     * @type {TnySpaceObject|null}
      * @cjs
      */
     owner = null;

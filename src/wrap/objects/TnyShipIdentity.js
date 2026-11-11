@@ -14,7 +14,7 @@ export class TnyShipIdentity extends TnySpaceObjectIdentity
 
     /**
      * A CCP skin, or null.
-     * @type {object|null}
+     * @type {TnySkinIdentity|null}
      * @cjs
      */
     @meta.mapAttribute(meta.READ)
@@ -23,7 +23,7 @@ export class TnyShipIdentity extends TnySpaceObjectIdentity
 
     /**
      * A SKINR design, or null.
-     * @type {object|null}
+     * @type {TnySkinrIdentity|null}
      * @cjs
      */
     @meta.mapAttribute(meta.READ)

@@ -119,7 +119,7 @@ export class Tny
 
     /**
      * Replaces the default scene draw when set: called as `(tny)` inside the frame's render job.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _renderHandler = null;

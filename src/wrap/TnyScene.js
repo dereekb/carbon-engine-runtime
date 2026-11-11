@@ -50,7 +50,7 @@ export class TnyScene extends CjsGraphRoot
 
     /**
      * Existing scene graph; native lists retain their own admission and notifications.
-     * @type {object|null}
+     * @type {EveSpaceScene|null}
      * @cjs
      */
     wrapped = null;
@@ -64,14 +64,14 @@ export class TnyScene extends CjsGraphRoot
 
     /**
      * The UI's change handler, called with a member's name; null when none.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _onModified = null;
 
     /**
      * The UI's type-info change handler; null when none.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _onTypeInfoModified = null;

@@ -77,7 +77,7 @@ export class TnySpaceObject extends CjsGraphRoot
 
     /**
      * What the object is, filled in by the library (TnySpaceObjectIdentity), read-only.
-     * @type {object|null}
+     * @type {TnySpaceObjectIdentity|null}
      * @cjs
      */
     @meta.mapAttribute(meta.READ)
@@ -189,7 +189,7 @@ export class TnySpaceObject extends CjsGraphRoot
 
     /**
      * The borrowed native object; a UI never reads it.
-     * @type {object|null}
+     * @type {EveSpaceObject2|null}
      * @cjs
      */
     wrapped = null;
@@ -203,14 +203,14 @@ export class TnySpaceObject extends CjsGraphRoot
 
     /**
      * Called with a member's name after the wrapper handled a change to it; set by a UI.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _onModified = null;
 
     /**
      * Called when this wrapper's type info changes (a skin change); set by a UI.
-     * @type {object|null}
+     * @type {Function|null}
      * @cjs
      */
     _onTypeInfoModified = null;
@@ -231,14 +231,14 @@ export class TnySpaceObject extends CjsGraphRoot
 
     /**
      * The object's controllers (TnyControllers); built on first use.
-     * @type {object|null}
+     * @type {TnyControllers|null}
      * @cjs
      */
     _controllers = null;
 
     /**
      * The object's overlays (TnyOverlays); built on first use.
-     * @type {object|null}
+     * @type {TnyOverlays|null}
      * @cjs
      */
     _overlays = null;

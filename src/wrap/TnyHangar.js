@@ -53,21 +53,21 @@ export class TnyHangar extends TnyScene
 
     /**
      * The hangar object (TnyStationary).
-     * @type {object|null}
+     * @type {TnyStationary|null}
      * @cjs
      */
     hangar = null;
 
     /**
      * "layout", "capital" or "origin": how ships are placed, from what the hangar holds.
-     * @type {object|null}
+     * @type {"layout"|"capital"|"origin"|null}
      * @cjs
      */
     kind = null;
 
     /**
      * The bay the last SetShip filled, the one Undock() leaves; null before.
-     * @type {object|null}
+     * @type {number|null}
      * @cjs
      */
     active = null;
@@ -88,7 +88,7 @@ export class TnyHangar extends TnyScene
 
     /**
      * The controllers view, made on first use.
-     * @type {object|null}
+     * @type {TnyControllers|null}
      * @cjs
      */
     _controllers = null;

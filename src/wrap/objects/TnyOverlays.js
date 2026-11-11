@@ -19,7 +19,7 @@ export class TnyOverlays
 
     /**
      * The TnySpaceObject whose overlays these are.
-     * @type {object|null}
+     * @type {TnySpaceObject|null}
      * @cjs
      */
     owner = null;
