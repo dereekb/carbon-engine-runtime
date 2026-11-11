@@ -9,7 +9,10 @@ import { FNV1_INITIAL, hashFnv1Floats, hashFnv1String } from "#utils/hash";
 import { TriVector4 } from "./TriVector4.js";
 
 
-/** An ordered list of vec4 rows uploaded into one named shader constant array. */
+/**
+ * An ordered list of vec4 rows uploaded into one named shader constant array.
+ * @adapted No own teardown hook: native Shader/Parameter/TriFloatArrayParameter.cpp:30-33 only returns; the value list acquires no observer, and cached shader references retain their existing lifetime policy.
+ */
 @be.define({
   name: "TriFloatArrayParameter",
   inherit: [ INotify, IInitialize ],
