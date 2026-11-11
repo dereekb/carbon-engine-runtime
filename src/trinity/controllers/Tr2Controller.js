@@ -53,6 +53,19 @@ import { Tr2ControllerEventHandler } from "./Tr2ControllerEventHandler.js";
 })
 export class Tr2Controller extends EveThrottleable
 {
+  /**
+   * Detaches this controller's owned list observers.
+   * Carbon acquisition: trinity/trinity/Controllers/Tr2Controller.cpp:21-33.
+   * @adapted Explicit observer detach replaces implicit BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), retaining content.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.stateMachines.SetNotify(null);
+    this.variables.SetNotify(null);
+    this.eventHandlers.SetNotify(null);
+  }
+
   @type.list("Tr2StateMachine")
   stateMachines = new BlueList(Tr2StateMachine, { className: "Tr2StateMachine", listOps: 0 });
 
