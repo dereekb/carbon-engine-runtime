@@ -216,7 +216,6 @@ export class EveChildLineSet extends EveChildTransform
   Destruct(managedLineSets = null)
   {
     this.ReleaseResources();
-    this._vertexBuffer.Destroy();
     this._instanceCursor.view = null;
     if (this._ownedLineSet) this._retiredLineSets.add(this._ownedLineSet);
     for (const lineSet of this._retiredLineSets)
@@ -574,14 +573,18 @@ export class EveChildLineSet extends EveChildTransform
   }
 
   /**
-   * Native ReleaseResources resets declaration caches, retaining the buffer.
+   * Resets declarations and releases instance storage for the next preparation/update.
+   * Carbon: trinity/Eve/SpaceObject/Children/EveChildLineSet.cpp:105-122,
+   *   294-325 and 540-544.
    *
-   * @implemented
+   * @adapted idle release destroys the buffer retained by Carbon, freeing
+   *   strongly registered AL storage without deterministic member destruction.
    */
 
   ReleaseResources()
   {
     this._cachedSVD = this._vertexDeclarationHandle = Tr2EffectStateManager.Unknown;
+    this._vertexBuffer.Destroy();
   }
 
   /**

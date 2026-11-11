@@ -167,8 +167,8 @@ test('native instance aliases and mesh-zero LOD survive resource release and ind
   assert.equal(b.vertexStreams[1],c._vertexBuffer,'submission preserves the instance stream');
   const cdata=c._instanceCursor;
   near([cdata.view.getFloat32(12,true),cdata.view.getFloat32(28,true),cdata.view.getFloat32(44,true)],[Math.SQRT2,0,Math.SQRT2]);
-  c.ReleaseResources();assert.equal(c._vertexBuffer.IsValid(),true);assert.equal(collect(c).length,0);
-  c.CreateSpriteVertexDeclaration();assert.equal(collect(c).length,1);
+  c.ReleaseResources();assert.equal(c._vertexBuffer.IsValid(),false);assert.equal(collect(c).length,0);
+  c.PrepareResources();update(c);assert.equal(collect(c).length,1);
 });
 
 test('native-shaped declaration ledger is copied rather than mutating the interned original',t=>{
@@ -180,7 +180,7 @@ test('native-shaped declaration ledger is copied rather than mutating the intern
   assert.equal(base.items.length,1);assert.equal(base.nextOffset[1],0);assert.equal(definition.nextOffset[0],20);assert.equal(definition.items.length,7);
 });
 
-test('owner buffer grows, reuses capacity, zeroes hidden nested paths, and releases only at destruction',t=>{
+test('owner buffer grows, reuses capacity, zeroes hidden nested paths, and releases on expiry',t=>{
   const {context}=setup(t),c=child(t);assert.equal(c._OnPrepareResources(),true);const buffer=c._vertexBuffer;
   assert.equal(buffer.GetDesc().count,128);
   const group=new EveLineChildContainer();group.lines=[circle(70),circle(70)];c.lines=[group];c.Initialize();
@@ -188,8 +188,31 @@ test('owner buffer grows, reuses capacity, zeroes hidden nested paths, and relea
   group.display=false;c.UpdateBuffer(context);
   assert.ok(new Uint8Array(c._instanceCursor.view.buffer,c._instanceCursor.view.byteOffset,140*48).every(x=>x===0));
   c.lines=[circle(4)];c.Initialize();c.UpdateBuffer(context);assert.equal(buffer.GetDesc().count,140);assert.equal(c._totalObjectCount,4);
-  c.ReleaseResources();assert.equal(buffer.IsValid(),true);const owned=c.lineSet;
+  c.ReleaseResources();assert.equal(buffer.IsValid(),false);const owned=c.lineSet;
   c.Destruct();assert.equal(buffer.IsValid(),false);assert.equal(TriDevice.GetResourcesRegistered().includes(c),false);assert.equal(TriDevice.GetResourcesRegistered().includes(owned),false);
+});
+
+test('idle line-set storage recovers through batch use and the normal update',t=>{
+  const {context,draws,material}=setup(t);
+  const resources=TriDevice._resourcesRegistered,generations=TriDevice._registeredGenerations,activeTime=TriDevice.activeTime;
+  TriDevice._resourcesRegistered=[];TriDevice._registeredGenerations=[];TriDevice.activeTime=1000*10000000;
+  t.after(()=>{TriDevice._resourcesRegistered=resources;TriDevice._registeredGenerations=generations;TriDevice.activeTime=activeTime;});
+  t.mock.method(Tr2Renderer,'IsResourceCreationAllowed',()=>true);
+  const device=new TriDevice(),c=child(t);mesh(c,material);c.renderType=OBJECT_RENDER;
+  // Carbon's cold cached-zero declaration quirk is covered separately below.
+  c.ReleaseResources();
+  assert.equal(collect(c).length,0);device._PreparePendingResources();update(c);
+  assert.equal(collect(c).length,1);
+  const buffer=c._vertexBuffer,destroy=t.mock.method(buffer.TrinityALImpl_GetObject(),'Destroy');
+  const original=Array.from(new Uint8Array(c._instanceCursor.view.buffer,c._instanceCursor.view.byteOffset,c._totalObjectCount*48));
+  TriDevice.activeTime+=(TriDevice.resourceIdleRule+1)*10000000;
+  device.CollectResources();device.CollectResources();c.ReleaseResources();
+  assert.equal(buffer.IsValid(),false);assert.equal(destroy.mock.callCount(),1);
+  assert.equal(collect(c).length,0);device._PreparePendingResources();update(c);
+  const batches=collect(c);assert.equal(batches.length,1);assert.equal(c._vertexBuffer,buffer);assert.equal(buffer.IsValid(),true);
+  assert.deepEqual(Array.from(new Uint8Array(c._instanceCursor.view.buffer,c._instanceCursor.view.byteOffset,c._totalObjectCount*48)),original);
+  context.RenderBatches({GetBatches:()=>batches});assert.equal(draws.at(-1)[1],4);
+  c.Destruct();
 });
 
 test('replaced defaults survive until final destruction while assigned line sets remain borrowed',t=>{
