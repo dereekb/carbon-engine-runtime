@@ -22,4 +22,3 @@ test("nested status scopes restore their predecessor through graph teardown", ()
   }
   finally { BeThreadMonitor.SetThreadStatus(prior); }
 });
-

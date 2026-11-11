@@ -16,14 +16,15 @@ test("interior static teardown detaches the cell back pointer and only its own n
     owner.geometry = peer.geometry = geometry;
     manager.notify.Add(owner, geometry, owner, "geometry");
     manager.notify.Add(peer, geometry, peer, "geometry");
-    owner.OnDestruct();
-    owner.OnDestruct();
+    owner.Destruct();
+    owner.Destruct();
     assert.equal(owner._parentCell, null);
     assert.equal(peer._parentCell, cell);
-    assert.equal(owner.geometry, geometry);
+    // Existing Tr2InteriorStatic.Destruct (c1c9a64e4:892-897) cleared geometry.
+    assert.equal(owner.geometry, null);
     assert.deepEqual(manager.notify.GetByOwner(owner), []);
     assert.equal(manager.notify.GetByOwner(peer).length, 1);
-    peer.OnDestruct();
+    peer.Destruct();
   }
   finally { blue.resMan = previous; }
 });

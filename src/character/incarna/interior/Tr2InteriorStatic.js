@@ -808,11 +808,13 @@ export class Tr2InteriorStatic extends IRoot
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @adapted JavaScript has no reference count to Unlock; IRoot.Unlock is unsupported.
    * @returns {void}
+   * @adapted Preserves existing explicit Destruct fences and owned-slot clearing after native cleanup.
    */
   OnDestruct()
   {
     this.RemoveFromCell();
     if (this.geometry) blue.resMan.notify.Remove(this, this.geometry);
+    this.geometry = null;
   }
 
   /**
@@ -883,18 +885,6 @@ export class Tr2InteriorStatic extends IRoot
     return [ min, max ];
   }
 
-  /**
-   * Carbon's destructor (cpp:47-56): leaves the cell and the geometry.
-   *
-   * @adapted JavaScript has no destructor; owners call this.
-   * @returns {void}
-   */
-  Destruct()
-  {
-    this.RemoveFromCell();
-    if (this.geometry) blue.resMan.notify.Remove(this, this.geometry);
-    this.geometry = null;
-  }
 
   /**
    * AxisAlignedBoundingBox::Transform and BoundingBoxTransform: the box of the

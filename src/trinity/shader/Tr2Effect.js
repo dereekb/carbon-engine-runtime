@@ -277,27 +277,6 @@ export class Tr2Effect extends Tr2Material
     this.parametersForPasses = [];
   }
 
-  /**
-   * Deterministic adaptation of the effect destructor and its owned value members.
-   *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
-   */
-  Destruct()
-  {
-    if (this._destroyed) return;
-    this._destroyed = true;
-    for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
-    for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
-    this._ClearPassBindings();
-    this.resources.Clear();
-    // Carbon ~Tr2Effect (Shader/Tr2Effect.cpp:266-280): ReleaseCachedData( m_effectResource ), then
-    // RemoveNotifyTarget. With no effect resource, RemoveCachedData(null) still releases, as Carbon does.
-    this.RemoveCachedData(this.effectResource);
-  }
 
   /**
    * Whether authored changes are batched until EndUpdate rebuilds the effect.
@@ -1098,16 +1077,17 @@ export class Tr2Effect extends Tr2Material
    * @adapted No renderer effect registry exists here, so there is no UnregisterEffect call.
    * @adapted Explicitly releases minted provider adapters because JS has no member RAII.
    * @returns {void}
+   * @adapted Preserves existing explicit Destruct fences and owned-slot clearing after native cleanup.
    */
   OnDestruct()
   {
+    if (this._destroyed) return;
+    this._destroyed = true;
     for (const resource of this.resources) resource.OnRemovedFromMaterial(this);
-    if (this.effectResource)
-    {
-      this.ReleaseCachedData(this.effectResource);
-      blue.resMan.notify.Remove(this, this.effectResource);
-    }
     for (const parameter of this._ownedProviders.keys()) this._ReleaseOwnedProvider(parameter);
+    // Release handles while resources remain reachable; this also retires pass bindings.
+    this.RemoveCachedData(this.effectResource);
+    this.resources.Clear();
   }
 
   /**

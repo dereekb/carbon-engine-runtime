@@ -74,7 +74,7 @@ test("every registered resource owner has a teardown hook, including abstract ba
 
 for (const primaryType of ["TriGrannyRes", "TriGeometryRes"])
 {
-  test(`animation teardown removes ${primaryType} primary and map links while preserving holders`, () =>
+  test(`animation teardown removes ${primaryType} primary and map links and clears its ownership slots`, () =>
   {
     const previous = blue.resMan, manager = new BlueResMan();
     blue.resMan = manager;
@@ -89,15 +89,16 @@ for (const primaryType of ["TriGrannyRes", "TriGeometryRes"])
       owner.SetSecondaryGrannyResource("res:/alias-b.gr2", primary);
       owner.SetSecondaryGrannyResource("res:/secondary.gr2", secondary);
       owner.SetSecondaryGrannyResource("res:/pending.gr2", null);
-      const map = owner._secondaryResources, entries = Array.from(map);
+      const map = owner._secondaryResources;
       assert.equal(manager.notify.GetByOwner(owner).length, 4);
-      owner.OnDestruct(); owner.OnDestruct();
+      owner.Destruct(); owner.Destruct();
       assert.deepEqual(manager.notify.GetByOwner(owner), []);
       assert.deepEqual(manager.notify.GetByResource(primary), []);
       assert.deepEqual(manager.notify.GetByResource(secondary), []);
-      assert.equal(owner.grannyRes, primary);
+      // Existing Tr2GrannyAnimation.Destruct (f577f66fb:2618-2631) clears these holders.
+      assert.equal(owner.grannyRes, null);
       assert.equal(owner._secondaryResources, map);
-      assert.deepEqual(Array.from(map), entries);
+      assert.deepEqual(Array.from(map), []);
     }
     finally { blue.resMan = previous; }
   });

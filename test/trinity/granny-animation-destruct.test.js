@@ -19,8 +19,8 @@ test("animation teardown clears sampling state even without a resource while ret
   animation._poseModifierView = {};
   animation._morphAnimations.set("test", 1);
   const layers = animation._layers;
-  animation.OnDestruct();
-  animation.OnDestruct();
+  animation.Destruct();
+  animation.Destruct();
   assert.equal(base.queue.length, 0);
   assert.equal(upper.queue.length, 0);
   assert.equal(base.boneMask, null);

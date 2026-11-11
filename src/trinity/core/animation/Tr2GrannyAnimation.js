@@ -450,6 +450,7 @@ export class Tr2GrannyAnimation extends IRoot
    * @adapted Native binding notifications remain absent: Tr2AnimationMeshBinding
    *   (cpp:2387-2413) is unported, as recorded by EveChildMesh.GetBoneTransforms.
    * @returns {void}
+   * @adapted Preserves existing explicit Destruct fences and owned-slot clearing after native cleanup.
    */
   OnDestruct()
   {
@@ -459,6 +460,13 @@ export class Tr2GrannyAnimation extends IRoot
     {
       if (resource) blue.resMan.notify.Remove(this, resource);
     }
+    this._secondaryResources.clear();
+    this._secondaryExts.clear();
+    this._destroyed = true;
+    this.grannyRes = null;
+    this._attachedPath = "";
+    this._attachedExt = "";
+    this._sharedGeometry = false;
   }
 
   /**
@@ -2610,25 +2618,5 @@ export class Tr2GrannyAnimation extends IRoot
   }
 
 
-  /**
-   * Carbon destructor (Tr2GrannyAnimation.cpp:99-117): detach shared geometry.
-   *
-   * @adapted
-   */
-  Destruct()
-  {
-    // Carbon ~Tr2GrannyAnimation (Tr2GrannyAnimation.cpp:99-120): RemoveNotifyTarget on the granny
-    // resource and every secondary one.
-    for (const resource of [ ...this._secondaryResources.values() ]) if (resource) this.RemoveCachedData(resource);
-    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
-    this._secondaryResources.clear();
-    this._secondaryExts.clear();
-    this._destroyed = true;
-    this._ReplaceGrannyRes(null);
-    this._attachedPath = "";
-    this._attachedExt = "";
-    this._sharedGeometry = false;
-    this.Cleanup();
-  }
 }
 
