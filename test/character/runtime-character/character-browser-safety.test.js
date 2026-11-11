@@ -22,7 +22,8 @@ test("published character source has no Node-only imports or globals", async () 
         for (const entry of await fs.readdir(directory, { withFileTypes: true }))
         {
             const target = path.join(directory, entry.name);
-            if (entry.isDirectory()) pending.push(target);
+            // carbon-donor/ is a git-ignored side-by-side port, never published (the lints and build skip it too).
+            if (entry.isDirectory()) { if (entry.name !== "carbon-donor") pending.push(target); }
             else if (entry.isFile() && entry.name.endsWith(".js")) files.push(target);
         }
     }
