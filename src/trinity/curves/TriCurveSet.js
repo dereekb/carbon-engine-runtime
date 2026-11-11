@@ -691,17 +691,26 @@ export class TriCurveSet extends IInitialize
   }
 
   /**
-   * Ends the set's lifetime, as Carbon's destructor does (TriCurveSet.cpp:44-50).
-   * Custom: JavaScript has no deterministic destructor. The graph owner must
-   * dispose an abandoned set; Stop and removal from one playback list do not
-   * end its lifetime because the set may be shared or played again.
+   * Releases the native owned callback during graph teardown.
+   * Carbon destructor: trinity/trinity/Curves/TriCurveSet.cpp:43-49.
+   * @adapted No sim-rebase registration is acquired in JS; retain its existing request-flag reset.
+   * @adapted Explicit callback Destroy replaces native by-value member destruction (blueexposure/BlueScriptCallback.cpp:244-247).
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this._isUsingSimTimeRebase = false;
+    this.DestroyStopCallback();
+  }
+
+  /**
+   * Existing disposal entry delegates to graph teardown.
+   * @adapted Retains the existing JS caller API; introduces no new lifetime caller.
    * @returns {void}
    */
   Dispose()
   {
-    // if (this._isUsingSimTimeRebase) blue.os.UnregisterForSimTimeRebase(this); // cpp:47; no TiDi sync reaches the browser.
-    this._isUsingSimTimeRebase = false;
-    this.DestroyStopCallback();
+    this.Destruct();
   }
 
 }
