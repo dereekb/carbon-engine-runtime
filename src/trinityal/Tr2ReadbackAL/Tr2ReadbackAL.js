@@ -51,13 +51,12 @@ export class Tr2ReadbackAL
   /**
    * Explicit release replaces shared_ptr destruction; other copies remain valid.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted
+   * Carbon: Tr2ReadbackAL destructor (trinity/trinityal/dx11/Tr2TextureALDx11.cpp:338-341).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     const readback = this._readback;
     this._readback = null;

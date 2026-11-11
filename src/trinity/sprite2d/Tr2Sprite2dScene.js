@@ -1252,11 +1252,10 @@ export class Tr2Sprite2dScene extends ITr2Scene
   /**
    * Explicit native destructor equivalent: JavaScript does not destroy owned AL values on scope exit.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2Sprite2dScene destructor (trinity/trinity/Sprite2d/Tr2Sprite2dScene.cpp:175-191).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     this._ResetCapture();
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);

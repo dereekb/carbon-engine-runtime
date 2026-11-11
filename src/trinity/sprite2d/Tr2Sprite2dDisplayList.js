@@ -55,11 +55,10 @@ export class Tr2Sprite2dDisplayList
   /**
    * Explicit equivalent of the native destructor: JS has no deterministic destruction.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2Sprite2dDisplayList destructor (trinity/trinity/Sprite2d/Tr2Sprite2dDisplayList.cpp:21-36).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     this.vertexBuffer.Destroy();
     this.indexBuffer.Destroy();

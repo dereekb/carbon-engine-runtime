@@ -220,13 +220,12 @@ export class Tr2Sprite2dTextObject extends Tr2SpriteObject
    * unregisters from the measurer, without dirtying the parent.
    * JS has no destructors, so the body runs from this explicit call.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @returns {void}
+   * Carbon: Tr2Sprite2dTextObject destructor (trinity/trinity/Sprite2d/Tr2Sprite2dTextObject.cpp:20-26).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._fontMeasurer) this._fontMeasurer.UnregisterForChangeNotification(this);
     this._fontMeasurer = null;

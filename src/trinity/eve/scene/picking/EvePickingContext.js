@@ -88,13 +88,12 @@ export class EvePickingContext extends IRoot
   /**
    * Explicit cancellation replaces destruction of Carbon's owning vector.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted
+   * Carbon: EvePickingContext destructor (trinity/trinity/Eve/EvePicking.h:42 (owned requests; implicit destructor)).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     for (const request of this.readbacks) request.Destruct();
     this.readbacks.length = 0;

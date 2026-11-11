@@ -163,13 +163,12 @@ export class EvePendingPickingReadback
   /**
    * Explicit unique_ptr/shared_ptr destruction, including retained root objects.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted
+   * Carbon: EvePendingPickingReadback destructor (trinity/trinity/Eve/EvePicking.h:14-25 (value member; implicit destructor)).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     this.Unmap();
     if (this.mainPickBuffer) this.mainPickBuffer.Destruct();
