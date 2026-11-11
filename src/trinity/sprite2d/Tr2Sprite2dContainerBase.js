@@ -59,7 +59,7 @@ export class Tr2Sprite2dContainerBase extends Tr2SpriteObjectBase
   /**
    * Detaches background items and children by setting their parent to null.
    * Carbon: Tr2Sprite2dContainerBase destructor (trinity/trinity/Sprite2d/Tr2Sprite2dContainer.cpp:18-34).
-   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @adapted Explicit observer detach replaces implicit BlueList destruction (blueexposure/include/BlueListUtil.h:198-204); authored lists remain retained.
    * @returns {void}
    */
   OnDestruct()
@@ -73,6 +73,8 @@ export class Tr2Sprite2dContainerBase extends Tr2SpriteObjectBase
     {
       if (child) child.SetParent(null);
     }
+    this.background.SetNotify(null);
+    this.children.SetNotify(null);
   }
 
   /**
