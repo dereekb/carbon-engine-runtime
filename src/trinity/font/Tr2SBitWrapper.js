@@ -37,7 +37,10 @@ function blendOverAlpha(bytes, index, col, sourceAlpha)
   bytes[index + 3] = scaledAlpha / 255;
 }
 
-/** Models Carbon's cached font-glyph wrapper, including placement coordinates and buffer-copy entry points. */
+/**
+ * Models Carbon's cached font-glyph wrapper, including placement coordinates and buffer-copy entry points.
+ * @adapted No own teardown hook: native Font/Tr2SBit.cpp:15-21 releases a FreeType node only when manager exists; this browser wrapper acquires neither manager nor node, only GC-owned glyph data.
+ */
 @be.define({
   name: "Tr2SBitWrapper",
   inherit: [ IRoot ],
