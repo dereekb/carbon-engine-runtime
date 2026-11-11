@@ -1,4 +1,5 @@
 import { IRoot } from "../../../blue/exposure/IRoot.js";
+import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
 import { exposure as be } from "#be";
 // Source: trinity/trinity/Tr2GpuBuffer.h
 // Hand-maintained from Carbon source. Unimplemented backend methods here are
@@ -8,7 +9,7 @@ import { type } from "#schema";
 import { INotify, IInitialize } from "#blue";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
-import { ALResult, Tr2BufferDescriptionAL } from "#trinityal";
+import { ALResult, Succeeded, Tr2BufferDescriptionAL } from "#trinityal";
 import "#consts/renderContext/formats";
 import { ITr2GpuBuffer } from "../ITr2GpuBuffer.js";
 import { blueEnums, EnumRegistrationType } from "#blue/enums/CjsBlueEnumRegistry";
@@ -27,9 +28,9 @@ blueEnums.Create("trinity.Tr2GpuBufferFlags", CreationFlags, {
 });
 
 
-/** Tr2GpuBuffer (trinityCore) - generated from schema shapeHash 7a225a45.... */
+/** Carbon: Tr2GpuBuffer (trinity/trinity/Tr2GpuBuffer.h:17-21) */
 @be.define("Tr2GpuBuffer")
-@be.inherit(ITr2GpuBuffer, INotify, IInitialize)
+@be.inherit(ITr2GpuBuffer, INotify, IInitialize, Tr2DeviceResource)
 @be.mapInterface(INotify)
 @be.mapInterface(IInitialize)
 @be.mapInterface(ITr2GpuBuffer)
@@ -138,7 +139,7 @@ export class Tr2GpuBuffer extends IRoot
    * when GPU-writable, CPU WRITE when CPU-writable, DRAW_INDIRECT_ARGS for
    * indirect draws; CPU READ always. A zero count or unknown format refuses.
    *
-   * @adapted
+   * @adapted Takes the caller's AL context; successful allocation renews JS device residency instead of constructor registration.
    * @param {Tr2RenderContext} renderContext The context to create on.
    * @returns {number} An `ALResult`.
    */
@@ -163,7 +164,32 @@ export class Tr2GpuBuffer extends IRoot
 
     if (this.#name) buffer.SetName(this.#name);
     this.#buffer = buffer;
+    this.KeepAlive();
     return ALResult.S_OK;
+  }
+
+  /**
+   * Carbon: Tr2GpuBuffer::ReleaseResources (trinity/trinity/Tr2GpuBuffer.cpp:179-181).
+   * @implemented Carbon intentionally leaves this hook empty, including for TRISTORAGE_ALL.
+   * @param {number} _storage Storage flags, unused by Carbon.
+   */
+  ReleaseResources(_storage)
+  {
+  }
+
+  /**
+   * Carbon: Tr2GpuBuffer::OnPrepareResources (trinity/trinity/Tr2GpuBuffer.cpp:183-190).
+   * @adapted Takes an optional AL context for isolated hosts; null represents the uncreated native value.
+   * @param {Tr2RenderContext} renderContext Context used to restore an invalid buffer.
+   * @returns {boolean} Whether allocation succeeded, or no allocation was needed.
+   */
+  _OnPrepareResources(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  {
+    if (!this.#buffer?.IsValid() && this.format !== PixelFormat.PIXEL_FORMAT_UNKNOWN)
+    {
+      return Succeeded(this.CreateBuffer(renderContext));
+    }
+    return true;
   }
 
   /**
@@ -187,12 +213,13 @@ export class Tr2GpuBuffer extends IRoot
    * variable binds through. Carbon returns its member, invalid until created;
    * here that is null, which the backend binds as its null buffer.
    *
-   * @implemented
+   * @adapted Binding renews JS device residency; Carbon retains the owner until destruction.
    * @param {number} [_index] Unused, as in Carbon.
    * @returns {object|null} The AL buffer.
    */
   GetGpuBuffer(_index = 0)
   {
+    this.KeepAlive();
     return this.#buffer;
   }
 
