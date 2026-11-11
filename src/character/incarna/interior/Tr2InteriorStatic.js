@@ -803,6 +803,18 @@ export class Tr2InteriorStatic extends IRoot
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: Trinity 24d033fa~1, Interior/Tr2InteriorStatic.cpp:47-56.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.geometry) blue.resMan.notify.Remove(this, this.geometry);
+  }
+
+  /**
    * Carbon GetID (Tr2InteriorStatic.h:63): the piece itself.
    *
    * @implemented
