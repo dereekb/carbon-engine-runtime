@@ -13,8 +13,8 @@ import { blue, INotify } from "#blue";
  * Native Python-only associatedObject weak-reference accessors are not exposed
  * by this JavaScript port. Required rendering/picking remain abstract.
  * Parent and auxiliary links are non-owning in declaration traversal but remain
- * ordinary JavaScript references; native destructor detach assertions have no
- * deterministic destruction counterpart here.
+ * ordinary JavaScript references.
+ * @adapted No own teardown hook: Sprite2d/Tr2SpriteObject.cpp:24-27 only asserts that the caller detached the parent. No active resource is released; that diagnostic is omitted without adding caller or parent-clearing policy.
  *
  * @abstract
  */
