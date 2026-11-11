@@ -66,6 +66,7 @@ export class EveChildInstanceContainer extends EveChildTransform
   /**
    * Detaches the instances and source from this container.
    * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceContainer.cpp:55-59.
+   * @adapted Detaches the owned modifier-list observer as BlueList member destruction does (blueexposure/include/BlueListUtil.h:198-204); transforms is an unobserved JS array.
    * @implemented
    * @returns {void}
    */
@@ -73,6 +74,7 @@ export class EveChildInstanceContainer extends EveChildTransform
   {
     this.UnregisterChildren(this.instances);
     this.UnregisterChild(this._source);
+    this.transformModifiers.SetNotify(null);
   }
 
 
