@@ -255,9 +255,9 @@ test("CjsWebgpuRenderTarget refuses work it cannot do", () =>
   assert.throws(() => target.CreateRenderPassDescriptor(frame, { clearDepth: 1 }), /no depth attachment/i);
   assert.throws(() => target.Configure({ width: 0, height: 32 }), /positive integer/i);
 
-  target.Destruct();
+  assert.equal(target.Destruct(), target);
   assert.throws(() => target.AcquireFrame(), /destroyed/i);
-  target.Destruct();
+  assert.equal(target.Destruct(), target);
 });
 
 test("CjsWebgpuRenderTarget releases what it created and leaves the canvas alone", () =>

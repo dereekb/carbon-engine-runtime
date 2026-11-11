@@ -1,3 +1,4 @@
+import { CjsGraph } from "../../../global/model/graph/CjsGraph.js";
 import { CjsPaperDollCompositor } from "../compositor/CjsPaperDollCompositor.js";
 
 /**
@@ -155,13 +156,22 @@ export class CjsPaperDollComposition
         return [ Math.round(texture.width / texture.cutoutWidth), Math.round(texture.height / texture.cutoutHeight) ];
     }
 
+    /** @cjs Thin public entry; this plain helper has no Blue schema or graph value exposure. */
+    Destruct()
+    {
+        CjsGraph.destruct(this);
+    }
+
     /**
      * Releases the compositor and everything it made.
      * @returns {void}
+     * @cjs Existing paper-doll composition ownership, with no native counterpart.
      */
-    Destruct()
+    OnDestruct()
     {
         this.compositor.Destruct();
     }
 
 }
+
+CjsGraph.defineLifetime(CjsPaperDollComposition, { onDestruct: CjsPaperDollComposition.prototype.OnDestruct });

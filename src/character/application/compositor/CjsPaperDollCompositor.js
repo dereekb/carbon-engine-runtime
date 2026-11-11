@@ -1,3 +1,4 @@
+import { CjsGraph } from "../../../global/model/graph/CjsGraph.js";
 import { blue } from "#blue";
 import { vec4 } from "#math/vec4";
 import { PixelFormat } from "#consts/render-context";
@@ -232,12 +233,19 @@ export class CjsPaperDollCompositor
         return good;
     }
 
+    /** @cjs Thin public entry; this plain helper has no Blue schema or graph value exposure. */
+    Destruct()
+    {
+        CjsGraph.destruct(this);
+    }
+
     /**
      * Releases every target and effect this compositor made, and its blitter. Textures it loaded are resMan's and
      * stay. Nothing it produced may be drawn or bound after this; a second call does nothing.
      * @returns {void}
+     * @cjs Existing paper-doll composition ownership, with no native counterpart.
      */
-    Destruct()
+    OnDestruct()
     {
         this._disposed = true;
         for (const record of this._publications.values()) record.resource.Shutdown();
@@ -787,3 +795,5 @@ export class CjsPaperDollCompositor
     }
 
 }
+
+CjsGraph.defineLifetime(CjsPaperDollCompositor, { onDestruct: CjsPaperDollCompositor.prototype.OnDestruct });

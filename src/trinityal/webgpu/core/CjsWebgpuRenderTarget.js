@@ -1,3 +1,4 @@
+import { CjsGraph } from "../../../global/model/graph/CjsGraph.js";
 // Attachment and target ownership for the WebGPU backend.
 import { CjsSchema, meta } from "#schema";
 //
@@ -404,14 +405,19 @@ export class CjsWebgpuRenderTarget
     return this;
   }
 
+  /** @cjs Generic lifetime dispatch while retaining the existing fluent public return. */
+  Destruct()
+  {
+    CjsGraph.destruct(this);
+    return this;
+  }
+
   /**
    * Releases every attachment this target created. The canvas is the caller's.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * @cjs Preserves the existing browser surface and attachment ownership.
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._destroyed) return this;
     this._destroyed = true;

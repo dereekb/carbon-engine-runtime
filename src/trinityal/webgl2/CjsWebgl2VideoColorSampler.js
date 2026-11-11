@@ -1,3 +1,4 @@
+import { CjsGraph } from "../../global/model/graph/CjsGraph.js";
 // Ours: the WebGL2 backend's asynchronous video average colour, behind
 // Tr2TextureAL.RequestAverageColor, as CjsWebgpuVideoColorSampler is WebGPU's.
 //
@@ -304,16 +305,23 @@ export class CjsWebgl2VideoColorSampler
     this._mipSize = null;
   }
 
+  /** @cjs Thin public entry; this plain helper has no Blue schema or graph value exposure. */
+  Destruct()
+  {
+    CjsGraph.destruct(this);
+  }
+
   /**
    * Stops answering; a copy in flight resolves null.
    *
-   * Temporary destructor stand-in, as CjsWebgpuVideoColorSampler's: teardown
-   * is required before the lifecycle (Destructor) pattern exists.
+   * @cjs Preserves browser-owned sampling cancellation through graph lifetime dispatch.
    */
-  Destruct()
+  OnDestruct()
   {
     this._destroyed = true;
     this._bytes = new Uint8Array(0);
     this._ReleaseMip();
   }
 }
+
+CjsGraph.defineLifetime(CjsWebgl2VideoColorSampler, { onDestruct: CjsWebgl2VideoColorSampler.prototype.OnDestruct });
