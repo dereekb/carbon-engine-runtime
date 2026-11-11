@@ -106,9 +106,57 @@ test("texture animation advances one frame after the strict threshold and keeps 
   const retained = textures.map(value => new Tr2TextureAL({ copy: value }));
   animation.Destruct();
   // Explicit copies represent the native shared values retained by bindings.
+  animation.Destruct();
   assert.ok(textures.every(item => !item.destroyed));
   retained.forEach(value => value.Destroy());
   assert.ok(textures.every(item => item.destroyed));
+  assert.equal(animation.GetTexture("density"), null);
+});
+
+test("public destruction cancels a pending file read before it can publish frames", async t =>
+{
+  const { animation, textures } = setup(t);
+  let finishRead;
+  t.mock.method(blue.resMan, "ReadResource", () => new Promise(resolve => { finishRead = resolve; }));
+  const pending = animation.ReadData();
+  const state = animation._asyncState;
+  await Promise.resolve();
+  assert.equal(typeof finishRead, "function");
+  animation.Destruct();
+  animation.Destruct();
+  assert.equal(state.cancel, true);
+  finishRead(fixture());
+  assert.equal(await pending, false);
+  assert.equal(state.bytes, null);
+  assert.equal(state.frameData, null);
+  animation.AdvanceTime(10);
+  assert.equal(textures.length, 0);
+  assert.deepEqual(animation.GetChannelNames(), []);
+});
+
+test("public destruction prevents an in-flight decode from publishing its completed frame", async t =>
+{
+  const { animation, textures } = setup(t);
+  let finishDecode;
+  let started;
+  const decoding = new Promise(resolve => { started = resolve; });
+  t.mock.method(CjsVtaFormat, "readFrames", () => ({ next: () => new Promise(resolve =>
+  {
+    finishDecode = resolve;
+    started();
+  }) }));
+  const pending = animation.ReadData();
+  const state = animation._asyncState;
+  await decoding;
+  animation.Destruct();
+  animation.Destruct();
+  finishDecode({ done: false, value: { grids: [] } });
+  assert.equal(await pending, false);
+  assert.equal(state.cancel, true);
+  assert.equal(state.bitmapsReady, false);
+  assert.equal(state.frameData, null);
+  animation.AdvanceTime(10);
+  assert.equal(textures.length, 0);
   assert.equal(animation.GetTexture("density"), null);
 });
 
