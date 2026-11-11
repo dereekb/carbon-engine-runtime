@@ -31,6 +31,24 @@ for (const Type of [Tr2GpuBuffer, Tr2GpuStructuredBuffer])
 {
     const layout = Type === Tr2GpuBuffer ? PixelFormat.PIXEL_FORMAT_R32_FLOAT : 4;
 
+    test(`${Type.name}: generic teardown releases the member and unregisters the device base`, t =>
+    {
+        const { device, context } = setup(t);
+        const owner = new Type();
+        assert.equal(owner.Create(8, layout, 1, context), ALResult.S_OK);
+        const buffer = owner.GetGpuBuffer();
+        assert.equal(buffer.IsValid(), true);
+        const destroy = t.mock.method(buffer, "Destroy");
+        assert.equal(device.GetResourcesRegistered().includes(owner), true);
+        owner.Destruct();
+        owner.Destruct();
+        assert.equal(destroy.mock.callCount(), 1);
+        assert.equal(buffer.IsValid(), false);
+        assert.equal(device.GetResourcesRegistered().includes(owner), false);
+        assert.equal(owner.GetGpuBuffer(), null);
+        assert.equal(device.GetResourcesRegistered().includes(owner), false, "existing dead-state policy prevents renewal");
+    });
+
     test(`${Type.name}: binding renews, native release is empty, invalid storage is restored`, t =>
     {
         const { device, context } = setup(t);

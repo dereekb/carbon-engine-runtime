@@ -10,7 +10,7 @@ import { getClassRegistrations, getRegisteredConstructor } from "../../../npm/di
 function checkOwner(name)
 {
   const Base = getRegisteredConstructor(name);
-  test(`${name}: link-only OnDestruct covers its concrete owners`, async t =>
+  test(`${name}: Destruct removes only its own notification links`, async t =>
   {
     assert.equal(typeof Base.prototype.OnDestruct, "function");
     const owners = getClassRegistrations().filter(({ type }) =>
@@ -39,15 +39,15 @@ function checkOwner(name)
             manager.notify.Add(peer, resource, peer, key);
           }
           assert.equal(manager.notify.GetByOwner(owner).length, slots.length);
-          owner.OnDestruct(); owner.OnDestruct();
+          owner.Destruct(); owner.Destruct();
           assert.deepEqual(manager.notify.GetByOwner(owner), []);
           assert.equal(manager.notify.GetByOwner(peer).length, slots.length);
           for (const { key, resource } of slots)
           {
-            assert.equal(owner[key], resource, "link-only hook does not perform item 4 teardown");
+            assert.equal(peer[key], resource, "peer retains the shared resource");
             assert.deepEqual(manager.notify.GetByResource(resource).map(link => link.owner), [peer]);
           }
-          peer.OnDestruct();
+          peer.Destruct();
           assert.deepEqual(manager.notify.GetByOwner(peer), []);
         }
         finally { blue.resMan = previous; }
@@ -60,7 +60,7 @@ function checkOwner(name)
 // no hook. A future private map/nested holder also needs its own fixture.
 const hooks = getClassRegistrations().filter(({ type }) =>
   Object.hasOwn(type.prototype, "OnDestruct") && typeof type.prototype.RemoveCachedData === "function");
-test("link-only teardown discovery exercises registered hooks", () => assert.ok(hooks.length));
+test("teardown discovery exercises registered hooks", () => assert.ok(hooks.length));
 for (const { name } of hooks) checkOwner(name);
 
 test("every registered resource owner has a teardown hook, including abstract bases", () =>

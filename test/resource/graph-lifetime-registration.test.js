@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { CjsGraph } from "../../npm/dist/global/model/graph/index.js";
@@ -57,4 +58,28 @@ test("late composed-base registration invalidates an already used teardown list"
   CjsSchema.meta.inherit(Late)(Owner);
   object.Destruct();
   assert.deepEqual(calls, [ "own", "own", "late" ]);
+});
+
+test("unexposed composed classes acquire teardown before any Blue definition", () =>
+{
+  const calls = [];
+  class Base { OnDestruct(value) { calls.push(["base", value]); } }
+  class Owner { OnDestruct(value) { calls.push(["owner", value]); } }
+  CjsSchema.meta.inherit(Base)(Owner);
+  assert.equal(CjsGraph.isDefined(Owner), false);
+  new Owner().Destruct(7);
+  assert.deepEqual(calls, [["owner", 7], ["base", 7]]);
+});
+
+
+test("a direct native GPU-buffer import can destruct before the device service loads", () =>
+{
+  const moduleUrl = new URL("../../npm/dist/trinity/core/device/Tr2GpuBuffer.js", import.meta.url).href;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", `
+    import { Tr2GpuBuffer } from ${JSON.stringify(moduleUrl)};
+    const owner = new Tr2GpuBuffer();
+    owner.Destruct();
+    owner.Destruct();
+  `], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
 });

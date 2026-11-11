@@ -351,18 +351,17 @@ export class Tr2GpuParticleSystem
    * explicitly. Device ReleaseResources is a separate reset operation. This
    * does not destroy buffers or effects that may still be shared by callers.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2GpuParticleSystem destructor (trinity/trinity/Particle/Tr2GpuParticleSystem.cpp:106-119).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._variableStore)
     {
       this._variableStore = null;
       for (const slot of EFFECT_SLOTS) this.SetVariableStore(this[slot]);
     }
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

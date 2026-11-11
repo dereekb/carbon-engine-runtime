@@ -164,14 +164,12 @@ export class EveHazeSet extends IEveSpaceObjectAttachment
    * JavaScript has no deterministic destructor, so the owner calls this
    * explicitly. No owner calls Destruct yet.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveHazeSet destructor (trinity/trinity/Eve/SpaceObject/Attachments/Sets/EveHazeSet.cpp:76-78).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._vertexBuffer.IsValid()) this._vertexBuffer._parent.Free(this._vertexBuffer);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

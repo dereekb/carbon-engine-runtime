@@ -488,11 +488,10 @@ export class Tr2ImpostorManager
    * effect retirement can be supplied as for other Trinity owners. Global
    * variable bindings persist as in Carbon and may already name another manager.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2ImpostorManager implicit destructor (trinity/trinity/Tr2ImpostorManager.h:58-70).
+   * @adapted Keeps existing JS ownership cleanup; the graph dispatches the device base.
    */
-  Destruct(managedResources = null)
+  OnDestruct(managedResources = null)
   {
     this._quadRenderer.UnregisterEffect(this._effectKey);
     this.atlas.Destroy();
@@ -506,7 +505,6 @@ export class Tr2ImpostorManager
     this._objects.clear();
     this._renderQueue.length = 0;
     this._atlas._free.length = 0;
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** Native private nested record identities, with separate JS source files. */

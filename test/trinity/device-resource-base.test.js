@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
+import { CjsGraph } from "../../npm/dist/global/model/graph/index.js";
 import {
   EveBannerSet,
   EveChildCloud,
@@ -26,6 +27,7 @@ test("Tr2DeviceResource registers on construction and gates preparation on resou
     ReleaseResources() {}
   }
 
+  CjsGraph.defineLifetime(Resource, { bases: [ Tr2DeviceResource ] });
   const resource = new Resource();
   assert.ok(TriDevice.GetResourcesRegistered().includes(resource), "the constructor registers");
   assert.equal(resource.GetDescription(), "<Unknown>");
@@ -38,7 +40,7 @@ test("Tr2DeviceResource registers on construction and gates preparation on resou
   assert.equal(resource.PrepareResources(), false, "a failed _OnPrepareResources fails the prepare");
   assert.deepEqual(calls, [ "prepare" ]);
 
-  Tr2DeviceResource.prototype.Destruct.call(resource);
+  resource.Destruct();
 });
 
 test("Tr2DeviceResource's two obligations are abstract", () =>
@@ -46,7 +48,7 @@ test("Tr2DeviceResource's two obligations are abstract", () =>
   const resource = new Tr2DeviceResource();
   assert.throws(() => resource.ReleaseResources(0), /ReleaseResources/u);
   assert.throws(() => resource._OnPrepareResources(), /_OnPrepareResources/u);
-  Tr2DeviceResource.prototype.Destruct.call(resource);
+  resource.Destruct();
 });
 
 test("the classes Carbon derives from Tr2DeviceResource take its PrepareResources", () =>

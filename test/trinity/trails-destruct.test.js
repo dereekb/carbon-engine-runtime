@@ -24,14 +24,15 @@ test("trails teardown frees its shared allocation while preserving peer storage 
     trails.geometryResource = geometry;
     trails.trailData.push({ size: 1 });
     manager.notify.Add(trails, geometry, trails, "geometryResource");
-    trails.OnDestruct();
-    trails.OnDestruct();
+    trails.Destruct();
+    trails.Destruct();
     assert.equal(allocation.IsValid(), false);
     assert.equal(peer.IsValid(), true);
     assert.equal(buffer._allocators[0].GetAllocatedMemory(), 16);
     assert.equal(trails._instanceBuffer, null);
     assert.equal(trails._trailVertexDeclElementCount, 0);
-    assert.equal(trails.geometryResource, geometry);
+    // EveTrailsSet.Destruct (e3f2aea3f, lines 408-414) already cleared this slot.
+    assert.equal(trails.geometryResource, null);
     assert.equal(trails.trailData.length, 1);
     assert.deepEqual(manager.notify.GetByOwner(trails), []);
     const replacement = buffer.Allocate(16, 1, null, context);

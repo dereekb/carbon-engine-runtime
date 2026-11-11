@@ -212,11 +212,10 @@ export class EveSpherePin
    * stay owned after replacement; a graph retirement walk can retain or retire
    * shared effects itself by including them in managedResources.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveSpherePin destructor (trinity/trinity/Eve/UI/EveSpherePin.cpp:61-70).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct(managedResources = null)
+  OnDestruct(managedResources = null)
   {
     this.ReleaseResources();
     for (const effect of this._ownedEffects)
@@ -227,7 +226,6 @@ export class EveSpherePin
     this._geometryResource = null;
     this._tree = null;
     this.pinEffect = this.pickEffect = null;
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

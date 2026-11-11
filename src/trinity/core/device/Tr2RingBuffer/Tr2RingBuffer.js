@@ -185,13 +185,13 @@ export class Tr2RingBuffer
     return created;
   }
 
-  /** Destroys storage and unregisters arenas at test/teardown; Carbon's are process-lived. */
+  /** @cjs Existing context/test teardown destroys storage and unregisters process-lived native arenas. */
   static ResetInstances()
   {
     for (const ring of Tr2RingBuffer._instances.values())
     {
       ring._buffer?.Destroy();
-      Tr2DeviceResource.prototype.Destruct.call(ring);
+      ring.Destruct();
     }
     Tr2RingBuffer._instances.clear();
   }

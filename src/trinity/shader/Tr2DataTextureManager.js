@@ -13,8 +13,7 @@ import { IInitialize } from "../../blue/exposure/IInitialize.js";
 //
 // Carbon derives this from Tr2DeviceResource, whose constructor registers it
 // with TriDevice and whose PrepareResources gates OnPrepareResources. There is
-// no JS base, so both halves are on the class, and JavaScript has no
-// destructor, so Release() stands in for ~Tr2DataTextureManager.
+// explicit JS teardown; Release() retains the existing owner-facing entry.
 import { type } from "#schema";
 import { PixelFormat, Tr2CpuUsage, Tr2GpuUsage } from "#consts/render-context";
 import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
@@ -107,14 +106,19 @@ export class Tr2DataTextureManager
    * the destructor (cpp:22-25) plus the base's unregistration
    * (Tr2DeviceResource.cpp:15-18).
    *
-   * JavaScript has no destructor, so the owner releases explicitly, as
-   * Tr2GpuResourcePool handles do.
+   * Carbon: Tr2DataTextureManager destructor (trinity/trinity/Shader/Utils/Tr2DataTextureManager.cpp:22-25).
+   * @adapted Preserves explicit texture release; the graph dispatches base cleanup.
    */
-  Release()
+  OnDestruct()
   {
     Tr2VariableStore.globalStore().UnregisterVariable(IMPACT_SHIELD_DATA_MAP);
-    Tr2DeviceResource.prototype.Destruct.call(this);
     this.ReleaseResources();
+  }
+
+  /** @adapted Existing owner-facing release forwards to graph teardown. */
+  Release()
+  {
+    this.Destruct();
   }
 
   /**

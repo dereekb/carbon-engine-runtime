@@ -285,15 +285,14 @@ export class Tr2GpuResourcePool
    * Outstanding handles retain their record and their own resource value;
    * this drops the pool's membership and unregisters it from device sweeps.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2GpuResourcePool destructor (trinity/trinity/Tr2GpuResourcePool.cpp:87-95).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
     allPools.delete(this);
-    Tr2DeviceResource.prototype.Destruct.call(this);
     this.#renderContext = null;
     this.#outer = null;
   }

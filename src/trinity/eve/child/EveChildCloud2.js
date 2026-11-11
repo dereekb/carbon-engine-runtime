@@ -471,17 +471,15 @@ export class EveChildCloud2 extends EveSpaceObjectChild
   /**
    * Explicit final release substitutes for Carbon's deterministic resource destructors.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted
+   * Carbon: EveChildCloud2 destructor (trinity/trinity/Eve/SpaceObject/Children/EveChildCloud2.cpp:120-122).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
     this.lights.SetNotify(null);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

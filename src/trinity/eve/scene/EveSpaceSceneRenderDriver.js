@@ -644,11 +644,11 @@ export class EveSpaceSceneRenderDriver
    * Tr2DeviceResource base unregisters from the device
    * (Tr2DeviceResource.cpp:11-14).
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveSpaceSceneRenderDriver destructor (trinity/trinity/Eve/EveSpaceSceneRenderDriver.cpp:162-165).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._destroyed) return;
     this._destroyed = true;
@@ -664,7 +664,6 @@ export class EveSpaceSceneRenderDriver
     this._preparedContext = null;
     EveSpaceSceneRenderDriver.deleteUpscalingContext(this._upscalingContext);
     this._upscalingContext = null;
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** The provider "DepthMap" is registered with; it holds this frame's scene depth. */

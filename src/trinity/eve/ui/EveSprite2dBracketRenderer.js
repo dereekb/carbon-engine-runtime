@@ -59,14 +59,12 @@ export class EveSprite2dBracketRenderer extends Tr2SpriteObject
    * and dropped by the client, so a dropped one stays registered until its
    * owner calls this.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveSprite2dBracketRenderer destructor (trinity/trinity/EveSprite2dBracketRenderer.h:44-45 (AL members; implicit destructor)).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources(0);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** m_iconAtlas (Tr2AtlasTexturePtr) [READWRITE] */

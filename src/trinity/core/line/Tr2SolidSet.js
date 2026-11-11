@@ -247,15 +247,14 @@ export class Tr2SolidSet extends Tr2PrimitiveSet
   /**
    * Owner teardown replaces the C++ destructor and automatic device unregistration.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2SolidSet destructor (trinity/trinity/Tr2SolidSet.cpp:20-23).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this._destroyed = true;
     this.ReleaseResources();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
 

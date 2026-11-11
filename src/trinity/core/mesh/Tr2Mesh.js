@@ -72,7 +72,6 @@ export class Tr2Mesh extends Tr2MeshBase
   _loadFenceReached = true;
 
 
-
   /**
    * @adapted Carbon's fence covers all earlier manager jobs through preparation.
    *   JavaScript has no queue-wide fence; this owner observes completion of its
@@ -298,11 +297,17 @@ export class Tr2Mesh extends Tr2MeshBase
    * Carbon: trinity/trinity/Tr2Mesh.cpp:14-24.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
-    if (this.geometry) blue.resMan.notify.Remove(this, this.geometry);
-    if (this.lowResGeometry) blue.resMan.notify.Remove(this, this.lowResGeometry);
+    this._destroyed = true;
+    this._loadFenceGeneration += 1;
+    this._loadFenceResource = null;
+    this._loadFenceReached = true;
+    // Carbon ~Tr2Mesh (Tr2Mesh.cpp:14-24): RemoveNotifyTarget on both geometries.
+    if (this.geometry) this.RemoveCachedData(this.geometry);
+    if (this.lowResGeometry) this.RemoveCachedData(this.lowResGeometry);
   }
 
   /**
@@ -569,20 +574,6 @@ export class Tr2Mesh extends Tr2MeshBase
   /** Distinguishes an older one-shot wait when a mesh rebinds the same handle. */
   _loadFenceGeneration = 0;
 
-  /**
-   * Carbon destructor (Tr2Mesh.cpp:14-22): releases both geometry slots.
-   *
-   * @adapted Clears manager links through Carbon's two resource setters.
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    this._loadFenceGeneration += 1;
-    this._loadFenceResource = null;
-    this._loadFenceReached = true;
-    // Carbon ~Tr2Mesh (Tr2Mesh.cpp:14-24): RemoveNotifyTarget on both geometries.
-    if (this.geometry) this.RemoveCachedData(this.geometry);
-    if (this.lowResGeometry) this.RemoveCachedData(this.lowResGeometry);
-  }
+
 }
 

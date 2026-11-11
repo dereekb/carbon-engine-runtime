@@ -193,16 +193,11 @@ export class Tr2GpuBuffer extends IRoot
   }
 
   /**
-   * Explicit final-owner teardown replaces destruction of Carbon's AL value member.
-   * Operational device-resource release remains separate.
-   *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: Tr2GpuBuffer::~Tr2GpuBuffer (trinity/trinity/Tr2GpuBuffer.cpp:23-25).
+   * @adapted Explicitly destroys the AL value member (h:79); native Tr2BufferAL destruction
+   * calls Destroy (trinity/trinityal/dx12/Tr2BufferALDx12.cpp:23-26). Graph dispatch handles bases.
    */
-  Destruct()
+  OnDestruct()
   {
     if (this.#buffer) this.#buffer.Destroy();
     this.#buffer = null;

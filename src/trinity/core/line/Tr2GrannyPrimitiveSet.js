@@ -159,13 +159,16 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
    * Carbon: trinity/trinity/Tr2GrannyPrimitiveSet.cpp:24-33.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @adapted JavaScript has no reference count to Unlock; IRoot.Unlock is unsupported.
+   * @adapted The device base owns unregistration; repeating the native explicit call would increment the JS generation twice.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
-    this.ReleaseResources();
-    CjsSchema.getConstructor("TriDevice").UnregisterResource(this);
-    if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
+    this._destroyed = true;
+    // Carbon ~Tr2GrannyPrimitiveSet (Tr2GrannyPrimitiveSet.cpp:24-33): RemoveNotifyTarget on the granny resource.
+    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
+    else this.CleanUp();
   }
 
   /**
@@ -424,23 +427,6 @@ export class Tr2GrannyPrimitiveSet extends Tr2PrimitiveSet
     return "<Tr2GrannyPrimitiveSet>";
   }
 
-  /**
-   * Explicit owner teardown replaces the C++ destructor and notify-target lifetime.
-   *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted Explicit owner teardown replaces the C++ destructor and notify-target lifetime. Temporary destructor stand-in: exists because teardown is required before the lifecycle (D
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    // Carbon ~Tr2GrannyPrimitiveSet (Tr2GrannyPrimitiveSet.cpp:24-33): RemoveNotifyTarget on the granny resource.
-    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
-    this.CleanUp();
-    Tr2DeviceResource.prototype.Destruct.call(this);
-  }
 
   static #declaration = new Tr2VertexDefinition();
 }

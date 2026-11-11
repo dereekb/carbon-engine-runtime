@@ -207,14 +207,13 @@ export class Tr2CurveLineSet
   /**
    * Explicit final-owner cleanup replaces the native destructor.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2CurveLineSet destructor (trinity/trinity/Tr2CurveLineSet.cpp:37-40).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

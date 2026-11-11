@@ -80,14 +80,12 @@ export class EveSpaceObjectDecal
    * the decal. No owner does yet: EveSpaceObject2, which holds decals, has no
    * Destruct of its own, so a dropped decal stays registered until one is added.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveSpaceObjectDecal destructor (trinity/trinity/Eve/SpaceObject/Attachments/EveSpaceObjectDecal.cpp:61-64).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

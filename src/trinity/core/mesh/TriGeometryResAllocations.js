@@ -1,4 +1,3 @@
-import { Tr2DeviceResource } from "../device/Tr2DeviceResource.js";
 // Source: trinity/trinity/Resources/TriGeometryRes.cpp:33-38, :2019-2140
 //   trinity/trinity/Tr2MeshBase.cpp:341-394
 //
@@ -43,7 +42,8 @@ const SHARED_BUFFER_USAGE = Tr2GpuUsage.VERTEX_BUFFER | Tr2GpuUsage.INDEX_BUFFER
 
 /**
  * Releases an existing backend allocator at final context shutdown without creating one.
- * Adapted: explicit context lifetime replaces Carbon's process-global buffer destruction.
+ * Carbon: shared allocator (trinity/trinity/Resources/TriGeometryRes.cpp:33-38).
+ * @adapted Explicit context lifetime replaces process-global buffer destruction.
  * @param {object} renderContext The context whose backend is shutting down.
  * @returns {void}
  */
@@ -53,7 +53,7 @@ export function ReleaseSharedGeometryBuffer(renderContext)
   const buffer = sharedBuffers.get(key);
   if (!buffer) return;
   buffer.ReleaseResources();
-  Tr2DeviceResource.prototype.Destruct.call(buffer);
+  buffer.Destruct();
   sharedBuffers.delete(key);
 }
 

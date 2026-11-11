@@ -587,38 +587,6 @@ export class EveTurretSet extends EveEntity
   /** Native first-firing fallback state (EveTurretSet.cpp:90,1481). */
   _firingEffectMuzzlePosSet = false;
 
-  /**
-   * Explicit final-owner teardown replaces native deterministic destruction.
-   * The steps are Carbon's destructor's, in its order (cpp:130-145): the
-   * firing effect's CleanUp, Cleanup, the geometry notify target, then
-   * ReleaseResources(TRISTORAGE_ALL); the Tr2DeviceResource base destructor
-   * then unregisters (Tr2DeviceResource.cpp:11-14). Shared geometry and
-   * effects are not destroyed. Removing one shared parent is not final
-   * ownership.
-   *
-   * Ours: the component-registry UnRegister first. Carbon's owner unregisters
-   * before destruction, and EveEntity's destructor only logs when it did not
-   * (EveEntity.cpp:43-50).
-   *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    this.UnRegister(this.GetComponentRegistry());
-
-    if (this.firingEffect) this.firingEffect.CleanUp();
-    this.Cleanup();
-    // Carbon ~EveTurretSet (Eve/Turret/EveTurretSet.cpp:130-145): RemoveNotifyTarget on the geometry.
-    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
-    this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
-
-    Tr2DeviceResource.prototype.Destruct.call(this);
-  }
 
   /**
    * Allocates float IDs0..23 (EveTurretSet.cpp:296-313). JS explicitly frees
@@ -1899,18 +1867,25 @@ export class EveTurretSet extends EveEntity
 
   /**
    * Stops firing, releases cached turret state and detaches resource ownership.
+   * Shared geometry and firing effects remain caller-owned; only this owner
+   * leaves the component registry and releases its instance allocation.
    * Carbon: trinity/trinity/Eve/Turret/EveTurretSet.cpp:130-145.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @adapted Retains existing explicit component unregister because the JS registry holds strong references.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
+    this._destroyed = true;
     this.UnRegister(this.GetComponentRegistry());
+
     if (this.firingEffect) this.firingEffect.CleanUp();
-    this.Cleanup();
-    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+    // Carbon ~EveTurretSet (Eve/Turret/EveTurretSet.cpp:130-145): RemoveNotifyTarget on the geometry.
+    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
+    else this.Cleanup();
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
+
   }
 
   /**

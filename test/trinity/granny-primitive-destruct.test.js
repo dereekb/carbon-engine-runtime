@@ -24,16 +24,16 @@ test("primitive teardown frees all three buffers and unregisters only its device
     TriDevice.RegisterResource(primitive);
     TriDevice.RegisterResource(peer);
     assert.ok(TriDevice.GetResourcesRegistered().includes(primitive));
-    primitive.OnDestruct();
-    primitive.OnDestruct();
+    primitive.Destruct();
+    primitive.Destruct();
     for (const buffer of buffers) assert.equal(buffer.IsValid(), false);
     assert.equal(TriDevice.GetResourcesRegistered().includes(primitive), false);
     assert.equal(TriDevice.GetResourcesRegistered().includes(peer), true);
   }
   finally
   {
-    primitive.OnDestruct();
-    peer.OnDestruct();
+    primitive.Destruct();
+    peer.Destruct();
     blue.resMan = previous;
   }
 });

@@ -537,13 +537,15 @@ export function recompileClassInfo(Constructor)
 
 /**
  * A decorator changed a class's bases, interfaces or chain: recompile it and
- * every compiled subclass, which may read its tables. Nothing for a class not
- * compiled yet, as at define, where its own decorators run before `define`.
+ * every compiled subclass, which may read its tables. Lifetime bases register
+ * even for unexposed infrastructure; value ClassInfo still waits for define.
  *
  * @param {Function} Changed The class.
  */
 function onExposureChanged(Changed)
 {
+  // Unexposed infrastructure can compose native bases without ever defining a Blue class.
+  registerGraphLifetime(Changed);
   for (const Constructor of COMPILED)
   {
     for (let type = Constructor; type && type !== Function.prototype; type = Object.getPrototypeOf(type))

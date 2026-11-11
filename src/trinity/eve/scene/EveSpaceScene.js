@@ -1111,13 +1111,11 @@ export class EveSpaceScene
    * scene objects/managers remain caller-owned. Readback snapshots are
    * owned by their picking contexts and remain usable after the scene retires.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: EveSpaceScene destructor (trinity/trinity/Eve/EveSpaceScene.cpp:309-325).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._destroyed) return;
     this._destroyed = true;
@@ -1135,8 +1133,6 @@ export class EveSpaceScene
     this._shadowPerFrameVSBuffer.Destroy();
     this.dataTextureMgr.Release();
     this.ClearComponentRegistry();
-    // Carbon's Tr2DeviceResource destructor (Tr2DeviceResource.cpp:11-14).
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

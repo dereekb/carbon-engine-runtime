@@ -157,15 +157,13 @@ export class EveChildBehaviorSystem extends EveChildTransform
   /**
    * Explicit final ownership release replaces Carbon's member destructors.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveChildBehaviorSystem destructor (trinity/trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp:63-65).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
     for (const group of this.behaviorGroups) group.SetVertexFunctionReferance(null);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

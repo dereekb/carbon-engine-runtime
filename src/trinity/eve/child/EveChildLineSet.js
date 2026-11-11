@@ -209,11 +209,10 @@ export class EveChildLineSet extends EveChildTransform
    * may supply line sets whose lifetime it manages separately, including shared
    * sets retained by another graph; JS has no BluePtr reference count.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveChildLineSet destructor (trinity/trinity/Eve/SpaceObject/Children/EveChildLineSet.cpp:72-74).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct(managedLineSets = null)
+  OnDestruct(managedLineSets = null)
   {
     this.ReleaseResources();
     this._instanceCursor.view = null;
@@ -224,7 +223,6 @@ export class EveChildLineSet extends EveChildTransform
     }
     this._retiredLineSets.clear();
     this._ownedLineSet = null;
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

@@ -339,14 +339,12 @@ export class EveBoosterSet2 extends EveEntity
    * Adapted: JavaScript has no deterministic destructor, so the owner calls
    * this explicitly. No owner calls Destruct yet.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveBoosterSet2 destructor (trinity/trinity/Eve/SpaceObject/Attachments/EveBoosterSet2.cpp:646-648).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     if (this._instanceBuffer.IsValid()) this._instanceBuffer._parent.Free(this._instanceBuffer);
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /** Carbon g_eveSpaceObjectTrailsEnabled (cpp:31-32), a registered engine setting: trails update and draw. */

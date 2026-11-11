@@ -88,11 +88,11 @@ export class Tr2ParticleSystem
    * 350-378). Adapted: explicit JS teardown replaces native destructors and
    * clears views of the owned CPU buffers; device reset retains that data.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2ParticleSystem destructor (trinity/trinity/Particle/Tr2ParticleSystem.cpp:89-99).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     Tr2ParticleSystem.getAllSystems().delete(this);
     this._DestroyBuffers();
@@ -109,7 +109,6 @@ export class Tr2ParticleSystem
     this.isValid = false;
     this._instanceData.buffer = null;
     this._instanceData.count = 0;
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   _buffers = [null, null];

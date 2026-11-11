@@ -179,20 +179,17 @@ export class Tr2PrimitiveScene extends ITr2PickableScene
   /**
    * Explicit destruction releases the owned picker and device registration.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
-   *
-   * @adapted
+   * Carbon: Tr2PrimitiveScene destructor (trinity/trinity/Tr2PrimitiveScene.cpp:38-44).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
     this._pickBuffer.Destruct();
     this._opaqueBatches.Clear();
     this._pickingBatches.Clear();
     this._allocator.Clear();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

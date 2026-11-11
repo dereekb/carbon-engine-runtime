@@ -304,15 +304,14 @@ export class Tr2LineSet extends Tr2PrimitiveSet
   /**
    * Owner teardown replaces the C++ destructor and automatic device unregistration.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2LineSet destructor (trinity/trinity/Tr2LineSet.cpp:21-24).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this._destroyed = true;
     this.ReleaseResources();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
 

@@ -104,14 +104,12 @@ export class EveStarfield
   /**
    * Explicit final-owner cleanup replaces C++ resource destruction.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveStarfield destructor (trinity/trinity/Eve/EveStarfield.cpp:56-58).
+   * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**

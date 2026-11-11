@@ -906,7 +906,7 @@ export class Tr2LightManager
     const instance = Tr2LightManager._instance;
     if (!instance) return;
     Tr2LightManager._instance = null;
-    Tr2DeviceResource.prototype.Destruct.call(instance);
+    instance.Destruct();
     const store = Tr2VariableStore.globalStore();
     store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());
     store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());

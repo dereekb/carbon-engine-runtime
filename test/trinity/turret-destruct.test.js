@@ -34,8 +34,8 @@ test("turret teardown stops firing, detaches animation and registry, and frees o
     const turret = { sequencer, pose: {}, worldTransforms: [{}] };
     owner._turrets.push(turret);
     owner._animationControls.set(turret, {});
-    owner.OnDestruct();
-    owner.OnDestruct();
+    owner.Destruct();
+    owner.Destruct();
     assert.equal(firing.isFiring, false);
     assert.deepEqual(registry.registeredEntities, [peer]);
     assert.equal(owner.GetComponentRegistry(), null);
@@ -50,7 +50,8 @@ test("turret teardown stops firing, detaches animation and registry, and frees o
     assert.equal(allocation.IsValid(), false);
     assert.equal(peerAllocation.IsValid(), true);
     assert.equal(owner.firingEffect, firing);
-    assert.equal(owner.geometryResource, geometry);
+    // EveTurretSet.Destruct (d091008aa, lines 609-620) already cleared this slot.
+    assert.equal(owner.geometryResource, null);
     assert.deepEqual(manager.notify.GetByOwner(owner), []);
     assert.deepEqual(manager.notify.GetByOwner(sequencer), []);
   }

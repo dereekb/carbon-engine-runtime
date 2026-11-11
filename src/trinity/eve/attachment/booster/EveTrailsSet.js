@@ -215,11 +215,14 @@ export class EveTrailsSet
    * Carbon: trinity/trinity/Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
-    this.Cleanup();
-    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+    this._destroyed = true;
+    // Carbon ~EveTrailsSet (Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41): RemoveNotifyTarget on the geometry.
+    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
+    else this.Cleanup();
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
@@ -400,17 +403,4 @@ export class EveTrailsSet
   static SingleTrailData = EveTrailsSetSingleTrailData;
 
 
-  /**
-   * Carbon destructor (EveTrailsSet.cpp:31-37): detach and discard cached declaration data.
-   *
-   * @adapted
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    this.Cleanup();
-    // Carbon ~EveTrailsSet (Eve/SpaceObject/Attachments/EveTrailsSet.cpp:31-41): RemoveNotifyTarget on the geometry.
-    if (this.geometryResource) this.RemoveCachedData(this.geometryResource);
-    Tr2DeviceResource.prototype.Destruct.call(this);
-  }
 }

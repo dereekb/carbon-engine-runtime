@@ -136,14 +136,13 @@ export class Tr2RuntimeInstanceData
   /**
    * Explicit final-owner teardown replaces Carbon's resource destructor.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: Tr2RuntimeInstanceData destructor (trinity/trinity/Tr2RuntimeInstanceData.cpp:189-191; Tr2RuntimeInstanceData.h:101 (allocation value member)).
+   * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @returns {void}
    */
-  Destruct()
+  OnDestruct()
   {
     this.ReleaseResources();
-    Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**
