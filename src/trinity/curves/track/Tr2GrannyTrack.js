@@ -131,8 +131,8 @@ export class Tr2GrannyTrack extends IRoot
   /**
    * Removes this owner's resource notification link.
    * Carbon: trinity/trinity/Curves/Tr2GrannyTrack.cpp:14-21.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @adapted JavaScript has no reference count to Unlock; IRoot.Unlock is unsupported.
    * @returns {void}
    */
   OnDestruct()
