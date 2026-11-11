@@ -892,14 +892,9 @@ export class Tr2LightManager
   }
 
   /**
-   * Carbon DeleteInstance (cpp:207-212). The destructor's ResetVariableStore
-   * (cpp:174-190) republishes empty buffers, so the globals stop naming this
-   * manager's.
-   *
-   * @adapted JavaScript has no destructor, so the manager unregisters from
-   *   the device and resets the variable store here. ResetVariableStore's
-   *   LightProfileArray and ShadowMapAtlas re-registrations are not made; the
-   *   manager does not publish either.
+   * Carbon DeleteInstance (trinity/trinity/Tr2LightManager.cpp:207-212).
+   * @adapted The existing singleton caller delegates native teardown to explicit Destruct.
+   * @returns {void}
    */
   static deleteInstance()
   {
@@ -907,9 +902,31 @@ export class Tr2LightManager
     if (!instance) return;
     Tr2LightManager._instance = null;
     instance.Destruct();
+  }
+
+  /**
+   * Carbon destructor (trinity/trinity/Tr2LightManager.cpp:174-177).
+   * @adapted Explicit Destroy releases the by-value constant-buffer share (Tr2LightManager.h:188; trinityal/include/Tr2ConstantBufferAL.h:52); reference members retain their existing lifetime policy.
+   * @adapted Native raytracing value resources have no working JS members to release.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    Tr2LightManager.ResetVariableStore();
+    this._perFrameData.Destroy();
+  }
+
+  /**
+   * Carbon ResetVariableStore (trinity/trinity/Tr2LightManager.cpp:179-190).
+   * @adapted LightProfileArray and ShadowMapAtlas publication is absent in JS, so their native re-registration is omitted.
+   * @returns {void}
+   */
+  static ResetVariableStore()
+  {
     const store = Tr2VariableStore.globalStore();
-    store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());
-    store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, new Tr2GpuStructuredBuffer());
+    const empty = new Tr2GpuStructuredBuffer();
+    store.RegisterVariableInternal(Tr2LightManager.LIGHT_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, empty);
+    store.RegisterVariableInternal(Tr2LightManager.LIGHT_INDEX_BUFFER_NAME, TriVariableContentType.TRIVARIABLE_GPUBUFFER, empty);
   }
 
   static _instance = null;
