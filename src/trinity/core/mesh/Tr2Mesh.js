@@ -294,6 +294,19 @@ export class Tr2Mesh extends Tr2MeshBase
   }
 
   /**
+   * Removes this owner's resource notification links.
+   * Carbon: trinity/trinity/Tr2Mesh.cpp:14-24.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.geometry) blue.resMan.notify.Remove(this, this.geometry);
+    if (this.lowResGeometry) blue.resMan.notify.Remove(this, this.lowResGeometry);
+  }
+
+  /**
    * Carbon: PySetGeometryRes (trinity/trinity/Tr2Mesh.cpp:202-206).
    * Binding a resource by hand clears
    * the authored path first, so the next notification does not refetch it.
