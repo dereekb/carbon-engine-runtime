@@ -34,6 +34,7 @@ import { RawData } from "../../core/rawData/RawData.js";
 import { EveComponentType } from "../EntityComponents.js";
 import { BLUELISTEVENT } from "#consts/blue";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../controllers/enums.js";
 import { IEveSpaceObjectChild } from "../child/IEveSpaceObjectChild.js";
 import { Tr2Light } from "../lights/Tr2Light.js";
 import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
@@ -160,6 +161,18 @@ export class EveEffectRoot2 extends EveEntity
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/EveEffectRoot2.cpp:47-57.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    for (const child of this.effectChildren) child.SetOwner(null);
+  }
 
   /** m_observers (PTriObserverLocalVector) [READ, PERSIST] */
   @be.mapAttribute(be.READ | be.PERSIST)
