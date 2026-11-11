@@ -96,7 +96,7 @@ function createData()
       },
       { name: "rifter2", buildClass: 1, isSkinned: true, sof6: true, opaqueAreas: [] },
     ],
-    faction: [{ name: "minmatar" }],
+    faction: [{ name: "minmatar", visibilityGroupSet: { visibilityGroups: [{ str: "primary" }] } }],
     race: [{ name: "minmatar" }],
     material: [
       { name: "rust", parameters: [] },
@@ -2619,6 +2619,32 @@ test("SOF emits first-hull audio, filtered controllers, and model curve resource
   assert.equal(hydrated.root.observers[0].observer.eventPrefix, "ship_");
   assert.equal(getRegisteredClassName(hydrated.root.modelRotationCurve.constructor), "Tr2RotationAdapter");
   assert.equal(getRegisteredClassName(hydrated.root.modelTranslationCurve.constructor), "Tr2TranslationAdapter");
+});
+
+test("SOF controllers are filtered by their visibility group, primary by default, as Carbon's are (bug reproduced)", async () => {
+  // EveSOF.cpp:2252 tests every controller against the faction's group set, with no UsingSof6 gate; a controller's group
+  // defaults to "primary" (EveSOFData.cpp:300-302). A faction without the primary group drops the default controllers.
+  const data = createData();
+  data.hull[0].controllers = [
+    { path: "res:/primary-controller.red" },
+    { path: "res:/other-controller.red", visibilityGroup: "other" },
+  ];
+  const built = async groups => {
+    data.faction[0].visibilityGroupSet = { visibilityGroups: groups.map(str => ({ str })) };
+    const sof = new EveSOF();
+    assert.equal(sof.dataMgr.SetData(data), true);
+    const resolved = [];
+    (await sof.SetObjectResourceResolver((path, context) => {
+      if (context.role === "controller") resolved.push(path);
+      return { kind: "Tr2ControllerReference", fields: { path } };
+    }));
+    await sof.Build("rifter", "minmatar", "minmatar");
+    return resolved;
+  };
+
+  assert.deepEqual(await built([ "primary" ]), [ "res:/primary-controller.red" ]);
+  assert.deepEqual(await built([ "other" ]), [ "res:/other-controller.red" ]);
+  assert.deepEqual(await built([]), []);
 });
 
 test("SOF object resource resolution is explicit and synchronous", async () => {

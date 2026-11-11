@@ -870,9 +870,11 @@ function projectHullSoundEmitters(values)
 
 function projectHullControllers(values)
 {
+  // Carbon: EveSOFDataMgr.cpp:1191-1197; the group hashed with CcpHashFNV1, "primary" by default (EveSOFData.cpp:9, :300-302).
   return (Array.isArray(values) ? values : []).filter(Boolean).map(value => ({
     path: String(value.path ?? ""),
-    buildFilter: Number(value.buildFilter ?? 0xffffffff) >>> 0
+    buildFilter: Number(value.buildFilter ?? 0xffffffff) >>> 0,
+    visibilityGroup: ccpHashFnv1(String(value.visibilityGroup ?? "primary"))
   }));
 }
 
