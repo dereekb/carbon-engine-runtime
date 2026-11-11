@@ -1,9 +1,13 @@
 // Source: trinity/trinity/Controllers/Tr2Controller.h
 // Source: trinity/trinity/Controllers/Tr2Controller.cpp
 // Source: trinity/trinity/Controllers/Tr2Controller_Blue.cpp
+import { isPublicName } from "#utils/text";
+import { EveChildContainer } from "../eve/child/EveChildContainer.js";
+import { Tr2ControllerReference } from "./Tr2ControllerReference.js";
+import { Tr2ActionSetValue } from "./action/Tr2ActionSetValue.js";
 import { exposure as be } from "#be";
 import * as CcpLog from "../../global/logging/ccpLog.js";
-import { type } from "#schema";
+import { CjsSchema, type } from "#schema";
 import { UnlinkReason } from "./enums.js";
 import { blue, BlueList, IListNotify, BlueClasses } from "#blue";
 import { BLUELISTEVENT } from "#consts/blue";
@@ -743,6 +747,78 @@ export class Tr2Controller extends EveThrottleable
       this.Link(owner);
     }
   }
+
+  /**
+   * Lists public controllers in a space object's immediate controller scope.
+   * Includes overlays, container effect children and supplied driving effects,
+   * in that order. Resolves one reference level; unloaded references retain
+   * their path. Repeated controllers and authored list indexes are preserved.
+   * This inspection policy is ours; native controller exposure has no collector.
+   * @param {EveSpaceObject2} object The space object to inspect.
+   * @param {EveMultiEffect[]} [effects] Additional driving effects.
+   * @returns {{controller: Tr2Controller|null, owner: string, index: number, path: string|null, reference: Tr2ControllerReference|null}[]} Entries.
+   * @cjs
+   */
+  static getEntries(object, effects = [])
+  {
+    const root = object.name || CjsSchema.getClassName(object.constructor);
+    const lists = [ [ root, object.controllers ] ];
+    for (const overlay of object.overlayEffects) lists.push([ `${root} / ${overlay.name || "overlay"}`, overlay.controllers ]);
+    for (const child of object.effectChildren)
+    {
+      const container = CjsSchema.cast(child, EveChildContainer);
+      if (container) lists.push([ `${root} / ${container.name || "child"}`, container.controllers ]);
+    }
+    for (const effect of effects) lists.push([ effect.name || "effect", effect.controllers ]);
+    const entries = [];
+    for (const [ owner, controllers ] of lists)
+    {
+      for (const [ index, each ] of [ ...controllers ].entries())
+      {
+        const reference = CjsSchema.cast(each, Tr2ControllerReference);
+        const controller = CjsSchema.cast(reference ? reference.controller : each, Tr2Controller);
+        if (controller && !isPublicName(controller.name)) continue;
+        if (controller || reference) entries.push({ controller, owner, index, path: reference && !controller ? reference.path : null, reference });
+      }
+    }
+    return entries;
+  }
+
+  /**
+   * Lists public events and inferred trigger variables, first name wins.
+   * A trigger defaults to zero and every state action assigning its value
+   * resets it to zero. This content heuristic is ours, not native execution.
+   * Events precede triggers within each controller; controller order is kept.
+   * @param {Tr2Controller[]} controllers Controllers to inspect, in order.
+   * @returns {{name: string, kind: "event"|"trigger", controller: string, running: boolean}[]} Actions.
+   * @cjs
+   */
+  static getActions(controllers)
+  {
+    const actions = new Map();
+    for (const controller of controllers)
+    {
+      for (const handler of controller.eventHandlers)
+        if (isPublicName(handler.name) && !actions.has(handler.name)) actions.set(handler.name, { name: handler.name, kind: "event", controller: controller.name, running: false });
+      const resets = new Map();
+      for (const machine of controller.stateMachines)
+        for (const state of machine.states)
+          for (const action of state.actions)
+          {
+            const set = CjsSchema.cast(action, Tr2ActionSetValue);
+            if (set && set.attribute === "value" && set.path) (resets.get(set.path) ?? resets.set(set.path, []).get(set.path)).push(set.value);
+          }
+      for (const variable of controller.variables)
+      {
+        const values = resets.get(variable.name);
+        if (!isPublicName(variable.name) || variable.defaultValue !== 0 || !values || actions.has(variable.name)) continue;
+        if (values.every(value => Number(value) === 0))
+          actions.set(variable.name, { name: variable.name, kind: "trigger", controller: controller.name, running: variable.GetValue() !== 0 });
+      }
+    }
+    return [ ...actions.values() ];
+  }
+
 }
 
 // Tr2Controller_Blue.cpp:15-19,65 maps this table and chains EveThrottleable.

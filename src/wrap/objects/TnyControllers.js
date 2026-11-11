@@ -1,16 +1,6 @@
-import { parseEnumValues } from "#utils/text";
-
-// Preserve the existing wrap entry point while keeping one parser implementation.
-export { parseEnumValues as ParseEnumValues } from "#utils/text";
-import { CjsSchema } from "#schema";
-import { Type } from "../../trinity/controllers/enums.js";
-import { EveChildContainer } from "../../trinity/eve/child/EveChildContainer.js";
+import { isPublicName, parseEnumValues } from "#utils/text";
+import { Tr2ControllerFloatVariable } from "../../trinity/controllers/expression/Tr2ControllerFloatVariable.js";
 import { Tr2Controller } from "../../trinity/controllers/Tr2Controller.js";
-import { Tr2ControllerReference } from "../../trinity/controllers/Tr2ControllerReference.js";
-import { Tr2ActionSetValue } from "../../trinity/controllers/action/Tr2ActionSetValue.js";
-
-/** Variable types by their Tr2ControllerFloatVariable::Type value. */
-const TYPE_NAMES = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BOOLEAN]: "boolean", [Type.ENUM]: "enum" };
 
 /**
  * What a space object's controllers expose, and nothing else: their variables
@@ -65,39 +55,18 @@ export class TnyControllers
     }
 
     /**
-     * Each controller with where it sits, as Graphene's Parameters lists them:
+     * Each controller with where it sits in the immediate space-object scope:
      * its owner (the object, an overlay, a container child or a driving
      * effect, by name), its index in that owner's list, and for a
      * Tr2ControllerReference not loaded yet its path and no controller.
      * A controller whose name starts with "_" is private to the content.
      *
-     * @returns {{controller: object|null, owner: string, index: number, path: string|null}[]} The entries.
+     * @returns {{controller: object|null, owner: string, index: number, path: string|null, reference: object|null}[]} The entries.
      * @cjs
      */
     _Entries()
     {
-        const object = this.owner.wrapped;
-        const root = object.name || CjsSchema.getClassName(object.constructor);
-        const lists = [ [ root, object.controllers ] ];
-        for (const overlay of object.overlayEffects) lists.push([ `${root} / ${overlay.name || "overlay"}`, overlay.controllers ]);
-        for (const child of object.effectChildren)
-        {
-            const container = CjsSchema.cast(child, EveChildContainer);
-            if (container) lists.push([ `${root} / ${container.name || "child"}`, container.controllers ]);
-        }
-        for (const effect of this.effects()) lists.push([ effect.name || "effect", effect.controllers ]);
-        const entries = [];
-        for (const [ owner, controllers ] of lists)
-        {
-            for (const [ index, each ] of [ ...controllers ].entries())
-            {
-                const reference = CjsSchema.cast(each, Tr2ControllerReference);
-                const controller = CjsSchema.cast(reference ? reference.controller : each, Tr2Controller);
-                if (controller && !IsPublic(controller.name)) continue;
-                if (controller || reference) entries.push({ controller, owner, index, path: reference && !controller ? reference.path : null, reference });
-            }
-        }
-        return entries;
+        return Tr2Controller.getEntries(this.owner.wrapped, this.effects());
     }
 
     /**
@@ -146,14 +115,14 @@ export class TnyControllers
                 owner,
                 index,
                 loading: null,
-                variables: controller.variables.filter(variable => IsPublic(variable.name)).map(variable =>
+                variables: controller.variables.filter(variable => isPublicName(variable.name)).map(variable =>
                 {
                     // Authored choices make a select whatever the type, as Graphene's Parameters do.
                     const choices = parseEnumValues(variable.enumValues);
-                    return { name: variable.name, type: TYPE_NAMES[variable.variableType] ?? "number", value: variable.GetValue(),
+                    return { name: variable.name, type: Tr2ControllerFloatVariable.getTypeName(variable.variableType), value: variable.GetValue(),
                         defaultValue: variable.defaultValue, ...(choices.length ? { choices } : {}) };
                 }),
-                stateMachines: controller.stateMachines.filter(machine => IsPublic(machine.name)).map(machine => ({
+                stateMachines: controller.stateMachines.filter(machine => isPublicName(machine.name)).map(machine => ({
                     name: machine.name,
                     state: machine.GetCurrentState()?.name ?? null
                 }))
@@ -175,28 +144,7 @@ export class TnyControllers
      */
     GetActions()
     {
-        const actions = new Map();
-        for (const controller of this._Controllers())
-        {
-            for (const handler of controller.eventHandlers)
-                if (IsPublic(handler.name) && !actions.has(handler.name)) actions.set(handler.name, { name: handler.name, kind: "event", controller: controller.name, running: false });
-            const resets = new Map();
-            for (const machine of controller.stateMachines)
-                for (const state of machine.states)
-                    for (const action of state.actions)
-                    {
-                        const set = CjsSchema.cast(action, Tr2ActionSetValue);
-                        if (set && set.attribute === "value" && set.path) (resets.get(set.path) ?? resets.set(set.path, []).get(set.path)).push(set.value);
-                    }
-            for (const variable of controller.variables)
-            {
-                const values = resets.get(variable.name);
-                if (!IsPublic(variable.name) || variable.defaultValue !== 0 || !values || actions.has(variable.name)) continue;
-                if (values.every(value => Number(value) === 0))
-                    actions.set(variable.name, { name: variable.name, kind: "trigger", controller: controller.name, running: variable.GetValue() !== 0 });
-            }
-        }
-        return [ ...actions.values() ];
+        return Tr2Controller.getActions(this._Controllers());
     }
 
     /**
@@ -230,7 +178,7 @@ export class TnyControllers
      */
     GetVariableNames()
     {
-        return [ ...new Set(this._Controllers().flatMap(controller => controller.variables.map(variable => variable.name).filter(IsPublic))) ];
+        return [ ...new Set(this._Controllers().flatMap(controller => controller.variables.map(variable => variable.name).filter(isPublicName))) ];
     }
 
     /**
@@ -242,7 +190,7 @@ export class TnyControllers
      */
     GetVariable(name)
     {
-        if (!IsPublic(name)) return null;
+        if (!isPublicName(name)) return null;
         for (const controller of this._Controllers())
         {
             const variable = controller.GetVariableByName(name);
@@ -260,7 +208,7 @@ export class TnyControllers
      */
     SetVariable(name, value)
     {
-        if (!IsPublic(name)) throw new RangeError(`${name} is private to the content.`);
+        if (!isPublicName(name)) throw new RangeError(`${name} is private to the content.`);
         if (!Number.isFinite(value)) throw new TypeError("A controller variable takes a number.");
         this.owner.wrapped.SetControllerVariable(name, value);
         for (const effect of this.effects()) effect.SetControllerVariable(name, value);
@@ -273,15 +221,4 @@ export class TnyControllers
      */
     static className = "TnyControllers";
 
-}
-
-/**
- * Whether a controller or variable name is public: content marks private ones with a leading "_".
- * @param {string} name Member or registration name.
- * @returns {boolean}
- * @cjs
- */
-function IsPublic(name)
-{
-    return !String(name).startsWith("_");
 }

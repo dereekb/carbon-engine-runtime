@@ -251,6 +251,25 @@ export class Tr2ControllerFloatVariable extends IInitialize
     destination.value = BigInt.asUintN(64, destination.value | this._dirtyMask);
   }
 
+  /**
+   * Returns the editable value-kind label for a controller variable type.
+   * These UI labels are ours; Carbon exposes the enum and chooser labels only.
+   * @param {number} variableType Native Type value.
+   * @returns {string} The kind, falling back to number for unknown values.
+   * @cjs
+   */
+  static getTypeName(variableType)
+  {
+    return Tr2ControllerFloatVariable.typeNames[variableType] ?? "number";
+  }
+
+  /**
+   * Editable value-kind labels indexed by native Type.
+   * @type {Object<number, string>}
+   * @cjs
+   */
+  static typeNames = { [Type.FLOAT]: "number", [Type.INTEGER]: "integer", [Type.BOOLEAN]: "boolean", [Type.ENUM]: "enum" };
+
   /** Native presentation enum exposed for JavaScript callers. */
   static Type = Type;
 

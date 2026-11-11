@@ -86,3 +86,14 @@ function isEnumNumber(text)
 {
     return text !== "" && Number.isFinite(Number(text));
 }
+
+/**
+ * Whether a name lacks the leading underscore used to mark private content.
+ * @param {string} name The name to inspect.
+ * @returns {boolean} Whether the name is public.
+ * @cjs
+ */
+export function isPublicName(name)
+{
+    return !String(name).startsWith("_");
+}
