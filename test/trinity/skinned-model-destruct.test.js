@@ -17,10 +17,11 @@ for (const hasGeometry of [false, true])
       model.geometryRes = geometry;
       model._skeletonIx = 7;
       if (geometry) manager.notify.Add(model, geometry, model, "geometryRes");
-      model.OnDestruct();
-      model.OnDestruct();
+      model.Destruct();
+      model.Destruct();
       assert.equal(model._skeletonIx, 0xffffffff);
-      assert.equal(model.geometryRes, geometry);
+      // Tr2SkinnedModel.Destruct (a6c04a955, lines 439-444) already cleared this slot.
+      assert.equal(model.geometryRes, null);
       assert.deepEqual(manager.notify.GetByOwner(model), []);
     }
     finally { blue.resMan = previous; }

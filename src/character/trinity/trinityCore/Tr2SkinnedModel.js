@@ -243,11 +243,14 @@ export class Tr2SkinnedModel extends Tr2Model
    * Carbon: trinity/trinity/Tr2SkinnedModel.cpp:23-30.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
-    this.ReleaseCachedData(this.geometryRes);
-    if (this.geometryRes) blue.resMan.notify.Remove(this, this.geometryRes);
+    this._destroyed = true;
+    // Carbon ~Tr2SkinnedModel (Tr2SkinnedModel.cpp:23-30): ReleaseCachedData( m_geometryRes ), then
+    // RemoveNotifyTarget. With no geometry, RemoveCachedData(null) still releases, as Carbon does.
+    this.RemoveCachedData(this.geometryRes);
   }
 
   /**
@@ -431,17 +434,5 @@ export class Tr2SkinnedModel extends Tr2Model
   }
 
 
-  /**
-   * Carbon destructor (Tr2SkinnedModel.cpp:23-28): release the geometry target.
-   *
-   * @adapted
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    // Carbon ~Tr2SkinnedModel (Tr2SkinnedModel.cpp:23-30): ReleaseCachedData( m_geometryRes ), then
-    // RemoveNotifyTarget. With no geometry, RemoveCachedData(null) still releases, as Carbon does.
-    this.RemoveCachedData(this.geometryRes);
-  }
 }
 

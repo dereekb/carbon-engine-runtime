@@ -134,10 +134,13 @@ export class Tr2GrannyTrack extends IRoot
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
    * @adapted JavaScript has no reference count to Unlock; IRoot.Unlock is unsupported.
    * @returns {void}
+   * @adapted Preserves the prior explicit Destruct fences and cached-slot clearing; graph dispatch owns base cleanup.
    */
   OnDestruct()
   {
-    if (this.grannyRes) blue.resMan.notify.Remove(this, this.grannyRes);
+    this._destroyed = true;
+    // Carbon ~Tr2GrannyTrack (Curves/Tr2GrannyTrack.cpp:14-21): RemoveNotifyTarget on the granny resource.
+    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
   }
 
   /**
@@ -215,17 +218,6 @@ export class Tr2GrannyTrack extends IRoot
     return Number(this.duration) || 0;
   }
 
-  /**
-   * Carbon destructor (Tr2GrannyTrack.cpp:14-21): drops the notification link.
-   *
-   * @adapted JavaScript has no destructor, so owners call this.
-   */
-  Destruct()
-  {
-    this._destroyed = true;
-    // Carbon ~Tr2GrannyTrack (Curves/Tr2GrannyTrack.cpp:14-21): RemoveNotifyTarget on the granny resource.
-    if (this.grannyRes) this.RemoveCachedData(this.grannyRes);
-  }
 
   /**
    * Locates resource curves.
