@@ -27,6 +27,17 @@ import { IListNotify } from "#exposure/IListNotify";
 @be.define("Tr2ControllerEventHandler")
 export class Tr2ControllerEventHandler extends IListNotify
 {
+  /**
+   * Detaches this handler's owned action-list observer.
+   * Carbon acquisition: trinity/trinity/Controllers/Tr2ControllerEventHandler.cpp:8-13.
+   * @adapted Explicit observer detach replaces implicit BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), retaining actions.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.actions.SetNotify(null);
+  }
+
   /** Authored event name compared by the owning controller. */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 
