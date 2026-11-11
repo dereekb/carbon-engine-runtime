@@ -18,6 +18,18 @@ import { type } from "#schema";
 @be.inherit(IRoot)
 export class Tr2FontMeasurer extends IRoot
 {
+  /**
+   * Carbon destructor Reset (trinity/trinity/Font/Tr2FontMeasurer.cpp:115-118,127-166).
+   * @adapted Listener-set clearing replaces implicit member destruction (Tr2FontMeasurer.h:185), after Reset sends the final change notification.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.Reset();
+    this._changeListeners.clear();
+  }
+
+
 
   /** m_ascender (int) [READWRITE] */
   @be.mapAttribute(be.READWRITE)
