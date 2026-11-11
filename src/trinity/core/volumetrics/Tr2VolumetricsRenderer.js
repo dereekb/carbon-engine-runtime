@@ -81,6 +81,19 @@ const FOG_LIGHT_BITS = new Uint32Array(FOG_LIGHTS.buffer); // alloc: uint32 view
 })
 export class Tr2VolumetricsRenderer
 {
+  /**
+   * Releases the native by-value constant-buffer member.
+   * Carbon: Tr2VolumetricsRenderer member (trinity/trinity/Tr2VolumetricsRenderer.h:303).
+   * @adapted Explicit Destroy replaces implicit shared_ptr member release; referenced effects and textures retain their existing lifetime policy.
+   * @adapted Native batch accumulator and shadow constant buffer (h:306-308) are not acquired by this JS class.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this._fogConstantBuffer.Destroy();
+  }
+
+
   /** Carbon: MAP_ATTRIBUTE_WITH_CHOOSER (trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp:29); chooser Tr2VolumetricQuality_Chooser (trinity/trinity/Tr2VolumetricsRenderer_Blue.cpp:8). */
   @type.int32
   @type.enum("trinity.Tr2VolumerticQuality")
