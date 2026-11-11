@@ -1113,6 +1113,9 @@ export class EveSpaceScene
    *
    * Carbon: EveSpaceScene destructor (trinity/trinity/Eve/EveSpaceScene.cpp:309-325).
    * @adapted Retains existing JS teardown; the graph dispatches each base hook.
+   * @adapted Native primary batches live in the caller-composed batch manager; this scene clears only its owned accumulators.
+   * @adapted Native shared-index/baked-morph variable publications are absent; ClearVariableStore detaches the four maintained environment handles.
+   * @adapted Explicitly detaches owned list observers, matching native BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), without clearing content.
    * @returns {void}
    */
   OnDestruct()
@@ -1133,6 +1136,10 @@ export class EveSpaceScene
     this._shadowPerFrameVSBuffer.Destroy();
     this.dataTextureMgr.Release();
     this.ClearComponentRegistry();
+    this.backgroundObjects.SetNotify(null);
+    this.planets.SetNotify(null);
+    this.objects.SetNotify(null);
+    this.uiObjects.SetNotify(null);
   }
 
   /**
