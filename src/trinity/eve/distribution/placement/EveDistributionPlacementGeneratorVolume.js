@@ -26,6 +26,16 @@ import { PlacementDataWithIdentifier } from "../../PlacementDataWithIdentifier.j
 })
 export class EveDistributionPlacementGeneratorVolume extends IEveDistributionPlacementGenerators
 {
+  /**
+   * Removes the volume-change subscription held by this generator.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume.cpp:16-19.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.RemoveVolumeCallbacks();
+  }
 
   _isRequestingRegeneration = true;
 
