@@ -314,6 +314,29 @@ export class Tr2ResourceSetDescriptionAL
   }
 
   /**
+   * Releases handles held by the native resource and sampler array members.
+   * Carbon: trinity/trinityal/include/Tr2ResourceSetAL.h:116-123.
+   * @adapted Explicit handle release replaces unique_ptr array destruction; moved-from arrays are null.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const records of [this._srv, this._uav])
+    {
+      if (records === null) continue;
+      for (const record of records)
+      {
+        if (record.texture) record.texture.Destroy();
+        if (record.buffer) record.buffer.Destroy();
+      }
+    }
+    if (this._samplers !== null)
+    {
+      for (const record of this._samplers) record.sampler.Destroy();
+    }
+  }
+
+  /**
    * Hashes dense resource identities and heap-view enums with Carbon's ordering
    * and omissions.
    *
