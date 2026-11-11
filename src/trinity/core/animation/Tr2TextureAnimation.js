@@ -341,13 +341,12 @@ export class Tr2TextureAnimation extends IRoot
    * handle, created by this animation, is destroyed (`_clear`), releasing this
    * animation's share; a bound resource set may still hold its own.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @returns {void}
+   * Carbon: Tr2TextureAnimation destructor (trinity/trinity/Tr2TextureAnimation.cpp:103-109).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     this._clear();
   }

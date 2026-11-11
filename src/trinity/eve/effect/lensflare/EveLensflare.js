@@ -621,14 +621,13 @@ export class EveLensflare
    * destructor, so the owner removing a lensflare calls this. Controllers unlink
    * with DELETING as in EveLensflare.cpp:129-135.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted
    * @returns {void}
+   * Carbon: EveLensflare destructor (trinity/trinity/Eve/EveLensflare.cpp:129-135).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
     const occlusionBuffer = Tr2OcclusionBuffer.getInstance();

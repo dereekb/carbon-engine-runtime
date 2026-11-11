@@ -106,11 +106,10 @@ export class EveCloudEditableVolume
   /**
    * Cancels pending computation; shared bitmap and texture references remain usable.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
+   * Carbon: EveCloudEditableVolume destructor (trinity/trinity/Eve/SpaceObject/Children/EveCloudEditableVolume.cpp:54-62).
+   * @adapted Timer/generator cancellation replaces joining a native thread; graph dispatch retains the existing teardown.
    */
-  Destruct()
+  OnDestruct()
   {
     clearTimeout(this._timer);
     this._timer = null;

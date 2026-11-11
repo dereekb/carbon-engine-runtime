@@ -169,16 +169,15 @@ export class Tr2DynamicBinding extends INotify
   /**
    * Carbon's destructor (Tr2DynamicBinding.cpp:185-190): drops the owner and unlinks.
    *
-   * Temporary destructor stand-in: exists because teardown is required before
-   * the lifecycle (Destructor) pattern exists. NOT the final mechanism; do not
-   * copy this as a pattern. Replaced by the lifecycle API after the IRoot pilot.
    *
    * @adapted JavaScript has no deterministic destructor, so the holder that
    *   abandons a binding calls this; which owners do is pending the open teardown
    *   ruling (with TriDevice's registry and plan Q4).
    * @returns {void}
+   * Carbon: Tr2DynamicBinding destructor (trinity/trinity/Tr2DynamicBinding.cpp:185-190).
+   * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
    */
-  Destruct()
+  OnDestruct()
   {
     // blue.os.UnregisterForSimTimeRebase(this); // cpp:187; no TiDi sync reaches the browser.
     this._owner = null;
