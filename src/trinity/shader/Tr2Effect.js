@@ -265,18 +265,15 @@ export class Tr2Effect extends Tr2Material
     }
   }
 
-  /** Explicitly releases pass value members as Carbon's vector clear/destructor does. */
+  /**
+   * Releases every owned technique value before replacing the pass vector.
+   * Carbon: trinity/trinity/Shader/Tr2Effect.cpp:801-806.
+   * @adapted Explicit owned-member teardown replaces native vector clear and unique_ptr destruction.
+   * @returns {void}
+   */
   _ClearPassBindings()
   {
-    for (const technique of this.parametersForPasses)
-    {
-      for (const pass of technique.passes)
-      {
-        for (const input of pass.stageInput) input.constantBuffer.Destroy();
-        pass.resourceSet.Destroy();
-        if (pass.resourceSetDesc) pass.resourceSetDesc.ClearResources();
-      }
-    }
+    for (const technique of this.parametersForPasses) technique.OnDestruct();
     this.parametersForPasses = [];
   }
 

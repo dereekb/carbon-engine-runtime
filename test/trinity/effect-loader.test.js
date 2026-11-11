@@ -7,6 +7,9 @@ import { blue, IBlueResMan } from "../../npm/dist/blue/index.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import { Tr2EffectRes } from "../../npm/dist/trinity/shader/index.js";
 import { Tr2Effect } from "../../npm/dist/trinity/shader/index.js";
+import { Tr2EffectTechniqueInputs } from "../../npm/dist/trinity/shader/material/Tr2EffectTechniqueInputs.js";
+import { Tr2EffectPassParameters } from "../../npm/dist/trinity/shader/material/Tr2EffectPassParameters.js";
+import { Tr2RenderContext } from "../../npm/dist/trinity/core/index.js";
 import { SetEffectPathDefaults } from "../../npm/dist/global/utils/effectPath.js";
 import { CjsCarbonEffectWriter } from "../../npm/dist/resource/format/carbonEffect/CjsCarbonEffectWriter.js";
 import { buildSyntheticDescription } from "../resource/runtime-resource/format/carbonEffectSynthetic.js";
@@ -66,15 +69,20 @@ test("effect path edits replace internal acquisitions and clearing releases the 
     const effect = new Tr2Effect();
     effect.SetEffectPathName("res:/a.sm_depth");
     const first = effect.effectResource;
-    let bindingsReleased = 0;
-    effect.parametersForPasses.push({ passes: [{
-      stageInput: [{ constantBuffer: { Destroy() { bindingsReleased++; } } }],
-      resourceSet: { Destroy() { bindingsReleased++; } }
-    }] });
+    const context = new Tr2RenderContext();
+    context.GetRenderContextAL().CreateDevice();
+    const technique = new Tr2EffectTechniqueInputs(), pass = new Tr2EffectPassParameters();
+    pass.stageInput[0].constantBuffer.Create__Size(16, context);
+    pass.resourceSet.Create__Program(pass.resourceSetDesc, {}, context);
+    assert.equal(pass.stageInput[0].constantBuffer.IsValid(), true);
+    assert.equal(pass.resourceSet.IsValid(), true);
+    technique.passes.push(pass);
+    effect.parametersForPasses.push(technique);
     effect.SetEffectPathName("res:/b.sm_depth");
     assert.notEqual(effect.effectResource, first);
     assert.equal(effect.effectResource.GetPath(), "res:/b.sm_depth");
-    assert.equal(bindingsReleased, 2);
+    assert.equal(pass.stageInput[0].constantBuffer.IsValid(), false);
+    assert.equal(pass.resourceSet.IsValid(), false);
     assert.equal(effect.parametersForPasses.length, 0);
     const second = effect.effectResource;
     effect.SetEffectPathName("res:/b.sm_depth");
