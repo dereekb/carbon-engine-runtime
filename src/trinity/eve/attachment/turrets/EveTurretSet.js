@@ -1898,6 +1898,18 @@ export class EveTurretSet extends EveEntity
   }
 
   /**
+   * Removes this owner's resource notification link.
+   * Carbon: trinity/trinity/Eve/Turret/EveTurretSet.cpp:130-145.
+   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
+   * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+  }
+
+  /**
    * Resolves the authored muzzle prefix plus two-digit joint index, capped at
    * the native twelve slots (EveTurretSet.cpp:320-355). Resource lookup uses
    * the canonical skeleton owner on decoded records; effect quad registration
