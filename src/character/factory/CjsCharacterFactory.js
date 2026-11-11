@@ -3,7 +3,7 @@ import { CjsSchema } from "#schema";
 import { CjsPaperDollDefinition } from "../application/CjsPaperDollDefinition.js";
 import { CjsCharacterLibraryManager } from "../library/CjsCharacterLibraryManager.js";
 import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
-import { CjsCharacterPdpType } from "../formats/CjsCharacterPdpType.js";
+import { CjsCharacterPdpType } from "../formats/characterPdpType.js";
 import { normalizeResourcePath } from "#utils/path";
 import female from "./defaults/defaultFemalePaperDoll.json" with { type: "json" };
 import male from "./defaults/defaultMalePaperDoll.json" with { type: "json" };

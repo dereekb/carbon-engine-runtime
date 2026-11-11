@@ -6,7 +6,7 @@ import { CjsCharacterLibraryBuilder } from "./CjsCharacterLibraryBuilder.js";
 import { CjsCharacterColorVariation } from "../model/source/CjsCharacterColorVariation.js";
 import { CjsCharacterTexture } from "../model/resources/CjsCharacterTexture.js";
 import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
-import { CjsCharacterPdpType } from "../formats/CjsCharacterPdpType.js";
+import { CjsCharacterPdpType } from "../formats/characterPdpType.js";
 
 import { CjsCharacterLibrary } from "./CjsCharacterLibrary.js";
 import { normalizeResourcePath } from "#utils/path";

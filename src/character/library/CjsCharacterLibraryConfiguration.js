@@ -1,4 +1,4 @@
-import { CjsCharacterPdpType } from "../formats/CjsCharacterPdpType.js";
+import { CjsCharacterPdpType } from "../formats/characterPdpType.js";
 
 /** Declarative source families for the flat character library. */
 export class CjsCharacterLibraryConfiguration
