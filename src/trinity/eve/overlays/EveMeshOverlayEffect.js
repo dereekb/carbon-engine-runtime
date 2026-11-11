@@ -15,6 +15,7 @@ import { Tr2RenderBatch, TriRenderBatchAreaBlock } from "../../core/batch/TriRen
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { CarbonVertexElements } from "../../core/vertex/vertexUsage.js";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../controllers/enums.js";
 import { Tr2Effect } from "../../shader/Tr2Effect.js";
 
 
@@ -47,6 +48,17 @@ export class EveMeshOverlayEffect extends IRoot
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Attachments/EveMeshOverlayEffect.cpp:16-22.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+  }
 
   @type.object.ref("TriCurveSet")
   curveSet = null;
