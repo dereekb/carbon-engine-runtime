@@ -16,8 +16,8 @@
 // buffer, so nothing above notices - except that two meshes in different
 // blocks cannot share one stream binding, which they could not anyway.
 //
-// Free is explicit at the owning resource's release because JavaScript has no
-// deterministic Allocation destructor. MapForReading remains unported.
+// Resource release and public allocation destruction return ranges through Free.
+// MapForReading remains unported.
 import { CjsSchema, type } from "#schema";
 
 
@@ -34,6 +34,18 @@ export const SHARED_BUFFER_MAX_SIZE = 2048 * 1024 * 1024;
  */
 export class Tr2SuballocatedBufferAllocation
 {
+  /**
+   * Returns this allocation's reservation to its parent.
+   * Carbon destructor: trinity/trinity/Tr2SuballocatedBuffer.cpp:184-190.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this._parent) this._parent.Free(this);
+  }
+
+
   /** The block's `Tr2BufferAL`. */
   _buffer = null;
 
