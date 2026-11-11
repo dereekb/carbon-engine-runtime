@@ -39,6 +39,18 @@ export class Tr2SphereConstraint extends ITr2GenericParticleConstraint
 {
 
   /**
+   * Releases this class's native destructor obligations.
+   * Carbon: Tr2SphereConstraint teardown (trinity/trinity/Particle/Tr2SphereConstraint.cpp:35-41).
+   * @adapted Explicit observer detach replaces implicit BlueList member destruction (blueexposure/include/BlueListUtil.h:198-204), retaining authored content.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.onCollisionEmitters.SetNotify(null);
+  }
+
+
+  /**
    * Carbon Tr2SphereConstraint.cpp:68-80 prepares newly inserted collision emitters.
    * Carbon declaration: Tr2SphereConstraint::OnListModified (trinity/trinity/Particle/Tr2SphereConstraint.h:42).
    *
