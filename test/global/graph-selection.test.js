@@ -5,6 +5,28 @@ import { CjsGraph } from "../../src/global/model/graph/index.js";
 
 const matchClass = info => info.declared.resource === true;
 
+test("lifetime-only declarations remain unknown value edges until full registration", () =>
+{
+  class Resource {}
+  class Late { resource = null; }
+  class Root { late = null; }
+  CjsGraph.defineLifetime(Late, {});
+  CjsGraph.define(Resource, { name: "SelectionLifetimeResource", resource: true });
+  CjsGraph.define(Root, { name: "SelectionLifetimeRoot", members: [
+    { name: "late", type: "rootRef", edge: { kind: "ref", type: Late } }
+  ] });
+  const diagnostics = [];
+  const selection = CjsGraph.compileSelection({ matchClass }, diagnostics);
+  assert.ok(diagnostics.some(row => row.className === "SelectionLifetimeRoot" && row.member === "late"));
+  CjsGraph.define(Late, { name: "SelectionLifetimeLate", members: [
+    { name: "resource", type: "rootRef", edge: { kind: "ref", type: Resource } }
+  ] });
+  const root = new Root();
+  root.late = new Late();
+  root.late.resource = new Resource();
+  assert.deepEqual(CjsGraph.select(root, selection, []), [ root.late.resource ]);
+});
+
 function sameIdentities(actual, expected)
 {
   assert.equal(actual.length, expected.length);

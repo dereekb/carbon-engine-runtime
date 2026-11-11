@@ -161,6 +161,7 @@
     },
     "blue/schema": {
       "mayImport": [
+        "global/model/graph",
         "blue/base",
         "blue/enums",
         "blue/exposure/classes",
@@ -171,6 +172,7 @@
         "global/logging"
       ],
       "why": [
+        "Schema registration supplies lifetime declarations to the independent graph; value registration remains opt-in.",
         "global/logging is Carbon core's CcpLog with no Blue or model dependency; the schema stamps",
         "CcpLogChannel_t as a Carbon class."
       ]

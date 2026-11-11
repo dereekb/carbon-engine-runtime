@@ -95,6 +95,12 @@ forwards to CjsGraph.destruct: declared own onDestruct hooks run derived-first,
 including bases, once per owning level. It does not traverse members, clear
 references, or change lifecycle state. Hooks must be repeat-safe and must not call
 super or another level's teardown manually.
+
+`defineLifetime(ctor, { bases, onDestruct })` registers constructor-based ancestry
+on the same class record without claiming a value definition. `isDefined` remains
+false until `define` supplies the member definition; later value registration
+preserves the separately registered lifetime facts. Blue supplies these facts at
+class registration, without importing object readers into the graph.
 Blue's side is `blue/formats/graph/CjsBlueGraph.js`, which supplies definitions and flags.
 
 `CjsGraph.traverse(root, visit, options)` follows declared object edges, once per
@@ -175,5 +181,4 @@ and controller references remain unexpanded; dynamically created runtime content
 GPU preparation are not covered. Production schemas and resource enumeration are unchanged.
 
 graphTypes.js exports the sole Carbon VARTYPE enum with unchanged names and values.
-The handlers are under types/. CjsGraphRoot will be added with working
-operation forwards; there are no speculative no-op graph methods here.
+The handlers are under types/. CjsGraphRoot provides operation forwards.

@@ -146,7 +146,8 @@ function CollectMembers(Contract)
     {
         for (const name of Object.getOwnPropertyNames(proto))
         {
-            if (name === "constructor" || OBJECT_MEMBERS.has(name)) continue;
+            // Teardown belongs to its declaring level; the graph dispatches every base body.
+            if (name === "constructor" || name === "OnDestruct" || OBJECT_MEMBERS.has(name)) continue;
             if (members.has(name)) continue;
 
             const descriptor = Object.getOwnPropertyDescriptor(proto, name);

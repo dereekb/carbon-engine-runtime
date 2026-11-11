@@ -15,6 +15,15 @@ export class CjsGraphClassInfo
   /** Last compiled snapshot, or null. CjsGraph.getClassInfo refreshes it after registration changes. */
   compiled = null;
 
+  /** Own lifetime declaration, independent of whether value members have been registered. */
+  lifetime = null;
+
+  /** True when a host supplies ancestry separately from its value definition. */
+  lifetimeExplicit = false;
+
+  /** Cached ancestry hooks and the graph registration revision that produced them. */
+  teardown = null;
+
   /**
    * Stores the constructor and declaration without deriving or allocating member values.
    * @cjs The graph registry supplies the declaration snapshot.

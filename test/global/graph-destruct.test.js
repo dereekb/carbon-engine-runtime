@@ -86,3 +86,35 @@ test("hook errors propagate without introducing automatic member release", () =>
   assert.throws(() => CjsGraph.destruct(object), /hook failure/);
   assert.deepEqual(object.held, { value: 1 });
 });
+
+test("lifetime-only records do not claim value definitions and retain identity when values arrive", () =>
+{
+  const calls = [];
+  class Owner { value = 3; }
+  const info = CjsGraph.defineLifetime(Owner, { onDestruct() { calls.push(this.value); } });
+  assert.equal(CjsGraph.isDefined(Owner), false);
+  assert.throws(() => CjsGraph.getClassInfo(Owner), /Unknown graph class/);
+  const object = new Owner();
+  CjsGraph.destruct(object);
+  assert.equal(CjsGraph.define(Owner, { name: "LifetimeThenValues", members: [ { name: "value", type: "float32" } ] }), info);
+  assert.equal(CjsGraph.isDefined(Owner), true);
+  CjsGraph.destruct(object);
+  object.value = 7;
+  assert.deepEqual(CjsGraph.get(object), { value: 7 });
+  assert.deepEqual(calls, [ 3, 3 ]);
+});
+
+test("late lifetime declarations keep full value definitions and update cached ancestry", () =>
+{
+  const calls = [];
+  class Base {} class Owner { value = 4; }
+  CjsGraph.defineLifetime(Base, { onDestruct() { calls.push("base"); } });
+  const info = CjsGraph.define(Owner, { name: "ValuesThenLifetime", members: [ { name: "value", type: "float32" } ] });
+  CjsGraph.destruct(new Owner());
+  assert.equal(CjsGraph.defineLifetime(Owner, { bases: [ Base ], onDestruct() { calls.push("own"); } }), info);
+  CjsGraph.destruct(new Owner());
+  assert.deepEqual(calls, [ "own", "base" ]);
+  const object = new Owner();
+  object.value = 7;
+  assert.deepEqual(CjsGraph.get(object), { value: 7 });
+});

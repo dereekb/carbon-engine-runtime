@@ -111,8 +111,9 @@ export class CjsGraph
     const declared = { ...definition, members, interfaces: definition.interfaces ?? [] };
 
     const info = existing ?? new CjsGraphClassInfo(ctor, declared);
-    if (existing) this._names.delete(existing.declared.name);
+    if (existing?.declared) this._names.delete(existing.declared.name);
     info.declared = declared;
+    if (!info.lifetimeExplicit) info.lifetime = { bases: declared.bases ?? [], onDestruct: declared.onDestruct ?? null };
     this._classes.set(ctor, info);
     this._names.set(name, info);
 
@@ -230,7 +231,30 @@ export class CjsGraph
    */
   static isDefined(ctor)
   {
-    return this._classes.has(ctor);
+    return this._classes.get(ctor)?.declared != null;
+  }
+
+  /**
+   * Declares ancestry and an own teardown hook without claiming a value/member definition.
+   * @cjs A host can register lifetime before opting into graph value operations, in the same record.
+   * @param {Function} ctor The constructor.
+   * @param {{bases?: Function[], onDestruct?: Function|null}} definition Own ancestry and hook.
+   * @returns {CjsGraphClassInfo} The shared record, retained by subsequent full definitions.
+   */
+  static defineLifetime(ctor, { bases = [], onDestruct = null })
+  {
+    if (typeof ctor !== "function") throw new TypeError("Graph lifetime requires a constructor.");
+    if (onDestruct !== null && typeof onDestruct !== "function") throw new TypeError("Graph onDestruct must be a function or null.");
+    if (!Array.isArray(bases) || bases.some(base => typeof base !== "function"))
+      throw new TypeError("Graph lifetime bases must be constructors.");
+    const info = this._classes.get(ctor) ?? new CjsGraphClassInfo(ctor, null);
+    const previous = info.lifetime;
+    info.lifetimeExplicit = true;
+    if (previous && previous.onDestruct === onDestruct && previous.bases.length === bases.length && previous.bases.every((base, i) => base === bases[i])) return info;
+    info.lifetime = { bases: bases.slice(), onDestruct };
+    this._classes.set(ctor, info);
+    this._revision++;
+    return info;
   }
 
   /**
@@ -240,7 +264,7 @@ export class CjsGraph
   static getClassInfo(type)
   {
     const info = typeof type === "string" ? this._names.get(type) : this._classes.get(type);
-    if (!info) throw new TypeError("Unknown graph class.");
+    if (!info?.declared) throw new TypeError("Unknown graph class.");
     if (!info.compiled || info.compiled.revision !== this._revision) info.compiled = this._compile(info);
     return info;
   }
@@ -255,9 +279,11 @@ export class CjsGraph
    */
   static destruct(target, ...args)
   {
-    const info = this.getClassInfo(target.constructor);
-    const hooks = info.compiled.destructors ??= this._getDestructors(info);
-    for (const hook of hooks) hook.apply(target, args);
+    const info = this._classes.get(target.constructor);
+    if (!info?.lifetime) throw new TypeError("Unknown graph lifetime.");
+    if (!info.teardown || info.teardown.revision !== this._revision)
+      info.teardown = { revision: this._revision, hooks: this._getDestructors(info) };
+    for (const hook of info.teardown.hooks) hook.apply(target, args);
   }
 
   /**
@@ -271,18 +297,18 @@ export class CjsGraph
     const seen = new Set(), active = new Set(), hooks = [];
     const visit = owner =>
     {
-      if (active.has(owner)) throw new TypeError(`Cyclic graph ancestry: ${owner.declared.name}`);
+      if (active.has(owner)) throw new TypeError("Cyclic graph ancestry.");
       if (seen.has(owner)) return;
       active.add(owner);
-      for (const base of owner.declared.bases ?? [])
+      for (const base of owner.lifetime.bases)
       {
         const parent = typeof base === "string" ? this._names.get(base) : this._classes.get(base);
-        if (!parent) throw new TypeError(`Unknown graph base in ${owner.declared.name}`);
+        if (!parent?.lifetime) throw new TypeError("Unknown graph base.");
         visit(parent);
       }
       active.delete(owner);
       seen.add(owner);
-      if (owner.declared.onDestruct) hooks.push(owner.declared.onDestruct);
+      if (owner.lifetime.onDestruct) hooks.push(owner.lifetime.onDestruct);
     };
     visit(info);
     return hooks.reverse();
@@ -1619,10 +1645,11 @@ export class CjsGraph
     const classes = new Map(), descendants = new Map(), prototypes = new Map();
     const queue = [];
 
-    for (const info of this._classes.values()) prototypes.set(info.ctor.prototype, info);
+    for (const info of this._classes.values()) if (info.declared) prototypes.set(info.ctor.prototype, info);
 
     for (const info of this._classes.values())
     {
+      if (!info.declared) continue;
       this.getClassInfo(info.ctor);
       const full = this._selectEdges(info, selection);
       const matches = !!selection.matchClass(info);
@@ -1649,7 +1676,11 @@ export class CjsGraph
       for (const member of row.full)
       {
         const types = member.edgeType;
-        const known = types.map(type => typeof type === "string" ? this._names.get(type) : this._classes.get(type));
+        const known = types.map(type =>
+        {
+          const target = typeof type === "string" ? this._names.get(type) : this._classes.get(type);
+          return target?.declared ? target : null;
+        });
         const targets = types.length !== 0 && known.every(Boolean) ? known.flatMap(target => descendants.get(target) ?? []) : null;
         row.dependencies.push({ member, targets });
         if (targets)
@@ -1804,7 +1835,7 @@ export class CjsGraph
     }
 
     return {
-      revision: this._revision, parent, members, byName, persistByName, memberNames, notifyNames, tables: [], defaults: null, ui: null, destructors: null,
+      revision: this._revision, parent, members, byName, persistByName, memberNames, notifyNames, tables: [], defaults: null, ui: null,
       name: declared.name,
       interfaces: declared.interfaces,
       bases: declared.bases ?? [],

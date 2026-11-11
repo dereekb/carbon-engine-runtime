@@ -11,7 +11,9 @@
 // CjsSchema imports this file and hands itself over (installClassInfoCompile)
 // before it defines its own classes, so the two never import each other.
 import { EDITFLAGS, VARTYPE } from "../../global/consts/blue.js";
-import { exposureChainTo, mappedInterfaces, ownMappedInterfaces, setExposureChangeListener } from "../compose/interface.js";
+import { baseList, exposureChainTo, mappedInterfaces, ownMappedInterfaces, setExposureChangeListener } from "../compose/interface.js";
+import { CjsGraph } from "../../global/model/graph/CjsGraph.js";
+import { CjsGraphRoot } from "../../global/model/graph/CjsGraphRoot.js";
 import { registerClass } from "../exposure/classes/registry.js";
 import { ClassInfo } from "../base/ClassInfo.js";
 import { ClassInfoMeta } from "../base/ClassInfoMeta.js";
@@ -251,6 +253,7 @@ const CHAINED_FROM = new WeakMap();
  */
 export function compileClassInfo(Constructor)
 {
+  registerGraphLifetime(Constructor);
   const schema = Schema.getDeclaredSchema(Constructor);
   const ci = classInfoOf(Constructor);
   COMPILED.add(Constructor);
@@ -333,6 +336,30 @@ export function compileClassInfo(Constructor)
   // (hidden keys, method tables, persisted members) is rebuilt.
   for (const Child of CHAINED_FROM.get(Constructor) ?? []) if (ClassInfo._byType.has(Child)) compileClassInfo(Child);
   return ci;
+}
+
+/**
+ * Supplies own teardown facts at class registration, independently of graph value registration.
+ * @cjs Constructor identities carry native base lists without loading readers or compiling values.
+ * @param {Function} Constructor The class being compiled.
+ * @param {Set<Function>} [visited] Current ancestry, including repeated/multiple bases.
+ * @returns {void}
+ */
+function registerGraphLifetime(Constructor, visited = new Set())
+{
+  if (visited.has(Constructor)) return;
+  visited.add(Constructor);
+  const parent = Object.getPrototypeOf(Constructor);
+  const bases = parent === Function.prototype || parent === Object || parent === null
+    ? baseList(Constructor) : [ parent, ...baseList(Constructor) ];
+  for (const base of bases) registerGraphLifetime(base, visited);
+  const descriptor = Object.getOwnPropertyDescriptor(Constructor.prototype, "OnDestruct");
+  CjsGraph.defineLifetime(Constructor, { bases, onDestruct: descriptor ? descriptor.value : null });
+  // An inherited legacy body must keep running until that owning class is migrated.
+  if (!("Destruct" in Constructor.prototype))
+    Object.defineProperty(Constructor.prototype, "Destruct", {
+      value: CjsGraphRoot.prototype.Destruct, configurable: true, writable: true
+    });
 }
 
 /**
