@@ -18,6 +18,7 @@ import { addChild, removeChild, clearChildren } from "../../../blue/children.js"
 import { EveChildTransform } from "./EveChildTransform.js";
 import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 import { ITr2Controller } from "../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../controllers/enums.js";
 import { Tr2ExternalParameter } from "../../core/binding/Tr2ExternalParameter.js";
 
 /** A container of child objects plugged into a socket, forwarding controller events, controller variables and component registration to what it contains. */
@@ -71,6 +72,18 @@ export class EveChildPlug extends EveChildTransform
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildPlug.cpp:22-29.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    this.UnregisterChildren(this.objects);
+  }
 
   /**
    * Carbon EveChildPlug constructor (cpp:19).
