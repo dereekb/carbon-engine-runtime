@@ -3,7 +3,10 @@
 // Verify fields against format-carbon resources/Tr2LoadPrepareFence.json.
 import { CjsSchema, type } from "#schema";
 
-/** Retained-only reference shape mirroring Carbon's two-queue load/prepare fence helper, superseded by `BlueResMan.Wait()`, which waits until both resMan queues are empty. */
+/**
+ * Dropped reference shape; BlueResMan.Wait polls the two queues directly.
+ * @adapted No runtime destructor: this class is not exported or acquired. Native Resources/Tr2LoadPrepareFence.cpp:15-18,33-48 cancels two callback IDs and clears onPrepared; Wait creates neither fence callbacks nor those IDs.
+ */
 export class Tr2LoadPrepareFence
 {
 
