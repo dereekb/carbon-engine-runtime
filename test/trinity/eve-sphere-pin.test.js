@@ -134,7 +134,27 @@ test('empty index selections and failed allocations stay dirty until a successfu
   p.centerNormal.set([1,0,0]);const failed=t.mock.method(p._indexBuffer,'Create',()=>ALResult.E_FAIL);
   p.UpdateSyncronous({});assert.equal(p._rebuildIndices,1);assert.equal(p._indexBuffer.IsValid(),false);failed.mock.restore();
   p.UpdateSyncronous({});assert.equal(p._rebuildIndices,0);assert.equal(p._indexBuffer.IsValid(),true);
-  p.ReleaseResources();assert.equal(p._indexBuffer.IsValid(),true);p._indexBuffer.Destroy();p._OnPrepareResources();assert.equal(p._rebuildIndices,1);
+  p.ReleaseResources();assert.equal(p._indexBuffer.IsValid(),false);p._OnPrepareResources();assert.equal(p._rebuildIndices,1);
+});
+
+test('idle pin indices recover on the same handle through batch use and update',t=>{
+  const {context,draws,material}=setup(t);
+  const resources=TriDevice._resourcesRegistered,generations=TriDevice._registeredGenerations,activeTime=TriDevice.activeTime;
+  TriDevice._resourcesRegistered=[];TriDevice._registeredGenerations=[];TriDevice.activeTime=1000*10000000;
+  t.after(()=>{TriDevice._resourcesRegistered=resources;TriDevice._registeredGenerations=generations;TriDevice.activeTime=activeTime;});
+  t.mock.method(Tr2Renderer,'IsResourceCreationAllowed',()=>true);
+  const device=new TriDevice(),p=pin();p.pinEffect=material;
+  assert.equal(collect(p).length,0);device._PreparePendingResources();p.UpdateSyncronous({});
+  assert.equal(collect(p).length,1);
+  const buffer=p._indexBuffer,destroy=t.mock.method(buffer.TrinityALImpl_GetObject(),'Destroy'),tree=p._tree;
+  TriDevice.activeTime+=(TriDevice.resourceIdleRule+1)*10000000;
+  device.CollectResources();device.CollectResources();p.ReleaseResources();
+  assert.equal(buffer.IsValid(),false);assert.equal(destroy.mock.callCount(),1);
+  assert.equal(collect(p).length,0);device._PreparePendingResources();p.UpdateSyncronous({});
+  const batches=collect(p);assert.equal(batches.length,1);assert.equal(p._indexBuffer,buffer);assert.equal(buffer.IsValid(),true);
+  assert.equal(p._tree,tree);assert.equal(p.primitiveCount,1);assert.equal(p._rebuildIndices,0);
+  context.RenderBatches({GetBatches:()=>batches});assert.deepEqual(draws.at(-1).slice(0,3),[3,1,0]);
+  p.Destruct();p.Destruct();
 });
 
 test('visibility places pins without frustum culling and bounds remain local',t=>{

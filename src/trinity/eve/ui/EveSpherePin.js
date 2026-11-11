@@ -224,7 +224,6 @@ export class EveSpherePin
       if (!managedResources?.has(effect)) effect.Destruct();
     }
     this._ownedEffects.clear();
-    this._indexBuffer.Destroy();
     this._geometryResource = null;
     this._tree = null;
     this.pinEffect = this.pickEffect = null;
@@ -282,13 +281,16 @@ export class EveSpherePin
   }
 
   /**
-   * Native ReleaseResources is empty; final destruction releases the index buffer.
+   * Releases selected indices; preparation marks the retained tree for regeneration.
+   * Carbon: trinity/Eve/UI/EveSpherePin.cpp:109-153.
    *
-   * @adapted
+   * @adapted idle release destroys indices retained by Carbon, freeing strongly
+   *   registered AL storage without deterministic member destruction.
    */
 
   ReleaseResources(_storage)
   {
+    this._indexBuffer.Destroy();
   }
 
   /**
