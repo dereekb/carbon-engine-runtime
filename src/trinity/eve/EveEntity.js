@@ -33,6 +33,21 @@ export class EveEntity extends IRoot
   indexInRegistry = -1;
 
   /**
+   * Reports an entity destroyed while registered, then drops its registry pointer.
+   * Carbon: EveEntity destructor (trinity/trinity/Eve/EveEntity.cpp:43-50).
+   * @adapted console.error replaces CCP_LOGERR; native destruction does not unregister the entity or clear its component state.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.registry)
+    {
+      console.error("EveEntity being destroyed while still registered in a component registry.");
+    }
+    this.registry = null;
+  }
+
+  /**
    * Whether this entity currently belongs to a component registry.
    *
    * @implemented
