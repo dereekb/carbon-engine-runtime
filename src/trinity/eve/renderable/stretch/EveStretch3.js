@@ -20,6 +20,7 @@ import { EveChildUpdateParams } from "../../EveChildUpdateParams.js";
 import { StretchState } from "../../../generated/eve/renderable/stretch/enums.js";
 import { ITr2ControllerOwner } from "../../../controllers/ITr2ControllerOwner.js";
 import { ITr2Controller } from "../../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../../controllers/enums.js";
 import { Tr2DynamicBinding } from "../../../core/binding/Tr2DynamicBinding.js";
 import { ITr2CurveSetOwner } from "../../../curves/ITr2CurveSetOwner.js";
 import { ITr2DynamicBindingOwner } from "../../ITr2DynamicBindingOwner.js";
@@ -100,6 +101,19 @@ export class EveStretch3 extends IEveFiringEffectElement
 
  @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/Renderable/Stretch/EveStretch3.cpp:42-48.
+   * @adapted Detaches JS strong back references; native BlueList destruction suppresses removal callbacks.
+   * Native removal behavior: EveStretch3.cpp:369; blueexposure/include/BlueListUtil.h:198-204.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    for (const binding of this.dynamicBindings) binding.SetOwner(null);
+  }
 
  @type.list("TriCurveSet")
   curveSets = new BlueList(TriCurveSet, { className: "TriCurveSet" });
