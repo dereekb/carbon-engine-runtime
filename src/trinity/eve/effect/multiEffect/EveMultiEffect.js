@@ -10,6 +10,7 @@ import { CjsSchema, type } from "#schema";
 import { EveMultiEffectParameter } from "./EveMultiEffectParameter.js";
 import { Tr2DynamicBinding } from "../../../core/binding/Tr2DynamicBinding.js";
 import { ITr2Controller } from "../../../controllers/ITr2Controller/ITr2Controller.js";
+import { UnlinkReason } from "../../../controllers/enums.js";
 import { ITr2ControllerOwner } from "../../../controllers/ITr2ControllerOwner.js";
 import { IEveSpaceObject2 } from "../../IEveSpaceObject2.js";
 import { BLUELISTEVENT } from "#consts/blue";
@@ -52,6 +53,20 @@ export class EveMultiEffect extends IRoot
 
   @type.list("ITr2Controller")
   controllers = new BlueList(ITr2Controller);
+
+  /**
+   * Unlinks controllers for deletion and detaches this owner's native back pointers.
+   * Carbon: trinity/trinity/Eve/EveMultiEffect.cpp:23-29.
+   * @adapted Detaches JS strong back references; native BlueList destruction suppresses removal callbacks.
+   * Native removal behavior: EveMultiEffect.cpp:99,119; blueexposure/include/BlueListUtil.h:198-204.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const controller of this.controllers) controller.Unlink(UnlinkReason.DELETING);
+    for (const parameter of this.parameters) parameter.SetOwner(null);
+    for (const binding of this.bindings) binding.SetOwner(null);
+  }
 
   /** m_curveSets (PTriCurveSetVector) [READ, PERSIST] */
 
