@@ -29,11 +29,6 @@ class ParentModel
     listEvents = [];
     modifiedCount = 0;
 
-    CreateChild(values, options)
-    {
-        return children.createChild(this, "children", values, { ...options, listNotify: this });
-    }
-
     AddChild(child, options)
     {
         return children.addChild(this, "children", child, { ...options, listNotify: this });
@@ -79,28 +74,6 @@ CjsSchema.defineField(ParentModel, "children", "type", {
 CjsSchema.defineField(ParentModel, "children", "exposure", { macro: "MAP_ATTRIBUTE", flags: 20 });
 CjsSchema.defineField(ParentModel, "children", "edit", { persist: true, notify: true });
 CjsSchema.define(ParentModel, { className: "ChildMutationTestParent" });
-
-test("Schema child factories hydrate, append, notify and settle", () => {
-    const parent = new ParentModel();
-
-    assert.equal(typeof children.addChild, "function");
-    assert.equal(parent.addChild, undefined);
-
-    const child = parent.CreateChild({ name: "first" });
-
-    assert.equal(child instanceof ChildModel, true);
-    assert.equal(child.name, "first");
-    assert.deepEqual(parent.children, [ child ]);
-    assert.deepEqual(parent.listEvents, [{
-        event: BELIST_INSERTED,
-        index: 0,
-        secondIndex: 0,
-        child,
-        length: 1
-    }]);
-    assert.equal(getRuntimeState(parent)?.dirty ?? false, false);
-    assert.equal(parent.modifiedCount, 1);
-});
 
 test("Schema remove detaches without deleting and delete uses explicit teardown", () => {
     const parent = new ParentModel();
@@ -168,7 +141,8 @@ test("Schema child mutation options preserve SetValues dirty and notification ru
 
 test("a child field does not implicitly delete its owner relationship", () => {
     const parent = new ParentModel();
-    const child = parent.CreateChild({ name: "requested" });
+    const child = new ChildModel();
+    parent.AddChild(child);
 
     CjsSchema.setValues(child, { deleteRequested: true });
 

@@ -2,32 +2,11 @@ import { IList } from "./exposure/IList.js";
 import { blue } from "./blue.js";
 import { BlueClasses } from "./exposure/BlueClasses.js";
 import { CjsSchema } from "./schema/index.js";
-import { DictReader, CreateAnchorTable } from "./formats/graph/DictReader.js";
 import { ensureRuntimeState } from "./compose/runtimeState.js";
 import { NotifyModified } from "./compose/values.js";
 import { BLUELISTEVENT } from "../global/consts/blue.js";
 
 const CHILD_COLLECTION_KINDS = new Set([ "array", "list" ]);
-
-/** Hydrates and appends one declared child. */
-export function createChild(target, property, values = {}, options = {})
-{
-    const { field } = getChildCollection(target, property);
-    const itemType = field.type?.itemType;
-    const itemClassName = typeof itemType === "string" ? itemType : itemType?.className ?? null;
-
-    // Built as a list item is (DictReader ReadIRootClass): the bag's
-    // `_type`, else the declared item class.
-    const importContext = CreateAnchorTable();
-    const child = new DictReader({ ...options, importContext })
-        .CreateObject(values, itemClassName ? CjsSchema.getConstructor(itemClassName) : null);
-    importContext.finalize();
-    importContext.initializeCreated({ ...options, importContext });
-
-    assertChildObject(child, field.name);
-    addChild(target, field.name, child, options);
-    return child;
-}
 
 /** Appends a child and applies the explicit mutation callbacks. */
 export function addChild(target, property, child, options = {})

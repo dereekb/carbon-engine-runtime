@@ -1,5 +1,4 @@
 import { IRoot as ExposureRoot } from "../../npm/dist/blue/exposure/IRoot.js";
-import { createChild } from "../../npm/dist/blue/children.js";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -197,29 +196,6 @@ test("resource target hydration builds a model-free emitter from the real Crisis
   class Unregistered {}
   assert.throws(() => manager._HydrateTarget(null, Unregistered, values, {}), /Target hydration failed/,
     "Negative control: an unregistered class cannot be constructed by schema name");
-});
-
-test("shared child creation hydrates the real Crisis graph before publishing it", (t) =>
-{
-  WithStubResMan(t);
-  class Owner { children = []; }
-  CjsSchema.define(Owner, { className: "RealAssetChildCollectionOwner", fields: [
-    { name: "children", key: "children", type: { kind: "list", itemType: host._type }, exposure: { macro: "MAP_ATTRIBUTE", flags: 16 }, edit: { persist: true } }
-  ] });
-  const owner = new Owner();
-  let initializedAtPublication = false;
-  const child = createChild(owner, "children", structuredClone(host), {
-    onAdded({ child: value }) { initializedAtPublication = value.particleEmitters[0].isValid; }
-  });
-  assert.equal(initializedAtPublication, true);
-  assert.equal(child.particleEmitters[0].particleSystem, child.particleSystems[0]);
-  assert.equal(owner.children[0], child);
-  const control = new Owner();
-  control.children.push(structuredClone(host));
-  assert.equal(control.children[0].particleEmitters[0].isValid, undefined,
-    "negative control: appending the authored bag omits dependency construction and initialization");
-  assert.throws(() => createChild(owner, "children", { _ref: "absent" }), /_ref/);
-  assert.deepEqual(owner.children, [child], "failed hydration never publishes a partial child");
 });
 
 test("the real Crisis effect custom setter initializes once after population, and honors initialize:false", t =>
