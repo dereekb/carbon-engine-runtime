@@ -1068,8 +1068,7 @@ export class EveChildTurret extends EveChildMesh
   /**
    * Force-creates the animation updater BEFORE the base wiring, then hooks
    * this turret in as the updater's pose modifier, unhooking any previously
-   * hooked updater on swap (Carbon cpp:714-731). CleanUp performs Carbon's
-   * destructor unhook.
+   * hooked updater on swap (Carbon cpp:714-731).
    *
    * @implemented
    */
@@ -1094,12 +1093,24 @@ export class EveChildTurret extends EveChildMesh
   }
 
   /**
-   * Carbon's destructor obligations: unhook the pose modifier and clean up
-   * the firing effect (Carbon cpp:32-47). JS has no destructor; owners call
-   * CleanUp when discarding the turret. Pending JS resource completions and
-   * their deferred calls are cancelled so disposal cannot resurrect the effect.
+   * Releases the turret's pose hook, firing effect and cached geometry.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildTurret.cpp:32-47.
+   * @adapted Existing CleanUp also cancels deferred JS firing-effect completions.
+   * @adapted Inherited ReleaseResources (EveChildMesh.cpp:1839-1847) owns baked-morph allocations and a constant buffer absent from this port.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.CleanUp();
+  }
+
+  /**
+   * Unhooks the pose modifier, stops the firing effect and drops cached geometry.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildTurret.cpp:32-44.
    *
-   * @adapted
+   * @adapted Cancels pending JS resource completions and deferred calls so cleanup cannot resurrect the effect.
+   * @param {object} [context] Legacy firing-effect update context.
+   * @returns {void}
    */
   CleanUp(context = { currentTime: 0, deltaTime: 0 })
   {
