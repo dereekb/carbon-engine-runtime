@@ -59,8 +59,9 @@ blueEnums.Create("trinity.WodBakingScene.VisualizerChooser", VisualizeMethod, {
 /**
  * Baking-scene record pairing a skinned avatar with a diagnostic visualization
  * mode. Native Carbon uses this scene to render the avatar through managed
- * skinned-object batches; CarbonEngineJS keeps the scene contract here and
- * leaves render-target realization to an engine adapter.
+ * skinned-object batches; the JS rendering implementation remains deferred.
+ *
+ * @adapted No OnDestruct is needed yet: JS acquires neither the native opaque batch accumulator (WodBakingScene.cpp:70-81) nor the by-value VS/PS buffers (WodBakingScene.h:33). Implement their release when the deferred render path acquires them.
  */
 @be.define({
   name: "WodBakingScene",
