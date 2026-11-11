@@ -17,6 +17,8 @@ import { Tr2ControllerFloatVariable } from "../expression/Tr2ControllerFloatVari
  * Plays a list of controller actions against a scrubbable timeline, starting and
  * stopping each action as the current time enters and leaves its authored
  * start/end range on an enabled track.
+ * @adapted No own teardown hook: native constructor/destructor register/unregister sim-time rebasing (Tr2TimelineController.cpp:38-51); this port acquires no rebase subscription.
+ * @adapted Native callback-vector elements release Python references (BlueScriptCallback.cpp:244-247,273-280); this port stores GC-owned functions, not owned callback wrappers or external registrations.
  */
 @be.define({
   name: "Tr2TimelineController",
