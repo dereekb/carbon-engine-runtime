@@ -48,6 +48,30 @@ const EMITTER_SEED_OFFSET = 60;
 /** The system's state textures, passes and ring cursor where there is no compute. */
 export class Tr2GpuParticleSystemNoCompute
 {
+  /**
+   * Releases the fallback's private rendering resources.
+   * @cjs This existing no-compute adaptation owns its textures, buffer values and effect instances; shared effect parameters and the parent system are not destroyed.
+   * @returns {void}
+   */
+  Destroy()
+  {
+    if (this._state)
+    {
+      for (const pair of this._state)
+      {
+        for (const texture of pair) if (texture) texture.Destroy();
+      }
+    }
+    if (this._params) this._params.Destroy();
+    this._updateCB.Destroy();
+    this._emitCB.Destroy();
+    this._drawCB.Destroy();
+    if (this._updateEffect) this._updateEffect.Destruct();
+    if (this._emitEffect) this._emitEffect.Destruct();
+    if (this._drawEffect) this._drawEffect.Destruct();
+  }
+
+
   static className = "Tr2GpuParticleSystemNoCompute";
 
   /**
