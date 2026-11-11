@@ -62,6 +62,18 @@ export class EveSwarmRenderable extends EveEntity
   _lastWorldTransform = mat4.create();
 
   /**
+   * Drops the owner and mesh exactly as the native destructor does.
+   * Carbon: EveSwarmRenderable destructor (trinity/trinity/Eve/SpaceObject/EveSwarm.cpp:29-33).
+   * @adapted Native persistent-buffer members (EveSwarm.h:83-84) are not acquired in JS; current per-object records are CPU data. The graph dispatches EveEntity teardown.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.owner = null;
+    this.mesh = null;
+  }
+
+  /**
    * Carbon InitializeRenderable (EveSwarm.cpp:109-113): binds this fighter to the swarm that owns it and the mesh it
    * draws with; RemoveSwarmer passes null for both.
    *
