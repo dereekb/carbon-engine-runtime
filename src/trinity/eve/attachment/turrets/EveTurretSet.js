@@ -1898,15 +1898,19 @@ export class EveTurretSet extends EveEntity
   }
 
   /**
-   * Removes this owner's resource notification link.
+   * Stops firing, releases cached turret state and detaches resource ownership.
    * Carbon: trinity/trinity/Eve/Turret/EveTurretSet.cpp:130-145.
-   * @cjs Link-only hook; item 4 will add remaining destructor behavior here.
    * @adapted Manager-owned links replace Carbon's per-resource notify targets.
+   * @adapted Retains existing explicit component unregister because the JS registry holds strong references.
    * @returns {void}
    */
   OnDestruct()
   {
+    this.UnRegister(this.GetComponentRegistry());
+    if (this.firingEffect) this.firingEffect.CleanUp();
+    this.Cleanup();
     if (this.geometryResource) blue.resMan.notify.Remove(this, this.geometryResource);
+    this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
   /**
