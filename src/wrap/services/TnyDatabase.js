@@ -3,19 +3,55 @@ import { CjsTableData } from "../../resource/format/CjsTableData.js";
 // Source: our Tny orchestration extension; see services/README.md.
 // Carbon's db/StringStore and Blue resource caches do not route host data providers.
 
-/** Host-owned table registry. Providers own acquisition; callers use one query surface. */
+/**
+ * Host-owned table registry. Providers own acquisition; callers use one query surface.
+ * @cjs
+ */
 export class TnyDatabase
 {
-    static className = "TnyDatabase";
 
+    /**
+     * Service registry used by this owner.
+     * @type {TnyServices|null}
+     * @cjs
+     */
     _services = null;
+
+    /**
+     * Registered table schemas, provider names and provenance.
+     * @type {Map<string, object>}
+     * @cjs
+     */
     _tables = new Map();
+
+    /**
+     * Whether new operations are rejected.
+     * @type {boolean}
+     * @cjs
+     */
     _closed = false;
 
-    /** Bind table routing to the supplied service registry. */
-    constructor(services) { this._services = services; }
+    /**
+     * Bind table routing to the supplied service registry.
+     * @param {TnyServices} services Service registry providing table data.
+     * @cjs
+     */
+    constructor(services)
+    {
+        this._services = services;
+    }
 
-    /** Register a description without constructing the provider or reading records. */
+    /**
+     * Register a description without constructing the provider or reading records.
+     * @param {object} definition Table name and column definitions.
+     * @param {object} options Options for this operation.
+     * @param {string} options.service Registered provider service name.
+     * @param {string} options.source Data source identity.
+     * @param {string|number} options.build Positive build number, stored as a string.
+     * @param {number} [options.revision=1] Cache representation revision.
+     * @returns {TnyDatabase}
+     * @cjs
+     */
     Register(definition, { service, source, build, revision = 1 })
     {
         this._AssertOpen();
@@ -30,17 +66,36 @@ export class TnyDatabase
         return this;
     }
 
-    /** Resolve the names of all registered tables while the database is open. */
-    async List() { this._AssertOpen(); return [...this._tables.keys()]; }
+    /**
+     * Resolve the names of all registered tables while the database is open.
+     * @returns {Promise<string[]>}
+     * @cjs
+     */
+    async List()
+    {
+        this._AssertOpen();
+        return [...this._tables.keys()];
+    }
 
-    /** Description and provenance are owned copies; inspecting a table does not load it. */
+    /**
+     * Description and provenance are owned copies; inspecting a table does not load it.
+     * @param {string} name Member or registration name.
+     * @returns {Promise<object>}
+     * @cjs
+     */
     async Describe(name)
     {
         const table = this._Table(name);
         return structuredClone({ ...table.schema, identity: table.identity });
     }
 
-    /** Query one primary-key record and validate its returned identity. */
+    /**
+     * Query one primary-key record and validate its returned identity.
+     * @param {string} name Member or registration name.
+     * @param {string|number} id Primary-key identity.
+     * @returns {Promise<object|null>}
+     * @cjs
+     */
     async GetByID(name, id)
     {
         const table = this._Table(name);
@@ -53,7 +108,13 @@ export class TnyDatabase
         return structuredClone(result);
     }
 
-    /** Bounded, structured query. Providers must reject unsupported predicates. */
+    /**
+     * Bounded, structured query. Providers must reject unsupported predicates.
+     * @param {string} name Member or registration name.
+     * @param {object} [query] Bounded filters, cursor and limit.
+     * @returns {Promise<object>}
+     * @cjs
+     */
     async Find(name, query = {})
     {
         const table = this._Table(name);
@@ -82,13 +143,31 @@ export class TnyDatabase
         return structuredClone({ ...result, identity: table.identity });
     }
 
-    /** Reject subsequent database operations by marking the registry closed. */
-    async Close() { this._closed = true; }
+    /**
+     * Reject subsequent database operations by marking the registry closed.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
+     */
+    async Close()
+    {
+        this._closed = true;
+    }
 
-    /** Reject operations after the registry has closed. */
-    _AssertOpen() { if (this._closed) throw new Error("Database is closed"); }
+    /**
+     * Reject operations after the registry has closed.
+     * @cjs
+     */
+    _AssertOpen()
+    {
+        if (this._closed) throw new Error("Database is closed");
+    }
 
-    /** Resolve a registered table or reject an unknown name or closed registry. */
+    /**
+     * Resolve a registered table or reject an unknown name or closed registry.
+     * @param {string} name Member or registration name.
+     * @returns {object}
+     * @cjs
+     */
     _Table(name)
     {
         this._AssertOpen();
@@ -96,5 +175,13 @@ export class TnyDatabase
         if (!table) throw new Error(`Unknown table ${name}`);
         return table;
     }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyDatabase";
+
 }
 

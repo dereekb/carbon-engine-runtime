@@ -14,62 +14,149 @@ const SHADER_MODELS = { lo: "TR2SM_3_0_LO", low: "TR2SM_3_0_LO", hi: "TR2SM_3_0_
  * rendering or a browser; only `Initialize` loads the engine, by dynamic import.
  * Ours, with no Carbon counterpart: the EVE client starts its device and scene
  * in proprietary client code.
+ * @cjs
  */
 export class Tny
 {
-    static className = "Tny";
 
+    /**
+     * Owned application storage manager.
+     * @type {TnyStorage|null}
+     * @cjs
+     */
     _storage = null;
+
+    /**
+     * Service registry used by this owner.
+     * @type {TnyServices|null}
+     * @cjs
+     */
     _services = null;
+
+    /**
+     * Owned table routing registry.
+     * @type {TnyDatabase|null}
+     * @cjs
+     */
     _database = null;
+
+    /**
+     * Shared shutdown promise, created by the first Close call.
+     * @type {Promise<void>|null}
+     * @cjs
+     */
     _closing = null;
 
-    /** The library Initialize created; null before it and after Close. */
+    /**
+     * The library Initialize created; null before it and after Close.
+     * @type {object|null}
+     * @cjs
+     */
     library = null;
 
-    /** The library's device backend (CjsBrowserBackend), owned by the library; null before Initialize. */
+    /**
+     * The library's device backend (CjsBrowserBackend), owned by the library; null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     backend = null;
 
-    /** The TnyScene being drawn; null before Initialize. */
+    /**
+     * The TnyScene being drawn; null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     scene = null;
 
-    /** The scene driver's camera (EveCamera); null before Initialize. */
+    /**
+     * The scene driver's camera (EveCamera); null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     camera = null;
 
-    /** The scene render driver (EveSpaceSceneRenderDriver); null before Initialize. */
+    /**
+     * The scene render driver (EveSpaceSceneRenderDriver); null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     driver = null;
 
-    /** The camera controls (TnyCameraControls) over `camera`; null before Initialize. */
+    /**
+     * The camera controls (TnyCameraControls) over `camera`; null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     controls = null;
 
-    /** The browser input router (TnyInputMan) on the canvas; null before Initialize. */
+    /**
+     * The browser input router (TnyInputMan) on the canvas; null before Initialize.
+     * @type {object|null}
+     * @cjs
+     */
     input = null;
 
-    /** The object the camera frames (`Focus`), or null. */
+    /**
+     * The object the camera frames (`Focus`), or null.
+     * @type {object|null}
+     * @cjs
+     */
     focus = null;
 
-    /** Device pixels per CSS pixel the canvas is sized at, read every frame. */
+    /**
+     * Device pixels per CSS pixel the canvas is sized at, read every frame.
+     * @type {number}
+     * @cjs
+     */
     pixelRatio = 1;
 
-    /** The first error a frame threw, kept for inspection; later frames still run. */
+    /**
+     * The first error a frame threw, kept for inspection; later frames still run.
+     * @type {object|null}
+     * @cjs
+     */
     frameError = null;
 
-    /** Replaces the default scene draw when set: called as `(tny)` inside the frame's render job. */
+    /**
+     * Replaces the default scene draw when set: called as `(tny)` inside the frame's render job.
+     * @type {object|null}
+     * @cjs
+     */
     _renderHandler = null;
 
-    /** The render job holding the frame's draw step, while the loop runs. */
+    /**
+     * The render job holding the frame's draw step, while the loop runs.
+     * @type {object|null}
+     * @cjs
+     */
     _job = null;
 
-    /** The device's render jobs the frame job was added to. */
+    /**
+     * The device's render jobs the frame job was added to.
+     * @type {object|null}
+     * @cjs
+     */
     _jobs = null;
 
-    /** The requestAnimationFrame id, while the loop runs. */
+    /**
+     * The requestAnimationFrame id, while the loop runs.
+     * @type {number}
+     * @cjs
+     */
     _frame = 0;
 
-    /** Engine modules Initialize loaded. */
+    /**
+     * Engine modules Initialize loaded.
+     * @type {object|null}
+     * @cjs
+     */
     _engine = null;
 
-    /** Construct inert storage, service and database owners from host options. */
+    /**
+     * Construct inert storage, service and database owners from host options.
+     * @param {object} [options] Options for this operation.
+     * @cjs
+     */
     constructor({ storage = {} } = {})
     {
         this._storage = new TnyStorage(storage);
@@ -77,14 +164,35 @@ export class Tny
         this._database = new TnyDatabase(this._services);
     }
 
-    /** Return the table registry owned by this host. */
-    get database() { return this._database; }
+    /**
+     * Return the table registry owned by this host.
+     * @returns {TnyDatabase}
+     * @cjs
+     */
+    get database()
+    {
+        return this._database;
+    }
 
-    /** Return the storage manager owned by this host. */
-    get storage() { return this._storage; }
+    /**
+     * Return the storage manager owned by this host.
+     * @returns {TnyStorage}
+     * @cjs
+     */
+    get storage()
+    {
+        return this._storage;
+    }
 
-    /** Return the service registry owned by this host. */
-    get services() { return this._services; }
+    /**
+     * Return the service registry owned by this host.
+     * @returns {TnyServices}
+     * @cjs
+     */
+    get services()
+    {
+        return this._services;
+    }
 
     /**
      * Starts the engine on a canvas: a CjsLibrary acquires WebGPU or WebGL2 and
@@ -104,6 +212,7 @@ export class Tny
      * @param {"opaque"|"premultiplied"} [options.alphaMode="opaque"] Canvas compositing.
      * @param {number} [options.pixelRatio] Device pixels per CSS pixel, default the window's.
      * @returns {Promise<Tny>} This host.
+     * @cjs
      */
     async Initialize({ canvas, resources = null, preference, scene = null, configuration = {}, services = {},
         shaderModel = "depth", alphaMode = "opaque", pixelRatio = globalThis.devicePixelRatio || 1 } = {})
@@ -139,8 +248,14 @@ export class Tny
         }
         catch (error)
         {
-            try { await this._Stop(); }
-            catch (cleanupError) { throw new AggregateError([ error, cleanupError ], "Tny startup and its cleanup failed", { cause: error }); }
+            try
+            {
+                await this._Stop();
+            }
+            catch (cleanupError)
+            {
+                throw new AggregateError([ error, cleanupError ], "Tny startup and its cleanup failed", { cause: error });
+            }
             throw error;
         }
     }
@@ -149,6 +264,7 @@ export class Tny
      * Draws another scene from the next frame. The previous scene is not destroyed.
      *
      * @param {TnyScene} scene The scene to draw.
+     * @cjs
      */
     SetScene(scene)
     {
@@ -167,13 +283,18 @@ export class Tny
      * @param {boolean} [options.animate=false] Fly rather than jump; not with `from`.
      * @param {number[]|null} [options.from=null] A world point to look from.
      * @returns {boolean} Whether the camera moved; false while the object has no bounds yet.
+     * @cjs
      */
     Focus(object, { animate = false, from = null } = {})
     {
         this.focus = object;
         const bounds = object?.GetBoundingSphere();
         if (!bounds) return false;
-        if (from) { this.controls.LookFrom(from, bounds.centre); return true; }
+        if (from)
+        {
+            this.controls.LookFrom(from, bounds.centre);
+            return true;
+        }
         return animate ? this.controls.Fly() : this.controls.Frame();
     }
 
@@ -181,6 +302,7 @@ export class Tny
      * Turns the user's camera input on or off; programmatic camera calls still work.
      *
      * @param {boolean} enabled Whether pointer and key input moves the camera.
+     * @cjs
      */
     SetInteractive(enabled)
     {
@@ -195,6 +317,7 @@ export class Tny
      *
      * @param {string} path The scene's resource path.
      * @returns {Promise<TnyScene>} The new scene, also `this.scene`.
+     * @cjs
      */
     async LoadScene(path)
     {
@@ -215,6 +338,7 @@ export class Tny
      * choices, and whether CjsLibrary makes it available here and why not.
      *
      * @returns {{name: string, type: string, value: *, applies: string, category: string[]|null, values: Array|null, available: boolean, reason: string|null}[]} The settings.
+     * @cjs
      */
     GetSettings()
     {
@@ -233,6 +357,7 @@ export class Tny
      *
      * @param {string} name A registered setting.
      * @returns {*} Its value.
+     * @cjs
      */
     GetSetting(name)
     {
@@ -245,6 +370,7 @@ export class Tny
      *
      * @param {string} name A registered setting.
      * @param {*} value A value of its type.
+     * @cjs
      */
     SetSetting(name, value)
     {
@@ -256,6 +382,7 @@ export class Tny
      * render job each frame, after Blue's tick; it may call `RenderScene`.
      *
      * @param {Function|null} handler Called as `(tny)`; null restores the default.
+     * @cjs
      */
     SetRenderHandler(handler)
     {
@@ -268,6 +395,7 @@ export class Tny
      * Medium and High TAA passes read and write a UAV in the pixel shader,
      * which WebGL2 cannot run. The host holds the preference; the runtime does
      * not substitute (as Graphene's host does).
+     * @cjs
      */
     RenderScene()
     {
@@ -277,7 +405,11 @@ export class Tny
         this.backend.Render(this.driver, blue.os.GetRealTime(), blue.os.GetCurrentFrameTime(), Tr2RenderContext_GetMainThreadRenderContext());
     }
 
-    /** Return the shared promise for closing this host once. */
+    /**
+     * Return the shared promise for closing this host once.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
+     */
     Close()
     {
         if (!this._closing) this._closing = this._Close();
@@ -287,17 +419,37 @@ export class Tny
     /**
      * Stop the engine, then close the database, services and storage in order,
      * and aggregate shutdown errors.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
      */
     async _Close()
     {
         const errors = [];
-        try { await this._Stop(); }
-        catch (error) { errors.push(error); }
+        try
+        {
+            await this._Stop();
+        }
+        catch (error)
+        {
+            errors.push(error);
+        }
         await this._database.Close();
-        try { await this._services.Close(); }
-        catch (error) { errors.push(error); }
-        try { await this._storage.Close(); }
-        catch (error) { errors.push(error); }
+        try
+        {
+            await this._services.Close();
+        }
+        catch (error)
+        {
+            errors.push(error);
+        }
+        try
+        {
+            await this._storage.Close();
+        }
+        catch (error)
+        {
+            errors.push(error);
+        }
         if (errors.length) throw new AggregateError(errors, "Tny shutdown failed");
     }
 
@@ -306,6 +458,7 @@ export class Tny
      * pumping Blue once per animation frame. Trinity is registered for Blue's
      * tick (trinity.Initialize) and runs the device's jobs, so the draw happens
      * inside PumpOS; the scene driver updates the scene and camera itself.
+     * @cjs
      */
     _Start()
     {
@@ -344,6 +497,8 @@ export class Tny
      * Moves the camera's centre by however far the focused object moved this
      * tick, so a moving ship stays in view and the user's pan is kept. The
      * driver updates the camera before the scene, so it trails by one frame.
+     * @param {number[]|null} before Focused object position captured before the engine tick.
+     * @cjs
      */
     _Follow(before)
     {
@@ -352,7 +507,10 @@ export class Tny
         for (let axis = 0; axis < 3; axis++) this.camera.extraTranslation[axis] += focus[axis] - before[axis];
     }
 
-    /** One frame's draw; a failure is kept and logged once, and later frames still run. */
+    /**
+     * One frame's draw; a failure is kept and logged once, and later frames still run.
+     * @cjs
+     */
     _Draw()
     {
         try
@@ -367,7 +525,10 @@ export class Tny
         }
     }
 
-    /** Keeps the canvas back buffer at its displayed size times `pixelRatio`. */
+    /**
+     * Keeps the canvas back buffer at its displayed size times `pixelRatio`.
+     * @cjs
+     */
     _FitCanvas()
     {
         const canvas = this.backend.canvas;
@@ -382,7 +543,11 @@ export class Tny
         if (width !== canvas.width || height !== canvas.height) this.backend.Resize(width, height);
     }
 
-    /** Stops the loop, removes the frame job and shuts the library down, which releases its backend. */
+    /**
+     * Stops the loop, removes the frame job and shuts the library down, which releases its backend.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
+     */
     async _Stop()
     {
         if (this._frame) globalThis.cancelAnimationFrame(this._frame);
@@ -401,9 +566,21 @@ export class Tny
         this.backend = null;
         if (library) await library.Shutdown();
     }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "Tny";
+
 }
 
-/** Loads the engine modules Initialize composes; Tny itself imports none. */
+/**
+ * Loads the engine modules Initialize composes; Tny itself imports none.
+ * @returns {Promise<object>}
+ * @cjs
+ */
 async function LoadEngine()
 {
     const [ core, driver, fetchFs, blueIndex, consts, trinityIndex, renderJob, camera, input, controls, scene, sceneDriver, tnyScene, settingsRegistrar ] = await Promise.all([
@@ -444,7 +621,12 @@ async function LoadEngine()
     };
 }
 
-/** An empty space scene, initialized against the attached device. */
+/**
+ * An empty space scene, initialized against the attached device.
+ * @param {object} engine Dynamically loaded engine modules.
+ * @returns {object}
+ * @cjs
+ */
 function CreateEmptyScene(engine)
 {
     const scene = new engine.EveSpaceScene();

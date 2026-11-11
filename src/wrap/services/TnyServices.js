@@ -1,22 +1,58 @@
-import { validateStoragePolicy } from "./storagePolicy.js";
 
 /**
  * Our host service registry. It constructs lazily and injects scoped storage;
  * it does not register Blue classes or infer data-provider routing.
+ * @cjs
  */
 export class TnyServices
 {
-    static className = "TnyServices";
 
+    /**
+     * Owned application storage manager.
+     * @type {TnyStorage|null}
+     * @cjs
+     */
     _storage = null;
+
+    /**
+     * Registered constructors, options and lazily constructed instances.
+     * @type {Map<string, object>}
+     * @cjs
+     */
     _services = new Map();
+
+    /**
+     * Whether new operations are rejected.
+     * @type {boolean}
+     * @cjs
+     */
     _closed = false;
+
+    /**
+     * Shared shutdown promise, created by the first Close call.
+     * @type {Promise<void>|null}
+     * @cjs
+     */
     _closing = null;
 
-    /** Retain the storage manager used for service store injection. */
-    constructor(storage) { this._storage = storage; }
+    /**
+     * Retain the storage manager used for service store injection.
+     * @param {TnyStorage} storage Storage manager borrowed by this registry.
+     * @cjs
+     */
+    constructor(storage)
+    {
+        this._storage = storage;
+    }
 
-    /** Validate and retain a named service constructor without instantiating it. */
+    /**
+     * Validate and retain a named service constructor without instantiating it.
+     * @param {string} name Member or registration name.
+     * @param {Function} Constructor Service constructor; receives its scoped store and options.
+     * @param {object} [options] Options for this operation.
+     * @returns {TnyServices}
+     * @cjs
+     */
     Register(name, Constructor, options = {})
     {
         this._AssertOpen();
@@ -24,13 +60,18 @@ export class TnyServices
             throw new TypeError("Service name must be a nonempty, trimmed string");
         if (this._services.has(name)) throw new Error("Service " + name + " is already registered");
         if (typeof Constructor !== "function") throw new TypeError("Service " + name + " requires a constructor");
-        validateStoragePolicy(Constructor.storagePolicy, name);
+        ValidateStoragePolicy(Constructor.storagePolicy, name);
         this._services.set(name, { Constructor, options, usesStorage: Constructor.storagePolicy !== null,
             instance: null, constructing: false });
         return this;
     }
 
-    /** Return one instance per registration, or null when no service has that name. */
+    /**
+     * Return one instance per registration, or null when no service has that name.
+     * @param {string} name Member or registration name.
+     * @returns {object|null}
+     * @cjs
+     */
     Get(name)
     {
         this._AssertOpen();
@@ -46,19 +87,36 @@ export class TnyServices
             entry.instance = instance;
             return instance;
         }
-        finally { entry.constructing = false; }
+        finally
+        {
+            entry.constructing = false;
+        }
     }
 
-    /** Return registered service names in registration order. */
-    List() { return Array.from(this._services.keys()); }
+    /**
+     * Return registered service names in registration order.
+     * @returns {string[]}
+     * @cjs
+     */
+    List()
+    {
+        return Array.from(this._services.keys());
+    }
 
-    /** Reject acquisition or registration after shutdown begins. */
+    /**
+     * Reject acquisition or registration after shutdown begins.
+     * @cjs
+     */
     _AssertOpen()
     {
         if (this._closed) throw new Error("Services are closed");
     }
 
-    /** Prevent new acquisitions and return the shared shutdown promise. */
+    /**
+     * Prevent new acquisitions and return the shared shutdown promise.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
+     */
     Close()
     {
         if (!this._closing)
@@ -72,6 +130,8 @@ export class TnyServices
     /**
      * Close instantiated services in reverse registration order and collect
      * failures.
+     * @returns {Promise<void>} Completion of the operation.
+     * @cjs
      */
     async _CloseServices()
     {
@@ -79,10 +139,39 @@ export class TnyServices
         for (const { instance } of Array.from(this._services.values()).reverse())
         {
             if (!instance) continue;
-            try { await instance.Close(); }
-            catch (error) { errors.push(error); }
+            try
+            {
+                await instance.Close();
+            }
+            catch (error)
+            {
+                errors.push(error);
+            }
         }
         if (errors.length) throw new AggregateError(errors, "Service shutdown failed");
     }
+
+    /**
+     * Stable identity for diagnostics and registration.
+     * @type {string}
+     * @cjs
+     */
+    static className = "TnyServices";
+
 }
 
+
+/**
+ * Our storage opt-in declaration. Options are added only for a concrete consumer.
+ * @param {object|null} policy Null opts out; an empty object requests storage.
+ * @param {string} name Service name included in validation errors.
+ * @cjs
+ */
+function ValidateStoragePolicy(policy, name)
+{
+    if (policy === null) return;
+    if (!policy || Object.getPrototypeOf(policy) !== Object.prototype)
+        throw new TypeError("Service " + name + ": storagePolicy must be null or a plain object");
+    const keys = Reflect.ownKeys(policy);
+    if (keys.length) throw new TypeError("Service " + name + ": unsupported storagePolicy field " + String(keys[0]));
+}
