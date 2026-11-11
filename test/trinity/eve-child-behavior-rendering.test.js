@@ -10,7 +10,7 @@ import { TriBatchType } from "../../npm/dist/global/consts/graphics/index.js";
 import { ALResult } from "../../npm/dist/trinityal/index.js";
 import {
   EveChildBehaviorSystem, EveChildContainer, EveShip2, BehaviorGroup, BehaviorGroupBooster, Tr2Mesh, Tr2MeshArea,
-  Tr2EffectStateManager, Tr2RenderContext_GetMainThreadRenderContext, TriDevice, trinity, CjsBatchManager
+  Tr2EffectStateManager, Tr2RenderContext_GetMainThreadRenderContext, TriDevice, trinity, Tr2Renderer, CjsBatchManager
 } from "../../npm/dist/trinity/index.js";
 import { FixtureEffect } from "../support/fixtureEffect.js";
 import { InitializeTrinityStub } from "../support/trinityStub.js";
@@ -203,6 +203,48 @@ test("allocation resize, empty groups, mapping failures and teardown obey owners
   assert.equal(value._boosterInstanceBuffer.IsValid(), false);
   assert.equal(TriDevice.GetResourcesRegistered().includes(value), false);
   assert.equal(a._changeBufferVertexCount, null);
+});
+
+test("idle behavior streams rebuild on next render collection with their instance bytes", t =>
+{
+  const resources = TriDevice._resourcesRegistered, generations = TriDevice._registeredGenerations;
+  const activeTime = TriDevice.activeTime;
+  TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
+  TriDevice.activeTime = 1000 * 10000000;
+  t.after(() =>
+  {
+    TriDevice._resourcesRegistered = resources; TriDevice._registeredGenerations = generations;
+    TriDevice.activeTime = activeTime;
+  });
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  const agents = group(2); agents.mesh = mesh(); agents.GetAgents()[1].position[0] = 7;
+  const value = system(t, [agents]), device = new TriDevice();
+  assert.ok(value.GetRenderables([]).includes(value));
+  // Packing advances previous transforms; settle that history before comparing bytes.
+  value.GetRenderables([]);
+  const buffers = [value._shipInstanceBuffer, value._boosterInstanceBuffer];
+  const bytes = buffers.map(buffer => buffer.TrinityALImpl_GetObject()._buffer.slice());
+  const destroys = buffers.map(buffer => t.mock.method(buffer.TrinityALImpl_GetObject(), "Destroy"));
+  TriDevice.activeTime += (TriDevice.resourceIdleRule + 1) * 10000000;
+  device.CollectResources(); device.CollectResources(); value.ReleaseResources();
+  assert.ok(buffers.every(buffer => !buffer.IsValid()));
+  assert.ok(destroys.every(destroy => destroy.mock.callCount() === 1));
+  assert.deepEqual(value.GetRenderables([]), []);
+  device._PreparePendingResources();
+  const renderables = value.GetRenderables([]);
+  assert.ok(renderables.includes(value));
+  assert.deepEqual([value._shipInstanceBuffer, value._boosterInstanceBuffer], buffers);
+  buffers.forEach((buffer, index) =>
+  {
+    assert.equal(buffer.IsValid(), true);
+    assert.deepEqual(buffer.TrinityALImpl_GetObject()._buffer, bytes[index]);
+  });
+  const manager = new CjsBatchManager().Initialize();
+  const batches = manager.Collect(renderables, 0, context).GetAccumulator(OPAQUE).GetBatches();
+  assert.equal(batches.length, 1);
+  assert.equal(batches[0].instanceCount, 2);
+  assert.equal(batches[0].vertexStreams[1], buffers[0]);
+  value.Destruct(); value.Destruct();
 });
 
 test("booster packing uses Carbon's LOD, local offset and world flare transform", () =>

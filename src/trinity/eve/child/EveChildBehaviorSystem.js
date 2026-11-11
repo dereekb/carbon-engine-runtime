@@ -163,20 +163,24 @@ export class EveChildBehaviorSystem extends EveChildTransform
    */
   Destruct()
   {
-    this._shipInstanceBuffer.Destroy();
-    this._boosterInstanceBuffer.Destroy();
+    this.ReleaseResources();
     for (const group of this.behaviorGroups) group.SetVertexFunctionReferance(null);
     Tr2DeviceResource.prototype.Destruct.call(this);
   }
 
   /**
-   * Carbon's device-release override is empty (EveChildBehaviorSystem.h).
+   * Releases both instance streams; preparation recreates their current capacity.
+   * Carbon: trinity/Eve/SpaceObject/Children/EveChildBehaviorSystem.h:69-71;
+   *   EveChildBehaviorSystem.cpp:189-198 and 529-565.
    *
-   * @adapted
+   * @adapted idle release destroys buffers retained by Carbon, freeing strongly
+   *   registered AL storage without deterministic member destruction.
    */
 
   ReleaseResources()
   {
+    this._shipInstanceBuffer.Destroy();
+    this._boosterInstanceBuffer.Destroy();
   }
 
   /**
