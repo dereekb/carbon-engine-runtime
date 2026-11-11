@@ -16,4 +16,16 @@ export class Tr2EffectTechniqueInputs
   @type.array("Tr2EffectLibraryParameters")
   libraries = [];
 
+  /**
+   * Releases the pass and library values owned by this technique.
+   * Carbon: trinity/trinity/Shader/Tr2Material.h:183-196.
+   * @adapted Explicit member hooks replace destruction of the native unique_ptr vectors.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    for (const library of this.libraries) library.OnDestruct();
+    for (const pass of this.passes) pass.OnDestruct();
+  }
+
 }
