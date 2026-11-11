@@ -52,12 +52,15 @@ is removed; callers use `IsGood()`.
 `Remove(owner, resource)`. Registration immediately rebuilds prepared
 resources. Load/reload dispatches `RebuildCachedData(resource)`; reload and failure
 dispatch `ReleaseCachedData(resource)`. Unrenewed links expire in `PurgeInactive`:
-release cached data, set the matching object property to null through its setter or
-set the matching Map value to null, and remove the link. Expiry drops resources,
-never paths: a Map slot keeps its key, and the owner reloads at use. A replacement
-is never cleared. A callback that throws does not stop the walk; failures are
-rethrown together as an `AggregateError`. Explicit destruction must still remove
-links. `GetByOwner` and `GetByResource` return diagnostic snapshots.
+remove the owner/resource links, then call the owner's `RemoveCachedData(resource)`
+to release derived data and clear matching slots. Expiry drops resources, never
+paths: a Map slot keeps its key, and the owner reloads at use. Registered-owner
+contract tests verify slot clearing and replacement preservation; expiry does not
+recheck or repair slots. Callback errors propagate immediately, so later callbacks
+wait for another invocation. Explicit teardown must still remove links.
+`GetByOwner` and `GetByResource` return diagnostic snapshots. Resource owners now
+have link-only `OnDestruct` hooks; the full destructor port and generic caller are
+separate work, so these hooks are not yet the complete teardown entry point.
 `linkExpirySeconds` sets how long an unrenewed link lives, and otherwise it follows
 the inactivity policy. This manager ownership is provisional until destruction can
 reliably unregister targets.
