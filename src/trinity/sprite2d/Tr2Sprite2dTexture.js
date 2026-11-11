@@ -175,6 +175,7 @@ export class Tr2Sprite2dTexture extends ITr2Sprite2dTexture
    *
    * Carbon: Tr2Sprite2dTexture destructor (trinity/trinity/Sprite2d/Tr2Sprite2dTexture.cpp:28-34).
    * @adapted Existing JS cleanup runs through graph dispatch; ownership and callers are unchanged.
+   * @adapted Clearing the JS listener set replaces implicit destruction of native m_changeListeners (Tr2Sprite2dTexture.h:128); the shared atlas itself is not destroyed.
    */
   OnDestruct()
   {
