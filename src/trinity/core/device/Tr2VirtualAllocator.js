@@ -2,7 +2,10 @@
 // Source: trinity/trinity/Tr2VirtualAllocator.cpp
 import { CjsSchema, type } from "#schema";
 
-/** Allocates aligned virtual byte ranges, reclaiming frees and expanding by reserved blocks. */
+/**
+ * Allocates aligned virtual byte ranges, reclaiming frees and expanding by reserved blocks.
+ * @adapted No own teardown hook: native Tr2VirtualAllocator.cpp:59-63 clears/destroys a VMA virtual block; this port acquires no VMA handle and stores only GC-owned span/reservation records (header:41-49).
+ */
 export class Tr2VirtualAllocator
 {
   _blockSize = 0;
