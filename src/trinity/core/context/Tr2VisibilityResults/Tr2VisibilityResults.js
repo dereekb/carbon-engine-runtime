@@ -24,6 +24,15 @@ export class Tr2VisibilityResults extends IRoot
   #events = [];
 
   /**
+   * Carbon destructor (Tr2VisibilityResults.cpp:12-16) clears the event set.
+   * @implemented
+   */
+  OnDestruct()
+  {
+    this.Clear();
+  }
+
+  /**
    * Adds the value-like visibility event emitted by a visibility executor.
    *
    * @adapted
