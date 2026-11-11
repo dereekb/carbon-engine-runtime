@@ -63,6 +63,18 @@ import { IEveEffectChildrenOwner } from "./IEveEffectChildrenOwner.js";
 })
 export class EveChildInstanceContainer extends EveChildTransform
 {
+  /**
+   * Detaches the instances and source from this container.
+   * Carbon: trinity/trinity/Eve/SpaceObject/Children/EveChildInstanceContainer.cpp:55-59.
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.UnregisterChildren(this.instances);
+    this.UnregisterChild(this._source);
+  }
+
 
   /** m_translation (Vector3) [READWRITE, PERSIST] - EveChildInstanceContainer_Blue.cpp:30 */
 
