@@ -8,6 +8,7 @@
 import { exposure as be } from "#be";
 import { meta, type } from "#schema";
 import { ALResult, Failed, Tr2FenceAL } from "#trinityal";
+import { TriStorageFlags } from "#consts/graphics";
 import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
 import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 
@@ -66,6 +67,15 @@ export class Tr2DynamicRingBuffer
   /** _name */
   @type.string
   _name = "";
+
+  /**
+   * Carbon destructor (Tr2DynamicRingBuffer.cpp:26-29).
+   * @adapted The destruction graph dispatches device-resource base teardown separately.
+   */
+  OnDestruct()
+  {
+    this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
+  }
 
   /**
    * Carbon's aligned PutData (cpp:50-117). Its three-argument overload is this

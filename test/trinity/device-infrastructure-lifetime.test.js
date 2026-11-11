@@ -6,7 +6,7 @@ import {
     Tr2RenderContext_GetMainThreadRenderContext
 } from "../../npm/dist/trinity/index.js";
 import { TriStorageFlags } from "../../npm/dist/global/consts/graphics/trinityEnums.js";
-import { Tr2RenderContextALStub, ALResult } from "../../npm/dist/trinityal/index.js";
+import { Tr2RenderContextALStub, Tr2BufferAL, Tr2FenceAL, ALResult } from "../../npm/dist/trinityal/index.js";
 
 const SECOND = 10000000;
 
@@ -37,6 +37,54 @@ function setup(t)
 
 for (const Type of [Tr2RingVertexBuffer, Tr2RingIndexBuffer])
 {
+    test(`${Type.name}: destruction releases owned buffer and pooled fences without invalidating copies`, t =>
+    {
+        const { context, device } = setup(t);
+        const ring = new Type();
+        assert.equal(ring.Create(32, 4), true);
+        assert.equal(ring.PutData(new Uint8Array(8), 8, 4, context).result, ALResult.S_OK);
+        ring.DoneUsingData(context);
+        const buffer = ring.GetBuffer();
+        const bufferPeer = new Tr2BufferAL({ copy: buffer });
+        const activeFence = ring._regions[0].fence;
+        const fencePeer = new Tr2FenceAL({ copy: activeFence });
+        const pooledFence = ring.AllocateFence();
+        ring.DeallocateFence(pooledFence);
+        assert.equal(activeFence.IsValid(), true);
+        assert.equal(pooledFence.IsValid(), true);
+        assert.equal(device.GetResourcesRegistered().includes(ring), true);
+        const pooledImplementation = pooledFence._fence.implementation;
+        const bufferImplementation = buffer.TrinityALImpl_GetObject();
+        const fenceImplementation = activeFence._fence.implementation;
+        try
+        {
+            for (let repeat = 0; repeat < 2; repeat++)
+            {
+                ring.Destruct();
+                assert.equal(device.GetResourcesRegistered().includes(ring), false);
+                assert.equal(ring._buffer, null);
+                assert.equal(buffer.IsValid(), false);
+                assert.equal(activeFence.IsValid(), false);
+                assert.equal(pooledFence.IsValid(), false);
+                assert.equal(pooledImplementation.IsValid(), false);
+                assert.equal(ring._regions.length, 0);
+                assert.equal(ring._availableFences.length, 0);
+                assert.equal(bufferPeer.IsValid(), true);
+                assert.equal(fencePeer.IsValid(), true);
+            }
+            assert.equal(fencePeer.Wait(context), ALResult.S_OK);
+            assert.equal(bufferPeer.MapForWriting(context).result, ALResult.S_OK);
+            bufferPeer.UnmapForWriting(context);
+        }
+        finally
+        {
+            bufferPeer.Destroy();
+            fencePeer.Destroy();
+        }
+        assert.equal(bufferImplementation.IsValid(), false);
+        assert.equal(fenceImplementation.IsValid(), false);
+    });
+
     test(`${Type.name}: inherited registration, idle release and retained-size recovery`, t =>
     {
         const { context, device, expire } = setup(t);
