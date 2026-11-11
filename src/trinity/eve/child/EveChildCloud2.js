@@ -443,9 +443,12 @@ export class EveChildCloud2 extends EveSpaceObjectChild
   }
 
   /**
-   * Resets native declaration, dirty state and shadow ownership (cpp:408-425).
+   * Resets declaration, dirty state and shadow ownership, and releases owned storage.
+   * Carbon: trinity/Eve/SpaceObject/Children/EveChildCloud2.cpp:408-508;
+   *   lightmaps rebuild at cpp:268-289, 302-376 and 603-655.
    *
-   * @adapted explicitly releases the owned depth surface; cube buffers survive.
+   * @adapted idle release also destroys cube buffers and lightmaps retained by
+   *   Carbon; explicit AL destruction frees registered storage without member RAII.
    */
 
   ReleaseResources(storage = 0)
@@ -457,6 +460,12 @@ export class EveChildCloud2 extends EveSpaceObjectChild
     this.ClearVariableStore();
     if (this.shadowMapDS) this.shadowMapDS.Destroy();
     this.shadowMapDS = null;
+    this._vertexBuffer.Destroy();
+    this._indexBuffer.Destroy();
+    this.lightmap.GetTexture().Destroy();
+    this.lightmap.OnTextureChange().Broadcast();
+    this._emptyLightMap.GetTexture().Destroy();
+    this._emptyLightMap.OnTextureChange().Broadcast();
   }
 
   /**
@@ -471,12 +480,6 @@ export class EveChildCloud2 extends EveSpaceObjectChild
   Destruct()
   {
     this.ReleaseResources();
-    this._vertexBuffer.Destroy();
-    this._indexBuffer.Destroy();
-    this.lightmap.GetTexture().Destroy();
-    this.lightmap.OnTextureChange().Broadcast();
-    this._emptyLightMap.GetTexture().Destroy();
-    this._emptyLightMap.OnTextureChange().Broadcast();
     this.lights.SetNotify(null);
     Tr2DeviceResource.prototype.Destruct.call(this);
   }

@@ -263,6 +263,15 @@ test("UpdateVolumetricLightmap: budget contract and slice arithmetic (cpp:319-38
   assert.equal(cloud.lightmapDirty, false, "completed (390 >= scaledWidth 16)");
   assert.equal(cloud.lightmapDirtyOffset, 0, "offset reset on completion (cpp:369)");
   assert.equal(cloud.UpdateVolumetricLightmap(renderContext), false, "clean lightmap - false");
+  const lightmap = cloud.lightmap.GetTexture();
+  cloud.ReleaseResources();
+  assert.equal(lightmap.IsValid(), false, "release frees the generated volume");
+  assert.equal(cloud._emptyLightMap.GetTexture().IsValid(), false);
+  assert.equal(cloud.UpdateVolumetricLightmap(renderContext), true, "next lightmap update regenerates pixels");
+  assert.equal(cloud.lightmap.GetTexture(), lightmap);
+  assert.equal(lightmap.IsValid(), true);
+  assert.deepEqual(calls, [[390, 8, 8], [390, 8, 8]]);
+  cloud.Destruct();
 });
 
 test("SetSceneInformation: scale map, dirty asymmetry, sun threshold quirk, effect options (cpp:384-424)", () =>
@@ -624,26 +633,47 @@ test("Tr2Light.GetLight returns lightData position/radius and brightness-scaled 
 });
 
 
-test("cube lifetime preserves Carbon release gates and binds native geometry", () =>
+test("cube idle expiry frees storage and the next volumetric batch rebuilds it", t =>
 {
+  const resources = TriDevice._resourcesRegistered, generations = TriDevice._registeredGenerations;
+  const activeTime = TriDevice.activeTime;
+  TriDevice._resourcesRegistered = []; TriDevice._registeredGenerations = [];
+  TriDevice.activeTime = 1000 * 10000000;
+  t.after(() =>
+  {
+    TriDevice._resourcesRegistered = resources; TriDevice._registeredGenerations = generations;
+    TriDevice.activeTime = activeTime;
+  });
+  t.mock.method(Tr2Renderer, "IsResourceCreationAllowed", () => true);
+  const device = new TriDevice();
   const cloud = new EveChildCloud2();
-  cloud.PrepareResources();
   cloud.UpdateAsyncronous(UpdateContext(), { localToWorldTransform: mat4.create() });
   cloud.effect = FixtureEffect();
   const frustum = { IsSphereVisible__CenterRadius: () => true, GetPixelSizeAccross__Sphere: () => 10000 };
   const accumulator = MakeAccumulator();
+  assert.equal(cloud.GetVolumetricBatches(frustum, accumulator), false);
+  device._PreparePendingResources();
   assert.equal(cloud.GetVolumetricBatches(frustum, accumulator), true);
   const batch = accumulator.committed[0];
   assert.equal(batch.vertexDeclaration, cloud._declaration);
   assert.equal(cloud._vertexBuffer.GetDesc().stride, 12);
   assert.equal(cloud._indexBuffer.GetDesc().stride, 2);
-  cloud.ReleaseResources();
-  assert.equal(cloud._vertexBuffer.IsValid(), true);
-  assert.equal(cloud._indexBuffer.IsValid(), true);
+  const vertex = cloud._vertexBuffer, index = cloud._indexBuffer;
+  const destroys = [vertex, index].map(buffer => t.mock.method(buffer.TrinityALImpl_GetObject(), "Destroy"));
+  TriDevice.activeTime += (TriDevice.resourceIdleRule + 1) * 10000000;
+  device.CollectResources(); device.CollectResources(); cloud.ReleaseResources();
+  assert.equal(vertex.IsValid(), false);
+  assert.equal(index.IsValid(), false);
+  assert.ok(destroys.every(destroy => destroy.mock.callCount() === 1));
   assert.equal(cloud.GetVolumetricBatches(frustum, MakeAccumulator()), false);
-  cloud.PrepareResources();
+  device._PreparePendingResources();
   assert.notEqual(cloud._declaration, Tr2EffectStateManager.Unknown);
   assert.equal(cloud.GetVolumetricBatches(frustum, MakeAccumulator()), true);
+  assert.equal(cloud._vertexBuffer, vertex);
+  assert.equal(cloud._indexBuffer, index);
+  assert.equal(vertex.IsValid(), true);
+  assert.equal(index.IsValid(), true);
+  cloud.Destruct(); cloud.Destruct();
 });
 
 test("DensityMap supplies native 3D dimensions; missing LightMap selects the gray fallback", () =>
@@ -668,6 +698,12 @@ test("DensityMap supplies native 3D dimensions; missing LightMap selects the gra
   assert.equal(fallback.GetDesc().GetFormat(), PixelFormat.PIXEL_FORMAT_R8G8_UNORM);
   assert.equal(cloud._variableStore.GetVariable("LightMap").GetValue(), cloud._emptyLightMap);
   assert.equal(cloud.lightmapDirty, false);
+  cloud.ReleaseResources();
+  assert.equal(fallback.IsValid(), false);
+  cloud.UpdateSyncronous(UpdateContext());
+  assert.equal(cloud._emptyLightMap.GetTexture(), fallback);
+  assert.equal(fallback.IsValid(), true, "stable effect rebuilds the released gray fallback");
+  cloud.Destruct();
   provider.GetTexture().Destroy();
 });
 
