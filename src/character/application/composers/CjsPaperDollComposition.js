@@ -56,7 +56,7 @@ export class CjsPaperDollComposition
      */
     AddOutput({ target, region, channel, width, height, mips = false, base, baseRegion = null, list = "order", consumers = [] })
     {
-        const buffers = [ this.compositor.TargetTexture(width, height, mips), this.compositor.TargetTexture(width, height, mips) ];
+        const buffers = [ this.compositor.TargetTexture(width, height, mips, target), this.compositor.TargetTexture(width, height, mips, target) ];
         const row = { target, region, channel, width, height, mips, base, baseRegion, list, consumers, buffers, active: 0 };
         this._rows.push(row);
         return row;

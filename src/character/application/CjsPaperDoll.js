@@ -60,19 +60,26 @@ export class CjsPaperDoll
     }
 
     /**
-     * Applies the definition's pending edits to the front instance.
+     * Applies the definition's pending edits to the front instance. A composition target the idle sweep freed
+     * comes back blank, so the targets its compositors report are baked again first.
      * @returns {boolean} Whether any output was rebuilt; false with no front instance.
      * @throws {Error} Whatever the instance's bindings throw.
      */
     Update()
     {
-        return this.front ? this.front.Update(this.definition) : false;
+        if (!this.front) return false;
+
+        let released = 0;
+        for (const compositor of this.compositors) released |= compositor.TakeReleasedTargets();
+        if (released) this.front.RebuildTargets(released);
+
+        return this.front.Update(this.definition);
     }
 
     /**
      * Renews everything this character needs to be drawn, animated and recomposed, and answers whether all of it
-     * is good: its compositors' effects, its skeleton and clips, and the geometry and area effects of its drawn
-     * objects.
+     * is good: its compositors' effects and the targets they own, its skeleton and clips, and the geometry and area
+     * effects of its drawn objects.
      *
      * For a character that is hidden entirely but should stay ready: whoever hid it calls this periodically
      * (well inside resMan's idle limit) so nothing it owns expires. A visible character does not need it, since

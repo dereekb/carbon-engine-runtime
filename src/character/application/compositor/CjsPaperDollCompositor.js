@@ -70,6 +70,12 @@ export class CjsPaperDollCompositor
     /** Composed target revisions, changed only after a successful draw. @type {Map<object, number>} */
     _targetRevisions = new Map();
 
+    /** Each target's change listener, kept here because the event holds its listeners weakly. @type {Map<object, { compositor: object, bits: number, Changed: function(): void }>} */
+    _targetListeners = new Map();
+
+    /** `PaperDollTarget` bits whose targets were released or recreated blank; see `TakeReleasedTargets`. */
+    _releasedTargets = 0;
+
     /** Completed material publications, owned until replacement or destruction. @type {Map<object, object>} */
     _publications = new Map();
 
@@ -174,14 +180,13 @@ export class CjsPaperDollCompositor
      * @param {boolean} [mips=false] Whether it has a full mip chain; call `Finish` after drawing into it. A mipped
      *   target is R8G8B8A8 and the others B8G8R8A8: blits do not care, but anything reading a target's bytes (a
      *   readback, a PNG save) must take its format from the target.
+     * @param {number} [targets=~0] The `PaperDollTarget` bits to bake again when the idle sweep frees this target;
+     *   every target when the caller does not say.
      * @returns {Tr2RenderTarget} The render target.
      */
-    MakeTarget(width, height, mips = false)
+    MakeTarget(width, height, mips = false, targets = ~0)
     {
         const target = new Tr2RenderTarget();
-        // The compositor draws into a target once and samples it for as long as the doll lives, and frees it in
-        // Destruct. The idle sweep must not release it: nothing here draws it again.
-        target._neverPurge = true;
         // Carbon refuses to generate mips for BGR formats (Tr2TextureAL.GenerateMipMaps), so a mipped target is RGBA.
         target.Create(width, height, mips ? 1 + Math.floor(Math.log2(Math.max(width, height))) : 1,
             mips ? PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM : PixelFormat.PIXEL_FORMAT_B8G8R8A8_UNORM);
@@ -189,7 +194,25 @@ export class CjsPaperDollCompositor
         this.targets.push(target);
         this._targetRevisions.set(target, 0);
         if (mips) this._mipped.add(target);
+
+        // The target is drawn once and sampled after. Its change event is raised when the idle sweep releases it and
+        // when the device tick recreates it blank (the draws here raise none), so either way its bits are baked again.
+        const listener = { compositor: this, bits: targets, Changed() { this.compositor._releasedTargets |= this.bits; } };
+        this._targetListeners.set(target, listener);
+        target.OnTextureChange().RegisterListener(listener, listener.Changed);
         return target;
+    }
+
+    /**
+     * The `PaperDollTarget` bits whose targets were released or recreated blank since the last call, cleared by it.
+     * The doll hands them to `CjsPaperDollInstance.RebuildTargets` on its next update.
+     * @returns {number} The bits; 0 when nothing was released.
+     */
+    TakeReleasedTargets()
+    {
+        const released = this._releasedTargets;
+        this._releasedTargets = 0;
+        return released;
     }
 
     /**
@@ -201,6 +224,8 @@ export class CjsPaperDollCompositor
     Finish(target)
     {
         if (!this._mipped.has(target)) return;
+        // Nothing was drawn into a target with no surface (see Draw), so there is no chain to regenerate.
+        if (!target.GetRenderTarget()) return;
         this._build.CheckActive();
         Tr2Renderer.BeginFrame();
         Tr2Renderer.BeginRenderContext();
@@ -227,12 +252,16 @@ export class CjsPaperDollCompositor
      * A live character therefore renews its compositors as part of its update, and a hidden one that should stay
      * ready through `CjsPaperDoll.IsGood`. Rejected: having `Draw` wait for its inputs, which would make the
      * synchronous draw calls in Graphene's composers (about 20 sites) asynchronous.
-     * @returns {boolean} Whether every held effect is good.
+     *
+     * It asks the targets it owns too, which renews them: a live doll keeps its targets whether or not it is drawn.
+     * One the idle sweep freed is not good until the device tick recreates it, and is then baked again.
+     * @returns {boolean} Whether every held effect and owned target is good.
      */
     IsGood()
     {
         let good = true;
         for (const value of this.effects) if (!value.IsGood()) good = false;
+        for (const target of this.targets) if (!target.IsGood()) good = false;
         return good;
     }
 
@@ -255,6 +284,7 @@ export class CjsPaperDollCompositor
         this._publications.clear();
         this._targetRevisions.clear();
         for (const target of this.targets.splice(0)) target.Dispose();
+        this._targetListeners.clear();
         for (const value of this.effects.splice(0)) value.Destruct();
         this._mipped.clear();
         this.blitter.Destruct();
@@ -265,11 +295,12 @@ export class CjsPaperDollCompositor
      * @param {number} width Its width.
      * @param {number} height Its height.
      * @param {boolean} [mips=false] Whether it has a full mip chain.
+     * @param {number} [targets=~0] The `PaperDollTarget` bits to bake again when the idle sweep frees it.
      * @returns {CjsPaperDollCompositionTarget} The target.
      */
-    TargetTexture(width, height, mips = false)
+    TargetTexture(width, height, mips = false, targets = ~0)
     {
-        return new CjsPaperDollCompositionTarget(this, width, height, mips);
+        return new CjsPaperDollCompositionTarget(this, width, height, mips, targets);
     }
 
     /**
@@ -286,6 +317,15 @@ export class CjsPaperDollCompositor
     Draw(target, width, height, value, region, clear = false, writeRGBA = clear)
     {
         this._build.CheckActive();
+
+        // A target the idle sweep freed has no surface until the device tick prepares it. Nothing is drawn, and its
+        // bits stay marked so the next update bakes it.
+        if (!target.GetRenderTarget())
+        {
+            this._releasedTargets |= this._targetListeners.get(target).bits;
+            return;
+        }
+
         Tr2Renderer.BeginFrame();
         Tr2Renderer.BeginRenderContext();
         const context = this._context;

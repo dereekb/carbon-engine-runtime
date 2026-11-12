@@ -45,13 +45,14 @@ export class CjsPaperDollCompositionTarget
      * @param {number} width Its width.
      * @param {number} height Its height.
      * @param {boolean} [mips=false] Whether it has a full mip chain (`Finish` regenerates it after drawing).
+     * @param {number} [targets=~0] The `PaperDollTarget` bits to bake again when the idle sweep frees it.
      */
-    constructor(compositor, width, height, mips = false)
+    constructor(compositor, width, height, mips = false, targets = ~0)
     {
         this._compositor = compositor;
         this.width = width;
         this.height = height;
-        this.target = compositor.MakeTarget(width, height, mips);
+        this.target = compositor.MakeTarget(width, height, mips, targets);
         this.resource = new TriTextureRes();
         this.resource.SetTextureFromRT(this.target);
     }
