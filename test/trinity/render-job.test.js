@@ -3,10 +3,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
-import { ITr2Scene, ITr2MultiPassScene, ITr2VisualizationModeRenderer, Tr2RenderContext, Tr2VariableStore, Tr2VisibilityResults, TriProjection } from "../../npm/dist/trinity/core/index.js";
+import { ITr2Scene, ITr2MultiPassScene, ITr2VisualizationModeRenderer, Tr2RenderContext, Tr2RenderContext_GetMainThreadRenderContext, Tr2VariableStore, Tr2VisibilityResults, TriProjection } from "../../npm/dist/trinity/core/index.js";
 import { ALResult, Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
 import { Tr2RenderTarget } from "../../npm/dist/trinity/core/device/Tr2RenderTarget.js";
-import { PixelFormat, TextureType } from "../../npm/dist/global/consts/renderContext/index.js";
+import { Tr2DepthStencil } from "../../npm/dist/trinity/core/device/Tr2DepthStencil.js";
+import { DepthStencilFormat, PixelFormat, TextureType } from "../../npm/dist/global/consts/renderContext/index.js";
 import { TriTextureRes } from "../../npm/dist/trinity/resources/texture/TriTextureRes.js";
 import { Tr2RenderJobs, TriRenderJob, TriRenderStep, TriStepClear, TriStepCopyRenderTarget, TriStepEnableWireframeMode, TriStepGenerateMipMaps, TriStepPopDepthStencil, TriStepPopRenderTarget, TriStepPresentSwapChain, TriStepPushDepthStencil, TriStepPushRenderTarget, TriStepRemoteSync, TriStepResolve, TriStepRunJob, TriStepSetDepthStencil, TriStepSetProjection, TriStepSetRenderState, TriStepSetRenderTarget, TriStepSetStdRndStates, TriStepSetView, TriStepSetViewport, TriStepSetVisualizationMode } from "../../npm/dist/trinity/renderJob/index.js";
 import { TriStepFilterVisibilityResults } from "../../npm/dist/trinity/renderJob/index.js";
@@ -73,6 +74,29 @@ function renderTarget(context, width = 64, height = 64)
 function stubTarget()
 {
   return StubTarget();
+}
+
+/**
+ * A created render target and depth-stencil, prepared as the device tick would.
+ * Preparation is gated on the main-thread context, so it gets the stub backend too.
+ */
+function preparedTargets(t, context)
+{
+  const main = Tr2RenderContext_GetMainThreadRenderContext(), previous = main.GetRenderContextAL();
+  const al = new Tr2RenderContextALStub();
+  al.CreateDevice({ mode: { width: 64, height: 64 } });
+  main.SetRenderContextAL(al);
+  const target = renderTarget(context), depth = new Tr2DepthStencil();
+  depth.Create(64, 64, DepthStencilFormat.DSFMT_D24S8, 1, 0, 0, context);
+  target.PrepareResources();
+  depth.PrepareResources();
+  t.after(() =>
+  {
+    target.Destruct();
+    depth.Destruct();
+    main.SetRenderContextAL(previous);
+  });
+  return { target, depth };
 }
 
 function assertEquals(actual, expected, message)
@@ -505,11 +529,10 @@ test("render-job stack guards diagnose and deterministically unwind", () =>
   assertEquals(throwingContext.GetStackSizeDS(), 0);
 });
 
-test("Carbon push/pop steps mutate only backend-neutral context intent stacks", () =>
+test("Carbon push/pop steps mutate only backend-neutral context intent stacks", t =>
 {
   const context = stubContext();
-  const target = stubTarget();
-  const depth = stubTarget();
+  const { target, depth } = preparedTargets(t, context);
   const pushRT = new TriStepPushRenderTarget();
   pushRT.__init__(target, 0);
   const pushDS = new TriStepPushDepthStencil();
@@ -528,11 +551,10 @@ test("Carbon push/pop steps mutate only backend-neutral context intent stacks", 
   assertEquals(disabled.pushCurrent, false);
 });
 
-test("P0 render steps preserve Carbon null rules and emit backend-neutral intents", () =>
+test("P0 render steps preserve Carbon null rules and emit backend-neutral intents", t =>
 {
   const context = stubContext();
-  const target = stubTarget();
-  const depth = stubTarget();
+  const { target, depth } = preparedTargets(t, context);
   const viewport = {};
   const projection = new TriProjection();
   projection.PerspectiveFov(0.9, 1.6, 1, 100);
@@ -551,14 +573,14 @@ test("P0 render steps preserve Carbon null rules and emit backend-neutral intent
   assertEquals(binds, 0, "null render target is a no-op");
   setRT.__init__(target);
   setRT.Execute(0, 0, context);
-  assertEquals(context.GetRenderTarget(0).Equals(target), true);
+  assertEquals(context.GetRenderTarget(0).Equals(target.GetRenderTarget()), true);
 
   const setDS = new TriStepSetDepthStencil();
   setDS.Execute(0, 0, context);
   assertEquals(context.GetDepthStencil(), null, "no depth stencil clears the binding");
   setDS.__init__(depth);
   setDS.Execute(0, 0, context);
-  assertEquals(context.GetDepthStencil().Equals(depth), true);
+  assertEquals(context.GetDepthStencil().Equals(depth.GetDepthStencil()), true);
 
   const setViewport = new TriStepSetViewport();
   setViewport.Execute(0, 0, context);

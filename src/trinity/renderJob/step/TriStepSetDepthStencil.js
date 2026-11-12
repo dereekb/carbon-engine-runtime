@@ -31,15 +31,21 @@ export class TriStepSetDepthStencil extends TriRenderStep
   }
 
   /**
-   * Binds the depth-stencil, including null to unbind; an explicit false from
-   * the render context is RS_FAILED.
+   * Binds the depth-stencil's texture, Carbon's `*m_depthStencil` conversion
+   * (TriStepSetDepthStencil.cpp:18-26, Tr2DepthStencil.h:63-70), or an empty
+   * texture to unbind when none is set; a refused bind is RS_FAILED.
    *
-   * @implemented
+   * @adapted Using the surface renews it (IsGood); a set surface that is not prepared (or was released by the idle sweep) fails the step instead of binding empty, so the job draws nothing.
    */
 
   Execute(_realTime, _simTime, renderContext)
   {
-    const accepted = renderContext.GetEffectStateManager().SetDepthStencilBuffer(this.depthStencil);
-    return accepted === false ? TriRenderJob.StepResult.RS_FAILED : TriRenderJob.StepResult.RS_OK;
+    let texture = null;
+    if (this.depthStencil)
+    {
+      texture = this.depthStencil.IsGood() ? this.depthStencil.GetDepthStencil() : null;
+      if (!texture) return TriRenderJob.StepResult.RS_FAILED;
+    }
+    return renderContext.GetEffectStateManager().SetDepthStencilBuffer(texture) ? TriRenderJob.StepResult.RS_OK : TriRenderJob.StepResult.RS_FAILED;
   }
 }

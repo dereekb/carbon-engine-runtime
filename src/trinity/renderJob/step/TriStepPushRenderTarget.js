@@ -33,10 +33,12 @@ export class TriStepPushRenderTarget extends TriRenderStep
   }
 
   /**
-   * Pushes the render target for its slot; every push needs a matching
-   * TriStepPopRenderTarget in the same job or the job's stack guard unwinds it.
+   * Pushes the target's texture for its slot, Carbon's `*m_renderTarget`
+   * conversion (TriStepPushRenderTarget.cpp:13-24, Tr2RenderTarget.h:95-102);
+   * every push needs a matching TriStepPopRenderTarget in the same job or the
+   * job's stack guard unwinds it.
    *
-   * @implemented
+   * @adapted Using the target renews it (IsGood); a target without a surface (not yet prepared, or released by the idle sweep) fails the step before pushing, instead of binding empty, so the job draws nothing.
    */
 
   Execute(_realTime, _simTime, renderContext)
@@ -48,7 +50,12 @@ export class TriStepPushRenderTarget extends TriRenderStep
     // which is a third thing - the one Tr2ShadowMap actually wants.
     const esm = renderContext.GetEffectStateManager();
 
-    if (this.renderTarget) esm.PushRenderTarget__TextureAL(this.renderTarget, this.slot);
+    if (this.renderTarget)
+    {
+      const texture = this.renderTarget.IsGood() ? this.renderTarget.GetRenderTarget() : null;
+      if (!texture) return TriRenderJob.StepResult.RS_FAILED;
+      esm.PushRenderTarget__TextureAL(texture, this.slot);
+    }
     else esm.PushRenderTarget__Current(this.slot);
     return TriRenderJob.StepResult.RS_OK;
   }
