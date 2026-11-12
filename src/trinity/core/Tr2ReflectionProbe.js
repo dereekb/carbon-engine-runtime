@@ -35,6 +35,7 @@ import { Tr2RenderContext_GetMainThreadRenderContext } from "./context/Tr2Render
 import { Tr2Effect } from "../shader/Tr2Effect.js";
 import { Tr2RuntimeTextureParameter } from "../shader/parameter/Tr2RuntimeTextureParameter.js";
 import { blue, EnumRegistrationType } from "#blue";
+import { TriStorageFlags } from "#consts/graphics";
 
 /** Carbon's MIP_COUNT (`cpp:15`): filtered levels below the top. */
 const MIP_COUNT = 7;
@@ -243,6 +244,17 @@ export class Tr2ReflectionProbe
   ReleaseResources(_storage)
   {
     this._initialized = false;
+  }
+
+  /**
+   * Carbon destructor (Tr2ReflectionProbe.cpp:58-61): ReleaseResources(TRISTORAGE_ALL).
+   *
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
   /**

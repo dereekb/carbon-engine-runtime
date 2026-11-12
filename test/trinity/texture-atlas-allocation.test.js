@@ -221,3 +221,24 @@ test('a collected texture is reclaimed and a collected outsider loses its AL tex
   assert.equal(outsiderTexture.IsValid(), false);
   assert.equal(atlas.texturesOutsideAtlasCount, 0);
 });
+
+test('destruction unlocks a locked texture, except after Shutdown (CE-147)', t =>
+{
+  // Tr2AtlasTexture.cpp:36-43; after OnShutdown (:139-146) UnlockBuffer finds no texture.
+  stubDevice(t);
+  const atlas = new Tr2TextureAtlas();
+  atlas.Initialize(BGRA, 64, 64);
+  const unlocked = atlas.CreateTexture(8, 8);
+  assert.ok(unlocked.LockBuffer());
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    unlocked.Destruct();
+    assert.equal(unlocked._isLocked, false);
+  }
+  const shutDown = atlas.CreateTexture(8, 8);
+  assert.ok(shutDown.LockBuffer());
+  shutDown.OnShutdown();
+  assert.equal(shutDown._isLocked, true, 'Shutdown leaves the lock for the destructor');
+  shutDown.Destruct();
+  assert.equal(shutDown._isLocked, true, 'CE-147: the unlock finds no texture');
+});

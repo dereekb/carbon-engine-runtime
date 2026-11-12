@@ -301,18 +301,13 @@ export class Tr2AtlasTexture extends BlueAsyncRes
 
   /**
    * Removes the texture from its atlas and releases its resources
-   * (`Tr2AtlasTexture.cpp:139-146`), then runs what Carbon's destructor does
-   * (`Tr2AtlasTexture.cpp:36-43`).
+   * (`Tr2AtlasTexture.cpp:139-146`). Carbon runs the destructor right after;
+   * that body is OnDestruct.
    *
-   * Carbon calls `OnShutdown` when the last reference goes and the destructor
-   * right after. JavaScript has no destructors, so the caller must call this
-   * explicitly; a texture that is merely dropped is reclaimed by the atlas's
-   * `_ReclaimCollectedTextures` (ours) at some later point instead.
-   *
-   * quirk, CE-147 (`Tr2AtlasTexture.cpp:36-43` after :139-146): the destructor's
-   * unlock runs after the area and own texture are gone, so `UnlockBuffer`
-   * finds no texture and returns without unmapping. Reproduced; only the
-   * warning is effective.
+   * Carbon calls `OnShutdown` when the last reference goes. JavaScript has no
+   * destructors, so the caller must call this explicitly; a texture that is
+   * merely dropped is reclaimed by the atlas's `_ReclaimCollectedTextures`
+   * (ours) at some later point instead.
    *
    * @adapted
    * @returns {void}
@@ -321,7 +316,20 @@ export class Tr2AtlasTexture extends BlueAsyncRes
   {
     if (this.atlas) this.atlas._RemoveFromAtlas(this);
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
+  }
 
+  /**
+   * Carbon destructor (Tr2AtlasTexture.cpp:36-43): warns and unlocks a texture still locked.
+   *
+   * quirk, CE-147 (`Tr2AtlasTexture.cpp:36-43` after :139-146): after Shutdown the
+   * area and own texture are gone, so `UnlockBuffer` finds no texture and returns
+   * without unmapping. Reproduced; only the warning is effective.
+   *
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
     if (this._isLocked)
     {
       CcpLog.CCP_LOGWARN("Tr2AtlasTexture locked upon destruction - unlock before destroying");
