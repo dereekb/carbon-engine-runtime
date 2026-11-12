@@ -1,6 +1,7 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { ITr2TextureProvider } from "../ITr2TextureProvider.js";
+import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
 // Source: trinity/trinity/Tr2RenderTarget.h
 // Source: trinity/trinity/Tr2RenderTarget.cpp
 import { Tr2TextureAL } from "../../../trinityal/Tr2TextureAL/index.js";
@@ -12,8 +13,12 @@ import { Tr2TextureAL } from "../../../trinityal/Tr2TextureAL/index.js";
 //
 // THE RENDER CONTEXT. Carbon reaches the main-thread context through
 // USE_MAIN_THREAD_RENDER_CONTEXT(); ours is Tr2RenderContext_GetMainThreadRenderContext(),
-// the default here. Each verb also takes an optional trailing context, for a
-// caller composing its own.
+// the default here. Each Create verb also takes an optional trailing context, for a
+// caller composing its own. Preparation after a release takes none, as in Carbon.
+//
+// DEVICE RESIDENCY. Creating, sampling or rendering into the target is a use and
+// renews it (KeepAlive). An idle target is released by the device sweep and loses
+// its pixels; the next use registers it again and the device tick recreates it.
 //
 // The `@be.mapAttribute(be.READ)` properties are the Blue READ projection, refreshed wherever
 // the texture changes.
@@ -51,9 +56,12 @@ function GetUsage(msaaType, flags)
   return { gpuUsage, cpuUsage };
 }
 
-/** Holds a render-target texture and the parameters it was created with. */
+/**
+ * Holds a render-target texture and the parameters it was created with.
+ * Carbon: Tr2RenderTarget (trinity/trinity/Tr2RenderTarget.h:18-20)
+ */
 @be.define("Tr2RenderTarget")
-@be.inherit(ITr2TextureProvider)
+@be.inherit(ITr2TextureProvider, Tr2DeviceResource)
 @be.mapInterface(ITr2TextureProvider)
 export class Tr2RenderTarget extends IRoot
 {
@@ -157,6 +165,9 @@ export class Tr2RenderTarget extends IRoot
   /**
    * The shared body of the three Create verbs: create the texture through the
    * context, or destroy on failure (Carbon's `else Destroy()`).
+   *
+   * @cjs
+   * @adapted Creation is the first use and registers with the device; Carbon registers in the constructor (Tr2DeviceResource.cpp:6-9).
    */
   _Create(dimensions, msaa, gpuUsage, cpuUsage, renderContext, raiseChange)
   {
@@ -171,6 +182,7 @@ export class Tr2RenderTarget extends IRoot
     if (this._renderTarget) this._renderTarget.Destroy();
     this._renderTarget = texture;
     this._created = { dimensions, msaa, gpuUsage, cpuUsage };
+    this.KeepAlive();
     texture.SetName(this._name);
     if (raiseChange) this._Changed();
     return ALResult.S_OK;
@@ -180,7 +192,7 @@ export class Tr2RenderTarget extends IRoot
    * Carbon `GetTexture` (`cpp:237-245`): the texture, only when it can be
    * sampled.
    *
-   * @implemented
+   * @adapted Sampling renews device residency (through GetRenderTarget); Carbon keeps the texture until destruction.
    */
 
   GetTexture()
@@ -251,12 +263,15 @@ export class Tr2RenderTarget extends IRoot
    * Carbon `GetRenderTarget` (`cpp:305-312`): the attached texture while
    * attached, else the owned one.
    *
-   * @implemented
-   * @returns {object|null} The `Tr2TextureAL`.
+   * @adapted Reading the surface renews device residency, so a target that is only rendered into stays alive too.
+   *   It never creates storage: a getter may run with no GPU. A target the idle sweep released answers null
+   *   until the device tick prepares it, and its reader skips the draw.
+   * @returns {object|null} The `Tr2TextureAL`, or null before Create and between an idle release and the next prepare.
    */
 
   GetRenderTarget()
   {
+    this.KeepAlive();
     return this.IsAttached() ? this._attachedRenderTarget : this._renderTarget;
   }
 
@@ -289,11 +304,22 @@ export class Tr2RenderTarget extends IRoot
   }
 
   /**
-   * Final owner teardown, including the attached value retained by native Detach/Destroy.
-   * Adapted: JavaScript requires an explicit counterpart to the C++ member destructors.
-   * Call after the owner has stopped using this render target.
+   * Final owner teardown. Call after the owner has stopped using this render target.
+   *
+   * @cjs
+   * @adapted Forwards to Destruct, which runs OnDestruct and the device-resource base's unregistration.
    */
   Dispose()
+  {
+    this.Destruct();
+  }
+
+  /**
+   * Carbon: Tr2RenderTarget::~Tr2RenderTarget (trinity/trinity/Tr2RenderTarget.cpp:40-42).
+   * @adapted The body is empty in Carbon; this releases the two Tr2TextureAL value members (h:114-115) their
+   *   C++ destructors release, including the attached value native Detach/Destroy retain. Graph dispatch handles bases.
+   */
+  OnDestruct()
   {
     this.Destroy();
     if (this._attachedRenderTarget) this._attachedRenderTarget.Destroy();
@@ -316,13 +342,14 @@ export class Tr2RenderTarget extends IRoot
   /**
    * Carbon `GenerateMipMaps` (`cpp:359-364`).
    *
-   * @implemented
+   * @adapted With no surface (before Create, or released and not yet prepared) this fails, as Carbon's invalid Tr2TextureAL does.
    * @returns {number} An `ALResult` value.
    */
   @be.mapMethodAndWrap()
   GenerateMipMaps(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
   {
-    return this.GetRenderTarget().GenerateMipMaps(renderContext);
+    const texture = this.GetRenderTarget();
+    return texture ? texture.GenerateMipMaps(renderContext) : ALResult.E_FAIL;
   }
 
   /**
@@ -336,7 +363,10 @@ export class Tr2RenderTarget extends IRoot
   Resolve(destination, renderContext = Tr2RenderContext_GetMainThreadRenderContext())
   {
     if (!destination) return ALResult.E_FAIL;
-    return this.GetRenderTarget().Resolve(destination.GetRenderTarget(), renderContext);
+
+    // No surface on either side (released and not yet prepared) fails, as Carbon's invalid Tr2TextureAL does.
+    const source = this.GetRenderTarget(), target = destination.GetRenderTarget();
+    return source && target ? source.Resolve(target, renderContext) : ALResult.E_FAIL;
   }
 
   /**
@@ -625,34 +655,37 @@ export class Tr2RenderTarget extends IRoot
 
   /**
    * Carbon `ReleaseResources` (`cpp:488-495`): drop the owned texture when its
-   * memory class is being released.
+   * memory class is being released. The creation parameters are kept.
    *
-   * @implemented
+   * @adapted Explicit Destroy replaces assigning an empty Tr2TextureAL over the owned value.
+   * @param {number} storage TriStorageFlags being released.
    */
 
   ReleaseResources(storage)
   {
     if (this._renderTarget?.IsValid() && (this._renderTarget.GetMemoryClass() & storage))
     {
-      if (this._renderTarget) this._renderTarget.Destroy();
-    this._renderTarget = null;
+      this._renderTarget.Destroy();
+      this._renderTarget = null;
       this._Changed();
     }
   }
 
   /**
    * Carbon `OnPrepareResources` (`cpp:498-508`): recreate a released texture
-   * from the parameters it was made with.
+   * on the main-thread context from the parameters it was made with. As in
+   * Carbon, the recreated texture is not renamed and its pixels are not restored.
    *
-   * @implemented
+   * @adapted Recreates from the retained AL dimensions; Carbon rebuilds them from m_type, m_format, m_width, m_height, m_mipCount and m_arraySize.
+   * @returns {boolean} Always true, as Carbon's.
    */
 
-  _OnPrepareResources(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  _OnPrepareResources()
   {
     if (!this._renderTarget && this._created)
     {
       const { dimensions, msaa, gpuUsage, cpuUsage } = this._created;
-      this._renderTarget = renderContext.CreateTexture(dimensions, { gpuUsage, cpuUsage, msaa });
+      this._renderTarget = Tr2RenderContext_GetMainThreadRenderContext().CreateTexture(dimensions, { gpuUsage, cpuUsage, msaa });
       this._Changed();
     }
     return true;

@@ -723,6 +723,19 @@ export class TriDevice extends IRoot
   /** @cjs Seconds between idle sweeps. */
   static resourceSweepInterval = 60;
 
+  /**
+   * The TriStorageFlags mask the idle sweep passes to ReleaseResources.
+   *
+   * The default is TRISTORAGE_ALL, so an idle resource frees whatever it owns. TRISTORAGE_VIDEOMEMORY is
+   * Carbon's device-reset mask (TriDevice.cpp:888): with it a texture the backend reports as managed memory,
+   * which the stub and WebGL2 do, is unregistered by the sweep without being freed. A resource in use is
+   * never swept, whatever the mask: use renews it.
+   *
+   * @cjs Carbon has no idle sweep; its two masks are for reset and for full release.
+   * @type {number}
+   */
+  static resourceSweepStorage = TriStorageFlags.TRISTORAGE_ALL;
+
   /** @cjs Maximum preparation attempts per tick, with round-robin fairness. */
   resourcePrepareBudget = 32;
 
@@ -766,18 +779,19 @@ export class TriDevice extends IRoot
   }
 
   /**
-   * Releases idle scene-content video memory; infrastructure is explicitly exempt.
+   * Releases what idle scene content holds, by the resourceSweepStorage mask; infrastructure is explicitly exempt.
    * @cjs Timer eviction supplements Carbon's explicit destruction and device reset.
    */
   static CollectResources()
   {
     const expiry = TriDevice.activeTime - TriDevice.resourceIdleRule * TICKS_PER_SECOND;
+    const storage = TriDevice.resourceSweepStorage;
     for (const resource of TriDevice.GetResourcesRegistered())
     {
       if (resource._neverPurge || resource._state === Tr2DeviceResourceState.DESTRUCTED || !(resource._stamp < expiry)) continue;
       // Unregister first: a release callback may renew and register a new generation.
       TriDevice.UnregisterResource(resource);
-      resource.ReleaseResources(TriStorageFlags.TRISTORAGE_VIDEOMEMORY);
+      resource.ReleaseResources(storage);
     }
     TriDevice.GetResourcesRegistered();
   }

@@ -1383,12 +1383,15 @@ export class Tr2InteriorScene extends ITr2PickableScene
     for (let i = 0; i < this.lights.length && i < this.shadowCount; i++)
     {
       const target = new Tr2RenderTarget();
+      // The scene owns its shadow targets and replaces them here; the idle sweep must not release one under it.
+      target._neverPurge = true;
       target.SetName("ShadowMap");
       target.Create(this.shadowSize, this.shadowSize, 1, PixelFormat.PIXEL_FORMAT_R32_FLOAT, 1, 0, 0, undefined, renderContext);
       this.lightRenderTargets.push(target);
     }
     if (this._lightDepthStencil) this._lightDepthStencil.Destroy();
     this._lightDepthStencil = new Tr2DepthStencil();
+    this._lightDepthStencil._neverPurge = true;
     this._lightDepthStencil.Create(this.shadowSize, this.shadowSize, DepthStencilFormat.DSFMT_D32, 0, 0, 0, renderContext);
   }
 

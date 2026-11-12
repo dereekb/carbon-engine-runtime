@@ -9,6 +9,7 @@ import { ITriEffectResourceParameter } from "./ITriEffectResourceParameter.js";
 import { ResourceFlags } from "./ITr2EffectValue.js";
 import { Tr2ColorSpace } from "#consts/render-context";
 import { RealizeTexture } from "../../core/Tr2ImageIOHelpers.js";
+import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 
 
 /**
@@ -262,8 +263,10 @@ export class Tr2RuntimeTextureParameter extends ITriEffectResourceParameter
    * (`ITriEffectResourceParameter.KeepAlive`, called by `Tr2Effect.IsGood`).
    *
    * Ours, like TriTextureParameter's: Carbon's resources are reference counted.
-   * The cast is to a resource as Carbon's `BlueCastPtr` does; a texture
-   * reference or render target is not one, and holds nothing to renew.
+   * The cast is to a resource as Carbon's `BlueCastPtr` does. A provider that is
+   * not one but owns device objects - a render target or depth stencil - is a
+   * Tr2DeviceResource and is renewed as one; a texture reference is neither and
+   * holds nothing to renew.
    *
    * @cjs
    * @adapted
@@ -271,7 +274,14 @@ export class Tr2RuntimeTextureParameter extends ITriEffectResourceParameter
   KeepAlive()
   {
     const resource = CjsSchema.cast(this.texture, IBlueResource);
-    if (resource) resource.KeepAlive();
+    if (resource)
+    {
+      resource.KeepAlive();
+      return;
+    }
+
+    const deviceResource = CjsSchema.cast(this.texture, Tr2DeviceResource);
+    if (deviceResource) deviceResource.KeepAlive();
   }
 
   /**

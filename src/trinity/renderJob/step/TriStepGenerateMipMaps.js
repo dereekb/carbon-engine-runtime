@@ -37,7 +37,9 @@ export class TriStepGenerateMipMaps extends TriRenderStep
 
   Execute(_realTime, _simTime, renderContext)
   {
-    if (this.renderTarget) this.renderTarget.GetRenderTarget().GenerateMipMaps(renderContext);
+    // A released target has no surface until the device tick prepares it; there is nothing to generate from.
+    const surface = this.renderTarget ? this.renderTarget.GetRenderTarget() : null;
+    if (surface) surface.GenerateMipMaps(renderContext);
     return TriRenderJob.StepResult.RS_OK;
   }
 }

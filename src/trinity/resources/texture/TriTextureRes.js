@@ -352,6 +352,20 @@ export class TriTextureRes extends BlueAsyncRes
   }
 
   /**
+   * Renews this resource and the render target it wraps. This is the per-frame path:
+   * Tr2Effect.IsGood renews each resource parameter, which renews its resource here.
+   *
+   * @cjs
+   * @adapted A wrapper in use keeps its target's device residency; Carbon holds the target by reference and never expires it.
+   * @param {object} [options] Deterministic activity values for tools/tests.
+   */
+  KeepAlive(options = undefined)
+  {
+    super.KeepAlive(options);
+    if (this.wrappedRenderTarget) this.wrappedRenderTarget.KeepAlive();
+  }
+
+  /**
    * Borrows a texture (`TriTextureRes.cpp:1159-1195`); its owner retains its lifetime.
    *
    * Fires m_onTextureChange every time, as Carbon does (`:1175`, `:1194`).

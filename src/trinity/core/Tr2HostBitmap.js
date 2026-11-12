@@ -861,7 +861,11 @@ export class Tr2HostBitmap extends HostBitmap
   async _CopyFromRenderTargetPython(rt)
   {
     if (!rt) return false;
-    return this.CopyFromRenderTarget(rt.GetRenderTarget(), Tr2RenderContext_GetMainThreadRenderContext());
+
+    // A released target has no surface until the device tick prepares it; there is nothing to copy.
+    const surface = rt.GetRenderTarget();
+    if (!surface) return false;
+    return this.CopyFromRenderTarget(surface, Tr2RenderContext_GetMainThreadRenderContext());
   }
 
   /**

@@ -181,6 +181,13 @@ export class Tr2ReflectionProbe
   {
     this.unfilteredTexture = new Tr2RenderTarget();
     this.reflectionTexture = new Tr2RenderTarget();
+
+    // The probe is the unit the idle sweep releases: its ReleaseResources destroys these targets and its prepare
+    // creates them again. Swept one by one they would vanish under a probe that still counts itself initialized.
+    for (let face = 0; face < this._renderTargets.length; face++) this._renderTargets[face]._neverPurge = true;
+    this._preFilterTarget._neverPurge = true;
+    this.unfilteredTexture._neverPurge = true;
+    this.reflectionTexture._neverPurge = true;
   }
 
   /**
@@ -383,7 +390,7 @@ export class Tr2ReflectionProbe
   }
 
   /**
-   * Carbon `OnModified` (`cpp:323-329`): rebuild everything on any change.
+   * Carbon `OnModified` (`cpp:323-329`): destroy the render targets and prepare again, on any change.
    *
    * @implemented
    */
@@ -391,6 +398,7 @@ export class Tr2ReflectionProbe
   OnModified(_value)
   {
     this.DestroyRenderTargets();
+    this.PrepareResources();
     return true;
   }
 

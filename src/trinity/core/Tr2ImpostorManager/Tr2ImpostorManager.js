@@ -125,6 +125,11 @@ export class Tr2ImpostorManager
   constructor()
   {
     this.atlas = new Tr2RenderTarget();
+    // The manager is never purged and frees its targets itself. The atlas keeps tiles drawn once per impostor, so
+    // the idle sweep must not release it under the manager; the two capture targets follow the same owner.
+    this.atlas._neverPurge = true;
+    this._itemRt._neverPurge = true;
+    this._ds._neverPurge = true;
     this.effect = new Tr2Effect();
     this._ownedEffects.add(this.effect);
     const store = Tr2VariableStore.globalStore();

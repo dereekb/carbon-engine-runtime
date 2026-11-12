@@ -292,12 +292,12 @@ test("SetTextureFromRT wraps a render target as a live view (TriTextureRes.cpp:8
   const { CjsSchema } = await import("../../npm/dist/blue/schema/index.js");
   const { Tr2Event } = await import("../../npm/dist/trinity/index.js");
 
-  /** A render target with Carbon's IsValid / GetRenderTarget / OnTextureChange. */
+  /** A render target with Carbon's IsValid / GetRenderTarget / OnTextureChange, and the use renewal the wrapper forwards. */
   const makeTarget = valid =>
   {
     const texture = { valid, IsValid() { return this.valid; } };
     const event = new Tr2Event();
-    return { texture, event, IsValid() { return texture.valid; }, GetRenderTarget() { return texture; }, OnTextureChange() { return event; } };
+    return { texture, event, IsValid() { return texture.valid; }, GetRenderTarget() { return texture; }, OnTextureChange() { return event; }, KeepAlive() {} };
   };
 
   const texture = new TriTextureRes();

@@ -1,6 +1,8 @@
 import { exposure as be } from "#be";
 import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { ITr2TextureProvider } from "../ITr2TextureProvider.js";
+import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 // Source: trinity/trinity/Tr2DepthStencil.h
 //   trinity/trinity/Tr2DepthStencil.cpp
 //
@@ -20,9 +22,13 @@ import { ITr2TextureProvider } from "../ITr2TextureProvider.js";
 // The READ properties (width, height, multiSampleType, multiSampleQuality, mipCount, isValid, isReadable) are accessors over Carbon's
 // getters, which ask the texture, so nothing is mirrored and nothing can drift.
 //
-// THE RENDER CONTEXT IS A PARAMETER. Carbon reaches the main-thread context
-// through USE_MAIN_THREAD_RENDER_CONTEXT(), a global we deliberately do not
-// have; the same reason Tr2Blitter takes one.
+// THE RENDER CONTEXT. Create takes the context as a parameter. Preparation after
+// a release takes none and uses the main-thread context, as Carbon does through
+// USE_MAIN_THREAD_RENDER_CONTEXT() (cpp:186-202).
+//
+// DEVICE RESIDENCY. Creating, sampling or rendering into the surface is a use and
+// renews it (KeepAlive). An idle surface is released by the device sweep; the next
+// use registers it again and the device tick recreates it.
 import { type } from "#schema";
 import { Tr2Event } from "../Tr2Event.js";
 import { ConvertDepthStencilFormat, DepthStencilFormat, ExFlag, Tr2GpuUsage } from "#consts/render-context";
@@ -30,9 +36,12 @@ import { BitmapDimensions as Tr2BitmapDimensions } from "#imageio";
 import { Tr2MsaaDesc } from "../../../trinityal/Tr2HalHelperStructures/Tr2MsaaDesc.js";
 import "#consts/renderContext/formats";
 
-/** Holds the depth-stencil surface a pass renders into, with the parameters it was created with. */
+/**
+ * Holds the depth-stencil surface a pass renders into, with the parameters it was created with.
+ * Carbon: Tr2DepthStencil (trinity/trinity/Tr2DepthStencil.h:19-21)
+ */
 @be.define("Tr2DepthStencil")
-@be.inherit(ITr2TextureProvider)
+@be.inherit(ITr2TextureProvider, Tr2DeviceResource)
 @be.mapInterface(ITr2TextureProvider)
 export class Tr2DepthStencil extends IRoot
 {
@@ -61,6 +70,12 @@ export class Tr2DepthStencil extends IRoot
   /** m_flags (Tr2RenderContextEnum::ExFlag), retained for the same reason. */
   #flags = ExFlag.EX_NONE;
 
+  /** m_width (uint32_t), retained so OnPrepareResources can rebuild; 0 when there is nothing to rebuild. */
+  _width = 0;
+
+  /** m_height (uint32_t), retained for the same reason. */
+  _height = 0;
+
   /** m_onTextureChange (OnTextureChangeEvent) */
   _onTextureChange = new Tr2Event();
 
@@ -76,8 +91,8 @@ export class Tr2DepthStencil extends IRoot
    * an object whose texture never came back.
    *
    * @adapted Carbon returns an HRESULT and reaches the main-thread render context through a
-   *   global; this returns a boolean and takes the context, which is the same reason
-   *   Tr2Blitter does.
+   *   global; this returns a boolean and takes the context. Creation is the first use and
+   *   registers with the device; Carbon registers in the constructor (Tr2DeviceResource.cpp:6-9).
    * @param {number} width Surface width in pixels.
    * @param {number} height Surface height in pixels.
    * @param {number} format A `DepthStencilFormat` value.
@@ -108,8 +123,12 @@ export class Tr2DepthStencil extends IRoot
 
     if (this.#depthStencil) this.#depthStencil.Destroy();
     this.#depthStencil = texture;
+    this._width = width;
+    this._height = height;
+    this.format = format;
     this.#msaa = msaa;
     this.#flags = flags;
+    this.KeepAlive();
     this.SetName(this._name);
     this._Changed();
     return true;
@@ -123,13 +142,14 @@ export class Tr2DepthStencil extends IRoot
    * binding the result as a shader input is the reason: a depth buffer that was
    * never made readable must fail here rather than at the draw.
    *
-   * @implemented
+   * @adapted Sampling renews device residency (through GetDepthStencil); Carbon keeps the surface until destruction.
    * @returns {object|null} The `Tr2TextureAL`, or null when it is not readable.
    */
 
   GetTexture()
   {
-    return this.IsValid() && this.IsReadable() ? this.#depthStencil : null;
+    const depthStencil = this.GetDepthStencil();
+    return depthStencil?.IsValid() && this.IsReadable() ? depthStencil : null;
   }
 
   /**
@@ -145,11 +165,14 @@ export class Tr2DepthStencil extends IRoot
    * be told a perfectly good depth buffer does not exist.
    *
    * @adapted Carbon exposes the member directly through a conversion operator; JavaScript
-   *   has none, so the raw surface is reached by name.
-   * @returns {object|null} The `Tr2TextureAL`, or null before Create.
+   *   has none, so the raw surface is reached by name. Reading it renews device residency,
+   *   so a surface that is only rendered into stays alive. It never creates storage: a getter
+   *   may run with no GPU. A released surface answers null until the device tick prepares it.
+   * @returns {object|null} The `Tr2TextureAL`, or null before Create and between an idle release and the next prepare.
    */
   GetDepthStencil()
   {
+    this.KeepAlive();
     return this.#depthStencil;
   }
 
@@ -204,10 +227,64 @@ export class Tr2DepthStencil extends IRoot
   {
     if (this.#depthStencil) this.#depthStencil.Destroy();
     this.#depthStencil = null;
+    this._width = 0;
+    this._height = 0;
     this.#msaa = null;
     this.#flags = ExFlag.EX_NONE;
     this.format = DepthStencilFormat.DSFMT_AUTO;
     this._Changed();
+  }
+
+  /**
+   * Carbon `ReleaseResources` (`cpp:176-183`): drop the surface when its memory
+   * class is being released. The creation parameters are kept.
+   *
+   * @adapted Explicit Destroy replaces assigning an empty Tr2TextureAL over the owned value.
+   * @param {number} storage TriStorageFlags being released.
+   */
+  ReleaseResources(storage)
+  {
+    if (this.#depthStencil?.IsValid() && (storage & this.#depthStencil.GetMemoryClass()))
+    {
+      this.#depthStencil.Destroy();
+      this.#depthStencil = null;
+      this._Changed();
+    }
+  }
+
+  /**
+   * Carbon `OnPrepareResources` (`cpp:186-202`): recreate a released surface on the
+   * main-thread context from the retained width, height, format, MSAA and flags.
+   * As in Carbon, the recreated surface is not renamed.
+   *
+   * @implemented
+   * @returns {boolean} Always true, as Carbon's.
+   */
+  _OnPrepareResources()
+  {
+    if (!this.#depthStencil?.IsValid() && this._width !== 0)
+    {
+      let gpuUsage = Tr2GpuUsage.DEPTH_STENCIL | Tr2GpuUsage.SHADER_RESOURCE;
+
+      if ((this.#flags & ExFlag.EX_CREATE_SHARED) !== 0) gpuUsage |= Tr2GpuUsage.SHARED;
+
+      this.#depthStencil = Tr2RenderContext_GetMainThreadRenderContext().CreateTexture(
+        Tr2BitmapDimensions.create__WidthHeightMipCountFormat(this._width, this._height, 1, ConvertDepthStencilFormat(this.format)),
+        { gpuUsage, msaa: this.#msaa }
+      );
+      this._Changed();
+    }
+    return true;
+  }
+
+  /**
+   * Carbon: Tr2DepthStencil::~Tr2DepthStencil (trinity/trinity/Tr2DepthStencil.cpp:16-18).
+   * @adapted The body is empty in Carbon; this releases the Tr2TextureAL value member (h:61) its C++ destructor releases. Graph dispatch handles bases.
+   */
+  OnDestruct()
+  {
+    if (this.#depthStencil) this.#depthStencil.Destroy();
+    this.#depthStencil = null;
   }
 
   /**

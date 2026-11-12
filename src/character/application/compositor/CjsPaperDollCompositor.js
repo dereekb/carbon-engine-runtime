@@ -179,6 +179,9 @@ export class CjsPaperDollCompositor
     MakeTarget(width, height, mips = false)
     {
         const target = new Tr2RenderTarget();
+        // The compositor draws into a target once and samples it for as long as the doll lives, and frees it in
+        // Destruct. The idle sweep must not release it: nothing here draws it again.
+        target._neverPurge = true;
         // Carbon refuses to generate mips for BGR formats (Tr2TextureAL.GenerateMipMaps), so a mipped target is RGBA.
         target.Create(width, height, mips ? 1 + Math.floor(Math.log2(Math.max(width, height))) : 1,
             mips ? PixelFormat.PIXEL_FORMAT_R8G8B8A8_UNORM : PixelFormat.PIXEL_FORMAT_B8G8R8A8_UNORM);

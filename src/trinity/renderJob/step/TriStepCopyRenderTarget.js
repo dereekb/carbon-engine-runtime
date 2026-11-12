@@ -104,6 +104,10 @@ export class TriStepCopyRenderTarget extends TriRenderStep
 
     if ((!destinationRT && !this.destinationTexture) || !sourceRT) return TriRenderJob.StepResult.RS_OK;
 
+    // A target the idle sweep released has no surface until the device tick prepares it. Carbon's copy from or
+    // into an invalid Tr2TextureAL fails, so the step fails the same way and copies on a later frame.
+    if (!sourceRT.GetRenderTarget() || (destinationRT && !destinationRT.GetRenderTarget())) return TriRenderJob.StepResult.RS_FAILED;
+
     let destX = this.destinationViewport ? this.destinationViewport.x : 0;
     let destY = this.destinationViewport ? this.destinationViewport.y : 0;
     let result = ALResult.S_OK;
