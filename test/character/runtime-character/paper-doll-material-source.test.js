@@ -78,7 +78,10 @@ test("the garment parts are the MATERIAL parts with the body target, their palet
 test("underwear lists one option per folder; every garment starts with no option and off", async t =>
 {
   const deteis = await configured(t, "Deteis");
-  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ], [ "recipe", "" ] ], "then the recipe option");
+  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => [ option.id, option.path ]), [ [ "bra01", "topunderwear/bra01" ], [ "bra02", "topunderwear/bra02" ] ], "no recipe option while no recipe names the part's folder");
+  deteis.definition.topUnderwear.recipePath = "topunderwear/bra01";
+  assert.deepEqual(deteis.definition.topUnderwear.GetOptions().map(option => option.id), [ "bra01", "bra02", "recipe" ], "then the recipe option");
+  deteis.definition.topUnderwear.recipePath = "";
   assert.deepEqual([ deteis.definition.topUnderwear.option, deteis.definition.topUnderwear.enabled ], [ "", false ], "no code-picked underwear: the character factory's defaults set it");
   assert.equal(deteis.definition.topMiddle.enabled, false, "a typed garment starts off");
   const [ bra ] = (await deteis.definition.topUnderwear.ResolveOption("bra02")).palettes.length ? [] : [ null ];
