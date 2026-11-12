@@ -205,7 +205,8 @@ export class CjsCharacterFactory
     static async _applyPart(component, part, archetype)
     {
         const { option = "", palette = "", secondaryPalette = "", colors = null, specularColors = null, ...rest } = part;
-        if (option && !component.GetOptions().some(value => value.id === option)) throw new Error("option " + option + " is not listed");
+        // The `recipe` option is listed while a recipe names the part's folder: here, the part's own `recipePath`.
+        if (option === "recipe" ? !rest.recipePath : option && !component.GetOptions().some(value => value.id === option)) throw new Error("option " + option + " is not listed");
         component.Reset();
         if (archetype)
         {

@@ -52,13 +52,14 @@ export class CjsPaperDollComponent
     /**
      * The part folder a `recipe` option names, below the paper doll root (a garment a recipe sets and no `.type`
      * presets; operator, 2026-11-09); empty otherwise. The part's source reads it when the `recipe` option resolves.
+     * Persisted, not exposed to an editor (no READ): the character factory sets it from a recipe; it is not a choice.
      */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    @meta.mapAttribute(meta.PERSIST | meta.NOTIFY)
     @type.string
     recipePath = "";
 
-    /** The variation a `recipe` option names (`recipePath`); empty for the part folder itself. */
-    @meta.mapAttribute(meta.READWRITE | meta.PERSIST | meta.NOTIFY)
+    /** The variation a `recipe` option names (`recipePath`); empty for the part folder itself. Not exposed, as `recipePath`. */
+    @meta.mapAttribute(meta.PERSIST | meta.NOTIFY)
     @type.string
     recipeVariation = "";
 
@@ -104,9 +105,11 @@ export class CjsPaperDollComponent
      * failed one is forgotten, so the next call retries it.
      * @param {string} id The option's id; "" (no option) resolves to null.
      * @returns {Promise<?object>} The option's record, or null for "" or an unknown id.
+     *   It rejects for the `recipe` option while no recipe names the part's folder (`recipePath` is empty).
      */
     ResolveOption(id)
     {
+        if (id === "recipe" && this.recipePath === "") return Promise.reject(new Error("The " + CjsSchema.getClassName(this.constructor) + " recipe option names no part folder: no recipe set recipePath"));
         const record = this._options.get(id) ?? null;
         if (!record || !this._resolve) return Promise.resolve(record);
         if (!this._resolving.has(id))
@@ -170,10 +173,13 @@ export class CjsPaperDollComponent
         return this._options.get(this.option)?.colorAreas ?? [];
     }
 
-    /** Prepared option choices, independent of their selected colours. */
+    /**
+     * Prepared option choices, independent of their selected colours. The `recipe` option is one only while a recipe
+     * names the part's folder (`recipePath`): it is the garment that recipe set, not a style to pick.
+     */
     GetOptions()
     {
-        return [...this._options.values()];
+        return [...this._options.values()].filter(record => record.id !== "recipe" || this.recipePath !== "");
     }
 
     /** Authored palettes for the selected option, retaining a cross-option choice. */
