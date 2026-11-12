@@ -355,6 +355,8 @@ function registerGraphLifetime(Constructor, visited = new Set())
   for (const base of bases) registerGraphLifetime(base, visited);
   const descriptor = Object.getOwnPropertyDescriptor(Constructor.prototype, "OnDestruct");
   CjsGraph.defineLifetime(Constructor, { bases, onDestruct: descriptor ? descriptor.value : null });
+  // An interface never destroys itself; the concrete class does (blueexposure/include/BlueClass.h:70-100).
+  if (Schema.getDeclaredSchema(Constructor)?.interface === true) return;
   // An inherited legacy body must keep running until that owning class is migrated.
   if (!("Destruct" in Constructor.prototype))
     Object.defineProperty(Constructor.prototype, "Destruct", {
