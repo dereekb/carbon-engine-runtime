@@ -131,3 +131,21 @@ function plainResource(path, value)
   blue.resMan._GetResourceRecord(resource).payload = value;
   return resource;
 }
+
+test("destruction frees the payload and raycaster twice over without announcing a cached-data release", t =>
+{
+  // TriGeometryRes.cpp:233-241: DestroyRayCaster, ReleaseResources(ALL), ClearGrannyData, ClearCMFData.
+  const res = loadedGeometry();
+  res.PrepareRayCaster();
+  const announce = t.mock.method(res, "_NotifyReleaseCachedData");
+  for (let repeat = 0; repeat < 2; repeat++)
+  {
+    res.Destruct();
+    assert.equal(res.GetCMFData(), null);
+    assert.equal(res.IsRayCasterReady(), false);
+    assert.equal(res.IsGood(), false);
+    assert.equal(res.IsPrepared(), false);
+    assert.equal(res.GetMemoryUsage(), 0);
+  }
+  assert.equal(announce.mock.callCount(), 0);
+});

@@ -46,6 +46,9 @@ const DDS_BITMAP_DESCRIPTOR = { Format: CjsDdsFormat, defaults: { emit: "bitmap"
  * Device realization currently creates the backend texture; this resource
  * RETAINS the one Trinity makes for it, as Carbon's does
  * (`m_texture`), so every parameter sharing the resource binds one texture.
+ *
+ * No OnDestruct: Carbon's destructor (Resources/TriTextureRes.cpp:155-160) only unregisters from
+ * Tr2TextureLodManager, and the constructor's RegisterTexture (cpp:152) is unported, so nothing is registered.
  */
 export class TriTextureRes extends BlueAsyncRes
 {
