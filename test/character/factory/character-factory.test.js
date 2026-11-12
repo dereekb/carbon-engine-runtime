@@ -147,6 +147,7 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     "- { category: bodyshapes, path: bodyshapes/thinshape, weight: 0.3 }",
     "- { category: topmiddle, path: topmiddle/shirt01, weight: 1.0, pattern: Camo, colorvariation: plain, colors: '[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1), (1, 1, 0, 1), (0, 1, 1, 1), (0, 0, 8, 8), 0.0]' }",
     "- { category: makeup, path: makeup/eyeliner/eyeliner_01, weight: 1.0, colors: '[(1, 0, 0, 1), (0, 1, 0, 1)]' }",
+    "- { category: dependants, path: dependants/boottucking/standard, variation: v1, weight: 1.0, tuck: true }",
     ""
   ].join("\n");
   const files = [
@@ -175,8 +176,20 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
   assert.deepEqual(dna.parts.eyeliner, { enabled: true, option: "eyeliner_01", weight: 1 }, "colours in an unread shape are skipped");
   assert.deepEqual(problems.sort(), [
     "bodyshapes/thinshape: no part (no paper doll category)",
+    "dependants/boottucking/standard: no part (no paper doll category)",
     "hair/long01: hair is not applied until the instance owns meshes (R6)",
     "makeup/eyeliner/eyeliner_01: 2 colours, not one per area; skipped",
     "topmiddle/shirt01: pattern Camo: its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)"
   ]);
+  // Every entry is kept as read, applied or not: the recipe-selected dependant variation, the shape's weight, the pattern.
+  assert.deepEqual(dna.modifiers.map(modifier => modifier.path), first.modifiers.map(entry => entry.path));
+  assert.deepEqual(dna.modifiers.at(-1), { category: "dependants", path: "dependants/boottucking/standard", weight: 1, tuck: true, variation: "v1" });
+  assert.deepEqual(dna.modifiers[7], { category: "bodyshapes", path: "bodyshapes/thinshape", weight: .3 });
+  assert.equal(dna.modifiers[8].pattern, "Camo");
+  assert.deepEqual(dna.modifiers[8].patternTransform, [ 0, 0, 8, 8 ]);
+  // The modifiers survive JSON, the merge and a refused field.
+  assert.deepEqual(CjsCharacterFactory.readJSON(CjsCharacterFactory.writeJSON(dna)).modifiers, dna.modifiers);
+  assert.deepEqual(CjsCharacterFactory.merge(dna).modifiers, dna.modifiers);
+  assert.throws(() => CjsCharacterFactory.readJSON({ ...dna, modifiers: [ { wat: 1 } ] }), /Unknown field wat on character DNA modifier 0/u);
+  assert.throws(() => CjsCharacterFactory.readJSON({ ...dna, modifiers: [ { weight: "1" } ] }), /modifier 0 weight is not a number/u);
 });

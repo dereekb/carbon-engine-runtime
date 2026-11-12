@@ -4,6 +4,7 @@ import { CjsPaperDollDefinition } from "../application/CjsPaperDollDefinition.js
 import { CjsCharacterLibraryManager } from "../library/CjsCharacterLibraryManager.js";
 import { CjsCharacterObjectBuilder } from "../formats/CjsCharacterObjectBuilder.js";
 import { CjsCharacterPdpType } from "../formats/characterPdpType.js";
+import { CjsCharacterRecipeModifier } from "../model/source/CjsCharacterRecipeModifier.js";
 import { normalizeResourcePath } from "#utils/path";
 import female from "./defaults/defaultFemalePaperDoll.json" with { type: "json" };
 import male from "./defaults/defaultMalePaperDoll.json" with { type: "json" };
@@ -35,8 +36,11 @@ const DEFAULTS = { female, male };
  * library's (`blue.characterLibrary`).
  *
  * A DNA is `{ sex, description?, parts: { <part>: { enabled?, option?, palette?, secondaryPalette?, colors?, weight?,
- * overridable? } } }`. A part is `archetype` or a `CjsPaperDollDefinition.parts` member; a palette is a `res:` path;
- * `colors` are three RGBA quadruples and win over `palette`. A part the DNA does not name is as its defaults have it.
+ * overridable? } }, modifiers? }`. A part is `archetype` or a `CjsPaperDollDefinition.parts` member; a palette is a
+ * `res:` path; `colors` are three RGBA quadruples and win over `palette`. A part the DNA does not name is as its
+ * defaults have it. `modifiers` is the recipe a DNA was read from, every entry as read (`readRecipe`): the parts are
+ * what the factory applies of it, and the entries it does not apply (shapes, dependants and their variations, parts not
+ * applied yet) are kept there (operator, 2026-11-12: "The factory MUST provide the data").
  * PROVISIONAL: the colour fields (`palette`, `secondaryPalette`, `colors`) and their precedence wait on the operator's
  * colour ruling (the parts library's `ResolveColors` is provisional too).
  *
@@ -61,11 +65,16 @@ export class CjsCharacterFactory
     {
         const value = typeof input === "string" ? JSON.parse(input) : input;
         if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("A character DNA is an object");
-        for (const key of Object.keys(value)) if (![ "sex", "description", "parts" ].includes(key)) throw new Error("Unknown character DNA field " + key);
+        for (const key of Object.keys(value)) if (![ "sex", "description", "parts", "modifiers" ].includes(key)) throw new Error("Unknown character DNA field " + key);
         if (!Object.hasOwn(DEFAULTS, value.sex)) throw new Error("Unknown character sex " + value.sex);
         const dna = { sex: value.sex, parts: {} };
         if (value.description !== undefined) dna.description = String(value.description);
         for (const [ name, part ] of Object.entries(value.parts ?? {})) dna.parts[name] = CjsCharacterFactory._readPart(name, part);
+        if (value.modifiers !== undefined)
+        {
+            if (!Array.isArray(value.modifiers)) throw new Error("A character DNA's modifiers are a list");
+            dna.modifiers = value.modifiers.map((modifier, index) => CjsCharacterFactory._readModifier(index, modifier));
+        }
         return dna;
     }
 
@@ -97,13 +106,17 @@ export class CjsCharacterFactory
      * part neither names switched off. A default part with `overridable: false` keeps its default values; the paper
      * doll's bake rules (occludes) can still remove it. What the DNA set and the merge did not apply is reported.
      * @param {object} input The DNA.
-     * @returns {{ sex: string, parts: Object<string, object>, problems: string[] }} A new DNA naming every part.
+     * The DNA's description and recipe `modifiers` carry through unchanged.
+     * @returns {{ sex: string, description?: string, parts: Object<string, object>, modifiers?: object[], problems: string[] }}
+     *   A new DNA naming every part.
      * @throws {Error} For a DNA `readJSON` refuses.
      */
     static merge(input)
     {
         const dna = CjsCharacterFactory.readJSON(input), defaults = CjsCharacterFactory.getDefaults(dna.sex);
         const merged = { sex: dna.sex, parts: {}, problems: [] };
+        if (dna.description !== undefined) merged.description = dna.description;
+        if (dna.modifiers !== undefined) merged.modifiers = dna.modifiers;
         for (const name of CjsCharacterFactory.parts)
         {
             const base = defaults.parts[name] ?? { enabled: false }, edit = dna.parts[name];
@@ -257,7 +270,8 @@ export class CjsCharacterFactory
      * marks nude (`feet_nude`) turns its part off. What
      * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets that
      * is not a garment (a garment takes the part's `recipe` option, `FetchRecipeOption`, where the build ships its
-     * folder), and the entries of parts not applied yet (`notAppliedYet`).
+     * folder), and the entries of parts not applied yet (`notAppliedYet`). Every entry, applied or not, is kept in the DNA's
+     * `modifiers` as read (`modifierValues`), so nothing the recipe states is lost.
      * PROVISIONAL: the colour fields, as `_applyColors`.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. Moved from the sources' own recipe handling.
@@ -271,7 +285,8 @@ export class CjsCharacterFactory
         const library = blue.characterLibrary, recipe = await CjsCharacterFactory.fetchRecipe(path);
         const recipeSex = recipe.sex || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
-        const dna = { sex: recipeSex, parts: {} }, problems = [], parts = CjsCharacterFactory._partsByCategory();
+        const dna = { sex: recipeSex, parts: {}, modifiers: recipe.modifiers.map(entry => CjsCharacterFactory.modifierValues(entry)) };
+        const problems = [], parts = CjsCharacterFactory._partsByCategory();
         for (const entry of recipe.modifiers)
         {
             const found = await library.ResolveRecipeEntry(recipeSex, entry);
@@ -406,6 +421,53 @@ export class CjsCharacterFactory
         if (!record) throw new Error("Character recipe did not load: " + path);
         CjsSchema.setValues(record, { _pdpID: path }, { initialize: false });
         return record;
+    }
+
+    /**
+     * A recipe entry's values as a DNA keeps them: every field whose value is not the empty record's, as plain JSON
+     * values (`CjsSchema.getValues`).
+     * @param {CjsCharacterRecipeModifier} entry The recipe entry.
+     * @returns {object} Its values.
+     */
+    static modifierValues(entry)
+    {
+        const values = CjsSchema.getValues(entry), empty = CjsCharacterFactory._emptyModifier();
+        for (const key of Object.keys(values)) if (JSON.stringify(values[key]) === JSON.stringify(empty[key])) delete values[key];
+        return values;
+    }
+
+    /**
+     * An empty recipe entry's values, made once: the fields a DNA modifier may carry and the values it leaves out.
+     * @returns {object}
+     */
+    static _emptyModifier()
+    {
+        if (CjsCharacterFactory._emptyModifierCache === null) CjsCharacterFactory._emptyModifierCache = CjsSchema.getValues(new CjsCharacterRecipeModifier());
+        return CjsCharacterFactory._emptyModifierCache;
+    }
+
+    /** An empty recipe entry's values (`_emptyModifier`). @type {?object} */
+    static _emptyModifierCache = null;
+
+    /**
+     * One DNA modifier, checked and copied: a recipe entry's values (`modifierValues`).
+     * @param {number} index Its place in the list.
+     * @param {object} modifier Its values.
+     * @returns {object} A new modifier.
+     * @throws {Error} For a field a recipe entry does not have, or a value of another type than the field's.
+     */
+    static _readModifier(index, modifier)
+    {
+        if (modifier === null || typeof modifier !== "object" || Array.isArray(modifier)) throw new Error("Character DNA modifier " + index + " is not an object");
+        const empty = CjsCharacterFactory._emptyModifier();
+        for (const [ key, value ] of Object.entries(modifier))
+        {
+            if (!Object.hasOwn(empty, key)) throw new Error("Unknown field " + key + " on character DNA modifier " + index);
+            const expected = empty[key] === null ? "object" : Array.isArray(empty[key]) ? "array" : typeof empty[key];
+            const actual = Array.isArray(value) ? "array" : typeof value;
+            if (actual !== expected) throw new Error("Character DNA modifier " + index + " " + key + " is not a " + expected);
+        }
+        return structuredClone(modifier);
     }
 
     /**
