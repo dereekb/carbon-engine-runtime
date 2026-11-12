@@ -256,4 +256,4 @@ for (const method of Object.getOwnPropertyNames(ICjsWwiseSoundEngine.prototype))
     if (method !== "constructor") CjsSchema.decorateMethod(ICjsWwiseSoundEngine, method, meta.abstract);
 }
 
-CjsSchema.meta.define("ICjsWwiseSoundEngine")(ICjsWwiseSoundEngine);
+CjsSchema.meta.interface("ICjsWwiseSoundEngine")(ICjsWwiseSoundEngine);

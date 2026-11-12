@@ -147,4 +147,4 @@ for (const method of Object.getOwnPropertyNames(ICjsSfxControls.prototype))
     if (method !== "constructor") CjsSchema.decorateMethod(ICjsSfxControls, method, meta.abstract);
 }
 
-CjsSchema.meta.define("ICjsSfxControls")(ICjsSfxControls);
+CjsSchema.meta.interface("ICjsSfxControls")(ICjsSfxControls);

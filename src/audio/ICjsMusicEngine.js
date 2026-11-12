@@ -146,4 +146,4 @@ for (const method of Object.getOwnPropertyNames(ICjsMusicEngine.prototype))
     if (method !== "constructor") CjsSchema.decorateMethod(ICjsMusicEngine, method, meta.abstract);
 }
 
-CjsSchema.meta.define("ICjsMusicEngine")(ICjsMusicEngine);
+CjsSchema.meta.interface("ICjsMusicEngine")(ICjsMusicEngine);
