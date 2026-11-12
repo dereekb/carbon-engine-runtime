@@ -21,7 +21,7 @@ import { vec3 } from "../../npm/dist/global/math/vec3.js";
 import { vec4 } from "../../npm/dist/global/math/vec4.js";
 import { CjsSchema } from "../../npm/dist/blue/schema/index.js";
 import * as ResourceShader from "../../npm/dist/resource/shader/index.js";
-import { Tr2ConstantBufferAL, Tr2RegisterMapAL, Tr2RenderContextALStub, Tr2ResourceSetALStub, Tr2ResourceSetDescriptionAL, Tr2SamplerStateALStub } from "../../npm/dist/trinityal/index.js";
+import { Tr2ConstantBufferAL, Tr2RegisterMapAL, Tr2RenderContextALStub, Tr2ResourceSetALStub, Tr2ResourceSetDescriptionAL, Tr2SamplerStateAL, Tr2SamplerStateALStub } from "../../npm/dist/trinityal/index.js";
 import { ResourceFlags } from "../../npm/dist/trinity/shader/index.js";
 import { Tr2EffectStateManager } from "../../npm/dist/trinity/shader/index.js";
 import { Tr2ColorSpace } from "../../npm/dist/global/consts/renderContext/index.js";
@@ -1181,7 +1181,8 @@ test("a material seeds its pass description with sampler states on first apply, 
   assertEquals(description._samplers[0].type, 0, "a rebuild seeds nothing; it has no context");
   effect.ApplyMaterialDataForPass(0, 0, context);
 
-  const diffuse = description._samplers[0].sampler;
+  // A C++ copy of the value: the rebuild below destructs this description and resets its own member.
+  const diffuse = new Tr2SamplerStateAL({ copy: description._samplers[0].sampler });
   const pattern = description._samplers[1].sampler;
 
   assert(diffuse.TrinityALImpl_GetObject() instanceof Tr2SamplerStateALStub, "the applying context's kind of sampler state");
