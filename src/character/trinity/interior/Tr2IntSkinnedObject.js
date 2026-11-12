@@ -525,6 +525,17 @@ export class Tr2IntSkinnedObject extends Tr2SkinnedObject
   }
 
   /**
+   * Carbon destructor (Interior/Tr2IntSkinnedObject.cpp:42-48): RemoveFromApexScene.
+   *
+   * @adapted The wodIntSkinnedObjectsAlive stats counter is not kept.
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.RemoveFromApexScene();
+  }
+
+  /**
    * Carbon: Tr2IntSkinnedObject::AddToScene (Tr2IntSkinnedObject.cpp:354-364).
    *
    * Requires available bounds before adding the object to the physics scene.

@@ -6,7 +6,12 @@ import { type } from "#schema";
 import { INotify } from "#exposure/INotify";
 import { ITr2ValueBinding } from "../../curves/ITr2ValueBinding.js";
 
-/** Copies named JavaScript attributes through the portable Python-value adapter. */
+/**
+ * Copies named JavaScript attributes through the portable Python-value adapter.
+ *
+ * No own teardown hook: Carbon's destructor (Tr2PyValueBinding.cpp:22-29) only drops its Python references
+ * (Py_DECREF); the endpoints here are ordinary GC references.
+ */
 @be.define({
   name: "Tr2PyValueBinding",
   inherit: [ ITr2ValueBinding ],

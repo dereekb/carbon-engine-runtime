@@ -23,6 +23,9 @@ import { TriCurveSet } from "../../../trinity/curves/TriCurveSet.js";
  * Skinned character object managing whole-model LOD selection and an immediate
  * CPU skinning palette.
  *
+ * No own teardown hook: Carbon's destructor (Tr2SkinnedObject.cpp:49-58) only deletes the rig mappings and
+ * FreeSkinningMatrices' queues (cpp:696-712), which are GC-owned arrays here.
+ *
  * @abstract
  */
 @be.define("Tr2SkinnedObject")

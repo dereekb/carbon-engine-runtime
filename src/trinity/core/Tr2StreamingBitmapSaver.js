@@ -146,6 +146,20 @@ export class Tr2StreamingBitmapSaver extends IRoot
   }
 
   /**
+   * Carbon destructor (Tr2StreamingBitmapSaver.cpp:26-32): ends a save still in progress.
+   *
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    if (this.IsSaving())
+    {
+      this.EndSaving();
+    }
+  }
+
+  /**
    * Carbon HasStartedBatch (cpp:294-296): whether a batch is in flight.
    *
    * @implemented
