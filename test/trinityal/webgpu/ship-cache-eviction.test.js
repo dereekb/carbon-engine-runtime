@@ -7,9 +7,11 @@ import { CjsWebgpuDevice } from "../../../npm/dist/trinityal/webgpu/index.js";
 import { CjsWebgpuRenderContextAL } from "../../../npm/dist/trinityal/webgpu/internal.js";
 import { Tr2RenderContext } from "../../../npm/dist/trinity/core/index.js";
 import { Tr2Effect } from "../../../npm/dist/trinity/shader/Tr2Effect.js";
+import { Tr2EffectTechniqueInputs } from "../../../npm/dist/trinity/shader/material/Tr2EffectTechniqueInputs.js";
+import { Tr2EffectPassParameters } from "../../../npm/dist/trinity/shader/material/Tr2EffectPassParameters.js";
 import { RealizeTexture } from "../../../npm/dist/trinity/core/Tr2ImageIOHelpers.js";
 import { CreateLodAllocations, SharedGeometryBuffer, ReleaseSharedGeometryBuffer } from "../../../npm/dist/trinity/core/mesh/TriGeometryResAllocations.js";
-import { Tr2BufferDescriptionAL, Tr2ResourceSetAL, Tr2ResourceSetDescriptionAL, Tr2RegisterMapAL } from "../../../npm/dist/trinityal/index.js";
+import { Tr2BufferDescriptionAL, Tr2ResourceSetDescriptionAL, Tr2RegisterMapAL } from "../../../npm/dist/trinityal/index.js";
 import { Tr2GpuUsage, Tr2CpuUsage, ShaderType } from "../../../npm/dist/global/consts/renderContext/index.js";
 import { HoldFrameLoop } from "../../support/frameLoop.js";
 
@@ -83,7 +85,10 @@ test("switching ships lets the idle owner's GPU objects expire while the current
     }) });
     description.SetSrv__TextureAL(ShaderType.PIXEL_SHADER, 0, texture.GetTexture());
     const effect = new Tr2Effect();
-    effect.parametersForPasses = [ { passes: [ { stageInput: [], resourceSetDesc: description, resourceSet: new Tr2ResourceSetAL() } ] } ];
+    const technique = new Tr2EffectTechniqueInputs(), pass = new Tr2EffectPassParameters();
+    pass.resourceSetDesc = description;
+    technique.passes.push(pass);
+    effect.parametersForPasses = [ technique ];
     const geometry = new TriGeometryRes();
     resourceIdentityFixture(geometry, `res:/${name}.gr2`, "gr2");
     const mesh = {
