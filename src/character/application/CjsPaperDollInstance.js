@@ -260,8 +260,8 @@ export class CjsPaperDollInstance
 
     /**
      * The dependant folders whose utility shapes join the owning garment's fitting (`dependantShapes`). Only boot
-     * tucking is checked against the content (male shoe tucks, build 3687575): drape and waist-tucking dependants also
-     * state utility-shape occlusions, unchecked, so they add none.
+     * tucking is checked against the content (male shoe tucks, build 3687575). Drape and waist-tucking dependants also
+     * state utility-shape occlusions, some weighted (`#0.01`, `#2.0`) as no rule here reads, so they have no rule yet.
      * @type {string[]}
      */
     static fittingDependants = [ "dependants/boottucking" ];
@@ -271,26 +271,53 @@ export class CjsPaperDollInstance
      * `fittingDependants` folder brings its metadata's utility-shape requests, for the garment, and its occlusions,
      * which protect no owner: `dependants/boottucking/standard` suppresses its own garment's boot pinch as well as
      * any other's, and `standard/v1` the boots' trouser tucks. `hidesBootShin` does not select them; both directions
-     * set it differently. Other dependants add none. The result goes to `resolveUtilityShapes` with the worn items'
-     * own requests and occlusions.
+     * set it differently. The result goes to `resolveUtilityShapes` with the worn items' own requests and occlusions.
+     * Every entry a dependant's metadata states has a rule or throws (operator, 2026-11-12: "all rules must be
+     * handled"): an entry outside `fittingDependants`, one that names no utility shape (`dependants/bootmasks`,
+     * `hair`) and one that does not decode all throw. A dependant that states no entries adds nothing.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. The library stores the metadata; this applies it.
-     * @param {Array<{ path: string, requests: object[], occlusions: object[] }>} dependants The garment's dependants: each
-     *   one's lower-case modifier path and its metadata's decoded requests (`decodeUtilityShape`) and occlusions
-     *   (`decodeUtilityOcclusion`).
+     * @param {Array<{ path: string, metadataPath: string, dependantModifiers: string[], occludesModifiers: string[] }>}
+     *   dependants The garment's dependants: each one's lower-case modifier path, the `metadata.yaml` read for it and
+     *   that file's two lists as authored.
      * @returns {{ requests: object[], occlusions: Array<{ modifierPath: string, protectedOwner: null }> }} The shapes
      *   to add; the caller sets each request's owner.
+     * @throws {Error} For an entry no rule reads, naming the dependant kind, the entry and the file.
      */
     static dependantShapes(dependants)
     {
         const result = { requests: [], occlusions: [] };
         for (const dependant of dependants)
         {
-            if (!CjsPaperDollDefinition.occludes(CjsPaperDollInstance.fittingDependants, dependant.path)) continue;
-            for (const request of dependant.requests) result.requests.push({ ...request });
-            for (const occlusion of dependant.occlusions) result.occlusions.push({ ...occlusion, protectedOwner: null });
+            const fitting = CjsPaperDollDefinition.occludes(CjsPaperDollInstance.fittingDependants, dependant.path);
+            for (const entry of dependant.dependantModifiers)
+            {
+                const request = fitting ? CjsCharacterAppearanceResolver.decodeUtilityShape(entry) : null;
+                if (request === null) throw CjsPaperDollInstance._MissingRule(dependant, "dependantModifiers", entry);
+                result.requests.push(request);
+            }
+            for (const entry of dependant.occludesModifiers)
+            {
+                const occlusion = fitting ? CjsCharacterAppearanceResolver.decodeUtilityOcclusion(entry) : null;
+                if (occlusion === null) throw CjsPaperDollInstance._MissingRule(dependant, "occludesModifiers", entry);
+                result.occlusions.push({ ...occlusion, protectedOwner: null });
+            }
         }
         return result;
+    }
+
+    /**
+     * The error for a dependant entry no rule reads, worded as the library's missing category rules are
+     * (`CjsCharacterLibraryManager._CategoryRule`).
+     * @param {{ path: string, metadataPath: string }} dependant The dependant.
+     * @param {string} list The metadata list holding the entry.
+     * @param {string} entry The entry as authored.
+     * @returns {Error} The error.
+     */
+    static _MissingRule(dependant, list, entry)
+    {
+        const kind = dependant.path.split("/").slice(0, 2).join("/");
+        return new Error("No paper doll rule for the " + kind + " " + list + " entry " + entry + " in " + dependant.metadataPath);
     }
 
     /**

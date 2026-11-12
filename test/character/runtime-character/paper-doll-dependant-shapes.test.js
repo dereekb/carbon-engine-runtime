@@ -2,18 +2,18 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CjsCharacterAppearanceResolver, CjsPaperDollInstance } from "../../../npm/dist/character/index.js";
 
-const { decodeUtilityShape, decodeUtilityOcclusion, resolveUtilityShapes } = CjsCharacterAppearanceResolver;
+const { decodeUtilityShape, resolveUtilityShapes } = CjsCharacterAppearanceResolver;
 
-/** A dependant as its male metadata states it (build 3687575): its path, requests and occlusions, decoded. */
-function Dependant(path, requests = [], occlusions = [])
+/** A dependant as its male metadata states it (build 3687575): its path, file and two lists as authored. */
+function Dependant(path, dependantModifiers = [], occludesModifiers = [], variation = "")
 {
-    return { path, requests: requests.map(value => decodeUtilityShape(value)), occlusions: occlusions.map(value => decodeUtilityOcclusion(value)) };
+    return { path, metadataPath: "res:/graphics/character/male/paperdoll/" + path + "/" + (variation ? variation + "/" : "") + "metadata.yaml", dependantModifiers, occludesModifiers };
 }
 
 const standard = Dependant("dependants/boottucking/standard", [],
     [ "utilityshapes/pinchbootankleshape", "utilityshapes/pinchboothighshinshape", "utilityshapes/pinchbootkneeshape", "utilityshapes/pinchbootlowshinshape" ]);
 const standardV1 = Dependant("dependants/boottucking/standard", [],
-    [ "utilityshapes/pantstucklowshape", "utilityshapes/pantstuckshinshape", "utilityshapes/pantstuckmediumshape", "utilityshapes/pantstuckkneeshape", "utilityshapes/pantstuckhighshape", "utilityshapes/pantstuckxhighshape" ]);
+    [ "utilityshapes/pantstucklowshape", "utilityshapes/pantstuckshinshape", "utilityshapes/pantstuckmediumshape", "utilityshapes/pantstuckkneeshape", "utilityshapes/pantstuckhighshape", "utilityshapes/pantstuckxhighshape" ], "v1");
 
 /** The trousers (pantscm01: pinch request, `standard` dependant) and boots worn together, resolved; retained weights by path. */
 function Fit(dependant, bootRequest)
@@ -43,16 +43,26 @@ test("boot tucking standard/v1 runs the other way: the boots' trouser tuck goes,
         { "utilityshapes/pinchbootankleshape": [ 1 ], "utilityshapes/pantstuckshinshape": [] });
 });
 
-test("only boot-tucking dependants add shapes, and their requests carry no owner", () =>
+test("boot-tucking requests carry no owner, and occlusions protect none", () =>
 {
     const shin = Dependant("dependants/boottucking/shin", [ "utilityshapes/pantstuckshinshape" ]);
-    const drape = Dependant("dependants/drape/outer", [ "utilityshapes/pinchhipsshape" ]);
-    const waist = Dependant("dependants/waisttucking/standard", [], [ "utilityshapes/pinchtuckshape" ]);
-    const shapes = CjsPaperDollInstance.dependantShapes([ shin, drape, waist, standard ]);
-    assert.deepEqual(shapes.requests, [ shin.requests[0] ]);
-    assert.notEqual(shapes.requests[0], shin.requests[0]);
+    const shapes = CjsPaperDollInstance.dependantShapes([ shin, standard, Dependant("dependants/drape/loose") ]);
+    assert.deepEqual(shapes.requests, [ decodeUtilityShape("utilityshapes/pantstuckshinshape") ]);
     assert.deepEqual(shapes.occlusions.map(value => [ value.modifierPath, value.protectedOwner ]),
-        standard.occlusions.map(value => [ value.modifierPath, null ]));
-    // A folder that only starts with the same letters is not below it.
-    assert.deepEqual(CjsPaperDollInstance.dependantShapes([ Dependant("dependants/boottuckingx", [ "utilityshapes/pantstuckshinshape" ]) ]).requests, []);
+        standard.occludesModifiers.map(value => [ value, null ]));
+});
+
+test("every dependant entry without a rule throws, naming its kind, entry and file", () =>
+{
+    const missing = (dependant, pattern) => assert.throws(() => CjsPaperDollInstance.dependantShapes([ standard, dependant ]), pattern);
+    // Kinds with no rule yet: drape and waist tucking (weighted occlusions), the hood (a part occlusion).
+    missing(Dependant("dependants/drape/outer", [ "utilityshapes/pinchhipsshape" ]),
+        /^Error: No paper doll rule for the dependants\/drape dependantModifiers entry utilityshapes\/pinchhipsshape in res:\/graphics\/character\/male\/paperdoll\/dependants\/drape\/outer\/metadata\.yaml$/u);
+    missing(Dependant("dependants/drape/standard", [], [ "utilityshapes/pinchhipsshape#0.01" ]), /dependants\/drape occludesModifiers entry utilityshapes\/pinchhipsshape#0\.01/u);
+    missing(Dependant("dependants/waisttucking/standard", [], [ "dependants/tuck" ]), /dependants\/waisttucking occludesModifiers entry dependants\/tuck/u);
+    missing(Dependant("dependants/hood/robeam1", [], [ "hair" ], "v1"), /dependants\/hood occludesModifiers entry hair in .*robeam1\/v1\/metadata\.yaml/u);
+    // Within boot tucking, an entry naming no utility shape (female standard/v1).
+    missing(Dependant("dependants/boottucking/standard", [], [ "dependants/bootmasks" ], "v1"), /dependants\/boottucking occludesModifiers entry dependants\/bootmasks/u);
+    // A folder that only starts with the same letters is not boot tucking.
+    missing(Dependant("dependants/boottuckingx", [ "utilityshapes/pantstuckshinshape" ]), /dependants\/boottuckingx dependantModifiers/u);
 });
