@@ -52,6 +52,7 @@ import { EveDamageOverlay } from "../overlays/EveDamageOverlay.js";
 import { EveDamageOverlayOwnerInfo } from "../overlays/EveDamageOverlayOwnerInfo.js";
 import { EveMeshOverlayEffect } from "../overlays/EveMeshOverlayEffect.js";
 import { ITr2Renderable } from "../../core/ITr2Renderable.js";
+import { Tr2DeviceResource } from "../../core/device/Tr2DeviceResource.js";
 import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 import { IEveChildTransformModifier } from "./modifiers/IEveChildTransformModifier.js";
 import "./EveChildContainer.js";
@@ -80,7 +81,7 @@ const NO_BONE_TRANSFORMS = { bones: null, boneCount: 0 };
  */
 @be.define({
   name: "EveChildMesh",
-  inherit: [ ITr2Renderable, IEveShadowCaster, IListNotify, IInitialize, INotify, IListNotify, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner ],
+  inherit: [ ITr2Renderable, IEveShadowCaster, IListNotify, IInitialize, INotify, IListNotify, ITr2GrannyAnimationOwner, IEveSpaceObjectDecalOwner, IEveSpaceObjectAttachmentOwner, Tr2DeviceResource ],
   // EveChildMesh_Blue.cpp:11-98, in Carbon's order.
   interfaces: [ EveEntity, IEveSpaceObjectDecalOwner, EveSpaceObjectChild, IEveSpaceObjectChild, ITr2Renderable, IInitialize, INotify, ITr2GrannyAnimationOwner, IEveSpaceObjectAttachmentOwner, ITr2LightOwner, ITr2Pickable, IEveShadowCaster ],
   members: [
@@ -2184,6 +2185,30 @@ export class EveChildMesh extends EveChildTransform
     }
 
     updater.SetSharedGeometryRes(null);
+  }
+
+  /**
+   * Carbon: EveChildMesh::ReleaseResources (trinity/trinity/Eve/SpaceObject/Children/EveChildMesh.cpp:1839-1847).
+   *
+   * @notImplemented Carbon frees the baked-morph allocation and, for TRISTORAGE_ALL, the merge-morphs constant buffer. Neither exists here until BakeMorphs is ported, so there is nothing to release.
+   * @param {number} _s TriStorageFlags, unused until then.
+   */
+  ReleaseResources(_s)
+  {
+  }
+
+  /**
+   * Carbon: EveChildMesh::OnPrepareResources (trinity/trinity/Eve/SpaceObject/Children/EveChildMesh.cpp:1849-1857):
+   * bakes the morphs again when they were baked before the release. Nothing sets _isMorphsBaked until
+   * BakeMorphs is ported, so this prepares nothing today.
+   *
+   * @implemented
+   * @returns {boolean} Always true, as Carbon's.
+   */
+  _OnPrepareResources()
+  {
+    if (this._isMorphsBaked) this.BakeMorphs();
+    return true;
   }
 
   /**
