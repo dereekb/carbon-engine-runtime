@@ -33,7 +33,8 @@ function setup(t)
     {
       if (registered.has(resource)) continue;
       resource.ReleaseResources();
-      Tr2DeviceResource.prototype.Destruct.call(resource);
+      // The registry also holds Tr2ProceduralBuffer's file-private registry, a plain object: run only the base destructor.
+      Tr2DeviceResource.prototype.OnDestruct.call(resource);
     }
     context.SetRenderContextAL(previous);
     blue.resMan = manager;

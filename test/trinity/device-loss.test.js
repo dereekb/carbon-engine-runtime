@@ -176,7 +176,7 @@ test("a lost device is released, notified, replaced over ticks and prepared agai
   }
   finally
   {
-    Tr2DeviceResource.prototype.Destruct.call(resource);
+    Tr2DeviceResource.prototype.OnDestruct.call(resource);
   }
 });
 
