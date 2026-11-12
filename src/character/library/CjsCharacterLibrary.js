@@ -64,9 +64,9 @@ export class CjsCharacterLibrary
     @type.list("CjsCharacterCamera")
     cameras = [];
 
-    /** Flat cameraSequences holdings. */
+    /** Flat cameraSequences holdings: cameras read from the positional layout. */
     @meta.mapAttribute(meta.READWRITE | meta.PERSIST)
-    @type.list("CjsCharacterCameraSequence")
+    @type.list("CjsCharacterCamera")
     cameraSequences = [];
 
     /** Flat positions holdings. */

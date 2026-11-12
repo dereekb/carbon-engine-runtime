@@ -10,7 +10,6 @@ export { CjsCharacterBaseColor } from "./CjsCharacterBaseColor.js";
 export { CjsCharacterBindPose } from "./CjsCharacterBindPose.js";
 export { CjsCharacterBlendShapes } from "./CjsCharacterBlendShapes.js";
 export { CjsCharacterCamera } from "./CjsCharacterCamera.js";
-export { CjsCharacterCameraSequence } from "./CjsCharacterCameraSequence.js";
 export { CjsCharacterColorVariation } from "./CjsCharacterColorVariation.js";
 export { CjsCharacterCurveCacheList } from "./CjsCharacterCurveCacheList.js";
 export { CjsCharacterCurveSetMetadata } from "./CjsCharacterCurveSetMetadata.js";

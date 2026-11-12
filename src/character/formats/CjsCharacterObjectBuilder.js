@@ -69,6 +69,7 @@ export class CjsCharacterObjectBuilder
         if (!Constructor) throw new TypeError(`Character kind ${identified.kind} requires registered ${identified.className}.`);
         if (identified.kind === "lights") raw = ReadLightRig(raw, this._path, sourceLists);
         if (identified.kind === "scalarPosts") raw = ReadScalarPost(raw, this._path);
+        if (identified.kind === "cameraSequences") raw = ReadPositionalCamera(raw, this._path);
         if (identified.items)
         {
             // An envelope list whose mappings are records of its declared class (a recipe's modifiers); its other
@@ -264,6 +265,26 @@ function ReadScalarPost(raw, path)
 {
     if (raw.lut !== "" || raw.lut_influence !== 0) throw new TypeError(`${path}: a scalar post other than the empty one is unread`);
     return { lut: false, lut_influence: [ 0, 0, 0, 0 ], lut_path: raw.lut_path };
+}
+
+/**
+ * A camera written in the positional layout, a six-item tuple, as `CjsCharacterCamera` values: position, point of
+ * interest, field of view, front clip, back clip, then five hook names. Every positional camera shipped (15 of build
+ * 3687575's 339 cameras) leaves the five hook names empty; they read as an empty `hook_names`, and others are unread,
+ * since the tuple does not say which hook each one is. The fields the tuple lacks (`aspect_ratio`,
+ * `transform_hook_scale`, `viewport_size`) stay at their defaults; its `_pdpType` (`CAMERA_SEQUENCE`) keeps the
+ * layout. Derived (2026-11-12): the slot meanings come from the values: 0.3, 0.1 and 200 equal the keyed files' field
+ * of view and clips, and the second tuple sits at head height.
+ * @param {Array<*>} raw The file's six items.
+ * @param {string} path The file's path.
+ * @returns {object} The camera's values.
+ * @throws {TypeError} For hook names other than five empty ones.
+ */
+function ReadPositionalCamera(raw, path)
+{
+    const [ position, point_of_interest, field_of_view, front_clip, back_clip, hooks ] = raw;
+    if (!Array.isArray(hooks) || hooks.length !== 5 || hooks.some(value => value !== "")) throw new TypeError(`${path}: a positional camera's hook names other than empty are unread`);
+    return { position, point_of_interest, field_of_view, front_clip, back_clip, hook_names: { fov: "", name: "", target: "", transform: "", translation: "" } };
 }
 
 /**

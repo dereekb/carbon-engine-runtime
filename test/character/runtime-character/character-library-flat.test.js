@@ -22,7 +22,7 @@ function fixture(t)
         [ROOT + "/diffuse.png", "opaque"],
         [ROOT + "/mesh.red", "opaque"],
         [CAMERA, "field_of_view: 0.25\n"],
-        [SEQUENCE, "[[1,2,3],[4,5,6],1,2,3,[a,b,c,d,e]]\n"],
+        [SEQUENCE, "[[1,2,3],[4,5,6],0.3,0.1,200,['','','','','']]\n"],
         [BASENAME, "one two\n"],
         ["res:/unrelated.yaml", "untouched"]
     ]);

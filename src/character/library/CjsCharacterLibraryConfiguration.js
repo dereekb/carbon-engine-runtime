@@ -23,7 +23,7 @@ export class CjsCharacterLibraryConfiguration
         types: { className: "CjsCharacterType", pdpType: CjsCharacterPdpType.TYPE, envelope: true, slots: [ "partPath", "variation", "colorVariant", "bloodlineIDs" ] },
         projectedDecals: { className: "CjsProjectedDecal", pdpType: CjsCharacterPdpType.PROJECTED_DECAL },
         cameras: { className: "CjsCharacterCamera", pdpType: CjsCharacterPdpType.CAMERA },
-        cameraSequences: { className: "CjsCharacterCameraSequence", pdpType: CjsCharacterPdpType.CAMERA_SEQUENCE, envelope: true },
+        cameraSequences: { className: "CjsCharacterCamera", pdpType: CjsCharacterPdpType.CAMERA_SEQUENCE },
         positions: { className: "CjsCharacterPosition", pdpType: CjsCharacterPdpType.POSITION },
         poses: { className: "CjsCharacterPose", pdpType: CjsCharacterPdpType.POSE, envelope: true },
         lights: { className: "CjsCharacterLightRig", pdpType: CjsCharacterPdpType.LIGHT_RIG },
