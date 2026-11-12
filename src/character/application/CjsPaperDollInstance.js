@@ -259,6 +259,41 @@ export class CjsPaperDollInstance
     }
 
     /**
+     * The dependant folders whose utility shapes join the owning garment's fitting (`dependantShapes`). Only boot
+     * tucking is checked against the content (male shoe tucks, build 3687575): drape and waist-tucking dependants also
+     * state utility-shape occlusions, unchecked, so they add none.
+     * @type {string[]}
+     */
+    static fittingDependants = [ "dependants/boottucking" ];
+
+    /**
+     * The utility shapes a worn garment's dependants add to its fitting (the tuck rule). A dependant under a
+     * `fittingDependants` folder brings its metadata's utility-shape requests, for the garment, and its occlusions,
+     * which protect no owner: `dependants/boottucking/standard` suppresses its own garment's boot pinch as well as
+     * any other's, and `standard/v1` the boots' trouser tucks. `hidesBootShin` does not select them; both directions
+     * set it differently. Other dependants add none. The result goes to `resolveUtilityShapes` with the worn items'
+     * own requests and occlusions.
+     *
+     * Ours (no Carbon counterpart): the client's paper doll is Python. The library stores the metadata; this applies it.
+     * @param {Array<{ path: string, requests: object[], occlusions: object[] }>} dependants The garment's dependants: each
+     *   one's lower-case modifier path and its metadata's decoded requests (`decodeUtilityShape`) and occlusions
+     *   (`decodeUtilityOcclusion`).
+     * @returns {{ requests: object[], occlusions: Array<{ modifierPath: string, protectedOwner: null }> }} The shapes
+     *   to add; the caller sets each request's owner.
+     */
+    static dependantShapes(dependants)
+    {
+        const result = { requests: [], occlusions: [] };
+        for (const dependant of dependants)
+        {
+            if (!CjsPaperDollDefinition.occludes(CjsPaperDollInstance.fittingDependants, dependant.path)) continue;
+            for (const request of dependant.requests) result.requests.push({ ...request });
+            for (const occlusion of dependant.occlusions) result.occlusions.push({ ...occlusion, protectedOwner: null });
+        }
+        return result;
+    }
+
+    /**
      * A target's ready capture: each part's settings (`CaptureTarget`), the suppression walk, and the ready lists the
      * composition draws. `order` is the bake order without the suppressed parts: an occluded part leaves every target's
      * bake (operator, 2026-11-09). The head's `brow` list is the parts after the eyebrows: what covers the brows on the
