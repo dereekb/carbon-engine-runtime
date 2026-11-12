@@ -40,6 +40,8 @@ import { ResourceFlags } from "./parameter/ITr2EffectValue.js";
 import { Tr2VariableStore } from "../core/variable/Tr2VariableStore.js";
 import { float32FromBits } from "#utils/bytes";
 import { blueEnums } from "#blue/enums/CjsBlueEnumRegistry";
+import { TriStorageFlags } from "#consts/graphics";
+import { Tr2DeviceResource } from "../core/device/Tr2DeviceResource.js";
 
 /** Tr2Effect_Blue.cpp:93: a one-entry chooser whose description is the effect file-dialog filter. */
 const EffectFileChooser = Object.freeze({
@@ -100,9 +102,12 @@ function findByName(values, name)
   return values.find(value => getNamedValue(value) === name) ?? null;
 }
 
-/** Owns the mutable effect facade: shader path and options, authored parameters and resources, sampler overrides, variable-store resolution, and rebuild state. */
+/**
+ * Owns the mutable effect facade: shader path and options, authored parameters and resources, sampler overrides, variable-store resolution, and rebuild state.
+ * Carbon: Tr2Effect (trinity/trinity/Shader/Tr2Effect.h:53-59)
+ */
 @be.define("Tr2Effect")
-@be.inherit(IInitialize, INotify, IListNotify)
+@be.inherit(IInitialize, INotify, IListNotify, Tr2DeviceResource)
 @be.mapInterface(Tr2Material)
 @be.mapInterface(INotify)
 @be.mapInterface(IInitialize)
@@ -1013,17 +1018,54 @@ export class Tr2Effect extends Tr2Material
    * shader finds none. Manager-owned links provide those callbacks here.
    *
    * @cjs
-   * @adapted Browser links require renewal and reacquisition after expiry.
+   * @adapted Browser links require renewal and reacquisition after expiry; use renews device residency.
    * @returns {boolean} Whether the effect can be drawn now.
    */
   IsGood()
   {
     if (this._destroyed) return false;
+    // Use registers the effect as a device resource; Carbon's constructor does (Tr2DeviceResource.cpp:10-13).
+    this.KeepAlive();
     for (const parameter of this.resources) parameter.KeepAlive();
     if (this.effectResource === null) this.#AcquireEffectResource();
     const resource = this.effectResource;
     if (resource !== null && !resource.IsGood(this)) return false;
     return this.shader !== null;
+  }
+
+  /**
+   * Carbon: Tr2Effect::ReleaseResources (trinity/trinity/Shader/Tr2Effect.cpp:282-302): a full
+   * release resets every pass stage's and library input's constant buffer; a partial one keeps them.
+   * Destroy is the port of Carbon's `= Tr2ConstantBufferAL()` reset.
+   * @implemented
+   * @param {number} s TriStorageFlags.
+   */
+  ReleaseResources(s)
+  {
+    if ((s & TriStorageFlags.TRISTORAGE_ALL) !== TriStorageFlags.TRISTORAGE_ALL) return;
+
+    for (const technique of this.parametersForPasses)
+    {
+      for (const pass of technique.passes)
+      {
+        for (const stage of pass.stageInput) stage.constantBuffer.Destroy();
+      }
+      for (const library of technique.libraries)
+      {
+        library.globalInput.constantBuffer.Destroy();
+        library.localInput.constantBuffer.Destroy();
+      }
+    }
+  }
+
+  /**
+   * Carbon: Tr2Effect::OnPrepareResources (trinity/trinity/Shader/Tr2Effect.cpp:304-307).
+   * @implemented
+   * @returns {boolean} True; the next apply recreates released constant buffers.
+   */
+  _OnPrepareResources()
+  {
+    return true;
   }
 
   /**
