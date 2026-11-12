@@ -53,6 +53,10 @@ function FormatTruncated(msg, args)
 /**
  * Queues and draws debug text.
  * Carbon: TriDebugTextRenderer (trinity/trinity/TriDebugTextRenderer.h:18-79)
+ *
+ * No own teardown hook: Carbon's destructor (TriDebugTextRenderer.cpp:49-62) deletes Win32 GDI objects and
+ * decrements a stats counter; this port is the non-Win32 baked-bitmap path and keeps no counter. The
+ * Tr2DeviceResource hook still unregisters it.
  */
 @meta.carbon("TriDebugTextRenderer")
 @meta.inherit(Tr2DeviceResource)

@@ -6,7 +6,12 @@ import { TriRenderStep } from "./TriRenderStep.js";
 import { vec2 } from "#math/vec2";
 import { vec4 } from "#math/vec4";
 
-/** A render step that draws a texture atlas for inspection, focused on one entry. */
+/**
+ * A render step that draws a texture atlas for inspection, focused on one entry.
+ *
+ * No own teardown hook: Carbon's destructor (RenderJob/TriStepRenderAtlas.cpp:20-23) unregisters
+ * "simpleOutColour", whose registration in the constructor (cpp:15) is unported.
+ */
 @be.define("TriStepRenderAtlas")
 @be.mapInterface(TriRenderStep)
 @be.exposureChainTo(TriRenderStep)

@@ -23,7 +23,12 @@ const RENDERING_MODES = [
   RenderingMode.RM_ALPHA_ADDITIVE
 ];
 
-/** A render step that renders a single renderable, optionally overriding its material. */
+/**
+ * A render step that renders a single renderable, optionally overriding its material.
+ *
+ * No own teardown hook: Carbon's destructor (RenderJob/TriStepRenderObject.cpp:35-41) only deletes the
+ * m_batches accumulators, which are GC-owned here and cleared after every Run.
+ */
 @be.define("TriStepRenderObject")
 @be.mapInterface(TriRenderStep)
 @be.exposureChainTo(TriRenderStep)

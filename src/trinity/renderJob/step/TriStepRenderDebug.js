@@ -6,7 +6,13 @@ import { TriRenderStep } from "./TriRenderStep.js";
 import { TriLineSet } from "../../core/line/TriLineSet.js";
 import { vec3 } from "#math/vec3";
 
-/** A render step that accumulates debug lines, boxes and 2D/3D text for one frame and hands them to the render context to draw. */
+/**
+ * A render step that accumulates debug lines, boxes and 2D/3D text for one frame and hands them to the render context to draw.
+ *
+ * No own teardown hook: Carbon's destructor (RenderJob/TriStepRenderDebug.cpp:34-44) frees m_data, drops its
+ * line-set reference and deletes two TriDebugTextRenderers; here the line set is a GC reference and the step
+ * makes neither the raw buffer nor the text renderers.
+ */
 @be.define("TriStepRenderDebug")
 @be.mapInterface(TriRenderStep)
 @be.exposureChainTo(TriRenderStep)
