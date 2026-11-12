@@ -84,17 +84,11 @@ test("an effect with a shader but no effect resource is not good", () =>
 });
 
 
-test("an effect with no path, or one that resolves to nothing, does not re-initialize when asked", () =>
+test("a pathless effect does not re-initialize when asked", () =>
 {
   const effect = new Tr2Effect();
   let initializes = 0;
   effect.Initialize = () => { initializes += 1; return true; };
-  for (let frame = 0; frame < 3; frame++) assert.equal(effect.IsGood(), false);
-  assert.equal(initializes, 0);
-
-  // No platform is installed here, so an authored .fx has no compiled path to acquire.
-  effect.effectFilePath = "res:/graphics/effect/managed/space/test.fx";
-  assert.equal(Tr2Effect.convertEffectPath(effect.effectFilePath), "");
   for (let frame = 0; frame < 3; frame++) assert.equal(effect.IsGood(), false);
   assert.equal(initializes, 0);
 });
@@ -112,9 +106,10 @@ test("an effect whose resource expired re-initializes on the next IsGood and ans
   });
 
   const effect = new Tr2Effect();
-  // A compiled path: an authored .fx resolves to nothing until a platform is installed, and is then not acquired.
-  effect.effectFilePath = "res:/graphics/effect.dx11/managed/space/test.sm_hi";
+  // An authored path: it resolves with no platform installed, into Carbon's stub build's tree.
+  effect.effectFilePath = "res:/graphics/effect/managed/space/test.fx";
   effect.Initialize();
+  assert.equal(effect.actualEffectFilePath, "res:/graphics/effect.dx11/managed/space/test.sm_depth");
   assert.equal(effect.effectResource, made[0]);
   assert.equal(effect.IsGood(), false, "still loading");
   prepareResourceFixture(made[0]);

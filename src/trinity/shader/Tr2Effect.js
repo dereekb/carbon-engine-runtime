@@ -905,7 +905,9 @@ export class Tr2Effect extends Tr2Material
   {
     if (!this.actualEffectFilePath) return;
 
-    this.effectResource = blue.resMan.GetResource(this.actualEffectFilePath);
+    // Carbon asks the manager for a Tr2EffectRes (BlueInterfaceIID<Tr2EffectRes>, cpp:397): anything else, or
+    // nothing, leaves m_effectResource null.
+    this.effectResource = CjsSchema.cast(blue.resMan.GetResource(this.actualEffectFilePath), Tr2EffectRes);
     if (this.effectResource) blue.resMan.notify.Add(this, this.effectResource, this, "effectResource");
   }
 
@@ -1045,9 +1047,8 @@ export class Tr2Effect extends Tr2Material
     if (this._destroyed) return false;
     this.KeepAlive();
 
-    // An effect with no path, or one whose path resolves to nothing yet (no platform installed), has nothing to
-    // acquire and must not rebuild on every ask.
-    if (!this.effectResource && this.effectFilePath && Tr2Effect.convertEffectPath(this.effectFilePath)) this.Initialize();
+    // An effect with no path has nothing to acquire and must not rebuild on every ask.
+    if (!this.effectResource && this.effectFilePath) this.Initialize();
 
     let isGood = true;
     if (!this.effectResource || !this.effectResource.IsGood(this)) isGood = false;
@@ -2216,13 +2217,9 @@ export class Tr2Effect extends Tr2Material
    * the first one - a backslash swap - so `actualEffectFilePath` still ended in
    * `.fx` and no extension route could ever match it.
    *
-   * Carbon returns false when it cannot substitute, and `Initialize` then
-   * blanks the path rather than fetching. The same happens here: with no
-   * platform name installed there is no committed backend, so an authored
-   * `/effect/*.fx` has no compiled tree to resolve into and yields "". The
-   * resolver itself throws in that case by design, and that loud failure is
-   * right for a caller that named a path deliberately; it is wrong for
-   * hydration, which may build an effect long before a backend exists.
+   * An authored path always resolves, before a backend is configured too: the
+   * platform name is never absent, as in Carbon, where it is a compile-time
+   * constant ("dx11" in the headless stub build, TrinityALForward.h:64-68).
    *
    * Adapted: when the committed backend's own tree differs from the installed
    * platform (`Tr2EffectRes.CommitBackend`), an authored `/effect/` path is
@@ -2234,7 +2231,7 @@ export class Tr2Effect extends Tr2Material
    *
    * @param {string} path Authored effect path.
    * @param {object} [options] Overrides for the installed configuration.
-   * @returns {string} Compiled path, or "" when none can be resolved.
+   * @returns {string} Compiled path; "" only for an empty path.
    */
   static convertEffectPath(path, options = {})
   {
@@ -2243,15 +2240,10 @@ export class Tr2Effect extends Tr2Material
     if (!authored) return "";
 
     const installed = GetEffectPathDefaults();
-    const platformName = options.platformName ?? installed.platformName ?? null;
+    const platformName = options.platformName || installed.platformName;
     const shaderModel = options.shaderModel ?? installed.shaderModel ?? "high";
     const normalized = NormalizeResourcePath(authored);
     const authoredEffect = normalized.endsWith(".fx") && normalized.includes("/effect/");
-
-    if (!platformName && authoredEffect)
-    {
-      return "";
-    }
 
     const backend = Tr2EffectRes.GetBackend();
     if (authoredEffect && options.platformName === undefined && backend !== null && backend.target !== platformName)

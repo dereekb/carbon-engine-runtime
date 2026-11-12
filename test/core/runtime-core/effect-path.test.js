@@ -39,13 +39,13 @@ test("ResolveEffectPath leaves an already-qualified tree alone", () =>
     assert.equal(ResolveEffectPath("", { platformName: "webgpu" }), "");
 });
 
-test("ResolveEffectPath fails loudly rather than resolving to something unloadable", () =>
+test("ResolveEffectPath always resolves: with no platform name it uses Carbon's stub build's", () =>
 {
-    // Without a platform name the substitution cannot happen, and a quiet
-    // pass-through would surface much later as a missing resource.
-    assert.throws(
-        () => ResolveEffectPath("res:/graphics/effect/space/quadv5.fx", {}),
-        /platform name/
+    // Carbon's platform name is a compile-time constant in every build, "dx11" in the headless stub one
+    // (trinityal/include/TrinityALForward.h:64-68), so an authored path never lacks a tree to resolve into.
+    assert.equal(
+        ResolveEffectPath("res:/graphics/effect/space/quadv5.fx", {}),
+        "res:/graphics/effect.dx11/space/quadv5.sm_depth"
     );
 
     assert.throws(() => ShaderModelSuffix("ultra"), RangeError);
@@ -83,7 +83,7 @@ test("Tr2PlatformInfo resolves against its own platform name", async () =>
         "res:/graphics/effect.webgpu/space/quadv5.sm_depth"
     );
 
-    // No backend committed, no tree to resolve into.
+    // No backend detected: the path still resolves, into Carbon's stub build's tree.
     const none = await Tr2PlatformInfo.Detect({ gpu: null, webgl: false });
-    assert.throws(() => none.ResolveEffectPath("res:/graphics/effect/space/quadv5.fx"));
+    assert.equal(none.ResolveEffectPath("res:/graphics/effect/space/quadv5.fx"), "res:/graphics/effect.dx11/space/quadv5.sm_depth");
 });

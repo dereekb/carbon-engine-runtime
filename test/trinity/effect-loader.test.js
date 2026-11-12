@@ -159,19 +159,19 @@ test("the same path yields the same resource handle", async () =>
   });
 });
 
-test("an unresolvable path acquires nothing rather than throwing", async () =>
+test("an authored path resolves and is acquired before any platform is installed", async () =>
 {
-  // No platform name installed means no backend is committed, so an authored
-  // /effect/ path has no compiled tree to resolve into. Carbon blanks the path
-  // and does not fetch; hydration must not explode.
+  // Carbon's platform name is never absent: it is a compile-time constant, "dx11" in the headless stub build
+  // (trinityal/include/TrinityALForward.h:64-68). So hydration before a backend exists resolves into that tree,
+  // at our default quality, and fetches.
   await withGlobalManager(() =>
   {
     const effect = new Tr2Effect();
     effect.effectFilePath = "res:/graphics/effect/ship/main.fx";
     effect.Initialize();
 
-    assert.equal(effect.actualEffectFilePath, "");
-    assert.equal(effect.effectResource, null);
+    assert.equal(effect.actualEffectFilePath, "res:/graphics/effect.dx11/ship/main.sm_depth");
+    assert.notEqual(effect.effectResource, null);
   });
 });
 

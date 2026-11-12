@@ -222,7 +222,8 @@ test("Render renews every texture parameter even when the effect resource is bad
 test("Render reacquires an expired internal resource and draws only after its rebuild callback", t =>
 {
   const manager = blue.resMan, original = manager.GetResource;
-  const effect = new Tr2Effect(), resource = new BlueAsyncRes();
+  // The effect takes only a Tr2EffectRes from the manager, as Carbon's typed fetch does (Tr2Effect.cpp:397).
+  const effect = new Tr2Effect(), resource = new Tr2EffectRes();
   let acquisitions = 0, draws = 0;
   manager.GetResource = () => { acquisitions++; return resource; };
   t.after(() => { effect.Destruct(); manager.GetResource = original; });

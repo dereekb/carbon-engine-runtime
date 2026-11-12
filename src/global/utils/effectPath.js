@@ -139,9 +139,14 @@ export function EffectCarriesBackendBlock(path)
  * untouched. That is what lets a qualified path override the configured
  * default without a second mechanism.
  *
- * Fails loudly rather than degrading: an authored path with no platform name to
- * substitute would silently resolve to something no backend can load, and the
- * failure would surface much later as a missing resource.
+ * Always resolves, as Carbon's does: its platform name is a compile-time
+ * constant in every build (`TRINITY_PLATFORM_NAME`), so an authored path never
+ * lacks one. With no `options.platformName` the installed name is used, which
+ * is Carbon's stub build's name until a backend is configured.
+ *
+ * @param {string} path Authored or compiled effect path.
+ * @param {{ platformName?: string, shaderModel?: string }} [options] Overrides for the installed defaults.
+ * @returns {string} The compiled path.
  */
 export function ResolveEffectPath(path, options = {})
 {
@@ -155,15 +160,7 @@ export function ResolveEffectPath(path, options = {})
 
     if (!base.includes("/effect/")) return `${base}.${suffix}`;
 
-    const platformName = options.platformName;
-
-    if (!platformName)
-    {
-        throw new Error(
-            `runtime/core: cannot resolve ${JSON.stringify(path)} without a platform name; `
-            + "no backend is committed, so there is no compiled effect tree to resolve into"
-        );
-    }
+    const platformName = options.platformName || defaults.platformName;
 
     return `${base.replace("/effect/", `/effect.${platformName}/`)}.${suffix}`;
 }
@@ -175,16 +172,20 @@ export function ResolveEffectPath(path, options = {})
 // read at call time. Same shape as the global variable store, and the same
 // reason: an installer that swaps them must be seen by effects already built.
 //
-// Nothing is defaulted. A platform name that is absent means no backend is
-// committed, which is a real state and not a value to guess.
-let defaults = { platformName: null, shaderModel: "high" };
+// Until configuration installs one, the platform name is Carbon's stub build's,
+// "dx11" (trinityal/include/TrinityALForward.h:64-68, "to use the dx11 platform
+// specific res files as our own"), so an authored path always resolves, headless
+// included. The quality default is ours: "high" is sm_depth, where Carbon's
+// renderer starts at TR2SM_3_0_HI, sm_hi (Tr2Renderer.cpp:34).
+const CARBON_STUB_PLATFORM_NAME = "dx11";
+let defaults = { platformName: CARBON_STUB_PLATFORM_NAME, shaderModel: "high" };
 
 
 /**
  * Installs the platform name and quality tier path conversion substitutes.
  *
- * Configuration owns these. Passing null clears them, which returns the module
- * to its uncommitted state rather than to a guess.
+ * Configuration owns these. Passing null, or no platform name, returns to
+ * Carbon's stub build's name.
  *
  * @param {object|null} values `{ platformName, shaderModel }`.
  * @returns {void}
@@ -192,7 +193,7 @@ let defaults = { platformName: null, shaderModel: "high" };
 export function SetEffectPathDefaults(values = null)
 {
     defaults = {
-        platformName: values?.platformName ?? null,
+        platformName: values?.platformName || CARBON_STUB_PLATFORM_NAME,
         shaderModel: values?.shaderModel ?? "high"
     };
 }
