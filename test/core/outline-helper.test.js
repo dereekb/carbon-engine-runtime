@@ -15,7 +15,7 @@ import { CompileEffectFile } from "../../src/resource/shader/compiler/ShaderComp
 import { CjsFxEffectCompilerWebGPU } from "../../src/resource/shader/compiler/EffectCompilerWebGPU/index.js";
 import { Platform } from "../../src/resource/shader/compiler/platforms.js";
 import { LIBRARY_ROOT } from "../../scripts/shadercompiler/cbuffer-headers.mjs";
-import { StubContext } from "../support/stubContext.js";
+import { MainStubContext } from "../support/stubContext.js";
 import { composeStubResMan, StubResMan } from "../support/stubResMan.js";
 
 const compiled = new Map();
@@ -75,7 +75,7 @@ async function fixture(t, options = {})
   SetEffectPathDefaults({ platformName: "webgpu", quality: "high" });
   const outline = new TnyOutlineHelper(options);
   assert.equal(await outline.loading, true, outline.error?.stack);
-  const context = StubContext();
+  const context = MainStubContext();
   const al = context.GetRenderContextAL();
   al.BeginScene();
   const target = new Tr2RenderTarget();

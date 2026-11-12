@@ -1,4 +1,4 @@
-import { Tr2RenderContext } from "../../npm/dist/trinity/core/index.js";
+import { Tr2RenderContext, Tr2RenderContext_GetMainThreadRenderContext } from "../../npm/dist/trinity/core/index.js";
 import { Tr2RenderContextALStub, Tr2BitmapDimensions, Tr2BufferDescriptionAL } from "../../npm/dist/trinityal/index.js";
 
 import { PixelFormat, Tr2GpuUsage, Tr2CpuUsage } from "../../npm/dist/global/consts/renderContext/index.js";
@@ -28,6 +28,28 @@ export function StubContext({ width = 64, height = 64 } = {})
   al.CreateDevice({ mode: { width, height } });
 
   const context = new Tr2RenderContext();
+
+  // SetRenderContextAL returns the AL, not the context - it does not chain.
+  context.SetRenderContextAL(al);
+
+  return context;
+}
+
+/**
+ * The main-thread render context with a fresh stub backend installed and a device created.
+ * Device resources such as the blitter prepare on the main context, as Carbon's do
+ * (USE_MAIN_THREAD_RENDER_CONTEXT), so a test drawing through them must draw on it too.
+ *
+ * @param {object} [mode] The back buffer's size.
+ * @returns {Tr2RenderContext} The main context.
+ */
+export function MainStubContext({ width = 64, height = 64 } = {})
+{
+  const al = new Tr2RenderContextALStub();
+
+  al.CreateDevice({ mode: { width, height } });
+
+  const context = Tr2RenderContext_GetMainThreadRenderContext();
 
   // SetRenderContextAL returns the AL, not the context - it does not chain.
   context.SetRenderContextAL(al);
