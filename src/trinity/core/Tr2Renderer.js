@@ -268,13 +268,12 @@ export class Tr2Renderer
    *
    * @adapted Carbon also allocates the quad vertex buffer here; only the
    *   blitter, the debug line set and the quad-list index buffers are ported.
-   * @param {object} [renderContext] The context to prepare the blitter against.
    * @returns {Tr2Blitter} The renderer's blitter.
    */
-  static prepareDeviceResources(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  static prepareDeviceResources()
   {
     Tr2Renderer.#blitter ??= new Tr2Blitter();
-    if (renderContext) Tr2Renderer.#blitter.PrepareResources(renderContext);
+    Tr2Renderer.#blitter.PrepareResources();
 
     Tr2Renderer.#debugLineSet ??= new TriLineSet();
 

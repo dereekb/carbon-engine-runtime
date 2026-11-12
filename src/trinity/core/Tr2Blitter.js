@@ -13,16 +13,13 @@ import { CjsGraph } from "../../global/model/graph/CjsGraph.js";
 // overloads differ only in which arguments they pass through, so they collapse
 // into one method with defaults here.
 //
+// It is a `Tr2DeviceResource`, as Carbon's is (`Tr2Blitter.h:17`), and prepares
+// on the main-thread render context (`Tr2Blitter.cpp:180`). Registration and
+// preparation happen at first use rather than in the constructor, because the
+// host installs the main context's backend after the blitter can exist.
+//
 // WHAT IS DELIBERATELY NOT PORTED:
 //
-// - The `Tr2DeviceResource` BASE. Carbon needs it because a DX device can be
-//   lost and every registered resource rebuilt; WebGPU surfaces device loss as
-//   a promise on the device itself and nothing here rebuilds on it yet. The
-//   `PrepareResources`/`OnPrepareResources` split IS kept - that is where such
-//   a registry would hook in - but it is called from first use rather than from
-//   the constructor, because the constructor takes no render context to prepare
-//   against. NOT because a device might be missing: there is always one by then,
-//   the stub backend included, which is what runs without webgpu or webgl.
 // - `BLITCUBE_EFFECT_PATH`. Carbon declares the constant and never uses it
 //   (`Tr2Blitter.cpp:13`); transcribing dead code would imply a cube blit
 //   exists.
@@ -42,6 +39,9 @@ import { Tr2TextureReference } from "./Tr2TextureReference.js";
 import { BLIT_EFFECT_PATH, BLIT_FILTERED_EFFECT_PATH } from "#consts/effectPaths";
 import { SCREEN_QUAD_FLOATS, SCREEN_VERTEX_BYTES, Tr2RenderUtils } from "./Tr2RenderUtils.js";
 import { TriVariableContentType } from "../generated/trinityCore/enums.js";
+import { exposure as be } from "#be";
+import { Tr2DeviceResource } from "./device/Tr2DeviceResource.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "./context/Tr2RenderContext.js";
 
 
 
@@ -117,6 +117,9 @@ export class Tr2Blitter
 
   #blitFilteredEffect = null;
 
+  /** @cjs Infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   /**
    * Registers `BlitSource` on the global store and creates the two blit
    * effects, as Carbon's constructor does (`Tr2Blitter.cpp:17-26`). The blit
@@ -178,38 +181,32 @@ export class Tr2Blitter
   }
 
   /**
-   * Brings the blitter's device resources up.
+   * Carbon: Tr2DeviceResource::PrepareResources (trinity/trinity/Tr2DeviceResource.cpp:21-33), which
+   * the blitter's constructor calls (`Tr2Blitter.cpp:28`).
    *
-   * Carbon's `Tr2DeviceResource::PrepareResources` is the public entry and
-   * `OnPrepareResources` the virtual a subclass implements; the blitter's
-   * constructor calls the former (`Tr2Blitter.cpp:28`). The split is kept
-   * because the base's half is where a device-resource registry would hook in,
-   * and collapsing it would hide that seam.
-   *
-   * @param {object} renderContext The context to create against.
-   * @returns {boolean} Whether the blitter is ready to draw.
+   * @adapted Called at first use rather than construction, and renews JS residency; the base keeps
+   *   the creation gate and readiness state.
+   * @returns {boolean} False when OnPrepareResources fails.
    */
-  PrepareResources(renderContext)
+  PrepareResources()
   {
-    this._OnPrepareResources(renderContext);
-
-    return this.IsPrepared();
+    this.KeepAlive();
+    return Tr2DeviceResource.prototype.PrepareResources.call(this);
   }
 
   /**
-   * Interns the vertex declaration and creates the vertex buffer.
+   * Interns the vertex declaration and creates the vertex buffer on the main-thread render context.
    *
-   * Carbon `OnPrepareResources` (`Tr2Blitter.cpp:161-179`). Both halves test
-   * before building, so it is idempotent exactly as Carbon's is - which is what
-   * lets it be called from first use here rather than from the constructor.
-   * Carbon can call it at construction because it has a device by then; we may
-   * not.
+   * Carbon `OnPrepareResources` (`Tr2Blitter.cpp:167-185`). Both halves test before building, so it
+   * is idempotent, as Carbon's is.
    *
-   * @param {object} renderContext The context to create against.
+   * @adapted A main context with no backend installed creates no buffer, so DrawHelper refuses.
    * @returns {boolean} Carbon returns true unconditionally, and so does this.
    */
-  _OnPrepareResources(renderContext)
+  _OnPrepareResources()
   {
+    const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
+
     if (this.#screenVertexDecl === -1)
     {
       // Carbon's exact spelling: m_screenVertexDecl =
@@ -255,20 +252,25 @@ export class Tr2Blitter
     const store = Tr2VariableStore.globalStore();
     store.UnregisterVariable(BLIT_SOURCE);
     store.UnregisterVariable("mipLevel");
-    this.ReleaseResources();
+    this.#textureReference.SetTexture(null);
+    if (this.#vertexBuffer) this.#vertexBuffer.Destroy();
+    this.#vertexBuffer = null;
+    this.#screenVertexDecl = -1;
     if (this.#blitEffect) this.#blitEffect.Destruct();
     if (this.#blitFilteredEffect) this.#blitFilteredEffect.Destruct();
     this.#blitEffect = null;
     this.#blitFilteredEffect = null;
   }
 
-  /** Drops the declaration handle and the buffer, as `ReleaseResources` does. */
-  ReleaseResources()
+  /**
+   * Carbon: Tr2Blitter::ReleaseResources (trinity/trinity/Tr2Blitter.cpp:187-190): only the declaration
+   * handle is dropped; the vertex buffer is kept and released with the blitter.
+   *
+   * @implemented
+   * @param {number} _s TriStorageFlags, unused by Carbon.
+   */
+  ReleaseResources(_s)
   {
-    this.#textureReference.SetTexture(null);
-    if (this.#vertexBuffer) this.#vertexBuffer.Destroy();
-
-    this.#vertexBuffer = null;
     this.#screenVertexDecl = -1;
   }
 
@@ -297,7 +299,9 @@ export class Tr2Blitter
     // (`cpp:101-107`). The refusal is the part that ships.
     if (!material || !shader) return false;
 
-    if (!this.PrepareResources(renderContext)) return false;
+    // Carbon's device tick has prepared it (cpp:109-112 only checks); ours prepares at use.
+    this.PrepareResources();
+    if (!this.IsPrepared()) return false;
 
     if (isCameraSpace)
     {
@@ -465,4 +469,4 @@ export class Tr2Blitter
   }
 }
 
-CjsGraph.defineLifetime(Tr2Blitter, { onDestruct: Tr2Blitter.prototype.OnDestruct });
+be.inherit(Tr2DeviceResource)(Tr2Blitter);

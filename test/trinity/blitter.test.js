@@ -2,22 +2,24 @@ import { StubTarget } from "../support/stubContext.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { Tr2Blitter, Tr2RenderContext, Tr2VariableStore } from "../../npm/dist/trinity/core/index.js";
+import { Tr2Blitter, Tr2RenderContext_GetMainThreadRenderContext, Tr2VariableStore } from "../../npm/dist/trinity/core/index.js";
 import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
 import { Topology } from "../../npm/dist/global/consts/renderContext/index.js";
 import { SCREEN_VERTEX_BYTES } from "../../npm/dist/trinity/core/index.js";
 import { Tr2EffectStateManager } from "../../npm/dist/trinity/shader/index.js";
 import { ALResult } from "../../npm/dist/trinityal/index.js";
 import { Tr2Renderer } from "../../npm/dist/trinity/core/Tr2Renderer.js";
+import { TriDevice } from "../../npm/dist/trinity/index.js";
+import { TriStorageFlags } from "../../npm/dist/global/consts/graphics/index.js";
 
-/** A Tr2RenderContext with the stub backend installed, which is what Carbon ships. */
+/** The main-thread render context with the stub backend installed; the blitter prepares on it, as Carbon's does (Tr2Blitter.cpp:180). */
 function stubContext()
 {
   const al = new Tr2RenderContextALStub();
 
   al.CreateDevice({ mode: { width: 64, height: 64 } });
 
-  const context = new Tr2RenderContext();
+  const context = Tr2RenderContext_GetMainThreadRenderContext();
 
   // SetRenderContextAL returns the AL, not the context - it is not a chaining
   // setter, so this cannot be a one-liner.
@@ -48,7 +50,7 @@ test("the screen-vertex declaration is built, and its ledger matches the stride"
   const context = stubContext();
   const blitter = new Tr2Blitter();
 
-  blitter.PrepareResources(context);
+  blitter.PrepareResources();
 
   // Carbon builds this with two Add calls and sizes the buffer with
   // sizeof(Tr2ScreenVertex) - two sources of truth that must agree. The
@@ -161,18 +163,18 @@ test("resources are prepared once and released together", () =>
   const blitter = new Tr2Blitter();
 
   assert.equal(blitter.IsPrepared(), false);
-  assert.equal(blitter.PrepareResources(context), true);
+  assert.equal(blitter.PrepareResources(), true);
   assert.equal(blitter.IsPrepared(), true);
 
   // Idempotent, as Carbon's OnPrepareResources is: both halves test before
   // building.
-  assert.equal(blitter.PrepareResources(context), true);
+  assert.equal(blitter.PrepareResources(), true);
 
   blitter.ReleaseResources();
   assert.equal(blitter.IsPrepared(), false);
 
   // And it comes back, which is the point of releasing rather than destroying.
-  assert.equal(blitter.PrepareResources(context), true);
+  assert.equal(blitter.PrepareResources(), true);
 });
 
 test("Draw__Texture picks the filtered effect only for linear, and refuses a missing one", () =>
@@ -197,3 +199,23 @@ test("Draw__Texture picks the filtered effect only for linear, and refuses a mis
   assert.equal(partial.Draw__Texture(context, { id: "t" }, undefined, undefined, 1), false);
 });
 
+
+test("the blitter is a device resource: registered at use, exempt from idle purge, unregistered on Destruct (Tr2Blitter.h:17)", () =>
+{
+  stubContext();
+  const blitter = new Tr2Blitter();
+  assert.equal(TriDevice.GetResourcesRegistered().includes(blitter), false);
+
+  assert.equal(blitter.PrepareResources(), true);
+  assert.equal(TriDevice.GetResourcesRegistered().includes(blitter), true);
+  assert.equal(blitter._neverPurge, true);
+
+  // Carbon's release drops only the declaration handle (Tr2Blitter.cpp:187-190); prepare restores it.
+  blitter.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
+  assert.equal(blitter.IsPrepared(), false);
+  assert.equal(blitter.PrepareResources(), true);
+  assert.equal(blitter.IsPrepared(), true);
+
+  blitter.Destruct();
+  assert.equal(TriDevice.GetResourcesRegistered().includes(blitter), false);
+});

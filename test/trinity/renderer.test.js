@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PER_FRAME_PS, PER_FRAME_VS, Tr2Blitter, Tr2RenderContext, Tr2Renderer } from "../../npm/dist/trinity/core/index.js";
+import { PER_FRAME_PS, PER_FRAME_VS, Tr2Blitter, Tr2RenderContext_GetMainThreadRenderContext, Tr2Renderer } from "../../npm/dist/trinity/core/index.js";
 import { Tr2RenderContextALStub } from "../../npm/dist/trinityal/index.js";
 
-/** A Tr2RenderContext with the stub backend installed, which is what runs without webgpu or webgl. */
+/** The main-thread render context with the stub backend installed; the blitter prepares on it (Tr2Blitter.cpp:180). */
 function stubContext()
 {
   const al = new Tr2RenderContextALStub();
 
   al.CreateDevice({ mode: { width: 64, height: 64 } });
 
-  const context = new Tr2RenderContext();
+  const context = Tr2RenderContext_GetMainThreadRenderContext();
 
   context.SetRenderContextAL(al);
   return context;
@@ -117,7 +117,7 @@ test("a prepared renderer actually reaches the blitter", () =>
   const renderer = new Tr2Renderer();
   const context = stubContext();
 
-  Tr2Renderer.prepareDeviceResources(context);
+  Tr2Renderer.prepareDeviceResources();
 
   const drawn = material();
 
@@ -132,7 +132,7 @@ test("a null material is refused by the renderer as it is by the blitter", () =>
   const renderer = new Tr2Renderer();
   const context = stubContext();
 
-  Tr2Renderer.prepareDeviceResources(context);
+  Tr2Renderer.prepareDeviceResources();
 
   assert.equal(Tr2Renderer.drawScreenQuad(context, null), false);
 });

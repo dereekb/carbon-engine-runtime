@@ -1664,7 +1664,7 @@ export class EveSpaceSceneRenderDriver
     if (this._preparedContext === renderContext) return;
 
     this._gpuResourcePool.SetRenderContext(renderContext);
-    Tr2Renderer.prepareDeviceResources(renderContext);
+    Tr2Renderer.prepareDeviceResources();
     this._preparedContext = renderContext;
   }
 
