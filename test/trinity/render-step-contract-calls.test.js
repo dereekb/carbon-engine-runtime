@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ITr2Scene, ITr2MultiPassScene, ITr2VisualizationModeRenderer, Tr2RenderContext, Tr2RenderTarget, Tr2LineGraph } from "../../npm/dist/trinity/core/index.js";
+import { Tr2Renderer } from "../../npm/dist/trinity/index.js";
 import { TriRenderStep, TriStepRenderScene, TriStepRenderPass, TriStepSetVisualizationMode, TriStepRenderTexture, TriStepRenderLineGraph } from "../../npm/dist/trinity/renderJob/index.js";
 import { BlueScriptCallback } from "../../npm/dist/blue/exposure/BlueScriptCallback.js";
 import { StubContext, StubTarget } from "../support/stubContext.js";
@@ -46,17 +47,17 @@ test("render-texture requires the provider's GetTexture", () =>
   assert.throws(() => step.Execute(0, 0, new Tr2RenderContext()), /GetTexture/);
 });
 
-test("render-texture skips a provider without a texture", () =>
+test("render-texture skips a provider without a texture", t =>
 {
   const step = new TriStepRenderTexture();
   const context = new Tr2RenderContext();
-  context.GetBlitter = () => { throw new Error("Must not draw an absent texture"); };
+  t.mock.method(Tr2Renderer, "drawTexture", () => { throw new Error("Must not draw an absent texture"); });
   assert.equal(step.Execute(0, 0, context), TriRenderStep.Result.RS_OK);
   step.texture = new Tr2RenderTarget();
   assert.equal(step.Execute(0, 0, context), TriRenderStep.Result.RS_OK);
 });
 
-test("render-texture passes the borrowed texture to the blitter and preserves textureSize", t =>
+test("render-texture passes the borrowed texture to Tr2Renderer.drawTexture and preserves textureSize", t =>
 {
   const context = StubContext();
   t.after(() => context.GetRenderContextAL().Destroy());
@@ -67,15 +68,15 @@ test("render-texture passes the borrowed texture to the blitter and preserves te
   provider.GetTexture = () => { getters++; return texture; };
   provider.GetWidth = () => { throw new Error("Not part of ITr2TextureProvider"); };
   provider.GetHeight = provider.GetWidth;
-  const blitter = context.GetBlitter();
   const calls = [];
-  blitter.Draw__Texture = (...args) => { calls.push(args); return true; };
+  // Carbon: Tr2Renderer::DrawTexture( renderContext, texture, tlTexCoord, brTexCoord ) (TriStepRenderTexture.cpp:56).
+  t.mock.method(Tr2Renderer, "drawTexture", (...args) => { calls.push(args); return true; });
   const step = new TriStepRenderTexture();
   step.texture = provider;
   step.textureSize.set([7, 8]);
   assert.equal(step.Execute(0, 0, context), TriRenderStep.Result.RS_OK);
   assert.equal(getters, 2);
-  assert.deepEqual(calls, [[context, texture, step.tlTexCoord, step.brTexCoord]]);
+  assert.deepEqual(calls, [[context, texture, { tlTexCoord: step.tlTexCoord, brTexCoord: step.brTexCoord }]]);
   assert.deepEqual([...step.textureSize], [7, 8]);
 });
 

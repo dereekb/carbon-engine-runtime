@@ -29,7 +29,6 @@ import { Tr2RenderBatch } from "../batch/TriRenderBatch/index.js";
 import { Tr2Shader } from "../../shader/Tr2Shader.js";
 import { Tr2EffectStateManager } from "../../shader/Tr2EffectStateManager.js";
 import { Tr2RenderContextALStub } from "../../../trinityal/stub/Tr2RenderContextALStub/index.js";
-import { Tr2Blitter } from "../Tr2Blitter.js";
 import { RealizeBatchGeometry, ReleaseSharedGeometryBuffer, ResolveWireframeDraw } from "../mesh/TriGeometryResAllocations.js";
 import { Tr2RingBuffer } from "../device/Tr2RingBuffer/Tr2RingBuffer.js";
 
@@ -87,9 +86,6 @@ export class Tr2RenderContext
 
   /** m_esm */
   _esm = new Tr2EffectStateManager().SetRenderContext(this);
-
-  /** Carbon's s_blitter, per context rather than per process; see GetBlitter. */
-  _blitter = null;
 
   _depthStencil = null;
 
@@ -212,8 +208,6 @@ export class Tr2RenderContext
     this._esm.Destruct();
     this._esm.ReleaseRealizedObjects();
     for (const buffer of this._perObjectConstantBuffers) buffer.Destroy();
-    if (this._blitter) this._blitter.Destruct();
-    this._blitter = null;
     ReleaseSharedGeometryBuffer(this);
     this._al.Destroy();
   }
@@ -787,30 +781,6 @@ export class Tr2RenderContext
   SetShaderProgram(shaderProgram)
   {
     return this._requireAL("SetShaderProgram").SetShaderProgram(shaderProgram);
-  }
-
-  /**
-   * The fullscreen-quad blitter, created on first use.
-   *
-   * WHERE CARBON PUTS IT, AND WHY WE DO NOT. Carbon holds one in a file-scope
-   * `s_blitter` in `Tr2Renderer.cpp:25`, immediately under its own comment:
-   * "The whole s_blitter thing needs to be rethough anyway." Its
-   * `DrawTexture`/`DrawFullScreenWithShader` statics are three-line wrappers
-   * that null-check it.
-   *
-   * Ours is per-context because `Tr2Renderer` here is deliberately NOT a
-   * process-wide singleton - see that file's head comment, which explains that
-   * two libraries with two resource managers would silently share one. The
-   * blitter owns a vertex buffer created against a context, so a context is
-   * exactly the lifetime it wants, and every render step already has one.
-   *
-   * @returns {Tr2Blitter} The blitter.
-   */
-  GetBlitter()
-  {
-    this._blitter ??= new Tr2Blitter();
-
-    return this._blitter;
   }
 
   // Carbon's four immediate draws (Tr2RenderContext.h). Trinity calls these

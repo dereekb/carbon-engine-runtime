@@ -188,10 +188,12 @@ test("portable generated render steps initialize and emit backend-neutral work",
   renderObject.Execute(0, 0, context);
   assertEquals(collectedTypes.join(","), "0,1,2,4");
 
-  // TriStepRenderEffect blits through Tr2Blitter now. The shader buffer must be
+  // TriStepRenderEffect blits through the renderer's one Tr2Blitter (Tr2Renderer.cpp:25), which exists once the
+  // renderer has prepared its device resources (cpp:1283-1291). The shader buffer must be
   // applied BEFORE the draw (Carbon cpp:34-38), because the draw runs every pass
   // and each one reads whatever the buffer bound.
   const effectOrder = [];
+  Tr2Renderer.prepareDeviceResources();
   const renderEffect = new TriStepRenderEffect();
   renderEffect.__init__(
     // The draw attempt is the blitter asking IsGood; it still comes after the buffer.

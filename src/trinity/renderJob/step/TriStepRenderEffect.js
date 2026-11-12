@@ -4,7 +4,7 @@ import { exposure as be } from "#be";
 import { type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { vec2 } from "#math/vec2";
-import { Tr2RenderUtils } from "../../core/Tr2RenderUtils.js";
+import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 
 /** A render step that draws a full-screen effect with an optional shader buffer. */
 @be.define("TriStepRenderEffect")
@@ -52,13 +52,13 @@ export class TriStepRenderEffect extends TriRenderStep
    * there is one, then `Tr2Renderer::DrawTexture( renderContext, m_effect,
    * m_tlTexCoord, m_brTexCoord )`. That overload adjusts the texture
    * coordinates to the viewport and hands them to `Tr2Blitter::Draw`
-   * (`Tr2Renderer.cpp:803-814`), which is what these two lines are.
+   * (`Tr2Renderer.cpp:806-817`); nothing is drawn until the renderer has prepared its blitter.
    *
    * THE ORDER IS CARBON'S AND IT MATTERS: the buffer is applied BEFORE the
    * draw, because the draw runs every pass of the effect and each pass reads
    * whatever the buffer bound.
    *
-   * @adapted
+   * @implemented
    */
 
   Execute(_realTime, _simTime, renderContext)
@@ -67,9 +67,7 @@ export class TriStepRenderEffect extends TriRenderStep
 
     if (this.shaderBuffer) this.shaderBuffer.ApplyBuffer(renderContext);
 
-    const adjusted = Tr2RenderUtils.adjustTextureCoordsToViewport(renderContext, this.tlTexCoord, this.brTexCoord);
-
-    renderContext.GetBlitter().Draw__EffectTexCoords(renderContext, this.effect, adjusted.tlTexCoord, adjusted.brTexCoord);
+    Tr2Renderer.DrawTexture__EffectTexCoords(renderContext, this.effect, this.tlTexCoord, this.brTexCoord);
 
     return TriRenderStep.Result.RS_OK;
   }

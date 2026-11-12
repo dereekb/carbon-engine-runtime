@@ -6,6 +6,7 @@ import { Tr2DepthStencil } from "../../core/device/Tr2DepthStencil.js";
 import { CjsSchema, type } from "#schema";
 import { TriRenderStep } from "./TriRenderStep.js";
 import { vec2 } from "#math/vec2";
+import { Tr2Renderer } from "../../core/Tr2Renderer.js";
 
 /** A render step that draws a provided texture into the current target. */
 @be.define("TriStepRenderTexture")
@@ -87,9 +88,9 @@ export class TriStepRenderTexture extends TriRenderStep
    * Blits the bound texture into the current target.
    *
    * Carbon `Execute` (`TriStepRenderTexture.cpp:50-71`) calls
-   * `Tr2Renderer::DrawTexture`, which is a three-line wrapper around
-   * `Tr2Blitter::Draw`. Ours reaches the blitter through the render context;
-   * see `Tr2RenderContext.GetBlitter` for why it lives there. The provider must
+   * `Tr2Renderer::DrawTexture` (`Tr2Renderer.cpp:780-791`), which adjusts the
+   * coordinates to the viewport and draws through the renderer's one blitter;
+   * nothing is drawn, and the step clears, until the renderer has prepared it. The provider must
    * supply GetTexture; the blitter receives its borrowed AL texture. As in the
    * native non-atlas branch, textureSize remains unchanged.
    *
@@ -108,7 +109,7 @@ export class TriStepRenderTexture extends TriRenderStep
 
     if (!source || !source.GetTexture()) return TriRenderStep.Result.RS_OK;
 
-    const drawn = renderContext.GetBlitter().Draw__Texture(renderContext, source.GetTexture(), this.tlTexCoord, this.brTexCoord);
+    const drawn = Tr2Renderer.drawTexture(renderContext, source.GetTexture(), { tlTexCoord: this.tlTexCoord, brTexCoord: this.brTexCoord });
 
     return this.ClearIfFail(drawn, renderContext);
   }
