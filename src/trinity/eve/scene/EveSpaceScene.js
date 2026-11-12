@@ -2069,14 +2069,14 @@ export class EveSpaceScene
    * @implemented
    */
 
-  OnModified(property, renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  OnModified(property)
   {
     if (IsMatch(property, "reflectionProbe") || IsMatch(property, "envMapResPath"))
     {
       this._staticEnvMapTextureRes = null;
       if (this._staticEnvMapHandle)
         this._staticEnvMapTextureRes = blue.resMan.GetResource(this.envMapResPath);
-      if (this.reflectionProbe && this.reflectionProbe.IsValid(renderContext))
+      if (this.reflectionProbe && this.reflectionProbe.IsValid())
       {
         this._envMapTextureRes = this.reflectionProbe.GetReflection();
         this.reflectionProbe.SetBackLightColor(this.reflectionBackLightingColor);
@@ -2092,7 +2092,7 @@ export class EveSpaceScene
         this[field] = blue.resMan.GetResource(this[field + "ResPath"]);
     }
     if ((IsMatch(property, "reflectionBackLightingColor") || IsMatch(property, "reflectionBackLightingContrast"))
-      && this.reflectionProbe && this.reflectionProbe.IsValid(renderContext))
+      && this.reflectionProbe && this.reflectionProbe.IsValid())
     {
       if (IsMatch(property, "reflectionBackLightingColor")) this.reflectionProbe.SetBackLightColor(this.reflectionBackLightingColor);
       if (IsMatch(property, "reflectionBackLightingContrast")) this.reflectionProbe.SetBackLightContrast(this.reflectionBackLightingContrast);
@@ -2239,20 +2239,17 @@ export class EveSpaceScene
   /**
    * Loads the nebula/reflection and registers initial scene objects (cpp:3207-3263).
    *
-   * @adapted the optional render context supports the probe validity query;
-   *   Carbon obtains its main-thread context internally. BoneTransforms is
-   *   already registered at construction, before any object effect can map it.
-   * @param {Tr2RenderContext} [renderContext] The frame's context.
+   * @adapted BoneTransforms is already registered at construction, before any object effect can map it.
    * @returns {boolean} True.
    */
 
-  Initialize(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  Initialize()
   {
     this._staticEnvMapTextureRes = this.envMapResPath
       ? blue.resMan.GetResource(this.envMapResPath)
       : null;
 
-    if (this.reflectionProbe && this.reflectionProbe.IsValid(renderContext))
+    if (this.reflectionProbe && this.reflectionProbe.IsValid())
     {
       this._envMapTextureRes = this.reflectionProbe.GetReflection();
       this.reflectionProbe.SetBackLightColor(this.reflectionBackLightingColor);

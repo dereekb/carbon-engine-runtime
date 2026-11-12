@@ -10,11 +10,16 @@ import { IRoot } from "../../../blue/exposure/IRoot.js";
 import { type } from "#schema";
 import { Succeeded } from "../../../trinityal/ALResult.js";
 import { Tr2SwapChainAL } from "../../../trinityal/Tr2SwapChainAL/index.js";
+import { Tr2DeviceResource } from "./Tr2DeviceResource.js";
+import { Tr2RenderContext_GetMainThreadRenderContext } from "../context/Tr2RenderContext.js";
 
-/** Tr2SwapChain (trinityCore) - generated from schema shapeHash 955529ab.... */
+/**
+ * Presents into a window through its AL swap chain.
+ * Carbon: Tr2SwapChain (trinity/trinity/Tr2SwapChain.h:16-17)
+ */
 @be.define({
   name: "Tr2SwapChain",
-  inherit: [ IRoot ],
+  inherit: [ IRoot, Tr2DeviceResource ],
   // Tr2SwapChain_Blue.cpp:12-21, in Carbon's order.
   members: [
     [ be.ATTR, "backBuffer", be.READ ],
@@ -46,51 +51,47 @@ export class Tr2SwapChain extends IRoot
   /** m_windowHandle */
   #windowHandle = 0;
 
+  /** @cjs Presentation infrastructure lives until explicit teardown, never idle purge. */
+  _neverPurge = true;
+
   /**
    * Records the window and brings the chain up.
+   * Carbon: Tr2SwapChain::CreateForWindow (trinity/trinity/Tr2SwapChain.cpp:13-22).
    *
-   * Carbon reads the context from `USE_MAIN_THREAD_RENDER_CONTEXT()`
-   * (`Tr2SwapChain.cpp:31`), a macro over a process-wide main-thread context we
-   * do not have. It is passed instead, as `Tr2Blitter.PrepareResources` already
-   * does.
-   *
-   * @adapted Carbon reaches the main-thread render context through a macro over process-wide
-   *   state; the context is an argument here, as it is for Tr2Blitter.
+   * @implemented
    * @param {number|object} windowHandle The window to present into.
-   * @param {object} renderContext The context to create against.
    * @returns {boolean} Whether the chain came up.
    */
-  CreateForWindow(windowHandle, renderContext)
+  CreateForWindow(windowHandle)
   {
     this.#windowHandle = windowHandle;
 
-    return this.PrepareResources(renderContext);
+    return this.PrepareResources();
   }
 
   /**
-   * Carbon's `Tr2DeviceResource::PrepareResources` half; see `Tr2Blitter` for
-   * why the split is kept rather than collapsed.
+   * Carbon: Tr2DeviceResource::PrepareResources (trinity/trinity/Tr2DeviceResource.cpp:21-33).
    *
-   * @implemented
-   * @param {object} renderContext The context to create against.
-   * @returns {boolean} Whether the chain came up.
+   * @adapted Explicit preparation renews JS residency; the base keeps the creation gate and readiness state.
+   * @returns {boolean} False when OnPrepareResources fails.
    */
-  PrepareResources(renderContext)
+  PrepareResources()
   {
-    return this._OnPrepareResources(renderContext);
+    this.KeepAlive();
+    return Tr2DeviceResource.prototype.PrepareResources.call(this);
   }
 
   /**
-   * Creates the AL swap chain and refreshes the mirrored dimensions.
+   * Creates the AL swap chain on the main-thread render context.
    * Carbon OnPrepareResources (Tr2SwapChain.cpp:29-48).
    *
    * @adapted Omits Carbon's depth-stencil creation and back-buffer attachment.
-   * @param {Tr2RenderContext} renderContext The context to create against.
    * @returns {boolean} Whether the AL chain came up.
    */
 
-  _OnPrepareResources(renderContext)
+  _OnPrepareResources()
   {
+    const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
     if (!Succeeded(this.#swapChain.Create(this.#windowHandle, renderContext))) return false;
 
     return true;

@@ -17,8 +17,8 @@ import { INotify } from "../../blue/exposure/INotify.js";
 // reflection pass and refuses by name until it is ported.
 //
 // THE RENDER CONTEXT. Carbon reaches the main-thread context through
-// USE_MAIN_THREAD_RENDER_CONTEXT(); ours is Tr2RenderContext_GetMainThreadRenderContext(),
-// the default here, with an optional trailing context.
+// USE_MAIN_THREAD_RENDER_CONTEXT(); ours is Tr2RenderContext_GetMainThreadRenderContext().
+// Preparation takes no context, as Carbon's does; Filter takes the drawing one.
 import { type } from "#schema";
 import { vec3 } from "#math/vec3";
 import { vec4 } from "#math/vec4";
@@ -36,6 +36,7 @@ import { Tr2Effect } from "../shader/Tr2Effect.js";
 import { Tr2RuntimeTextureParameter } from "../shader/parameter/Tr2RuntimeTextureParameter.js";
 import { blue, EnumRegistrationType } from "#blue";
 import { TriStorageFlags } from "#consts/graphics";
+import { Tr2DeviceResource } from "./device/Tr2DeviceResource.js";
 
 /** Carbon's MIP_COUNT (`cpp:15`): filtered levels below the top. */
 const MIP_COUNT = 7;
@@ -50,10 +51,13 @@ const PRE_FILTER_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/
 const FILTER_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/ReflectionFilterActivision128.fx";
 const COPY_MIP_EFFECT = "res:/graphics/effect/managed/space/System/Reflection/CopyCube.fx";
 
-/** Filters a cube into the prefiltered HDR reflection cube Eve's scene binds as its environment map. */
+/**
+ * Filters a cube into the prefiltered HDR reflection cube Eve's scene binds as its environment map.
+ * Carbon: Tr2ReflectionProbe (trinity/trinity/Tr2ReflectionProbe.h:15-17)
+ */
 @be.define({
   name: "Tr2ReflectionProbe",
-  inherit: [ INotify ],
+  inherit: [ INotify, Tr2DeviceResource ],
   // Tr2ReflectionProbe_Blue.cpp:18-36, in Carbon's order.
   interfaces: [ INotify ],
   members: [
@@ -180,15 +184,29 @@ export class Tr2ReflectionProbe
   }
 
   /**
-   * Carbon `IsValid` (`cpp:63-66`): whether the probe's resources are ready.
+   * Carbon `IsValid` (`cpp:63-66`): prepares, and answers whether the probe's resources are ready.
    *
    * @implemented
    * @returns {boolean} True when prepared.
    */
 
-  IsValid(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  IsValid()
   {
-    return this._OnPrepareResources(renderContext);
+    return this.PrepareResources();
+  }
+
+  /**
+   * Carbon: Tr2DeviceResource::PrepareResources (trinity/trinity/Tr2DeviceResource.cpp:21-33), which the
+   * probe's constructor and IsValid call (Tr2ReflectionProbe.cpp:55, 63-66).
+   *
+   * @adapted Called at use rather than construction, and renews JS residency; the base keeps the creation
+   *   gate and readiness state.
+   * @returns {boolean} False when OnPrepareResources fails.
+   */
+  PrepareResources()
+  {
+    this.KeepAlive();
+    return Tr2DeviceResource.prototype.PrepareResources.call(this);
   }
 
   /**
@@ -263,12 +281,13 @@ export class Tr2ReflectionProbe
    * UAV-compatible, `cpp:234-236`). WebGPU cannot write R11G11B10 from compute,
    * so it takes Carbon's DX12 fallback.
    *
-   * @adapted
+   * @adapted RGBA16F on every backend: WebGPU cannot write R11G11B10 from compute.
    * @returns {boolean} Whether the resources are ready.
    */
 
-  _OnPrepareResources(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  _OnPrepareResources()
   {
+    const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
     const al = renderContext.GetRenderContextAL();
 
     if (!(al.constructor.SHADER_TYPE_MASK & (1 << ShaderType.COMPUTE_SHADER))) return false;
@@ -409,7 +428,7 @@ export class Tr2ReflectionProbe
 
   Filter(renderContext)
   {
-    if (!this.IsValid(renderContext)) return;
+    if (!this.IsValid()) return;
 
     if (this.hollywoodMode)
     {
@@ -439,8 +458,9 @@ export class Tr2ReflectionProbe
    *
    * @implemented
    */
-  RunFilter(renderContext = Tr2RenderContext_GetMainThreadRenderContext())
+  RunFilter()
   {
+    const renderContext = Tr2RenderContext_GetMainThreadRenderContext();
     this.DestroyRenderTargets();
     this.DoPrepareResources(PixelFormat.PIXEL_FORMAT_R16G16B16A16_FLOAT, renderContext);
     this.Filter(renderContext);
