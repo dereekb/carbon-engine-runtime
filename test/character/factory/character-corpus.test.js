@@ -128,7 +128,15 @@ test("the character readers and the factory keep every field of a real build", {
     {
         const raw = (await Raw(path)).filter(item => item !== null && typeof item === "object" && !Array.isArray(item));
         const recipe = await CjsCharacterFactory.fetchRecipe(path);
-        const { dna } = await CjsCharacterFactory.readRecipe(path, recipe.sex || "female");
+        // A recipe holding entries the paper doll does not apply throws, naming them; the DNA it would give keeps every
+        // entry as `modifierValues` reads it.
+        let dna;
+        try { ({ dna } = await CjsCharacterFactory.readRecipe(path, recipe.sex || "female")); }
+        catch (error)
+        {
+            if (!/^No paper doll rule for \d+ entries of the recipe /u.test(error.message)) throw error;
+            dna = { modifiers: recipe.modifiers.map(entry => CjsCharacterFactory.modifierValues(entry)) };
+        }
         if (dna.modifiers.length !== raw.length) { failures.push(path + ": " + raw.length + " entries, the DNA keeps " + dna.modifiers.length); continue; }
         raw.forEach((entry, i) =>
         {

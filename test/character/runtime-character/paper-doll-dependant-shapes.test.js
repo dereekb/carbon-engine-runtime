@@ -52,27 +52,45 @@ test("boot-tucking requests carry no owner, and occlusions protect none", () =>
         standard.occludesModifiers.map(value => [ value, null ]));
 });
 
-test("every dependant entry without a rule throws, naming its kind, entry and file", () =>
+test("every dependant's utility shapes apply as authored; an entry naming no utility shape throws, with its kind, entry and file", () =>
 {
+    // Drape: a request for the garment, and weighted occlusions that set their morphs.
+    const shapes = CjsPaperDollInstance.dependantShapes([ Dependant("dependants/drape/outer", [ "utilityshapes/pinchhipsshape" ]),
+        Dependant("dependants/drape/standard", [], [ "utilityshapes/pushdrapeshape#0.25", "utilityshapes/pushhemshape#0.25" ]) ]);
+    assert.deepEqual(shapes.requests.map(value => value.modifierPath), [ "utilityshapes/pinchhipsshape" ]);
+    assert.deepEqual(shapes.occlusions.map(value => [ value.targetName, value.weight, value.protectedOwner ]), [ [ "pushdrapeshape", .25, null ], [ "pushhemshape", .25, null ] ]);
     const missing = (dependant, pattern) => assert.throws(() => CjsPaperDollInstance.dependantShapes([ standard, dependant ]), pattern);
-    // Kinds with no rule yet: drape and waist tucking (weighted occlusions), the hood (a part occlusion).
-    missing(Dependant("dependants/drape/outer", [ "utilityshapes/pinchhipsshape" ]),
-        /^Error: No paper doll rule for the dependants\/drape dependantModifiers entry utilityshapes\/pinchhipsshape in res:\/graphics\/character\/male\/paperdoll\/dependants\/drape\/outer\/metadata\.yaml$/u);
-    missing(Dependant("dependants/drape/standard", [], [ "utilityshapes/pinchhipsshape#0.01" ]), /dependants\/drape occludesModifiers entry utilityshapes\/pinchhipsshape#0\.01/u);
-    missing(Dependant("dependants/waisttucking/standard", [], [ "dependants/tuck" ]), /dependants\/waisttucking occludesModifiers entry dependants\/tuck/u);
+    missing(Dependant("dependants/waisttucking/standard", [], [ "dependants/tuck" ]),
+        /^Error: No paper doll rule for the dependants\/waisttucking occludesModifiers entry dependants\/tuck in res:\/graphics\/character\/male\/paperdoll\/dependants\/waisttucking\/standard\/metadata\.yaml$/u);
     missing(Dependant("dependants/hood/robeam1", [], [ "hair" ], "v1"), /dependants\/hood occludesModifiers entry hair in .*robeam1\/v1\/metadata\.yaml/u);
-    // Within boot tucking, an entry naming no utility shape (female standard/v1).
     missing(Dependant("dependants/boottucking/standard", [], [ "dependants/bootmasks" ], "v1"), /dependants\/boottucking occludesModifiers entry dependants\/bootmasks/u);
-    // A folder that only starts with the same letters is not boot tucking.
-    missing(Dependant("dependants/boottuckingx", [ "utilityshapes/pantstuckshinshape" ]), /dependants\/boottuckingx dependantModifiers/u);
+    missing(Dependant("dependants/torso/torso_nude", [ "dependants/ragdoll/ragdollhair" ]), /dependants\/torso dependantModifiers entry dependants\/ragdoll\/ragdollhair/u);
 });
 
-test("a worn item's own utility shapes decode, and a weighted occlusion throws", () =>
+test("a weighted occlusion sets its morph while worn, over every request; two weights for one morph throw", () =>
+{
+    const request = (owner, value) => ({ ...decodeUtilityShape(value), owner });
+    const setting = (owner, value) => ({ ...CjsCharacterAppearanceResolver.decodeUtilityOcclusion(value), protectedOwner: null, owner });
+    const groups = resolveUtilityShapes([ request("topMiddle", "utilityshapes/pinchrighthipsshape"), request("bottomOuter", "utilityshapes/pushhemmidshape###0.35") ],
+        [ setting("topMiddle", "utilityshapes/PinchRightHipsShape#2.0"), setting("bottomOuter", "utilityshapes/pushjackethighshape#-0.25") ]);
+    assert.deepEqual(groups.map(group => [ group.modifierPath, group.suppressed.length, group.retained.map(value => [ value.targetName, value.weight, value.owner ]) ]), [
+        [ "utilityshapes/pinchrighthipsshape", 1, [ [ "PinchRightHipsShape", 2, "topMiddle" ] ] ],
+        [ "utilityshapes/pushhemmidshape", 0, [ [ "pushhemmidshape", .35, "bottomOuter" ] ] ],
+        // Set though nothing requests it.
+        [ "utilityshapes/pushjackethighshape", 0, [ [ "pushjackethighshape", -0.25, "bottomOuter" ] ] ]
+    ]);
+    assert.throws(() => resolveUtilityShapes([], [ setting("a", "utilityshapes/pinchhipsshape#0.01"), setting("b", "utilityshapes/pinchhipsshape#2.0") ]),
+        /^Error: No paper doll rule for utilityshapes\/pinchhipsshape set to 0\.01 and 2 at once$/u);
+});
+
+test("a worn item's own utility shapes decode, weighted occlusions included", () =>
 {
     const item = (dependantModifiers, occludesModifiers) => ({ metadataPath: "res:/graphics/character/female/paperdoll/topmiddle/x/metadata.yaml", dependantModifiers, occludesModifiers });
     const shapes = CjsPaperDollInstance.itemShapes(item([ "utilityshapes/pushhemmidshape###0.35", "dependants/drape/standard" ], [ "utilityshapes/tucktopshape", "dependants/tuck", "hair" ]));
     assert.deepEqual(shapes.requests, [ decodeUtilityShape("utilityshapes/pushhemmidshape###0.35") ]);
     assert.deepEqual(shapes.occlusions.map(value => value.modifierPath), [ "utilityshapes/tucktopshape" ]);
-    assert.throws(() => CjsPaperDollInstance.itemShapes(item([], [ "utilityshapes/pinchrighthipsshape#2.0" ])),
-        /^Error: No paper doll rule for the occludesModifiers entry utilityshapes\/pinchrighthipsshape#2\.0 in res:\/graphics\/character\/female\/paperdoll\/topmiddle\/x\/metadata\.yaml$/u);
+    assert.deepEqual(CjsPaperDollInstance.itemShapes(item([], [ "utilityshapes/pinchrighthipsshape#2.0" ])).occlusions,
+        [ { modifierPath: "utilityshapes/pinchrighthipsshape", targetName: "pinchrighthipsshape", weight: 2 } ]);
+    assert.throws(() => CjsPaperDollInstance.itemShapes(item([], [ "utilityshapes/pinchrighthipsshape#2.0#1" ])),
+        /^Error: No paper doll rule for the occludesModifiers entry utilityshapes\/pinchrighthipsshape#2\.0#1 in res:\/graphics\/character\/female\/paperdoll\/topmiddle\/x\/metadata\.yaml$/u);
 });

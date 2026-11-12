@@ -267,10 +267,12 @@ export class CjsCharacterFactory
      * Reads a `.prs` recipe into a DNA: each entry's category and option from the parts library
      * (`ResolveRecipeEntry`), set on, at its weight, with its own colours (and their specular colours) or the palette
      * its colour variation names. An archetype entry sets the archetype (the library's option path). An entry the library
-     * marks nude (`feet_nude`) turns its part off. What
-     * cannot apply is reported: an entry in no category or one with no paper doll part, an entry no option presets that
-     * is not a garment (a garment takes the part's `recipe` option, `FetchRecipeOption`, where the build ships its
-     * folder), and the entries of parts not applied yet (`notAppliedYet`). Every entry, applied or not, is kept in the DNA's
+     * marks nude (`feet_nude`) turns its part off. An entry the paper doll does not apply throws (operator,
+     * 2026-11-12: a rule not handled throws), all of them named in one error: an entry in no category or one with no
+     * paper doll part, an entry no option presets that is not a garment (a garment takes the part's `recipe` option,
+     * `FetchRecipeOption`, where the build ships its folder), an archetype entry with no archetype, and the entries of
+     * parts not applied yet (`notAppliedYet`). What an applied entry cannot apply (a palette, a pattern's colours) is
+     * reported. Every entry, applied or not, is kept in the DNA's
      * `modifiers` as read (`modifierValues`), so nothing the recipe states is lost.
      * PROVISIONAL: the colour fields, as `_applyColors`.
      *
@@ -278,7 +280,7 @@ export class CjsCharacterFactory
      * @param {string} path The recipe's `res:` path.
      * @param {string} [sex=""] The sex, for a recipe that names none (5 of 63 shipped).
      * @returns {Promise<{ dna: { sex: string, parts: Object<string, object> }, problems: string[] }>}
-     * @throws {Error} For a recipe and a call that name no sex.
+     * @throws {Error} For a recipe and a call that name no sex, and for entries the paper doll does not apply.
      */
     static async readRecipe(path, sex = "")
     {
@@ -286,21 +288,21 @@ export class CjsCharacterFactory
         const recipeSex = recipe.sex || sex;
         if (recipeSex !== "female" && recipeSex !== "male") throw new Error("The recipe " + path + " names no sex, and none was given");
         const dna = { sex: recipeSex, parts: {}, modifiers: recipe.modifiers.map(entry => CjsCharacterFactory.modifierValues(entry)) };
-        const problems = [], parts = CjsCharacterFactory._partsByCategory();
+        const problems = [], unapplied = [], parts = CjsCharacterFactory._partsByCategory();
         for (const entry of recipe.modifiers)
         {
             const found = await library.ResolveRecipeEntry(recipeSex, entry);
-            if (found === null) { problems.push(entry.path + ": no part (no paper doll category)"); continue; }
+            if (found === null) { unapplied.push(entry.path + ": no part (no paper doll category)"); continue; }
             if (found.category === "archetypes")
             {
                 // The archetype's option is its folder below the root, as the paper doll's archetype names it.
                 if (found.option !== null) dna.parts.archetype = { option: found.path };
-                else problems.push(entry.path + ": no archetype");
+                else unapplied.push(entry.path + ": no archetype");
                 continue;
             }
             const name = parts.get(found.category) ?? null;
-            if (name === null) { problems.push(entry.path + ": no part (" + found.category + ")"); continue; }
-            if (CjsCharacterFactory.notAppliedYet.includes(name)) { problems.push(entry.path + ": " + name + " is not applied until the instance owns meshes (R6)"); continue; }
+            if (name === null) { unapplied.push(entry.path + ": no part (" + found.category + ")"); continue; }
+            if (CjsCharacterFactory.notAppliedYet.includes(name)) { unapplied.push(entry.path + ": " + name + " is not applied until the instance owns meshes (R6)"); continue; }
             if (found.option === null)
             {
                 // The operator's ruling (feet_nude): an entry naming a part's bare state turns the part off.
@@ -310,7 +312,7 @@ export class CjsCharacterFactory
                     ? await library.FetchRecipeOption(recipeSex, found.category, entry) : null;
                 if (recipeOption === null)
                 {
-                    problems.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorVariation + "')" + (CjsCharacterLibraryManager.categories[found.category].maps === "garment" ? ", and the build ships no such folder" : ""));
+                    unapplied.push(entry.path + ": no " + name + " option presets it (variation '" + entry.variation + "', colour variation '" + entry.colorVariation + "')" + (CjsCharacterLibraryManager.categories[found.category].maps === "garment" ? ", and the build ships no such folder" : ""));
                     continue;
                 }
                 if (Object.hasOwn(dna.parts, name)) problems.push(entry.path + ": a second entry for " + name + "; the last applies");
@@ -343,6 +345,7 @@ export class CjsCharacterFactory
             }
             dna.parts[name] = value;
         }
+        if (unapplied.length) throw new Error("No paper doll rule for " + unapplied.length + " entries of the recipe " + path + ": " + unapplied.join("; "));
         return { dna: CjsCharacterFactory.readJSON(dna), problems };
     }
 

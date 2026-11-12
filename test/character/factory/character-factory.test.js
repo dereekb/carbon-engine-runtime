@@ -143,22 +143,29 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
     "- { category: archetypes, path: archetypes/msshape, weight: 1.0 }",
     "- { category: feet, path: feet/feet_nude, weight: 1.0 }",
     "- { category: outer, path: outer/coat01, variation: v9, weight: 1.0 }",
-    "- { category: hair, path: hair/long01, weight: 1.0 }",
-    "- { category: bodyshapes, path: bodyshapes/thinshape, weight: 0.3 }",
     "- { category: topmiddle, path: topmiddle/shirt01, weight: 1.0, pattern: Camo, colorvariation: plain, colors: '[(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1), (1, 1, 0, 1), (0, 1, 1, 1), (0, 0, 8, 8), 0.0]' }",
     "- { category: makeup, path: makeup/eyeliner/eyeliner_01, weight: 1.0, colors: '[(1, 0, 0, 1), (0, 1, 0, 1)]' }",
+    ""
+  ].join("\n");
+  // Entries the paper doll does not apply: the recipe throws, naming each.
+  const UNAPPLIED = "res:/graphics/character/dnafiles/unapplied.prs";
+  const unapplied = [
+    "- female",
+    "- { category: hair, path: hair/long01, weight: 1.0 }",
+    "- { category: bodyshapes, path: bodyshapes/thinshape, weight: 0.3 }",
     "- { category: dependants, path: dependants/boottucking/standard, variation: v1, weight: 1.0, tuck: true }",
+    "- { category: makeup, path: makeup/blush/blush_01, weight: 0.5, colorvariation: pink }",
     ""
   ].join("\n");
   const files = [
-    PRS,
+    PRS, UNAPPLIED,
     ROOT + "makeup/lipstick/lipstick_01/types/lipstick_01.type", ROOT + "makeup/lipstick/lipstick_01/red.color",
     ROOT + "makeup/blush/blush_01/types/blush_01.type", ROOT + "makeup/blush/blush_01/pink.color",
     ROOT + "makeup/aging/aging_01/types/aging_01_v1.type", ROOT + "makeup/aging/aging_01/v1/comp_head_d.png",
     ROOT + "outer/coat01/types/coat01.type", ROOT + "hair/long01/types/long01.type", ROOT + "archetypes/msshape/head_d.png",
     ROOT + "topmiddle/shirt01/types/shirt01.type", ROOT + "topmiddle/shirt01/plain.color", ROOT + "makeup/eyeliner/eyeliner_01/types/eyeliner_01.type"
   ];
-  installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe } });
+  installPartsLibrary(t, ROOT, files, { text: { [PRS]: recipe, [UNAPPLIED]: unapplied } });
   const [ first, second ] = [ await CjsCharacterFactory.fetchRecipe(PRS), await CjsCharacterFactory.fetchRecipe(PRS) ];
   assert.notEqual(first, second, "each caller its own recipe record");
   assert.deepEqual([ first._pdpID, first._pdpType ], [ PRS, CjsCharacterPdpType.RECIPE ]);
@@ -175,18 +182,16 @@ test("a recipe reads into a DNA: each entry's option on, its weight and colours;
   assert.deepEqual(dna.parts.topMiddle, { enabled: true, option: "shirt01", weight: 1, palette: ROOT + "topmiddle/shirt01/plain.color" }, "a pattern entry: its colour variation's palette");
   assert.deepEqual(dna.parts.eyeliner, { enabled: true, option: "eyeliner_01", weight: 1 }, "colours in an unread shape are skipped");
   assert.deepEqual(problems.sort(), [
-    "bodyshapes/thinshape: no part (no paper doll category)",
-    "dependants/boottucking/standard: no part (no paper doll category)",
-    "hair/long01: hair is not applied until the instance owns meshes (R6)",
     "makeup/eyeliner/eyeliner_01: 2 colours, not one per area; skipped",
     "topmiddle/shirt01: pattern Camo: its own pattern colours are not applied; its colour variation's palette is (PROVISIONAL)"
   ]);
-  // Every entry is kept as read, applied or not: the recipe-selected dependant variation, the shape's weight, the pattern.
+  // Every entry is kept as read: its variation, its weight, the pattern.
   assert.deepEqual(dna.modifiers.map(modifier => modifier.path), first.modifiers.map(entry => entry.path));
-  assert.deepEqual(dna.modifiers.at(-1), { category: "dependants", path: "dependants/boottucking/standard", weight: 1, tuck: true, variation: "v1" });
-  assert.deepEqual(dna.modifiers[7], { category: "bodyshapes", path: "bodyshapes/thinshape", weight: .3 });
-  assert.equal(dna.modifiers[8].pattern, "Camo");
-  assert.deepEqual(dna.modifiers[8].patternTransform, [ 0, 0, 8, 8 ]);
+  assert.deepEqual(dna.modifiers[2], { category: "makeup", path: "makeup/aging/aging_01", weight: 1, variation: "v1" });
+  assert.equal(dna.modifiers[6].pattern, "Camo");
+  assert.deepEqual(dna.modifiers[6].patternTransform, [ 0, 0, 8, 8 ]);
+  await assert.rejects(CjsCharacterFactory.readRecipe(UNAPPLIED), new RegExp("^Error: No paper doll rule for 3 entries of the recipe " + UNAPPLIED.replace(/[./]/gu, "\\$&")
+    + ": hair/long01: hair is not applied until the instance owns meshes \\(R6\\); bodyshapes/thinshape: no part \\(no paper doll category\\); dependants/boottucking/standard: no part \\(no paper doll category\\)$", "u"));
   // The modifiers survive JSON, the merge and a refused field.
   assert.deepEqual(CjsCharacterFactory.readJSON(CjsCharacterFactory.writeJSON(dna)).modifiers, dna.modifiers);
   assert.deepEqual(CjsCharacterFactory.merge(dna).modifiers, dna.modifiers);

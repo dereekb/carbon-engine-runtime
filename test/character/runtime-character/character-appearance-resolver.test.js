@@ -12,7 +12,9 @@ test("decodes utility shapes and applies occlusion and weight conflicts without 
     assert.equal(decode("utilityshapes/pinchrightouterlowerhipsshape#"), null);
     assert.equal(decode("utilityshapes/pinchtuckshape###x"), null);
     assert.equal(decode("dependants/drape/standard"), null);
-    assert.deepEqual(CjsCharacterAppearanceResolver.decodeUtilityOcclusion("utilityshapes/TuckTopShape"), { modifierPath: "utilityshapes/tucktopshape" });
+    assert.deepEqual(CjsCharacterAppearanceResolver.decodeUtilityOcclusion("utilityshapes/TuckTopShape"), { modifierPath: "utilityshapes/tucktopshape", targetName: "TuckTopShape", weight: null });
+    assert.deepEqual(CjsCharacterAppearanceResolver.decodeUtilityOcclusion("utilityshapes/pushJacketHighShape#-0.25"), { modifierPath: "utilityshapes/pushjackethighshape", targetName: "pushJacketHighShape", weight: -0.25 });
+    assert.equal(CjsCharacterAppearanceResolver.decodeUtilityOcclusion("utilityshapes/tucktopshape#wat"), null);
     assert.equal(CjsCharacterAppearanceResolver.decodeUtilityOcclusion("utilityshapes/tucktopshape###0.5"), null);
 
     const request = (owner, value) => ({ ...decode(value), owner });

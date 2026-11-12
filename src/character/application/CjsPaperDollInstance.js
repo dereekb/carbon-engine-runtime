@@ -261,15 +261,15 @@ export class CjsPaperDollInstance
     /**
      * A worn item's own utility shapes: the `utilityshapes/` entries of its metadata's two lists, decoded
      * (`decodeUtilityShape`, `decodeUtilityOcclusion`). Every such entry decodes or throws (operator, 2026-11-12:
-     * "all rules must be handled"); an occlusion with a weight (`utilityshapes/pushhemshape#0.2`) decodes to no rule
-     * yet, so it throws. Entries outside `utilityshapes/` (dependants, occluded parts) are other rules' and are not
-     * read here.
+     * "all rules must be handled"); a weighted occlusion (`utilityshapes/pushhemshape#0.2`) sets its morph's weight
+     * (`resolveUtilityShapes`). Entries outside `utilityshapes/` (dependants, occluded parts) are other rules' and
+     * are not read here.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. The library stores the metadata; this applies it.
      * @param {{ metadataPath: string, dependantModifiers: string[], occludesModifiers: string[] }} item The
      *   `metadata.yaml` read for the item and its two lists as authored.
      * @returns {{ requests: object[], occlusions: object[] }} The item's requests (`{ modifierPath, targetName,
-     *   weight, explicitWeight }`) and occlusions (`{ modifierPath }`); the caller sets the owner.
+     *   weight, explicitWeight }`) and occlusions (`{ modifierPath, targetName, weight }`); the caller sets the owner.
      * @throws {Error} For a utility-shape entry no rule reads, naming the entry and the file.
      */
     static itemShapes(item)
@@ -292,29 +292,22 @@ export class CjsPaperDollInstance
     }
 
     /**
-     * The dependant folders whose utility shapes join the owning garment's fitting (`dependantShapes`). Only boot
-     * tucking is checked against the content (male shoe tucks, build 3687575). Drape and waist-tucking dependants also
-     * state utility-shape occlusions, some weighted (`#0.01`, `#2.0`) as no rule here reads, so they have no rule yet.
-     * @type {string[]}
-     */
-    static fittingDependants = [ "dependants/boottucking" ];
-
-    /**
-     * The utility shapes a worn garment's dependants add to its fitting (the tuck rule). A dependant under a
-     * `fittingDependants` folder brings its metadata's utility-shape requests, for the garment, and its occlusions,
-     * which protect no owner: `dependants/boottucking/standard` suppresses its own garment's boot pinch as well as
-     * any other's, and `standard/v1` the boots' trouser tucks. `hidesBootShin` does not select them; both directions
-     * set it differently. The result goes to `resolveUtilityShapes` with the worn items' own requests and occlusions.
-     * Every entry a dependant's metadata states has a rule or throws (operator, 2026-11-12: "all rules must be
-     * handled"): an entry outside `fittingDependants`, one that names no utility shape (`dependants/bootmasks`,
-     * `hair`) and one that does not decode all throw. A dependant that states no entries adds nothing.
+     * The utility shapes a worn garment's dependants add to its fitting (the tuck rule). Every dependant brings its
+     * metadata's utility-shape requests, for the garment, and its occlusions, which protect no owner:
+     * `dependants/boottucking/standard` suppresses its own garment's boot pinch as well as any other's, and
+     * `standard/v1` the boots' trouser tucks; a weighted one sets its morph (`resolveUtilityShapes`), exactly as
+     * authored, with no filtering by kind or target (operator, 2026-11-12: "we just do exactly what the garments
+     * say"). `hidesBootShin` does not select them; both directions set it differently. The result goes to
+     * `resolveUtilityShapes` with the worn items' own requests and occlusions. Every entry a dependant's metadata
+     * states has a rule or throws (operator, 2026-11-12: "all rules must be handled"): one that names no utility shape
+     * (`dependants/tuck`, `dependants/bootmasks`, `hair`) and one that does not decode throw.
      *
      * Ours (no Carbon counterpart): the client's paper doll is Python. The library stores the metadata; this applies it.
      * @param {Array<{ path: string, metadataPath: string, dependantModifiers: string[], occludesModifiers: string[] }>}
      *   dependants The garment's dependants: each one's lower-case modifier path, the `metadata.yaml` read for it and
      *   that file's two lists as authored.
-     * @returns {{ requests: object[], occlusions: Array<{ modifierPath: string, protectedOwner: null }> }} The shapes
-     *   to add; the caller sets each request's owner.
+     * @returns {{ requests: object[], occlusions: Array<{ modifierPath: string, targetName: string, weight: ?number,
+     *   protectedOwner: null }> }} The shapes to add; the caller sets each request's owner and each weighted occlusion's.
      * @throws {Error} For an entry no rule reads, naming the dependant kind, the entry and the file.
      */
     static dependantShapes(dependants)
@@ -322,16 +315,15 @@ export class CjsPaperDollInstance
         const result = { requests: [], occlusions: [] };
         for (const dependant of dependants)
         {
-            const fitting = CjsPaperDollDefinition.occludes(CjsPaperDollInstance.fittingDependants, dependant.path);
             for (const entry of dependant.dependantModifiers)
             {
-                const request = fitting ? CjsCharacterAppearanceResolver.decodeUtilityShape(entry) : null;
+                const request = CjsCharacterAppearanceResolver.decodeUtilityShape(entry);
                 if (request === null) throw CjsPaperDollInstance._MissingRule(dependant.path, "dependantModifiers", entry, dependant.metadataPath);
                 result.requests.push(request);
             }
             for (const entry of dependant.occludesModifiers)
             {
-                const occlusion = fitting ? CjsCharacterAppearanceResolver.decodeUtilityOcclusion(entry) : null;
+                const occlusion = CjsCharacterAppearanceResolver.decodeUtilityOcclusion(entry);
                 if (occlusion === null) throw CjsPaperDollInstance._MissingRule(dependant.path, "occludesModifiers", entry, dependant.metadataPath);
                 result.occlusions.push({ ...occlusion, protectedOwner: null });
             }
