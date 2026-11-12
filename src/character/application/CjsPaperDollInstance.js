@@ -259,6 +259,39 @@ export class CjsPaperDollInstance
     }
 
     /**
+     * A worn item's own utility shapes: the `utilityshapes/` entries of its metadata's two lists, decoded
+     * (`decodeUtilityShape`, `decodeUtilityOcclusion`). Every such entry decodes or throws (operator, 2026-11-12:
+     * "all rules must be handled"); an occlusion with a weight (`utilityshapes/pushhemshape#0.2`) decodes to no rule
+     * yet, so it throws. Entries outside `utilityshapes/` (dependants, occluded parts) are other rules' and are not
+     * read here.
+     *
+     * Ours (no Carbon counterpart): the client's paper doll is Python. The library stores the metadata; this applies it.
+     * @param {{ metadataPath: string, dependantModifiers: string[], occludesModifiers: string[] }} item The
+     *   `metadata.yaml` read for the item and its two lists as authored.
+     * @returns {{ requests: object[], occlusions: object[] }} The item's requests (`{ modifierPath, targetName,
+     *   weight, explicitWeight }`) and occlusions (`{ modifierPath }`); the caller sets the owner.
+     * @throws {Error} For a utility-shape entry no rule reads, naming the entry and the file.
+     */
+    static itemShapes(item)
+    {
+        const result = { requests: [], occlusions: [] };
+        const isUtility = entry => /^utilityshapes\//iu.test(entry);
+        for (const entry of item.dependantModifiers.filter(isUtility))
+        {
+            const request = CjsCharacterAppearanceResolver.decodeUtilityShape(entry);
+            if (request === null) throw CjsPaperDollInstance._MissingRule("", "dependantModifiers", entry, item.metadataPath);
+            result.requests.push(request);
+        }
+        for (const entry of item.occludesModifiers.filter(isUtility))
+        {
+            const occlusion = CjsCharacterAppearanceResolver.decodeUtilityOcclusion(entry);
+            if (occlusion === null) throw CjsPaperDollInstance._MissingRule("", "occludesModifiers", entry, item.metadataPath);
+            result.occlusions.push(occlusion);
+        }
+        return result;
+    }
+
+    /**
      * The dependant folders whose utility shapes join the owning garment's fitting (`dependantShapes`). Only boot
      * tucking is checked against the content (male shoe tucks, build 3687575). Drape and waist-tucking dependants also
      * state utility-shape occlusions, some weighted (`#0.01`, `#2.0`) as no rule here reads, so they have no rule yet.
@@ -293,13 +326,13 @@ export class CjsPaperDollInstance
             for (const entry of dependant.dependantModifiers)
             {
                 const request = fitting ? CjsCharacterAppearanceResolver.decodeUtilityShape(entry) : null;
-                if (request === null) throw CjsPaperDollInstance._MissingRule(dependant, "dependantModifiers", entry);
+                if (request === null) throw CjsPaperDollInstance._MissingRule(dependant.path, "dependantModifiers", entry, dependant.metadataPath);
                 result.requests.push(request);
             }
             for (const entry of dependant.occludesModifiers)
             {
                 const occlusion = fitting ? CjsCharacterAppearanceResolver.decodeUtilityOcclusion(entry) : null;
-                if (occlusion === null) throw CjsPaperDollInstance._MissingRule(dependant, "occludesModifiers", entry);
+                if (occlusion === null) throw CjsPaperDollInstance._MissingRule(dependant.path, "occludesModifiers", entry, dependant.metadataPath);
                 result.occlusions.push({ ...occlusion, protectedOwner: null });
             }
         }
@@ -307,17 +340,18 @@ export class CjsPaperDollInstance
     }
 
     /**
-     * The error for a dependant entry no rule reads, worded as the library's missing category rules are
+     * The error for a metadata entry no rule reads, worded as the library's missing category rules are
      * (`CjsCharacterLibraryManager._CategoryRule`).
-     * @param {{ path: string, metadataPath: string }} dependant The dependant.
+     * @param {string} dependant The dependant's modifier path, whose first two folders name its kind; "" for a worn item.
      * @param {string} list The metadata list holding the entry.
      * @param {string} entry The entry as authored.
+     * @param {string} metadataPath The `metadata.yaml` holding it.
      * @returns {Error} The error.
      */
-    static _MissingRule(dependant, list, entry)
+    static _MissingRule(dependant, list, entry, metadataPath)
     {
-        const kind = dependant.path.split("/").slice(0, 2).join("/");
-        return new Error("No paper doll rule for the " + kind + " " + list + " entry " + entry + " in " + dependant.metadataPath);
+        const kind = dependant ? dependant.split("/").slice(0, 2).join("/") + " " : "";
+        return new Error("No paper doll rule for the " + kind + list + " entry " + entry + " in " + metadataPath);
     }
 
     /**

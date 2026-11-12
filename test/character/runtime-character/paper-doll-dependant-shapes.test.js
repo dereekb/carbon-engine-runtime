@@ -66,3 +66,13 @@ test("every dependant entry without a rule throws, naming its kind, entry and fi
     // A folder that only starts with the same letters is not boot tucking.
     missing(Dependant("dependants/boottuckingx", [ "utilityshapes/pantstuckshinshape" ]), /dependants\/boottuckingx dependantModifiers/u);
 });
+
+test("a worn item's own utility shapes decode, and a weighted occlusion throws", () =>
+{
+    const item = (dependantModifiers, occludesModifiers) => ({ metadataPath: "res:/graphics/character/female/paperdoll/topmiddle/x/metadata.yaml", dependantModifiers, occludesModifiers });
+    const shapes = CjsPaperDollInstance.itemShapes(item([ "utilityshapes/pushhemmidshape###0.35", "dependants/drape/standard" ], [ "utilityshapes/tucktopshape", "dependants/tuck", "hair" ]));
+    assert.deepEqual(shapes.requests, [ decodeUtilityShape("utilityshapes/pushhemmidshape###0.35") ]);
+    assert.deepEqual(shapes.occlusions.map(value => value.modifierPath), [ "utilityshapes/tucktopshape" ]);
+    assert.throws(() => CjsPaperDollInstance.itemShapes(item([], [ "utilityshapes/pinchrighthipsshape#2.0" ])),
+        /^Error: No paper doll rule for the occludesModifiers entry utilityshapes\/pinchrighthipsshape#2\.0 in res:\/graphics\/character\/female\/paperdoll\/topmiddle\/x\/metadata\.yaml$/u);
+});
