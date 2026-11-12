@@ -227,10 +227,11 @@ test("Render reacquires an expired internal resource and draws only after its re
   manager.GetResource = () => { acquisitions++; return resource; };
   t.after(() => { effect.Destruct(); manager.GetResource = original; });
   const shader = { GetPassCount() { return 1; }, ApplyAllStateForPass() {} };
-  effect.RebuildCachedData = value => { if (value === resource) effect.shader = shader; };
+  // The cached shader data follows the resource: Initialize and the rebuild callback both end here.
+  effect.RebuildCachedDataInternal = () => { effect.shader = resource.IsGood() ? shader : null; };
   effect.GetShaderStateInterface = () => effect.shader;
   effect.ApplyMaterialDataForPass = () => {};
-  effect.actualEffectFilePath = "res:/effect.fx";
+  effect.effectFilePath = "res:/effect.fx";
   const callback = { SubmitGeometry() { draws++; } };
   effect.Render(callback, {});
   assert.equal(acquisitions, 1);

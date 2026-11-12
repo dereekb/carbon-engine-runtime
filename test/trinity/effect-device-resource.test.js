@@ -28,7 +28,8 @@ function effectWithBuffers()
 
 test("Tr2Effect takes Carbon's device-resource base (Tr2Effect.h:53-59)", () =>
 {
-  assert.equal(Tr2Effect.prototype.KeepAlive, Tr2DeviceResource.prototype.KeepAlive);
+  // Its own KeepAlive calls the base's and then renews its resource parameters.
+  assert.notEqual(Tr2Effect.prototype.KeepAlive, Tr2DeviceResource.prototype.KeepAlive);
   assert.equal(Tr2Effect.prototype.PrepareResources, Tr2DeviceResource.prototype.PrepareResources);
   assert.equal(new Tr2Effect()._OnPrepareResources(), true, "Tr2Effect.cpp:304-307");
 });

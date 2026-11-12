@@ -1,4 +1,4 @@
-import { prepareResourceFixture, failResourceFixture, pendingResourceFixture, purgeResourceFixture } from "../support/resourceFixtures.js";
+import { prepareResourceFixture, failResourceFixture, pendingResourceFixture, purgeResourceFixture, resourceIdentityFixture } from "../support/resourceFixtures.js";
 // Tr2Effect.IsGood: "am I good to draw", answered from the effect's own
 // resource, after renewing every resource the effect holds.
 //
@@ -51,12 +51,88 @@ test("IsGood and its transitional alias renew every texture without an early exi
 });
 
 
-test("a failed texture does not make the effect bad; it draws with the fallback", () =>
+/** Gives an effect a ready effect resource and a resolved shader, as a loaded effect has. */
+function makeGood(effect)
+{
+  const shader = new Tr2Shader();
+  const resource = prepareResourceFixture(new Tr2EffectRes());
+  resource.GetShader = () => shader;
+  effect.effectResource = resource;
+  effect.shader = shader;
+  return effect;
+}
+
+
+test("a texture that failed or is still loading does not make the effect bad; it is renewed and draws with the fallback", () =>
+{
+  const effect = makeGood(new Tr2Effect());
+  const missing = addTexture(effect, "missing", "failed");
+  const loading = addTexture(effect, "loading", "pending");
+  assert.equal(effect.IsGood(), true);
+  assert.deepEqual([ missing.count, loading.count ], [ 1, 1 ], "KeepAlive renews textures without gating on them");
+
+  effect.KeepAlive();
+  assert.deepEqual([ missing.count, loading.count ], [ 2, 2 ], "the effect's KeepAlive is where its children are renewed");
+});
+
+
+test("an effect with a shader but no effect resource is not good", () =>
 {
   const effect = new Tr2Effect();
-  addTexture(effect, "missing", "failed");
   effect.shader = new Tr2Shader();
+  assert.equal(effect.IsGood(), false);
+});
+
+
+test("an effect with no path, or one that resolves to nothing, does not re-initialize when asked", () =>
+{
+  const effect = new Tr2Effect();
+  let initializes = 0;
+  effect.Initialize = () => { initializes += 1; return true; };
+  for (let frame = 0; frame < 3; frame++) assert.equal(effect.IsGood(), false);
+  assert.equal(initializes, 0);
+
+  // No platform is installed here, so an authored .fx has no compiled path to acquire.
+  effect.effectFilePath = "res:/graphics/effect/managed/space/test.fx";
+  assert.equal(Tr2Effect.convertEffectPath(effect.effectFilePath), "");
+  for (let frame = 0; frame < 3; frame++) assert.equal(effect.IsGood(), false);
+  assert.equal(initializes, 0);
+});
+
+
+test("an effect whose resource expired re-initializes on the next IsGood and answers false until ready", t =>
+{
+  const made = [];
+  t.mock.method(blue.resMan, "GetResource", path =>
+  {
+    const resource = pendingResourceFixture(resourceIdentityFixture(new Tr2EffectRes(), path));
+    resource.GetShader = () => new Tr2Shader();
+    made.push(resource);
+    return resource;
+  });
+
+  const effect = new Tr2Effect();
+  // A compiled path: an authored .fx resolves to nothing until a platform is installed, and is then not acquired.
+  effect.effectFilePath = "res:/graphics/effect.dx11/managed/space/test.sm_hi";
+  effect.Initialize();
+  assert.equal(effect.effectResource, made[0]);
+  assert.equal(effect.IsGood(), false, "still loading");
+  prepareResourceFixture(made[0]);
   assert.equal(effect.IsGood(), true);
+
+  // Expiry: the manager's link expiry has the owner let go (CjsBlueResManNotify._ExpireLink).
+  effect.RemoveCachedData(made[0]);
+  assert.equal(effect.effectResource, null);
+  assert.equal(effect.shader, null, "the cached shader data went with the resource");
+
+  assert.equal(effect.IsGood(), false, "asked again: it re-initializes and waits");
+  assert.equal(made.length, 2, "Initialize acquired the resource again (Tr2Effect.cpp:378-401)");
+  assert.equal(effect.effectResource, made[1]);
+  assert.equal(effect.IsGood(), false);
+  assert.equal(made.length, 2, "a held resource that is loading is not acquired again");
+
+  prepareResourceFixture(made[1]);
+  assert.equal(effect.IsGood(), true, "the new resource's completion rebuilt the cached data");
 });
 
 
@@ -133,7 +209,7 @@ test("draw paths ask the effect: a primitive set skips an effect that is not goo
   set.GetBatches({ Commit() {} }, TriBatchType.TRIBATCHTYPE_OPAQUE, null);
   assert.equal(drawn, 0);
 
-  set.effect.shader = new Tr2Shader();
+  makeGood(set.effect);
   set.GetBatches({ Commit() {} }, TriBatchType.TRIBATCHTYPE_OPAQUE, null);
   assert.equal(drawn, 1);
 });
