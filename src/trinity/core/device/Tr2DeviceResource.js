@@ -111,12 +111,14 @@ export class Tr2DeviceResource
 
   /**
    * Stamps use and registers for device-tick preparation; destroyed resources stay dead.
+   * Without a loaded device class (CPU-only deep imports) there is no registry to join and no sweep to stamp for.
    * @cjs Use-driven device residency; Carbon retains resources until destruction.
    */
   KeepAlive()
   {
     if (this._state === Tr2DeviceResourceState.DESTRUCTED) return;
     const deviceClass = CjsSchema.getConstructor("TriDevice");
+    if (deviceClass === null) return;
     const now = deviceClass.activeTime;
     if (!(this._stamp >= now)) this._stamp = now;
     deviceClass.RegisterResource(this);
