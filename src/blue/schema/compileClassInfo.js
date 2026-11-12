@@ -521,7 +521,9 @@ export function classInfoOf(Constructor)
  */
 export function registerClassInfo(registration)
 {
-  const classInfo = registration.classInfo ?? ClassInfo.exposeToBlue(registration.type);
+  // registerClass rejects a non-constructor; compiling one first would fail on its missing prototype instead.
+  const isConstructor = typeof registration.type === "function";
+  const classInfo = registration.classInfo ?? (isConstructor ? ClassInfo.exposeToBlue(registration.type) : null);
   return registerClass({ ...registration, classInfo });
 }
 
