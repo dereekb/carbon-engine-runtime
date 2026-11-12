@@ -61,6 +61,10 @@ function FindDamageLocators(sets)
  * instanced mesh manager, owning their registration handles, instance flags and
  * world cull bounds.
  * Carbon: EveChildInstancedMeshes (trinity/trinity/Eve/SpaceObject/Children/EveChildInstancedMeshes.h:16-24)
+ *
+ * No own teardown hook: Carbon's destructor (EveChildInstancedMeshes.cpp:30-52) removes its geometry notify
+ * targets and deletes its raytracing meshes; neither is made here (IBlueAsyncResNotifyTarget and the
+ * raytracing build are unported). The Tr2DeviceResource hook still unregisters it.
  */
 @be.define("EveChildInstancedMeshes")
 @be.inherit(ITr2Renderable, IEveShadowCaster, IEveInstanceMeshProvider, Tr2DeviceResource)

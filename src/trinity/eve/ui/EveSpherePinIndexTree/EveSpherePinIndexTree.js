@@ -82,6 +82,9 @@ function AddFaceToTree(node, face, spherical)
  * Selects the sphere triangles touched by a pin using Carbon's angular tree.
  * The decoded geometry payload replaces both native CMF and Granny streams.
  * This native helper has no Blue identity or serialized fields.
+ *
+ * No own teardown hook: Carbon's destructor (Eve/UI/EveSpherePinIndexTree.cpp:423-436) only frees the tree
+ * nodes and face array, which are GC-owned objects here.
  */
 @meta.carbon("EveSpherePinIndexTree")
 export class EveSpherePinIndexTree

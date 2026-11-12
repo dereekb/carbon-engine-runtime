@@ -21,6 +21,9 @@ import { EveBoosterSet2 } from "./EveBoosterSet2.js";
  * One ship's instance of a booster set: it carries the parent transform, speed
  * and rotation, derives the booster and trail intensities, and maintains the
  * five-point trail spline and its LOD flags.
+ *
+ * No own teardown hook: Carbon's destructor (Eve/SpaceObject/Attachments/EveBoosterSet2.cpp:81-84) only frees
+ * the aligned m_trailsOffsets array, which is GC-owned storage here.
  */
 @be.define({
   name: "EveBoosterSet2Renderable",

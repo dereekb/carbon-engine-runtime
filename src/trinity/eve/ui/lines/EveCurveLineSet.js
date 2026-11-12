@@ -39,6 +39,18 @@ export class EveCurveLineSet extends Tr2CurveLineSet
     this.pickEffect.SetEffectPathName("res:/Graphics/Effect/Managed/Space/SpecialFX/Lines3DPicking.fx");
   }
 
+  /**
+   * Carbon destructor (Eve/UI/EveCurveLineSet.cpp:39-43): ReleaseResources(TRISTORAGE_ALL), which this class
+   * does not override, so the Tr2CurveLineSet hook (Tr2CurveLineSet.cpp:37-40) releases a second time, as Carbon's does.
+   *
+   * @implemented
+   * @returns {void}
+   */
+  OnDestruct()
+  {
+    this.ReleaseResources();
+  }
+
   /** Carbon's last visibility result. */
   @type.boolean
   isVisible = false;

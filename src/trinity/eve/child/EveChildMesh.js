@@ -73,6 +73,10 @@ const NO_BONE_TRANSFORMS = { bones: null, boneCount: 0 };
  * Space-object child that draws one mesh under its own transform, owning its
  * decals, lights, attachments, morph weights, world bounds and screen-size LOD
  * state.
+ *
+ * No own teardown hook: Carbon's destructor (Eve/SpaceObject/Children/EveChildMesh.cpp:76-80) releases the BVH
+ * debug visualization (cpp:1395-1402, made only by RenderDebugInfo, unported) and the audio geometry
+ * (audio is a separate system).
  */
 @be.define({
   name: "EveChildMesh",
