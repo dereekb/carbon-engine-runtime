@@ -1573,6 +1573,8 @@ export class EveSOF extends IRoot
     }
     if (hasChildEffects)
     {
+      // The placement container is the part's child owner and carries the part
+      // transform; transform children still join the root's children with it.
       this.SetupEffects(document, rootFields, placementFields, dna, [transform], buildFlags);
     }
     if (!rootFields.impactOverlay)
@@ -2327,11 +2329,18 @@ export class EveSOF extends IRoot
 
   /**
    * Composes child placement, imports or allocates the resolved node, and
-   * appends its reference to the selected owner list.
+   * appends its reference to the selected owner list. A transform child joins
+   * the root's `children` with the offset. An effect child joins the child
+   * owner's list (effectChildOwnerList): a root's `effectChildren` with the
+   * offset, or a modular part's placement container's `objects` with none,
+   * since that container already carries the part transform.
    */
   _addResolvedChild(document, objectFields, childOwnerFields, descriptor, child, offset)
   {
-    const placement = composeChildPlacement(child, offset);
+    const owner = descriptor.target === "children"
+      ? { list: objectFields.children, ownSpace: false }
+      : effectChildOwnerList(childOwnerFields);
+    const placement = composeChildPlacement(child, owner.ownSpace ? null : offset);
     // "children"-target hosts accept only the SRT placement; effect children
     // additionally receive Carbon's LOD gate and placement origin.
     const placementFields = descriptor.target === "children"
@@ -2360,8 +2369,7 @@ export class EveSOF extends IRoot
         descriptor.raw ? cloneValue(descriptor.raw) : null
       );
     }
-    const ownerFields = descriptor.target === "children" ? objectFields : childOwnerFields;
-    ownerFields[descriptor.target].push(ref);
+    owner.list.push(ref);
     return ref;
   }
 
@@ -4784,6 +4792,20 @@ function DeclaredPlacement(kind, fields, placement)
 
 /** The placement members `EveChildTransform::Setup` writes only under `m_useSRT`. */
 const SRT_MEMBERS = new Set([ "scaling", "rotation", "translation" ]);
+
+/**
+ * Where an effect child joins its owner, as IEveEffectChildrenOwner.AddToEffectChildrenList puts it: a space-object
+ * root (or a stand-in owner) keeps effectChildren; an EveChildContainer keeps objects
+ * (EveChildContainer.AddToEffectChildrenList). The only container owner is a modular part's placement container
+ * (_BuildChildIntoDocument), which carries the part transform the offset holds, so a child placed in it takes no
+ * offset: the part transform applies once, as it does to the part's mesh and child booster set.
+ */
+function effectChildOwnerList(ownerFields)
+{
+  if (Array.isArray(ownerFields?.effectChildren)) return { list: ownerFields.effectChildren, ownSpace: false };
+  if (Array.isArray(ownerFields?.objects)) return { list: ownerFields.objects, ownSpace: true };
+  throw new TypeError("EveSOF child owner keeps neither effectChildren nor objects");
+}
 
 function composeChildPlacement(source, offset)
 {
