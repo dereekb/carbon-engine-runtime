@@ -8,6 +8,15 @@ import { meta, type, blue } from "#schema";
 import { INotify } from "#blue";
 import { LifeTimeFormulas } from "./enums.js";
 
+/** Power-curve exponents for authored m_crossFadeCurve values: EVE build 3698585 wrote 5 wherever 3682781 wrote an m_crossFadeIntensity of 9.0288. */
+const CROSS_FADE_CURVE_EXPONENTS = new Map([ [ 5, Math.fround(9.0288) ] ]);
+
+/** The exponent a modifier's crossfade position is raised to: its authored curve's, else crossFadeIntensity. */
+function crossFadeExponent(modifier)
+{
+  return CROSS_FADE_CURVE_EXPONENTS.get(modifier.crossFadeCurve) ?? modifier.crossFadeIntensity;
+}
+
 /** Owns common smart-light activation state and a nominal modifier contract whose optional colour and controller hooks default to no-ops while required update and attribute-processing methods throw until a concrete modifier implements them. */
 @be.define("EveSmartLightBaseAttributeModifier")
 @blue.inherit(IInitialize, INotify)
@@ -51,6 +60,22 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
   @type.float32
   crossFadeIntensity = 1;
 
+  /**
+   * m_crossFadeCurve (int) [READWRITE, PERSIST]
+   *
+   * Adapted: EVE build 3698585 authors this in place of m_crossFadeIntensity, and
+   * the canonical Black reader refused every record carrying it (the racial
+   * primary spotlight sets, so every hull naming one). Its 44 authored values are
+   * all 5, each on a modifier 3682781 authored with an intensity of 9.0288.
+   * Carbon's curve enum is not known here: a value in CROSS_FADE_CURVE_EXPONENTS
+   * keeps the power curve its intensity gave; 0 (unwritten) and any other value
+   * use crossFadeIntensity, which older builds author.
+   */
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
+
+  @type.int32
+  crossFadeCurve = 0;
+
   /** m_perInstanceOffset (float) [READWRITE, PERSIST] */
   @be.mapAttribute(be.READWRITE | be.PERSIST)
 
@@ -93,6 +118,19 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
   @type.float32
   delayedActivation = 0;
 
+  /**
+   * m_activationDelay (float) [READWRITE, PERSIST]
+   *
+   * Adapted: EVE build 3698585 renamed m_delayedActivation to m_activationDelay
+   * (gca2_t1_pride_gallente_fx: same bytes, new name), and the canonical Black
+   * reader refused it. A nonzero activationDelay wins, else delayedActivation,
+   * which older builds author.
+   */
+  @be.mapAttribute(be.READWRITE | be.PERSIST)
+
+  @type.float32
+  activationDelay = 0;
+
   // Carbon-protected crossfade state (EveSmartLightBaseAttributeModifier.h:47-60).
   // subclasses write them (EveSmartLightAttributeModifierBucket::SetActive);
   // the rest is private.
@@ -125,7 +163,9 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
 
   /**
    * Reacts to an `active` edit by restarting the crossfade from the current
-   * (unmapped) position (EveSmartLightBaseAttributeModifier.cpp:35-48).
+   * (unmapped) position (EveSmartLightBaseAttributeModifier.cpp:35-48). The
+   * exponent comes through crossFadeExponent (adapted for EVE build 3698585's
+   * m_crossFadeCurve).
    */
 
   @meta.implemented
@@ -134,9 +174,10 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
     if (IsMatch(propertyName, "active"))
     {
       this._isChangingActivation = true;
-      if (this.crossFadeIntensity > 0)
+      const exponent = crossFadeExponent(this);
+      if (exponent > 0)
       {
-        this._activationValuePreMapped = Math.pow(this._activationValuePreMapped, 1 / this.crossFadeIntensity);
+        this._activationValuePreMapped = Math.pow(this._activationValuePreMapped, 1 / exponent);
       }
       this.ResetPlayTime(this.active);
     }
@@ -167,21 +208,24 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
   /**
    * Maps the linear crossfade position through the intensity power curve,
    * mirrored around the deactivating direction
-   * (EveSmartLightBaseAttributeModifier.cpp:65-70).
+   * (EveSmartLightBaseAttributeModifier.cpp:65-70). The exponent comes through
+   * crossFadeExponent (adapted for EVE build 3698585's m_crossFadeCurve).
    */
 
   @meta.implemented
   MapActivationValue()
   {
     const scaleValue = this.active ? this._activationValuePreMapped : 1 - this._activationValuePreMapped;
-    const mapped = Math.pow(scaleValue, this.crossFadeIntensity);
+    const mapped = Math.pow(scaleValue, crossFadeExponent(this));
     this.activationValue = this.active ? mapped : 1 - mapped;
   }
 
   /**
    * Advances the crossfade/delayed-activation state machine and folds the
    * parent multiplier into the final activation strength
-   * (EveSmartLightBaseAttributeModifier.cpp:72-125).
+   * (EveSmartLightBaseAttributeModifier.cpp:72-125). The delay is a nonzero
+   * activationDelay, else delayedActivation (adapted for EVE build 3698585's
+   * rename).
    */
 
   @meta.implemented
@@ -189,7 +233,7 @@ export class EveSmartLightBaseAttributeModifier extends IRoot
   {
     if (this._isChangingActivation)
     {
-      const activationTime = this._lastActivationTimeStamp + this.delayedActivation;
+      const activationTime = this._lastActivationTimeStamp + (this.activationDelay || this.delayedActivation);
       if (this.playTime < activationTime && this.active)
       {
         if (parentActivationMultiplier > 0)
