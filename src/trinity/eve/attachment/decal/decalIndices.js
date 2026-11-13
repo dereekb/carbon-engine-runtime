@@ -139,7 +139,9 @@ export function SelectDecalTriangles(lod, decalMatrix, inverseDecalMatrix, bound
     // No positions is not a failure. Carbon returns from a dozen conditions in
     // this function and commits no batch, and a decal on geometry that has not
     // arrived is the ordinary first-frame case rather than a broken asset.
-    if (!Array.isArray(positions) || !positions.length) return [];
+    // A decoded hull mesh holds its position channel as a Float32Array, so a
+    // typed array is the ordinary case here, not only a plain one.
+    if (!(Array.isArray(positions) || ArrayBuffer.isView(positions)) || !positions.length) return [];
 
     const indices = lodIndices(lod);
 
