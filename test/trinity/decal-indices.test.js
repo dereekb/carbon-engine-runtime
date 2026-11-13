@@ -100,6 +100,68 @@ test("the position stride comes from the declaration", () =>
   assert.deepEqual(SelectDecalTriangles(lod, matrix, inverse, null, wide), [ 0, 1, 2 ]);
 });
 
+test("a typed position channel selects the same triangles as a plain one", () =>
+{
+  // A decoded hull mesh holds its positions as a Float32Array (the Rifter's
+  // mf4_t1: 268,989 floats). Accepting only a plain array selected nothing on
+  // every real hull, so a runtime-placed decal never drew.
+  const plain = lodOf();
+  const typed = { ...plain, vertex: { position: new Float32Array(plain.vertex.position) } };
+
+  for (const [ scale, translation ] of [ [ [ 2, 2, 2 ], [ 0, 0, 0 ] ], [ [ 2, 2, 2 ], [ 20, 0, 0 ] ], [ [ 40, 40, 40 ], [ 0, 0, 0 ] ] ])
+  {
+    const { matrix, inverse } = volumeOf(scale, translation);
+
+    assert.deepEqual(
+      SelectDecalTriangles(typed, matrix, inverse, null, DECL),
+      SelectDecalTriangles(plain, matrix, inverse, null, DECL)
+    );
+  }
+
+  const { matrix, inverse } = volumeOf([ 2, 2, 2 ]);
+
+  assert.deepEqual(SelectDecalTriangles(typed, matrix, inverse, null, DECL), [ 0, 1, 2 ]);
+
+  // An empty typed channel is still geometry that has not arrived, and a view
+  // with no element length is not a position channel.
+  assert.deepEqual(SelectDecalTriangles({ ...plain, vertex: { position: new Float32Array(0) } }, matrix, inverse, null, DECL), []);
+  assert.deepEqual(SelectDecalTriangles({ ...plain, vertex: { position: new DataView(new ArrayBuffer(72)) } }, matrix, inverse, null, DECL), []);
+});
+
+test("a typed float4 position channel reads by the declaration's stride", () =>
+{
+  const lod = {
+    vertex: {
+      position: new Float32Array([
+        0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1,
+        20, 0, 0, 1, 21, 0, 0, 1, 20, 1, 0, 1
+      ])
+    },
+    indices: [ { faces: [ 0, 1, 2, 3, 4, 5 ] } ]
+  };
+  const { matrix, inverse } = volumeOf([ 2, 2, 2 ], [ 20, 0, 0 ]);
+  const wide = [ { usage: "Position", usageIndex: 0, elementCount: 4 } ];
+
+  assert.deepEqual(SelectDecalTriangles(lod, matrix, inverse, null, wide), [ 3, 4, 5 ]);
+});
+
+test("typed indices select from typed positions", () =>
+{
+  // The retained authored index stream is a Uint16Array or Uint32Array by the
+  // mesh's index width; either reads the same.
+  const { matrix, inverse } = volumeOf([ 2, 2, 2 ], [ 20, 0, 0 ]);
+
+  for (const Indices of [ Uint16Array, Uint32Array ])
+  {
+    const lod = {
+      vertex: { position: new Float32Array(lodOf().vertex.position) },
+      indexBuffer: new Indices([ 0, 1, 2, 3, 4, 5 ])
+    };
+
+    assert.deepEqual(SelectDecalTriangles(lod, matrix, inverse, null, DECL), [ 3, 4, 5 ], Indices.name);
+  }
+});
+
 test("world bounds transform the corners, not the extremes", () =>
 {
   // A rotated volume: taking min and max through the matrix would give a box
@@ -146,6 +208,26 @@ test("the built index buffer is 32-bit whatever the source indexed at", () =>
 
   assert.ok(built.indices instanceof Uint32Array);
   assert.equal(built.indices.length, 6);
+});
+
+test("a mesh with typed LOD positions builds a decal", () =>
+{
+  // The decoded-hull shape end to end: typed positions and typed indices on
+  // every LOD. An empty build is what made _BuildGeometry return null.
+  const typedLod = () => ({
+    vertex: { position: new Float32Array(lodOf().vertex.position) },
+    indexBuffer: new Uint16Array([ 0, 1, 2, 3, 4, 5 ])
+  });
+  const { matrix, inverse } = volumeOf([ 2, 2, 2 ]);
+
+  const built = BuildDecalGeometry({ decl: DECL, lods: [ typedLod(), typedLod() ] }, matrix, inverse);
+
+  assert.ok(built.indices.length > 0);
+  assert.deepEqual(built.lods, [
+    { startIndex: 0, primitiveCount: 1 },
+    { startIndex: 3, primitiveCount: 1 }
+  ]);
+  assert.deepEqual([ ...built.indices ], [ 0, 1, 2, 0, 1, 2 ]);
 });
 
 test("a volume already built is reused rather than reselected", () =>
