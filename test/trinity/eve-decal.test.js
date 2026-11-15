@@ -453,6 +453,98 @@ test("decals sharing a hull mesh and a decal matrix share one index allocation (
   assert.equal(mesh.decals.length, 1);
 });
 
+/** A hull whose mesh 0 record is `mesh`, so a test can read the decal cache on it. */
+const hullWithMesh = mesh => ({ GetCMFData() { return { meshes: [ this.GetMeshData(0) ] }; }, GetMeshData: () => mesh, GetLodIndexForScreenSize: () => 0 });
+
+test("destructing a decal frees its cached geometry and index allocation", () =>
+{
+  // Ours: a decal placed or moved at runtime builds a new volume each time, and
+  // the mesh's cache would otherwise keep every old one's allocation.
+  const mesh = { lodMask: 1, lods: [ {} ] };
+  const decal = visibleDecal();
+
+  decal.SetIndices([ [ 0, 1, 2 ] ]);
+  assert.equal(decal.GetRenderables([], null, hullWithMesh(mesh), 100), true);
+  assert.equal(mesh.decals.length, 1);
+
+  const allocation = mesh.decals[0].indexBuffer;
+
+  assert.equal(allocation.IsValid(), true);
+  decal.Destruct();
+  assert.equal(mesh.decals.length, 0, "the cache entry left the mesh");
+  assert.equal(allocation.IsValid(), false, "the index allocation was freed");
+});
+
+test("decals sharing one cached geometry free it with the last of them", () =>
+{
+  const mesh = { lodMask: 1, lods: [ {} ] };
+  const hull = hullWithMesh(mesh);
+  const first = visibleDecal();
+  const second = visibleDecal();
+
+  first.SetIndices([ [ 0, 1, 2 ] ]);
+  second.SetIndices([ [ 0, 1, 2 ] ]);
+  assert.equal(first.GetRenderables([], null, hull, 100), true);
+  assert.equal(second.GetRenderables([], null, hull, 100), true);
+  assert.equal(second.GetRenderables([], null, hull, 100), true, "drawing again takes no second hold");
+
+  const allocation = mesh.decals[0].indexBuffer;
+
+  first.Destruct();
+  assert.equal(mesh.decals.length, 1, "the second decal still holds it");
+  assert.equal(allocation.IsValid(), true);
+  assert.equal(second.GetRenderables([], null, hull, 100), true, "the survivor still draws");
+
+  second.Destruct();
+  assert.equal(mesh.decals.length, 0);
+  assert.equal(allocation.IsValid(), false);
+});
+
+test("a new hull lets go of the old hull's decal geometry", () =>
+{
+  const oldMesh = { lodMask: 1, lods: [ {} ] };
+  const newMesh = { lodMask: 1, lods: [ {} ] };
+  const decal = visibleDecal();
+
+  decal.SetIndices([ [ 0, 1, 2 ] ]);
+  assert.equal(decal.GetRenderables([], null, hullWithMesh(oldMesh), 100), true);
+
+  const allocation = oldMesh.decals[0].indexBuffer;
+
+  assert.equal(decal.GetRenderables([], null, hullWithMesh(newMesh), 100), true);
+  assert.equal(oldMesh.decals.length, 0, "the old mesh's entry is gone");
+  assert.equal(allocation.IsValid(), false);
+  assert.equal(newMesh.decals.length, 1);
+});
+
+test("an entry its mesh's owner already dropped is not freed again", () =>
+{
+  // A hull copy's owner frees the allocations cached on its records and empties
+  // the cache itself; a decal destructed afterwards must not free the entry a
+  // newer decal built for the same volume.
+  const mesh = { lodMask: 1, lods: [ {} ] };
+  const hull = hullWithMesh(mesh);
+  const stale = visibleDecal();
+  const fresh = visibleDecal();
+
+  stale.SetIndices([ [ 0, 1, 2 ] ]);
+  fresh.SetIndices([ [ 0, 1, 2 ] ]);
+  assert.equal(stale.GetRenderables([], null, hull, 100), true);
+
+  const dropped = mesh.decals[0].indexBuffer;
+
+  dropped._parent.Free(dropped);
+  mesh.decals.length = 0;
+
+  assert.equal(fresh.GetRenderables([], null, hull, 100), true);
+
+  const kept = mesh.decals[0].indexBuffer;
+
+  stale.Destruct();
+  assert.equal(mesh.decals.length, 1);
+  assert.equal(kept.IsValid(), true, "the newer entry survives");
+});
+
 test("GetBatches commits the hull LOD's vertices with the decal's own indices (cpp:250-331)", () =>
 {
   const decal = visibleDecal();

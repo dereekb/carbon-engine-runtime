@@ -239,6 +239,64 @@ export function FindCachedDecalGeometry(cached, inverseDecalMatrix)
 }
 
 /**
+ * How many decals hold each cached geometry. Ours: Carbon's decal holds its geometry through a shared_ptr
+ * (m_decalGeometry); JavaScript has no destructor, so this count stands in for the shared_ptr's own.
+ */
+const decalGeometryUsers = new WeakMap();
+
+/**
+ * Counts one more decal holding a cached geometry.
+ *
+ * @adapted Ours: the shared_ptr copy Carbon makes when a decal takes the mesh's geometry.
+ * @param {object} entry The cached geometry.
+ * @returns {object} The same entry.
+ */
+export function AcquireCachedDecalGeometry(entry)
+{
+    decalGeometryUsers.set(entry, (decalGeometryUsers.get(entry) ?? 0) + 1);
+    return entry;
+}
+
+/**
+ * Lets go of one decal's hold on a cached geometry; with the last hold gone, removes the entry from the mesh's cache
+ * and frees its index allocation.
+ *
+ * Ours: Carbon places hull decals once, from authored data, so its mesh cache stays as large as the hull's decal set.
+ * A decal placed, moved or removed at runtime builds a new volume every time, and without this each one would leave an
+ * allocation behind on the shared mesh. An entry no longer in the cache (a caller emptied it and freed the
+ * allocations itself) is left alone, so the allocation is never freed twice.
+ *
+ * @adapted Ours: frees what Carbon's shared_ptr frees with its last copy.
+ * @param {Array<object>|null} cached The mesh's cache the entry was taken from.
+ * @param {object} entry The cached geometry.
+ * @returns {boolean} Whether the entry was removed and its allocation freed.
+ */
+export function ReleaseCachedDecalGeometry(cached, entry)
+{
+    const users = (decalGeometryUsers.get(entry) ?? 1) - 1;
+
+    if (users > 0)
+    {
+        decalGeometryUsers.set(entry, users);
+        return false;
+    }
+
+    decalGeometryUsers.delete(entry);
+
+    const index = cached ? cached.indexOf(entry) : -1;
+
+    if (index === -1) return false;
+
+    cached.splice(index, 1);
+
+    const allocation = entry.indexBuffer;
+
+    if (allocation?._parent) allocation._parent.Free(allocation);
+
+    return true;
+}
+
+/**
  * Builds decal geometry from index lists the SOF already computed.
  *
  * THIS IS THE PATH A SHIP TAKES. Every decal on a shipped hull arrives with

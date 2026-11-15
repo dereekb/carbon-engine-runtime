@@ -23,7 +23,7 @@ import { CarbonVertexElements } from "../../../core/vertex/vertexUsage.js";
 import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js";
 import { Tr2PickType } from "#consts/graphics/tr2PickType";
 import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
-import { BuildDecalGeometry, BuildStaticDecalGeometry, FindCachedDecalGeometry } from "./decalIndices.js";
+import { AcquireCachedDecalGeometry, BuildDecalGeometry, BuildStaticDecalGeometry, FindCachedDecalGeometry, ReleaseCachedDecalGeometry } from "./decalIndices.js";
 import "#consts/graphics/trinityEnums";
 import { trinity } from "../../../CjsTrinity.js";
 
@@ -77,14 +77,18 @@ export class EveSpaceObjectDecal
    * (Tr2DeviceResource.cpp:11-14): releases everything, then unregisters.
    *
    * Ours: JavaScript has no destructor, so the owner calls this when it drops
-   * the decal. No owner does yet: EveSpaceObject2, which holds decals, has no
-   * Destruct of its own, so a dropped decal stays registered until one is added.
+   * the decal. EveSpaceObject2, which holds decals, has no Destruct of its own,
+   * so a caller that removes a decal from its owner's list destructs it.
+   * Destructing also lets go of the decal's geometry, as Carbon's shared_ptr
+   * does: the mesh's cached entry and its index allocation go with the last
+   * decal holding them (ReleaseCachedDecalGeometry).
    *
    * Carbon: EveSpaceObjectDecal destructor (trinity/trinity/Eve/SpaceObject/Attachments/EveSpaceObjectDecal.cpp:61-64).
    * @adapted Retains existing explicit JS member cleanup; the graph dispatches base hooks.
    */
   OnDestruct()
   {
+    this._ReleaseDecalGeometry();
     this.ReleaseResources(TriStorageFlags.TRISTORAGE_ALL);
   }
 
@@ -111,7 +115,7 @@ export class EveSpaceObjectDecal
   {
     if (this._decalGeometry && !this._decalGeometry.indexBuffer.IsValid())
     {
-      this._decalGeometry = null;
+      this._ReleaseDecalGeometry();
     }
     return true;
   }
@@ -168,6 +172,12 @@ export class EveSpaceObjectDecal
 
   /** m_decalGeometry (std::shared_ptr<MeshDecalData>) */
   _decalGeometry = null;
+
+  /**
+   * The mesh record whose decal cache _decalGeometry came from. Ours: the
+   * release finds the cache through it (Carbon's shared_ptr needs no owner).
+   */
+  _decalGeometryMesh = null;
 
   /** m_isGeometryFrozen (bool) - pins the decal to LOD 0. */
   _isGeometryFrozen = false;
@@ -249,7 +259,7 @@ export class EveSpaceObjectDecal
     if (IsMatch(propertyName, "position") || IsMatch(propertyName, "rotation") || IsMatch(propertyName, "scaling"))
     {
       this._UpdateDecalMatrix();
-      if (!this.HasStaticIndexBuffers()) this._decalGeometry = null;
+      if (!this.HasStaticIndexBuffers()) this._ReleaseDecalGeometry();
     }
     return true;
   }
@@ -777,7 +787,7 @@ export class EveSpaceObjectDecal
     // rebuilt every frame.
     if (geometryResource !== this._baseGeometryResource)
     {
-      this._decalGeometry = null;
+      this._ReleaseDecalGeometry();
       this._baseGeometryResource = geometryResource;
     }
 
@@ -785,7 +795,7 @@ export class EveSpaceObjectDecal
 
     if (!this._decalGeometry || (mesh && mesh.lodMask !== this._decalGeometry.lodMask))
     {
-      this._decalGeometry = this._BuildGeometry(mesh);
+      this._SetDecalGeometry(this._BuildGeometry(mesh), mesh);
     }
 
     if (!this._decalGeometry) return false;
@@ -880,6 +890,43 @@ export class EveSpaceObjectDecal
 
     mesh.decals.push(decalGeometry);
     return decalGeometry;
+  }
+
+  /**
+   * Holds a built (or cached) geometry in place of the current one, letting go
+   * of the old one first. The same entry again changes nothing.
+   *
+   * @adapted Ours: Carbon assigns the shared_ptr, which counts the hold itself.
+   * @param {MeshDecalData|null} geometry The geometry to hold.
+   * @param {TriGeometryResMeshData|null} mesh The mesh record it is cached on.
+   */
+  _SetDecalGeometry(geometry, mesh)
+  {
+    if (geometry === this._decalGeometry) return;
+
+    this._ReleaseDecalGeometry();
+
+    if (!geometry) return;
+
+    this._decalGeometry = AcquireCachedDecalGeometry(geometry);
+    this._decalGeometryMesh = mesh;
+  }
+
+  /**
+   * Lets go of the held geometry: the mesh's cached entry and its index
+   * allocation are freed once no decal holds them.
+   *
+   * @adapted Ours: Carbon resets the shared_ptr.
+   */
+  _ReleaseDecalGeometry()
+  {
+    const geometry = this._decalGeometry;
+    const mesh = this._decalGeometryMesh;
+
+    this._decalGeometry = null;
+    this._decalGeometryMesh = null;
+
+    if (geometry) ReleaseCachedDecalGeometry(mesh?.decals ?? null, geometry);
   }
 
   /**
