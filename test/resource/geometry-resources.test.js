@@ -18,6 +18,7 @@ import test from "node:test";
 import { TriGeometryRes } from "../../npm/dist/resource/index.js";
 import { CjsGr2Format } from "../../npm/dist/resource/formats/gr2/index.js";
 import { CjsCmfFormat } from "../../npm/dist/resource/formats/cmf/index.js";
+import { BuildFromGrannyVertexDecl, Tr2VertexDefinition } from "../../npm/dist/trinity/core/index.js";
 
 /** Replaces the two format readers for the body; the granny read is `{ granny: true }`. */
 function WithStubbedReaders(t)
@@ -55,6 +56,34 @@ test("the .gr2 format route retains Granny provenance and rebuilds missing bound
   assert.equal(seen.length, 1);
   assert.equal(seen[0]?.rebuildMissingBounds, true);
   assert.equal(resource.GetGrannyInfo(), decoded, "the Granny graph is retained without another decode or clone");
+});
+
+test("a Granny file's DiffuseColor0 decodes as color0 and declares COLOR 0", () =>
+{
+  // A hull wreck's vertex colour is quadwreckv5's intact mask; GetDecodedMesh feeds the hull copies.
+  const colours = [ 1, 0.5, 0, 1, 0.25, 0.75, 1, 0, 0, 0, 0, 1 ];
+  const bytes = CjsGr2Format.writeShared({
+    meshes: [ {
+      name: "triangle",
+      vertex: { position: [ 0, 0, 0, 1, 0, 0, 0, 1, 0 ], texcoord0: [ 0, 0, 1, 0, 0, 1 ], color0: colours },
+      indices: [ { name: "hull", bytesPerIndex: 2, faces: [ 0, 1, 2 ] } ],
+      boneBindings: [],
+      morphTargets: []
+    } ],
+    skeletons: [],
+    animations: []
+  });
+  const resource = new TriGeometryRes();
+  assert.equal(resource.ReadGrannyFile(bytes), true);
+  assert.equal(resource.IsUsingCMF(), false);
+
+  const color0 = resource.GetDecodedMesh(0)?.vertex.color0;
+  assert.equal(color0?.length, colours.length);
+  color0.forEach((value, index) => assert.ok(Math.abs(value - colours[index]) <= 1 / 255, `color0[${index}] ${value}`));
+
+  const definition = BuildFromGrannyVertexDecl(resource.GetGrannyInfo().Meshes[0].PrimaryVertexData.Vertices.type);
+  const { COLOR } = Tr2VertexDefinition.UsageCode;
+  assert.ok(definition.items.some(item => item.usage === COLOR && item.usageIndex === 0), JSON.stringify(definition.items));
 });
 
 test("IsUsingCMF follows the reader that ran, not the payload's shape", (t) =>

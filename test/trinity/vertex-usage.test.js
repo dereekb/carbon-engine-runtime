@@ -132,6 +132,8 @@ test("channel names translate for both readers", () =>
   assert.deepEqual(CarbonUsageFromChannel("binormal"), { usage: BITANGENT, usageIndex: 0 });
   assert.deepEqual(CarbonUsageFromChannel("blendIndice"), { usage: BLENDINDICES, usageIndex: 0 });
   assert.deepEqual(CarbonUsageFromChannel("blendWeight"), { usage: BLENDWEIGHTS, usageIndex: 0 });
+  // A wreck's DiffuseColor0 projects as color0: quadwreckv5's COLOR0 char mask.
+  assert.deepEqual(CarbonUsageFromChannel("color0"), { usage: COLOR, usageIndex: 0 });
 });
 
 test("a trailing digit is the semantic index, not part of the name", () =>

@@ -76,7 +76,8 @@ test("vertex annotation sets emit compact sparse delta targets", () =>
             texcoord0: [],
             texcoord1: [],
             binormal: [],
-            blendWeight: []
+            blendWeight: [],
+            color0: []
         },
         vertexIndices: [ 2, 0 ]
     });

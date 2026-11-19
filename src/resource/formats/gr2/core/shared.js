@@ -104,7 +104,8 @@ function populate(instance, props, hydrationOptions = {})
  * @property {number} grannyFileFormatRevision Granny file format revision.
  * @property {string} grannyFileSource Original source filename, or an empty string.
  * @property {object[]} meshes Mesh records with deinterleaved Float32Array
- *     vertex channels (`VERTEX_CHANNELS`), `boneBindings`, `morphTargets`
+ *     vertex channels (`VERTEX_CHANNELS`, a vertex colour `DiffuseColor0` as
+ *     `color0`), `boneBindings`, `morphTargets`
  *     (sparse ones carry `vertexIndices`) and `indices` groups whose `faces`
  *     is a typed view into the complete `indexBuffer`. Group `firstElement`
  *     retains Granny TriFirst (a triangle offset), independently of group order.
@@ -195,7 +196,8 @@ const VERTEX_CHANNELS = [
     [ "texcoord0", "TextureCoordinates0", 2, true ],
     [ "texcoord1", "TextureCoordinates1", 2, true ],
     [ "binormal", "Binormal", 4, true ],
-    [ "blendWeight", "BoneWeights", 4 ]
+    [ "blendWeight", "BoneWeights", 4 ],
+    [ "color0", "DiffuseColor0", 4 ]
 ];
 
 /**

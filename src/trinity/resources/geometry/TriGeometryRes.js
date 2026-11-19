@@ -105,7 +105,8 @@ function boundsPair(bounds)
 /** The shared GR2 projection's channel names for Granny vertex members (formats/gr2/core/shared.js). */
 const GRANNY_CHANNEL_NAMES = {
   Position: "position", BoneIndices: "blendIndice", Tangent: "tangent", Normal: "normal",
-  TextureCoordinates0: "texcoord0", TextureCoordinates1: "texcoord1", Binormal: "binormal", BoneWeights: "blendWeight"
+  TextureCoordinates0: "texcoord0", TextureCoordinates1: "texcoord1", Binormal: "binormal", BoneWeights: "blendWeight",
+  DiffuseColor0: "color0"
 };
 
 /** Bytes and float reader per Granny member type, dequantized as the shared GR2 projection does. */
@@ -1059,7 +1060,7 @@ export class TriGeometryRes extends BlueAsyncRes
    * One mesh as decoded vertex channels and per-area triangle lists, the shape our own CPU readers
    * take (the Incarna emulator, Graphene's character tools): the CMF mesh itself, or for a Granny
    * mesh its first LOD's vertex members decoded as the shared GR2 projection names and dequantizes
-   * them (position, normal, tangent, binormal, texcoord0/1, blendIndice, blendWeight), with one
+   * them (position, normal, tangent, binormal, texcoord0/1, blendIndice, blendWeight, color0), with one
    * index group per area of the record's first LOD.
    *
    * @cjs Carbon's readers take the vertex bytes; these readers of ours take channels.
