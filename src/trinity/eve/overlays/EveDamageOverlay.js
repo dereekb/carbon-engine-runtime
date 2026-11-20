@@ -123,6 +123,14 @@ export class EveDamageOverlay extends IRoot
 
   _armorImpacts = new Map();
 
+  /**
+   * Pinned armour impacts, 4 floats each (x, y, z in the damage locators' bind space, then the texel radius in metres).
+   *
+   * @adapted Ours, not Carbon's: scene-director paints EVE's armour damage into its hull craters with these. They draw
+   * after the live impacts, never heal, and stay out of the impact table, Clear and SetDamageState.
+   */
+  _pinnedImpacts = new Float32Array(0);
+
   _header = Array.from({ length: 4 }, () => vec4.create());
 
   _texelRows = [];
@@ -420,7 +428,8 @@ export class EveDamageOverlay extends IRoot
     this.armorRepairing.Update(updateContext);
     this.hullRepairing.Update(updateContext);
 
-    const rowCount = Math.max(Number(minTexelRows) >>> 0, this._armorImpacts.size);
+    const pinnedCount = this.GetPinnedImpactCount();
+    const rowCount = Math.max(Number(minTexelRows) >>> 0, this._armorImpacts.size + pinnedCount);
     while (this._texelRows.length < rowCount)
     {
       this._texelRows.push(Array.from({ length: 4 }, () => vec4.create()));
@@ -428,7 +437,7 @@ export class EveDamageOverlay extends IRoot
     this._texelRows.length = rowCount;
 
     vec4.set(this._header[2],
-      this._armorImpacts.size,
+      this._armorImpacts.size + pinnedCount,
       this.armorImpactParentSize,
       this.hullRepairing.GetFaderValue(),
       this.hullRepairing.GetKickInValue());
@@ -446,16 +455,56 @@ export class EveDamageOverlay extends IRoot
 
     // Carbon EveDamageOverlay.cpp:301: an owner that cannot resolve its
     // locators (an instanced part whose mesh is not loaded) supplies none.
-    if (!ownerInfo.getDamageLocatorPositionOS) return;
-    let row = 0;
-    for (const impact of this._armorImpacts.values())
+    if (ownerInfo.getDamageLocatorPositionOS)
     {
-      const texel = this._texelRows[row++];
-      const position = vec3.zero(EveDamageOverlay._locatorPosition);
-      ownerInfo.getDamageLocatorPositionOS(impact.damageLocatorIndex, position);
-      vec4.set(texel[2], position[0], position[1], position[2], 0);
-      vec4.set(texel[3], impact.size * IMPACT_ARMOR_SIZE_FACTOR * this.armorImpactParentSize, 0, 0, 0);
+      let row = 0;
+      for (const impact of this._armorImpacts.values())
+      {
+        const texel = this._texelRows[row++];
+        const position = vec3.zero(EveDamageOverlay._locatorPosition);
+        ownerInfo.getDamageLocatorPositionOS(impact.damageLocatorIndex, position);
+        vec4.set(texel[2], position[0], position[1], position[2], 0);
+        vec4.set(texel[3], impact.size * IMPACT_ARMOR_SIZE_FACTOR * this.armorImpactParentSize, 0, 0, 0);
+      }
     }
+
+    // Ours: the pinned impacts follow the live ones, whatever the locator source.
+    const pinned = this._pinnedImpacts;
+    for (let index = 0, row = this._armorImpacts.size; index < pinnedCount; index++, row++)
+    {
+      const texel = this._texelRows[row];
+      const offset = index * 4;
+      vec4.set(texel[2], pinned[offset], pinned[offset + 1], pinned[offset + 2], 0);
+      vec4.set(texel[3], pinned[offset + 3], 0, 0, 0);
+    }
+  }
+
+  /**
+   * Replaces the pinned armour impacts: 4 numbers each, x, y, z in object space (the damage locators' bind space) and
+   * the texel radius in metres. The list is copied; null or an empty list clears it. A trailing partial entry is
+   * dropped.
+   *
+   * @adapted Ours, not Carbon's: scene-director's crater burns. Pinned impacts draw beside the live ones at any
+   * damage state and are not part of ArmorImpacts, HasImpact, CreateImpact, Clear or SetDamageState.
+   * @param {ArrayLike<number>|null} spheres Packed spheres.
+   */
+  SetPinnedImpacts(spheres)
+  {
+    const count = spheres ? Math.floor((Number(spheres.length) >>> 0) / 4) : 0;
+    const next = new Float32Array(count * 4);
+    for (let index = 0; index < next.length; index++) next[index] = Number(spheres[index]) || 0;
+    this._pinnedImpacts = next;
+  }
+
+  /**
+   * Returns the number of pinned armour impacts.
+   *
+   * @adapted Ours, not Carbon's (see SetPinnedImpacts).
+   * @returns {number} The count.
+   */
+  GetPinnedImpactCount()
+  {
+    return this._pinnedImpacts.length >> 2;
   }
 
   /**
@@ -488,12 +537,17 @@ export class EveDamageOverlay extends IRoot
       this._header, this._texelRows.length, this._texelRows, this.renderPriority);
   }
 
-  /** Reports whether armour impacts or armour faders are active. */
+  /**
+   * Reports whether armour impacts, pinned impacts or armour faders are active.
+   *
+   * @adapted Ours: pinned impacts (SetPinnedImpacts) count too, so they draw at full HP.
+   */
 
   HasArmorActivity()
   {
     return EveDamageOverlay.impactEffectEnabled &&
-      (this._armorImpacts.size !== 0 || !this.armorHardening.IsZero() || !this.armorRepairing.IsZero());
+      (this._armorImpacts.size !== 0 || this._pinnedImpacts.length !== 0 ||
+        !this.armorHardening.IsZero() || !this.armorRepairing.IsZero());
   }
 
   /** Reports whether hull damage presentation is active. */
