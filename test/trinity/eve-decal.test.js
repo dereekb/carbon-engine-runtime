@@ -456,6 +456,62 @@ test("decals sharing a hull mesh and a decal matrix share one index allocation (
 /** A hull whose mesh 0 record is `mesh`, so a test can read the decal cache on it. */
 const hullWithMesh = mesh => ({ GetCMFData() { return { meshes: [ this.GetMeshData(0) ] }; }, GetMeshData: () => mesh, GetLodIndexForScreenSize: () => 0 });
 
+test("decals sharing a volume but carrying different static lists build their own geometry", () =>
+{
+  // Ours: Carbon's static lists are a function of the volume; a runtime decal chooses its own (face picking), so the
+  // matrix alone no longer identifies the triangles.
+  const mesh = { lodMask: 1, lods: [ {} ] };
+  const hull = hullWithMesh(mesh);
+  const first = visibleDecal();
+  const second = visibleDecal();
+
+  first.SetIndices([ [ 0, 1, 2 ] ]);
+  second.SetIndices([ [ 0, 1, 2, 2, 1, 3 ] ]);
+
+  const allocations = countAllocations(() =>
+  {
+    assert.equal(first.GetRenderables([], null, hull, 100), true);
+    assert.equal(second.GetRenderables([], null, hull, 100), true);
+  });
+
+  assert.equal(allocations, 2, "each list built its own geometry");
+  assert.equal(mesh.decals.length, 2);
+  assert.deepEqual(mesh.decals.map(entry => entry.lods[0].primitiveCount), [ 1, 2 ]);
+
+  const kept = mesh.decals[1].indexBuffer;
+
+  first.Destruct();
+  assert.equal(mesh.decals.length, 1, "destructing one leaves the other's");
+  assert.equal(kept.IsValid(), true);
+  assert.equal(second.GetRenderables([], null, hull, 100), true);
+
+  second.Destruct();
+  assert.equal(mesh.decals.length, 0);
+});
+
+test("the selection path (no static lists) still shares by volume", () =>
+{
+  const mesh = { lodMask: 1, lods: [ {} ] };
+  const positions = new Float32Array([ 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0 ]);
+  const indices = new Uint32Array([ 0, 1, 2 ]);
+  const hull = { ...hullWithMesh(mesh), GetLodPositions: () => positions, GetLodIndices: () => indices };
+
+  hull.GetCMFData = function () { return { meshes: [ this.GetMeshData(0) ] }; };
+
+  const first = visibleDecal();
+  const second = visibleDecal();
+
+  const allocations = countAllocations(() =>
+  {
+    assert.equal(first.GetRenderables([], null, hull, 100), true);
+    assert.equal(second.GetRenderables([], null, hull, 100), true);
+  });
+
+  assert.equal(allocations, 1, "the second selection found the first's geometry");
+  assert.equal(mesh.decals.length, 1);
+  assert.equal(mesh.decals[0].lods[0].primitiveCount, 1);
+});
+
 test("destructing a decal frees its cached geometry and index allocation", () =>
 {
   // Ours: a decal placed or moved at runtime builds a new volume each time, and

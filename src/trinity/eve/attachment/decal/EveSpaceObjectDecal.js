@@ -23,7 +23,7 @@ import { CarbonVertexElements } from "../../../core/vertex/vertexUsage.js";
 import { Tr2EffectStateManager } from "../../../shader/Tr2EffectStateManager.js";
 import { Tr2PickType } from "#consts/graphics/tr2PickType";
 import { Tr2DeviceResource } from "../../../core/device/Tr2DeviceResource.js";
-import { AcquireCachedDecalGeometry, BuildDecalGeometry, BuildStaticDecalGeometry, FindCachedDecalGeometry, ReleaseCachedDecalGeometry } from "./decalIndices.js";
+import { AcquireCachedDecalGeometry, BuildDecalGeometry, BuildStaticDecalGeometry, FindCachedDecalGeometry, RecordCachedDecalLists, ReleaseCachedDecalGeometry } from "./decalIndices.js";
 import "#consts/graphics/trinityEnums";
 import { trinity } from "../../../CjsTrinity.js";
 
@@ -850,6 +850,10 @@ export class EveSpaceObjectDecal
    * index allocation; the indices go into the shared geometry buffer, always
    * 32-bit, where the hull's LODs live.
    *
+   * @adapted Ours: shared only when the volume AND the static lists match
+   * (FindCachedDecalGeometry). A decal placed at runtime chooses its own lists,
+   * so two decals in one volume can carry different ones.
+   *
    * Divergence kept from before this port: Carbon runs triangle selection only
    * behind g_buildDecalBuffers (default false, cpp:22-23, :203-206); this runs
    * it whenever there are no static lists. Shipped hull decals all carry them.
@@ -862,14 +866,15 @@ export class EveSpaceObjectDecal
     if (!mesh) return null;
 
     mesh.decals ??= [];
-    const cached = FindCachedDecalGeometry(mesh.decals, this._inverseDecalMatrix);
+    const lists = this.HasStaticIndexBuffers() ? this.staticIndexBuffers : null;
+    const cached = FindCachedDecalGeometry(mesh.decals, this._inverseDecalMatrix, lists);
     if (cached) return cached;
 
     // The static lists follow the record's LODs by their original index, as Carbon's do; selecting
     // triangles reads each LOD's positions and indices from whichever reader ran (GetLodPositions).
     const geometry = this._baseGeometryResource;
-    const built = this.HasStaticIndexBuffers()
-      ? BuildStaticDecalGeometry(mesh, this.staticIndexBuffers)
+    const built = lists
+      ? BuildStaticDecalGeometry(mesh, lists)
       : BuildDecalGeometry({ lods: mesh.lods.map(lod => ({
         vertex: { position: geometry.GetLodPositions(0, lod) }, indexBuffer: geometry.GetLodIndices(0, lod) })) },
       this._decalMatrix, this._inverseDecalMatrix);
@@ -888,6 +893,7 @@ export class EveSpaceObjectDecal
     // A failed allocation returns before the cache push, as Carbon's does.
     if (!decalGeometry.indexBuffer) return null;
 
+    RecordCachedDecalLists(decalGeometry, lists);
     mesh.decals.push(decalGeometry);
     return decalGeometry;
   }

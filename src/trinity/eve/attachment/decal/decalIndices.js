@@ -214,22 +214,81 @@ export function BuildDecalGeometry(mesh, decalMatrix, inverseDecalMatrix)
 }
 
 /**
- * Finds an already-built decal geometry for the same volume.
+ * The static index lists each cached geometry was built from, copied per LOD. An entry built by triangle selection has
+ * none recorded.
+ *
+ * @adapted Ours: Carbon keys its cache on the volume alone, see FindCachedDecalGeometry.
+ */
+const decalGeometryLists = new WeakMap();
+
+/**
+ * Whether recorded lists equal a decal's: both none, or the same LOD count, lengths and values.
+ *
+ * @param {Array<Array<number>>|null|undefined} recorded The entry's lists.
+ * @param {Array<Array<number>>|null} staticIndexBuffers The decal's per-LOD lists, or null for none.
+ * @returns {boolean} Whether they match.
+ */
+function DecalListsEqual(recorded, staticIndexBuffers)
+{
+    if (!recorded || !staticIndexBuffers) return !recorded && !staticIndexBuffers;
+    if (recorded.length !== staticIndexBuffers.length) return false;
+
+    for (let lod = 0; lod < recorded.length; lod++)
+    {
+        const kept = recorded[lod];
+        const list = staticIndexBuffers[lod] ?? [];
+
+        if (kept.length !== list.length) return false;
+
+        for (let at = 0; at < list.length; at++)
+        {
+            if (kept[at] !== (list[at] >>> 0)) return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Records the static index lists a cached geometry was built from, so FindCachedDecalGeometry matches it only for a
+ * decal carrying the same lists.
+ *
+ * @adapted Ours: see FindCachedDecalGeometry.
+ * @param {object} entry The cached geometry.
+ * @param {Array<Array<number>>|null} staticIndexBuffers The per-LOD lists it was built from, or null for a selection.
+ * @returns {object} The same entry.
+ */
+export function RecordCachedDecalLists(entry, staticIndexBuffers)
+{
+    if (staticIndexBuffers) decalGeometryLists.set(entry, staticIndexBuffers.map(lod => Array.from(lod ?? [], value => value >>> 0)));
+    else decalGeometryLists.delete(entry);
+
+    return entry;
+}
+
+/**
+ * Finds an already-built decal geometry for the same volume and the same static lists.
  *
  * Carbon caches these on the MESH, keyed by the inverse decal matrix
  * (`EveSpaceObjectDecal.cpp:620-631`), so two decals occupying the same volume
  * select the same triangles once. A hull carrying eleven decals is the ordinary
  * case, and the selection walks every triangle of every LOD.
  *
+ * @adapted Ours: an entry also matches only when its recorded static lists equal the decal's (both none, or the same
+ * lengths and values). Carbon's static lists come from the SOF and are a function of the volume, so the matrix alone
+ * is a full key there; a decal placed at runtime chooses its own lists (scene-director's face picking), so one volume
+ * can carry different lists, and keying on the matrix alone would hand the second decal the first one's triangles.
+ * Decals sharing a volume and the same lists (ships of one hull) still share one allocation.
  * @param {Array<object>} cached Existing entries.
  * @param {mat4} inverseDecalMatrix Volume to match.
+ * @param {Array<Array<number>>|null} [staticIndexBuffers=null] The decal's per-LOD lists, or null for a selection.
  * @returns {object|null} The matching entry, or null.
  */
-export function FindCachedDecalGeometry(cached, inverseDecalMatrix)
+export function FindCachedDecalGeometry(cached, inverseDecalMatrix, staticIndexBuffers = null)
 {
     for (const entry of cached ?? [])
     {
-        if (entry?.inverseDecalMatrix && mat4.exactEquals(entry.inverseDecalMatrix, inverseDecalMatrix))
+        if (entry?.inverseDecalMatrix && mat4.exactEquals(entry.inverseDecalMatrix, inverseDecalMatrix) && DecalListsEqual(decalGeometryLists.get(entry), staticIndexBuffers))
         {
             return entry;
         }
